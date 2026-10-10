@@ -137,6 +137,11 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
   };
 
   return {
+    "apps.inspect": ({ id }) => {
+      if (!deps.apps)
+        throw new OperationError("unsupported", "Managed applications are not configured");
+      return deps.apps.inspect(id);
+    },
     "apps.run": (params, context) => {
       if (!deps.apps)
         throw new OperationError("unsupported", "Managed applications are not configured");
@@ -243,7 +248,8 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
           `${POLICY_REASONS.protectedContainer}: ${container.name} is protected; "${action}" is not allowed from Otuken`,
         );
       }
-      await docker.controlContainer(container.id, action).catch(toOperationError);
+      const control = () => docker.controlContainer(container.id, action).catch(toOperationError);
+      await (deps.apps ? deps.apps.withProjectLock(container.project, control) : control());
       logger.info("Container action submitted", {
         container: container.name,
         action,
@@ -323,9 +329,9 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
           );
         }
       }
-      const result = await docker
-        .runCompose(project, workingDir, configFiles, action, signal)
-        .catch(toOperationError);
+      const run = () =>
+        docker.runCompose(project, workingDir, configFiles, action, signal).catch(toOperationError);
+      const result = await (deps.apps ? deps.apps.withProjectLock(project, run) : run());
       logger.info("Compose action finished", { project, action, ok: result.ok });
       return result;
     },

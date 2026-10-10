@@ -34,15 +34,43 @@ export const AppInstallRequestSchema = z.strictObject({
     .max(128)
     .default([]),
   acknowledgeRisks: z.boolean().default(false),
+  dataFrom: z.string().uuid().optional(),
+  confirmDataFrom: z.string().uuid().optional(),
 });
 export const ManagedAppRunSchema = z.strictObject({
   id: z.string().uuid(),
   action: z.enum(APP_ACTIONS),
   compose: z.string().max(512 * 1024),
   riskOverride: z.boolean(),
+  jobId: z.string().uuid().optional(),
+  dataFrom: z.string().uuid().optional(),
+});
+const AppImageSchema = z.strictObject({
+  reference: z.string().max(2048),
+  digest: z
+    .string()
+    .regex(/^sha256:[a-f0-9]{64}$/)
+    .nullable(),
+  platform: z.string().max(64),
 });
 export const ManagedAppResultSchema = z.strictObject({
   source: z.enum(["host", "simulated"]),
   ok: z.boolean(),
   rollback: z.enum(["not-needed", "succeeded", "failed"]),
+  images: z.array(AppImageSchema).max(50).optional(),
+});
+export const ManagedAppInspectSchema = z.strictObject({ id: z.string().uuid() });
+export const ManagedAppInspectionSchema = z.strictObject({
+  source: z.enum(["host", "simulated"]),
+  busy: z.boolean(),
+  ownership: z.enum(["missing", "prepared", "deployed", "removed", "conflict"]),
+  lastRun: z
+    .strictObject({
+      jobId: z.string().uuid().nullable(),
+      action: z.enum(APP_ACTIONS),
+      ok: z.boolean(),
+      rollback: z.enum(["not-needed", "succeeded", "failed"]),
+      images: z.array(AppImageSchema).max(50),
+    })
+    .nullable(),
 });

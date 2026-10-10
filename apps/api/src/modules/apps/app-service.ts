@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { Actor } from "@otuken/agent-protocol";
-import { CatalogError, managedProject, prepareInstall } from "@otuken/catalogs";
+import {
+  CatalogError,
+  managedProject,
+  parseCompose,
+  prepareInstall,
+  selectArchitecture,
+} from "@otuken/catalogs";
 import type { Database } from "@otuken/database";
 import type { SecretBox } from "@otuken/security";
 import type { AppAction, AppJobView, CatalogApp, InstalledAppView } from "@otuken/shared";
@@ -21,6 +27,14 @@ interface AppRow {
   last_error: string | null;
   installed_at: number;
   removed: number;
+  metadata: string;
+}
+interface AppMetadata {
+  web?: CatalogApp["web"];
+  images?: InstalledAppView["images"];
+  dataCopyEligible?: boolean;
+  dataFrom?: string;
+  services?: string[];
 }
 interface JobRow {
   id: string;
@@ -59,6 +73,9 @@ export class AppService {
     this.#now = deps.now;
     // A process restart cannot prove whether the agent finished an interrupted mutation.
     this.#db.run(
+      "UPDATE installed_apps SET last_error = 'interrupted' WHERE id IN (SELECT app_id FROM app_jobs WHERE stage IN ('queued', 'deploying'))",
+    );
+    this.#db.run(
       "UPDATE app_jobs SET stage = 'failed', error = 'interrupted', rollback = 'unknown', updated_at = ? WHERE stage IN ('queued', 'deploying')",
       this.#now(),
     );
@@ -91,6 +108,11 @@ export class AppService {
       .all<AppRow>("SELECT * FROM installed_apps WHERE removed = 0 ORDER BY installed_at DESC")
       .map((row) => {
         const members = list.containers.filter((container) => container.project === row.project);
+        const metadata = JSON.parse(row.metadata) as AppMetadata;
+        const latest = this.#db.get<{ id: string }>(
+          "SELECT id FROM app_jobs WHERE app_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+          row.id,
+        );
         return {
           id: row.id,
           name: JSON.parse(row.name) as CatalogApp["name"],
@@ -102,10 +124,38 @@ export class AppService {
             : !members.length
               ? "missing"
               : members.some((container) => container.state === "running")
-                ? "running"
+                ? members.some(
+                    (container) =>
+                      container.state !== "running" ||
+                      container.health === "unhealthy" ||
+                      container.health === "starting",
+                  ) ||
+                  (metadata.services &&
+                    metadata.services.some(
+                      (service) => !members.some((container) => container.service === service),
+                    ))
+                  ? "degraded"
+                  : "running"
                 : "stopped",
           lastError: row.last_error,
           installedAt: row.installed_at,
+          images: metadata.images ?? [],
+          web: metadata.web ?? { path: "/", scheme: "http" },
+          ports: members.flatMap((container) =>
+            container.ports
+              .filter(
+                (port) =>
+                  port.publicPort !== null &&
+                  port.type === "tcp" &&
+                  container.service === metadata.web?.service &&
+                  port.privatePort === metadata.web?.port,
+              )
+              .map((port) => ({ port: port.publicPort!, hostIp: port.ip })),
+          ),
+          lastJob: latest ? this.job(latest.id) : null,
+          dataCopyEligible:
+            metadata.dataCopyEligible === true &&
+            members.every((container) => container.state !== "running"),
         };
       });
   }
@@ -135,14 +185,22 @@ export class AppService {
       variables: Record<string, string>;
       ports: { service: string; index: number; host: number }[];
       acknowledgeRisks: boolean;
+      dataFrom?: string | undefined;
+      confirmDataFrom?: string | undefined;
     },
     actor: Actor,
   ): Promise<AppJobView> {
     this.#capacity();
-    const app = this.#catalogs.app(input.appId);
+    let app = this.#catalogs.app(input.appId);
     if (!app) throw new ApiError(404, "NOT_FOUND", "Catalog application not found");
     if (app.source.ref !== input.snapshot)
       throw new ApiError(409, "CONFLICT", "Catalog snapshot changed");
+    const system = await this.#agent.call("system.info", {}, actor).catch((error: unknown) => {
+      throw toApiError(error);
+    });
+    const arch =
+      system.arch === "x64" ? "amd64" : system.arch === "aarch64" ? "arm64" : system.arch;
+    app = selectArchitecture(app, arch);
     if (app.blockers.length)
       throw new ApiError(422, "VALIDATION_FAILED", "Unsupported Compose template", {
         details: { reason: "unsupported-compose", blockers: app.blockers },
@@ -154,16 +212,29 @@ export class AppService {
       });
     if (risky && (actor.kind !== "user" || actor.role !== "admin"))
       throw new ApiError(403, "FORBIDDEN", "Administrator risk approval required");
-    const system = await this.#agent.call("system.info", {}, actor).catch((error: unknown) => {
-      throw toApiError(error);
-    });
-    const arch =
-      system.arch === "x64" ? "amd64" : system.arch === "aarch64" ? "arm64" : system.arch;
     if (app.architectures.length && !app.architectures.includes(arch))
       throw new ApiError(422, "VALIDATION_FAILED", "Incompatible architecture", {
         details: { reason: "architecture", arch },
       });
     const id = randomUUID();
+    if (input.dataFrom) {
+      if (input.confirmDataFrom !== input.dataFrom)
+        throw new ApiError(422, "VALIDATION_FAILED", "Data source confirmation required");
+      const source = this.#row(input.dataFrom);
+      if (!source || (JSON.parse(source.metadata) as AppMetadata).dataCopyEligible !== true)
+        throw new ApiError(
+          422,
+          "VALIDATION_FAILED",
+          "Source does not have transferable owned data",
+        );
+      const containers = await this.#agent.call("docker.containers.list", {}, actor);
+      if (
+        containers.containers.some(
+          (container) => container.project === source.project && container.state === "running",
+        )
+      )
+        throw new ApiError(409, "CONFLICT", "Stop the source application before copying data");
+    }
     let compose: string;
     try {
       compose = prepareInstall(app, id, input);
@@ -174,7 +245,7 @@ export class AppService {
     }
     this.#capacity();
     this.#db.run(
-      "INSERT INTO installed_apps(id, name, project, provenance, sealed_compose, risk_override, source, installed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO installed_apps(id, name, project, provenance, sealed_compose, risk_override, source, installed_at, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       id,
       JSON.stringify(app.name),
       managedProject(id),
@@ -183,20 +254,92 @@ export class AppService {
       risky ? 1 : 0,
       system.source,
       this.#now(),
+      JSON.stringify({
+        web: app.web ?? { path: "/", scheme: "http" },
+        services: Object.keys(parseCompose(compose).services as Record<string, unknown>),
+        dataCopyEligible:
+          app.mounts.length > 0 &&
+          app.mounts.every(
+            (mount) => mount.kind === "bind" && /^\$\{?APP_DATA_DIR\}?\//.test(mount.source ?? ""),
+          ),
+        ...(input.dataFrom ? { dataFrom: input.dataFrom } : {}),
+      }),
     );
     return this.#enqueue(id, "install", actor);
   }
-  control(id: string, action: Exclude<AppAction, "install">, actor: Actor): AppJobView {
+  async control(
+    id: string,
+    action: Exclude<AppAction, "install">,
+    actor: Actor,
+  ): Promise<AppJobView> {
     this.#capacity(id);
     const app = this.#row(id);
     if (!app) throw new ApiError(404, "NOT_FOUND", "Installed application not found");
     if (
-      action === "update" &&
+      (action === "update" || action === "retry") &&
       app.risk_override &&
       (actor.kind !== "user" || actor.role !== "admin")
     )
       throw new ApiError(403, "FORBIDDEN", "Administrator risk approval required");
+    const inspection = await this.#agent
+      .call("apps.inspect", { id }, actor)
+      .catch((error: unknown) => {
+        throw toApiError(error);
+      });
+    if (inspection.busy)
+      throw new ApiError(409, "CONFLICT", "The agent is still executing an operation");
+    this.#capacity(id);
     return this.#enqueue(id, action, actor);
+  }
+  async reconcile(id: string, actor: Actor) {
+    const row = this.#row(id);
+    if (!row) throw new ApiError(404, "NOT_FOUND", "Installed application not found");
+    const inspection = await this.#agent
+      .call("apps.inspect", { id }, actor)
+      .catch((error: unknown) => {
+        throw toApiError(error);
+      });
+    const latest = this.#db.get<{ id: string }>(
+      "SELECT id FROM app_jobs WHERE app_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+      id,
+    );
+    const job = latest ? this.job(latest.id) : null;
+    const run = inspection.lastRun;
+    if (!inspection.busy && job?.error === "interrupted" && run?.jobId === job.id) {
+      this.#db.transaction(() => {
+        this.#db.run(
+          "UPDATE app_jobs SET stage = ?, error = ?, rollback = ?, updated_at = ? WHERE id = ?",
+          run.ok ? "succeeded" : "failed",
+          run.ok ? null : "compose-failed",
+          run.rollback,
+          this.#now(),
+          job.id,
+        );
+        const metadata = JSON.parse(row.metadata) as AppMetadata;
+        if (run.ok && run.images.length) metadata.images = run.images;
+        this.#db.run(
+          "UPDATE installed_apps SET last_error = ?, removed = ?, metadata = ? WHERE id = ?",
+          run.ok ? null : "compose-failed",
+          run.ok && run.action === "remove" ? 1 : 0,
+          JSON.stringify(metadata),
+          id,
+        );
+      });
+    }
+    this.#audit.record({
+      action: "apps.reconcile",
+      target: id,
+      outcome: "success",
+      ...(actor.kind === "user"
+        ? { actor: { userId: actor.userId, username: actor.username }, ip: actor.ip ?? null }
+        : {}),
+      details: { ownership: inspection.ownership, busy: inspection.busy },
+    });
+    return {
+      ownership: inspection.ownership,
+      busy: inspection.busy,
+      job: job ? this.job(job.id) : null,
+    };
   }
   #enqueue(id: string, action: AppAction, actor: Actor): AppJobView {
     const jobId = randomUUID();
@@ -240,6 +383,10 @@ export class AppService {
           action: job.action,
           compose: this.#secrets.open(app.sealed_compose, `app:${app.id}:compose:v1`),
           riskOverride: app.risk_override === 1,
+          jobId: job.id,
+          ...((JSON.parse(app.metadata) as AppMetadata).dataFrom
+            ? { dataFrom: (JSON.parse(app.metadata) as AppMetadata).dataFrom! }
+            : {}),
         },
         actor,
         { signal },
@@ -249,9 +396,18 @@ export class AppService {
       if (!ok) error = "compose-failed";
       if (!this.#stopped)
         this.#db.run("UPDATE installed_apps SET source = ? WHERE id = ?", result.source, app.id);
+      if (!this.#stopped && ok && result.images?.length) {
+        const metadata = JSON.parse(app.metadata) as AppMetadata;
+        metadata.images = result.images;
+        this.#db.run(
+          "UPDATE installed_apps SET metadata = ? WHERE id = ?",
+          JSON.stringify(metadata),
+          app.id,
+        );
+      }
     } catch (caught) {
       error = toApiError(caught).code;
-      rollback = job.action === "install" ? "unknown" : "not-needed";
+      rollback = ["install", "retry", "update"].includes(job.action) ? "unknown" : "not-needed";
     }
     if (this.#stopped) return;
     this.#db.transaction(() => {

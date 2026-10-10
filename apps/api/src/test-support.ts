@@ -192,6 +192,8 @@ export class FakeAgent implements AgentGateway {
 
   #defaults(op: string, params: unknown): unknown {
     switch (op) {
+      case "apps.inspect":
+        return { source: "simulated", busy: false, ownership: "prepared", lastRun: null };
       case "system.info":
         return sampleSystemInfo;
       case "agent.ping":

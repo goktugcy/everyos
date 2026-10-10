@@ -12,7 +12,7 @@ import type { Services } from "../../services.ts";
 const Empty = z.strictObject({});
 const Id = z.strictObject({ id: CatalogIdSchema });
 const Action = z.strictObject({
-  action: z.enum(["start", "stop", "restart", "update", "remove"]),
+  action: z.enum(["retry", "start", "stop", "restart", "update", "remove"]),
   confirmId: CatalogIdSchema.optional(),
 });
 export function appRoutes(services: Services): Hono<AppEnv> {
@@ -46,13 +46,35 @@ export function appRoutes(services: Services): Hono<AppEnv> {
     const { id } = parseParams(c, Id);
     const input = await parseJsonBody(c, Action);
     try {
-      if (["remove", "stop", "restart", "update"].includes(input.action) && input.confirmId !== id)
+      if (
+        ["retry", "remove", "stop", "restart", "update"].includes(input.action) &&
+        input.confirmId !== id
+      )
         throw new ApiError(422, "VALIDATION_FAILED", "Application confirmation required");
-      return c.json(services.apps.control(id, input.action, actor(c)), 202);
+      return c.json(await services.apps.control(id, input.action, actor(c)), 202);
     } catch (error) {
       const auth = requireAuth(c);
       services.audit.record({
         action: `apps.${input.action}`,
+        target: id,
+        outcome: error instanceof ApiError && error.status === 403 ? "denied" : "failure",
+        actor: { userId: auth.user.id, username: auth.user.username },
+        ip: c.get("client").ip,
+        details: { reason: error instanceof ApiError ? error.code : "INTERNAL_ERROR" },
+      });
+      throw error;
+    }
+  });
+  app.post("/:id/reconcile", requirePermission("apps:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, Id);
+    await parseJsonBody(c, Empty);
+    try {
+      return c.json(await services.apps.reconcile(id, actor(c)));
+    } catch (error) {
+      const auth = requireAuth(c);
+      services.audit.record({
+        action: "apps.reconcile",
         target: id,
         outcome: error instanceof ApiError && error.status === 403 ? "denied" : "failure",
         actor: { userId: auth.user.id, username: auth.user.username },

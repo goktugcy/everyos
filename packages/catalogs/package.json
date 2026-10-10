@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@otuken/shared": "workspace:*",
+    "re2js": "catalog:",
     "yaml": "catalog:"
   }
 }

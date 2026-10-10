@@ -38,6 +38,8 @@ import {
   UnitNameSchema,
   ManagedAppRunSchema,
   ManagedAppResultSchema,
+  ManagedAppInspectSchema,
+  ManagedAppInspectionSchema,
 } from "@otuken/shared/schemas";
 import { z } from "zod";
 
@@ -99,6 +101,14 @@ function stream<P extends z.ZodType, E extends z.ZodType>(
 const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
+  "apps.inspect": unary({
+    params: ManagedAppInspectSchema,
+    result: ManagedAppInspectionSchema,
+    permission: "apps:read",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 10_000,
+  }),
   "apps.run": unary({
     params: ManagedAppRunSchema,
     result: ManagedAppResultSchema,

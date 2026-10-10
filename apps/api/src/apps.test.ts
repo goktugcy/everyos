@@ -65,6 +65,61 @@ async function finished(ctx: TestContext, id: string) {
   return ctx.services.apps.job(id)!;
 }
 describe("App Store installations", () => {
+  it("reconciles only the exact interrupted job and refuses concurrent agent mutations", async () => {
+    const { ctx, admin, viewer, input } = await fixture();
+    ctx.agent.handlers.set("apps.run", () => ({
+      source: "simulated",
+      ok: true,
+      rollback: "not-needed",
+    }));
+    const job = await json<AppJobView>(await admin.post("/api/apps/install", input));
+    await finished(ctx, job.id);
+    ctx.db.run(
+      "UPDATE app_jobs SET stage = 'failed', error = 'interrupted', rollback = 'unknown' WHERE id = ?",
+      job.id,
+    );
+    ctx.db.run("UPDATE installed_apps SET last_error = 'interrupted' WHERE id = ?", job.appId);
+    const lastRun = {
+      jobId: String(randomUUID()),
+      action: "install",
+      ok: true,
+      rollback: "not-needed",
+      images: [],
+    };
+    ctx.agent.handlers.set("apps.inspect", () => ({
+      source: "simulated",
+      ownership: "deployed",
+      busy: false,
+      lastRun,
+    }));
+    expect((await viewer.post(`/api/apps/${job.appId}/reconcile`, {})).status).toBe(403);
+    expect((await admin.post(`/api/apps/${job.appId}/reconcile`, {})).status).toBe(200);
+    expect(ctx.services.apps.job(job.id)?.error).toBe("interrupted");
+    lastRun.jobId = job.id;
+    await admin.post(`/api/apps/${job.appId}/reconcile`, {});
+    expect(ctx.services.apps.job(job.id)).toMatchObject({
+      stage: "succeeded",
+      error: null,
+      rollback: "not-needed",
+    });
+    const listed = await json<{ apps: InstalledAppView[] }>(await admin.get("/api/apps"));
+    expect(listed.apps[0]?.lastJob?.id).toBe(job.id);
+    expect(listed.apps[0]?.lastError).toBeNull();
+    ctx.agent.handlers.set("apps.inspect", () => ({
+      source: "simulated",
+      ownership: "deployed",
+      busy: true,
+      lastRun,
+    }));
+    expect(
+      (
+        await admin.post(`/api/apps/${job.appId}/actions`, {
+          action: "retry",
+          confirmId: job.appId,
+        })
+      ).status,
+    ).toBe(409);
+  });
   it("validates permission and snapshot, encrypts configuration and never exposes passwords", async () => {
     const { ctx, admin, viewer, operator, input } = await fixture();
     ctx.agent.handlers.set("apps.run", () => ({

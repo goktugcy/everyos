@@ -1,12 +1,34 @@
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import type { CatalogApp } from "@otuken/shared";
-import { cleanCompose, object, parseCompose, VARIABLE } from "./compose.ts";
+import {
+  cleanCompose,
+  CONFIG_PLACEHOLDER,
+  inspectCompose,
+  object,
+  parseCompose,
+  VARIABLE,
+} from "./compose.ts";
 import { CatalogError } from "./fetch.ts";
 import { stringify } from "yaml";
+import { validateField } from "./fields.ts";
 
 export const APP_DATA_PLACEHOLDER = "{{otuken.appData}}";
 export function managedProject(id: string): string {
   return `otk-${id.replaceAll("-", "")}`;
+}
+export function selectArchitecture(app: CatalogApp, architecture: string): CatalogApp {
+  const compose = app.variants?.[architecture];
+  if (!compose) return app;
+  const inspected = inspectCompose(compose);
+  return {
+    ...app,
+    ...inspected,
+    compose,
+    variables: inspected.variables.map((entry) => ({
+      ...entry,
+      ...app.variables.find((field) => field.key === entry.key),
+    })),
+  };
 }
 
 /** Resolve only declared inputs. No process environment participates in interpolation. */
@@ -27,8 +49,25 @@ export function prepareInstall(
     ["APP_ID", id],
     ["APP_DATA_DIR", APP_DATA_PLACEHOLDER],
   ]);
-  for (const entry of app.variables) {
+  const declarations = [...app.variables].sort(
+    (a, b) => Number(/^SERVICE_SUPABASE/.test(a.key)) - Number(/^SERVICE_SUPABASE/.test(b.key)),
+  );
+  for (const entry of declarations) {
     let value = input.variables[entry.key];
+    if (!value && /^SERVICE_(URL|FQDN)_/.test(entry.key)) {
+      const urlKey = entry.key.replace(/^SERVICE_FQDN_/, "SERVICE_URL_");
+      const fqdnKey = entry.key.replace(/^SERVICE_URL_/, "SERVICE_FQDN_");
+      const url = input.variables[urlKey],
+        fqdn = input.variables[fqdnKey];
+      if (entry.key === fqdnKey && url) {
+        try {
+          value = new URL(url).host;
+        } catch {
+          throw new CatalogError("invalid-field-value");
+        }
+      }
+      if (entry.key === urlKey && fqdn) value = `http://${fqdn}`;
+    }
     if (entry.generated && !value) {
       const length = /^SERVICE_(USER|LOWERCASEUSER)_/.test(entry.key)
         ? 16
@@ -40,16 +79,42 @@ export function prepareInstall(
               )?.[1],
             ) || 32,
           );
-      value = /^SERVICE_REALBASE64/.test(entry.key)
-        ? randomBytes(length).toString("base64")
-        : randomBytes(length).toString("hex").slice(0, length);
+      const size =
+        entry.field?.type === "random"
+          ? (entry.field.min ?? Math.min(32, entry.field.max ?? 32))
+          : length;
+      value =
+        /^SERVICE_REALBASE64/.test(entry.key) || entry.field?.encoding === "base64"
+          ? randomBytes(size).toString("base64")
+          : randomBytes(size).toString("hex").slice(0, size);
       if (/^SERVICE_PASSWORDWITHSYMBOLS/.test(entry.key)) value = `${value.slice(0, -1)}!`;
+      if (/^SERVICE_SUPABASE(ANON|SERVICE)_/.test(entry.key)) {
+        const key = vars.get("SERVICE_PASSWORD_JWT");
+        if (!key) throw new CatalogError("missing-jwt-signing-key");
+        const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString(
+          "base64url",
+        );
+        const now = Math.floor(Date.now() / 1000);
+        const body = Buffer.from(
+          JSON.stringify({
+            iss: "supabase",
+            role: entry.key.startsWith("SERVICE_SUPABASEANON_") ? "anon" : "service_role",
+            iat: now,
+            exp: now + 10 * 365 * 86400,
+          }),
+        ).toString("base64url");
+        const signature = createHmac("sha256", key).update(`${header}.${body}`).digest("base64url");
+        value = `${header}.${body}.${signature}`;
+      }
     }
     if (value === undefined && !entry.secret && entry.default !== null) value = entry.default;
     if (value === undefined && entry.secret && entry.default === "") value = "";
     if (value === undefined || (entry.required && !value))
       throw new CatalogError("missing-variable");
     if (value.includes("\0")) throw new CatalogError("invalid-variable");
+    if (value.includes(APP_DATA_PLACEHOLDER) || value.includes(CONFIG_PLACEHOLDER))
+      throw new CatalogError("reserved-variable-value");
+    if (entry.field) validateField(value, entry.field);
     vars.set(entry.key, value);
   }
   const doc = parseCompose(cleanCompose(app.compose));

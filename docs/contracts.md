@@ -293,7 +293,7 @@ export type RiskFlag =
 - Fetching uses an SSRF-safe client: http(s) only, public addresses only unless allowed
   explicitly, redirects re-validated, plus size and time limits.
 
-## 5. Implemented contracts (Phases 1–4 and initial Phase 5)
+## 5. Implemented contracts (Phases 1–5)
 
 - **HTTP API:** [api.md](api.md).
 - **Agent operations:** `packages/agent-protocol/src/operations.ts`. Each operation declares a
@@ -305,8 +305,9 @@ export type RiskFlag =
 - **Docker views:** zod-free types/constants in `packages/shared/src/docker.ts`, runtime schemas
   in `packages/shared/src/schemas/docker.ts`. Only SQLite imports establish imported ownership;
   labels are discovery data. See [docker-management.md](docker-management.md).
-- **Initial App Store views:** zod-free `CatalogAppView`, `CatalogView`, `InstalledAppView` and
+- **App Store views:** zod-free `CatalogAppView`, `CatalogView`, `InstalledAppView` and
   `AppJobView` in `packages/shared/src/catalogs.ts`; strict request/agent schemas in
-  `packages/shared/src/schemas/catalogs.ts`. These are the initial supported subset of §4.2;
-  screenshots, richer metadata and architecture-specific variants remain open. See
+  `packages/shared/src/schemas/catalogs.ts`. Metadata, raster assets, architecture variants,
+  typed fields, immutable deployed images, durable recovery and data-copy eligibility are included.
+  The executable types are authoritative; §4.2 remains the original design sketch. See
   [app-store.md](app-store.md) for the complete current contract and compatibility limits.

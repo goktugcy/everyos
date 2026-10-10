@@ -200,8 +200,10 @@ session. A failed load remains visible with a retry action.
 | `/run/otuken/`            | root:otuken, 0750 | `agent.sock` (0660)                                                          |
 | `/var/log/otuken/`        | –                 | reserved; logs go to journald                                                |
 
-Application data managed by Otuken (Phase 5) lives outside the program and state directories, under
-a configurable data root, so removing or upgrading Otuken never touches it.
+App Store data and root-owned deployment records live under `/var/lib/otuken/apps/<instance>`
+(private root and instance directories). Application removal preserves its data. Decrypted embedded
+configuration uses private root-owned tmpfs at `/run/otuken/app-configs/<instance>`; durable
+configuration stays encrypted. See [app-store.md](app-store.md).
 
 ## Development mode
 

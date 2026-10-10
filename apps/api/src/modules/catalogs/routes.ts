@@ -114,5 +114,21 @@ export function catalogRoutes(services: Services): Hono<AppEnv> {
       throw notFound("Asset");
     }
   });
+  app.get("/apps/:id/screenshots/:index", requirePermission("apps:read"), async (c) => {
+    parseQuery(c, Empty);
+    const { id, index } = parseParams(
+      c,
+      AppId.extend({ index: z.coerce.number().int().min(0).max(11) }),
+    );
+    try {
+      const { content, contentType } = await catalogs.screenshot(id, index);
+      c.header("Content-Type", contentType);
+      c.header("Cache-Control", "private, max-age=3600");
+      c.header("X-Content-Type-Options", "nosniff");
+      return c.body(new Uint8Array(content).buffer);
+    } catch {
+      throw notFound("Asset");
+    }
+  });
   return app;
 }

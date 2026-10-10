@@ -232,7 +232,7 @@ describe("migrate", () => {
         db.exec("DROP TABLE app_jobs; DROP TABLE installed_apps;");
       }
       const result = await migrate(db, OTUKEN_MIGRATIONS, { backupDir: join(dir, "backups") });
-      expect(result.applied).toEqual([5]);
+      expect(result.applied).toEqual([5, 6]);
       expect(
         db.get<{ name: string }>("SELECT name FROM catalogs WHERE id = ?", "existing-catalog")
           ?.name,
@@ -254,7 +254,7 @@ describe("migrate", () => {
       const backup = openDatabase(result.backupPath!, { readOnly: true });
       opened.push(backup);
       expect(currentSchemaVersion(backup)).toBe(4);
-      expect(currentSchemaVersion(db)).toBe(5);
+      expect(currentSchemaVersion(db)).toBe(6);
       expect((await migrate(db, OTUKEN_MIGRATIONS)).applied).toEqual([]);
     },
   );

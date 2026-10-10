@@ -2,7 +2,7 @@ import { chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import { AgentServer } from "@otuken/agent-protocol";
 import { createLogger, serializeError } from "@otuken/logger";
-import { loadKeyFile } from "@otuken/security";
+import { deriveKey, loadKeyFile, SecretBox } from "@otuken/security";
 import { OTUKEN_VERSION } from "@otuken/shared";
 import {
   createDockerClient,
@@ -132,6 +132,7 @@ async function main(): Promise<void> {
       isProtectedContainer,
       apps: new ManagedAppManager({
         docker,
+        secrets: new SecretBox(deriveKey(agentKey, "otuken/agent-apps/v1")),
         root:
           config.mode === "production"
             ? "/var/lib/otuken/apps"

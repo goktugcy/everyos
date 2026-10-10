@@ -4,6 +4,7 @@ import { migration0002 } from "./0002-desktop.ts";
 import { migration0003 } from "./0003-docker.ts";
 import { migration0004 } from "./0004-catalogs.ts";
 import { migration0005 } from "./0005-managed-apps.ts";
+import { migration0006 } from "./0006-app-details.ts";
 
 /** Ordered list of all Otuken schema migrations. Append only. */
 export const OTUKEN_MIGRATIONS: readonly Migration[] = [
@@ -12,4 +13,5 @@ export const OTUKEN_MIGRATIONS: readonly Migration[] = [
   migration0003,
   migration0004,
   migration0005,
+  migration0006,
 ];

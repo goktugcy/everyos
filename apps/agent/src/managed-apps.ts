@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { chmod, lstat, mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, readFile, realpath, rename, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, normalize } from "node:path";
 import {
   OperationError,
@@ -10,6 +10,10 @@ import {
 import { inspectCompose, object, parseCompose } from "@otuken/catalogs/compose";
 import type { DockerApi } from "@otuken/system";
 import { stringify } from "yaml";
+import type { AppImage } from "@otuken/shared";
+import type { SecretBox } from "@otuken/security";
+import { copyManagedData } from "./managed-data.ts";
+import { materializeConfigs } from "./managed-configs.ts";
 
 type RunParams = OperationParams<"apps.run">;
 type RunResult = OperationResult<"apps.run">;
@@ -21,14 +25,64 @@ export class ManagedAppManager {
   readonly #root: string;
   readonly #protected: (name: string) => boolean;
   readonly #busy = new Set<string>();
+  readonly #secrets: SecretBox;
   constructor(options: {
     docker: DockerApi;
     root: string;
     isProtected: (name: string) => boolean;
+    secrets: SecretBox;
   }) {
     this.#docker = options.docker;
     this.#root = options.root;
     this.#protected = options.isProtected;
+    this.#secrets = options.secrets;
+  }
+  async #write(path: string, value: string): Promise<void> {
+    await writeFile(`${path}.tmp`, value, { mode: 0o600 });
+    await rename(`${path}.tmp`, path);
+  }
+  async withProjectLock<T>(project: string | null, run: () => Promise<T>): Promise<T> {
+    if (!project || !/^otk-[a-f0-9]{32}$/.test(project)) return run();
+    const id = project.slice(4).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
+    if (this.#busy.has(id))
+      throw new OperationError("busy", "Managed application operation in progress");
+    this.#busy.add(id);
+    try {
+      return await run();
+    } finally {
+      this.#busy.delete(id);
+    }
+  }
+  async inspect(id: string): Promise<OperationResult<"apps.inspect">> {
+    let ownership: OperationResult<"apps.inspect">["ownership"] = "missing";
+    let lastRun: OperationResult<"apps.inspect">["lastRun"] = null;
+    try {
+      await this.#directory(this.#root, false);
+      const appDir = join(this.#root, id);
+      const info = await lstat(appDir).catch(() => null);
+      if (info) {
+        await this.#directory(appDir, false);
+        const marker = object(
+          JSON.parse(await readFile(join(appDir, "ownership.json"), "utf8").catch(() => "{}")),
+        );
+        if (marker.id === id && marker.project === `otk-${id.replaceAll("-", "")}`)
+          ownership =
+            marker.removed === true
+              ? "removed"
+              : marker.phase === "deployed"
+                ? "deployed"
+                : "prepared";
+        else
+          ownership = await lstat(join(this.#root, `.intent-${id}`))
+            .then(() => "prepared" as const)
+            .catch(() => "conflict" as const);
+        const run = await readFile(join(appDir, "last-run.json"), "utf8").catch(() => null);
+        if (run) lastRun = JSON.parse(run) as NonNullable<typeof lastRun>;
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") ownership = "conflict";
+    }
+    return { source: this.#docker.source, busy: this.#busy.has(id), ownership, lastRun };
   }
   async #directory(path: string, create = true): Promise<void> {
     if (!isAbsolute(path) || normalize(path) !== path)
@@ -52,6 +106,13 @@ export class ManagedAppManager {
     if (this.#busy.has(id) || this.#busy.size >= 2)
       throw new OperationError("busy", "Managed application operation in progress");
     this.#busy.add(id);
+    const copying =
+      params.dataFrom && ["install", "retry"].includes(params.action) ? params.dataFrom : null;
+    if (copying && (copying === id || this.#busy.has(copying))) {
+      this.#busy.delete(id);
+      throw new OperationError("busy", "Source application operation in progress");
+    }
+    if (copying) this.#busy.add(copying);
     try {
       return await this.#run(params, context);
     } catch (error) {
@@ -59,10 +120,11 @@ export class ManagedAppManager {
       throw new OperationError("failed", "Managed application operation failed");
     } finally {
       this.#busy.delete(id);
+      if (copying) this.#busy.delete(copying);
     }
   }
   async #run(
-    { id, action, compose, riskOverride }: RunParams,
+    { id, action, compose, riskOverride, jobId, dataFrom }: RunParams,
     { actor, signal, logger }: OperationContext,
   ): Promise<RunResult> {
     const project = `otk-${id.replaceAll("-", "")}`;
@@ -90,27 +152,72 @@ export class ManagedAppManager {
       (risk) => risk !== "unpinned-image" && risk !== "default-secret",
     );
     if (
-      ["install", "update"].includes(action) &&
+      ["install", "retry", "update"].includes(action) &&
       risks.length &&
       (!riskOverride || actor.kind !== "user" || actor.role !== "admin")
     )
       throw new OperationError("policy_denied", "Administrator risk approval required");
     await this.#directory(this.#root);
     const marker = join(appDir, "ownership.json");
+    const intent = join(this.#root, `.intent-${id}`);
     if (action === "install") {
       if ((await this.#docker.listProjects()).some((entry) => entry.name === project))
         throw new OperationError("conflict", "Project already exists");
       // Exclusive directory creation prevents adopting anything already present on the host.
-      await mkdir(appDir, { mode: 0o700 }).catch(() => {
+      if (
+        await lstat(appDir)
+          .then(() => true)
+          .catch(() => false)
+      )
         throw new OperationError("conflict", "Managed application already exists");
-      });
-      await writeFile(marker, JSON.stringify({ id, project, composeHash: digest(compose) }), {
+      await writeFile(intent, JSON.stringify({ id, project, composeHash: digest(compose) }), {
         flag: "wx",
         mode: 0o600,
       });
+      await mkdir(appDir, { mode: 0o700 }).catch(() => {
+        throw new OperationError("conflict", "Managed application already exists");
+      });
+      await writeFile(
+        marker,
+        JSON.stringify({ id, project, composeHash: digest(compose), phase: "prepared" }),
+        {
+          flag: "wx",
+          mode: 0o600,
+        },
+      );
       await mkdir(dataDir, { mode: 0o777 });
       await chmod(dataDir, 0o777);
     } else {
+      if (action === "retry") {
+        const record = object(JSON.parse(await readFile(intent, "utf8").catch(() => "{}")));
+        if (
+          record.id === id &&
+          record.project === project &&
+          record.composeHash === digest(compose)
+        ) {
+          await mkdir(appDir, { mode: 0o700 }).catch((error: unknown) => {
+            if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+          });
+          await this.#directory(appDir, false);
+          if (
+            !(await lstat(marker)
+              .then(() => true)
+              .catch(() => false))
+          )
+            await writeFile(marker, JSON.stringify({ ...record, phase: "prepared" }), {
+              flag: "wx",
+              mode: 0o600,
+            });
+          if (
+            !(await lstat(dataDir)
+              .then(() => true)
+              .catch(() => false))
+          ) {
+            await mkdir(dataDir, { mode: 0o777 });
+            await chmod(dataDir, 0o777);
+          }
+        }
+      }
       await this.#directory(appDir);
       let ownership: unknown;
       try {
@@ -163,38 +270,119 @@ export class ManagedAppManager {
           if (current === dataDir) break;
           current = dirname(current);
         }
+        const missing: string[] = [];
+        current = source;
+        while (current !== dataDir && !(await lstat(current).catch(() => null))) {
+          missing.push(current);
+          current = dirname(current);
+        }
+        for (const directory of missing.reverse()) {
+          await mkdir(directory, { mode: 0o777 });
+          await chmod(directory, 0o777);
+        }
       }
     }
     const input = stringify(actual, { lineWidth: 0 });
     let ok = false;
+    let images: AppImage[] = [];
+    const deployment = join(appDir, "deployment.box"),
+      deploymentContext = `app:${id}:deployment:v1`;
+    const saved = await readFile(deployment, "utf8").catch(() => null);
+    const previous = saved ? this.#secrets.open(saved, deploymentContext) : null;
+    if (action === "update" && !previous)
+      throw new OperationError(
+        "invalid_params",
+        "Retry installation to establish a pinned deployment before updating",
+      );
+    let runningInput = previous ?? input;
+    let attempted = false;
     try {
+      if (dataFrom && (action === "install" || action === "retry")) {
+        if (dataFrom === id)
+          throw new OperationError("invalid_params", "Cannot copy from the same instance");
+        const sourceDir = join(this.#root, dataFrom);
+        await this.#directory(sourceDir, false);
+        const record = object(
+          JSON.parse(await readFile(join(sourceDir, "ownership.json"), "utf8")),
+        );
+        if (
+          record.id !== dataFrom ||
+          record.project !== `otk-${dataFrom.replaceAll("-", "")}` ||
+          record.removed === true ||
+          !record.composeHash
+        )
+          throw new OperationError("policy_denied", "Source application is not owned");
+        if (
+          (await this.#docker.listContainers()).some(
+            (entry) => entry.project === record.project && entry.state === "running",
+          )
+        )
+          throw new OperationError(
+            "policy_denied",
+            "Source application must be stopped before copying data",
+          );
+        const currentMarker = object(JSON.parse(await readFile(marker, "utf8")));
+        if (currentMarker.dataCopied !== true) {
+          await copyManagedData(join(sourceDir, "data"), dataDir, signal);
+          await this.#write(marker, JSON.stringify({ ...currentMarker, dataCopied: true }));
+        }
+      }
+      if (["install", "retry", "update"].includes(action)) {
+        const resolved = await this.#docker.resolveImages(
+          input,
+          `linux/${process.arch === "x64" ? "amd64" : process.arch}`,
+          action === "update",
+          signal,
+        );
+        runningInput = resolved.compose;
+        images = resolved.images;
+      }
+      attempted = true;
       const result = await this.#docker.runCompose(
         project,
         appDir,
         [],
-        action === "install" ? "up" : action === "remove" ? "down" : action,
+        action === "install" || action === "retry" || action === "update"
+          ? "up"
+          : action === "remove"
+            ? "down"
+            : action,
         signal,
-        input,
+        await materializeConfigs(runningInput, id, this.#docker.source === "simulated"),
       );
       ok = result.ok;
-    } catch {
+    } catch (error) {
+      if (error instanceof OperationError) throw error;
       /* CLI output and exception messages may contain credentials. */
     }
     let rollback: RunResult["rollback"] = "not-needed";
-    if (!ok && action === "install") {
+    if (
+      !ok &&
+      attempted &&
+      (action === "install" || action === "retry" || (action === "update" && previous))
+    ) {
       try {
         const result = await this.#docker.runCompose(
           project,
           appDir,
           [],
-          "down",
+          action === "update" ? "up" : "down",
           AbortSignal.timeout(60_000),
-          input,
+          await materializeConfigs(
+            action === "update" ? (previous ?? input) : runningInput,
+            id,
+            this.#docker.source === "simulated",
+          ),
         );
         rollback = result.ok ? "succeeded" : "failed";
       } catch {
         rollback = "failed";
       }
+    }
+    if (ok && ["install", "retry", "update"].includes(action)) {
+      await this.#write(deployment, this.#secrets.seal(runningInput, deploymentContext));
+      const record = object(JSON.parse(await readFile(marker, "utf8")));
+      await this.#write(marker, JSON.stringify({ ...record, phase: "deployed" }));
     }
     if (ok && action === "remove")
       await writeFile(
@@ -203,6 +391,10 @@ export class ManagedAppManager {
         { mode: 0o600 },
       );
     logger.info("Managed application operation finished", { id, action, ok, rollback });
-    return { source: this.#docker.source, ok, rollback };
+    await this.#write(
+      join(appDir, "last-run.json"),
+      JSON.stringify({ jobId: jobId ?? null, action, ok, rollback, images }),
+    );
+    return { source: this.#docker.source, ok, rollback, images };
   }
 }

@@ -1,22 +1,23 @@
 import { createHash } from "node:crypto";
-import type { CatalogApp, CatalogFormat, LocalizedText } from "@otuken/shared";
+import type { CatalogApp, CatalogFormat } from "@otuken/shared";
 import { stringify } from "yaml";
 import { readZip, safePath } from "./archive.ts";
-import { cleanCompose, inspectCompose, object, parseCompose, strings, text } from "./compose.ts";
+import {
+  cleanCompose,
+  CONFIG_PLACEHOLDER,
+  inspectCompose,
+  object,
+  parseCompose,
+  strings,
+  text,
+} from "./compose.ts";
 import { CatalogError, type CatalogFetcher } from "./fetch.ts";
+import { assetUrl, localized, parseField } from "./fields.ts";
 
 export interface CatalogSnapshot {
   ref: string;
   apps: CatalogApp[];
   skipped: { path: string; reason: string }[];
-}
-function localized(value: unknown): LocalizedText {
-  if (typeof value === "string") return { en: value.slice(0, 16_000) };
-  return Object.fromEntries(
-    Object.entries(object(value))
-      .filter((entry): entry is [string, string] => typeof entry[1] === "string")
-      .map(([key, value]) => [key.slice(0, 32), value.slice(0, 16_000)]),
-  );
 }
 function parseJson(value: string): Record<string, unknown> {
   return object(JSON.parse(value));
@@ -46,7 +47,67 @@ function normalize(
 ): CatalogApp {
   const doc = parseCompose(input);
   const meta = { ...object(doc["x-casaos"]), ...extra };
-  const compose = cleanCompose(input);
+  const base = text(meta.assetBase) ?? "https://invalid.invalid/";
+  const prepared = structuredClone(doc);
+  if (format === "coolify") {
+    const files: { name: string; content: string }[] = [];
+    for (const raw of Object.values(object(prepared.services))) {
+      const service = object(raw);
+      delete service.exclude_from_hc;
+      if (Array.isArray(service.volumes))
+        service.volumes = service.volumes.map((raw: unknown) => {
+          const volume = { ...object(raw) };
+          if (typeof volume.content === "string") {
+            if (typeof volume.target !== "string" || !volume.target.startsWith("/"))
+              throw new CatalogError("invalid-inline-files");
+            const name = `config${files.length}`;
+            files.push({ name, content: volume.content });
+            return {
+              type: "bind",
+              source: `${CONFIG_PLACEHOLDER}/${name}`,
+              target: volume.target,
+              read_only: true,
+            };
+          }
+          if (
+            volume.is_directory === true &&
+            typeof volume.source === "string" &&
+            /^\.\/[A-Za-z0-9_./-]+$/.test(volume.source) &&
+            !volume.source.split("/").includes("..")
+          ) {
+            volume.source = "${APP_DATA_DIR}/" + volume.source.slice(2);
+            delete volume.is_directory;
+            return volume;
+          }
+          return raw;
+        });
+      if (!Array.isArray(service.ports) || !service.ports.length) {
+        const env = Array.isArray(service.environment)
+          ? strings(service.environment).join("\n")
+          : JSON.stringify(service.environment ?? {});
+        const port = Number(
+          env.match(/SERVICE_(?:URL|FQDN)_[A-Za-z0-9_]*_([0-9]{2,5})(?:[^A-Za-z0-9_]|$)/)?.[1],
+        );
+        if (Number.isInteger(port) && port > 0 && port <= 65535) service.ports = [String(port)];
+      }
+    }
+    if (files.length) prepared["x-otuken-files"] = files;
+  }
+  if (format === "casaos-source" || format === "casaos-v2") {
+    for (const raw of Object.values(object(prepared.services))) {
+      const service = object(raw);
+      if (Array.isArray(service.volumes))
+        service.volumes = service.volumes.map((raw: unknown) => {
+          const rewrite = (value: string) =>
+            value.replace(/^\/DATA\/AppData\//, "${APP_DATA_DIR}/");
+          if (typeof raw === "string") return rewrite(raw);
+          const entry = { ...object(raw) };
+          if (typeof entry.source === "string") entry.source = rewrite(entry.source);
+          return entry;
+        });
+    }
+  }
+  const compose = cleanCompose(stringify(prepared));
   const inspected = inspectCompose(compose);
   const services = object(doc.services);
   const main = text(meta.main) ?? Object.keys(services)[0] ?? nativeId;
@@ -65,12 +126,31 @@ function normalize(
     const key = text(entry.env_variable);
     const variable = inspected.variables.find((item) => item.key === key);
     if (variable) {
+      variable.field = parseField(entry);
       if (entry.type === "random") variable.generated = true;
       if (entry.type === "password" || entry.type === "random") variable.secret = true;
       if (entry.required === true) variable.required = true;
       if (entry.default !== undefined && !variable.secret) variable.default = scalar(entry.default);
     }
   }
+  for (const entry of inspected.variables)
+    if (!entry.field && /^SERVICE_(URL|FQDN)_/.test(entry.key))
+      entry.field = parseField({ type: entry.key.startsWith("SERVICE_URL_") ? "url" : "fqdnip" });
+  const variants = Object.fromEntries(
+    Object.entries(object(meta.composeVariants)).map(([arch, compose]) => {
+      if (typeof compose !== "string") throw new CatalogError("invalid-compose-variant");
+      return [
+        arch,
+        normalize(catalogId, ref, path, format, nativeId, compose, { ...meta, composeVariants: {} })
+          .compose,
+      ];
+    }),
+  );
+  const webPort =
+    inspected.ports.find(
+      (port) =>
+        port.service === main && port.protocol === "tcp" && port.host === Number(meta.port_map),
+    ) ?? inspected.ports.find((port) => port.service === main && port.protocol === "tcp");
   return {
     id: `${catalogId}:${nativeId}`,
     nativeId,
@@ -85,19 +165,61 @@ function normalize(
       .map((value) => value.trim().toLowerCase())
       .slice(0, 32),
     icon: text(meta.icon),
+    screenshots: strings(meta.screenshots ?? meta.screenshot_link)
+      .slice(0, 12)
+      .map((url) => assetUrl(url, base))
+      .filter((url): url is string => url !== null),
+    links: {
+      documentation: assetUrl(meta.documentation ?? meta.docs, base),
+      website: assetUrl(meta.website, base),
+      repository: assetUrl(meta.repo ?? meta.repository, base),
+    },
+    notes: localized(object(meta.tips).before_install ?? meta.pre_install_notes),
+    web: {
+      ...(webPort ? { service: main, port: webPort.container } : {}),
+      path:
+        text(meta.index) &&
+        String(meta.index).startsWith("/") &&
+        !String(meta.index).startsWith("//")
+          ? String(meta.index)
+          : "/",
+      scheme: meta.scheme === "https" ? "https" : "http",
+    },
+    variants,
+    contentHash: text(meta.content_hash),
+    ...(text(meta.cacheKey) ? { cacheKey: String(meta.cacheKey) } : {}),
     version: text(meta.version),
     architectures: strings(meta.architectures ?? meta.supported_architectures),
     source: { catalogId, format, ref, path },
     compose,
     ...inspected,
+    risks: [
+      ...new Set([
+        ...inspected.risks,
+        ...Object.values(variants).flatMap((variant) => inspectCompose(variant).risks),
+      ]),
+    ],
   };
 }
 
-function runtipiCompose(dynamic: Record<string, unknown>, config: Record<string, unknown>): string {
+function runtipiCompose(
+  dynamic: Record<string, unknown>,
+  config: Record<string, unknown>,
+  architecture?: string,
+): string {
   if (dynamic.schemaVersion !== 2 || !Array.isArray(dynamic.services))
     throw new CatalogError("unsupported-runtipi-schema");
-  if (Array.isArray(dynamic.overrides) && dynamic.overrides.length)
-    throw new CatalogError("runtipi-architecture-overrides");
+  const selected = new Map(dynamic.services.map((raw) => [text(object(raw).name), object(raw)]));
+  for (const raw of Array.isArray(dynamic.overrides) ? dynamic.overrides : []) {
+    const override = object(raw);
+    if (override.architecture !== architecture) continue;
+    for (const raw of Array.isArray(override.services) ? override.services : []) {
+      const service = object(raw),
+        name = text(service.name);
+      if (!name || !selected.has(name)) throw new CatalogError("invalid-runtipi-override");
+      selected.set(name, { ...selected.get(name), ...service });
+    }
+  }
   const services: Record<string, unknown> = {};
   const fields: Record<string, string> = {
     command: "command",
@@ -139,7 +261,7 @@ function runtipiCompose(dynamic: Record<string, unknown>, config: Record<string,
     "addToMainNetwork",
     ...Object.keys(fields),
   ]);
-  for (const raw of dynamic.services) {
+  for (const raw of selected.values()) {
     const source = object(raw);
     if (Object.keys(source).some((key) => !known.has(key)))
       throw new CatalogError("unsupported-runtipi-field");
@@ -250,6 +372,7 @@ export async function readCatalog(options: {
   url: string;
   format: CatalogFormat;
   fetcher: CatalogFetcher;
+  previous?: CatalogApp[];
 }): Promise<CatalogSnapshot> {
   const { catalogId, url, fetcher } = options;
   const payload = await fetcher.get(url, 24 * 1024 * 1024);
@@ -267,7 +390,10 @@ export async function readCatalog(options: {
     try {
       const id = slug(nativeId);
       if (ids.has(id)) throw new CatalogError("duplicate-native-id");
-      const app = normalize(catalogId, ref, path, format, id, compose, extra);
+      const app = normalize(catalogId, ref, path, format, id, compose, {
+        assetBase: new URL("./", url).href,
+        ...extra,
+      });
       ids.add(id);
       apps.push(app);
     } catch (error) {
@@ -283,7 +409,10 @@ export async function readCatalog(options: {
   if (isZip) files = readZip(payload);
   else {
     const content = payload.toString("utf8");
-    if (/^\s*\{/.test(content)) json = parseJson(content);
+    if (/^\s*[[{]/.test(content)) {
+      const parsed: unknown = JSON.parse(content);
+      json = Array.isArray(parsed) ? { templates: parsed } : object(parsed);
+    }
     files = new Map([["docker-compose.yml", content]]);
   }
   if (json.version === 2 && (json.store_id || Array.isArray(json.apps))) {
@@ -291,10 +420,9 @@ export async function readCatalog(options: {
     let index = json;
     let base = url;
     if (!Array.isArray(index.apps)) {
-      const location = new URL(text(json.url) ?? "./", url);
-      base = location.pathname.endsWith(".json")
-        ? location.href
-        : new URL("index.json", location.href.endsWith("/") ? location : `${location.href}/`).href;
+      base = text(json.index_url)
+        ? new URL(String(json.index_url), url).href
+        : new URL("index.json", url).href;
       index = parseJson((await fetcher.get(base, 4 * 1024 * 1024)).toString("utf8"));
     }
     const entries = index.apps;
@@ -309,11 +437,60 @@ export async function readCatalog(options: {
           const composeUrl = text(entry.compose_url);
           const metaUrl = text(entry.meta_url);
           if (!composeUrl || !metaUrl || !text(entry.id)) throw new CatalogError("invalid-index");
-          const compose = await fetcher.get(new URL(composeUrl, base).href);
-          const meta = parseJson((await fetcher.get(new URL(metaUrl, base).href)).toString("utf8"));
+          const cacheKey = createHash("sha256")
+            .update(JSON.stringify({ base, entry }))
+            .digest("hex");
+          const previous = options.previous?.find(
+            (app) =>
+              app.nativeId === slug(String(entry.id)) &&
+              app.contentHash === entry.content_hash &&
+              app.cacheKey === cacheKey &&
+              app.source.path === composeUrl,
+          );
+          if (
+            previous &&
+            typeof entry.content_hash === "string" &&
+            previous.variants &&
+            previous.screenshots
+          ) {
+            const reused = structuredClone(previous);
+            reused.source.ref = ref;
+            apps.push(reused);
+            ids.add(reused.nativeId);
+            continue;
+          }
+          const compose = await fetcher.get(assetUrl(composeUrl, base) ?? "");
+          const meta = parseJson(
+            (await fetcher.get(assetUrl(metaUrl, base) ?? "")).toString("utf8"),
+          );
+          const variants: Record<string, string> = {};
+          for (const arch of strings(entry.architectures).filter(
+            (arch) => arch === "amd64" || arch === "arm64",
+          )) {
+            try {
+              variants[arch] = cleanCompose(
+                (
+                  await fetcher.get(
+                    assetUrl(composeUrl.replace(/\.ya?ml$/, `.${arch}.yml`), base) ?? "",
+                  )
+                ).toString("utf8"),
+              );
+            } catch (error) {
+              if (!(error instanceof CatalogError && error.reason === "http-error")) throw error;
+            }
+          }
           add(composeUrl, "casaos-v2", String(entry.id), compose.toString("utf8"), {
             ...entry,
             ...meta,
+            icon: assetUrl(
+              String(entry.icon).endsWith(".svg")
+                ? String(entry.icon).replace(/\.svg$/, ".png")
+                : entry.icon,
+              base,
+            ),
+            assetBase: base,
+            cacheKey,
+            composeVariants: variants,
           });
         }
       }),
@@ -324,7 +501,10 @@ export async function readCatalog(options: {
     for (const [index, raw] of json.templates.entries()) {
       const entry = object(raw);
       const path = `templates/${index}`;
+      if (entry.type === "container" || entry.type === undefined) entry.type = 1;
+      if (entry.type === "stack") entry.type = 3;
       try {
+        if (entry.platform === "windows") throw new CatalogError("unsupported-portainer-platform");
         let compose: string;
         if (entry.type === 3) {
           const repo = object(entry.repository);
@@ -348,7 +528,15 @@ export async function readCatalog(options: {
           "portainer",
           text(entry.name) ?? `${slug(text(entry.title) ?? "app")}-${index}`,
           compose,
-          { ...entry, icon: entry.logo },
+          {
+            ...entry,
+            assetBase: url,
+            icon: assetUrl(entry.logo, new URL("./", url).href),
+            form_fields: (Array.isArray(entry.env) ? entry.env : []).map((raw) => {
+              const env = object(raw);
+              return { ...env, env_variable: env.name, type: "text", options: env.select };
+            }),
+          },
         );
       } catch (error) {
         if (
@@ -378,6 +566,7 @@ export async function readCatalog(options: {
       add(id, "coolify", id, Buffer.from(encoded, "base64").toString("utf8"), {
         ...entry,
         title: id,
+        assetBase: new URL("./", url).href,
       });
     }
   } else {
@@ -400,10 +589,10 @@ export async function readCatalog(options: {
           const native =
             files.get(`${dir}/docker-compose.yml`) ?? files.get(`${dir}/docker-compose.yaml`);
           let compose: string;
+          const variants: Record<string, string> = {};
           if (native && object(parseCompose(native)["x-runtipi"]).schema_version) {
             const doc = parseCompose(native);
-            if (object(doc["x-runtipi"]).overrides)
-              throw new CatalogError("runtipi-architecture-overrides");
+            const overrides = object(doc["x-runtipi"]).overrides;
             for (const raw of Object.values(object(doc.services))) {
               const svc = object(raw);
               const meta = object(svc["x-runtipi"]);
@@ -414,12 +603,35 @@ export async function readCatalog(options: {
                 ];
             }
             compose = stringify(doc);
-          } else
-            compose = runtipiCompose(
-              parseJson(files.get(`${dir}/docker-compose.json`) ?? ""),
-              config,
-            );
-          add(path, "runtipi", dir.split("/").at(-1) ?? "app", compose, config);
+            for (const raw of Array.isArray(overrides) ? overrides : []) {
+              const override = object(raw),
+                arch = text(override.architecture);
+              if (!arch || !["amd64", "arm64"].includes(arch)) continue;
+              const variant = structuredClone(doc),
+                services = object(variant.services);
+              const replacements = Array.isArray(override.services)
+                ? Object.fromEntries(
+                    override.services.map((raw) => [String(object(raw).name), object(raw)]),
+                  )
+                : object(override.services);
+              for (const [name, replacement] of Object.entries(replacements)) {
+                if (!services[name]) throw new CatalogError("invalid-runtipi-override");
+                const { name: _name, ...fields } = object(replacement);
+                services[name] = { ...object(services[name]), ...fields };
+              }
+              variants[arch] = cleanCompose(stringify(variant));
+            }
+          } else {
+            const dynamic = parseJson(files.get(`${dir}/docker-compose.json`) ?? "");
+            compose = runtipiCompose(dynamic, config);
+            for (const arch of ["amd64", "arm64"])
+              variants[arch] = runtipiCompose(dynamic, config, arch);
+          }
+          add(path, "runtipi", dir.split("/").at(-1) ?? "app", compose, {
+            ...config,
+            composeVariants: variants,
+            assetBase: new URL("./", url).href,
+          });
         } catch (error) {
           skipped.push({
             path,

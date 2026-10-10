@@ -12,9 +12,11 @@ import { localized } from "./parts.tsx";
 export function InstalledCard({
   app,
   onJob,
+  onChanged,
 }: {
   app: InstalledAppView;
   onJob: (job: AppJobView) => void;
+  onChanged: () => void;
 }) {
   const { t, i18n } = useTranslation();
   const canManage = usePermissions().includes("apps:manage");
@@ -28,7 +30,13 @@ export function InstalledCard({
           name: localized(app.name, i18n.language),
           action: t(`appStore.actions.${action}`),
         }),
-        body: t(action === "remove" ? "appStore.removeBody" : "appStore.confirmBody"),
+        body: t(
+          action === "remove"
+            ? "appStore.removeBody"
+            : action === "update"
+              ? "appStore.updateBody"
+              : "appStore.confirmBody",
+        ),
         confirmLabel: t(`appStore.actions.${action}`),
         danger: action === "remove",
       }))
@@ -59,6 +67,58 @@ export function InstalledCard({
         </span>
       </div>
       <p className="break-all font-mono text-xs text-fg-subtle">{app.project}</p>
+      {app.lastJob ? (
+        <p className="text-xs text-fg-muted">
+          {t("appStore.progress", {
+            action: t(`appStore.actions.${app.lastJob.action}`),
+            stage: t(`appStore.stages.${app.lastJob.stage}`),
+          })}
+          {app.lastJob.stage === "failed"
+            ? ` · ${t(`appStore.rollback.${app.lastJob.rollback}`)}`
+            : ""}
+        </p>
+      ) : null}
+      {app.images?.length ? (
+        <details className="text-xs">
+          <summary className="cursor-pointer text-fg-muted">
+            {t(
+              app.images.some((image) => image.digest !== null)
+                ? "appStore.imageDigests"
+                : "appStore.imageReferences",
+            )}
+          </summary>
+          <ul className="mt-2 break-all font-mono">
+            {app.images.map((image) => (
+              <li key={`${image.reference}:${image.platform}`}>
+                {image.reference} · {image.platform}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+      {app.source === "host" && app.state === "running" ? (
+        <div className="flex flex-wrap gap-3">
+          {app.ports
+            ?.filter(
+              (port, index, ports) =>
+                ports.findIndex((entry) => entry.port === port.port) === index &&
+                (!port.hostIp ||
+                  !["127.0.0.1", "::1"].includes(port.hostIp) ||
+                  ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)),
+            )
+            .map((port) => (
+              <a
+                key={port.port}
+                href={`${app.web?.scheme ?? "http"}://${window.location.hostname}:${port.port}${app.web?.path ?? "/"}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-accent underline"
+              >
+                {t("appStore.launch", { port: port.port })}
+              </a>
+            ))}
+        </div>
+      ) : null}
       {app.lastError ? (
         <Alert tone="warning">{t("appStore.failed", { reason: app.lastError })}</Alert>
       ) : null}
@@ -76,6 +136,35 @@ export function InstalledCard({
               {t(`appStore.actions.${action}`)}
             </Button>
           ))}
+          {app.lastError ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={pending || app.state === "busy"}
+              onClick={() => void act("retry")}
+            >
+              {t("appStore.actions.retry")}
+            </Button>
+          ) : null}
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={pending}
+            onClick={async () => {
+              setPending(true);
+              setError(null);
+              try {
+                await api(`/apps/${app.id}/reconcile`, { method: "POST", body: {} });
+                onChanged();
+              } catch (caught) {
+                setError(caught);
+              } finally {
+                setPending(false);
+              }
+            }}
+          >
+            {t("appStore.reconcile")}
+          </Button>
         </div>
       ) : null}
     </article>

@@ -1,34 +1,38 @@
-# App Store — Phase 5 initial implementation
+# App Store — Phase 5
 
-The App Store now reads real remote catalog data and installs applications through a typed agent
-operation. Phase 5 remains in progress: the working catalog/installation/lifecycle flow does not
-claim full compatibility with every upstream template.
+Phase 5 is implemented and verified with real Docker in a disposable ARM64 Linux VM. The runtime
+contract is standalone Linux Docker Compose. Parsing a catalog does not mean every upstream
+application was deployed; features outside this contract produce explicit blockers/skipped entries.
 
-Schema migration 5 adds missing managed-installation tables for early development databases that
-had already applied the catalog-only form of migration 4. It also preserves installations in
-databases that applied the complete form. Startup creates a pre-migration backup automatically;
-existing catalogs, accounts and settings do not need to be reset.
+## Catalogs and metadata
 
-## Catalogs
+Administrators manage source URLs, format hints and explicit private-network permission. Sync
+commits a complete snapshot atomically; invalid/empty sources and failed downloads preserve the
+previous snapshot. Invalid templates are reported by path/reason. Disabling or removing a catalog
+never removes installations or their source provenance.
 
-Administrators add a source URL, optional format hint, and an explicit per-source private-network
-permission. Catalogs can be synchronized, disabled, enabled, or removed. Synchronization replaces
-the snapshot atomically; a failed download or an empty/invalid source preserves the last successful
-snapshot. Invalid individual templates are reported with their paths and reasons. Disabling or
-removing a catalog never deletes an installation or its provenance.
+Readers support CasaOS/ZimaOS v2 store/index JSON, CasaOS source ZIPs (including Big Bear and the
+compact legacy store), Runtipi native/dynamic v2 ZIPs, Coolify base64 JSON/template directories,
+Portainer legacy/v2/v3 container and GitHub Compose-stack templates, and plain Compose URLs/ZIPs.
+Windows and Swarm entries are explicitly unsupported on this Linux Compose runtime.
 
-Supported readers:
+V2 repository `url` is metadata; the index is fetched beside the store. Prefix-relative assets
+resolve against `base_url`. Matching architecture manifests take precedence. An unchanged native
+content hash plus index/base identity reuses cached manifests; changes fetch fresh content.
+Runtipi architecture overrides merge declared services. Form labels/hints/options/types, numeric
+and length bounds, regex constraints and hex/base64 random fields are retained and checked on the
+server. Untrusted patterns use RE2, avoiding JavaScript backtracking regex execution.
 
-- CasaOS/ZimaOS v2 store/index JSON, with Compose and metadata resolved against `base_url`.
-- CasaOS source ZIPs, including Big Bear and the compact legacy CasaOS store ZIP.
-- Runtipi ZIPs: native `x-runtipi` YAML takes precedence, otherwise dynamic Compose v2 is converted.
-  Obsolete static YAML is not substituted for the current dynamic manifest.
-- Coolify's self-contained JSON with base64 Compose templates, and Compose template directories.
-- Portainer v2/v3 container templates and GitHub-backed Compose stack templates. Swarm templates
-  are reported as unsupported.
-- A plain Compose URL or a ZIP containing Compose files.
+CasaOS `/DATA/AppData/…` becomes isolated `${APP_DATA_DIR}/…`; unrelated host paths retain their
+host-access risk. Fixed container names are removed and default `bridge` becomes the project
+network. Coolify supports password/user/encoding generators, paired URL/FQDN inputs, Supabase JWTs,
+embedded `volumes.content` and explicitly declared relative directory volumes. A service URL's
+explicit port suffix supplies an editable published port when none exists. Existing proxies are
+never enrolled through catalog labels; URLs, DNS, TLS and reverse proxies remain owner-managed.
+Declared Docker health checks stay enforced even when Coolify metadata excludes a service from
+its own health checker.
 
-Useful source URLs (fetched at runtime, never bundled into Otuken):
+Typical runtime sources:
 
 ```text
 https://cdn.jsdelivr.net/gh/IceWhaleTech/CasaOS-AppStore@gh-pages/store.json
@@ -39,102 +43,122 @@ https://cdn.coollabs.io/coolify/service-templates-latest.json
 https://raw.githubusercontent.com/portainer/templates/v3/templates.json
 ```
 
-HTTP(S) only; credentials in URL authority and credential-like query parameters are rejected.
-Every connection validates DNS results and pins the selected address. Redirects repeat this check.
-Loopback/private/reserved addresses are rejected by default; link-local metadata and IPv4-mapped
-IPv6 addresses remain forbidden even with private-network permission. Downloads have a 90-second
-session deadline, a 15-second socket timeout, at most four redirects, a 24 MiB root-body limit,
-512 KiB per manifest, and a 32 MiB total transfer budget. ZIP parsing rejects traversal, symlinks,
-duplicates, encryption, invalid CRCs and oversized metadata. Nothing is extracted or executed.
-Only raster icons are fetched, checked by signature, cached, and served by the authenticated API;
-the browser never hotlinks upstream images or renders catalog HTML.
+HTTP(S) only; URL credentials and credential-like query parameters are rejected. Every connection
+validates DNS and pins the selected address; redirects repeat the check. Nonpublic addresses need
+explicit source permission; link-local metadata and IPv4-mapped IPv6 remain forbidden. Bounds:
+90-second session, 15-second socket timeout, four redirects, 24 MiB root body, 512 KiB manifest and
+32 MiB total transfer. ZIP parsing rejects traversal, symlinks, duplicates, encryption, invalid CRCs
+and oversized metadata. Remote content is neither extracted nor executed.
 
-Logical duplicates use the main image repository and normalized application name. They remain
-separate source variants with an indication in the browser. Snapshot hashes include fetched
-manifests, and every installation preserves the exact source format, snapshot and path.
+Notes/descriptions render as text. Links permit HTTP(S) only. Icons/screenshots use authenticated,
+SSRF-safe raster proxies, PNG/JPEG/WebP signatures and cache invalidation. No browser hotlinks or
+remote HTML. Screenshots are limited to 12 per app and 2 MiB each. Logical duplicates use the main
+image repository and normalized app name and remain selectable variants. Snapshot hashes cover
+manifests/architecture variants; installations retain catalog, format, path and exact snapshot.
 
 ## Installation and ownership
 
-Install requests carry a snapshot identity, declared variables, editable host ports and explicit
-risk acknowledgement. Changed snapshots, unknown/missing variables, incompatible declared
-architectures and unsupported Compose features are rejected. No host process environment is
-inherited. Generated values are created on the server unless the user supplies a declared override;
-the form allows known login credentials to be chosen without exposing generated values.
-Secret-valued variable defaults are hidden
-and require explicit input unless the source declares a supported generator. Fixed upstream
-credential literals are preserved to avoid breaking relationships between services and produce a
-`default-secret` warning that requires acknowledgement. They are public source data, not a safe
-production credential policy.
+Requests carry snapshot identity, declared variables, editable host ports and risk acknowledgement.
+Changed snapshots, unknown/missing inputs, incompatible architectures and unsupported Compose fail.
+No host environment is inherited. Generated values are created on the server or explicitly
+replaced through declared fields. Secret defaults are hidden and require input unless a generator
+exists. Fixed public credential literals remain consistent across services and require warning
+acknowledgement; they are not a production credential policy.
 
-Risks are derived from Compose, not catalog metadata. The installation dialog lists mount sources,
-container targets and read/write modes before acknowledgement. Privileged mode, host namespaces, host
-filesystem/device access, extra capabilities, Docker sockets and unconfined security settings
-require an administrator override. Unpinned images and fixed credential defaults are warnings.
-The agent independently checks these rules; unsupported host-side Compose features cannot be
-overridden. Builds, lifecycle hooks, external/custom-driver resources, env/config/secret files,
-relative binds and unresolved interpolation are rejected.
+The dialog shows images, architectures, ports and mount source/target/access modes. Host paths,
+privileged mode, namespaces, devices, capabilities, Docker sockets and unconfined settings require
+administrator approval. The agent rechecks policy. Builds, hooks, external/custom-driver resources,
+external env/config/secret files, undeclared relative files and unresolved interpolation cannot be
+overridden.
 
-Each installation receives a UUID and an `otk-<UUID-without-dashes>` Compose project. The agent
-refuses existing projects/directories instead of adopting them. Ownership comes from SQLite and
-an agent-owned configuration hash, not container labels. `${APP_DATA_DIR}` resolves only inside
-that instance's agent-owned data directory. Arbitrary source host paths remain explicit host-access
-risks; they are not automatically imported, moved, rewritten or removed.
+Each UUID receives `otk-<UUID-without-dashes>`; existing projects/directories are rejected. Ownership
+comes from SQLite and a private agent configuration hash rather than labels. A private install
+intent permits interrupted directory/marker recovery. `${APP_DATA_DIR}` resolves under
+`/var/lib/otuken/apps/<instance>/data`. Root/instance parents are private; new bind directories allow
+container UIDs to write through mounts without chmod of existing data. Existing components are
+checked for symlinks. Removal retains data and writes an ownership tombstone.
 
-Rendered configuration is encrypted with `SecretBox` using `app:<instanceId>:compose:v1`. The
-agent passes decrypted configuration to Compose through stdin, without plaintext secret files or
-secret command-line arguments. It executes fixed CLI argument arrays against the discovery socket.
-Managed `up` waits up to 120 seconds for services to be running/healthy. Only the job outcome is
-returned; CLI output may contain credentials and is discarded.
+The API seals configuration with `app:<instance>:compose:v1`. The agent seals its pinned deployment
+with a key derived from the persistent agent key and `app:<instance>:deployment:v1`. Compose receives
+stdin, fixed arguments and the discovery socket; secrets never become arguments or plaintext disk
+files. Embedded configs use read-only files under `/run/otuken/app-configs/<instance>/configN`, with
+private root-owned parents on verified Linux tmpfs. Missing/non-tmpfs storage fails explicitly.
+After host reboot, an App Store start/retry may be needed to rematerialize these runtime files.
 
-Failed initial `up` triggers `down` for that new project only, with an independent 60-second
-rollback deadline. Neither rollback nor removal uses volume/image deletion or prune. Application
-data, images and volumes remain. Failed rollback is reported explicitly. A root-owned tombstone
-prevents replaying a removed installation. Protected containers and the development-mode host
-mutation prohibition also apply to managed apps.
+Images resolve for the host architecture, verify against Docker metadata and pin by repository
+digest or immutable local image ID. Wrong platforms/digests fail before deployment. Explicit local
+`pull_policy: never` is respected; updates otherwise pull before changing services. Simulated
+results show references with null digests and the simulation badge.
 
-Installation and lifecycle work runs as bounded API jobs (two concurrent operations, one per
-instance). Read-only SSE exposes queued, executing and terminal states; it does not invent image
-pull percentages. Polling provides a fallback. Audit records contain actor, instance, job and safe
-outcome codes only. After API restart, incomplete jobs are marked interrupted with unknown rollback;
-the installed list derives current running/stopped/missing state from real Docker discovery.
+Managed `up` waits up to 120 seconds for running/healthy services. CLI output is discarded because
+it may contain credentials. Failed initial installation/retry runs `down` only in its new namespace.
+Failed update restores the previous pinned configuration with an independent 60-second deadline;
+pull failure leaves the current deployment intact. No rollback/removal deletes data, images or
+volumes or runs prune. Image rollback does not reverse application database/schema changes; the
+update dialog states this. Application-aware backup/restore belongs to Phase 7.
 
-## HTTP and agent contracts
+Early development installations without an encrypted pinned agent deployment must complete an
+explicit retry before updating. The agent refuses such updates before any image/container mutation
+instead of claiming it can restore an artifact it never recorded.
 
-- `GET/POST /api/catalogs`, `PATCH/DELETE /api/catalogs/:id`, `POST /api/catalogs/:id/sync`:
-  `catalogs:manage`.
-- `GET /api/catalogs/apps`, `GET /api/catalogs/apps/:id/icon`, `GET /api/apps`,
-  `GET /api/apps/jobs/:id`, `GET /api/apps/jobs/:id/events`: `apps:read`.
-- `POST /api/apps/install`, `POST /api/apps/:id/actions`: `apps:manage`; stop/restart/update/remove
-  additionally require the exact instance ID as confirmation.
-- Agent `apps.run`: strict UUID/action/configuration contract, `apps:manage`, user actor only,
-  mutation audit, 12-minute hard timeout and independent agent policy checks.
+## Durable jobs and data transfer
 
-All route bodies, path parameters and query objects are validated; mutation routes retain CSRF
-and session-lock enforcement. Docker discovery marks installed projects `managed`; generic project
-import/action controls do not take over the App Store's configuration.
+API jobs allow two concurrent operations and one per instance. Authenticated read-only SSE reports
+queued/deploying/terminal states, with polling fallback and no invented percentages. Audits record
+safe actor/instance/job/outcome fields, never secrets. The agent writes the API job ID in its terminal
+journal. API restart marks incomplete jobs interrupted with unknown rollback. Reconciliation uses
+only an idle agent's exact latest interrupted job result; older results are never guessed to belong
+to a newer request. Retry rechecks ownership/policy. Generic Docker actions share the project lock,
+including the source lock during copying. Job outcomes survive browser reload. Running/stopped/
+missing/degraded state comes from Docker; launch links use published main-service TCP ports and the
+configured path, respecting loopback bindings.
 
-## Verification and remaining work
+Installations can copy data from an explicitly confirmed, stopped, owned instance whose mounts all
+use its app-data root. The source remains unchanged. Regular files/directories preserve ordinary
+permissions and UID/GID on Linux; symlinks, hardlinks and special files fail. Bounds: 10,000 entries
+and 1 GiB. Live or concurrently changing sources are rejected. External paths/named volumes are
+outside this transfer contract; the owner must choose a compatible target application/version.
 
-The development end-to-end test uses an original HTTP catalog fixture with explicit private-network
-permission and the labeled Docker simulator. It covers source creation/sync, variable input,
-installation, streamed progress, stop/start, source removal without affecting the installation,
-and app removal. Unit/integration tests cover SSRF, archive limits, adapter selection, permissions,
-snapshot preservation, secret encryption/redaction, policy revalidation and rollback failures.
-Real read-only synchronization on 2026-10-10 parsed 178 CasaOS, 359 Coolify and 58 Portainer apps; unsupported
-Portainer entries were recorded rather than silently approximated. No real host Docker resources
-were changed during development.
+## Contracts and verification
 
-Still required before closing Phase 5:
+Catalog mutations/listing require `catalogs:manage`. App/catalog-app/job/raster reads require
+`apps:read`. Install, lifecycle and reconciliation require `apps:manage`, CSRF and an unlocked
+session. Stop/restart/update/remove/retry require exact instance-ID confirmation; copying requires
+exact source-ID confirmation. Bodies/parameters/queries use strict zod. Generic project import/
+actions cannot take over an App Store installation. Agent `apps.run` is a user-only typed audited
+mutation with a 12-minute deadline; `apps.inspect` is a user-only typed read with a 10-second deadline.
 
-- Disposable Linux-host acceptance of successful/failed installs, data permissions, rollback,
-  interrupted-agent recovery and root-agent deployment.
-- Broader upstream compatibility: Runtipi architecture overrides and form constraints/encodings,
-  Coolify ingress/embedded configuration and JWT generators, Portainer legacy/Swarm variants.
-- Incremental v2 fetches, per-architecture digest selection/verification, screenshot caching,
-  richer metadata/environment editing and application launch links.
-- A durable reconciliation/retry UI for interrupted jobs and failed ownership preparation;
-  health-aware update rollback and application-data migration remain unimplemented.
+Live safe reads on 2026-10-10 parsed 178 CasaOS v2 apps (all with architecture variants), 359 Coolify
+apps and 56 Linux Portainer apps. Policy admitted 151, 341 and 50 respectively; 14 Portainer entries
+were skipped. Admission is not proof that every application was deployed. Upstream counts can change.
 
-These limitations are intentionally visible as blockers, unresolved inputs, skipped entries or
-documented unsupported metadata. Parsing a template is not a claim that its application was tested
-on a production host.
+The [Linux acceptance record](phase5-acceptance.json) uses Node 26.11.1, Docker 29.9.0 and Compose
+5.6.0, a root agent and a separate UID 1000 API. Thirteen real scenarios cover healthy HTTP access,
+nonroot data permissions, encryption, tmpfs config, lifecycle, failed-install cleanup, image rollback,
+source-preserving copying, ownership/policy refusal, API-crash recovery/retry, agent restart and
+removal with data/foreign-resource preservation. Only original fixtures were deployed in a dedicated
+VM; owner services were untouched. ARM64/AMD64 packaging and host-specific hardening remain Phase 8.
+
+Unit/API tests cover transport/archive bounds, adapters/forms/JWTs, image identity/platform checks,
+permissions, raster caching, snapshot preservation, encryption, ownership recovery, source locks and
+rollback failures. Browser acceptance covers connected catalog/install/progress/lifecycle behavior
+using the explicitly labeled development simulator.
+
+To stage the standalone acceptance harness:
+
+```bash
+pnpm build
+node scripts/build-app-acceptance.ts
+```
+
+Run `dist/accept-app-store.mjs` only in a new disposable Linux VM/runtime with Node 26, Docker
+CLI/Compose, an empty daemon and shared agent/daemon bind paths. Set
+`OTUKEN_DISPOSABLE_ACCEPTANCE=1`, `OTUKEN_ACCEPTANCE_DOCKER_ID` to that daemon's ID,
+`OTUKEN_ACCEPTANCE_DIST` to the absolute build path and optionally
+`OTUKEN_ACCEPTANCE_STATE_ROOT` to a private output directory. A different/nonempty daemon is refused.
+The API runs as UID/GID 1000 and the result JSON contains no secrets. The shared
+`/run/otuken/app-configs` mount must be tmpfs. Test data and the foreign-resource fixture remain for
+inspection; discard or stop only that dedicated VM afterwards.
+
+Migration 5 repairs early catalog-only v4 development databases without resetting data. Migration 6
+adds deployment metadata and screenshot caching. Startup makes a pre-migration backup automatically.

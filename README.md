@@ -13,10 +13,10 @@ without taking them over.
 
 The name comes from **Ötüken**, the historical and symbolic center of the ancient Turkic world.
 
-> **Status: early development (v0.1.0, Phases 1–4 implemented; Phase 5 in progress).** Authentication,
-> the desktop/mobile shell, Linux integration and Docker management work end to end. The initial
-> multi-catalog [App Store](docs/app-store.md) now includes synchronization, policy-checked installs
-> and lifecycle controls. Production packaging and disposable-host acceptance remain open (see the
+> **Status: early development (v0.1.0, Phases 1–5 implemented).** Authentication,
+> the desktop/mobile shell, Linux integration, Docker management and the multi-catalog
+> [App Store](docs/app-store.md) work end to end. Deployment, image rollback and recovery passed
+> disposable Linux-host acceptance. Production packaging remains open (see the
 > [roadmap](docs/roadmap.md)). Do not expose it to untrusted networks yet.
 
 ## What works today
@@ -38,9 +38,9 @@ The name comes from **Ötüken**, the historical and symbolic center of the anci
   and a mobile-friendly layout.
 - **Desktop and host management.** Persistent windows, themes, virtual desktops, live Linux metrics,
   systemd/journald tools and Docker discovery/lifecycle with explicit ownership and protection rules.
-- **Initial App Store.** Runtime catalog readers, safe synchronization, snapshots, duplicate detection,
-  installation policy, encrypted configuration, isolated rollback, progress streams and lifecycle
-  operations. Supported scope and remaining compatibility work are in [app-store.md](docs/app-store.md).
+- **App Store.** Runtime catalog readers, safe synchronization, architecture variants, rich forms,
+  policy, encryption, immutable images, health-aware rollback, progress streams, durable recovery,
+  lifecycle and owned-data transfer. Scope and verification are in [app-store.md](docs/app-store.md).
 
 ## Quick start (development)
 

@@ -116,20 +116,25 @@ See [docker-management.md](docker-management.md) for measurements and limits. Re
 root-agent deployment still need dedicated disposable-host acceptance; existing owner resources
 were not modified. Managed ownership and App Store installs remain Phase 5.
 
-## Phase 5 — Multi-catalog App Store (in progress)
+## Phase 5 — Multi-catalog App Store (implemented and verified)
 
 Adapters, in order: CasaOS v2, CasaOS source, Big Bear, Runtipi, Coolify, Portainer, plain compose
 (see [research/catalog-formats.md](research/catalog-formats.md)). The phase also covers catalog
 settings, SSRF-safe synchronization with snapshots, duplicate detection, the install policy engine
 (risk flags), transactional install with rollback and streamed progress, and lifecycle operations.
 
-Implemented initial flow: bounded catalog readers, SSRF-safe synchronization and atomic snapshots,
-duplicate indications, administrator catalog management, App Store browsing/search/category
-filters, Compose-derived policy, encrypted installation configuration, typed agent deployment with
-isolated rollback, streamed jobs, lifecycle controls and managed Docker ownership. Real CasaOS,
-Coolify and Portainer sources were read without host mutations; browser acceptance uses a labeled simulator.
-Full upstream compatibility, richer catalog metadata and disposable-host installation acceptance
-remain open. See [app-store.md](app-store.md) for the exact supported scope and remaining work.
+Implemented: bounded catalog readers, safe atomic/incremental synchronization, architecture
+variants, duplicates, catalog management/browsing, metadata/screenshots/forms, Compose policy,
+encrypted configuration, immutable images, health-aware image rollback, durable jobs/reconciliation/
+retry, lifecycle controls, launch links, managed ownership and stopped owned-instance data transfer.
+
+Verified with live catalog reads, API/unit tests, browser acceptance and 13 real Docker scenarios
+in a dedicated ARM64 Linux VM with a root agent and unprivileged API. See
+[app-store.md](app-store.md) and [the acceptance record](phase5-acceptance.json).
+Standalone Linux Compose is the contract: Swarm/Windows/build/hooks/external-file features remain
+explicit unsupported outcomes. Existing proxies/DNS/TLS remain owner-managed; image rollback does
+not promise database downgrade or application-aware restore (Phase 7). Production packaging and
+host-specific hardening remain Phase 8.
 
 ## Phase 6 — Widget platform
 

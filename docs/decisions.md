@@ -171,3 +171,23 @@ multiple services and connection strings may rely on the same literal. Preserve 
 relationships and require acknowledgement of a fixed-credential warning. Declared generators are
 supported explicitly; secret-valued interpolation defaults require user input. Port edits retain
 the source's host-IP binding instead of broadening loopback-only exposure.
+
+## D18 — Durable managed deployments and bounded compatibility (2026-10)
+
+Resolve images for the host architecture and seal the pinned deployment separately at the agent,
+using a key derived from its persistent IPC key. Updates pull before changing services and restore
+the previous artifact after an unhealthy `up`. This restores images/configuration, not application
+database changes. Initial failure/removal never deletes app data, volumes or images.
+
+Persist root-owned install intent and terminal job identity. Reconciliation matches the exact API
+job after interruption and does not infer success from running containers. All managed lifecycle
+paths share project locks, including generic Docker controls and the source of a data copy.
+
+Normalize embedded Coolify configuration into bounded, fixed-name read-only files on verified
+root-private tmpfs; durable content remains sealed. Keep proxy/DNS/TLS configuration owner-managed.
+Swarm, Windows, builds/hooks and external files are explicit unsupported outcomes of the standalone
+Linux Compose contract. Use RE2 for untrusted catalog field constraints. Copy only stopped owned
+app-data files/directories, with entry/byte bounds and no links or special files.
+
+Verified with a root agent, UID 1000 API and real Docker in a dedicated ARM64 Linux VM. See
+[app-store.md](app-store.md) and [phase5-acceptance.json](phase5-acceptance.json).

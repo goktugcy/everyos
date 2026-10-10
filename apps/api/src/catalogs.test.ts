@@ -18,6 +18,45 @@ const source =
   "services:\n  app:\n    image: example.invalid/test:1\n    environment:\n      PASSWORD: ${TEST_PASSWORD:-do-not-disclose}\n";
 
 describe("catalog API", () => {
+  it("proxies and caches raster screenshots while rejecting active content and strict invalid paths", async () => {
+    const { ctx, admin, viewer } = await withRoles();
+    contexts.push(ctx);
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
+    let imageUrl = "https://assets.invalid/screen.png",
+      imageCalls = 0;
+    ctx.services.catalogs = new CatalogService(
+      ctx.db,
+      () => ctx.clock.now,
+      () => ({
+        get: (url) => {
+          if (url.includes("assets.invalid")) {
+            imageCalls++;
+            return Promise.resolve(
+              url.endsWith("svg") ? Buffer.from("<svg onload='alert(1)' />") : png,
+            );
+          }
+          return Promise.resolve(
+            Buffer.from(source + `x-casaos:\n  screenshot_link: ['${imageUrl}']\n`),
+          );
+        },
+      }),
+    );
+    ctx.app = createApp(ctx.services);
+    const catalog = await json<CatalogView>(
+      await admin.post("/api/catalogs", { name: "Images", url: "https://fixture.invalid/a" }),
+    );
+    await admin.post(`/api/catalogs/${catalog.id}/sync`, {});
+    const app = ctx.services.catalogs.apps()[0]!;
+    const url = app.screenshots[0]!;
+    expect(url).toMatch(/^\/api\/catalogs\/apps\//);
+    expect((await viewer.get(url)).headers.get("content-type")).toBe("image/png");
+    expect((await viewer.get(url)).status).toBe(200);
+    expect(imageCalls).toBe(1);
+    expect((await viewer.get(url.replace(/\/0$/, "/12"))).status).toBe(400);
+    imageUrl = "https://assets.invalid/screen.svg";
+    await admin.post(`/api/catalogs/${catalog.id}/sync`, {});
+    expect((await viewer.get(url)).status).toBe(404);
+  });
   it("enforces roles, validates strict input, preserves snapshots on failure and masks secret defaults", async () => {
     const { ctx, admin, viewer, operator } = await withRoles();
     contexts.push(ctx);

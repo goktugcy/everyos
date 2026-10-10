@@ -165,7 +165,9 @@ export default function StoreApp() {
           {installed.loading ? (
             <LoadingBlock />
           ) : installed.data?.apps.length ? (
-            installed.data.apps.map((app) => <InstalledCard key={app.id} app={app} onJob={onJob} />)
+            installed.data.apps.map((app) => (
+              <InstalledCard key={app.id} app={app} onJob={onJob} onChanged={installed.reload} />
+            ))
           ) : (
             <p className="py-10 text-center text-sm text-fg-muted">
               {t("appStore.installedEmpty")}
@@ -190,7 +192,12 @@ export default function StoreApp() {
         ) : null}
       </div>
       {selected ? (
-        <InstallDialog app={selected} onClose={() => setSelected(null)} onJob={onJob} />
+        <InstallDialog
+          app={selected}
+          onClose={() => setSelected(null)}
+          onJob={onJob}
+          sources={installed.data?.apps ?? []}
+        />
       ) : null}
       {adding ? <AddCatalog onClose={() => setAdding(false)} onChanged={reload} /> : null}
     </Tabs.Root>

@@ -2,11 +2,13 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import type { AddressInfo } from "node:net";
 import { crc32, deflateRawSync } from "node:zlib";
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { readCatalog } from "./adapters.ts";
 import { readZip } from "./archive.ts";
 import { inspectCompose, object, parseCompose } from "./compose.ts";
-import { prepareInstall } from "./install.ts";
+import { prepareInstall, selectArchitecture } from "./install.ts";
+import { parseField, validateField } from "./fields.ts";
 import { addressAllowed, createCatalogFetcher, type CatalogFetcher } from "./fetch.ts";
 
 // Original fixtures, intentionally unrelated to upstream catalog content.
@@ -171,6 +173,210 @@ describe("catalog archives and policies", () => {
 });
 
 describe("catalog formats", () => {
+  it("normalizes Coolify embedded configs and declared ingress ports without joining host proxies", async () => {
+    const input = `${compose}    labels: {'traefik.enable': 'true', 'custom.label': 'keep'}\n    environment: [SERVICE_URL_TEST_8080]\n    volumes:\n      - source: ./config.txt\n        target: /config.txt\n        content: 'token=\${SERVICE_PASSWORD_TEST}'\n      - type: bind\n        source: ./uploads\n        target: /uploads\n        is_directory: true\n    exclude_from_hc: true\n`;
+    const app = (
+      await readCatalog({
+        catalogId: id,
+        url: "https://fixture.invalid/c",
+        format: "coolify",
+        fetcher: memory({
+          "https://fixture.invalid/c": JSON.stringify({
+            test: { slogan: "Original", compose: Buffer.from(input).toString("base64") },
+          }),
+        }),
+      })
+    ).apps[0]!;
+    expect(app.blockers).toEqual([]);
+    expect(app.ports[0]?.container).toBe(8080);
+    expect(app.compose).toContain("{{otuken.configDir}}/config0");
+    expect(app.compose).toContain("${APP_DATA_DIR}/uploads");
+    expect(app.compose).not.toContain("traefik.enable");
+    expect(app.compose).toContain("custom.label");
+    const rendered = prepareInstall(app, id, {
+      variables: { SERVICE_URL_TEST_8080: "https://test.example.org" },
+      ports: [{ service: "test", index: 0, host: 9000 }],
+    });
+    expect(rendered).toContain("x-otuken-files");
+    expect(rendered).not.toContain("${SERVICE_PASSWORD_TEST}");
+    expect(() =>
+      inspectCompose(`${compose}x-otuken-files: [{name: ../escape, content: secret}]\n`),
+    ).toThrow("invalid-inline-files");
+  });
+  it("honors v2 repository metadata, prefixed URLs, architecture manifests and incremental identity", async () => {
+    const root = "https://fixture.invalid/store/store.json",
+      index = "https://fixture.invalid/store/index.json",
+      base = "https://assets.invalid/repo@main";
+    const entry = {
+      id: "app",
+      compose_url: "/apps/app.yml",
+      meta_url: "/apps/app.json",
+      content_hash: "native-hash",
+      architectures: ["arm64"],
+    };
+    const contents = {
+      [root]: JSON.stringify({
+        version: 2,
+        store_id: "test",
+        url: "https://github.com/example/repository",
+      }),
+      [index]: JSON.stringify({ version: 2, base_url: base, apps: [entry] }),
+      [`${base}/apps/app.yml`]: compose,
+      [`${base}/apps/app.arm64.yml`]: compose.replace("test:1.0", "arm-test:2"),
+      [`${base}/apps/app.json`]: JSON.stringify({
+        title: "Original",
+        screenshots: ["/apps/screen.png"],
+      }),
+    };
+    const first = await readCatalog({
+      catalogId: id,
+      url: root,
+      format: "auto",
+      fetcher: memory(contents),
+    });
+    expect(first.apps[0]?.screenshots).toEqual([`${base}/apps/screen.png`]);
+    expect(selectArchitecture(first.apps[0]!, "arm64").images).toEqual([
+      "example.invalid/arm-test:2",
+    ]);
+    const second = await readCatalog({
+      catalogId: id,
+      url: root,
+      format: "auto",
+      previous: first.apps,
+      fetcher: memory({ [root]: contents[root], [index]: contents[index] }),
+    });
+    expect(second.ref).toBe(first.ref);
+    const changed = await readCatalog({
+      catalogId: id,
+      url: root,
+      format: "auto",
+      previous: second.apps,
+      fetcher: memory({
+        ...contents,
+        [index]: JSON.stringify({ version: 2, base_url: base, apps: [{ ...entry, version: "2" }] }),
+      }),
+    });
+    expect(changed.ref).not.toBe(first.ref);
+  });
+  it("applies Runtipi architecture overrides and validates declared generated fields", async () => {
+    const archive = zipFixture({
+      "repo/apps/app/config.json": JSON.stringify({
+        tipi_version: 1,
+        name: "App",
+        form_fields: [
+          { env_variable: "TOKEN", type: "random", min: 24, max: 24, encoding: "base64" },
+        ],
+      }),
+      "repo/apps/app/docker-compose.json": JSON.stringify({
+        schemaVersion: 2,
+        services: [
+          {
+            name: "app",
+            image: "example.invalid/x86:1",
+            environment: [{ key: "TOKEN", value: "${TOKEN}" }],
+          },
+        ],
+        overrides: [
+          { architecture: "arm64", services: [{ name: "app", image: "example.invalid/arm:1" }] },
+        ],
+      }),
+    });
+    const app = (
+      await readCatalog({
+        catalogId: id,
+        url: "https://fixture.invalid/t.zip",
+        format: "auto",
+        fetcher: memory({ "https://fixture.invalid/t.zip": archive }),
+      })
+    ).apps[0]!;
+    const selected = selectArchitecture(app, "arm64");
+    expect(selected.images).toEqual(["example.invalid/arm:1"]);
+    const env = object(
+      object(
+        object(parseCompose(prepareInstall(selected, id, { variables: {}, ports: [] })).services)
+          .app,
+      ).environment,
+    );
+    expect(Buffer.from(String(env.TOKEN), "base64")).toHaveLength(24);
+    expect(() =>
+      prepareInstall(selected, id, { variables: { TOKEN: "short" }, ports: [] }),
+    ).toThrow("invalid-field-value");
+  });
+  it("generates Supabase JWTs from one signing key and derives paired service URLs", async () => {
+    const input = `${compose}    environment: [SERVICE_SUPABASEANON_APP, SERVICE_SUPABASESERVICE_APP, SERVICE_PASSWORD_JWT, SERVICE_URL_APP, SERVICE_FQDN_APP]\n`;
+    const app = (
+      await readCatalog({
+        catalogId: id,
+        url: "https://fixture.invalid/a",
+        format: "auto",
+        fetcher: memory({ "https://fixture.invalid/a": input }),
+      })
+    ).apps[0]!;
+    const env = object(
+      object(
+        object(
+          parseCompose(
+            prepareInstall(app, id, {
+              variables: { SERVICE_URL_APP: "https://app.example.org" },
+              ports: [],
+            }),
+          ).services,
+        ).test,
+      ).environment,
+    );
+    expect(env.SERVICE_FQDN_APP).toBe("app.example.org");
+    for (const [name, role] of [
+      ["SERVICE_SUPABASEANON_APP", "anon"],
+      ["SERVICE_SUPABASESERVICE_APP", "service_role"],
+    ]) {
+      const [header, body, signature] = String(env[name!]).split(".");
+      expect(signature).toBe(
+        createHmac("sha256", String(env.SERVICE_PASSWORD_JWT))
+          .update(`${header}.${body}`)
+          .digest("base64url"),
+      );
+      expect(JSON.parse(Buffer.from(body!, "base64url").toString())).toMatchObject({
+        iss: "supabase",
+        role,
+      });
+    }
+    expect(() =>
+      prepareInstall(app, id, { variables: { SERVICE_URL_APP: "file:///host" }, ports: [] }),
+    ).toThrow("invalid-field-value");
+  });
+  it("isolates CasaOS app-data binds and bridge networks while retaining unrelated host risks", async () => {
+    const input = `${compose}    network_mode: bridge\n    volumes: ['/DATA/AppData/demo/cache:/cache', '/DATA/Media:/media:ro']\nx-casaos: {title: Demo}\n`;
+    const app = (
+      await readCatalog({
+        catalogId: id,
+        url: "https://fixture.invalid/a",
+        format: "auto",
+        fetcher: memory({ "https://fixture.invalid/a": input }),
+      })
+    ).apps[0]!;
+    expect(app.compose).toContain("${APP_DATA_DIR}/demo/cache");
+    expect(app.compose).not.toContain("network_mode");
+    expect(app.mounts[1]?.source).toBe("/DATA/Media");
+    expect(app.risks).toContain("sensitive-host-path");
+  });
+  it("supports legacy Portainer lists and skips Windows and Swarm explicitly", async () => {
+    const entries = [
+      { type: "container", title: "Original", image: "example.invalid/app:1" },
+      { type: 1, platform: "windows", image: "example.invalid/win:1" },
+      { type: 2, title: "Swarm" },
+    ];
+    const result = await readCatalog({
+      catalogId: id,
+      url: "https://fixture.invalid/p",
+      format: "auto",
+      fetcher: memory({ "https://fixture.invalid/p": JSON.stringify(entries) }),
+    });
+    expect(result.apps).toHaveLength(1);
+    expect(result.skipped.map((item) => item.reason)).toEqual([
+      "unsupported-portainer-platform",
+      "unsupported-portainer-type",
+    ]);
+  });
   it("generates credentials with declared sizes and accepts only declared overrides", async () => {
     const input = `${compose}    environment: [SERVICE_USER_TEST_64_NAME, SERVICE_PASSWORD_64_TEST, SERVICE_PASSWORDWITHSYMBOLS_TEST, SERVICE_HEX_128_TEST]\n`;
     const result = await readCatalog({
@@ -365,5 +571,27 @@ describe("catalog formats", () => {
         }),
       ),
     ).rejects.toThrow("unsupported-umbrel");
+  });
+});
+
+describe("untrusted catalog form constraints", () => {
+  it.each([
+    { type: "number", min: 2, max: 4 },
+    { type: "boolean" },
+    { type: "ip" },
+    { type: "email" },
+    { type: "fqdn" },
+    { type: "url" },
+    { regex: "^[a-z]{3}$" },
+    { options: [{ value: "allowed" }] },
+  ])("rejects an invalid field value for %j", (raw) => {
+    expect(() => validateField("invalid value", parseField(raw))).toThrow("invalid-field-value");
+  });
+  it("bounds unsafe patterns and rejects unsupported backreferences without running JavaScript regex", () => {
+    expect(() => parseField({ regex: "a".repeat(513) })).toThrow("unsupported-field-pattern");
+    expect(() => parseField({ regex: "(a)\\1" })).toThrow("unsupported-field-pattern");
+    expect(() => validateField("a".repeat(4000) + "!", parseField({ regex: "^(a+)+$" }))).toThrow(
+      "invalid-field-value",
+    );
   });
 });

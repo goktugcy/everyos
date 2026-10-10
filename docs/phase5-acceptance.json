@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-10T19:44:44.784Z",
+  "platform": "linux/arm64",
+  "node": "v26.11.1",
+  "docker": "29.9.0",
+  "compose": "5.6.0",
+  "apiUid": 1000,
+  "agentUid": 0,
+  "checks": [
+    "root agent and UID 1000 API communicate through group-restricted IPC",
+    "real healthy installation, immutable image identity and nonroot writable data",
+    "embedded secret configuration is readable by nonroot containers and exists only on verified tmpfs",
+    "secrets stay encrypted in API and agent records and absent from views/audit",
+    "real stop/start lifecycle",
+    "failed update restores previous healthy pinned image and preserves data",
+    "failed installation removes only its own containers",
+    "failed installation retries without adopting unrelated state",
+    "stopped owned-instance data copies to a new instance without changing its source",
+    "foreign namespace and unapproved host access remain protected",
+    "API crash reconciles the exact durable agent job and supports retry",
+    "agent restart retains ownership and decrypts pinned deployment",
+    "removal retains application data and leaves foreign resources running"
+  ]
+}

@@ -158,6 +158,29 @@ Every stream (`/events`, `/logs/stream`, Docker logs) re-checks access every 15 
 it closes when the session is locked, revoked or expired, the account is disabled, or the role no
 longer grants the permission. Opening a stream from a locked session returns `423`.
 
+## App Store
+
+All route parameters, queries and bodies are strict. Mutations require CSRF and an unlocked
+session. Catalog management is administrator-only; installed provenance survives source removal.
+
+| Method & path                               | Permission        | Description                                                                                                                                                                     |
+| ------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET/POST /catalogs`                        | `catalogs:manage` | List/add sources; input `{name, url, format?, allowPrivate?}`.                                                                                                                  |
+| `PATCH/DELETE /catalogs/:id`                | `catalogs:manage` | Enable/disable with `{enabled}` or remove with `{}`.                                                                                                                            |
+| `POST /catalogs/:id/sync`                   | `catalogs:manage` | `{}`; atomically sync or preserve the old snapshot on failure.                                                                                                                  |
+| `GET /catalogs/apps`                        | `apps:read`       | Metadata, variables, ports/mounts, risks/blockers and duplicate identities; never rendered Compose or secrets.                                                                  |
+| `GET /catalogs/apps/:id/icon`               | `apps:read`       | Authenticated raster icon proxy.                                                                                                                                                |
+| `GET /catalogs/apps/:id/screenshots/:index` | `apps:read`       | Cached raster screenshot, index 0–11.                                                                                                                                           |
+| `GET /apps`                                 | `apps:read`       | Real container state, provenance, image identities, launch ports and persisted latest job.                                                                                      |
+| `POST /apps/install`                        | `apps:manage`     | `{appId, snapshot, variables, ports, acknowledgeRisks, dataFrom?, confirmDataFrom?}` → `202 AppJobView`; host-access risks additionally require admin.                          |
+| `POST /apps/:id/actions`                    | `apps:manage`     | `{action: start/stop/restart/update/remove/retry, confirmId?}` → `202 AppJobView`; every action except start requires exact ID confirmation. Risky update/retry requires admin. |
+| `POST /apps/:id/reconcile`                  | `apps:manage`     | `{}`; reconcile only the exact interrupted agent job; return ownership/busy/latest job.                                                                                         |
+| `GET /apps/jobs/:id`                        | `apps:read`       | Persisted progress, safe error and explicit rollback outcome.                                                                                                                   |
+| `GET /apps/jobs/:id/events`                 | `apps:read`       | Read-only SSE `progress`/`end`; session/permission checks continue during the stream.                                                                                           |
+
+See [app-store.md](app-store.md) for generators, data-copy limits, unsupported formats and rollback
+semantics. Launch links and successful job outcomes do not promise application-level data rollback.
+
 ## Docker
 
 Routes reject unknown query/body fields. Queries are empty except for logs; image/network/import

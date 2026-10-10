@@ -211,6 +211,22 @@ export const en: Messages = {
     docker: "Docker",
   },
   appStore: {
+    choose: "Choose",
+    screenshot: "Screenshot {{index}}",
+    links: { documentation: "Documentation", website: "Website", repository: "Source repository" },
+    dataSource: "Copy data from installation",
+    freshData: "Create new application data",
+    dataCopyHint:
+      "Only a stopped installation's Otuken-owned data is copied. The source is preserved; external paths and named volumes are not migrated.",
+    copyConfirmTitle: "Copy installation data",
+    copyConfirmBody:
+      "The selected stopped installation's data will be copied into a separate directory for the new instance. Source data is preserved. The copy must be compatible with the target application version.",
+    reconcile: "Reconcile actual state",
+    imageDigests: "Verified image versions",
+    imageReferences: "Image references",
+    launch: "Open application · {{port}}",
+    updateBody:
+      "Images are updated and services must become running/healthy. On failure the previous pinned images are restored. Application database changes are not automatically reverted.",
     browse: "Catalog",
     installed: "Installed apps",
     catalogs: "Catalog sources",
@@ -265,11 +281,13 @@ export const en: Messages = {
     installedEmpty: "No apps have been installed with Otuken yet.",
     states: {
       running: "Running",
+      degraded: "Unhealthy or incomplete services",
       stopped: "Stopped",
       missing: "Container not found",
       busy: "Operation in progress",
     },
     actions: {
+      retry: "Retry installation",
       start: "Start",
       stop: "Stop",
       restart: "Restart",

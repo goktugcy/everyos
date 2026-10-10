@@ -47,6 +47,16 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await expect(app).toContainText("Durduruldu");
   await app.getByRole("button", { name: "Başlat", exact: true }).click();
   await expect(app).toContainText("Çalışıyor");
+  await page.reload();
+  await expect(store).toBeVisible();
+  await store.getByRole("tab", { name: "Kurulu uygulamalar", exact: true }).click();
+  await expect(app).toContainText("Başlat: Tamamlandı");
+  const reconciliation = page.waitForResponse(
+    (response) => response.url().endsWith("/reconcile") && response.request().method() === "POST",
+  );
+  await app.getByRole("button", { name: "Gerçek durumu uzlaştır", exact: true }).click();
+  expect((await reconciliation).status()).toBe(200);
+  await expect(app).toContainText("Çalışıyor");
   const catalogs = (await (await page.request.get("/api/catalogs")).json()) as {
     catalogs: { id: string; name: string }[];
   };

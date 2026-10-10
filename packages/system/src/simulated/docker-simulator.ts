@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { parse as parseYaml } from "yaml";
 import type {
+  AppImage,
   ComposeAction,
   ContainerDetail,
   ContainerLogLine,
@@ -336,6 +337,15 @@ export function createDockerSimulator(
 
   return {
     source: "simulated",
+    resolveImages(input: string, platform: string) {
+      const doc = parseYaml(input) as { services: Record<string, { image: string }> };
+      const images: AppImage[] = Object.values(doc.services).map((service) => ({
+        reference: service.image,
+        digest: null,
+        platform,
+      }));
+      return Promise.resolve({ compose: input, images });
+    },
 
     status: () =>
       Promise.resolve({

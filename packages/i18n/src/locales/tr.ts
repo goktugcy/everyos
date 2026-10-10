@@ -222,6 +222,22 @@ export const tr = {
     docker: "Docker",
   },
   appStore: {
+    choose: "Seçin",
+    screenshot: "Ekran görüntüsü {{index}}",
+    links: { documentation: "Dokümantasyon", website: "Web sitesi", repository: "Kaynak deposu" },
+    dataSource: "Verileri alınacak kurulum",
+    freshData: "Yeni uygulama verileri oluştur",
+    dataCopyHint:
+      "Yalnızca durdurulmuş bir kurulumun Otuken’e ait verileri kopyalanır. Kaynak kurulum korunur; harici dizinler ve named volume’lar taşınmaz.",
+    copyConfirmTitle: "Kurulum verilerini kopyala",
+    copyConfirmBody:
+      "Seçilen durdurulmuş kurulumun verileri yeni kurulumun ayrı dizinine kopyalanacak. Kaynak veriler silinmez. Kopya, hedef uygulamanın sürümüyle uyumlu olmalıdır.",
+    reconcile: "Gerçek durumu uzlaştır",
+    imageDigests: "Doğrulanmış imaj sürümleri",
+    imageReferences: "İmaj referansları",
+    launch: "Uygulamayı aç · {{port}}",
+    updateBody:
+      "İmajlar güncellenir ve hizmetlerin çalışması/sağlığı beklenir. Başarısız olursa önceki sabitlenmiş imajlara dönülür. Uygulamanın kendi veritabanı değişiklikleri otomatik olarak geri alınmaz.",
     browse: "Katalog",
     installed: "Kurulu uygulamalar",
     catalogs: "Katalog kaynakları",
@@ -276,11 +292,13 @@ export const tr = {
     installedEmpty: "Henüz Otuken ile kurulmuş uygulama yok.",
     states: {
       running: "Çalışıyor",
+      degraded: "Sağlıksız veya eksik servis",
       stopped: "Durduruldu",
       missing: "Konteyner bulunamadı",
       busy: "İşlem sürüyor",
     },
     actions: {
+      retry: "Kurulumu yeniden dene",
       start: "Başlat",
       stop: "Durdur",
       restart: "Yeniden başlat",

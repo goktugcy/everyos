@@ -3,6 +3,7 @@ import { totalmem } from "node:os";
 import { createInterface } from "node:readline";
 import { StringDecoder } from "node:string_decoder";
 import type {
+  AppImage,
   ComposeAction,
   ComposeActionResult,
   ComposeFileCheck,
@@ -20,6 +21,7 @@ import type {
 } from "@otuken/shared";
 import { mapLimit, pathKind } from "../fs-utils.ts";
 import { checkComposeFiles, ComposeError, detectCompose, runCompose } from "./compose.ts";
+import { resolveManagedImages } from "./managed-images.ts";
 import {
   composeProjects,
   LogDemuxer,
@@ -70,6 +72,12 @@ export interface LogOptions {
  * validated identifiers.
  */
 export interface DockerApi {
+  resolveImages(
+    input: string,
+    platform: string,
+    update: boolean,
+    signal?: AbortSignal,
+  ): Promise<{ compose: string; images: AppImage[] }>;
   readonly source: "host" | "simulated";
   status(): Promise<DockerStatus>;
   listContainers(): Promise<ContainerSummary[]>;
@@ -268,6 +276,10 @@ export function createDockerClient(options: DockerClientOptions = {}): DockerApi
 
   return {
     source: "host",
+    async resolveImages(input, platform, update, signal) {
+      const { path } = await transport.connection();
+      return resolveManagedImages(path, input, platform, update, signal);
+    },
 
     async status() {
       const empty = { total: 0, running: 0, paused: 0, stopped: 0 };

@@ -16,6 +16,31 @@ export function text(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
+export const CONFIG_PLACEHOLDER = "{{otuken.configDir}}";
+export function inlineFiles(doc: Record<string, unknown>): { name: string; content: string }[] {
+  const raw = doc["x-otuken-files"];
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw) || raw.length > 50) throw new CatalogError("invalid-inline-files");
+  const names = new Set<string>();
+  let bytes = 0;
+  return raw.map((value: unknown) => {
+    const file = object(value);
+    if (
+      Object.keys(file).some((key) => key !== "name" && key !== "content") ||
+      typeof file.name !== "string" ||
+      !/^config[0-9]{1,2}$/.test(file.name) ||
+      names.has(file.name) ||
+      typeof file.content !== "string" ||
+      file.content.includes("\0") ||
+      Buffer.byteLength(file.content) > 64 * 1024 ||
+      (bytes += Buffer.byteLength(file.content)) > 256 * 1024
+    )
+      throw new CatalogError("invalid-inline-files");
+    names.add(file.name);
+    return { name: file.name, content: file.content };
+  });
+}
+
 export function parseCompose(input: string): Record<string, unknown> {
   if (Buffer.byteLength(input) > 512 * 1024) throw new CatalogError("too-large");
   const result: unknown = parse(input, { maxAliasCount: 50, uniqueKeys: true });
@@ -44,13 +69,14 @@ function values(
 
 export const VARIABLE =
   /\$\$|\$\{([A-Za-z_][A-Za-z0-9_]*)(?:(:?[-+?])([^}]*))?\}|\$([A-Za-z_][A-Za-z0-9_]*)/g;
-const SECRET = /PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|PRIVATE_KEY|JWT/i;
+const SECRET = /PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|PRIVATE_KEY|JWT|SUPABASEANON|SUPABASESERVICE/i;
 const PLATFORM = new Set(["AppID", "APP_ID", "APP_DATA_DIR"]);
 
 export function inspectCompose(
   compose: string,
 ): Pick<CatalogApp, "images" | "risks" | "blockers" | "variables" | "ports" | "mounts"> {
   const doc = parseCompose(compose);
+  const configNames = new Set(inlineFiles(doc).map((file) => file.name));
   const risks = new Set<InstallRisk>();
   const blockers = new Set<string>();
   const images: string[] = [];
@@ -151,11 +177,17 @@ export function inspectCompose(
         risks.add("sensitive-host-path");
       if (source?.startsWith(".") || source?.startsWith("~")) blockers.add("compose.relative-bind");
       if (
+        source?.startsWith(CONFIG_PLACEHOLDER) &&
+        !configNames.has(source.slice(CONFIG_PLACEHOLDER.length + 1))
+      )
+        blockers.add("compose.config-reference");
+      if (
         entry.type === "bind" &&
         source &&
         !source.startsWith("/") &&
         !source.startsWith("${APP_DATA_DIR}") &&
-        !source.startsWith("{{otuken.appData}}")
+        !source.startsWith("{{otuken.appData}}") &&
+        !source.startsWith(`${CONFIG_PLACEHOLDER}/`)
       )
         blockers.add("compose.relative-bind");
     }
@@ -206,7 +238,7 @@ export function inspectCompose(
           secret: SECRET.test(key),
           default: null,
           generated:
-            /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX)|OTUKEN_SECRET_)/.test(
+            /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX|SUPABASEANON|SUPABASESERVICE)|OTUKEN_SECRET_)/.test(
               key,
             ),
         });
@@ -225,7 +257,9 @@ export function inspectCompose(
         secret: SECRET.test(key),
         default: fallback,
         generated:
-          /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX)|OTUKEN_SECRET_)/.test(key),
+          /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX|SUPABASEANON|SUPABASESERVICE)|OTUKEN_SECRET_)/.test(
+            key,
+          ),
       });
     }
   });
@@ -244,10 +278,14 @@ export function cleanCompose(input: string): string {
   const doc = parseCompose(input);
   delete doc.name;
   delete doc.version;
-  for (const key of Object.keys(doc)) if (key.startsWith("x-")) delete doc[key];
+  inlineFiles(doc);
+  for (const key of Object.keys(doc))
+    if (key.startsWith("x-") && key !== "x-otuken-files") delete doc[key];
   for (const raw of Object.values(object(doc.services))) {
     const service = object(raw);
     delete service.container_name;
+    // Compose's project network replaces the unscoped default bridge used by CasaOS.
+    if (service.network_mode === "bridge") delete service.network_mode;
     for (const key of Object.keys(service)) if (key.startsWith("x-")) delete service[key];
     const environment = Array.isArray(service.environment)
       ? Object.fromEntries(
@@ -258,6 +296,15 @@ export function cleanCompose(input: string): string {
         )
       : object(service.environment);
     if (service.environment !== undefined) service.environment = environment;
+    // Catalogs cannot enroll themselves into an existing host reverse proxy.
+    if (Array.isArray(service.labels))
+      service.labels = strings(service.labels).filter(
+        (label) => !/^(traefik|caddy)\./i.test(label),
+      );
+    else if (service.labels)
+      service.labels = Object.fromEntries(
+        Object.entries(object(service.labels)).filter(([key]) => !/^(traefik|caddy)\./i.test(key)),
+      );
   }
   return stringify(doc, { lineWidth: 0 });
 }

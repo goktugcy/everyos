@@ -22,6 +22,31 @@ export const INSTALL_RISKS = [
 export type InstallRisk = (typeof INSTALL_RISKS)[number];
 export type CatalogFormat = (typeof CATALOG_FORMATS)[number];
 export type LocalizedText = Record<string, string>;
+export interface InstallField {
+  label: LocalizedText;
+  hint: LocalizedText;
+  type:
+    | "text"
+    | "password"
+    | "random"
+    | "boolean"
+    | "number"
+    | "email"
+    | "url"
+    | "ip"
+    | "fqdn"
+    | "fqdnip";
+  min: number | null;
+  max: number | null;
+  pattern: string | null;
+  options: { label: string; value: string }[];
+  encoding: "hex" | "base64" | null;
+}
+export interface AppImage {
+  reference: string;
+  digest: string | null;
+  platform: string;
+}
 
 export interface CatalogApp {
   id: string;
@@ -35,6 +60,13 @@ export interface CatalogApp {
   architectures: string[];
   source: { catalogId: string; format: CatalogFormat; ref: string; path: string };
   images: string[];
+  variants: Record<string, string>;
+  contentHash: string | null;
+  cacheKey?: string;
+  screenshots: string[];
+  links: { documentation: string | null; website: string | null; repository: string | null };
+  notes: LocalizedText;
+  web: { path: string; scheme: "http" | "https"; service?: string; port?: number };
   risks: InstallRisk[];
   /** Unsupported host-side features are never eligible for an override. */
   blockers: string[];
@@ -44,6 +76,7 @@ export interface CatalogApp {
     secret: boolean;
     default: string | null;
     generated: boolean;
+    field?: InstallField;
   }[];
   ports: {
     service: string;
@@ -61,7 +94,7 @@ export interface CatalogApp {
   }[];
   compose: string;
 }
-export type CatalogAppView = Omit<CatalogApp, "compose"> & { duplicates: string[] };
+export type CatalogAppView = Omit<CatalogApp, "compose" | "variants"> & { duplicates: string[] };
 export interface CatalogView {
   id: string;
   name: string;
@@ -76,7 +109,15 @@ export interface CatalogView {
   lastError: string | null;
 }
 
-export const APP_ACTIONS = ["install", "start", "stop", "restart", "update", "remove"] as const;
+export const APP_ACTIONS = [
+  "install",
+  "retry",
+  "start",
+  "stop",
+  "restart",
+  "update",
+  "remove",
+] as const;
 export type AppAction = (typeof APP_ACTIONS)[number];
 export interface InstalledAppView {
   id: string;
@@ -84,9 +125,14 @@ export interface InstalledAppView {
   project: string;
   provenance: CatalogApp["source"];
   source: "host" | "simulated";
-  state: "running" | "stopped" | "missing" | "busy";
+  state: "running" | "degraded" | "stopped" | "missing" | "busy";
   lastError: string | null;
   installedAt: number;
+  images: AppImage[];
+  web: CatalogApp["web"];
+  ports: { port: number; hostIp: string | null }[];
+  lastJob: AppJobView | null;
+  dataCopyEligible: boolean;
 }
 export interface AppJobView {
   id: string;
