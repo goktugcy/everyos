@@ -13,12 +13,13 @@ without taking them over.
 
 The name comes from **Ötüken**, the historical and symbolic center of the ancient Turkic world.
 
-> **Status: early development (v0.1.0, Phase 1 of 8 complete).** The foundation works end to end:
-> authentication with optional 2FA, the privileged agent, real host information, and the Turkish
-> and English UI. The desktop shell, Docker management, the App Store and packaging come in the
-> next phases (see the [roadmap](docs/roadmap.md)). Do not expose it to untrusted networks yet.
+> **Status: early development (v0.1.0, Phases 1–4 implemented; Phase 5 in progress).** Authentication,
+> the desktop/mobile shell, Linux integration and Docker management work end to end. The initial
+> multi-catalog [App Store](docs/app-store.md) now includes synchronization, policy-checked installs
+> and lifecycle controls. Production packaging and disposable-host acceptance remain open (see the
+> [roadmap](docs/roadmap.md)). Do not expose it to untrusted networks yet.
 
-## What works today (Phase 1)
+## What works today
 
 - **Secure first-run setup.** The first administrator can only be created with a one-time token
   stored on the server, so nobody else on the network can claim the instance.
@@ -35,6 +36,11 @@ The name comes from **Ötüken**, the historical and symbolic center of the anci
   data is explained, never invented.
 - **Web client.** React, glass UI, Turkish by default with English available, accessible forms,
   and a mobile-friendly layout.
+- **Desktop and host management.** Persistent windows, themes, virtual desktops, live Linux metrics,
+  systemd/journald tools and Docker discovery/lifecycle with explicit ownership and protection rules.
+- **Initial App Store.** Runtime catalog readers, safe synchronization, snapshots, duplicate detection,
+  installation policy, encrypted configuration, isolated rollback, progress streams and lifecycle
+  operations. Supported scope and remaining compatibility work are in [app-store.md](docs/app-store.md).
 
 ## Quick start (development)
 

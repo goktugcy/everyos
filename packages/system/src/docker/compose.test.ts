@@ -23,6 +23,24 @@ afterEach(() => {
 });
 
 describe("controlled Compose execution", () => {
+  it("pipes managed configuration through stdin without secret files", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "otk-compose-stdin-"));
+    directories.push(directory);
+    const input =
+      "services:\n  app:\n    image: example.invalid/test:1\n    environment: {PASSWORD: original-secret}\n";
+    await runCompose(
+      "otk-original",
+      directory,
+      [],
+      "up",
+      "/run/custom-docker.sock",
+      undefined,
+      input,
+    );
+    const [, args, options] = vi.mocked(runCapture).mock.calls.at(-1)!;
+    expect(args).toEqual(expect.arrayContaining(["--file", "-", "up", "--detach"]));
+    expect(options).toMatchObject({ input, maxOutputBytes: 0 });
+  });
   it("uses the discovery socket and never removes volumes or images", async () => {
     const directory = mkdtempSync(join(tmpdir(), "otk-compose-run-"));
     directories.push(directory);

@@ -22,6 +22,8 @@ import { SessionService } from "./modules/auth/session-service.ts";
 import { SetupService } from "./modules/setup/setup-service.ts";
 import { UserRepository } from "./modules/users/user-repository.ts";
 import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
+import { CatalogService } from "./modules/catalogs/catalog-service.ts";
+import { AppService } from "./modules/apps/app-service.ts";
 
 /** The subset of the agent client the HTTP layer depends on. */
 export type AgentGateway = Pick<AgentClient, "state" | "call" | "stream">;
@@ -55,6 +57,8 @@ export interface Services {
   metrics: MetricsHub;
   docker: DockerHub;
   dockerProjects: DockerProjectRepository;
+  catalogs: CatalogService;
+  apps: AppService;
   /** How often open event streams re-check access and send a keep-alive. */
   eventStreamHeartbeatMs: number;
   limiters: Limiters;
@@ -123,6 +127,9 @@ export function createLimiters(now: () => number): Limiters {
 export function createServices(deps: ServiceDependencies): Services {
   const now = deps.now ?? Date.now;
   const users = new UserRepository(deps.db, now);
+  const secrets = new SecretBox(deriveKey(deps.masterKey, "otuken/secret-box/v1"));
+  const catalogs = new CatalogService(deps.db, now);
+  const audit = new AuditLog(deps.db, deps.logger, now);
   return {
     config: deps.config,
     logger: deps.logger,
@@ -139,18 +146,20 @@ export function createServices(deps: ServiceDependencies): Services {
       deriveKey(deps.masterKey, "otuken/csrf/v1"),
       now,
     ),
-    audit: new AuditLog(deps.db, deps.logger, now),
+    audit,
     setup: new SetupService({
       users,
       tokenFile: deps.config.paths.setupTokenFile,
       logger: deps.logger,
       revealTokenInLogs: deps.config.mode === "development",
     }),
-    secrets: new SecretBox(deriveKey(deps.masterKey, "otuken/secret-box/v1")),
+    secrets,
     agent: deps.agent,
     metrics: new MetricsHub({ agent: deps.agent, logger: deps.logger, now }),
     docker: new DockerHub({ agent: deps.agent, logger: deps.logger, now }),
     dockerProjects: new DockerProjectRepository(deps.db, now),
+    catalogs,
+    apps: new AppService({ db: deps.db, agent: deps.agent, secrets, catalogs, audit, now }),
     eventStreamHeartbeatMs: 15_000,
     limiters: createLimiters(now),
     challenges: new LoginChallengeStore(now),

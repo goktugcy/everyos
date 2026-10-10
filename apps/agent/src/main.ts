@@ -20,6 +20,7 @@ import {
 } from "@otuken/system";
 import { ConfigError, loadAgentConfig, resolveGroupId, type AgentConfig } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
+import { ManagedAppManager } from "./managed-apps.ts";
 import { createPolicy } from "./policy.ts";
 import { createContainerProtection, createUnitProtection } from "./protection.ts";
 
@@ -129,6 +130,14 @@ async function main(): Promise<void> {
       internet: createInternetProbe(config.internetCheckTargets),
       docker,
       isProtectedContainer,
+      apps: new ManagedAppManager({
+        docker,
+        root:
+          config.mode === "production"
+            ? "/var/lib/otuken/apps"
+            : `${process.env.OTUKEN_DEV_ROOT ?? dirname(config.socketPath)}/agent-apps`,
+        isProtected: isProtectedContainer,
+      }),
     }),
     policy: createPolicy({
       mode: config.mode,

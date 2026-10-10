@@ -36,6 +36,8 @@ import {
   SystemInfoSchema,
   TailscaleStatusSchema,
   UnitNameSchema,
+  ManagedAppRunSchema,
+  ManagedAppResultSchema,
 } from "@otuken/shared/schemas";
 import { z } from "zod";
 
@@ -97,6 +99,14 @@ function stream<P extends z.ZodType, E extends z.ZodType>(
 const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
+  "apps.run": unary({
+    params: ManagedAppRunSchema,
+    result: ManagedAppResultSchema,
+    permission: "apps:manage",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 12 * 60_000,
+  }),
   "agent.ping": unary({
     params: NoParams,
     result: z.strictObject({

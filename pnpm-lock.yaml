@@ -286,6 +286,9 @@ importers:
       '@otuken/agent-protocol':
         specifier: workspace:*
         version: link:../../packages/agent-protocol
+      '@otuken/catalogs':
+        specifier: workspace:*
+        version: link:../../packages/catalogs
       '@otuken/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -316,6 +319,9 @@ importers:
       '@otuken/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@otuken/catalogs':
+        specifier: workspace:*
+        version: link:../../packages/catalogs
       '@otuken/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -444,6 +450,15 @@ importers:
       '@otuken/shared':
         specifier: workspace:*
         version: link:../shared
+
+  packages/catalogs:
+    dependencies:
+      '@otuken/shared':
+        specifier: workspace:*
+        version: link:../shared
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
 
   packages/database:
     dependencies:

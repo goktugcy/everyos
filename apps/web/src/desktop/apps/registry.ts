@@ -7,12 +7,40 @@ import {
   Gauge,
   ScrollText,
   Settings,
+  Store,
   Users,
 } from "lucide-react";
 import type { AppId, DesktopAppManifest } from "./types.ts";
 
 /** Built-in apps. Later phases register Files, Terminal and the App Store here. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
+  {
+    id: "otuken.store",
+    titleKey: "apps.store",
+    icon: Store,
+    tint: "from-emerald-400 to-teal-600",
+    category: "tools",
+    requiredPermission: "apps:read",
+    window: {
+      defaultSize: { width: 1040, height: 740 },
+      minSize: { width: 420, height: 360 },
+      instancing: "single",
+    },
+    keywords: [
+      "uygulama",
+      "mağaza",
+      "app",
+      "store",
+      "catalog",
+      "katalog",
+      "casaos",
+      "big bear",
+      "runtipi",
+      "coolify",
+      "portainer",
+    ],
+    load: () => import("./store/store-app.tsx"),
+  },
   {
     id: "otuken.system",
     titleKey: "apps.system",

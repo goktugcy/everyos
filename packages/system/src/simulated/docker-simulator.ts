@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { parse as parseYaml } from "yaml";
 import type {
   ComposeAction,
   ContainerDetail,
@@ -578,8 +580,50 @@ export function createDockerSimulator(
       });
     },
 
-    runCompose(name, _workingDir, _files, action: ComposeAction) {
-      const project = projects.get(name);
+    async runCompose(name, workingDir, files, action: ComposeAction, _signal, input) {
+      let project = projects.get(name);
+      if (/^otk-[a-f0-9]{32}$/.test(name) && (action === "up" || action === "update")) {
+        const file = files[0];
+        if (!file && input === undefined)
+          throw new DockerError("invalid", "Missing simulated Compose file");
+        const doc = parseYaml(input ?? (await readFile(file ?? "", "utf8"))) as {
+          services: Record<
+            string,
+            {
+              image: string;
+              ports?: { target: number; published: string; protocol: "tcp" | "udp" }[];
+              environment?: Record<string, string>;
+            }
+          >;
+        };
+        project = { name, workingDir, configFiles: [...files], managerHint: null };
+        projects.set(name, project);
+        if (!containers.some((c) => c.project === name)) {
+          for (const [service, entry] of Object.entries(doc.services)) {
+            const container: SimContainer = {
+              id: hex(`${name}-${service}`),
+              name: `${name}-${service}-1`,
+              image: entry.image,
+              state: "created",
+              health: "none",
+              project: name,
+              service,
+              ports: (entry.ports ?? [])
+                .filter((p) => typeof p === "object")
+                .map((p) => port(p.target, Number(p.published), p.protocol)),
+              networks: ["bridge"],
+              volumes: [],
+              risks: [],
+              envKeys: Object.keys(entry.environment ?? {}),
+              startedAt: null,
+              exitCode: null,
+              memory: 64 * 1024 ** 2,
+            };
+            containers.push(container);
+            emit("container", "create", container.id, container.name);
+          }
+        }
+      }
       if (!project) return Promise.reject(new DockerError("invalid", "Unknown project"));
       const members = () => containers.filter((c) => c.project === name);
       const lines: string[] = [];

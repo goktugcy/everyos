@@ -46,7 +46,11 @@ export function dockerRoutes(services: Services): Hono<AppEnv> {
 
   /** Ownership comes only from Otuken's records, never from container labels. */
   const ownershipOf = (project: string | null): DockerOwnership =>
-    project !== null && projects.get(project) ? "imported" : "external";
+    project !== null && services.apps.owns(project)
+      ? "managed"
+      : project !== null && projects.get(project)
+        ? "imported"
+        : "external";
 
   const audit = (
     c: Context<AppEnv>,
@@ -238,7 +242,7 @@ export function dockerRoutes(services: Services): Hono<AppEnv> {
       imported.delete(project.name);
       return {
         ...project,
-        ownership: record ? "imported" : "external",
+        ownership: services.apps.owns(project.name) ? "managed" : record ? "imported" : "external",
         importedAt: record?.importedAt ?? null,
         importedBy: record?.importedByUsername ?? null,
       };
@@ -267,6 +271,8 @@ export function dockerRoutes(services: Services): Hono<AppEnv> {
     const auth = requireAuth(c);
     const { name } = parseParams(c, ProjectParams);
     const { acknowledgeManager } = await parseJsonBody(c, ImportRequestSchema);
+    if (services.apps.owns(name))
+      throw new ApiError(409, "CONFLICT", "Use the App Store to manage this application");
     const discovered = (await callAgent(c, services, "docker.compose.projects", {})).projects.find(
       (project) => project.name === name,
     );

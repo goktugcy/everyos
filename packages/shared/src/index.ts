@@ -4,6 +4,7 @@
  * (type-only exports are erased at runtime).
  */
 export * from "./api-types.ts";
+export * from "./catalogs.ts";
 export * from "./docker.ts";
 export * from "./errors.ts";
 export * from "./host.ts";

@@ -12,6 +12,7 @@
     "@hono/node-server": "catalog:",
     "@otuken/agent-protocol": "workspace:*",
     "@otuken/auth": "workspace:*",
+    "@otuken/catalogs": "workspace:*",
     "@otuken/database": "workspace:*",
     "@otuken/logger": "workspace:*",
     "@otuken/security": "workspace:*",

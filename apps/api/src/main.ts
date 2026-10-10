@@ -113,6 +113,8 @@ async function main(): Promise<void> {
     clearInterval(maintenanceTimer);
     services.metrics.stop();
     services.docker.stop();
+    services.catalogs.stop();
+    services.apps.stop();
     const forceExit = setTimeout(() => process.exit(1), 10_000);
     forceExit.unref();
     server.close(() => {

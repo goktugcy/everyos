@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@otuken/agent-protocol": "workspace:*",
+    "@otuken/catalogs": "workspace:*",
     "@otuken/logger": "workspace:*",
     "@otuken/security": "workspace:*",
     "@otuken/shared": "workspace:*",

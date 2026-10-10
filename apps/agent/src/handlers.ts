@@ -20,6 +20,7 @@ import {
 } from "@otuken/system";
 import type { AgentMode } from "./config.ts";
 import { POLICY_REASONS } from "./policy.ts";
+import type { ManagedAppManager } from "./managed-apps.ts";
 
 export interface HandlerDependencies {
   mode: AgentMode;
@@ -38,6 +39,7 @@ export interface HandlerDependencies {
   tailscaleSockets?: readonly string[];
   /** Concurrent `journalctl --follow` processes across all connections. */
   maxLogFollows?: number;
+  apps?: ManagedAppManager;
 }
 
 /** Host information changes rarely; cache it briefly to bound filesystem reads. */
@@ -135,6 +137,11 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
   };
 
   return {
+    "apps.run": (params, context) => {
+      if (!deps.apps)
+        throw new OperationError("unsupported", "Managed applications are not configured");
+      return deps.apps.run(params, context);
+    },
     "agent.ping": () => ({
       pong: true,
       agentVersion: deps.version,

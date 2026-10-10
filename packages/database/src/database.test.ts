@@ -192,4 +192,70 @@ describe("migrate", () => {
       ]),
     );
   });
+
+  it.each([false, true])(
+    "upgrades v4 with installation tables present=%s without data loss",
+    async (hasApps) => {
+      const { db, dir } = tempDb();
+      await migrate(db, OTUKEN_MIGRATIONS.slice(0, 4));
+      db.run(
+        "INSERT INTO catalogs (id, name, url, format) VALUES (?, ?, ?, ?)",
+        "existing-catalog",
+        "Keep this source",
+        "https://fixture.invalid/catalog",
+        "auto",
+      );
+      if (hasApps) {
+        db.run(
+          "INSERT INTO installed_apps (id, name, project, provenance, sealed_compose, risk_override, source, installed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "existing-app",
+          "{}",
+          "otk-existing",
+          "{}",
+          "encrypted-fixture",
+          0,
+          "simulated",
+          1,
+        );
+        db.run(
+          "INSERT INTO app_jobs (id, app_id, action, stage, rollback, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "existing-job",
+          "existing-app",
+          "install",
+          "succeeded",
+          "not-needed",
+          1,
+          2,
+        );
+      } else {
+        // Reproduce the catalog-only v4 already applied by a live development watcher.
+        db.exec("DROP TABLE app_jobs; DROP TABLE installed_apps;");
+      }
+      const result = await migrate(db, OTUKEN_MIGRATIONS, { backupDir: join(dir, "backups") });
+      expect(result.applied).toEqual([5]);
+      expect(
+        db.get<{ name: string }>("SELECT name FROM catalogs WHERE id = ?", "existing-catalog")
+          ?.name,
+      ).toBe("Keep this source");
+      expect(db.get<{ count: number }>("SELECT COUNT(*) AS count FROM installed_apps")?.count).toBe(
+        hasApps ? 1 : 0,
+      );
+      expect(db.get<{ count: number }>("SELECT COUNT(*) AS count FROM app_jobs")?.count).toBe(
+        hasApps ? 1 : 0,
+      );
+      if (hasApps)
+        expect(
+          db.get<{ sealed_compose: string }>(
+            "SELECT sealed_compose FROM installed_apps WHERE id = ?",
+            "existing-app",
+          )?.sealed_compose,
+        ).toBe("encrypted-fixture");
+      expect(db.all("PRAGMA foreign_key_check")).toEqual([]);
+      const backup = openDatabase(result.backupPath!, { readOnly: true });
+      opened.push(backup);
+      expect(currentSchemaVersion(backup)).toBe(4);
+      expect(currentSchemaVersion(db)).toBe(5);
+      expect((await migrate(db, OTUKEN_MIGRATIONS)).applied).toEqual([]);
+    },
+  );
 });

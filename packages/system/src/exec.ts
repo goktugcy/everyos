@@ -189,6 +189,8 @@ export function runCapture(
     env?: Record<string, string>;
     cwd?: string;
     maxOutputBytes?: number;
+    /** Pipe a fixed tool's input without persisting secrets to a file. */
+    input?: string;
   },
 ): Promise<CaptureResult> {
   if (options.signal?.aborted)
@@ -197,7 +199,7 @@ export function runCapture(
   return new Promise((resolve, reject) => {
     const child = spawn(file, [...args], {
       env: options.env ?? SAFE_ENV,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: [options.input === undefined ? "ignore" : "pipe", "pipe", "pipe"],
       windowsHide: true,
       ...(options.cwd ? { cwd: options.cwd } : {}),
     });
@@ -206,8 +208,13 @@ export function runCapture(
       tail = Buffer.concat([tail, chunk]);
       if (tail.length > max * 2) tail = tail.subarray(tail.length - max);
     };
-    child.stdout.on("data", collect);
-    child.stderr.on("data", collect);
+    child.stdout?.on("data", collect);
+    child.stderr?.on("data", collect);
+    if (child.stdin) {
+      // The tool can reject configuration and close stdin before consuming it.
+      child.stdin.on("error", () => undefined);
+      child.stdin.end(options.input, "utf8");
+    }
     let failure: CommandError | null = null;
     const stop = (error: CommandError) => {
       failure ??= error;

@@ -92,6 +92,7 @@ export interface DockerApi {
     files: readonly string[],
     action: ComposeAction,
     signal?: AbortSignal,
+    input?: string,
   ): Promise<ComposeActionResult>;
   events(signal: AbortSignal): AsyncIterable<DockerEvent>;
 }
@@ -476,10 +477,10 @@ export function createDockerClient(options: DockerClientOptions = {}): DockerApi
       return checkComposeFiles(found.name, found.workingDir, found.configFiles);
     },
 
-    async runCompose(project, workingDir, files, action, signal) {
+    async runCompose(project, workingDir, files, action, signal, input) {
       try {
         const { path } = await transport.connection();
-        return await runCompose(project, workingDir, files, action, path, signal);
+        return await runCompose(project, workingDir, files, action, path, signal, input);
       } catch (error) {
         if (error instanceof ComposeError)
           throw new DockerError(

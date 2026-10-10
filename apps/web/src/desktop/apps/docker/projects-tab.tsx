@@ -229,7 +229,7 @@ function ProjectCard({
           })}
         </p>
       ) : null}
-      {!imported ? (
+      {project.ownership === "external" ? (
         <p className="text-xs text-fg-muted">{t("docker.projects.externalHelp")}</p>
       ) : null}
       {canManage ? (
@@ -258,7 +258,7 @@ function ProjectCard({
                 {t("docker.projects.unimport")}
               </Button>
             </>
-          ) : project.containers.total > 0 ? (
+          ) : project.ownership === "external" && project.containers.total > 0 ? (
             <Button size="sm" variant="secondary" onClick={() => setImporting(true)}>
               {t("docker.projects.import")}
             </Button>

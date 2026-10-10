@@ -92,10 +92,11 @@ browser (Origin header, CSRF token).
 
 ## Troubleshooting
 
-| Symptom                                | Cause / fix                                                                                        |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `ERR_PNPM_OTHER_PM_EXPECTED`           | A parent directory's `package.json` pins another package manager. Run pnpm inside this repository. |
-| UI shows "Agent unavailable"           | The agent is not running, or its key differs. Check the `agent` lines in `pnpm dev`.               |
-| `Database schema version … is newer`   | A newer build migrated `./.dev`. Delete `./.dev` or switch back to that version.                   |
-| Port 5173/7470 in use                  | Another dev server is running; both ports are strict.                                              |
-| Playwright says the browser is missing | `pnpm exec playwright install --only-shell chromium`                                               |
+| Symptom                                    | Cause / fix                                                                                                                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ERR_PNPM_OTHER_PM_EXPECTED`               | A parent directory's `package.json` pins another package manager. Run pnpm inside this repository.                                                                          |
+| UI shows "Agent unavailable"               | The agent is not running, or its key differs. Check the `agent` lines in `pnpm dev`.                                                                                        |
+| `Database schema version … is newer`       | A newer build migrated `./.dev`. Delete `./.dev` or switch back to that version.                                                                                            |
+| Port 5173/7470 in use                      | Another dev server is running; both ports are strict.                                                                                                                       |
+| Vite reports `ECONNREFUSED 127.0.0.1:7470` | The API is not listening. Check the preceding `api` error. Early Phase 5 databases missing `app_jobs` are upgraded automatically by migration 5; keep existing `.dev` data. |
+| Playwright says the browser is missing     | `pnpm exec playwright install --only-shell chromium`                                                                                                                        |

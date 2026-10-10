@@ -11,6 +11,7 @@ export const POLICY_REASONS = {
 
 /** Docker operations that change the host's Docker state. */
 const DOCKER_MUTATIONS = new Set([
+  "apps.run",
   "docker.containers.control",
   "docker.images.remove",
   "docker.volumes.remove",

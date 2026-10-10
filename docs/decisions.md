@@ -151,3 +151,23 @@ Compose uses its CLI to preserve existing host files, environment files and mult
 The agent uses fixed argument arrays, minimal environment and the same explicit Unix socket as
 discovery. Only start is allowed for a project containing a protected container: up/update may
 recreate services and therefore cannot bypass protection.
+
+## D17 — Bounded catalog data and stdin-based managed Compose (2026-10)
+
+Catalog readers consume bounded HTTP and in-memory ZIP data instead of cloning/executing upstream
+repositories. Every redirect resolves and pins a validated public address unless the administrator
+explicitly grants private-source access. Snapshots replace data atomically and never own installed
+applications. Unsupported templates/features are visible outcomes rather than guessed conversions.
+
+Managed applications use a UUID project namespace, a private agent-owned ownership marker, and
+configuration encrypted in SQLite with a per-instance SecretBox context. Compose receives the
+configuration through stdin so decrypted secrets never require a persistent or temporary file.
+The mutation is a typed unary operation; a separate authenticated read-only SSE stream reports the
+API job state. Initial failure rolls back only that namespace while preserving all data and images.
+Updates do not yet provide application-data rollback.
+
+Do not heuristically replace fixed upstream password literals with independent random values:
+multiple services and connection strings may rely on the same literal. Preserve the source's
+relationships and require acknowledgement of a fixed-credential warning. Declared generators are
+supported explicitly; secret-valued interpolation defaults require user input. Port edits retain
+the source's host-IP binding instead of broadening loopback-only exposure.

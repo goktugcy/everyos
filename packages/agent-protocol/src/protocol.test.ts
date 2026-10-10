@@ -65,6 +65,7 @@ const notUsed = () => {
 
 function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers {
   return {
+    "apps.run": notUsed,
     "agent.ping": () => ({
       pong: true,
       agentVersion: "test",

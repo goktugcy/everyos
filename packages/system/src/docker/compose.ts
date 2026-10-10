@@ -123,15 +123,24 @@ export async function runCompose(
   action: ComposeAction,
   socketPath: string,
   signal?: AbortSignal,
+  input?: string,
 ): Promise<ComposeActionResult> {
   if (!normalizedAbsolute(workingDir))
     throw new ComposeError("invalid", "Invalid project directory");
   const directory = await stat(workingDir).catch(() => null);
   if (!directory?.isDirectory())
     throw new ComposeError("invalid", "Project directory does not exist");
-  const checks = await Promise.all(files.map((file) => checkComposeFile(file)));
-  if (checks.length === 0 || checks.some((check) => !check.ok))
-    throw new ComposeError("invalid", "Compose files failed validation");
+  if (input === undefined) {
+    const checks = await Promise.all(files.map((file) => checkComposeFile(file)));
+    if (checks.length === 0 || checks.some((check) => !check.ok))
+      throw new ComposeError("invalid", "Compose files failed validation");
+  } else {
+    if (files.length || Buffer.byteLength(input) > MAX_COMPOSE_FILE_BYTES)
+      throw new ComposeError("invalid", "Invalid managed Compose input");
+    const doc: unknown = parseYaml(input, { maxAliasCount: 50 });
+    if (!doc || typeof doc !== "object" || !Object.hasOwn(doc, "services"))
+      throw new ComposeError("invalid", "Invalid managed Compose input");
+  }
   const docker = await findExecutable("docker");
   if (!docker || (await detectCompose()) === null)
     throw new ComposeError("unavailable", "docker compose is not installed");
@@ -144,7 +153,7 @@ export async function runCompose(
     project,
     "--project-directory",
     workingDir,
-    ...files.flatMap((file) => ["--file", file]),
+    ...(input === undefined ? files.flatMap((file) => ["--file", file]) : ["--file", "-"]),
   ];
   // HOME lets the CLI find registry credentials of the account the agent runs as.
   // Bind Compose to the same daemon as discovery, regardless of the user's CLI context.
@@ -156,13 +165,18 @@ export async function runCompose(
   };
   let output = "";
   const deadline = Date.now() + COMPOSE_TIMEOUT_MS;
-  for (const step of ACTION_STEPS[action]) {
+  for (const originalStep of ACTION_STEPS[action]) {
+    const step =
+      input !== undefined && originalStep[0] === "up"
+        ? [...originalStep, "--wait", "--wait-timeout", "120"]
+        : originalStep;
     try {
       const result = await runCapture(docker, [...base, ...step], {
         timeoutMs: Math.max(1, deadline - Date.now()),
         env,
         cwd: workingDir,
         ...(signal ? { signal } : {}),
+        ...(input !== undefined ? { input, maxOutputBytes: 0 } : {}),
       });
       output += result.output;
       if (result.exitCode !== 0) return { ok: false, output: tail(output) };

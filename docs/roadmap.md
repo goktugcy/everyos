@@ -116,12 +116,20 @@ See [docker-management.md](docker-management.md) for measurements and limits. Re
 root-agent deployment still need dedicated disposable-host acceptance; existing owner resources
 were not modified. Managed ownership and App Store installs remain Phase 5.
 
-## Phase 5 — Multi-catalog App Store
+## Phase 5 — Multi-catalog App Store (in progress)
 
 Adapters, in order: CasaOS v2, CasaOS source, Big Bear, Runtipi, Coolify, Portainer, plain compose
 (see [research/catalog-formats.md](research/catalog-formats.md)). The phase also covers catalog
 settings, SSRF-safe synchronization with snapshots, duplicate detection, the install policy engine
 (risk flags), transactional install with rollback and streamed progress, and lifecycle operations.
+
+Implemented initial flow: bounded catalog readers, SSRF-safe synchronization and atomic snapshots,
+duplicate indications, administrator catalog management, App Store browsing/search/category
+filters, Compose-derived policy, encrypted installation configuration, typed agent deployment with
+isolated rollback, streamed jobs, lifecycle controls and managed Docker ownership. Real CasaOS,
+Coolify and Portainer sources were read without host mutations; browser acceptance uses a labeled simulator.
+Full upstream compatibility, richer catalog metadata and disposable-host installation acceptance
+remain open. See [app-store.md](app-store.md) for the exact supported scope and remaining work.
 
 ## Phase 6 — Widget platform
 

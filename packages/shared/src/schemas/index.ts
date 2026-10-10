@@ -8,3 +8,4 @@ export * from "./docker.ts";
 export * from "./host.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
+export * from "./catalogs.ts";
