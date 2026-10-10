@@ -1,4 +1,4 @@
-import type { EventTopic } from "@otuken/shared";
+import { EVENT_TOPICS, type EventTopic, type TopicMessage } from "@otuken/shared";
 import { useSessionStore } from "../stores/session-store.ts";
 import { api } from "./api.ts";
 
@@ -20,13 +20,19 @@ const TOPIC_EVENTS: Record<EventTopic, readonly string[]> = {
 export interface TopicHandlers {
   /** Called whenever the stream (re)connects; reload anything that may be stale. */
   ready?: () => void;
-  events: Record<string, (data: unknown) => void>;
+  /** Live topics (metrics, docker): handlers per event name. */
+  events?: Record<string, (data: unknown) => void>;
+  /** Shared data topics (`data.*`): every `event: data` message for this topic. */
+  data?: (message: TopicMessage) => void;
   status?: (status: StreamStatus) => void;
 }
 
 interface Subscription extends TopicHandlers {
-  topic: EventTopic;
+  topic: string;
 }
+
+const isStreamTopic = (topic: string): topic is EventTopic =>
+  (EVENT_TOPICS as readonly string[]).includes(topic);
 
 const MAX_RETRY_MS = 30_000;
 const subscriptions = new Set<Subscription>();
@@ -66,7 +72,21 @@ function open(topics: string): void {
     setStatus("live");
     for (const subscription of subscriptions) subscription.ready?.();
   });
-  for (const topic of topics.split(",") as EventTopic[]) {
+  const list = topics.split(",");
+  if (list.some((topic) => !isStreamTopic(topic))) {
+    events.addEventListener("data", (event) => {
+      let message: TopicMessage;
+      try {
+        message = JSON.parse((event as MessageEvent<string>).data) as TopicMessage;
+      } catch {
+        return;
+      }
+      for (const subscription of subscriptions) {
+        if (subscription.topic === message.topic) subscription.data?.(message);
+      }
+    });
+  }
+  for (const topic of list.filter(isStreamTopic)) {
     for (const name of TOPIC_EVENTS[topic]) {
       events.addEventListener(name, (event) => {
         let data: unknown;
@@ -76,7 +96,7 @@ function open(topics: string): void {
           return;
         }
         for (const subscription of subscriptions) {
-          if (subscription.topic === topic) subscription.events[name]?.(data);
+          if (subscription.topic === topic) subscription.events?.[name]?.(data);
         }
       });
     }
@@ -121,7 +141,7 @@ function listenOnce(): void {
 }
 
 /** Subscribes to a topic of the shared event stream; returns the unsubscribe function. */
-export function subscribeTopic(topic: EventTopic, handlers: TopicHandlers): () => void {
+export function subscribeTopic(topic: string, handlers: TopicHandlers): () => void {
   listenOnce();
   const subscription: Subscription = { topic, ...handlers };
   subscriptions.add(subscription);

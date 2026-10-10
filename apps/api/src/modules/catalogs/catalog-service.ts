@@ -6,6 +6,7 @@ import {
   type CatalogFetcher,
 } from "@otuken/catalogs";
 import type { Database } from "@otuken/database";
+import { detectAdapters } from "@otuken/widget-sdk";
 import type { CatalogApp, CatalogAppView, CatalogFormat, CatalogView } from "@otuken/shared";
 
 interface CatalogRow {
@@ -193,6 +194,7 @@ export class CatalogService {
           default: entry.secret ? null : entry.default,
         })),
         duplicates: (groups.get(app.logicalKey) ?? []).filter((id) => id !== app.id),
+        widgetAdapters: detectAdapters(app.images),
       };
     });
   }

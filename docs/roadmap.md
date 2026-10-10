@@ -99,8 +99,8 @@ temporary directory with the system Node.js 22.23 (no packages installed):
 
 Not yet verified (needs root or production packaging, Phase 8): the agent running as root with
 `/run/otuken` and the socket group, `vcgencmd`/`smartctl` output as root, real service actions,
-Node.js 26 on the Pi, and the `tailscale serve` header recipe. System widgets move to Phase 6
-together with the widget platform.
+Node.js 26 on the Pi, and the `tailscale serve` header recipe. System widgets were delivered with
+the Phase 6 widget platform.
 
 ## Phase 4 — Docker management
 
@@ -136,11 +136,32 @@ explicit unsupported outcomes. Existing proxies/DNS/TLS remain owner-managed; im
 not promise database downgrade or application-aware restore (Phase 7). Production packaging and
 host-specific hardening remain Phase 8.
 
-## Phase 6 — Widget platform
+## Phase 6 — Widget platform (implemented and verified)
 
 Widget registry and manifest validation, topic-based data providers, layouts on desktop, sidebar
 and menu bar, the configuration UI, app-specific adapters (Jellyfin, Immich, Home Assistant,
 Uptime Kuma, Nextcloud, PostgreSQL), and widget offers after app installation.
+
+Implemented:
+
+- **Registry:** 44 built-in widgets (system, Raspberry Pi, Docker, apps) with versioned manifests,
+  compatibility checks, generated configuration and migration.
+- **Data:** the shared `DataHub` topics (12 system topics plus integration feeds) on the existing
+  SSE stream, plus new read-only agent collectors for listening sockets, APT updates and systemd
+  timers.
+- **Integrations:** sealed credentials, an audience setting, an SSRF-safe client, Home Assistant
+  quick controls, and fixed-query PostgreSQL statistics.
+- **Desktop:** a grid layer (drag, resize, keyboard move), the sidebar, menu bar widgets, the
+  gallery, configuration dialogs, Settings › Widgets with connection management, and post-install
+  offers in the Store.
+
+Verified with unit/API tests, browser tests (including a Jellyfin fixture server) and a read-only
+run on the Raspberry Pi 5. See [widgets.md](widgets.md). Not yet verified:
+
+- the app adapters against the owner's real apps (credentials needed);
+- process names for sockets and Raspberry Pi throttling flags, which need the root agent
+  (Phase 8);
+- widgets on the mobile launcher.
 
 ## Phase 7 — Advanced tools
 

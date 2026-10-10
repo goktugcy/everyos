@@ -281,6 +281,31 @@ export class FakeAgent implements AgentGateway {
       }
       case "logs.query":
         return { source: "host", entries: this.logEntries, hasMore: false };
+      case "network.sockets":
+        return {
+          source: "host",
+          listening: [
+            { protocol: "tcp", address: "0.0.0.0", port: 22, process: "sshd" },
+            { protocol: "tcp", address: "127.0.0.1", port: 7470, process: "node" },
+          ],
+          connections: { established: 3, timeWait: 1, other: 0 },
+        };
+      case "apt.updates":
+        return {
+          source: "host",
+          listsUpdatedAt: 1_760_000_000_000,
+          total: 2,
+          security: 1,
+          packages: [
+            { name: "openssl", version: "3.0.13-0ubuntu3.6", security: true },
+            { name: "curl", version: "8.5.0-2ubuntu10.7", security: false },
+          ],
+        };
+      case "services.timers":
+        return {
+          source: "host",
+          timers: [{ unit: "apt-daily.timer", activates: "apt-daily.service", next: 2, last: 1 }],
+        };
       default:
         throw new Error(`FakeAgent: no default for ${op}`);
     }
@@ -332,6 +357,10 @@ export class FakeAgent implements AgentGateway {
         return wrap("projects", docker.listProjects());
       case "docker.compose.check":
         return docker.checkProject(p.project!);
+      case "apps.postgres.stats": {
+        const stats = params as { container: string; user: string; database: string };
+        return docker.postgresStats(stats.container, stats.user, stats.database);
+      }
       case "docker.compose.run": {
         const run = params as {
           project: string;

@@ -76,6 +76,7 @@ export interface MetricsPoint {
   memoryUsedBytes: number | null;
   memoryTotalBytes: number | null;
   swapUsedBytes: number | null;
+  swapTotalBytes: number | null;
   load1: number | null;
   netRxBytesPerSec: number | null;
   netTxBytesPerSec: number | null;

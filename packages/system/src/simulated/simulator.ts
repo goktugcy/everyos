@@ -5,6 +5,7 @@ import type {
   ServiceAction,
   ServiceDetail,
   ServiceUnit,
+  TimerSummary,
 } from "@otuken/shared";
 import type { LogFilter, LogSource } from "../logs/journal-client.ts";
 import { ServiceError, type ServiceManager } from "../services/systemd-client.ts";
@@ -231,7 +232,38 @@ export function createSimulator(now: () => number = Date.now): Simulator {
       log(name, 6, `Simulated ${action} of ${name}`);
       return Promise.resolve();
     },
+    timers: () => Promise.resolve(timers()),
   };
+
+  const timers = (): TimerSummary => ({
+    source: "simulated",
+    timers: [
+      {
+        unit: "apt-daily.timer",
+        activates: "apt-daily.service",
+        next: now() + 5 * 3_600_000,
+        last: now() - 19 * 3_600_000,
+      },
+      {
+        unit: "backup-sync.timer",
+        activates: "backup-sync.service",
+        next: now() + 9 * 3_600_000,
+        last: now() - 15 * 3_600_000,
+      },
+      {
+        unit: "fstrim.timer",
+        activates: "fstrim.service",
+        next: now() + 3 * 86_400_000,
+        last: now() - 4 * 86_400_000,
+      },
+      {
+        unit: "logrotate.timer",
+        activates: "logrotate.service",
+        next: now() + 2 * 3_600_000,
+        last: now() - 22 * 3_600_000,
+      },
+    ],
+  });
 
   const logs: LogSource = {
     source: "simulated",

@@ -2,6 +2,7 @@ import type { Permission } from "@otuken/shared";
 import type { WindowSpec } from "@otuken/window-manager";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import type { AppId, DesktopAppManifest } from "../apps/types.ts";
+import type { SettingsSection } from "../commands.tsx";
 import { usePreferences } from "./preferences-store.ts";
 import { wm } from "./window-store.ts";
 import { useSessionStore } from "../../stores/session-store.ts";
@@ -49,8 +50,8 @@ export const desktop = {
   focusWindow: (id: string) => wm().focus(id),
   minimizeWindow: (id: string) => wm().minimize(id),
   closeWindow: (id: string) => wm().close(id),
-  openSettings(section: "appearance" | "desktop" | "account" | "security" | "about") {
-    desktop.openApp("otuken.settings", { appState: { section } });
+  openSettings(section: SettingsSection, extra: Record<string, unknown> = {}) {
+    desktop.openApp("otuken.settings", { appState: { ...extra, section } });
   },
   /** Ids of the virtual desktops in order (from preferences). */
   desktopIds(): string[] {

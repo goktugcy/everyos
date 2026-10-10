@@ -64,6 +64,9 @@ function Capabilities({ info }: { info: SystemInfo }) {
                 <CircleSlash className="size-3.5" aria-hidden />
               )}
               <span>{t(`system.capabilities.${id}`)}</span>
+              {status.simulated ? (
+                <span className="text-warning">· {t("system.sourceSimulated")}</span>
+              ) : null}
               {!status.available ? (
                 <span className="sr-only">
                   : {t(`system.reasons.${status.reason ?? "not-detected"}`)}

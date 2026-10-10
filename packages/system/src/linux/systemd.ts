@@ -116,3 +116,24 @@ export const SHOW_PROPERTIES = [
   "Restart",
   "Type",
 ] as const;
+
+/** `systemctl list-timers --all --output=json` (timestamps in microseconds; 0/null = never). */
+export function parseListTimers(
+  raw: unknown,
+): Array<{ unit: string; activates: string | null; next: number | null; last: number | null }> {
+  if (!Array.isArray(raw)) return [];
+  const time = (value: unknown) =>
+    typeof value === "number" && value > 0 ? Math.round(value / 1000) : null;
+  return raw.slice(0, 500).flatMap((entry: unknown) => {
+    const timer = (entry ?? {}) as Record<string, unknown>;
+    if (typeof timer.unit !== "string") return [];
+    return [
+      {
+        unit: timer.unit.slice(0, 256),
+        activates: typeof timer.activates === "string" ? timer.activates.slice(0, 256) : null,
+        next: time(timer.next),
+        last: time(timer.last),
+      },
+    ];
+  });
+}

@@ -6,7 +6,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
@@ -40,6 +40,10 @@ const children: ChildProcess[] = [
 // Original catalog fixture served over HTTP to exercise the real safe fetcher.
 // Installed containers still use the explicitly labeled Docker simulator.
 const catalog = createServer((request, response) => {
+  if (request.url?.startsWith("/jellyfin/")) {
+    fakeJellyfin(request.url.slice("/jellyfin".length), request.headers.authorization, response);
+    return;
+  }
   if (request.url !== "/catalog.yml") {
     response.writeHead(404);
     response.end();
@@ -51,6 +55,46 @@ const catalog = createServer((request, response) => {
   );
 });
 catalog.listen(E2E_PORT + 1, "127.0.0.1");
+
+/**
+ * Minimal stand-in for a Jellyfin server (test fixture only, never real
+ * media data) so widget integrations run through the real API client.
+ */
+function fakeJellyfin(
+  path: string,
+  authorization: string | undefined,
+  response: ServerResponse,
+): void {
+  const json = (status: number, body: unknown) => {
+    response.writeHead(status, { "Content-Type": "application/json" });
+    response.end(JSON.stringify(body));
+  };
+  if (path === "/System/Info/Public")
+    return json(200, { ServerName: "E2E Jellyfin", Version: "10.10.7" });
+  if (!authorization?.includes('Token="e2e-jellyfin-key"'))
+    return json(401, { error: "unauthorized" });
+  if (path.startsWith("/Sessions"))
+    return json(200, [
+      {
+        UserName: "ayse",
+        Client: "Jellyfin Web",
+        DeviceName: "Salon TV",
+        RemoteEndPoint: "192.168.1.44",
+        NowPlayingItem: { Name: "Deneme Filmi", Type: "Movie", RunTimeTicks: 1000 },
+        PlayState: { PositionTicks: 400, IsPaused: false },
+      },
+      { UserName: "mehmet", Client: "Android", DeviceName: "Telefon" },
+    ]);
+  if (path === "/Items/Counts")
+    return json(200, {
+      MovieCount: 12,
+      SeriesCount: 3,
+      EpisodeCount: 40,
+      SongCount: 0,
+      BookCount: 1,
+    });
+  json(404, { error: "not found" });
+}
 
 const stop = () => {
   catalog.close();

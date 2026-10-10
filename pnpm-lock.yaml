@@ -337,6 +337,9 @@ importers:
       '@otuken/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@otuken/widget-sdk':
+        specifier: workspace:*
+        version: link:../../packages/widget-sdk
       hono:
         specifier: 'catalog:'
         version: 4.13.13
@@ -374,6 +377,9 @@ importers:
       '@otuken/theme':
         specifier: workspace:*
         version: link:../../packages/theme
+      '@otuken/widget-sdk':
+        specifier: workspace:*
+        version: link:../../packages/widget-sdk
       '@otuken/window-manager':
         specifier: workspace:*
         version: link:../../packages/window-manager
@@ -498,6 +504,12 @@ importers:
         version: 2.9.1
 
   packages/theme:
+    dependencies:
+      '@otuken/shared':
+        specifier: workspace:*
+        version: link:../shared
+
+  packages/widget-sdk:
     dependencies:
       '@otuken/shared':
         specifier: workspace:*

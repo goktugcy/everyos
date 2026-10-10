@@ -29,7 +29,8 @@
     "react-i18next": "catalog:",
     "tailwind-merge": "catalog:",
     "uqr": "catalog:",
-    "zustand": "catalog:"
+    "zustand": "catalog:",
+    "@otuken/widget-sdk": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

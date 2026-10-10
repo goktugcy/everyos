@@ -36,6 +36,21 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
     .fill("original-e2e-secret-$value");
   await page.getByRole("dialog").getByRole("button", { name: "Kur", exact: true }).click();
   await expect(store).toContainText("Tamamlandı");
+  // A finished installation offers the app's widgets.
+  const offer = page.getByTestId("widget-offer");
+  await expect(offer).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText("Kullanılabilir widget'lar");
+  await offer
+    .locator('[data-widget="docker.app"]')
+    .getByRole("button", { name: "Ekle", exact: true })
+    .click();
+  await expect(offer.locator('[data-widget="docker.app"]')).toContainText("eklendi");
+  await page.getByRole("dialog").getByRole("button", { name: "Şimdi değil" }).click();
+  await expect(offer).toBeHidden();
+  const appWidget = page.locator('[data-testid="desktop-widget"]').filter({
+    has: page.locator('[data-widget="docker.app"]'),
+  });
+  await expect(appWidget).toContainText("Deneme Uygulaması");
   const app = store.locator("article").filter({ hasText: "Deneme Uygulaması" });
   await expect(app).toContainText("Çalışıyor");
   await expect(app.getByTestId("simulated-badge")).toBeVisible();
@@ -76,4 +91,10 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await app.getByRole("button", { name: "Kaldır", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Kaldır", exact: true }).click();
   await expect(store).toContainText("Henüz Otuken ile kurulmuş uygulama yok.");
+  // Widgets of an uninstalled app say so and offer removal instead of showing stale data.
+  await store.getByRole("button", { name: "Kapat", exact: true }).first().click();
+  await expect(store).toHaveCount(0);
+  await expect(appWidget).toContainText("Bağlı uygulama kaldırıldı", { timeout: 15_000 });
+  await appWidget.getByRole("button", { name: "Kaldır", exact: true }).click();
+  await expect(appWidget).toHaveCount(0);
 });

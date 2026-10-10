@@ -79,6 +79,7 @@ export class DockerHub {
   readonly #now: () => number;
   readonly #intervalMs: number;
   readonly #listeners = new Set<(message: DockerHubMessage) => void>();
+  readonly #observers = new Set<(event: DockerChangeEvent) => void>();
   readonly #previous = new Map<string, ContainerStatsSample>();
   readonly #history = new Map<string, ContainerStatsPoint[]>();
   #latest: DockerStatsSnapshot | null = null;
@@ -122,6 +123,15 @@ export class DockerHub {
     this.#timer = null;
     this.#events?.abort();
     this.#events = null;
+  }
+
+  /**
+   * Observes change events without starting collection (e.g. to refresh the
+   * shared `data.docker` widget topic while live views are open).
+   */
+  onChange(observer: (event: DockerChangeEvent) => void): () => void {
+    this.#observers.add(observer);
+    return () => this.#observers.delete(observer);
   }
 
   history(id: string): ContainerStatsHistory {
@@ -208,6 +218,14 @@ export class DockerHub {
   }
 
   #emit(message: DockerHubMessage): void {
+    if (message.kind === "change")
+      for (const observer of this.#observers) {
+        try {
+          observer(message.event);
+        } catch (error) {
+          this.#logger.error("Docker change observer failed", { error });
+        }
+      }
     for (const listener of this.#listeners) {
       try {
         listener(message);

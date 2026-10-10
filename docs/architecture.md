@@ -41,6 +41,7 @@ packages/
   system/         host introspection (/proc, /sys, /etc) with capability detection
   theme/          zod-free theme resolution, contrast adjustment, CSS tokens and theme import/export
   window-manager/ framework-independent window state, geometry, snapping and persistence
+  widget-sdk/     browser-safe built-in widget manifests, layout, configuration and adapter detection
 scripts/      dev orchestrator and production build
 tests/e2e/    Playwright end-to-end tests against the built artifacts
 docs/         developer documentation (this folder)
@@ -55,10 +56,11 @@ that implements them (see [roadmap.md](roadmap.md)).
 
 ```mermaid
 flowchart TD
-  web --> shared & i18n & theme & window-manager
+  web --> shared & i18n & theme & window-manager & widget-sdk
+  widget-sdk --> shared
   theme --> shared
   window-manager --> shared
-  api --> shared & database & auth & security & logger & agent-protocol
+  api --> shared & database & auth & security & logger & agent-protocol & widget-sdk
   agent --> agent-protocol & system & security & shared & logger
   agent-protocol --> shared & security & logger
   auth --> shared & security
@@ -106,6 +108,23 @@ the shared `docker` SSE topic. History resets on API restart.
 The lazy Docker desktop/mobile app displays grouped containers, ownership, health/security risks,
 detail, live logs/charts, Compose imports/actions and image/volume/network inventories. See
 [docker-management.md](docker-management.md) for ownership rules and verification limits.
+
+## Widget platform (Phase 6)
+
+`@otuken/widget-sdk` holds the built-in manifests and the pure layout, configuration,
+compatibility and adapter-detection logic. The web client and the API share it. The API's
+`DataHub` (`apps/api/src/modules/widgets`) runs one reference-counted collector per data topic and
+filters results per subscriber:
+
+- **System topics** call fixed agent operations, including the new read-only `network.sockets`,
+  `apt.updates` and `services.timers`.
+- **Integration topics** call `IntegrationService` (`apps/api/src/modules/integrations`). It
+  reads app APIs with an SSRF-checked HTTP client using sealed credentials (migration 0007), and
+  reads PostgreSQL statistics through the agent.
+
+Topics travel on the existing per-tab SSE stream as `event: data`. The desktop renders widgets on
+an 80 px grid layer between the icons and the windows, in a 320 px sidebar that shrinks the window
+work area, and in the menu bar. See [widgets.md](widgets.md).
 
 ## Request lifecycle (API)
 

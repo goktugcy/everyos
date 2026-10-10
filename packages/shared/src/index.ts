@@ -12,6 +12,7 @@ export * from "./locale.ts";
 export * from "./permissions.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
+export * from "./widgets.ts";
 export type { CapabilityStatus, SystemInfo } from "./schemas/system.ts";
 export type {
   ComposeActionResult,
@@ -35,6 +36,7 @@ export type {
   VolumeList,
   VolumeSummary,
 } from "./schemas/docker.ts";
+export type { PostgresStats } from "./schemas/widgets.ts";
 export type {
   CpuTimes,
   HardwareStatus,

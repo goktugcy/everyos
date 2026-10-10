@@ -666,6 +666,23 @@ export function createDockerSimulator(
       return Promise.resolve({ ok: true, output: lines.join("\n") });
     },
 
+    postgresStats(container) {
+      const found = containers.find((c) => c.name === container || c.id.startsWith(container));
+      if (!found) return Promise.reject(new DockerError("not-found", "Container not found"));
+      if (!found.image.startsWith("postgres"))
+        return Promise.reject(new DockerError("invalid", "Not a PostgreSQL container"));
+      if (found.state !== "running")
+        return Promise.reject(new DockerError("conflict", "Container is not running"));
+      return Promise.resolve({
+        connections: 7,
+        maxConnections: 100,
+        databases: [
+          { name: "nextcloud", sizeBytes: 412 * 1024 ** 2 },
+          { name: "postgres", sizeBytes: 7 * 1024 ** 2 },
+        ],
+      });
+    },
+
     async *events(signal) {
       const queue: DockerEvent[] = [];
       let wake: (() => void) | null = null;

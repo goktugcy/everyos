@@ -26,7 +26,14 @@ export interface DesktopCommand {
   run: () => void;
 }
 
-export const SETTINGS_SECTIONS = ["appearance", "desktop", "account", "security", "about"] as const;
+export const SETTINGS_SECTIONS = [
+  "appearance",
+  "desktop",
+  "widgets",
+  "account",
+  "security",
+  "about",
+] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 /** Global commands offered by the launcher (and reused by keyboard shortcuts). */

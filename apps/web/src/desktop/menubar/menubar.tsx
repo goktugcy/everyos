@@ -35,6 +35,7 @@ import { useAgentStatus, useAgentStatusPolling } from "./agent-status.ts";
 import { menubarButton } from "./menubar-button.ts";
 import { QuickSettings } from "./quick-settings.tsx";
 import { NetworkModule, ResourcesModule } from "./system-modules.tsx";
+import { MenubarWidgets } from "../widgets/menubar-widgets.tsx";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -319,6 +320,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
             <span className="hidden md:inline">{t("transport.insecureTitle")}</span>
           </span>
         ) : null}
+        {show("widgets") ? <MenubarWidgets /> : null}
         {show("resources") && canReadSystem ? <ResourcesModule /> : null}
         {show("network") && canReadSystem ? <NetworkModule /> : null}
         {show("agent") ? <AgentIndicator /> : null}

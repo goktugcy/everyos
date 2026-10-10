@@ -7,8 +7,10 @@ import type {
   PreferenceDocuments,
   PreferenceKey,
   SecurityPreferences,
+  WidgetPreferences,
   WindowSession,
 } from "@otuken/shared";
+import { defaultWidgetPreferences, migrateWidgets } from "@otuken/widget-sdk";
 import { DEFAULT_APPEARANCE } from "@otuken/theme";
 import type { TFunction } from "i18next";
 import { create } from "zustand";
@@ -25,6 +27,7 @@ export interface PreferencesState {
   dock: DockPreferences;
   menubar: MenubarPreferences;
   security: SecurityPreferences;
+  widgets: WidgetPreferences;
   /** Window session loaded at sign-in; consumed once by the shell. */
   initialWindows: WindowSession | null;
   saveError: boolean;
@@ -37,6 +40,7 @@ export const usePreferences = create<PreferencesState>()(() => ({
   dock: defaultDock([]),
   menubar: DEFAULT_MENUBAR,
   security: DEFAULT_SECURITY,
+  widgets: { version: 1, instances: [], sidebar: { open: false } },
   initialWindows: null,
   saveError: false,
 }));
@@ -159,6 +163,9 @@ export async function loadPreferences(context: LoadContext, signal?: AbortSignal
     dock: stored.dock ?? defaultDock(context.permissions),
     menubar: stored.menubar ?? DEFAULT_MENUBAR,
     security: stored.security ?? DEFAULT_SECURITY,
+    widgets:
+      (stored.widgets ? migrateWidgets(stored.widgets) : null) ??
+      defaultWidgetPreferences(context.permissions, () => crypto.randomUUID()),
     initialWindows: usePreferences.getState().ready
       ? usePreferences.getState().initialWindows
       : (stored.windows ?? null),

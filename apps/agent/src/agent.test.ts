@@ -169,6 +169,20 @@ describe("agent handlers", () => {
     await handlers["system.info"]({}, actorContext);
     expect(calls).toBe(2);
   });
+
+  it("labels capabilities served by development simulators", async () => {
+    const missing = { available: false, reason: "not-linux" } as const;
+    const host = {
+      ...info,
+      capabilities: { systemd: missing, journald: missing, docker: missing, thermal: missing },
+    } as unknown as SystemInfo;
+    const handlers = createHandlers(deps({ collect: () => Promise.resolve(host) }));
+    const result = await handlers["system.info"]({}, actorContext);
+    expect(result.capabilities.docker).toEqual({ available: true, simulated: true });
+    expect(result.capabilities.systemd).toEqual({ available: true, simulated: true });
+    // Capabilities without a simulator keep the real host status.
+    expect(result.capabilities.thermal).toEqual(missing);
+  });
 });
 
 describe("unit protection and policy", () => {
@@ -289,6 +303,7 @@ describe("host operation handlers", () => {
       list: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
       get: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
       control: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
+      timers: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
     };
     const handlers = createHandlers(deps({ services: unavailable }));
     await expect(handlers["services.list"]({}, contextFor(admin))).rejects.toMatchObject({
@@ -428,5 +443,33 @@ describe("docker handlers and policy", () => {
     ).rejects.toMatchObject({
       code: "conflict",
     });
+  });
+});
+
+describe("widget data handlers", () => {
+  it("serves timers, Postgres statistics and capability reasons", async () => {
+    const handlers = createHandlers(deps());
+    expect(
+      (await handlers["services.timers"]({}, contextFor(admin))).timers.length,
+    ).toBeGreaterThan(0);
+    await expect(
+      handlers["apps.postgres.stats"](
+        { container: "nextcloud-db", user: "postgres", database: "postgres" },
+        contextFor(admin),
+      ),
+    ).resolves.toMatchObject({ maxConnections: 100 });
+    await expect(
+      handlers["apps.postgres.stats"](
+        { container: "jellyfin", user: "postgres", database: "postgres" },
+        contextFor(admin),
+      ),
+    ).rejects.toMatchObject({ code: "invalid_params" });
+    if (process.platform !== "linux") {
+      // macOS has no /proc/net: the reason travels with the error.
+      await expect(handlers["network.sockets"]({}, contextFor(admin))).rejects.toMatchObject({
+        code: "unsupported",
+        message: expect.stringMatching(/^not-linux:/) as string,
+      });
+    }
   });
 });

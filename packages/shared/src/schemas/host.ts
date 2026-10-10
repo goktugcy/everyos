@@ -9,6 +9,7 @@ import {
   UNIT_NAME_PATTERN,
 } from "../host.ts";
 import { CAPABILITY_REASONS, DATA_SOURCES } from "../system.ts";
+import { DATA_TOPICS, INTEGRATION_TOPIC_PATTERN } from "../widgets.ts";
 
 const n = z.number().nonnegative();
 const name = z.string().max(128);
@@ -316,7 +317,23 @@ export const MetricsHistoryQuerySchema = z.strictObject({
 export const EventStreamQuerySchema = z.strictObject({
   topics: z
     .string()
-    .max(200)
+    .max(6000)
     .transform((value) => [...new Set(value.split(",").filter(Boolean))])
-    .pipe(z.array(z.enum(EVENT_TOPICS)).min(1)),
+    .pipe(
+      z
+        .array(
+          z
+            .string()
+            .max(128)
+            .refine(
+              (topic) =>
+                (EVENT_TOPICS as readonly string[]).includes(topic) ||
+                (DATA_TOPICS as readonly string[]).includes(topic) ||
+                INTEGRATION_TOPIC_PATTERN.test(topic),
+              "unknown-topic",
+            ),
+        )
+        .min(1)
+        .max(64),
+    ),
 });

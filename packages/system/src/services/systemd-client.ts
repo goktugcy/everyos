@@ -3,9 +3,11 @@ import {
   type ServiceAction,
   type ServiceDetail,
   type ServiceList,
+  type TimerSummary,
 } from "@otuken/shared";
 import { CommandError, findExecutable, runCommand } from "../exec.ts";
 import {
+  parseListTimers,
   parseListUnitFiles,
   parseListUnits,
   parseShow,
@@ -33,6 +35,8 @@ export interface ServiceManager {
     signal?: AbortSignal,
   ): Promise<ServiceDetail>;
   control(unit: string, action: ServiceAction, signal?: AbortSignal): Promise<void>;
+  /** systemd timers (the host's scheduled tasks). */
+  timers(signal?: AbortSignal): Promise<TimerSummary>;
 }
 
 async function systemctl(): Promise<string> {
@@ -123,6 +127,16 @@ export function createSystemdManager(): ServiceManager {
         }
         throw new ServiceError("failed", `systemctl ${action} ${unit} failed`);
       }
+    },
+
+    async timers(signal) {
+      const bin = await systemctl();
+      const output = await runCommand(
+        bin,
+        ["list-timers", "--all", "--no-pager", "--no-legend", "--output=json"],
+        { timeoutMs: 10_000, ...(signal ? { signal } : {}) },
+      );
+      return { source: "host", timers: parseListTimers(JSON.parse(output)) };
     },
   };
 }

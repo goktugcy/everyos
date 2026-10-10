@@ -1,4 +1,5 @@
 import type { AppAction, AppJobView, InstalledAppView } from "@otuken/shared";
+import { PanelsTopLeft } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -8,6 +9,8 @@ import { usePermissions } from "../../../stores/session-store.ts";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { localized } from "./parts.tsx";
+import { offerFor } from "../../widgets/offer.tsx";
+import { widgetUi } from "../../widgets/ui-store.ts";
 
 export function InstalledCard({
   app,
@@ -123,6 +126,12 @@ export function InstalledCard({
         <Alert tone="warning">{t("appStore.failed", { reason: app.lastError })}</Alert>
       ) : null}
       <ResourceError error={error} />
+      <div>
+        <Button variant="ghost" size="sm" onClick={() => widgetUi.offer(offerFor(app))}>
+          <PanelsTopLeft className="size-4" aria-hidden />
+          {t("widgets.title")}
+        </Button>
+      </div>
       {canManage ? (
         <div className="flex flex-wrap gap-2">
           {(["start", "stop", "restart", "update", "remove"] as const).map((action) => (

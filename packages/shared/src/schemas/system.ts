@@ -4,6 +4,8 @@ import { CAPABILITY_IDS, CAPABILITY_REASONS, DATA_SOURCES } from "../system.ts";
 export const CapabilityStatusSchema = z.object({
   available: z.boolean(),
   reason: z.enum(CAPABILITY_REASONS).optional(),
+  /** Development only: the agent serves this capability from its simulator. */
+  simulated: z.literal(true).optional(),
 });
 
 export type CapabilityStatus = z.infer<typeof CapabilityStatusSchema>;

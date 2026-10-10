@@ -1,4 +1,6 @@
 import { z } from "zod";
+import type { WidgetPreferences } from "../widgets.ts";
+import { WidgetPreferencesSchema } from "./widgets.ts";
 import {
   AUTO_LOCK_MINUTES,
   DOCK_POSITIONS,
@@ -211,6 +213,7 @@ export const PREFERENCE_SCHEMAS: Record<PreferenceKey, z.ZodType> = {
   menubar: MenubarPreferencesSchema,
   windows: WindowSessionSchema,
   security: SecurityPreferencesSchema,
+  widgets: WidgetPreferencesSchema,
 };
 
 export interface PreferenceDocuments {
@@ -220,6 +223,7 @@ export interface PreferenceDocuments {
   menubar: MenubarPreferences;
   windows: WindowSession;
   security: SecurityPreferences;
+  widgets: WidgetPreferences;
 }
 
 export const UnlockRequestSchema = z.strictObject({

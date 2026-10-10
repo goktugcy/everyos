@@ -1,13 +1,16 @@
 import { OperationError, type OperationHandlers } from "@otuken/agent-protocol";
 import { roleHasPermission, type ProcessList, type SystemInfo } from "@otuken/shared";
 import {
+  collectAptUpdates,
   collectHardware,
   collectMetrics,
   collectNetwork,
   collectProcesses,
+  collectSockets,
   collectStorage,
   collectSystemInfo,
   getTailscaleStatus,
+  UnavailableError,
   LogSourceUnavailableError,
   REAL_HOST,
   ServiceError,
@@ -73,6 +76,9 @@ function cached<T>(ttlMs: number, now: () => number, load: () => Promise<T>): ()
 /** Translates collector errors into protocol errors with safe messages. */
 function toOperationError(error: unknown): never {
   if (error instanceof OperationError) throw error;
+  // "<reason>: …" lets the API show the capability reason instead of a generic error.
+  if (error instanceof UnavailableError)
+    throw new OperationError("unsupported", `${error.reason}: ${error.message}`);
   if (error instanceof ServiceError) {
     switch (error.kind) {
       case "unavailable":
@@ -129,6 +135,10 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
   const hardware = cached(HARDWARE_TTL_MS, now, async () =>
     collectHardware({ paths, isRaspberryPi: (await systemInfo()).hardware.isRaspberryPi }),
   );
+  /** Listening sockets change rarely and scanning /proc/<pid>/fd costs a little. */
+  const sockets = cached(30_000, now, () => collectSockets({ paths }));
+  /** apt reads large package lists; its data only changes when the lists are refreshed. */
+  const aptUpdates = cached(30 * 60_000, now, () => collectAptUpdates());
   const processesBy = {
     cpu: cached(PROCESSES_TTL_MS, now, () => collectProcesses({ paths, sort: "cpu", limit: 500 })),
     memory: cached(PROCESSES_TTL_MS, now, () =>
@@ -154,7 +164,20 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
       mode: deps.mode,
     }),
 
-    "system.info": () => systemInfo(),
+    "system.info": async () => {
+      const info = await systemInfo();
+      // Development simulators stand in for missing backends; say so instead of "unavailable".
+      const simulated = {
+        systemd: deps.services.source === "simulated",
+        journald: deps.logs.source === "simulated",
+        docker: docker.source === "simulated",
+      } as const;
+      if (!Object.values(simulated).some(Boolean)) return info;
+      const capabilities = { ...info.capabilities };
+      for (const [id, on] of Object.entries(simulated))
+        if (on) capabilities[id as keyof typeof simulated] = { available: true, simulated: true };
+      return { ...info, capabilities };
+    },
 
     "metrics.sample": () => collectMetrics({ paths, now }),
 
@@ -335,6 +358,16 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
       logger.info("Compose action finished", { project, action, ok: result.ok });
       return result;
     },
+
+    "network.sockets": () => sockets().catch(toOperationError),
+
+    "apt.updates": () => aptUpdates().catch(toOperationError),
+
+    "services.timers": (_params, { signal }) =>
+      deps.services.timers(signal).catch(toOperationError),
+
+    "apps.postgres.stats": ({ container, user, database }, { signal }) =>
+      docker.postgresStats(container, user, database, signal).catch(toOperationError),
 
     "docker.events": async function* (_params, { signal }) {
       try {

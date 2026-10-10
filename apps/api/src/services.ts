@@ -14,6 +14,9 @@ import { createProxyMatcher, type ApiConfig } from "./config.ts";
 import { AuditLog } from "./modules/audit/audit-log.ts";
 import { LoginChallengeStore } from "./modules/auth/login-challenges.ts";
 import { DockerHub } from "./modules/docker/docker-hub.ts";
+import { IntegrationService } from "./modules/integrations/integration-service.ts";
+import { DataHub } from "./modules/widgets/data-hub.ts";
+import { systemProviders } from "./modules/widgets/providers.ts";
 import { DockerProjectRepository } from "./modules/docker/project-repository.ts";
 import { MetricsHub } from "./modules/metrics/metrics-hub.ts";
 import { PreferenceRepository } from "./modules/preferences/preference-repository.ts";
@@ -59,6 +62,9 @@ export interface Services {
   dockerProjects: DockerProjectRepository;
   catalogs: CatalogService;
   apps: AppService;
+  integrations: IntegrationService;
+  /** Shared, reference-counted widget data topics. */
+  widgetData: DataHub;
   /** How often open event streams re-check access and send a keep-alive. */
   eventStreamHeartbeatMs: number;
   limiters: Limiters;
@@ -76,6 +82,8 @@ export interface ServiceDependencies {
   agent: AgentGateway;
   scryptParams?: ScryptParams;
   now?: () => number;
+  /** Test hook: DNS resolution for integration requests. */
+  resolveHost?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
 }
 
 export function createPasswordHasher(params: ScryptParams = DEFAULT_SCRYPT_PARAMS): PasswordHasher {
@@ -130,6 +138,31 @@ export function createServices(deps: ServiceDependencies): Services {
   const secrets = new SecretBox(deriveKey(deps.masterKey, "otuken/secret-box/v1"));
   const catalogs = new CatalogService(deps.db, now);
   const audit = new AuditLog(deps.db, deps.logger, now);
+  const apps = new AppService({ db: deps.db, agent: deps.agent, secrets, catalogs, audit, now });
+  const integrations = new IntegrationService({
+    db: deps.db,
+    secrets,
+    agent: deps.agent,
+    now,
+    appExists: (id) => apps.exists(id),
+    ...(deps.resolveHost ? { resolve: deps.resolveHost } : {}),
+  });
+  const docker = new DockerHub({ agent: deps.agent, logger: deps.logger, now });
+  const widgetData = new DataHub({
+    logger: deps.logger,
+    now,
+    providers: systemProviders(deps.agent, () => apps.managedProjects()),
+    resolve: (topic) => integrations.provider(topic),
+  });
+  // Container widgets follow Docker changes while live views keep the event stream open.
+  let dockerRefresh: NodeJS.Timeout | null = null;
+  docker.onChange(() => {
+    dockerRefresh ??= setTimeout(() => {
+      dockerRefresh = null;
+      widgetData.refresh("data.docker");
+    }, 500);
+    dockerRefresh.unref();
+  });
   return {
     config: deps.config,
     logger: deps.logger,
@@ -156,10 +189,12 @@ export function createServices(deps: ServiceDependencies): Services {
     secrets,
     agent: deps.agent,
     metrics: new MetricsHub({ agent: deps.agent, logger: deps.logger, now }),
-    docker: new DockerHub({ agent: deps.agent, logger: deps.logger, now }),
+    docker,
     dockerProjects: new DockerProjectRepository(deps.db, now),
     catalogs,
-    apps: new AppService({ db: deps.db, agent: deps.agent, secrets, catalogs, audit, now }),
+    apps,
+    integrations,
+    widgetData,
     eventStreamHeartbeatMs: 15_000,
     limiters: createLimiters(now),
     challenges: new LoginChallengeStore(now),

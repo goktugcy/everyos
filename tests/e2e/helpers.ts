@@ -22,7 +22,15 @@ export async function signIn(page: Page, reset = true): Promise<SessionInfo> {
     (await page.request.patch("/api/account", { headers, data: { locale: "tr" } })).status(),
   ).toBe(200);
   if (reset) {
-    for (const key of ["appearance", "desktop", "dock", "windows", "security", "menubar"]) {
+    for (const key of [
+      "appearance",
+      "desktop",
+      "dock",
+      "windows",
+      "security",
+      "menubar",
+      "widgets",
+    ]) {
       expect((await page.request.delete(`/api/preferences/${key}`, { headers })).status()).toBe(
         204,
       );

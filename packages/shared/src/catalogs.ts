@@ -1,3 +1,5 @@
+import type { IntegrationAdapter } from "./widgets.ts";
+
 export const CATALOG_FORMATS = [
   "auto",
   "casaos-v2",
@@ -94,7 +96,11 @@ export interface CatalogApp {
   }[];
   compose: string;
 }
-export type CatalogAppView = Omit<CatalogApp, "compose" | "variants"> & { duplicates: string[] };
+export type CatalogAppView = Omit<CatalogApp, "compose" | "variants"> & {
+  duplicates: string[];
+  /** Built-in widget adapters matching the app's images (never taken from catalog claims). */
+  widgetAdapters: IntegrationAdapter[];
+};
 export interface CatalogView {
   id: string;
   name: string;
@@ -133,6 +139,8 @@ export interface InstalledAppView {
   ports: { port: number; hostIp: string | null }[];
   lastJob: AppJobView | null;
   dataCopyEligible: boolean;
+  /** Built-in widget adapters matching the deployed images. */
+  widgetAdapters: IntegrationAdapter[];
 }
 export interface AppJobView {
   id: string;

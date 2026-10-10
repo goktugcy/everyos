@@ -12,6 +12,7 @@ export const PREFERENCE_KEYS = [
   "menubar",
   "windows",
   "security",
+  "widgets",
 ] as const;
 
 export type PreferenceKey = (typeof PREFERENCE_KEYS)[number];
@@ -67,6 +68,7 @@ export type DockPosition = (typeof DOCK_POSITIONS)[number];
 
 /** Menu bar modules that can be shown or hidden individually. */
 export const MENUBAR_MODULE_IDS = [
+  "widgets",
   "resources",
   "network",
   "agent",

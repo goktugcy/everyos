@@ -216,6 +216,49 @@ unprivileged and exposes a small attack surface.
   Otuken-managed data. Labels cannot cause execution without an explicit import/action. Remote
   catalog validation and installation policy remain Phase 5 work.
 
+## Widgets and application integrations **[P6]**
+
+- **Built-in code only.** Widget renderers and app adapters are compiled into Otuken. Catalogs
+  can at most be _matched_ to a built-in adapter, and matching uses deployed image repositories,
+  never catalog claims. No remote or third-party JavaScript runs in the desktop.
+- **Data minimization in the API.** Feeds return only what widgets display:
+  - Jellyfin sessions without client addresses.
+  - Home Assistant states only for administrator-listed entities.
+  - Uptime Kuma monitors without URLs or hostnames.
+  - Process summaries without command lines.
+
+  Per-subscriber views drop alerts and installed apps the user may not see.
+
+- **Consent and audience.** Creating an integration (`apps:manage`) is explicit consent to read
+  that app's API. Data is visible to app managers only, unless the administrator chooses
+  `everyone` (`apps:read`). Permissions are checked when each topic is subscribed, and again by
+  the stream's periodic session check.
+- **Credentials** are sealed with the secret box under a per-integration context and are
+  write-only. They are never logged, audited, returned, or sent to the browser.
+- **Outbound HTTP (SSRF):**
+  - http(s) only, with no user info in URLs.
+  - DNS is resolved once and the connection pinned to the checked addresses.
+  - Private and loopback addresses are allowed, because self-hosted apps live there. Link-local
+    and cloud metadata addresses are always refused.
+  - Redirects are not followed.
+  - Responses are limited to 1 MB and 6 s.
+- **Device control.** Home Assistant quick controls need `apps:manage`. They are limited to
+  `toggle`/`turn_on`/`turn_off` on entities the administrator allowed, in switch-like domains
+  only, and every action is audited.
+- **PostgreSQL** statistics use one fixed, read-only SQL statement through `docker exec` in the
+  agent (`apps.postgres.stats`). Container, role and database names are validated identifiers,
+  and only PostgreSQL images are accepted. No user-provided SQL exists.
+- **Host collectors** are read-only:
+  - `apt list --upgradable` never refreshes package lists.
+  - Listening sockets come from `/proc/net`; mapping them to process names reads only
+    `/proc/<pid>/fd` links.
+  - systemd timers are read with `systemctl list-timers`.
+- **Development simulators** are reported as `simulated` capabilities, and widgets label
+  simulated data. Production never uses simulators.
+- **Bounded cost.** One collector runs per topic regardless of viewers, and only while
+  subscribed, with failure backoff. At most 256 active topics, 64 topics per stream and 64
+  widgets per user.
+
 ## Audit log **[P1, P4]**
 
 Security-relevant actions are written to `audit_events` and mirrored to journald: setup, login

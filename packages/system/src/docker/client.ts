@@ -19,6 +19,7 @@ import type {
   NetworkSummary,
   VolumeSummary,
 } from "@otuken/shared";
+import type { PostgresStats } from "@otuken/shared/schemas";
 import { mapLimit, pathKind } from "../fs-utils.ts";
 import { checkComposeFiles, ComposeError, detectCompose, runCompose } from "./compose.ts";
 import { resolveManagedImages } from "./managed-images.ts";
@@ -103,9 +104,56 @@ export interface DockerApi {
     input?: string,
   ): Promise<ComposeActionResult>;
   events(signal: AbortSignal): AsyncIterable<DockerEvent>;
+  /**
+   * Connection and size statistics of a PostgreSQL container, from one fixed,
+   * read-only query run with `psql` inside it (never arbitrary SQL or commands).
+   */
+  postgresStats(
+    container: string,
+    user: string,
+    database: string,
+    signal?: AbortSignal,
+  ): Promise<PostgresStats>;
 }
 
 const DEFAULT_SOCKETS = ["/var/run/docker.sock", "/run/docker.sock"];
+const SQL_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]{0,62}$/;
+/** Images of PostgreSQL and its common distributions; exec is refused for anything else. */
+const POSTGRES_IMAGE = /(^|\/)(postgres|postgresql|pgvector|pgvecto-rs|postgis)(:|@|$)/;
+/** The only statement Otuken runs inside PostgreSQL containers: read-only, fixed, no user input. */
+export const POSTGRES_STATS_SQL =
+  "BEGIN READ ONLY; SELECT json_build_object(" +
+  "'connections', (SELECT count(*) FROM pg_stat_activity), " +
+  "'maxConnections', current_setting('max_connections')::int, " +
+  "'databases', COALESCE((SELECT json_agg(json_build_object('name', datname, 'sizeBytes', pg_database_size(datname))) " +
+  "FROM pg_database WHERE NOT datistemplate AND datallowconn), '[]'::json)); COMMIT;";
+
+export function parsePostgresStats(line: string): PostgresStats {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(line);
+  } catch {
+    throw new DockerError("failed", "psql returned unexpected output");
+  }
+  const value = (raw ?? {}) as {
+    connections?: unknown;
+    maxConnections?: unknown;
+    databases?: unknown;
+  };
+  const count = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : 0);
+  return {
+    connections: count(value.connections),
+    maxConnections: count(value.maxConnections),
+    databases: (Array.isArray(value.databases) ? value.databases : [])
+      .slice(0, 256)
+      .flatMap((entry: unknown) => {
+        const db = (entry ?? {}) as { name?: unknown; sizeBytes?: unknown };
+        return typeof db.name === "string"
+          ? [{ name: db.name.slice(0, 128), sizeBytes: count(db.sizeBytes) }]
+          : [];
+      }),
+  };
+}
 /** Newest Engine API version Otuken was written against; older servers are used at their version. */
 const CLIENT_API_VERSION = "1.51";
 /** `stats?one-shot=true` needs 1.41 (Docker 20.10). */
@@ -149,6 +197,8 @@ interface CallOptions {
   /** Statuses treated as success besides 2xx (e.g. 304 "already started"). */
   okStatuses?: readonly number[];
   signal?: AbortSignal;
+  /** JSON request body. */
+  body?: unknown;
 }
 
 /** HTTP over the Docker Unix socket with negotiated API version, timeouts and size caps. */
@@ -194,11 +244,17 @@ class DockerTransport {
 
   #send(socketPath: string, method: string, path: string, options: CallOptions, timeoutMs: number) {
     return new Promise<IncomingMessage>((resolve, reject) => {
+      const body = options.body === undefined ? null : Buffer.from(JSON.stringify(options.body));
       const req = request({
         socketPath,
         method,
         path,
-        headers: { Host: "docker" },
+        headers: {
+          Host: "docker",
+          ...(body
+            ? { "Content-Type": "application/json", "Content-Length": String(body.length) }
+            : {}),
+        },
         ...(options.signal ? { signal: options.signal } : {}),
       });
       req.setTimeout(timeoutMs, () =>
@@ -206,7 +262,7 @@ class DockerTransport {
       );
       req.once("response", resolve);
       req.once("error", (error) => reject(connectionError(error)));
-      req.end();
+      req.end(body ?? undefined);
     });
   }
 
@@ -501,6 +557,67 @@ export function createDockerClient(options: DockerClientOptions = {}): DockerApi
           );
         throw error;
       }
+    },
+
+    async postgresStats(container, user, database, signal) {
+      if (!SQL_IDENTIFIER.test(user) || !SQL_IDENTIFIER.test(database))
+        throw new DockerError("invalid", "Invalid PostgreSQL role or database name");
+      const found = (await listed()).find(
+        (candidate) =>
+          candidate.summary.name === container || candidate.summary.id.startsWith(container),
+      );
+      if (!found) throw new DockerError("not-found", "Container not found");
+      if (found.summary.state !== "running")
+        throw new DockerError("conflict", "Container is not running");
+      if (!POSTGRES_IMAGE.test(found.summary.image))
+        throw new DockerError("invalid", "Not a PostgreSQL container");
+      const exec = (await transport.json(`/containers/${found.summary.id}/exec`, {
+        method: "POST",
+        body: {
+          AttachStdout: true,
+          AttachStderr: true,
+          Tty: false,
+          Cmd: [
+            "psql",
+            "-U",
+            user,
+            "-d",
+            database,
+            "-AtqX",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            POSTGRES_STATS_SQL,
+          ],
+        },
+        timeoutMs: 10_000,
+      })) as { Id?: unknown };
+      if (typeof exec.Id !== "string" || !/^[a-f0-9]{64}$/.test(exec.Id))
+        throw new DockerError("failed", "Docker did not create the exec instance");
+      const response = await transport.open(`/exec/${exec.Id}/start`, {
+        method: "POST",
+        body: { Detach: false, Tty: false },
+        timeoutMs: 15_000,
+        ...(signal ? { signal } : {}),
+      });
+      const demux = new LogDemuxer();
+      const output = { stdout: "", stderr: "" };
+      for await (const chunk of response as AsyncIterable<Buffer>) {
+        for (const frame of demux.push(chunk)) {
+          output[frame.stream] += frame.data.toString("utf8");
+          if (output.stdout.length + output.stderr.length > 1024 * 1024) {
+            response.destroy();
+            throw new DockerError("too-large", "psql produced too much output");
+          }
+        }
+      }
+      const result = (await transport.json(`/exec/${exec.Id}/json`)) as { ExitCode?: unknown };
+      if (result.ExitCode !== 0) {
+        const message = output.stderr.trim().split("\n")[0]?.slice(0, 200) ?? "";
+        throw new DockerError("failed", `psql failed${message ? `: ${message}` : ""}`);
+      }
+      const line = output.stdout.split("\n").find((candidate) => candidate.startsWith("{"));
+      return parsePostgresStats(line ?? "");
     },
 
     async *events(signal) {

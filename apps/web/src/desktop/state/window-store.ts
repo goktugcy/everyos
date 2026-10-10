@@ -18,11 +18,14 @@ export function dockThickness(dock: DockPreferences): number {
   return dock.iconSize + padding;
 }
 
-export function computeInsets(dock: DockPreferences): Insets {
+/** Width of the widget sidebar; windows do not go underneath it while it is open. */
+export const WIDGET_SIDEBAR_WIDTH = 320;
+
+export function computeInsets(dock: DockPreferences, sidebarOpen = false): Insets {
   const thickness = dockThickness(dock);
   return {
     top: MENUBAR_HEIGHT,
-    right: dock.position === "right" ? thickness : 0,
+    right: (dock.position === "right" ? thickness : 0) + (sidebarOpen ? WIDGET_SIDEBAR_WIDTH : 0),
     bottom: dock.position === "bottom" ? thickness : 0,
     left: dock.position === "left" ? thickness : 0,
   };

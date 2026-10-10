@@ -8,8 +8,15 @@ import {
   selectArchitecture,
 } from "@otuken/catalogs";
 import type { Database } from "@otuken/database";
+import { detectAdapters } from "@otuken/widget-sdk";
 import type { SecretBox } from "@otuken/security";
-import type { AppAction, AppJobView, CatalogApp, InstalledAppView } from "@otuken/shared";
+import type {
+  AppAction,
+  AppJobView,
+  CatalogApp,
+  InstalledAppView,
+  LocalizedText,
+} from "@otuken/shared";
 import type { AgentGateway } from "../../services.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
 import type { CatalogService } from "../catalogs/catalog-service.ts";
@@ -93,6 +100,32 @@ export class AppService {
       ) !== undefined
     );
   }
+  /** Installed (not removed) apps with their Compose project, for widgets. */
+  managedProjects(): Array<{ id: string; name: LocalizedText; project: string }> {
+    return this.#db
+      .all<{ id: string; name: string; project: string }>(
+        "SELECT id, name, project FROM installed_apps WHERE removed = 0 ORDER BY installed_at",
+      )
+      .map((row) => {
+        let name: LocalizedText = {};
+        try {
+          name = JSON.parse(row.name) as LocalizedText;
+        } catch {
+          // Keep an empty name rather than failing the widget.
+        }
+        return { id: row.id, name, project: row.project };
+      });
+  }
+
+  exists(id: string): boolean {
+    return (
+      this.#db.get<{ id: string }>(
+        "SELECT id FROM installed_apps WHERE id = ? AND removed = 0",
+        id,
+      ) !== undefined
+    );
+  }
+
   #row(id: string): AppRow | null {
     return (
       this.#db.get<AppRow>("SELECT * FROM installed_apps WHERE id = ? AND removed = 0", id) ?? null
@@ -156,6 +189,11 @@ export class AppService {
           dataCopyEligible:
             metadata.dataCopyEligible === true &&
             members.every((container) => container.state !== "running"),
+          widgetAdapters: detectAdapters(
+            (metadata.images ?? [])
+              .map((image) => image.reference)
+              .concat(members.map((c) => c.image)),
+          ),
         };
       });
   }

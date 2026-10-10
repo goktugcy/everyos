@@ -125,59 +125,64 @@ export interface WindowManagerActions {
   full-screen with a back button, and no overlapping windows exist. Switching shell size does not
   clear the current user's desktop windows.
 
-## 3. Widget platform (Phase 6)
+## 3. Widget platform (Phase 6, implemented)
+
+The complete contract, limits and verification are in [widgets.md](widgets.md). In short:
 
 ### 3.1 Widget manifest (versioned)
 
 ```jsonc
 {
   "schemaVersion": 1,
-  "id": "system.cpu", // "<provider>.<name>"
-  "version": "1.0.0",
-  "provider": "system", // built-in provider or an installed app integration id
-  "titleKey": "widgets.system.cpu.title",
-  "supportedSizes": ["small", "medium", "large"],
+  "id": "system.diskUsage", // "<provider>.<name>"; i18n key widgets.items.system_diskUsage
+  "version": 1, // configuration format; stored instances are migrated on load
+  "provider": "system", // system | docker | raspberryPi | built-in integration adapter
+  "categories": ["storage"],
+  "supportedSizes": ["compact", "small", "medium"], // + "custom" on the desktop
+  "defaultSize": "small",
   "placements": ["desktop", "sidebar", "menubar"],
-  "permissions": ["system:read"],
-  "dataSources": [{ "topic": "metrics.cpu", "minIntervalMs": 2000 }],
-  "configSchema": { "type": "object", "properties": { "showPerCore": { "type": "boolean" } } },
-  "requiresCapability": "procfs",
+  "permissions": ["system:read"], // required to add the widget and to receive its data
+  "requiresCapability": "procfs", // optional
+  "dataSources": [{ "topic": "data.storage", "minIntervalMs": 30000 }],
+  "config": [{ "key": "mount", "type": "mount", "default": "/" }],
 }
 ```
 
+Manifests live in `packages/widget-sdk/src/manifests.ts` and are validated by
+`WidgetManifestSchema`. Configuration UIs and validation are generated from `config`.
+
 ### 3.2 Data flow
 
-Widget rendering and data collection are separate. Collectors run on the server and publish to
-**topics**. The client keeps a single SSE connection per tab and multiplexes topic subscriptions
-over it. Ten CPU widgets cost one collector and one stream, not ten polls.
+Collectors run on the server behind **topics**: the stream topics `metrics` and `docker`, the
+shared `data.*` topics, and `data.integration.<id>.<feed>`. The browser keeps one SSE connection
+per tab (`/api/events?topics=…`) and reference-counts topics with `useTopic`. Data topics arrive as
+`event: data` with a `TopicMessage`
+(`ok` | `unavailable` with a reason | `error` with a code). The `DataHub` runs one collector per
+topic while anyone subscribes and checks permissions per subscriber. Ten CPU widgets in five tabs
+cost one collector.
 
 ```ts
-// server side (API): one collector per topic, reference-counted by subscribers
-export interface TopicProvider<T> {
-  topic: string; // "metrics.cpu", "docker.containers", "app.jellyfin.sessions"
-  permission: Permission; // checked per subscriber
-  minIntervalMs: number; // lower bound enforced server side
-  collect(signal: AbortSignal): Promise<T>;
+interface DataProvider {
+  topic: string;
+  permissions: readonly Permission[]; // all required, checked per subscriber
+  intervalMs: number; // the hub never collects more often
+  collect(signal: AbortSignal): Promise<ProviderResult>;
+  view?: (data: unknown, permissions: ReadonlySet<Permission>) => unknown; // per-subscriber filtering
 }
-
-// client side
-export function useTopic<T>(topic: string, options?: { intervalMs?: number }): TopicState<T>;
-export type TopicState<T> =
-  | { status: "loading" }
-  | { status: "ok"; data: T; at: number }
-  | { status: "unavailable"; reason: CapabilityReason | "app-offline" | "not-configured" }
-  | { status: "error"; code: ErrorCode };
 ```
 
 ### 3.3 Security rule
 
-Catalogs can **declare** that an app supports a built-in widget adapter (for example
-`"widgets": [{ "adapter": "jellyfin.sessions" }]`). They cannot ship executable widget code.
-Remote JavaScript is never imported into the desktop. A future third-party widget model would run
-in a sandboxed `<iframe sandbox>` with an explicit, permission-checked `postMessage` bridge.
-Credentials for application APIs are stored with the secret box and never sent to the browser.
-Every widget renders inside an error boundary, and an offline app shows the `app-offline` state
-instead of breaking the desktop.
+Catalogs cannot ship widget code. Adapters are matched from deployed image repositories, never
+from catalog claims, and remote JavaScript is never imported into the desktop. A future
+third-party widget model would run in a sandboxed `<iframe sandbox>` with an explicit,
+permission-checked `postMessage` bridge.
+
+- **Credentials** are sealed with the secret box and never sent to the browser.
+- **Visibility:** integration data is limited to app managers unless the administrator shares it
+  with everyone who can see apps.
+- **Failures:** every widget renders inside an error boundary. An offline app shows `app-offline`
+  instead of breaking the desktop, and simulated development data is labeled.
 
 ## 4. Catalog adapters (Phase 5)
 
@@ -293,7 +298,7 @@ export type RiskFlag =
 - Fetching uses an SSRF-safe client: http(s) only, public addresses only unless allowed
   explicitly, redirects re-validated, plus size and time limits.
 
-## 5. Implemented contracts (Phases 1–5)
+## 5. Implemented contracts (Phases 1–6)
 
 - **HTTP API:** [api.md](api.md).
 - **Agent operations:** `packages/agent-protocol/src/operations.ts`. Each operation declares a
@@ -311,3 +316,7 @@ export type RiskFlag =
   typed fields, immutable deployed images, durable recovery and data-copy eligibility are included.
   The executable types are authoritative; §4.2 remains the original design sketch. See
   [app-store.md](app-store.md) for the complete current contract and compatibility limits.
+- **Widgets:** zod-free constants/types in `packages/shared/src/widgets.ts`, schemas in
+  `packages/shared/src/schemas/widgets.ts`, manifests/layout/compatibility helpers in
+  `@otuken/widget-sdk`, providers in `apps/api/src/modules/widgets`, integrations in
+  `apps/api/src/modules/integrations`. See [widgets.md](widgets.md).

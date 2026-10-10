@@ -17,6 +17,7 @@ import { catalogRoutes } from "./modules/catalogs/routes.ts";
 import { appRoutes } from "./modules/apps/routes.ts";
 import { eventRoutes } from "./modules/events/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
+import { integrationRoutes } from "./modules/integrations/routes.ts";
 import { logRoutes } from "./modules/logs/routes.ts";
 import { preferenceRoutes } from "./modules/preferences/routes.ts";
 import { serviceRoutes } from "./modules/services/routes.ts";
@@ -58,6 +59,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/services", serviceRoutes(services));
   api.route("/logs", logRoutes(services));
   api.route("/docker", dockerRoutes(services));
+  api.route("/integrations", integrationRoutes(services));
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
   api.route("/events", eventRoutes(services));

@@ -191,3 +191,24 @@ app-data files/directories, with entry/byte bounds and no links or special files
 
 Verified with a root agent, UID 1000 API and real Docker in a dedicated ARM64 Linux VM. See
 [app-store.md](app-store.md) and [phase5-acceptance.json](phase5-acceptance.json).
+
+## D19 — Built-in widgets on shared server topics (2026-10)
+
+Widgets are built-in manifests and renderers. Catalog entries can only be matched to built-in
+adapters by deployed image repository, so app data reaches the desktop without executing remote
+code. A sandboxed third-party widget model is deferred, and would need its own permission bridge.
+
+Data is collected on the server behind reference-counted topics, multiplexed on the existing SSE
+stream (D15) as `event: data`. This was chosen over per-widget polling: N widgets in M tabs cost
+one collector, permissions are enforced per subscriber with per-subscriber views, and an app being
+offline is a state, not an exception. Collectors exist only while someone is subscribed.
+
+App integrations are explicit administrator consent, with sealed write-only credentials, a
+managers-only default audience, and an SSRF-checked client that allows LAN/loopback but never
+link-local/metadata addresses and never follows redirects. Feeds minimize data in the API rather
+than in the browser.
+
+Layouts are a per-user preference document. Desktop widgets use a coarse 80 px grid that refuses
+overlaps. When the work area shrinks, an effective layout moves widgets to free cells, and the
+saved layout adopts it on the next change. Widgets on missing virtual desktops move to the first
+one, like windows.

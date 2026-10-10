@@ -1,7 +1,7 @@
 import type { AppJobView, CatalogAppView, CatalogView, InstalledAppView } from "@otuken/shared";
 import { Package, Store } from "lucide-react";
 import { Tabs } from "radix-ui";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button.tsx";
 import { Field } from "../../../components/ui/field.tsx";
@@ -14,6 +14,9 @@ import { AddCatalog, CatalogCard } from "./catalogs.tsx";
 import { InstallDialog } from "./install-dialog.tsx";
 import { InstalledCard } from "./installed.tsx";
 import { localized, Progress } from "./parts.tsx";
+import { offerFor } from "../../widgets/offer.tsx";
+import { widgetUi } from "../../widgets/ui-store.ts";
+import { api } from "../../../lib/api.ts";
 
 const TABS = ["browse", "installed", "catalogs"] as const;
 export default function StoreApp() {
@@ -42,6 +45,16 @@ export default function StoreApp() {
     installed.reload();
     setTab("installed");
   };
+  // A freshly installed app offers its widgets ("Available widgets…, add to desktop?").
+  const onFinished = useCallback((job: AppJobView) => {
+    if (job.action !== "install" || job.stage !== "succeeded") return;
+    void api<{ apps: InstalledAppView[] }>("/apps")
+      .then(({ apps: list }) => {
+        const app = list.find((entry) => entry.id === job.appId);
+        if (app) widgetUi.offer(offerFor(app));
+      })
+      .catch(() => undefined);
+  }, []);
   const categories = [...new Set((apps.data?.apps ?? []).flatMap((app) => app.categories))].sort();
   const filtered = (apps.data?.apps ?? []).filter(
     (app) =>
@@ -73,7 +86,7 @@ export default function StoreApp() {
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {jobId ? (
           <div className="mb-4">
-            <Progress key={jobId} id={jobId} onChanged={installed.reload} />
+            <Progress key={jobId} id={jobId} onChanged={installed.reload} onFinished={onFinished} />
           </div>
         ) : null}
         <Tabs.Content value="browse" className="outline-none">

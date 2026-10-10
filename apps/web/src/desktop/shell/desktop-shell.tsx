@@ -1,3 +1,4 @@
+import { reassignDesktops } from "@otuken/widget-sdk";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
@@ -36,16 +37,22 @@ import {
 import { DesktopSurface } from "../surface/desktop-surface.tsx";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
+import { WidgetDesktopLayer } from "../widgets/desktop-layer.tsx";
+import { WidgetHost } from "../widgets/host.tsx";
 import { WindowLayer } from "../windows/window-layer.tsx";
 import { MobileShell } from "./mobile-shell.tsx";
 
 /** Restores the window session once and keeps the viewport in sync. */
 function useWindowSession(): void {
   const dock = usePreferences((state) => state.dock);
+  const sidebarOpen = usePreferences((state) => state.widgets.sidebar.open);
 
   useEffect(() => {
     const { initialWindows, desktop } = usePreferences.getState();
-    wm().setViewport(measureViewport(computeInsets(usePreferences.getState().dock)));
+    const preferences = usePreferences.getState();
+    wm().setViewport(
+      measureViewport(computeInsets(preferences.dock, preferences.widgets.sidebar.open)),
+    );
     const desktopIds = desktop.desktops.map((d) => d.id);
     if (initialWindows) {
       wm().hydrate(initialWindows, resolveSpec);
@@ -79,11 +86,11 @@ function useWindowSession(): void {
   }, []);
 
   useEffect(() => {
-    const update = () => wm().setViewport(measureViewport(computeInsets(dock)));
+    const update = () => wm().setViewport(measureViewport(computeInsets(dock, sidebarOpen)));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, [dock]);
+  }, [dock, sidebarOpen]);
 }
 
 function DesktopWorkspace() {
@@ -109,7 +116,9 @@ function DesktopWorkspace() {
           fallback={{ kind: "preset", id: "otuken-dusk" }}
         />
         <DesktopSurface />
+        <WidgetDesktopLayer />
         <WindowLayer />
+        <WidgetHost />
         <Menubar insecure={insecure} />
         <Dock />
         <Launcher />
@@ -153,6 +162,13 @@ export function DesktopShell() {
         const current = usePreferences.getState().desktop;
         if (pruneUnavailable(current, available) !== current) {
           updatePreference("desktop", (doc) => pruneUnavailable(doc, available));
+        }
+        const desktopIds = usePreferences.getState().desktop.desktops.map((d) => d.id);
+        const widgets = usePreferences.getState().widgets;
+        if (reassignDesktops(widgets, desktopIds) !== widgets) {
+          updatePreference("widgets", (doc) => reassignDesktops(doc, desktopIds));
+          // Saves a default desktop layout so its ids stay stable from now on.
+          updatePreference("desktop", (doc) => doc);
         }
       })
       .catch((error: unknown) => {

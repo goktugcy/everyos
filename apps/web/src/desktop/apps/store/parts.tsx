@@ -1,5 +1,5 @@
 import type { AppJobView, LocalizedText } from "@otuken/shared";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
@@ -22,7 +22,16 @@ export function operationReason(error: unknown): string | null {
     : null;
 }
 
-export function Progress({ id, onChanged }: { id: string; onChanged: () => void }) {
+export function Progress({
+  id,
+  onChanged,
+  onFinished,
+}: {
+  id: string;
+  onChanged: () => void;
+  /** Called once when the job succeeds or fails. */
+  onFinished?: (job: AppJobView) => void;
+}) {
   const { t } = useTranslation();
   const resource = useApiResource<AppJobView>(`/apps/jobs/${id}`, 5000);
   const [event, setEvent] = useState<AppJobView | null>(null);
@@ -30,6 +39,13 @@ export function Progress({ id, onChanged }: { id: string; onChanged: () => void 
     resource.data?.stage === "succeeded" || resource.data?.stage === "failed"
       ? resource.data
       : (event ?? resource.data);
+  const finished = job?.stage === "succeeded" || job?.stage === "failed" ? job : null;
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!finished || reported.current) return;
+    reported.current = true;
+    onFinished?.(finished);
+  }, [finished, onFinished]);
   useEffect(() => {
     const stream = new EventSource(`/api/apps/jobs/${id}/events`, { withCredentials: true });
     stream.addEventListener("progress", (message) => {

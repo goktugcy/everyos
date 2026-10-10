@@ -19,7 +19,8 @@
     "@otuken/shared": "workspace:*",
     "hono": "catalog:",
     "yaml": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@otuken/widget-sdk": "workspace:*"
   },
   "devDependencies": {
     "@otuken/system": "workspace:*"

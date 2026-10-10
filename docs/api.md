@@ -1,4 +1,4 @@
-# HTTP API (Phases 1–2)
+# HTTP API (Phases 1–6)
 
 Base path: `/api`. Bodies are JSON except raw wallpaper uploads. JSON responses are never cached
 (`Cache-Control: no-store`); owned wallpaper images use private immutable caching.
@@ -54,11 +54,11 @@ convenience; server idle/absolute session expiry remains the authentication boun
 All roles can customize their own desktop. This permission gives no authority over host or
 instance settings, or another user's data. Ownership is always taken from the session.
 
-| Method & path              | Description                                                                                                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /preferences`         | `{ preferences: Partial<PreferenceDocuments> }`. Missing documents use client defaults. Unexpected query fields are rejected.                                             |
-| `PUT /preferences/:key`    | Validated version-1 document → `204`. Keys: `appearance`, `desktop`, `dock`, `menubar`, `windows`, `security`. Unknown keys return `404`; invalid documents return `400`. |
-| `DELETE /preferences/:key` | Removes the current user's document → `204`. Security changes and resets are audited without document contents.                                                           |
+| Method & path              | Description                                                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /preferences`         | `{ preferences: Partial<PreferenceDocuments> }`. Missing documents use client defaults. Unexpected query fields are rejected.                                                        |
+| `PUT /preferences/:key`    | Validated version-1 document → `204`. Keys: `appearance`, `desktop`, `dock`, `menubar`, `windows`, `security`, `widgets`. Unknown keys return `404`; invalid documents return `400`. |
+| `DELETE /preferences/:key` | Removes the current user's document → `204`. Security changes and resets are audited without document contents.                                                                      |
 
 Schemas and bounds live in `packages/shared/src/schemas/preferences.ts`. Theme and wallpaper data
 are never executable. The web client queues writes per document, debounces edits, retries failures,
@@ -154,6 +154,15 @@ every 5 s, and `docker.change` with a lifecycle notification. Sampling runs whil
 A slow client receives the latest pending snapshot/notification instead of an unbounded queue;
 clients refetch inventories on changes and reconnects.
 
+**Widget data topics** can be added to the same stream: `data.system`, `data.storage`,
+`data.network`, `data.tailscale`, `data.processes`, `data.hardware`, `data.services`,
+`data.timers`, `data.sockets`, `data.apt`, `data.docker`, `data.alerts` and
+`data.integration.<id>.<feed>` (at most 64 topics per stream). They arrive as `event: data` with a
+`TopicMessage` (`{ topic, at, status: "ok", data }`, `{ …, status: "unavailable", reason }` or
+`{ …, status: "error", code }`). Unknown topics and topics the user may not read produce an
+`error` message for that topic only (`NOT_FOUND`, `FORBIDDEN`). Delivery is "latest wins" per topic.
+Permissions, intervals and payloads are listed in [widgets.md](widgets.md#3-data-topics).
+
 Every stream (`/events`, `/logs/stream`, Docker logs) re-checks access every 15 s without extending the session:
 it closes when the session is locked, revoked or expired, the account is disabled, or the role no
 longer grants the permission. Opening a stream from a locked session returns `423`.
@@ -180,6 +189,23 @@ session. Catalog management is administrator-only; installed provenance survives
 
 See [app-store.md](app-store.md) for generators, data-copy limits, unsupported formats and rollback
 semantics. Launch links and successful job outcomes do not promise application-level data rollback.
+
+## Application integrations (widgets)
+
+Credentials are write-only: responses carry `hasCredentials`, never the secret. Every mutation and
+quick-control action is audited, and invalidates the integration's data topics.
+
+| Method & path                    | Permission    | Description                                                                                                                                                                                                                                       |
+| -------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /integrations`              | `apps:read`   | `{ integrations: IntegrationView[] }`, filtered by audience: `managers` integrations are listed only with `apps:manage`.                                                                                                                          |
+| `POST /integrations`             | `apps:manage` | `{ adapter, name, appId?, baseUrl?, audience?, secret?, username?, options? }` → `201 IntegrationView`. `baseUrl` is http(s) without user info. `options`: Home Assistant `entities`/`controlEntities`, PostgreSQL `container`/`user`/`database`. |
+| `PATCH /integrations/:id`        | `apps:manage` | Partial update; `secret` replaces the stored credential, `clearSecret: true` removes it.                                                                                                                                                          |
+| `DELETE /integrations/:id`       | `apps:manage` | Deletes the integration and its sealed credential → `204`.                                                                                                                                                                                        |
+| `POST /integrations/:id/test`    | `apps:manage` | Runs the adapter once → `{ status: "ok" }`, `{ status: "unavailable", reason }` (e.g. `auth-failed`, `app-offline`) or `{ status: "error", code }` (e.g. `UNSAFE_ADDRESS`).                                                                       |
+| `POST /integrations/:id/actions` | `apps:manage` | Home Assistant quick control `{ entityId, service: "toggle" \| "turn_on" \| "turn_off" }` → `{ accepted: true }`. Only entities in `controlEntities`; others → `403`.                                                                             |
+
+`GET /apps` and `GET /catalogs/apps` include `widgetAdapters`: built-in adapters matched from the
+deployed (or declared) image repositories.
 
 ## Docker
 

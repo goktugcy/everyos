@@ -16,6 +16,7 @@ import {
   Trash2,
   Pencil,
   FolderInput,
+  PanelsTopLeft,
 } from "lucide-react";
 import {
   memo,
@@ -52,6 +53,8 @@ import {
 } from "../state/preferences-store.ts";
 import { useWindowManager } from "../state/window-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
+import { widgetActions } from "../widgets/actions.ts";
+import { widgetUi } from "../widgets/ui-store.ts";
 import {
   cellAt,
   cellRect,
@@ -305,6 +308,21 @@ export function DesktopSurface() {
                   ),
               }))
             : [{ kind: "label" as const, id: "none", label: t("desktop.menu.noShortcutsLeft") }],
+      },
+      { kind: "separator", id: "s0" },
+      {
+        kind: "item",
+        id: "add-widget",
+        label: t("widgets.menu.addWidget"),
+        icon: <PanelsTopLeft />,
+        onSelect: () => widgetUi.openGallery("desktop"),
+      },
+      {
+        kind: "check",
+        id: "widget-sidebar",
+        label: t("widgets.sidebar.label"),
+        checked: usePreferences.getState().widgets.sidebar.open,
+        onCheckedChange: (open) => widgetActions.setSidebar(open),
       },
       { kind: "separator", id: "s1" },
       {

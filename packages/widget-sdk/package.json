@@ -1,0 +1,16 @@
+{
+  "name": "@otuken/widget-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Otuken widget platform: versioned manifests of built-in widgets, configuration validation, compatibility checks, app adapter detection and layout operations. Zod-free and safe for the browser.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/shared": "workspace:*"
+  }
+}

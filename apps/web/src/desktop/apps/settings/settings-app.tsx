@@ -2,6 +2,7 @@ import {
   Info,
   LayoutDashboard,
   Palette,
+  PanelsTopLeft,
   ShieldCheck,
   UserRound,
   type LucideIcon,
@@ -17,6 +18,7 @@ const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnTyp
   {
     appearance: { icon: Palette, component: lazy(() => import("./appearance-section.tsx")) },
     desktop: { icon: LayoutDashboard, component: lazy(() => import("./desktop-section.tsx")) },
+    widgets: { icon: PanelsTopLeft, component: lazy(() => import("./widgets-section.tsx")) },
     account: { icon: UserRound, component: lazy(() => import("./account-section.tsx")) },
     security: { icon: ShieldCheck, component: lazy(() => import("./security-section.tsx")) },
     about: { icon: Info, component: lazy(() => import("./about-section.tsx")) },
