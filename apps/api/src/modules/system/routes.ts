@@ -51,7 +51,10 @@ export function systemRoutes(services: Services): Hono<AppEnv> {
       );
       return c.json(info);
     } catch (error) {
-      c.get("logger").warn("system.info failed", { error });
+      // A client that navigates away (or React re-running an effect in dev)
+      // aborts its request; that is routine, not a failure worth a warning.
+      if (c.req.raw.signal.aborted) c.get("logger").debug("system.info cancelled by client");
+      else c.get("logger").warn("system.info failed", { error });
       throw toApiError(error);
     }
   });

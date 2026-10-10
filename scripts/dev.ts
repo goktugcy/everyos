@@ -5,7 +5,8 @@
  * the agent refuses to run as root, and nothing on the host is modified.
  */
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -65,10 +66,21 @@ function shutdown(code: number): void {
 process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
+/**
+ * Resolves Vite's CLI from the web workspace. pnpm installs it only under
+ * apps/web/node_modules (it is not a root dependency).
+ */
+function resolveViteCli(): string {
+  const webRequire = createRequire(join(root, "apps/web/package.json"));
+  const manifestPath = webRequire.resolve("vite/package.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { bin: { vite: string } };
+  return join(dirname(manifestPath), manifest.bin.vite);
+}
+
 const node = process.execPath;
 run("agent", node, ["--watch", "--watch-preserve-output", "src/main.ts"], join(root, "apps/agent"));
 run("api", node, ["--watch", "--watch-preserve-output", "src/main.ts"], join(root, "apps/api"));
-run("web", node, [join(root, "node_modules/vite/bin/vite.js")], join(root, "apps/web"));
+run("web", node, [resolveViteCli()], join(root, "apps/web"));
 
 console.log(
   `\nOtuken development environment\n  web  → http://127.0.0.1:5173\n  api  → http://127.0.0.1:7470\n  data → ${devRoot}\n`,

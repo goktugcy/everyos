@@ -363,7 +363,13 @@ export class AgentServer {
       }
     } catch (error) {
       if (error instanceof OperationError) {
-        log.warn("Operation failed", { ...auditFields, code: error.code, message: error.message });
+        // Client-side cancellation is routine; real failures stay visible.
+        const level = error.code === "cancelled" ? "debug" : "warn";
+        log[level]("Operation failed", {
+          ...auditFields,
+          code: error.code,
+          message: error.message,
+        });
         reply({ code: error.code, message: error.message });
       } else {
         log.error("Operation crashed", { ...auditFields, error });
