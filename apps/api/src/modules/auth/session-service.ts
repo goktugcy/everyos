@@ -10,6 +10,8 @@ export interface Session {
   expiresAt: number;
   ip: string | null;
   userAgent: string | null;
+  /** Set while the session is locked; protected host/account operations are denied. */
+  lockedAt: number | null;
 }
 
 interface SessionRow {
@@ -20,6 +22,7 @@ interface SessionRow {
   expires_at: number;
   ip: string | null;
   user_agent: string | null;
+  locked_at: number | null;
 }
 
 function toSession(row: SessionRow): Session {
@@ -31,6 +34,7 @@ function toSession(row: SessionRow): Session {
     expiresAt: row.expires_at,
     ip: row.ip,
     userAgent: row.user_agent,
+    lockedAt: row.locked_at,
   };
 }
 
@@ -90,6 +94,7 @@ export class SessionService {
         expiresAt: now + this.#policy.maxAgeMs,
         ip: client.ip,
         userAgent,
+        lockedAt: null,
       },
       token,
     };
@@ -139,6 +144,18 @@ export class SessionService {
         userAgent: row.user_agent,
         current: row.id === currentSessionId,
       }));
+  }
+
+  lock(sessionId: string): void {
+    this.#db.run(
+      "UPDATE sessions SET locked_at = COALESCE(locked_at, ?) WHERE id = ?",
+      this.#now(),
+      sessionId,
+    );
+  }
+
+  unlock(sessionId: string): void {
+    this.#db.run("UPDATE sessions SET locked_at = NULL WHERE id = ?", sessionId);
   }
 
   revoke(sessionId: string): boolean {

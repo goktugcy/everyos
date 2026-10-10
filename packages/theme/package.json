@@ -1,0 +1,16 @@
+{
+  "name": "@otuken/theme",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Otuken theme engine: presets, user customization, render modes, WCAG contrast guarantees and CSS custom property generation.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/shared": "workspace:*"
+  }
+}

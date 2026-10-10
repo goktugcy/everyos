@@ -23,6 +23,7 @@ export const PERMISSIONS = [
   "users:manage",
   "settings:manage",
   "audit:read",
+  "preferences:manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -32,6 +33,7 @@ export const ROLES = ["admin", "operator", "viewer"] as const;
 export type Role = (typeof ROLES)[number];
 
 const VIEWER_PERMISSIONS: readonly Permission[] = [
+  "preferences:manage",
   "system:read",
   "services:read",
   "docker:read",

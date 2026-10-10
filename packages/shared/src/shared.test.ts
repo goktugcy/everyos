@@ -12,9 +12,12 @@ describe("roles", () => {
     expect(permissionsForRole("admin").sort()).toEqual([...PERMISSIONS].sort());
   });
 
-  it("keeps viewers read-only", () => {
-    for (const permission of ROLE_PERMISSIONS.viewer)
+  it("keeps viewers read-only on host resources while allowing personal preferences", () => {
+    expect(roleHasPermission("viewer", "preferences:manage")).toBe(true);
+    for (const permission of ROLE_PERMISSIONS.viewer) {
+      if (permission === "preferences:manage") continue;
       expect(permission.endsWith(":read")).toBe(true);
+    }
   });
 
   it("does not give operators administrative or terminal access", () => {

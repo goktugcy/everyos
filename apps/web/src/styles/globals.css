@@ -3,52 +3,58 @@
 /*
  * Otuken design tokens.
  *
- * Every visual decision flows from CSS custom properties so the Phase 2 theme
- * engine can switch presets (Liquid Dark, Frost Blue, Aurora, …) and apply
- * user overrides at runtime without rebuilding or restarting anything.
- * Colors are stored as "r g b" triplets so alpha can vary per use.
+ * Every visual decision flows from CSS custom properties. The theme engine
+ * (@otuken/theme) resolves the user's appearance settings into these
+ * variables and sets them on <html> at runtime, so switching themes needs no
+ * rebuild and no server restart. The values below are the Liquid Dark
+ * defaults used before preferences load (first paint, sign-in screens).
+ * Colors are "r g b" triplets so alpha can vary per use.
  */
-:root,
-[data-theme="liquid-dark"] {
+:root {
   --otk-accent: 125 211 252;
   --otk-accent-strong: 99 132 255;
-  --otk-accent-contrast: 8 12 28;
+  --otk-accent-contrast: 11 16 32;
+  --otk-button-from: 125 211 252;
+  --otk-button-to: 99 132 255;
   --otk-danger: 251 113 133;
   --otk-success: 52 211 153;
   --otk-warning: 251 191 36;
 
   --otk-text: 241 245 251;
   --otk-text-muted: 203 213 230;
-  --otk-text-subtle: 148 163 190;
+  --otk-text-subtle: 163 177 201;
 
   --otk-surface: 16 22 38;
-  --otk-surface-opacity: 0.58;
+  --otk-surface-opacity: 0.6;
   --otk-surface-strong-opacity: 0.78;
   --otk-border: 255 255 255;
   --otk-border-opacity: 0.12;
   --otk-highlight-opacity: 0.1;
   --otk-shadow-opacity: 0.55;
+  --otk-hover: 255 255 255;
+  --otk-inset: 0 0 0;
+  --otk-inset-opacity: 0.28;
 
-  --otk-blur: 22px;
+  --otk-blur: 16px;
   --otk-saturate: 165%;
   --otk-radius-sm: 10px;
   --otk-radius-md: 14px;
   --otk-radius-lg: 22px;
   --otk-font-scale: 1;
+  --otk-icon-size: 52px;
 
   --otk-wallpaper-base: #070b18;
   --otk-wallpaper-a: 56 189 248;
   --otk-wallpaper-b: 99 102 241;
   --otk-wallpaper-c: 16 185 129;
 
+  --otk-menubar-height: 36px;
+
   color-scheme: dark;
 }
 
-/* Performance preset (and browsers without backdrop-filter): opaque surfaces, no blur. */
-[data-render="performance"] {
-  --otk-blur: 0px;
-  --otk-surface-opacity: 0.92;
-  --otk-surface-strong-opacity: 0.96;
+[data-scheme="light"] {
+  color-scheme: light;
 }
 
 @theme {
@@ -67,6 +73,8 @@
   --color-success: rgb(var(--otk-success));
   --color-warning: rgb(var(--otk-warning));
   --color-line: rgb(var(--otk-border) / var(--otk-border-opacity));
+  /* Neutral overlay for hover/selection: white on dark themes, ink on light themes. */
+  --color-hover: rgb(var(--otk-hover));
 
   --radius-otk-sm: var(--otk-radius-sm);
   --radius-otk-md: var(--otk-radius-md);
@@ -109,9 +117,9 @@
 
 /*
  * Glass surfaces. A translucent tinted base, a soft top-down sheen, a hairline
- * border and an inner highlight give depth without hurting text contrast:
- * surface opacity stays high enough that body text keeps ≥ 4.5:1 contrast
- * against any wallpaper.
+ * border and an inner highlight give depth. The theme engine guarantees the
+ * surface opacity is high enough for WCAG AA text contrast on the current
+ * wallpaper (see packages/theme/src/resolve.ts).
  */
 @utility glass {
   position: relative;
@@ -125,34 +133,43 @@
   border: 1px solid rgb(var(--otk-border) / var(--otk-border-opacity));
   box-shadow:
     0 30px 70px -28px rgb(0 0 0 / var(--otk-shadow-opacity)),
-    inset 0 1px 0 0 rgb(255 255 255 / 0.14);
+    inset 0 1px 0 0 rgb(255 255 255 / calc(var(--otk-highlight-opacity) * 1.4));
   -webkit-backdrop-filter: blur(var(--otk-blur)) saturate(var(--otk-saturate));
   backdrop-filter: blur(var(--otk-blur)) saturate(var(--otk-saturate));
 }
 
 @utility glass-strong {
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(255 255 255 / 0.01) 40%),
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / calc(var(--otk-highlight-opacity) * 0.8)),
+      rgb(255 255 255 / 0.01) 40%
+    ),
     rgb(var(--otk-surface) / var(--otk-surface-strong-opacity));
   border: 1px solid rgb(var(--otk-border) / var(--otk-border-opacity));
   box-shadow:
     0 30px 70px -28px rgb(0 0 0 / var(--otk-shadow-opacity)),
-    inset 0 1px 0 0 rgb(255 255 255 / 0.12);
+    inset 0 1px 0 0 rgb(255 255 255 / calc(var(--otk-highlight-opacity) * 1.2));
   -webkit-backdrop-filter: blur(calc(var(--otk-blur) * 1.25)) saturate(var(--otk-saturate));
   backdrop-filter: blur(calc(var(--otk-blur) * 1.25)) saturate(var(--otk-saturate));
 }
 
-/* Inset field surface used by inputs. */
+/* Inset field surface used by inputs and wells. */
 @utility glass-inset {
-  background: rgb(0 0 0 / 0.28);
-  border: 1px solid rgb(var(--otk-border) / 0.1);
-  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.35);
+  background: rgb(var(--otk-inset) / var(--otk-inset-opacity));
+  border: 1px solid rgb(var(--otk-border) / calc(var(--otk-border-opacity) + 0.04));
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18);
+}
+
+@utility button-accent {
+  background: linear-gradient(135deg, rgb(var(--otk-button-from)), rgb(var(--otk-button-to)));
+  color: rgb(var(--otk-accent-contrast));
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root {
-    --otk-surface-opacity: 0.92;
-    --otk-surface-strong-opacity: 0.96;
+    --otk-surface-opacity: 0.94 !important;
+    --otk-surface-strong-opacity: 0.97 !important;
   }
 }
 
@@ -180,17 +197,44 @@
   }
 }
 
+@keyframes otk-window-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes otk-window-scale {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+
 .otk-aurora-blob {
-  animation: otk-drift 48s ease-in-out infinite;
   will-change: transform;
+}
+
+[data-wallpaper-animated="true"] .otk-aurora-blob {
+  animation: otk-drift 48s ease-in-out infinite;
 }
 
 .otk-enter {
   animation: otk-rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-[data-render="performance"] .otk-aurora-blob {
-  animation: none;
+[data-window-animation="fade"] .otk-window-enter {
+  animation: otk-window-fade 160ms ease-out both;
+}
+
+[data-window-animation="scale"] .otk-window-enter {
+  animation: otk-window-scale 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+[data-render="performance"] *,
+[data-render="performance"] *::before,
+[data-render="performance"] *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

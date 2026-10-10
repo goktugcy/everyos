@@ -13,7 +13,7 @@ export async function parseJsonBody<S extends z.ZodType>(
 ): Promise<z.output<S>> {
   const contentType = c.req.header("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("application/json")) {
-    throw new ApiError(415, "BAD_REQUEST", "Expected an application/json body");
+    throw new ApiError(415, "UNSUPPORTED_MEDIA_TYPE", "Expected an application/json body");
   }
   let raw: unknown;
   try {
@@ -34,6 +34,16 @@ export function parseQuery<S extends z.ZodType>(c: Context, schema: S): z.output
   const result = schema.safeParse(c.req.query());
   if (!result.success) {
     throw new ApiError(400, "VALIDATION_FAILED", "Invalid query parameters", {
+      details: issues(result.error),
+    });
+  }
+  return result.data;
+}
+
+export function parseParams<S extends z.ZodType>(c: Context, schema: S): z.output<S> {
+  const result = schema.safeParse(c.req.param());
+  if (!result.success) {
+    throw new ApiError(400, "VALIDATION_FAILED", "Invalid path parameters", {
       details: issues(result.error),
     });
   }

@@ -1,11 +1,11 @@
 # Otuken contracts
 
-This document defines the contracts that later phases implement: the desktop application contract,
-the window manager API, the widget platform and the catalog adapter interface. The agent operation
-contract and the HTTP API already exist in code (Phase 1) and are summarized at the end.
+This document describes the implemented desktop and window-manager contracts (Phase 2), and planned
+widget and catalog contracts. The agent operation contract and HTTP API exist in code and are
+summarized at the end.
 
-The TypeScript definitions here are the **intended shape**. Implementations may refine them, and
-this document is updated in the same change.
+The Phase 2 source files are authoritative; the later-phase TypeScript definitions are intended
+shapes and will be refined alongside implementation.
 
 ---
 
@@ -16,60 +16,49 @@ desktop through a static manifest and a lazily imported component. The desktop n
 code at startup; it loads an app only when the user opens it (code splitting per app).
 
 ```ts
-// packages/desktop/src/app-registry.ts
+// apps/web/src/desktop/apps/types.ts
 export interface DesktopAppManifest {
-  id: string; // "otuken.docker" — stable, used in layouts and deep links
-  titleKey: TranslationKey; // i18n key, never a literal string
-  icon: IconRef; // built-in icon id or bundled asset; never a remote URL
+  id: AppId;
+  titleKey: `apps.${keyof Messages["apps"]}`; // i18n key, never a literal title
+  icon: LucideIcon; // bundled icon; never a remote URL
+  tint: string; // bundled Tailwind gradient classes
   category: "system" | "apps" | "tools" | "settings";
-  /** Permission needed to see the app at all (UI hint; the API enforces it independently). */
   requiredPermission?: Permission;
-  /** Capability the host must provide (e.g. "docker"); otherwise the app explains why it is unavailable. */
-  requiredCapability?: CapabilityId;
+  hidden?: boolean;
+  keywords?: string[];
   window: {
     defaultSize: { width: number; height: number };
     minSize: { width: number; height: number };
-    resizable: boolean;
     /** "single": focus the existing window instead of opening a second one. */
     instancing: "single" | "multiple";
   };
-  /** Commands shown in the app menu, dock menu and global search. */
-  commands?: AppCommand[];
-  load: () => Promise<{ default: ComponentType<DesktopAppProps> }>;
+  load: () => Promise<{ default: ComponentType }>;
 }
 
-export interface DesktopAppProps {
-  windowId: WindowId;
-  /** Opaque, serializable state restored with the layout (e.g. current folder). */
-  initialState?: unknown;
-  setWindowState(state: unknown): void; // persisted, debounced
+// apps/web/src/desktop/apps/app-context.ts
+export interface AppHost {
+  windowId: string;
+  appState: unknown;
+  setAppState(state: unknown): void;
   setTitle(title: string): void;
-  setBadge(count: number | null): void; // dock badge
-}
-
-export interface AppCommand {
-  id: string;
-  titleKey: TranslationKey;
-  shortcut?: string; // "Mod+Shift+T"
-  requiredPermission?: Permission;
-  run(ctx: CommandContext): void | Promise<void>;
+  close(): void;
 }
 ```
 
 **Rules**
 
 - Apps receive host data only through the API client. They never talk to the agent.
-- App state that must survive a reload goes through `setWindowState`, which persists it in the
-  per-user layout (`user_preferences`, key `desktop.layout`), debounced to at most one write per
-  second.
+- Apps access their host through `AppHostContext` / `useAppHost`. Persisted state goes through
+  `setAppState` in the per-user `windows` preference document, debounced to at most one write per
+  second. Settings stores its current section; Folder stores its desktop folder id.
 - Every action that is reachable by right-click must also be reachable by keyboard and touch (the
   app menu and the command palette).
 
 ## 2. Window manager API (Phase 2)
 
-`packages/window-manager` is framework-light state plus thin React bindings. Window geometry lives
-in a Zustand store that is updated with transient subscriptions during drag and resize, so moving a
-window re-renders only that window frame and never the app contents.
+`packages/window-manager` exposes a framework-independent Zustand store. The React binding lives
+in `apps/web/src/desktop/state/window-store.ts`. Drag/resize previews paint DOM styles directly on
+animation frames; the store receives committed geometry on release, preserving app contents.
 
 ```ts
 export type WindowId = string;
@@ -80,26 +69,48 @@ export interface WindowState {
   desktopId: string; // virtual desktop
   title: string;
   bounds: { x: number; y: number; width: number; height: number };
-  mode: "normal" | "minimized" | "maximized" | "fullscreen" | { snapped: SnapZone };
+  layout: WindowLayout;
+  minimized: boolean;
   z: number;
+  minSize: { width: number; height: number };
   appState?: unknown;
 }
 
-export type SnapZone = "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+export type WindowLayout =
+  | "floating"
+  | "maximized"
+  | "fullscreen"
+  | "left"
+  | "right"
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
 
-export interface DesktopController {
-  openApp(appId: string, options?: { state?: unknown; desktopId?: string }): WindowId;
-  openWindow(appId: string, options?: { state?: unknown }): WindowId; // forces a new instance
-  focusWindow(id: WindowId): void;
-  minimizeWindow(id: WindowId): void;
-  maximizeWindow(id: WindowId): void;
-  restoreWindow(id: WindowId): void;
+export interface WindowManagerActions {
+  open(
+    spec: WindowSpec,
+    options?: { appState?: unknown; desktopId?: string; newInstance?: boolean },
+  ): WindowId;
+  close(id: WindowId): void;
+  focus(id: WindowId): void;
+  minimize(id: WindowId): void;
+  restore(id: WindowId): void;
+  toggleMaximize(id: WindowId): void;
   toggleFullscreen(id: WindowId): void;
-  snapWindow(id: WindowId, zone: SnapZone): void;
-  tileWindows(desktopId: string, layout: "columns" | "grid"): void;
-  moveWindow(id: WindowId, bounds: Partial<WindowState["bounds"]>): void;
-  closeWindow(id: WindowId): void;
-  cycleWindows(direction: 1 | -1): void; // Alt+Tab equivalent
+  setLayout(id: WindowId, layout: WindowLayout): void;
+  setBounds(id: WindowId, bounds: WindowState["bounds"]): void;
+  setTitle(id: WindowId, title: string): void;
+  setAppState(id: WindowId, state: unknown): void;
+  setViewport(viewport: Viewport): void;
+  switchDesktop(desktopId: string): void;
+  moveToDesktop(id: WindowId, desktopId: string): void;
+  mergeDesktop(from: string, into: string): void;
+  cycle(direction: 1 | -1): void;
+  tile(mode: "columns" | "grid"): void;
+  minimizeAll(): void;
+  hydrate(session: WindowSession, resolveSpec: (appId: string) => WindowSpec | null): void;
+  serialize(): WindowSession;
 }
 ```
 
@@ -107,10 +118,12 @@ export interface DesktopController {
 
 - After every viewport change and every layout restore, each window's title bar must stay at
   least 48 px inside the viewport. Windows can never become unreachable.
-- Layouts are stored in relative units, so a different display resolution maps windows
-  proportionally before the clamp is applied.
+- Layouts store pixel bounds plus the original viewport dimensions, so a different display
+  resolution maps windows proportionally before clamping. Unknown or forbidden apps are omitted
+  during hydration; windows from removed desktops move to the first desktop.
 - On narrow viewports (< 768 px) the shell switches to a mobile launcher. There, apps open
-  full-screen with a back gesture, and no overlapping windows exist.
+  full-screen with a back button, and no overlapping windows exist. Switching shell size does not
+  clear the current user's desktop windows.
 
 ## 3. Widget platform (Phase 6)
 
@@ -279,7 +292,7 @@ export type RiskFlag =
 - Fetching uses an SSRF-safe client: http(s) only, public addresses only unless allowed
   explicitly, redirects re-validated, plus size and time limits.
 
-## 5. Implemented contracts (Phase 1)
+## 5. Implemented contracts (Phases 1–2)
 
 - **HTTP API:** [api.md](api.md).
 - **Agent operations:** `packages/agent-protocol/src/operations.ts`. Each operation declares a

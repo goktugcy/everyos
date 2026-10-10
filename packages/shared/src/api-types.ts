@@ -56,6 +56,8 @@ export interface SessionInfo {
     id: string;
     createdAt: number;
     expiresAt: number;
+    /** A locked session only accepts unlock, logout and session reads. */
+    locked: boolean;
   };
 }
 

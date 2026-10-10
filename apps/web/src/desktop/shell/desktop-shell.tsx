@@ -1,0 +1,204 @@
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { LogoMark } from "../../components/brand/logo.tsx";
+import { Alert } from "../../components/ui/alert.tsx";
+import { Button } from "../../components/ui/button.tsx";
+import { Spinner } from "../../components/ui/spinner.tsx";
+import { useMediaQuery } from "../../lib/use-media-query.ts";
+import { errorMessage } from "../../lib/errors.ts";
+import { registerBeforeSignOut, useSessionStore } from "../../stores/session-store.ts";
+import { getApp, isAppAllowed } from "../apps/registry.ts";
+import { Dock } from "../dock/dock.tsx";
+import { Launcher } from "../launcher/launcher.tsx";
+import { LockScreen } from "../lock/lock-screen.tsx";
+import { useAutoLock } from "../lock/use-auto-lock.ts";
+import { ConfirmHost } from "../menus/confirm.tsx";
+import { Menubar } from "../menubar/menubar.tsx";
+import { useDesktopShortcuts } from "../shortcuts.ts";
+import { resolveSpec } from "../state/controller.ts";
+import { pruneUnavailable } from "../state/desktop-ops.ts";
+import {
+  discardPending,
+  flushPending,
+  flushPreferences,
+  loadPreferences,
+  scheduleSave,
+  updatePreference,
+  usePreferences,
+} from "../state/preferences-store.ts";
+import {
+  computeInsets,
+  measureViewport,
+  useWindowManager,
+  windowManager,
+  wm,
+} from "../state/window-store.ts";
+import { DesktopSurface } from "../surface/desktop-surface.tsx";
+import { useThemeStore } from "../theme/theme-store.ts";
+import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
+import { WindowLayer } from "../windows/window-layer.tsx";
+import { MobileShell } from "./mobile-shell.tsx";
+
+/** Restores the window session once and keeps the viewport in sync. */
+function useWindowSession(): void {
+  const dock = usePreferences((state) => state.dock);
+
+  useEffect(() => {
+    const { initialWindows, desktop } = usePreferences.getState();
+    wm().setViewport(measureViewport(computeInsets(usePreferences.getState().dock)));
+    const desktopIds = desktop.desktops.map((d) => d.id);
+    if (initialWindows) {
+      wm().hydrate(initialWindows, resolveSpec);
+      usePreferences.setState({ initialWindows: null });
+    }
+    // Windows on desktops that no longer exist move to the first desktop.
+    for (const window of Object.values(wm().windows)) {
+      if (!desktopIds.includes(window.desktopId)) wm().moveToDesktop(window.id, desktopIds[0]!);
+    }
+    if (!desktopIds.includes(wm().activeDesktopId)) wm().switchDesktop(desktopIds[0]!);
+
+    // Persist the window layout (debounced) whenever it changes.
+    let last = JSON.stringify(wm().serialize());
+    const unsubscribe = windowManager.subscribe(() => {
+      const next = JSON.stringify(wm().serialize());
+      if (next === last) return;
+      last = next;
+      scheduleSave("windows", () => wm().serialize(), 1_000);
+    });
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flushPreferences();
+    };
+    window.addEventListener("pagehide", flushPreferences);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("pagehide", flushPreferences);
+      document.removeEventListener("visibilitychange", onHide);
+      flushPreferences();
+    };
+  }, []);
+
+  useEffect(() => {
+    const update = () => wm().setViewport(measureViewport(computeInsets(dock)));
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [dock]);
+}
+
+function DesktopWorkspace() {
+  const { t } = useTranslation();
+  const locked = useSessionStore((state) => state.locked);
+  const bootstrap = useSessionStore((state) => state.bootstrap);
+  const saveError = usePreferences((state) => state.saveError);
+  const theme = useThemeStore((state) => state.theme);
+  const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
+  const desktopWallpaper = usePreferences(
+    (state) => state.desktop.desktops.find((d) => d.id === activeDesktopId)?.wallpaper ?? null,
+  );
+  useWindowSession();
+  useDesktopShortcuts();
+  useAutoLock();
+
+  const insecure = bootstrap ? !bootstrap.transport.secure && !bootstrap.transport.loopback : false;
+  return (
+    <>
+      <div className="fixed inset-0 overflow-hidden" inert={locked} data-testid="desktop">
+        <WallpaperView
+          spec={desktopWallpaper ?? theme.wallpaper}
+          fallback={{ kind: "preset", id: "otuken-dusk" }}
+        />
+        <DesktopSurface />
+        <WindowLayer />
+        <Menubar insecure={insecure} />
+        <Dock />
+        <Launcher />
+        <ConfirmHost />
+        {saveError ? (
+          <div className="fixed right-3 top-12 z-[75] w-80">
+            <Alert tone="warning">{t("common.saveFailed")}</Alert>
+          </div>
+        ) : null}
+      </div>
+      {locked ? <LockScreen /> : null}
+    </>
+  );
+}
+
+/**
+ * The signed-in experience: loads per-user preferences, then shows the full
+ * desktop on wide screens or the simplified launcher on phones.
+ */
+export function DesktopShell() {
+  const { t } = useTranslation();
+  const ready = usePreferences((state) => state.ready);
+  const permissions = useSessionStore((state) => state.session?.permissions);
+  const sessionId = useSessionStore((state) => state.session?.session.id);
+  const locked = useSessionStore((state) => state.locked);
+  const mobile = useMediaQuery("(max-width: 767px)");
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    if (!permissions || ready || locked) return;
+    const controller = new AbortController();
+    void loadPreferences({ t, permissions }, controller.signal)
+      .then(() => {
+        if (controller.signal.aborted) return;
+        // Drop shortcuts to apps this user can no longer open (e.g. after a role change).
+        const available = (appId: string) => {
+          const manifest = getApp(appId);
+          return Boolean(manifest && isAppAllowed(manifest, permissions));
+        };
+        const current = usePreferences.getState().desktop;
+        if (pruneUnavailable(current, available) !== current) {
+          updatePreference("desktop", (doc) => pruneUnavailable(doc, available));
+        }
+      })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) setLoadError(error);
+      });
+    return () => controller.abort();
+  }, [t, permissions, sessionId, ready, locked, attempt]);
+
+  useEffect(() => {
+    const unregister = registerBeforeSignOut(flushPending);
+    return () => {
+      unregister();
+      discardPending();
+      wm().hydrate(
+        { version: 1, viewport: { width: 1, height: 1 }, activeDesktopId: "d1", windows: [] },
+        () => null,
+      );
+      usePreferences.setState({ ready: false, initialWindows: null });
+    };
+  }, [sessionId]);
+
+  if (!ready) {
+    if (locked) return <LockScreen />;
+    if (loadError) {
+      return (
+        <div className="flex min-h-dvh items-center justify-center p-6">
+          <div className="glass-strong flex max-w-md flex-col gap-4 rounded-otk-lg p-6">
+            <Alert tone="danger">{errorMessage(t, loadError)}</Alert>
+            <Button
+              onClick={() => {
+                setLoadError(null);
+                setAttempt((value) => value + 1);
+              }}
+            >
+              {t("common.retry")}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex min-h-dvh items-center justify-center gap-4">
+        <LogoMark className="size-12" />
+        <Spinner className="size-5 text-fg-subtle" label={t("common.loading")} />
+      </div>
+    );
+  }
+  return mobile ? <MobileShell /> : <DesktopWorkspace />;
+}

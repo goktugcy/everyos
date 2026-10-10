@@ -64,7 +64,7 @@ export function PasswordField(props: Omit<FieldProps, "type" | "trailing">) {
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="grid size-9 place-items-center rounded-otk-sm text-fg-subtle hover:bg-white/8 hover:text-fg"
+          className="grid size-9 place-items-center rounded-otk-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
           aria-label={visible ? t("common.hidePassword") : t("common.showPassword")}
           aria-pressed={visible}
         >

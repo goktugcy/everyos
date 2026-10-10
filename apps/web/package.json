@@ -11,9 +11,14 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@dnd-kit/core": "catalog:",
+    "@dnd-kit/sortable": "catalog:",
+    "@dnd-kit/utilities": "catalog:",
     "@fontsource-variable/inter": "catalog:",
     "@otuken/i18n": "workspace:*",
     "@otuken/shared": "workspace:*",
+    "@otuken/theme": "workspace:*",
+    "@otuken/window-manager": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "i18next": "catalog:",

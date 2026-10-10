@@ -84,3 +84,22 @@ to the console.
 device (local storage) applies before sign-in, and the user's saved preference applies after.
 **Why:** This is a product requirement. Browser negotiation would silently show English to most
 users.
+
+## D11 — Desktop ownership and client persistence (2026-10)
+
+Desktop preferences and wallpapers use `preferences:manage`, available to every role for its own
+account. The API takes ownership only from the authenticated session. This does not grant viewers
+host mutations or instance configuration rights. Security preference edits and wallpaper deletion
+are audited. Session locking is enforced by the API, with explicit read exceptions needed to
+render the lock screen after a reload.
+
+Preference writes are serialized per document and debounced. Logout waits for in-flight writes;
+failed writes are retried only within the same signed-in session. UI resets save defaults through
+that queue rather than racing a DELETE against an earlier PUT. A failed load shows an error and
+retry control, preserving saved user data.
+
+The reusable theme and window state engines live in packages. Desktop-specific React UI remains
+under `apps/web/src/desktop`; glass primitives stay in `apps/web/src/components/ui` until a second
+consumer justifies extracting `packages/ui`. The earlier package-extraction milestone is deferred,
+not represented by an empty workspace package. Dock badges and capability-gated future app
+manifests remain future extensions; no placeholder apps are registered.

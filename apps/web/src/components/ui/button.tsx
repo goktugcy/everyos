@@ -9,9 +9,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-[linear-gradient(135deg,rgb(var(--otk-accent)),rgb(var(--otk-accent-strong)))] text-accent-contrast shadow-[0_10px_30px_-12px_rgb(var(--otk-accent-strong)/0.9),inset_0_1px_0_rgb(255_255_255/0.35)] hover:brightness-110",
-        secondary: "glass-inset text-fg hover:bg-white/10",
-        ghost: "text-fg-muted hover:bg-white/8 hover:text-fg",
+          "button-accent shadow-[0_10px_30px_-12px_rgb(var(--otk-accent-strong)/0.9),inset_0_1px_0_rgb(255_255_255/0.35)] hover:brightness-110",
+        secondary: "glass-inset text-fg hover:bg-hover/10",
+        ghost: "text-fg-muted hover:bg-hover/8 hover:text-fg",
         danger:
           "bg-danger/90 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)] hover:bg-danger",
       },

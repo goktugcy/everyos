@@ -36,7 +36,9 @@ export function securityHeaders(services: Services): MiddlewareHandler<AppEnv> {
       "Permissions-Policy",
       "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()",
     );
-    if (c.req.path.startsWith("/api/")) headers.set("Cache-Control", "no-store");
+    if (c.req.path.startsWith("/api/") && !headers.has("Cache-Control")) {
+      headers.set("Cache-Control", "no-store");
+    }
     if (services.config.security.hsts && c.get("client").secure) {
       headers.set("Strict-Transport-Security", "max-age=31536000");
     }

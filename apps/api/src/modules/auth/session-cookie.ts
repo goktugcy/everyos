@@ -56,6 +56,7 @@ export function buildSessionInfo(services: Services, user: User, session: Sessio
       id: session.id,
       createdAt: session.createdAt,
       expiresAt: services.sessions.effectiveExpiry(session),
+      locked: session.lockedAt !== null,
     },
   };
 }

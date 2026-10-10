@@ -1,6 +1,7 @@
-# HTTP API (Phase 1)
+# HTTP API (Phases 1–2)
 
-Base path: `/api`. All bodies are JSON. Responses are never cached (`Cache-Control: no-store`).
+Base path: `/api`. Bodies are JSON except raw wallpaper uploads. JSON responses are never cached
+(`Cache-Control: no-store`); owned wallpaper images use private immutable caching.
 
 **Errors** always have this shape:
 
@@ -34,12 +35,48 @@ for logs; clients show the localized text for `code`. A `429` response carries `
 
 ## Session (authenticated)
 
-| Method & path               | Description                                                                               |
-| --------------------------- | ----------------------------------------------------------------------------------------- |
-| `GET /auth/session`         | `SessionInfo`: `{ user, permissions, csrfToken, session: { id, createdAt, expiresAt } }`. |
-| `POST /auth/logout`         | Revokes the current session and clears the cookie. Returns `204`.                         |
-| `GET /auth/sessions`        | `{ sessions: SessionSummary[] }` for the current user.                                    |
-| `DELETE /auth/sessions/:id` | Revokes one of your own sessions. Returns `204`.                                          |
+| Method & path               | Description                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET /auth/session`         | `SessionInfo`: `{ user, permissions, csrfToken, session: { id, createdAt, expiresAt, locked } }`. |
+| `POST /auth/logout`         | Revokes the current session and clears the cookie. Returns `204`.                                 |
+| `GET /auth/sessions`        | `{ sessions: SessionSummary[] }` for the current user.                                            |
+| `DELETE /auth/sessions/:id` | Revokes one of your own sessions. Returns `204`.                                                  |
+| `POST /auth/lock`           | Locks only the current session on the server. Returns `204` and records an audit event.           |
+| `POST /auth/unlock`         | `{ password }` → `SessionInfo`. Re-authentication is rate-limited and audited.                    |
+
+Locked sessions receive `423 SESSION_LOCKED` for host/account reads and all mutations except
+unlock and logout. Public health/bootstrap, session probing, preference reads and owned wallpaper
+images remain readable so the lock screen can render across reloads. UI auto-lock is an inactivity
+convenience; server idle/absolute session expiry remains the authentication boundary.
+
+## Personal desktop preferences (`preferences:manage`)
+
+All roles can customize their own desktop. This permission gives no authority over host or
+instance settings, or another user's data. Ownership is always taken from the session.
+
+| Method & path              | Description                                                                                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /preferences`         | `{ preferences: Partial<PreferenceDocuments> }`. Missing documents use client defaults. Unexpected query fields are rejected.                                             |
+| `PUT /preferences/:key`    | Validated version-1 document → `204`. Keys: `appearance`, `desktop`, `dock`, `menubar`, `windows`, `security`. Unknown keys return `404`; invalid documents return `400`. |
+| `DELETE /preferences/:key` | Removes the current user's document → `204`. Security changes and resets are audited without document contents.                                                           |
+
+Schemas and bounds live in `packages/shared/src/schemas/preferences.ts`. Theme and wallpaper data
+are never executable. The web client queues writes per document, debounces edits, retries failures,
+and waits for pending writes before logout. Failed initial loads show a retry screen rather than
+replacing saved preferences. Resetting in the UI saves defaults through the same ordered queue.
+
+## Wallpapers (`preferences:manage`, owner only)
+
+| Method & path               | Description                                                                                                                                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /wallpapers`           | `{ wallpapers: WallpaperInfo[] }` for the current user.                                                                                                                                                                         |
+| `POST /wallpapers`          | Raw JPEG, PNG or WebP body with its MIME `Content-Type`; `201` with `WallpaperInfo`. Metadata is inspected from image bytes. Uploads stream to disk with a 10 MiB cap, 8192-pixel edge cap, 20-file quota and free-space check. |
+| `GET /wallpapers/:id/image` | Owned image, its inspected MIME, `nosniff` and `Cache-Control: private, max-age=31536000, immutable`. Unknown or other users' ids return `404`.                                                                                 |
+| `DELETE /wallpapers/:id`    | Deletes the owned image and metadata → `204`; records an audit event.                                                                                                                                                           |
+
+SVG and HTML uploads are rejected. Stored files live under `<dataDir>/wallpapers/<userId>/`;
+deleting an account removes its wallpapers. Wallpaper uploads are the only exception to the
+64 KiB JSON body cap and still require the session CSRF token.
 
 ## Account (authenticated, self-service)
 

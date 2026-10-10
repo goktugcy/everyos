@@ -1,7 +1,7 @@
 import { ROLE_PERMISSIONS, type Permission } from "@otuken/shared";
 import type { Context, MiddlewareHandler } from "hono";
 import type { AppEnv, AuthState } from "../context.ts";
-import { forbidden, unauthenticated } from "../http/errors.ts";
+import { ApiError, forbidden, unauthenticated } from "../http/errors.ts";
 import { readSessionToken } from "../modules/auth/session-cookie.ts";
 import type { Services } from "../services.ts";
 
@@ -48,5 +48,34 @@ export function requirePermission(permission: Permission): MiddlewareHandler<App
 
 export const authenticated: MiddlewareHandler<AppEnv> = async (c, next) => {
   requireAuth(c);
+  await next();
+};
+
+/** Requests a locked session may still make (everything else gets 423). */
+const ALLOWED_WHILE_LOCKED = new Set([
+  "GET /api/health",
+  "GET /api/bootstrap",
+  "GET /api/auth/session",
+  "POST /api/auth/unlock",
+  "POST /api/auth/logout",
+  "GET /api/preferences",
+]);
+
+/**
+ * Enforces session locking on the server. The lock screen in the browser is
+ * only a view; a locked session cannot access host or account data until the
+ * user re-enters their password. Public bootstrap and appearance reads allow
+ * the lock screen to render after a page reload.
+ */
+export const enforceUnlocked: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const auth = c.get("auth");
+  if (auth && auth.session.lockedAt !== null) {
+    const route = `${c.req.method} ${c.req.path}`;
+    const wallpaperImage =
+      c.req.method === "GET" && /^\/api\/wallpapers\/[^/]+\/image$/.test(c.req.path);
+    if (!ALLOWED_WHILE_LOCKED.has(route) && !wallpaperImage) {
+      throw new ApiError(423, "SESSION_LOCKED", "Session is locked");
+    }
+  }
   await next();
 };

@@ -7,7 +7,7 @@ that looks finished is not enough.
 | Phase | Scope                   | Status        |
 | ----- | ----------------------- | ------------- |
 | 1     | Foundation              | **Completed** |
-| 2     | Desktop shell           | Next          |
+| 2     | Desktop shell           | **Completed** |
 | 3     | Linux integration       | Planned       |
 | 4     | Docker management       | Planned       |
 | 5     | Multi-catalog App Store | Planned       |
@@ -33,12 +33,13 @@ that looks finished is not enough.
 password hash), agent ≈62 MiB RSS idle, 0.09 s agent CPU in 45 s. The API and agent connect
 within 131 ms of start. Raspberry Pi 5 measurements are still to be done (Phase 3).
 
-## Phase 2 — Desktop shell (next)
+## Phase 2 — Desktop shell
 
 Milestones:
 
-1. `packages/ui`: extract and extend the glass component set (menus, context menus, tooltips,
-   tabs, switches, sliders).
+1. Extend the glass component set in `apps/web/src/components/ui` and desktop menus (context
+   menus, tooltips, switches, sliders, selects). Extracting `packages/ui` is deferred until a second
+   consumer exists; see [D11](decisions.md#d11--desktop-ownership-and-client-persistence-2026-10).
 2. Theme engine: the 7 presets (Liquid Dark, Frost Blue, Graphite Glass, Aurora, Minimal Clear,
    Neon Night, Liquid Light), per-user overrides, render presets (Performance, Balanced, Premium),
    import/export, and contrast checks in tests.
@@ -55,6 +56,15 @@ Milestones:
 Acceptance: Playwright tests for window drag, resize and snap, context menus, dock actions, theme
 switching and layout persistence across reloads. The desktop stays responsive (no long tasks over
 50 ms) with 10 open windows.
+
+Implemented: the theme and window-manager packages, user-owned preference/wallpaper APIs,
+desktop/mobile shells, launcher/search, dock, icon folders, virtual desktops, built-in apps and
+API-enforced session locking. Browser acceptance covers the real System/Users/Audit apps,
+cross-user isolation and all desktop interactions listed above. The ten-folder-window drag test
+recorded no main-thread tasks over 50 ms in Chromium on the development MacBook Air M2; this is a
+local measurement, not a Raspberry Pi or cross-browser performance guarantee. Host metrics/widgets,
+Docker controls and host file management remain in their respective later phases. Shared UI
+package extraction remains explicitly deferred as described in D11.
 
 ## Phase 3 — Linux integration
 

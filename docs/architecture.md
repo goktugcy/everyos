@@ -38,13 +38,15 @@ packages/
   security/       master key files, AES-256-GCM secret box, HKDF subkeys, constant-time helpers
   agent-protocol/ API⇄agent protocol: framing, handshake, operation registry, client and server
   system/         host introspection (/proc, /sys, /etc) with capability detection
+  theme/          zod-free theme resolution, contrast adjustment, CSS tokens and theme import/export
+  window-manager/ framework-independent window state, geometry, snapping and persistence
 scripts/      dev orchestrator and production build
 tests/e2e/    Playwright end-to-end tests against the built artifacts
 docs/         developer documentation (this folder)
 ```
 
 Packages are only created when they have real content. Planned packages from the product
-specification (`desktop`, `window-manager`, `widgets`, `widget-sdk`, `app-store`,
+specification (`desktop`, `widgets`, `widget-sdk`, `app-store`,
 `catalog-adapters`, `app-installer`, `docker`, `notifications`, `ui`) are introduced in the phase
 that implements them (see [roadmap.md](roadmap.md)).
 
@@ -52,7 +54,9 @@ that implements them (see [roadmap.md](roadmap.md)).
 
 ```mermaid
 flowchart TD
-  web --> shared & i18n
+  web --> shared & i18n & theme & window-manager
+  theme --> shared
+  window-manager --> shared
   api --> shared & database & auth & security & logger & agent-protocol
   agent --> agent-protocol & system & security & shared & logger
   agent-protocol --> shared & security & logger
@@ -87,14 +91,16 @@ Details and alternatives considered are recorded in [decisions.md](decisions.md)
 1. `requestContext` assigns a request id and resolves the client (IP, HTTPS, host). Forwarded
    headers count only when the direct peer is a configured trusted proxy.
 2. `securityHeaders` sets a strict CSP and related headers on every response.
-3. `bodyLimit` caps JSON bodies at 64 KiB.
+3. `bodyLimit` caps JSON bodies at 64 KiB. Wallpaper uploads use their own streaming 10 MiB cap.
 4. `loadSession` resolves the session cookie to a user. Permissions are recomputed from the user's
    current role on every request.
 5. `csrfProtection` checks Fetch Metadata, `Origin`, and the per-session CSRF token header for
    state-changing requests.
-6. The route handler validates input with zod (`parseJsonBody` / `parseQuery`), checks permissions
+6. `enforceUnlocked` rejects protected requests from locked sessions with HTTP 423. Public bootstrap
+   and lock-screen reads remain available.
+7. The route handler validates input with zod (`parseJsonBody` / `parseQuery` / `parseParams`), checks permissions
    (`requirePermission`) and records audit events for security-relevant actions.
-7. Errors are converted to `{ error: { code, message, details? } }`. The code is stable and
+8. Errors are converted to `{ error: { code, message, details? } }`. The code is stable and
    localized by the client (`errors.<CODE>` translation keys).
 
 ## Data storage
@@ -112,6 +118,29 @@ SQLite (`/var/lib/otuken/otuken.db`) in WAL mode with `synchronous=NORMAL` and f
 
 Phase 1 tables: `users`, `sessions`, `recovery_codes`, `user_preferences`, `instance_settings`,
 `audit_events`.
+
+Phase 2 adds `sessions.locked_at` and `wallpapers`; `user_preferences` stores versioned appearance,
+desktop, dock, menu-bar, window-session and security documents. Wallpaper files are owned by the API
+user and are served only after session ownership checks.
+
+## Desktop client (Phase 2)
+
+`apps/web/src/desktop` contains the static application registry, desktop/mobile shells, menus,
+launcher, dock, icon/folder operations and the thin React binding to `@otuken/window-manager`.
+System, Settings, Users, Audit and Folder apps load lazily and each window has an error boundary.
+System data comes from the existing real agent operation; desktop folders organize application
+shortcuts and are not host filesystem folders.
+
+Drag/resize previews update frame DOM styles once per animation frame; committed geometry updates
+the store after release. App content is memoized and keeps a stable component identity. Snap zones,
+tiling, viewport clamping and proportional layout restoration live in the window-manager package.
+Below 768 px the shell presents one full-screen app at a time. Switching between shells preserves
+the window session; user state is cleared only when the signed-in session ends.
+
+The theme package resolves seven presets plus validated custom themes into CSS variables. It
+clamps surface opacity for text contrast, applies Performance/Balanced/Premium effect limits and
+exports data-only JSON. Preference writes are ordered per key, coalesced and scoped to the signed-in
+session. A failed load remains visible with a retry action.
 
 ## Host filesystem layout (production)
 

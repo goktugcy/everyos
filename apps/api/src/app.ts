@@ -1,11 +1,11 @@
 import type { ApiErrorBody } from "@otuken/shared";
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import type { AppEnv } from "./context.ts";
 import { ApiError, notFound } from "./http/errors.ts";
 import { serveWebClient } from "./http/static.ts";
-import { loadSession } from "./middleware/auth.ts";
+import { enforceUnlocked, loadSession } from "./middleware/auth.ts";
 import { csrfProtection } from "./middleware/csrf.ts";
 import { requestContext } from "./middleware/request-context.ts";
 import { securityHeaders } from "./middleware/security-headers.ts";
@@ -13,9 +13,11 @@ import { accountRoutes } from "./modules/account/routes.ts";
 import { auditRoutes } from "./modules/audit/routes.ts";
 import { authRoutes } from "./modules/auth/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
+import { preferenceRoutes } from "./modules/preferences/routes.ts";
 import { setupRoutes } from "./modules/setup/routes.ts";
 import { systemRoutes } from "./modules/system/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
+import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
 import type { Services } from "./services.ts";
 
 const MAX_JSON_BODY_BYTES = 64 * 1024;
@@ -25,17 +27,19 @@ export function createApp(services: Services): Hono<AppEnv> {
 
   app.use("*", requestContext(services));
   app.use("*", securityHeaders(services));
-  app.use(
-    "/api/*",
-    bodyLimit({
-      maxSize: MAX_JSON_BODY_BYTES,
-      onError: () => {
-        throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Request body too large");
-      },
-    }),
-  );
+  const jsonBodyLimit = bodyLimit({
+    maxSize: MAX_JSON_BODY_BYTES,
+    onError: () => {
+      throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Request body too large");
+    },
+  });
+  // Wallpaper uploads stream to disk with their own (larger) limit.
+  const enforceBodyLimit: MiddlewareHandler<AppEnv> = (c, next) =>
+    c.req.method === "POST" && c.req.path === "/api/wallpapers" ? next() : jsonBodyLimit(c, next);
+  app.use("/api/*", enforceBodyLimit);
   app.use("/api/*", loadSession(services));
   app.use("/api/*", csrfProtection(services));
+  app.use("/api/*", enforceUnlocked);
 
   const api = new Hono<AppEnv>();
   api.route("/", healthRoutes(services));
@@ -45,6 +49,8 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/users", userRoutes(services));
   api.route("/audit", auditRoutes(services));
   api.route("/system", systemRoutes(services));
+  api.route("/preferences", preferenceRoutes(services));
+  api.route("/wallpapers", wallpaperRoutes(services));
   api.all("*", () => {
     throw notFound("Endpoint");
   });

@@ -139,7 +139,7 @@ export function userRoutes(services: Services): Hono<AppEnv> {
     return c.body(null, 204);
   });
 
-  app.delete("/:id", (c) => {
+  app.delete("/:id", async (c) => {
     const auth = requireAuth(c);
     const user = target(c.req.param("id"));
     if (user.id === auth.user.id)
@@ -147,6 +147,7 @@ export function userRoutes(services: Services): Hono<AppEnv> {
     if (isLastActiveAdmin(user))
       throw new ApiError(409, "USER_LAST_ADMIN", "The last active administrator cannot be deleted");
     users.delete(user.id);
+    await services.wallpapers.deleteAllForUser(user.id);
     audit.record({
       action: "users.delete",
       outcome: "success",

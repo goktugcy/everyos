@@ -7,8 +7,24 @@ export * from "./api-types.ts";
 export * from "./errors.ts";
 export * from "./locale.ts";
 export * from "./permissions.ts";
+export * from "./preferences.ts";
 export * from "./system.ts";
 export type { CapabilityStatus, SystemInfo } from "./schemas/system.ts";
+export type {
+  AppearancePreferences,
+  CustomTheme,
+  DesktopItem,
+  DesktopPreferences,
+  DockPreferences,
+  MenubarPreferences,
+  PersistedWindow,
+  PreferenceDocuments,
+  SecurityPreferences,
+  ThemeEffects,
+  VirtualDesktop,
+  WallpaperSpec,
+  WindowSession,
+} from "./schemas/preferences.ts";
 export type {
   CreateUserRequest,
   LoginRequest,

@@ -75,6 +75,23 @@ flowchart LR
   protected **[P1]**.
 - The UI hides actions a user cannot perform, but hiding is never the control. The API and the agent
   enforce permissions independently **[P1]**.
+- `preferences:manage` is available to all roles for their own desktop and wallpapers **[P2]**.
+  Every operation derives ownership from the session, never from a submitted user id. Viewers
+  retain read-only access to host resources.
+
+## Desktop session locking **[P2]**
+
+The API persists the lock on the session row. Locked sessions cannot query host data, administer
+users, access audit logs, change account security or mutate preferences. Unlock requires the
+current password with re-authentication rate limiting; lock/unlock outcomes are audited. Logging
+out remains possible. Public health/bootstrap, session probing, preference reads and owned
+wallpaper images are the explicit read exceptions needed to render the lock screen after reload.
+The client's inactivity timer is a convenience, not a replacement for server session expiry.
+
+Wallpaper uploads stream under a hard size limit, inspect supported raster headers and dimensions,
+enforce per-user quotas, and never accept SVG/HTML. Theme files are parsed as bounded data, never
+executed or dynamically imported. Security preference changes and wallpaper deletion are audited
+without storing secrets or image content in event details.
 
 ## CSRF and browser hardening **[P1]**
 

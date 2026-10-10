@@ -24,6 +24,16 @@ pnpm check            # format check + lint + typecheck + tests
 The first `pnpm test:e2e` run on a machine needs the browser binary:
 `pnpm exec playwright install --only-shell chromium`.
 
+The end-to-end stack uses disposable state under `tests/e2e/.state` and port 7480 by default
+(`OTUKEN_E2E_PORT` overrides it); it does not reuse or stop a running development stack. Phase 2
+coverage includes window drag/resize/snap and restoration, dock/context menus, folders, all seven
+themes, virtual desktops, API-enforced locking across reloads, mobile transitions, and recovery
+from failed preference loads. Desktop/mobile screenshots are written to the test output directory.
+
+After signing in, open System from the dock for real host information, or Settings for appearance,
+desktop/dock, account and security preferences. Folder icons organize application shortcuts;
+they do not operate on host files. Keyboard shortcuts are listed in Settings → Desktop and Dock.
+
 ## Development mode
 
 `pnpm dev` (see `scripts/dev.ts`) creates `./.dev/{data,run,secrets}` and starts:

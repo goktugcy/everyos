@@ -5,39 +5,17 @@ import {
   type SessionSummary,
   type TotpEnrollmentResponse,
 } from "@otuken/shared";
-import { Check, Copy, KeyRound, Laptop, ShieldCheck } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { Check, Copy, Laptop } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { renderSVG } from "uqr";
 import { Alert } from "../../components/ui/alert.tsx";
 import { Button } from "../../components/ui/button.tsx";
-import { Dialog } from "../../components/ui/dialog.tsx";
 import { Field, PasswordField } from "../../components/ui/field.tsx";
 import { api } from "../../lib/api.ts";
 import { cn } from "../../lib/cn.ts";
 import { errorMessage, passwordViolations } from "../../lib/errors.ts";
 import { formatDateTime } from "../../lib/format.ts";
-import { useSessionStore } from "../../stores/session-store.ts";
-
-function Section({
-  icon,
-  title,
-  children,
-}: {
-  icon: ReactNode;
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-4 border-b border-line pb-6 last:border-b-0 last:pb-0">
-      <h3 className="flex items-center gap-2 text-sm font-semibold [&>svg]:size-4 [&>svg]:text-accent">
-        {icon}
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
 
 function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void }) {
   const { t } = useTranslation();
@@ -74,7 +52,7 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
   );
 }
 
-function TwoFactorSection({
+export function TwoFactorSection({
   user,
   onUserChange,
 }: {
@@ -233,7 +211,7 @@ function TwoFactorSection({
         <span
           className={cn(
             "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
-            user.totpEnabled ? "bg-success/15 text-success" : "bg-white/8 text-fg-subtle",
+            user.totpEnabled ? "bg-success/15 text-success" : "bg-hover/8 text-fg-subtle",
           )}
         >
           {user.totpEnabled ? t("account.totp.enabled") : t("account.totp.disabled")}
@@ -265,7 +243,7 @@ function TwoFactorSection({
   );
 }
 
-function PasswordSection() {
+export function PasswordSection() {
   const { t } = useTranslation();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
@@ -349,7 +327,7 @@ function PasswordSection() {
   );
 }
 
-function SessionsSection() {
+export function SessionsSection() {
   const { t, i18n } = useTranslation();
   const [sessions, setSessions] = useState<SessionSummary[] | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -407,33 +385,5 @@ function SessionsSection() {
         </div>
       ))}
     </div>
-  );
-}
-
-export function AccountSecurityDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const { t } = useTranslation();
-  const user = useSessionStore((state) => state.session?.user);
-  const updateUser = useSessionStore((state) => state.updateUser);
-  if (!user) return null;
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange} title={t("account.title")}>
-      <div className="flex flex-col gap-6">
-        <Section icon={<ShieldCheck />} title={t("account.totp.title")}>
-          <TwoFactorSection user={user} onUserChange={updateUser} />
-        </Section>
-        <Section icon={<KeyRound />} title={t("account.password.title")}>
-          <PasswordSection />
-        </Section>
-        <Section icon={<Laptop />} title={t("account.sessions.title")}>
-          {open ? <SessionsSection /> : null}
-        </Section>
-      </div>
-    </Dialog>
   );
 }

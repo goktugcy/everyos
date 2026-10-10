@@ -1,11 +1,16 @@
 import { hashRecoveryCode, verifyTotp } from "@otuken/auth";
 import { type LoginResponse } from "@otuken/shared";
-import { LoginRequestSchema, LoginTotpRequestSchema } from "@otuken/shared/schemas";
+import {
+  EmptyDesktopQuerySchema,
+  LoginRequestSchema,
+  LoginTotpRequestSchema,
+  UnlockRequestSchema,
+} from "@otuken/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { ApiError, notFound, rateLimited } from "../../http/errors.ts";
-import { parseJsonBody } from "../../http/validation.ts";
-import { requireAuth } from "../../middleware/auth.ts";
+import { parseJsonBody, parseQuery } from "../../http/validation.ts";
+import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { totpContext } from "./password-policy.ts";
 import { buildSessionInfo, clearSessionCookie, startSession } from "./session-cookie.ts";
@@ -176,6 +181,51 @@ export function authRoutes(services: Services): Hono<AppEnv> {
     }
     clearSessionCookie(c);
     return c.body(null, 204);
+  });
+
+  app.post("/lock", requirePermission("preferences:manage"), async (c) => {
+    const auth = requireAuth(c);
+    parseQuery(c, EmptyDesktopQuerySchema);
+    // The Node adapter exposes a stream even for a bodyless POST.
+    if ((await c.req.text()).length > 0)
+      throw new ApiError(400, "VALIDATION_FAILED", "Lock request does not accept a body");
+    services.sessions.lock(auth.session.id);
+    audit.record({
+      action: "auth.session.lock",
+      outcome: "success",
+      actor: { userId: auth.user.id, username: auth.user.username },
+      ip: c.get("client").ip,
+    });
+    return c.body(null, 204);
+  });
+
+  app.post("/unlock", requirePermission("preferences:manage"), async (c) => {
+    const auth = requireAuth(c);
+    const body = await parseJsonBody(c, UnlockRequestSchema);
+    const actor = { userId: auth.user.id, username: auth.user.username };
+    const key = `user:${auth.user.id}`;
+    const decision = limiters.sensitiveUser.check(key);
+    if (!decision.allowed) throw rateLimited(decision.retryAfterMs);
+    const { valid } = await services.passwords.verify(body.password, auth.user.passwordHash);
+    if (!valid) {
+      limiters.sensitiveUser.recordFailure(key);
+      audit.record({
+        action: "auth.session.unlock",
+        outcome: "failure",
+        actor,
+        ip: c.get("client").ip,
+      });
+      throw new ApiError(401, "AUTH_INVALID_CREDENTIALS", "Invalid password");
+    }
+    limiters.sensitiveUser.reset(key);
+    services.sessions.unlock(auth.session.id);
+    audit.record({
+      action: "auth.session.unlock",
+      outcome: "success",
+      actor,
+      ip: c.get("client").ip,
+    });
+    return c.json(buildSessionInfo(services, auth.user, { ...auth.session, lockedAt: null }));
   });
 
   app.get("/session", (c) => {

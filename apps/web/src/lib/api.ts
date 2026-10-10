@@ -23,6 +23,7 @@ export class ApiRequestError extends Error {
 
 let csrfToken: string | null = null;
 let unauthenticatedHandler: (() => void) | null = null;
+let lockedHandler: (() => void) | null = null;
 
 export function setCsrfToken(token: string | null): void {
   csrfToken = token;
@@ -33,18 +34,28 @@ export function onUnauthenticated(handler: (() => void) | null): void {
   unauthenticatedHandler = handler;
 }
 
+/** Called when the server reports that the session is locked (HTTP 423). */
+export function onSessionLocked(handler: (() => void) | null): void {
+  lockedHandler = handler;
+}
+
 export interface ApiOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   signal?: AbortSignal;
   /** Suppress the global "session ended" handler (used while probing the session). */
   quiet401?: boolean;
+  /** Let the request outlive the page (used to flush unsaved state on unload). */
+  keepalive?: boolean;
+  /** Raw request body (e.g. an uploaded file) sent with its own content type. */
+  raw?: { body: Blob; contentType: string };
 }
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const method = options.method ?? "GET";
   const headers: Record<string, string> = { Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  if (options.raw) headers["Content-Type"] = options.raw.contentType;
   if (method !== "GET" && csrfToken) headers[CSRF_HEADER] = csrfToken;
 
   let response: Response;
@@ -54,7 +65,9 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
       headers,
       credentials: "same-origin",
       ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+      ...(options.raw ? { body: options.raw.body } : {}),
       ...(options.signal ? { signal: options.signal } : {}),
+      ...(options.keepalive ? { keepalive: true } : {}),
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
@@ -74,6 +87,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
   const code: ClientErrorCode = isErrorCode(error?.code) ? error.code : "UNKNOWN";
   if (response.status === 401 && code === "UNAUTHENTICATED" && !options.quiet401)
     unauthenticatedHandler?.();
+  if (response.status === 423 && code === "SESSION_LOCKED") lockedHandler?.();
   throw new ApiRequestError(
     response.status,
     code,

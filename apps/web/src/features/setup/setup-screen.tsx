@@ -35,7 +35,7 @@ function Stepper({ current }: { current: Step }) {
           <span
             className={cn(
               "h-1 rounded-full transition-colors",
-              i <= index ? "bg-accent" : "bg-white/12",
+              i <= index ? "bg-accent" : "bg-hover/12",
             )}
           />
           <span className={cn("text-xs font-medium", i === index ? "text-fg" : "text-fg-subtle")}>

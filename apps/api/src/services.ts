@@ -13,10 +13,12 @@ import { deriveKey, SecretBox } from "@otuken/security";
 import { createProxyMatcher, type ApiConfig } from "./config.ts";
 import { AuditLog } from "./modules/audit/audit-log.ts";
 import { LoginChallengeStore } from "./modules/auth/login-challenges.ts";
+import { PreferenceRepository } from "./modules/preferences/preference-repository.ts";
 import { FailureLimiter } from "./modules/auth/rate-limiter.ts";
 import { SessionService } from "./modules/auth/session-service.ts";
 import { SetupService } from "./modules/setup/setup-service.ts";
 import { UserRepository } from "./modules/users/user-repository.ts";
+import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
 
 /** The subset of the agent client the HTTP layer depends on. */
 export type AgentGateway = Pick<AgentClient, "state" | "call">;
@@ -40,6 +42,8 @@ export interface Services {
   logger: Logger;
   db: Database;
   users: UserRepository;
+  preferences: PreferenceRepository;
+  wallpapers: WallpaperService;
   sessions: SessionService;
   audit: AuditLog;
   setup: SetupService;
@@ -116,6 +120,8 @@ export function createServices(deps: ServiceDependencies): Services {
     logger: deps.logger,
     db: deps.db,
     users,
+    preferences: new PreferenceRepository(deps.db, deps.logger, now),
+    wallpapers: new WallpaperService(deps.db, deps.config.paths.dataDir, now),
     sessions: new SessionService(
       deps.db,
       {

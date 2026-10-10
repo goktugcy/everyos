@@ -104,7 +104,7 @@ export async function createTestContext(
 
 export interface RequestOptions {
   body?: unknown;
-  rawBody?: string;
+  rawBody?: string | Uint8Array;
   headers?: Record<string, string>;
   ip?: string;
   /** Omit the Origin header (non-browser client). */
@@ -138,7 +138,7 @@ export class TestClient {
         [...this.cookies].map(([name, value]) => `${name}=${value}`).join("; "),
       );
     }
-    let body: string | undefined;
+    let body: string | Uint8Array | undefined;
     if (options.rawBody !== undefined) body = options.rawBody;
     else if (options.body !== undefined) {
       body = JSON.stringify(options.body);

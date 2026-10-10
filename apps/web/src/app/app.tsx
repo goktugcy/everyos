@@ -15,8 +15,8 @@ const SetupScreen = lazy(() =>
 const LoginScreen = lazy(() =>
   import("../features/auth/login-screen.tsx").then((m) => ({ default: m.LoginScreen })),
 );
-const FoundationShell = lazy(() =>
-  import("../features/shell/foundation-shell.tsx").then((m) => ({ default: m.FoundationShell })),
+const DesktopShell = lazy(() =>
+  import("../desktop/shell/desktop-shell.tsx").then((m) => ({ default: m.DesktopShell })),
 );
 
 function Splash({ children }: { children?: ReactNode }) {
@@ -65,6 +65,6 @@ function Screen({ loading }: { loading: ReactNode }) {
     case "login":
       return <LoginScreen />;
     case "authenticated":
-      return <FoundationShell />;
+      return <DesktopShell />;
   }
 }

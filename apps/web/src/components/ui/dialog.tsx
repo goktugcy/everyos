@@ -46,7 +46,7 @@ export function Dialog({
               )}
             </div>
             <DialogPrimitive.Close
-              className="grid size-8 place-items-center rounded-otk-sm text-fg-subtle hover:bg-white/8 hover:text-fg"
+              className="grid size-8 place-items-center rounded-otk-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
               aria-label={t("common.close")}
             >
               <X className="size-4" aria-hidden />

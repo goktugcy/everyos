@@ -4,4 +4,5 @@
  * entry point.
  */
 export * from "./api.ts";
+export * from "./preferences.ts";
 export * from "./system.ts";

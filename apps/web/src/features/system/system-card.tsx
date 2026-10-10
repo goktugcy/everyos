@@ -21,10 +21,10 @@ import type { SystemInfoState } from "./use-system-info.ts";
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="flex items-center gap-3 py-2.5">
-      <span className="grid size-8 shrink-0 place-items-center rounded-otk-sm bg-white/6 text-fg-subtle [&>svg]:size-4">
+      <span className="grid size-8 shrink-0 place-items-center rounded-otk-sm bg-hover/6 text-fg-subtle [&>svg]:size-4">
         {icon}
       </span>
-      <dt className="w-32 shrink-0 text-sm text-fg-subtle">{label}</dt>
+      <dt className="w-32 shrink-0 text-sm text-fg-muted">{label}</dt>
       <dd
         className="min-w-0 flex-1 truncate text-sm font-medium"
         title={typeof value === "string" ? value : undefined}
@@ -50,7 +50,7 @@ function Capabilities({ info }: { info: SystemInfo }) {
                 "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
                 status.available
                   ? "border-success/35 bg-success/10 text-fg"
-                  : "border-line bg-white/4 text-fg-subtle",
+                  : "border-line bg-hover/4 text-fg-subtle",
               )}
               title={
                 status.available
@@ -77,17 +77,15 @@ function Capabilities({ info }: { info: SystemInfo }) {
   );
 }
 
-export function SystemCard({ state }: { state: SystemInfoState }) {
+/** Host information (used inside the System app window). */
+export function SystemInfoView({ state }: { state: SystemInfoState }) {
   const { t, i18n } = useTranslation();
   const { info, error, loading } = state;
   const agentDown =
     error instanceof ApiRequestError && ["AGENT_UNAVAILABLE", "AGENT_TIMEOUT"].includes(error.code);
 
   return (
-    <section
-      className="glass flex flex-col gap-5 rounded-otk-lg p-5 sm:p-6"
-      aria-labelledby="system-card-title"
-    >
+    <section className="flex flex-col gap-5" aria-labelledby="system-card-title">
       <div className="flex items-center justify-between gap-3">
         <h2 id="system-card-title" className="text-lg font-semibold tracking-tight">
           {t("system.title")}

@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["es2024", "dom"],
     "types": ["node"]
   },
   "include": ["scripts/**/*.ts", "tests/**/*.ts", "*.config.ts"]
