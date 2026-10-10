@@ -1,0 +1,17 @@
+{
+  "name": "@otuken/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runtime-agnostic contracts shared by the Otuken web client, API and agent: permissions, roles, error codes and API schemas.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas": "./src/schemas/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  }
+}

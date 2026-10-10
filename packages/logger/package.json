@@ -1,0 +1,13 @@
+{
+  "name": "@otuken/logger",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dependency-free structured JSON logger with secret redaction, shared by the Otuken API, agent and CLI.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

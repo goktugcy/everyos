@@ -1,0 +1,19 @@
+{
+  "name": "@otuken/agent-protocol",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed, authenticated protocol between the unprivileged Otuken API and the privileged local agent over a Unix domain socket.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/logger": "workspace:*",
+    "@otuken/security": "workspace:*",
+    "@otuken/shared": "workspace:*",
+    "zod": "catalog:"
+  }
+}

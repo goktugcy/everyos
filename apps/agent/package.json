@@ -1,0 +1,20 @@
+{
+  "name": "@otuken/agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Otuken privileged local agent. Executes a fixed registry of validated operations requested by the API over a Unix domain socket.",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --watch-preserve-output src/main.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/agent-protocol": "workspace:*",
+    "@otuken/logger": "workspace:*",
+    "@otuken/security": "workspace:*",
+    "@otuken/shared": "workspace:*",
+    "@otuken/system": "workspace:*",
+    "yaml": "catalog:",
+    "zod": "catalog:"
+  }
+}

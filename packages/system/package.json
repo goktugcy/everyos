@@ -1,0 +1,16 @@
+{
+  "name": "@otuken/system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Linux host integration for Otuken: host information and capability detection from /proc, /sys and /etc, with no fabricated values.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/shared": "workspace:*"
+  }
+}

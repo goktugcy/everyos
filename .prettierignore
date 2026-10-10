@@ -1,0 +1,8 @@
+dist/
+coverage/
+pnpm-lock.yaml
+.dev/
+test-results/
+playwright-report/
+graphify-out/
+docs/research/

@@ -1,0 +1,23 @@
+{
+  "name": "@otuken/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Otuken HTTP API (Hono). Runs as the unprivileged otuken user and serves the web client.",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --watch-preserve-output src/main.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hono/node-server": "catalog:",
+    "@otuken/agent-protocol": "workspace:*",
+    "@otuken/auth": "workspace:*",
+    "@otuken/database": "workspace:*",
+    "@otuken/logger": "workspace:*",
+    "@otuken/security": "workspace:*",
+    "@otuken/shared": "workspace:*",
+    "hono": "catalog:",
+    "yaml": "catalog:",
+    "zod": "catalog:"
+  }
+}

@@ -1,0 +1,104 @@
+import type { Locale } from "./locale.ts";
+import type { Permission, Role } from "./permissions.ts";
+
+/*
+ * Response contracts of the HTTP API. Request bodies are validated with the
+ * zod schemas in "@otuken/shared/schemas"; their inferred types are
+ * re-exported from the package root as type-only exports so browser bundles
+ * never include zod.
+ */
+
+export const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MAX_LENGTH = 256;
+
+export interface HealthResponse {
+  status: "ok" | "degraded";
+  checks: {
+    database: "ok" | "error";
+    agent: "connected" | "unavailable";
+  };
+}
+
+export interface BootstrapResponse {
+  product: "otuken";
+  version: string;
+  setupRequired: boolean;
+  defaultLocale: Locale;
+  transport: {
+    /** True when the browser reached Otuken over HTTPS (directly or via a trusted proxy). */
+    secure: boolean;
+    /** True when the client connected from the loopback interface. */
+    loopback: boolean;
+  };
+  mode: "production" | "development";
+}
+
+export interface PublicUser {
+  id: string;
+  username: string;
+  displayName: string;
+  role: Role;
+  locale: Locale;
+  totpEnabled: boolean;
+  createdAt: number;
+}
+
+export interface AdminUserView extends PublicUser {
+  disabled: boolean;
+  lastLoginAt: number | null;
+}
+
+export interface SessionInfo {
+  user: PublicUser;
+  permissions: Permission[];
+  csrfToken: string;
+  session: {
+    id: string;
+    createdAt: number;
+    expiresAt: number;
+  };
+}
+
+export interface SessionSummary {
+  id: string;
+  createdAt: number;
+  lastSeenAt: number;
+  expiresAt: number;
+  ip: string | null;
+  userAgent: string | null;
+  current: boolean;
+}
+
+export type LoginResponse =
+  | { status: "authenticated"; session: SessionInfo }
+  | { status: "totp_required"; challengeId: string; expiresAt: number };
+
+export interface TotpEnrollmentResponse {
+  secret: string;
+  otpauthUri: string;
+}
+
+export interface RecoveryCodesResponse {
+  recoveryCodes: string[];
+}
+
+export const AUDIT_OUTCOMES = ["success", "failure", "denied"] as const;
+
+export type AuditOutcome = (typeof AUDIT_OUTCOMES)[number];
+
+export interface AuditEvent {
+  id: number;
+  ts: number;
+  actorUserId: string | null;
+  actorUsername: string | null;
+  ip: string | null;
+  action: string;
+  target: string | null;
+  outcome: AuditOutcome;
+  details: Record<string, unknown> | null;
+}
+
+export interface AuditPage {
+  events: AuditEvent[];
+  nextCursor: number | null;
+}

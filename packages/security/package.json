@@ -1,0 +1,13 @@
+{
+  "name": "@otuken/security",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Security primitives for Otuken: host master key handling, authenticated encryption of secrets at rest, key derivation and constant-time helpers.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

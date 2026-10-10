@@ -1,0 +1,27 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# Local development state (database, secrets, sockets)
+.dev/
+
+# Playwright
+test-results/
+playwright-report/
+tests/e2e/.state/
+
+# Packaging output
+packaging/out/
+
+# Editor / OS
+.DS_Store
+.idea/
+*.swp
+.env
+.env.*
+!.env.example
+
+# Generated knowledge graph (local tooling)
+graphify-out/

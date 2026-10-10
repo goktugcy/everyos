@@ -1,0 +1,16 @@
+{
+  "name": "@otuken/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SQLite access layer for Otuken built on node:sqlite: connection setup, transactions, versioned migrations with automatic pre-migration backups.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/logger": "workspace:*"
+  }
+}

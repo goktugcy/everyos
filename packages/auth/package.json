@@ -1,0 +1,17 @@
+{
+  "name": "@otuken/auth",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Credential primitives for Otuken: scrypt password hashing, password policy, RFC 6238 TOTP and recovery codes.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@otuken/security": "workspace:*",
+    "@otuken/shared": "workspace:*"
+  }
+}
