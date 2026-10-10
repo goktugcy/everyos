@@ -65,6 +65,7 @@ async function main(): Promise<void> {
   const services = createServices({ config, logger, db, masterKey, agent });
   services.setup.initialize();
   const app = createApp(services);
+  services.metrics.start();
 
   const runMaintenance = () => {
     try {
@@ -110,6 +111,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info("Shutting down", { signal });
     clearInterval(maintenanceTimer);
+    services.metrics.stop();
     const forceExit = setTimeout(() => process.exit(1), 10_000);
     forceExit.unref();
     server.close(() => {
@@ -117,6 +119,12 @@ async function main(): Promise<void> {
       db.close();
       process.exit(0);
     });
+    // Event streams never finish on their own; give normal requests a moment first.
+    const closeStreams = setTimeout(() => {
+      if ("closeAllConnections" in server) server.closeAllConnections();
+    }, 2_000);
+    closeStreams.unref();
+    if ("closeIdleConnections" in server) server.closeIdleConnections();
   };
   process.on("SIGTERM", () => shutdown("SIGTERM"));
   process.on("SIGINT", () => shutdown("SIGINT"));

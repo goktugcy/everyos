@@ -67,6 +67,8 @@ export type DockPosition = (typeof DOCK_POSITIONS)[number];
 
 /** Menu bar modules that can be shown or hidden individually. */
 export const MENUBAR_MODULE_IDS = [
+  "resources",
+  "network",
   "agent",
   "desktops",
   "search",

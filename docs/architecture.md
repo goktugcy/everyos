@@ -142,6 +142,31 @@ clamps surface opacity for text contrast, applies Performance/Balanced/Premium e
 exports data-only JSON. Preference writes are ordered per key, coalesced and scoped to the signed-in
 session. A failed load remains visible with a retry action.
 
+## Host integration (Phase 3)
+
+```
+ /proc, /sys, statfs ─┐                               ┌─► GET /api/system/* (REST)
+ systemctl --output=json ├─► agent collectors ─NDJSON─► API ─┼─► MetricsHub ─► SSE /api/events
+ journalctl --output=json│   (raw counters,     socket       │   (rates, ring buffers)
+ Tailscale LocalAPI ──┘    no rates)                     └─► SSE /api/logs/stream
+```
+
+- **Agent (`packages/system`)** reads cheap kernel interfaces directly and parses tool output in
+  pure, fixture-tested functions (`src/linux/*`). Collectors return raw cumulative counters; they
+  never compute rates, so a sample is a single consistent reading.
+- **API `MetricsHub`** samples `metrics.sample` every 2 s only while a live subscriber exists and
+  every 60 s in the background. It derives rates from consecutive samples (counter resets yield
+  `null`, never negative values) and keeps 15 minutes of live points plus 24 hours of minute
+  averages in bounded in-memory buffers (≤ 450 + 1440 points). History is intentionally not
+  persisted in Phase 3.
+- **One event stream per tab** (`/api/events?topics=…`) carries live metrics to the menu bar module,
+  the System Monitor and future widgets; the browser closes it while the tab is hidden.
+- **Services and logs** go through `ServiceManager` / `LogSource` interfaces with two
+  implementations: systemd/journald on Linux and an in-memory simulator used only in development.
+- **Web apps:** System Monitor (overview charts, storage, network + Tailscale, processes, hardware,
+  info), Services and Logs. Charts are dependency-free SVG with crosshair tooltips, keyboard
+  navigation and a table view for every chart.
+
 ## Host filesystem layout (production)
 
 | Path                      | Owner / mode      | Contents                                                                     |
@@ -165,7 +190,9 @@ a configurable data root, so removing or upgrading Otuken never touches it.
 - refuses to run as root (both the orchestrator and the agent);
 - uses `0600` sockets and keys owned by the developer;
 - reports real data where the host provides it (on macOS, Linux-only capabilities show as
-  unavailable with reason `not-linux`). Any simulated data is marked `source: "simulated"` and
-  labeled as such in the UI.
+  unavailable with reason `not-linux`). Service and log operations fall back to an in-memory
+  simulator when systemd/journald are missing; simulated data is marked `source: "simulated"` and
+  labeled as such in the UI;
+- never changes real host services: the development agent's policy denies them.
 
 See [development.md](development.md).

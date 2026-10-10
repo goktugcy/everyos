@@ -269,6 +269,7 @@ describe("authorization", () => {
     await admin.get("/api/system/info");
     expect(ctx.agent.calls.at(-1)).toEqual({
       op: "system.info",
+      params: {},
       actor: {
         kind: "user",
         userId: session.user.id,

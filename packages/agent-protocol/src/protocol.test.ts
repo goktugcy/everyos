@@ -2,7 +2,7 @@ import { mkdtempSync, statSync, writeFileSync } from "node:fs";
 import { connect } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { SystemInfo } from "@otuken/shared";
+import type { LogEntry, SystemInfo } from "@otuken/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
@@ -46,6 +46,23 @@ const sampleInfo: SystemInfo = {
   collectedAt: 1_700_000_100_000,
 };
 
+function entry(n: number): LogEntry {
+  return {
+    cursor: `c${n}`,
+    ts: 1_700_000_000_000 + n,
+    priority: 6,
+    unit: "ssh.service",
+    identifier: "sshd",
+    pid: 10,
+    hostname: "pi5",
+    message: `line ${n}`,
+  };
+}
+
+const notUsed = () => {
+  throw new OperationError("failed", "not used in this test");
+};
+
 function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers {
   return {
     "agent.ping": () => ({
@@ -55,6 +72,19 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
       mode: "development",
     }),
     "system.info": () => sampleInfo,
+    "metrics.sample": notUsed,
+    "storage.usage": notUsed,
+    "hardware.status": notUsed,
+    "network.status": notUsed,
+    "tailscale.status": notUsed,
+    "processes.list": notUsed,
+    "services.list": notUsed,
+    "services.get": notUsed,
+    "services.control": notUsed,
+    "logs.query": notUsed,
+    async *"logs.follow"(_params, { signal }) {
+      for (let n = 0; n < 3 && !signal.aborted; n++) yield await Promise.resolve(entry(n));
+    },
     ...overrides,
   };
 }
@@ -69,6 +99,8 @@ async function setup(
     handlers?: Partial<OperationHandlers>;
     clientKey?: Buffer;
     policy?: ConstructorParameters<typeof AgentServer>[0]["policy"];
+    server?: Partial<ConstructorParameters<typeof AgentServer>[0]>;
+    maxQueuedEvents?: number;
   } = {},
 ) {
   const dir = mkdtempSync(join(tmpdir(), "otk-"));
@@ -79,6 +111,7 @@ async function setup(
     agentVersion: "0.1.0-test",
     handlers: handlers(options.handlers),
     ...(options.policy ? { policy: options.policy } : {}),
+    ...options.server,
   });
   await server.listen();
   cleanups.push(() => server.close());
@@ -86,6 +119,7 @@ async function setup(
     socketPath,
     agentKey: options.clientKey ?? agentKey,
     reconnectMinDelayMs: 20,
+    ...(options.maxQueuedEvents ? { maxQueuedEvents: options.maxQueuedEvents } : {}),
   });
   cleanups.push(() => client.stop());
   return { server, client, socketPath, dir };
@@ -142,6 +176,7 @@ describe("agent protocol", () => {
 
   it("derives authorization from the actor role and the contract", () => {
     const contract = {
+      kind: "unary" as const,
       params: z.strictObject({}),
       result: z.unknown(),
       permission: "services:manage" as const,
@@ -315,5 +350,165 @@ describe("agent protocol", () => {
       handlers: handlers(),
     });
     await expect(server.listen()).rejects.toThrow(/non-socket/);
+  });
+});
+
+async function connected(options: Parameters<typeof setup>[0] = {}) {
+  const context = await setup(options);
+  context.client.start();
+  await context.client.waitUntilConnected();
+  return context;
+}
+
+async function collect<T>(iterable: AsyncIterable<T>): Promise<T[]> {
+  const items: T[] = [];
+  for await (const item of iterable) items.push(item);
+  return items;
+}
+
+describe("stream operations", () => {
+  it("delivers validated events and ends when the agent finishes", async () => {
+    const { client } = await connected();
+    const events = await collect(client.stream("logs.follow", {}, admin));
+    expect(events.map((e) => e.message)).toEqual(["line 0", "line 1", "line 2"]);
+  });
+
+  it("checks permissions and parameters before starting a stream", async () => {
+    let started = false;
+    const { client } = await connected({
+      handlers: {
+        // eslint-disable-next-line require-yield -- the stream must never start
+        async *"logs.follow"() {
+          started = await Promise.resolve(true);
+        },
+      },
+    });
+    await expect(collect(client.stream("logs.follow", {}, viewer))).rejects.toMatchObject({
+      agentCode: "forbidden",
+    });
+    await expect(
+      collect(client.stream("logs.follow", { unit: "../etc/passwd" }, admin)),
+    ).rejects.toMatchObject({ agentCode: "invalid_params" });
+    expect(started).toBe(false);
+  });
+
+  it("cancels the handler when the consumer stops early", async () => {
+    let aborted = false;
+    const { client } = await connected({
+      handlers: {
+        async *"logs.follow"(_params, { signal }) {
+          signal.addEventListener("abort", () => (aborted = true));
+          for (let n = 0; ; n++) {
+            yield entry(n);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+          }
+        },
+      },
+    });
+    const seen: string[] = [];
+    for await (const event of client.stream("logs.follow", {}, admin)) {
+      seen.push(event.message);
+      if (seen.length === 2) break;
+    }
+    await expect.poll(() => aborted).toBe(true);
+    expect(seen).toEqual(["line 0", "line 1"]);
+    // The connection stays usable for other operations.
+    await expect(client.call("agent.ping", {}, admin)).resolves.toMatchObject({ pong: true });
+  });
+
+  it("stops a stream through an AbortSignal", async () => {
+    let aborted = false;
+    const { client } = await connected({
+      handlers: {
+        async *"logs.follow"(_params, { signal }) {
+          signal.addEventListener("abort", () => (aborted = true));
+          yield entry(0);
+          await new Promise((resolve) => signal.addEventListener("abort", resolve));
+        },
+      },
+    });
+    const controller = new AbortController();
+    const seen: LogEntry[] = [];
+    for await (const event of client.stream("logs.follow", {}, admin, {
+      signal: controller.signal,
+    })) {
+      seen.push(event);
+      controller.abort();
+    }
+    expect(seen).toHaveLength(1);
+    await expect.poll(() => aborted).toBe(true);
+  });
+
+  it("limits concurrent streams per connection", async () => {
+    const { client } = await connected({
+      server: { maxStreamsPerConnection: 1 },
+      handlers: {
+        async *"logs.follow"(_params, { signal }) {
+          yield entry(0);
+          await new Promise((resolve) => signal.addEventListener("abort", resolve));
+        },
+      },
+    });
+    const first = client.stream("logs.follow", {}, admin);
+    await first.next();
+    await expect(collect(client.stream("logs.follow", {}, admin))).rejects.toMatchObject({
+      agentCode: "busy",
+    });
+    await first.return();
+  });
+
+  it("ends streams with an error when the agent connection drops", async () => {
+    const { client, server } = await connected({
+      handlers: {
+        async *"logs.follow"(_params, { signal }) {
+          yield entry(0);
+          await new Promise((resolve) => signal.addEventListener("abort", resolve));
+        },
+      },
+    });
+    const stream = client.stream("logs.follow", {}, admin);
+    await stream.next();
+    await server.close();
+    await expect(stream.next()).rejects.toMatchObject({ code: "AGENT_UNAVAILABLE" });
+  });
+
+  it("disconnects consumers that cannot keep up", async () => {
+    const { client } = await connected({
+      maxQueuedEvents: 5,
+      handlers: {
+        async *"logs.follow"(_params, { signal }) {
+          for (let n = 0; n < 1_000 && !signal.aborted; n++) yield entry(n);
+          await new Promise((resolve) => signal.addEventListener("abort", resolve));
+        },
+      },
+    });
+    const stream = client.stream("logs.follow", {}, admin);
+    await stream.next();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(collect(stream)).rejects.toThrow(/too slow/);
+  });
+
+  it("rejects events that violate the contract", async () => {
+    const { client } = await connected({
+      handlers: {
+        async *"logs.follow"() {
+          yield await Promise.resolve({ ...entry(0), priority: 42 });
+        },
+      },
+    });
+    await expect(collect(client.stream("logs.follow", {}, admin))).rejects.toMatchObject({
+      agentCode: "failed",
+    });
+  });
+});
+
+describe("frame limits", () => {
+  it("fails oversized results without breaking the connection", async () => {
+    const { client } = await connected({
+      server: { maxResponseBytes: 2_048 },
+      handlers: { "system.info": () => ({ ...sampleInfo, hostname: "x".repeat(4_000) }) },
+    });
+    await expect(client.call("system.info", {}, admin)).rejects.toThrow(/too large/);
+    await expect(client.call("agent.ping", {}, admin)).resolves.toMatchObject({ pong: true });
   });
 });

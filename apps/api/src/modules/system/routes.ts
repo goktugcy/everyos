@@ -1,62 +1,46 @@
-import { AgentClientError, type Actor } from "@otuken/agent-protocol";
+import { MetricsHistoryQuerySchema, ProcessQuerySchema } from "@otuken/shared/schemas";
 import { Hono } from "hono";
-import type { AppEnv, AuthState } from "../../context.ts";
+import type { AppEnv } from "../../context.ts";
+import { callAgent } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
-import { requireAuth, requirePermission } from "../../middleware/auth.ts";
+import { parseQuery } from "../../http/validation.ts";
+import { requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 
-/** Identity forwarded to the agent so it can re-check permissions and audit. */
-export function agentActor(auth: AuthState, ip: string): Actor {
-  return {
-    kind: "user",
-    userId: auth.user.id,
-    username: auth.user.username,
-    role: auth.user.role,
-    sessionId: auth.session.id,
-    ip: ip.slice(0, 64),
-  };
-}
+export { agentActor, toApiError } from "../../http/agent.ts";
 
-/** Maps agent failures to stable API errors without leaking internals. */
-export function toApiError(error: unknown): ApiError {
-  if (!(error instanceof AgentClientError)) {
-    return new ApiError(502, "AGENT_OPERATION_FAILED", "Agent operation failed");
-  }
-  switch (error.code) {
-    case "AGENT_UNAVAILABLE":
-      return new ApiError(503, "AGENT_UNAVAILABLE", "The system agent is not available");
-    case "AGENT_TIMEOUT":
-      return new ApiError(504, "AGENT_TIMEOUT", "The system agent did not respond in time");
-    case "AGENT_OPERATION_DENIED":
-      return new ApiError(403, "AGENT_OPERATION_DENIED", "Denied by the agent policy");
-    case "AGENT_OPERATION_FAILED":
-    case "AGENT_INVALID_RESPONSE":
-      return new ApiError(502, "AGENT_OPERATION_FAILED", "Agent operation failed");
-  }
-}
+/** A snapshot older than this is refreshed before answering a one-off request. */
+const SNAPSHOT_MAX_AGE_MS = 5_000;
 
 export function systemRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
+  app.use("*", requirePermission("system:read"));
 
-  app.get("/info", requirePermission("system:read"), async (c) => {
-    const auth = requireAuth(c);
-    try {
-      const info = await services.agent.call(
-        "system.info",
-        {},
-        agentActor(auth, c.get("client").ip),
-        {
-          signal: c.req.raw.signal,
-        },
-      );
-      return c.json(info);
-    } catch (error) {
-      // A client that navigates away (or React re-running an effect in dev)
-      // aborts its request; that is routine, not a failure worth a warning.
-      if (c.req.raw.signal.aborted) c.get("logger").debug("system.info cancelled by client");
-      else c.get("logger").warn("system.info failed", { error });
-      throw toApiError(error);
-    }
+  app.get("/info", async (c) => c.json(await callAgent(c, services, "system.info", {})));
+
+  /** Latest live metrics, for clients that do not keep an event stream open. */
+  app.get("/metrics", async (c) => {
+    const latest = services.metrics.latest;
+    if (!latest || services.now() - latest.point.at > SNAPSHOT_MAX_AGE_MS)
+      await services.metrics.sample();
+    const snapshot = services.metrics.latest;
+    if (!snapshot) throw new ApiError(503, "AGENT_UNAVAILABLE", "No metrics available yet");
+    return c.json(snapshot);
+  });
+
+  app.get("/metrics/history", (c) => {
+    const { range } = parseQuery(c, MetricsHistoryQuerySchema);
+    return c.json(services.metrics.history(range));
+  });
+
+  app.get("/storage", async (c) => c.json(await callAgent(c, services, "storage.usage", {})));
+  app.get("/hardware", async (c) => c.json(await callAgent(c, services, "hardware.status", {})));
+  app.get("/network", async (c) => c.json(await callAgent(c, services, "network.status", {})));
+  app.get("/tailscale", async (c) => c.json(await callAgent(c, services, "tailscale.status", {})));
+
+  app.get("/processes", async (c) => {
+    const query = parseQuery(c, ProcessQuerySchema);
+    return c.json(await callAgent(c, services, "processes.list", query));
   });
 
   return app;

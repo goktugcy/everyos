@@ -50,11 +50,21 @@
 
   --otk-menubar-height: 36px;
 
+  /*
+   * Chart series colors (categorical slots 1–2), stepped per scheme and
+   * validated for color-vision deficiency and contrast against every
+   * built-in theme surface. Text never uses these colors.
+   */
+  --otk-chart-1: #3987e5;
+  --otk-chart-2: #d95926;
+
   color-scheme: dark;
 }
 
 [data-scheme="light"] {
   color-scheme: light;
+  --otk-chart-1: #2a78d6;
+  --otk-chart-2: #eb6834;
 }
 
 @theme {

@@ -37,6 +37,7 @@ export const ERROR_CODES = [
   "AGENT_TIMEOUT",
   "AGENT_OPERATION_FAILED",
   "AGENT_OPERATION_DENIED",
+  "HOST_CAPABILITY_UNAVAILABLE",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

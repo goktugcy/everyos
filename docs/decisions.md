@@ -103,3 +103,37 @@ under `apps/web/src/desktop`; glass primitives stay in `apps/web/src/components/
 consumer justifies extracting `packages/ui`. The earlier package-extraction milestone is deferred,
 not represented by an empty workspace package. Dock badges and capability-gated future app
 manifests remain future extensions; no placeholder apps are registered.
+
+## D12 — Raw counters in the agent, rates and history in the API (2026-10)
+
+The agent returns raw cumulative counters (`/proc/stat`, `/proc/net/dev`, `/proc/diskstats`) and
+instantaneous values. The API derives rates from consecutive samples. This keeps agent operations
+stateless and cacheable, lets one sample serve every subscriber, and keeps all retention logic in
+the unprivileged process. Fast (2 s) sampling runs only while someone watches; a 60 s background
+sampler feeds 24 h of minute averages in memory. Persistent history (SQLite) is deferred until a
+widget or alert needs it, to avoid write amplification on SD cards.
+
+## D13 — systemctl/journalctl JSON output instead of D-Bus bindings (2026-10)
+
+Native D-Bus bindings would require a compiled addon or a large dependency. `systemctl
+--output=json`, `systemctl show --timestamp=unix` and `journalctl --output=json` are stable,
+machine-readable interfaces on every supported distribution (systemd ≥ 248 for JSON unit lists).
+They run through the agent's restricted `execFile` helper, never a shell. Revisit if per-call
+process start-up cost shows up in Raspberry Pi measurements.
+
+## D14 — Development simulator for systemd and journald (2026-10)
+
+macOS development machines and CI need deterministic service and log data. A simulator implements
+the same interfaces in memory and is selected only in development (automatically when the tool is
+missing, or with `OTUKEN_AGENT_SIMULATE=1`). Every simulated response carries
+`source: "simulated"`, which the UI labels, and the agent refuses the variable in production.
+Metrics, storage and processes are never simulated; on macOS they are real readings with
+Linux-only fields reported as unavailable.
+
+## D15 — One multiplexed SSE stream per tab (2026-10)
+
+Server-sent events instead of WebSockets: one-way server → browser is all live metrics and logs
+need, they work through every reverse proxy and `tailscale serve`, reconnect automatically, and
+reuse cookie authentication and the CSRF model unchanged. Topics are multiplexed on one
+`/api/events` connection to stay within browsers' per-origin connection limits; log tails are a
+separate stream because they carry per-viewer filters.

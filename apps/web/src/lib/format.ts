@@ -45,3 +45,34 @@ export function formatDateTime(
     options ?? { dateStyle: "medium", timeStyle: "short" },
   ).format(timestamp);
 }
+
+/** Percentage of a 0–100 value, localized ("%45" in Turkish, "45%" in English). */
+export function formatPercent(value: number, language: string, digits = 0): string {
+  return new Intl.NumberFormat(localeTag(language), {
+    style: "percent",
+    maximumFractionDigits: digits,
+  }).format(value / 100);
+}
+
+export function formatCelsius(value: number, language: string): string {
+  return new Intl.NumberFormat(localeTag(language), {
+    style: "unit",
+    unit: "celsius",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function formatNumber(value: number, language: string, digits = 0): string {
+  return new Intl.NumberFormat(localeTag(language), { maximumFractionDigits: digits }).format(
+    value,
+  );
+}
+
+/** Clock time for chart axes and log rows. */
+export function formatClock(timestamp: number, language: string, seconds = false): string {
+  return new Intl.DateTimeFormat(localeTag(language), {
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(seconds ? { second: "2-digit" } : {}),
+  }).format(timestamp);
+}

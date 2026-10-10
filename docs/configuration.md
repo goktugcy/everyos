@@ -62,11 +62,22 @@ socketPath: /run/otuken/agent.sock
 agentKeyFile: /etc/otuken/agent.key
 socketGroup: otuken # group allowed to connect (name or gid)
 logLevel: info
+# Extra units Otuken may only start (never stop, restart, reload, enable or disable)
+# (exact names or * globs), on top of the built-in list (SSH, Tailscale, Otuken,
+# D-Bus, networking, systemd-*, gettys, user managers).
+protectedUnits:
+  - nginx.service
+  - "docker*.service"
+# "host:port" endpoints probed with a TCP connect to tell LAN-only from internet
+# access. Probed at most once a minute and only when network status is requested.
+# Default: ["1.1.1.1:443", "9.9.9.9:443"]. An empty list disables the check.
+internetCheckTargets: []
 ```
 
 The agent honours `OTUKEN_ENV`, `OTUKEN_AGENT_CONFIG`, `OTUKEN_AGENT_SOCKET`,
-`OTUKEN_AGENT_KEY_FILE` and `OTUKEN_LOG_LEVEL`. Policy rules for privileged operations will be added
-to this file in Phase 3.
+`OTUKEN_AGENT_KEY_FILE` and `OTUKEN_LOG_LEVEL`. In development only, `OTUKEN_AGENT_SIMULATE=1`
+answers service and log operations from the in-memory simulator even when systemd exists (the e2e
+suite uses it). The agent refuses to start with this variable in production.
 
 ## Remote access recipes
 

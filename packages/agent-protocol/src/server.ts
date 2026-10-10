@@ -2,8 +2,13 @@ import { chmodSync, chownSync, lstatSync, unlinkSync } from "node:fs";
 import { connect, createServer, type Server, type Socket } from "node:net";
 import { silentLogger, type Logger } from "@otuken/logger";
 import { roleHasPermission } from "@otuken/shared";
-import type { z } from "zod";
-import { DEFAULT_MAX_MESSAGE_BYTES, encodeFrame, LineDecoder } from "./framing.ts";
+import {
+  DEFAULT_MAX_MESSAGE_BYTES,
+  DEFAULT_MAX_RESPONSE_BYTES,
+  encodeFrame,
+  FrameTooLargeError,
+  LineDecoder,
+} from "./framing.ts";
 import { createNonce, deriveAgentAuthKey, serverProof, verifyClientMac } from "./handshake.ts";
 import {
   ClientMessageSchema,
@@ -16,10 +21,14 @@ import {
 import {
   AGENT_OPERATIONS,
   isOperationName,
-  type AgentOperations,
   type OperationContract,
-  type OperationName,
+  type OperationEvent,
   type OperationResult,
+  type ParsedOperationParams,
+  type StreamContract,
+  type StreamOperationName,
+  type UnaryContract,
+  type UnaryOperationName,
 } from "./operations.ts";
 
 /** Error type handlers throw to return a specific code and a safe message. */
@@ -39,17 +48,25 @@ export interface OperationContext {
   logger: Logger;
 }
 
-export type OperationHandler<N extends OperationName> = (
-  params: z.output<AgentOperations[N]["params"]>,
+export type UnaryHandler<N extends UnaryOperationName> = (
+  params: ParsedOperationParams<N>,
   context: OperationContext,
 ) => Promise<OperationResult<N>> | OperationResult<N>;
 
-export type OperationHandlers = { [N in OperationName]: OperationHandler<N> };
+/** Stream handlers must stop producing once `context.signal` aborts. */
+export type StreamHandler<N extends StreamOperationName> = (
+  params: ParsedOperationParams<N>,
+  context: OperationContext,
+) => AsyncIterable<OperationEvent<N>>;
+
+export type OperationHandlers = { [N in UnaryOperationName]: UnaryHandler<N> } & {
+  [N in StreamOperationName]: StreamHandler<N>;
+};
 
 export type PolicyDecision = { allowed: true } | { allowed: false; reason: string };
 
 /** Extra, operation-specific rules evaluated after the permission check. */
-export type OperationPolicy = (op: OperationName, params: unknown, actor: Actor) => PolicyDecision;
+export type OperationPolicy = (op: string, params: unknown, actor: Actor) => PolicyDecision;
 
 export interface AgentServerOptions {
   socketPath: string;
@@ -64,8 +81,23 @@ export interface AgentServerOptions {
   socketGroupId?: number | null;
   maxConnections?: number;
   maxInFlightPerConnection?: number;
+  /** Concurrent stream operations per connection (they also count as in flight). */
+  maxStreamsPerConnection?: number;
   handshakeTimeoutMs?: number;
+  /** Largest accepted request frame. */
   maxMessageBytes?: number;
+  /** Largest frame the agent will send; bigger results fail instead of breaking the connection. */
+  maxResponseBytes?: number;
+}
+
+interface Connection {
+  readonly log: Logger;
+  readonly inFlight: Map<number, AbortController>;
+  streams: number;
+  /** Writes one frame; throws FrameTooLargeError without writing when it exceeds the limit. */
+  send(message: unknown): void;
+  /** Resolves once the socket's write buffer has drained (or the socket closed). */
+  drained(): Promise<void>;
 }
 
 export class AgentServerError extends Error {
@@ -176,16 +208,38 @@ export class AgentServer {
 
   #accept(socket: Socket): void {
     this.#sockets.add(socket);
-    const log = this.#logger.child({ connection: this.#sockets.size });
     const decoder = new LineDecoder(this.#options.maxMessageBytes ?? DEFAULT_MAX_MESSAGE_BYTES);
     const maxInFlight = this.#options.maxInFlightPerConnection ?? 16;
-    const inFlight = new Map<number, AbortController>();
+    const maxResponseBytes = this.#options.maxResponseBytes ?? DEFAULT_MAX_RESPONSE_BYTES;
     const serverNonce = createNonce();
     let authenticated = false;
 
-    const send = (message: unknown) => {
-      if (!socket.destroyed) socket.write(encodeFrame(message));
+    const connection: Connection = {
+      log: this.#logger.child({ connection: this.#sockets.size }),
+      inFlight: new Map(),
+      streams: 0,
+      send(message) {
+        if (socket.destroyed) return;
+        const frame = encodeFrame(message);
+        if (Buffer.byteLength(frame) > maxResponseBytes)
+          throw new FrameTooLargeError(maxResponseBytes);
+        socket.write(frame);
+      },
+      drained() {
+        if (!socket.writableNeedDrain || socket.destroyed) return Promise.resolve();
+        return new Promise((resolve) => {
+          const done = () => {
+            socket.off("drain", done);
+            socket.off("close", done);
+            resolve();
+          };
+          socket.once("drain", done);
+          socket.once("close", done);
+        });
+      },
     };
+    const { log, inFlight } = connection;
+    const send = (message: unknown) => connection.send(message);
     const fatal = (code: AgentErrorCode, message: string) => {
       send({ type: "fatal", code, message });
       socket.end();
@@ -247,7 +301,7 @@ export class AgentServer {
             });
             return;
           }
-          void this.#dispatch(message, inFlight, send, log);
+          void this.#dispatch(message, connection);
           return;
       }
     };
@@ -280,22 +334,20 @@ export class AgentServer {
     });
   }
 
-  async #dispatch(
-    message: RequestMessage,
-    inFlight: Map<number, AbortController>,
-    send: (message: unknown) => void,
-    log: Logger,
-  ): Promise<void> {
+  async #dispatch(message: RequestMessage, connection: Connection): Promise<void> {
     const { id, op, actor } = message;
+    const { log, inFlight } = connection;
     const reply = (outcome: { result: unknown } | { code: AgentErrorCode; message: string }) => {
-      if ("result" in outcome) send({ type: "response", id, ok: true, result: outcome.result });
-      else
-        send({
-          type: "response",
-          id,
-          ok: false,
-          error: { code: outcome.code, message: outcome.message },
-        });
+      const error = (code: AgentErrorCode, text: string) =>
+        connection.send({ type: "response", id, ok: false, error: { code, message: text } });
+      if (!("result" in outcome)) return error(outcome.code, outcome.message);
+      try {
+        connection.send({ type: "response", id, ok: true, result: outcome.result });
+      } catch (sendError) {
+        if (!(sendError instanceof FrameTooLargeError)) throw sendError;
+        log.error("Operation result exceeds the frame limit", { op, requestId: id });
+        error("failed", "Operation result is too large");
+      }
     };
 
     if (!isOperationName(op)) {
@@ -322,15 +374,19 @@ export class AgentServer {
       log.warn("Operation denied by policy", { ...auditFields, reason: decision.reason });
       return reply({ code: "policy_denied", message: decision.reason });
     }
+    if (
+      contract.kind === "stream" &&
+      connection.streams >= (this.#options.maxStreamsPerConnection ?? 8)
+    ) {
+      return reply({ code: "busy", message: "Too many concurrent streams" });
+    }
 
     const controller = new AbortController();
     inFlight.set(id, controller);
+    const limitMs = contract.kind === "unary" ? contract.timeoutMs : contract.maxDurationMs;
     const timer = setTimeout(
-      () =>
-        controller.abort(
-          new OperationError("timeout", `Operation exceeded ${contract.timeoutMs} ms`),
-        ),
-      contract.timeoutMs,
+      () => controller.abort(new OperationError("timeout", `Operation exceeded ${limitMs} ms`)),
+      limitMs,
     );
     const aborted = new Promise<never>((_, reject) => {
       controller.signal.addEventListener("abort", () => reject(controller.signal.reason as Error), {
@@ -341,25 +397,37 @@ export class AgentServer {
     if (contract.mutating) log.info("Executing operation", auditFields);
     else log.debug("Executing operation", auditFields);
 
-    const handler = this.#options.handlers[op] as OperationHandler<OperationName>;
+    const context: OperationContext = {
+      actor,
+      signal: controller.signal,
+      logger: log.child({ op }),
+    };
+    const handler = this.#options.handlers[op] as (
+      params: unknown,
+      context: OperationContext,
+    ) => unknown;
     try {
-      const result = await Promise.race([
-        Promise.resolve(
-          handler(parsed.data as never, {
-            actor,
-            signal: controller.signal,
-            logger: log.child({ op }),
-          }),
-        ),
-        aborted,
-      ]);
-      const validated = contract.result.safeParse(result);
-      if (!validated.success) {
-        log.error("Handler returned a result that violates the contract", auditFields);
-        reply({ code: "failed", message: "Agent produced an invalid result" });
-      } else {
+      if (contract.kind === "unary") {
+        const result = await Promise.race([
+          Promise.resolve(handler(parsed.data, context)),
+          aborted,
+        ]);
+        reply({ result: this.#validateResult(contract, result, auditFields, log) });
         if (contract.mutating) log.info("Operation succeeded", auditFields);
-        reply({ result: validated.data });
+      } else {
+        connection.streams += 1;
+        try {
+          await this.#pump(
+            contract,
+            handler(parsed.data, context) as AsyncIterable<unknown>,
+            id,
+            connection,
+            aborted,
+          );
+        } finally {
+          connection.streams -= 1;
+        }
+        reply({ result: null });
       }
     } catch (error) {
       if (error instanceof OperationError) {
@@ -378,6 +446,53 @@ export class AgentServer {
     } finally {
       clearTimeout(timer);
       inFlight.delete(id);
+      // Release the handler (e.g. kill a `journalctl --follow` child) on every exit path.
+      if (!controller.signal.aborted)
+        controller.abort(new OperationError("cancelled", "Operation finished"));
+    }
+  }
+
+  #validateResult(
+    contract: UnaryContract,
+    result: unknown,
+    auditFields: Record<string, unknown>,
+    log: Logger,
+  ): unknown {
+    const validated = contract.result.safeParse(result);
+    if (validated.success) return validated.data;
+    log.error("Handler returned a result that violates the contract", auditFields);
+    throw new OperationError("failed", "Agent produced an invalid result");
+  }
+
+  /** Forwards stream events, pausing while the socket applies backpressure. */
+  async #pump(
+    contract: StreamContract,
+    events: AsyncIterable<unknown>,
+    id: number,
+    connection: Connection,
+    aborted: Promise<never>,
+  ): Promise<void> {
+    const iterator = events[Symbol.asyncIterator]();
+    try {
+      while (true) {
+        const next = await Promise.race([iterator.next(), aborted]);
+        if (next.done) return;
+        const validated = contract.event.safeParse(next.value);
+        if (!validated.success) {
+          connection.log.error("Stream produced an event that violates the contract", { id });
+          throw new OperationError("failed", "Agent produced an invalid event");
+        }
+        try {
+          connection.send({ type: "event", id, data: validated.data });
+        } catch (error) {
+          if (error instanceof FrameTooLargeError) continue; // Drop the single oversized event.
+          throw error;
+        }
+        await Promise.race([connection.drained(), aborted]);
+      }
+    } finally {
+      // Do not await: a generator blocked in `next()` finishes once the signal aborts.
+      void iterator.return?.()?.catch(() => undefined);
     }
   }
 }

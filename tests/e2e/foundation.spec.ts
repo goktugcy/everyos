@@ -1,45 +1,8 @@
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { expect, test, type Page } from "@playwright/test";
-import {
-  CSRF_HEADER,
-  type PreferenceDocuments,
-  type SessionInfo,
-} from "../../packages/shared/src/index.ts";
-
-const stateDir = join(dirname(fileURLToPath(import.meta.url)), ".state");
-const PASSWORD = "mavi-gokyuzu-ve-daglar-42";
-
-async function signIn(page: Page, reset = true): Promise<SessionInfo> {
-  await page.goto("/");
-  await page.getByLabel(/Kullanıcı adı|Username/).fill("goktug");
-  await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
-  await page.getByRole("button", { name: /Giriş yap|Sign in/ }).click();
-  await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();
-  const session = (await (await page.request.get("/api/auth/session")).json()) as SessionInfo;
-  const headers = { [CSRF_HEADER]: session.csrfToken };
-  expect(
-    (await page.request.patch("/api/account", { headers, data: { locale: "tr" } })).status(),
-  ).toBe(200);
-  if (reset) {
-    for (const key of ["appearance", "desktop", "dock", "windows", "security", "menubar"]) {
-      expect((await page.request.delete(`/api/preferences/${key}`, { headers })).status()).toBe(
-        204,
-      );
-    }
-  }
-  await page.reload();
-  await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();
-  return session;
-}
-
-async function preferences(page: Page): Promise<Partial<PreferenceDocuments>> {
-  const body = (await (await page.request.get("/api/preferences")).json()) as {
-    preferences: Partial<PreferenceDocuments>;
-  };
-  return body.preferences;
-}
+import { join } from "node:path";
+import { expect, test } from "@playwright/test";
+import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
+import { PASSWORD, preferences, signIn, stateDir } from "./helpers.ts";
 
 test.describe.configure({ mode: "serial" });
 
@@ -68,8 +31,12 @@ test("first-run setup creates the administrator and opens the shell", async ({ p
   await page.getByRole("button", { name: "Kurulumu tamamla" }).click();
 
   await expect(page.getByTestId("desktop")).toBeVisible();
-  await page.getByTestId("dock").getByRole("button", { name: "Sistem", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Sistem" })).toBeVisible();
+  await page
+    .getByTestId("dock")
+    .getByRole("button", { name: "Sistem İzleyici", exact: true })
+    .click();
+  await page.getByRole("tab", { name: "Bilgi", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Sistem", exact: true })).toBeVisible();
   await expect(page.getByText("Gerçek veri")).toBeVisible();
   await expect(page.getByText("Ajan bağlı")).toBeVisible();
   await page.screenshot({ path: test.info().outputPath("desktop.png"), animations: "disabled" });
@@ -134,9 +101,11 @@ test("windows drag, resize, snap, minimize and restore their layout after reload
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
   const system = page.locator('[data-app-id="otuken.system"]');
-  const dockButton = page.getByTestId("dock").getByRole("button", { name: "Sistem", exact: true });
+  const dockButton = page
+    .getByTestId("dock")
+    .getByRole("button", { name: "Sistem İzleyici", exact: true });
   await dockButton.click();
-  await expect(system.getByText("Gerçek veri")).toBeVisible();
+  await expect(system.getByRole("tab", { name: "Genel bakış", exact: true })).toBeVisible();
   const initial = (await system.boundingBox())!;
   const title = (await system.locator("header").boundingBox())!;
   await page.mouse.move(title.x + 160, title.y + 20);
@@ -215,7 +184,7 @@ test("desktop context menus create folders, move icons and persist them", async 
   await page.keyboard.press("Enter");
   const folder = surface.getByRole("button", { name: "Araçlar", exact: true });
   await expect(folder).toBeVisible();
-  const system = surface.getByRole("button", { name: "Sistem", exact: true });
+  const system = surface.getByRole("button", { name: "Sistem İzleyici", exact: true });
   const icon = (await system.boundingBox())!;
   await page.mouse.move(icon.x + 30, icon.y + 30);
   await page.mouse.down();
@@ -230,7 +199,7 @@ test("desktop context menus create folders, move icons and persist them", async 
   await expect(
     page
       .locator('[data-app-id="otuken.folder"]')
-      .getByRole("button", { name: "Sistem", exact: true }),
+      .getByRole("button", { name: "Sistem İzleyici", exact: true }),
   ).toBeVisible();
   await expect
     .poll(async () =>
@@ -257,13 +226,13 @@ test("launcher search, virtual desktops and dock menus use the same window state
   await expect(system).toBeHidden();
   await page
     .getByTestId("dock")
-    .getByRole("button", { name: "Sistem", exact: true })
+    .getByRole("button", { name: "Sistem İzleyici", exact: true })
     .click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Sistem", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Sistem İzleyici", exact: true }).click();
   await expect(system).toBeVisible();
   await page
     .getByTestId("dock")
-    .getByRole("button", { name: "Sistem", exact: true })
+    .getByRole("button", { name: "Sistem İzleyici", exact: true })
     .click({ button: "right" });
   await page.getByRole("menuitem", { name: "Dock'tan kaldır", exact: true }).click();
   await expect
@@ -280,7 +249,10 @@ test("locking is enforced by the API and survives reload without losing windows"
   page,
 }) => {
   await signIn(page);
-  await page.getByTestId("dock").getByRole("button", { name: "Sistem", exact: true }).click();
+  await page
+    .getByTestId("dock")
+    .getByRole("button", { name: "Sistem İzleyici", exact: true })
+    .click();
   await expect.poll(async () => (await preferences(page)).windows?.windows.length).toBe(1);
   await page.keyboard.press("Control+Alt+l");
   await expect(page.getByTestId("lock-screen")).toBeVisible();
@@ -302,7 +274,10 @@ test("desktop and mobile transitions preserve windows and mobile settings are sa
   page,
 }) => {
   await signIn(page);
-  await page.getByTestId("dock").getByRole("button", { name: "Sistem", exact: true }).click();
+  await page
+    .getByTestId("dock")
+    .getByRole("button", { name: "Sistem İzleyici", exact: true })
+    .click();
   await expect(page.locator('[data-app-id="otuken.system"]')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByTestId("mobile-shell")).toBeVisible();

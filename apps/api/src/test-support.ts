@@ -4,7 +4,15 @@ import { join } from "node:path";
 import { AgentClientError, type Actor, type AgentConnectionState } from "@otuken/agent-protocol";
 import { migrate, openDatabase, OTUKEN_MIGRATIONS, type Database } from "@otuken/database";
 import { silentLogger } from "@otuken/logger";
-import { CSRF_HEADER, type SessionInfo, type SystemInfo } from "@otuken/shared";
+import {
+  CSRF_HEADER,
+  type LogEntry,
+  type MetricsSample,
+  type ServiceDetail,
+  type ServiceList,
+  type SessionInfo,
+  type SystemInfo,
+} from "@otuken/shared";
 import type { Hono } from "hono";
 import { createApp } from "./app.ts";
 import { loadApiConfig, type ApiConfig } from "./config.ts";
@@ -39,23 +47,257 @@ export const sampleSystemInfo: SystemInfo = {
   collectedAt: 0,
 };
 
+/** Raw counters that grow by a fixed amount per sample, so rates are predictable. */
+export function sampleMetrics(index: number, at: number): MetricsSample {
+  const cpu = (i: number) => ({
+    user: 100 * i,
+    nice: 0,
+    system: 50 * i,
+    idle: 250 * i,
+    iowait: 50 * i,
+    irq: 0,
+    softirq: 0,
+    steal: 0,
+  });
+  return {
+    source: "host",
+    at,
+    uptimeSeconds: 1_000 + index,
+    cpu: { total: cpu(index), cores: [cpu(index), cpu(index)] },
+    memory: {
+      totalBytes: 8_000_000_000,
+      availableBytes: 6_000_000_000,
+      freeBytes: 1_000_000_000,
+      buffersBytes: 0,
+      cachedBytes: 0,
+      swapTotalBytes: 0,
+      swapFreeBytes: 0,
+    },
+    load: [0.5, 0.4, 0.3],
+    network: [
+      {
+        name: "lo",
+        rxBytes: 1e6 * index,
+        txBytes: 1e6 * index,
+        rxPackets: 0,
+        txPackets: 0,
+        rxErrors: 0,
+        txErrors: 0,
+        physical: false,
+      },
+      {
+        name: "br_kasm_sidecar",
+        rxBytes: 5e5 * index,
+        txBytes: 5e5 * index,
+        rxPackets: 0,
+        txPackets: 0,
+        rxErrors: 0,
+        txErrors: 0,
+        physical: false,
+      },
+      {
+        name: "eth0",
+        rxBytes: 2_000 * index,
+        txBytes: 1_000 * index,
+        rxPackets: 0,
+        txPackets: 0,
+        rxErrors: 0,
+        txErrors: 0,
+        physical: true,
+      },
+    ],
+    disks: [
+      {
+        name: "nvme0n1",
+        readBytes: 4_096 * index,
+        writeBytes: 8_192 * index,
+        readOps: 0,
+        writeOps: 0,
+        busyMs: 100 * index,
+      },
+    ],
+    thermal: [{ zone: "thermal_zone0", type: "cpu-thermal", celsius: 48.5 }],
+    cpuFrequencyMHz: [2400, 2400],
+    fans: null,
+  };
+}
+
+export const sampleServices: ServiceList = {
+  source: "host",
+  units: [
+    {
+      name: "ssh.service",
+      description: "OpenBSD Secure Shell server",
+      load: "loaded",
+      active: "active",
+      sub: "running",
+      unitFileState: "enabled",
+      protected: true,
+    },
+    {
+      name: "jellyfin.service",
+      description: "Jellyfin",
+      load: "loaded",
+      active: "inactive",
+      sub: "dead",
+      unitFileState: "disabled",
+      protected: false,
+    },
+  ],
+};
+
+export function sampleLogEntry(n: number): LogEntry {
+  return {
+    cursor: `s=1;i=${n}`,
+    ts: 1_760_000_000_000 + n,
+    priority: 6,
+    unit: "ssh.service",
+    identifier: "sshd",
+    pid: 100,
+    hostname: "otuken-test",
+    message: `entry ${n}`,
+  };
+}
+
+type FakeHandler = (params: unknown) => unknown;
+
+/**
+ * In-memory agent for API tests. Every operation has a realistic default
+ * answer; `handlers` overrides individual operations (throw to simulate an
+ * agent error).
+ */
 export class FakeAgent implements AgentGateway {
   state: AgentConnectionState = "connected";
-  readonly calls: Array<{ op: string; actor: Actor }> = [];
+  readonly calls: Array<{ op: string; params: unknown; actor: Actor }> = [];
+  readonly handlers = new Map<string, FakeHandler>();
+  logEntries: LogEntry[] = [sampleLogEntry(1), sampleLogEntry(2)];
+  #metricsIndex = 0;
+  now: () => number = Date.now;
 
-  call: AgentGateway["call"] = (op, _params, actor) => {
-    this.calls.push({ op, actor });
+  #defaults(op: string, params: unknown): unknown {
+    switch (op) {
+      case "system.info":
+        return sampleSystemInfo;
+      case "agent.ping":
+        return { pong: true, agentVersion: "test", uptimeSeconds: 1, mode: "development" };
+      case "metrics.sample":
+        return sampleMetrics(++this.#metricsIndex, this.now());
+      case "storage.usage":
+        return {
+          source: "host",
+          mounts: [
+            {
+              device: "/dev/nvme0n1p2",
+              mountpoint: "/",
+              fsType: "ext4",
+              readOnly: false,
+              totalBytes: 500e9,
+              usedBytes: 120e9,
+              availableBytes: 355e9,
+              inodesTotal: 1e6,
+              inodesFree: 9e5,
+            },
+          ],
+        };
+      case "hardware.status":
+        return {
+          source: "host",
+          throttling: { status: { available: true }, flags: null, raw: "0x0" },
+          nvme: { status: { available: false, reason: "not-detected" }, devices: [] },
+        };
+      case "network.status":
+        return {
+          source: "host",
+          interfaces: [],
+          gateways: [],
+          dns: [],
+          internet: { state: "online", checkedAt: 1, latencyMs: 10 },
+        };
+      case "tailscale.status":
+        return {
+          status: { available: false, reason: "not-detected" },
+          backendState: null,
+          version: null,
+          hostName: null,
+          dnsName: null,
+          tailnet: null,
+          ips: [],
+          online: null,
+          exitNode: { active: false, name: null, online: null },
+          peers: { total: 0, online: 0 },
+          health: [],
+        };
+      case "processes.list":
+        return { source: "host", sampledAt: 1, total: 1, processes: [] };
+      case "services.list":
+        return sampleServices;
+      case "services.get": {
+        const unit = sampleServices.units.find((u) => u.name === (params as { unit: string }).unit);
+        if (!unit)
+          throw new AgentClientError("AGENT_OPERATION_FAILED", "Unit not found", "not_found");
+        const detail: ServiceDetail = {
+          ...unit,
+          source: "host",
+          mainPid: null,
+          activeSince: null,
+          memoryBytes: null,
+          cpuNanoseconds: null,
+          tasks: null,
+          restarts: 0,
+          fragmentPath: null,
+          restartPolicy: null,
+          type: "simple",
+        };
+        return detail;
+      }
+      case "services.control": {
+        const { unit } = params as { unit: string };
+        if (unit === "ssh.service") {
+          throw new AgentClientError(
+            "AGENT_OPERATION_DENIED",
+            'PROTECTED_UNIT: ssh.service is protected; "stop" is not allowed from Otuken',
+            "policy_denied",
+          );
+        }
+        return { accepted: true };
+      }
+      case "logs.query":
+        return { source: "host", entries: this.logEntries, hasMore: false };
+      default:
+        throw new Error(`FakeAgent: no default for ${op}`);
+    }
+  }
+
+  call: AgentGateway["call"] = (op, params, actor) => {
+    this.calls.push({ op, params, actor });
     if (this.state !== "connected") {
       return Promise.reject(new AgentClientError("AGENT_UNAVAILABLE", "not connected"));
     }
-    if (op === "system.info") return Promise.resolve(sampleSystemInfo) as never;
-    return Promise.resolve({
-      pong: true,
-      agentVersion: "test",
-      uptimeSeconds: 1,
-      mode: "development",
-    }) as never;
+    try {
+      const handler = this.handlers.get(op);
+      return Promise.resolve(handler ? handler(params) : this.#defaults(op, params)) as never;
+    } catch (error) {
+      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+    }
   };
+
+  /** Streams `logEntries`, then stays open until aborted (like `journalctl --follow`). */
+  stream = async function* (
+    this: FakeAgent,
+    op: string,
+    params: unknown,
+    actor: Actor,
+    options: { signal?: AbortSignal } = {},
+  ) {
+    this.calls.push({ op, params, actor });
+    if (this.state !== "connected")
+      throw new AgentClientError("AGENT_UNAVAILABLE", "not connected");
+    for (const entry of this.logEntries) yield entry;
+    const signal = options.signal;
+    if (signal && !signal.aborted) {
+      await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }));
+    }
+  } as unknown as AgentGateway["stream"];
 }
 
 export interface TestContext {
@@ -80,6 +322,7 @@ export async function createTestContext(
   await migrate(db, OTUKEN_MIGRATIONS);
   const agent = new FakeAgent();
   const clock = { now: 1_760_000_000_000 };
+  agent.now = () => clock.now;
   const services = createServices({
     config,
     logger: silentLogger,

@@ -121,6 +121,18 @@ export class SessionService {
     return session;
   }
 
+  /**
+   * Current state of a session without extending it. Long-lived streams use
+   * this so an open browser tab cannot keep an idle session alive forever.
+   */
+  peek(sessionId: string): Session | null {
+    const row = this.#db.get<SessionRow>("SELECT * FROM sessions WHERE id = ?", sessionId);
+    if (!row) return null;
+    const now = this.#now();
+    if (row.expires_at <= now || row.last_seen_at + this.#policy.idleMs <= now) return null;
+    return toSession(row);
+  }
+
   /** Effective expiry: whichever of the idle and absolute limits comes first. */
   effectiveExpiry(session: Session): number {
     return Math.min(session.expiresAt, session.lastSeenAt + this.#policy.idleMs);

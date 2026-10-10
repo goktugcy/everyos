@@ -13,6 +13,7 @@ import { deriveKey, SecretBox } from "@otuken/security";
 import { createProxyMatcher, type ApiConfig } from "./config.ts";
 import { AuditLog } from "./modules/audit/audit-log.ts";
 import { LoginChallengeStore } from "./modules/auth/login-challenges.ts";
+import { MetricsHub } from "./modules/metrics/metrics-hub.ts";
 import { PreferenceRepository } from "./modules/preferences/preference-repository.ts";
 import { FailureLimiter } from "./modules/auth/rate-limiter.ts";
 import { SessionService } from "./modules/auth/session-service.ts";
@@ -21,7 +22,7 @@ import { UserRepository } from "./modules/users/user-repository.ts";
 import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
 
 /** The subset of the agent client the HTTP layer depends on. */
-export type AgentGateway = Pick<AgentClient, "state" | "call">;
+export type AgentGateway = Pick<AgentClient, "state" | "call" | "stream">;
 
 export interface PasswordHasher {
   hash(password: string): Promise<string>;
@@ -49,6 +50,9 @@ export interface Services {
   setup: SetupService;
   secrets: SecretBox;
   agent: AgentGateway;
+  metrics: MetricsHub;
+  /** How often open event streams re-check access and send a keep-alive. */
+  eventStreamHeartbeatMs: number;
   limiters: Limiters;
   challenges: LoginChallengeStore;
   passwords: PasswordHasher;
@@ -140,6 +144,8 @@ export function createServices(deps: ServiceDependencies): Services {
     }),
     secrets: new SecretBox(deriveKey(deps.masterKey, "otuken/secret-box/v1")),
     agent: deps.agent,
+    metrics: new MetricsHub({ agent: deps.agent, logger: deps.logger, now }),
+    eventStreamHeartbeatMs: 15_000,
     limiters: createLimiters(now),
     challenges: new LoginChallengeStore(now),
     passwords: createPasswordHasher(deps.scryptParams),

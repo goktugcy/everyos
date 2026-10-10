@@ -5,7 +5,13 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type AppId =
-  "otuken.system" | "otuken.settings" | "otuken.users" | "otuken.audit" | "otuken.folder";
+  | "otuken.system"
+  | "otuken.services"
+  | "otuken.logs"
+  | "otuken.settings"
+  | "otuken.users"
+  | "otuken.audit"
+  | "otuken.folder";
 
 /**
  * Contract every built-in Otuken app fulfils (docs/contracts.md §1). The

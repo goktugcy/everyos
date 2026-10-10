@@ -108,6 +108,49 @@ deleting an account removes its wallpapers. Wallpaper uploads are the only excep
 
 ## System (`system:read`)
 
-| Method & path      | Description                                                                                                                                                                                                                                                                             |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /system/info` | Host information collected by the agent (`SystemInfo`: hostname, OS, kernel, architecture, CPU, memory, uptime, hardware model, capability map with reasons). Errors: `AGENT_UNAVAILABLE` (503), `AGENT_TIMEOUT` (504), `AGENT_OPERATION_DENIED` (403), `AGENT_OPERATION_FAILED` (502). |
+Agent errors map to stable codes on every host endpoint: `AGENT_UNAVAILABLE` (503),
+`AGENT_TIMEOUT` (504), `AGENT_OPERATION_DENIED` (403, `details.reason` carries the agent's policy
+reason, prefixed `PROTECTED_UNIT:` or `DEVELOPMENT_MODE:`), `HOST_CAPABILITY_UNAVAILABLE` (501, e.g.
+no systemd/journald), `NOT_FOUND` (404), `RATE_LIMITED` (429, too many concurrent agent streams) and
+`AGENT_OPERATION_FAILED` (502).
+
+| Method & path                 | Description                                                                                                                                                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /system/info`            | Host information (`SystemInfo`: hostname, OS, kernel, architecture, CPU, memory, uptime, hardware model, capability map with reasons).                                                              |
+| `GET /system/metrics`         | Latest `MetricsSnapshot` (derived rates: CPU %, memory, swap, load, network/disk bytes per second, temperatures, per-core usage, fans). Sampled on demand when the last snapshot is older than 5 s. |
+| `GET /system/metrics/history` | Query `range` = `15m` (live resolution) \| `1h` (1-minute averages) \| `24h` (5-minute averages). Returns `{ range, resolutionMs, points }`. In-memory only: history restarts with the API.         |
+| `GET /system/storage`         | Mounted data file systems with size, usage and inodes (`statfs`, 2 s timeout per mount).                                                                                                            |
+| `GET /system/hardware`        | Raspberry Pi throttling flags (firmware `get_throttled`) and NVMe SMART health (`smartctl`), each with an availability reason.                                                                      |
+| `GET /system/network`         | Interfaces (kind, state, MAC, MTU, speed, addresses), default gateways, DNS servers and internet reachability (TCP probe, cached for 60 s, configurable in `agent.yaml`).                           |
+| `GET /system/tailscale`       | Tailscale state through the local LocalAPI socket (never the network).                                                                                                                              |
+| `GET /system/processes`       | Query `sort` = `cpu` \| `memory`, `limit` 1–500 (default 50). CPU % is measured over 500 ms. Full command lines are only returned to roles with `system:manage`; others see the process name.       |
+
+## Services
+
+| Method & path                  | Permission        | Description                                                                                                                                                                                                       |
+| ------------------------------ | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /services`                | `services:read`   | All systemd service units with load/active/sub state, unit-file state and the `protected` flag.                                                                                                                   |
+| `GET /services/:unit`          | `services:read`   | Unit detail (main PID, active since, memory, CPU time, tasks, restarts, unit file, restart policy, type). Unit names are validated (`*.service` etc., no paths or options).                                       |
+| `POST /services/:unit/actions` | `services:manage` | Body `{ "action": "start" \| "stop" \| "restart" \| "reload" \| "enable" \| "disable" }` → `202 { accepted: true }`. Submitted with `--no-block`; poll the detail for the result. Audited as `services.<action>`. |
+
+Protected units (SSH, Tailscale, Otuken itself, D-Bus, networking, `systemd-*`, gettys, user
+managers, plus any configured in `agent.yaml`) accept only `start`, for every role. `stop`,
+`restart`, `reload`, `enable` and `disable` are refused, so their boot configuration never changes
+(Ubuntu's `ssh.service`, for example, is socket-activated through `ssh.socket`).
+
+## Logs (`logs:read`)
+
+| Method & path      | Description                                                                                                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /logs`        | journald entries, newest first. Query `unit`, `priority` (0–7, this level and more severe), `since`/`until` (epoch ms), `grep` (≤ 200 chars, case-insensitive), `limit` (1–1000, default 200), `before` (cursor of the oldest entry already shown). Returns `{ source, entries, hasMore }`. |
+| `GET /logs/stream` | Server-sent events of new entries (`event: entry`, `id` = journal cursor). Same `unit`, `priority`, `grep` filters. The agent ends a stream after one hour (`event: end`); EventSource reconnects automatically.                                                                            |
+
+## Event stream
+
+`GET /events?topics=metrics` opens one multiplexed server-sent event stream per tab. Each topic
+requires its own permission (`metrics` → `system:read`). Events: `ready`, then `metrics` with a
+`MetricsSnapshot` every 2 s. A slow client skips snapshots instead of queueing them.
+
+Every stream (`/events`, `/logs/stream`) re-checks access every 15 s without extending the session:
+it closes when the session is locked, revoked or expired, the account is disabled, or the role no
+longer grants the permission. Opening a stream from a locked session returns `423`.

@@ -34,6 +34,8 @@ export const AGENT_ERROR_CODES = [
   "invalid_request",
   "unknown_operation",
   "invalid_params",
+  "not_found",
+  "unsupported",
   "forbidden",
   "policy_denied",
   "busy",
@@ -73,6 +75,13 @@ export const ResponseMessageSchema = z.union([
   }),
 ]);
 
+/** One item of a stream operation; the stream ends with a normal response. */
+export const EventMessageSchema = z.strictObject({
+  type: z.literal("event"),
+  id: z.number().int().nonnegative(),
+  data: z.unknown(),
+});
+
 export const FatalMessageSchema = z.strictObject({
   type: z.literal("fatal"),
   code: z.enum(AGENT_ERROR_CODES),
@@ -83,6 +92,7 @@ export const ServerMessageSchema = z.union([
   HelloMessageSchema,
   ReadyMessageSchema,
   ResponseMessageSchema,
+  EventMessageSchema,
   FatalMessageSchema,
 ]);
 

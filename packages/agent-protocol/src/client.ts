@@ -1,6 +1,6 @@
 import { connect, type Socket } from "node:net";
 import { silentLogger, type Logger } from "@otuken/logger";
-import { DEFAULT_MAX_MESSAGE_BYTES, encodeFrame, LineDecoder } from "./framing.ts";
+import { DEFAULT_MAX_RESPONSE_BYTES, encodeFrame, LineDecoder } from "./framing.ts";
 import { clientMac, createNonce, deriveAgentAuthKey, verifyServerProof } from "./handshake.ts";
 import {
   PROTOCOL_VERSION,
@@ -11,9 +11,13 @@ import {
 } from "./messages.ts";
 import {
   AGENT_OPERATIONS,
-  type OperationName,
+  type OperationEvent,
   type OperationParams,
   type OperationResult,
+  type StreamContract,
+  type StreamOperationName,
+  type UnaryContract,
+  type UnaryOperationName,
 } from "./operations.ts";
 
 export type AgentClientErrorCode =
@@ -50,14 +54,22 @@ export interface AgentClientOptions {
   reconnectMaxDelayMs?: number;
   handshakeTimeoutMs?: number;
   maxMessageBytes?: number;
+  /** Events buffered per stream before a slow consumer is disconnected from it. */
+  maxQueuedEvents?: number;
 }
 
 interface PendingCall {
-  op: OperationName;
+  op: UnaryOperationName;
   resolve: (value: unknown) => void;
   reject: (error: AgentClientError) => void;
   timer: NodeJS.Timeout;
   cleanup: () => void;
+}
+
+interface OpenStream {
+  op: StreamOperationName;
+  push: (event: unknown) => void;
+  end: (outcome: AgentClientError | null) => void;
 }
 
 function mapAgentError(code: AgentErrorCode, message: string): AgentClientError {
@@ -72,6 +84,8 @@ function mapAgentError(code: AgentErrorCode, message: string): AgentClientError 
     case "invalid_request":
     case "unknown_operation":
     case "invalid_params":
+    case "not_found":
+    case "unsupported":
     case "cancelled":
     case "failed":
       return new AgentClientError("AGENT_OPERATION_FAILED", message, code);
@@ -88,6 +102,7 @@ export class AgentClient {
   readonly #authKey: Buffer;
   readonly #logger: Logger;
   readonly #pending = new Map<number, PendingCall>();
+  readonly #streams = new Map<number, OpenStream>();
   readonly #listeners = new Set<(state: AgentConnectionState) => void>();
   #socket: Socket | null = null;
   #state: AgentConnectionState = "disconnected";
@@ -104,7 +119,8 @@ export class AgentClient {
       reconnectMinDelayMs: options.reconnectMinDelayMs ?? 500,
       reconnectMaxDelayMs: options.reconnectMaxDelayMs ?? 15_000,
       handshakeTimeoutMs: options.handshakeTimeoutMs ?? 5_000,
-      maxMessageBytes: options.maxMessageBytes ?? DEFAULT_MAX_MESSAGE_BYTES,
+      maxMessageBytes: options.maxMessageBytes ?? DEFAULT_MAX_RESPONSE_BYTES,
+      maxQueuedEvents: options.maxQueuedEvents ?? 2_000,
     };
     this.#authKey = deriveAgentAuthKey(options.agentKey);
     this.#logger = (options.logger ?? silentLogger).child({ component: "agent-client" });
@@ -158,7 +174,7 @@ export class AgentClient {
     });
   }
 
-  call<N extends OperationName>(
+  call<N extends UnaryOperationName>(
     op: N,
     params: OperationParams<N>,
     actor: Actor,
@@ -171,7 +187,7 @@ export class AgentClient {
     if (options.signal?.aborted) {
       return Promise.reject(new AgentClientError("AGENT_OPERATION_FAILED", "Request aborted"));
     }
-    const contract = AGENT_OPERATIONS[op];
+    const contract: UnaryContract = AGENT_OPERATIONS[op];
     const id = this.#nextId++;
     return new Promise<OperationResult<N>>((resolve, reject) => {
       const onAbort = () => {
@@ -192,6 +208,81 @@ export class AgentClient {
       });
       this.#send({ type: "request", id, op, params, actor });
     });
+  }
+
+  /**
+   * Runs a stream operation. Iteration ends when the agent finishes the
+   * stream, and throws if it fails; breaking out of the loop or aborting
+   * `signal` cancels it on the agent.
+   */
+  async *stream<N extends StreamOperationName>(
+    op: N,
+    params: OperationParams<N>,
+    actor: Actor,
+    options: { signal?: AbortSignal } = {},
+  ): AsyncGenerator<OperationEvent<N>, void, undefined> {
+    if (this.#state !== "connected" || !this.#socket) {
+      throw new AgentClientError("AGENT_UNAVAILABLE", "Agent is not connected");
+    }
+    const { signal } = options;
+    if (signal?.aborted) return;
+    const contract: StreamContract = AGENT_OPERATIONS[op];
+    const id = this.#nextId++;
+    const queue: unknown[] = [];
+    let ended: { error: AgentClientError | null } | null = null;
+    let wake: (() => void) | null = null;
+    const notify = () => {
+      wake?.();
+      wake = null;
+    };
+    const end = (error: AgentClientError | null) => {
+      if (ended) return;
+      ended = { error };
+      this.#streams.delete(id);
+      notify();
+    };
+    this.#streams.set(id, {
+      op,
+      push: (event) => {
+        const parsed = contract.event.safeParse(event);
+        if (!parsed.success) {
+          this.#send({ type: "cancel", id });
+          end(new AgentClientError("AGENT_INVALID_RESPONSE", `Agent sent an invalid ${op} event`));
+        } else if (queue.length >= this.#options.maxQueuedEvents) {
+          this.#send({ type: "cancel", id });
+          end(new AgentClientError("AGENT_OPERATION_FAILED", `Consumer of ${op} is too slow`));
+        } else {
+          queue.push(parsed.data);
+          notify();
+        }
+      },
+      end,
+    });
+    signal?.addEventListener("abort", notify);
+    this.#send({ type: "request", id, op, params, actor });
+    try {
+      while (true) {
+        if (queue.length > 0) {
+          yield queue.shift() as OperationEvent<N>;
+          continue;
+        }
+        const finished = ended as { error: AgentClientError | null } | null;
+        if (finished) {
+          if (finished.error) throw finished.error;
+          return;
+        }
+        if (signal?.aborted) return;
+        await new Promise<void>((resolve) => {
+          wake = resolve;
+        });
+      }
+    } finally {
+      signal?.removeEventListener("abort", notify);
+      if (this.#streams.has(id)) {
+        this.#streams.delete(id);
+        this.#send({ type: "cancel", id });
+      }
+    }
   }
 
   #setState(state: AgentConnectionState): void {
@@ -224,6 +315,7 @@ export class AgentClient {
 
   #failAll(error: AgentClientError): void {
     for (const id of [...this.#pending.keys()]) this.#settle(id, error);
+    for (const stream of [...this.#streams.values()]) stream.end(error);
   }
 
   #scheduleReconnect(): void {
@@ -287,15 +379,26 @@ export class AgentClient {
           this.#logger.info("Connected to agent", { agentVersion: this.#agentVersion });
           this.#setState("connected");
           return;
+        case "event":
+          if (authenticated) this.#streams.get(message.id)?.push(message.data);
+          return;
         case "response": {
           if (!authenticated) return;
+          const stream = this.#streams.get(message.id);
+          if (stream) {
+            stream.end(
+              message.ok ? null : mapAgentError(message.error.code, message.error.message),
+            );
+            return;
+          }
           const pending = this.#pending.get(message.id);
           if (!pending) return;
           if (!message.ok) {
             this.#settle(message.id, mapAgentError(message.error.code, message.error.message));
             return;
           }
-          const parsed = AGENT_OPERATIONS[pending.op].result.safeParse(message.result);
+          const contract: UnaryContract = AGENT_OPERATIONS[pending.op];
+          const parsed = contract.result.safeParse(message.result);
           this.#settle(
             message.id,
             parsed.success

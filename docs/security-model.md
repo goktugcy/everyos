@@ -79,6 +79,14 @@ flowchart LR
   Every operation derives ownership from the session, never from a submitted user id. Viewers
   retain read-only access to host resources.
 
+## Live streams **[P3]**
+
+Server-sent event streams (`/api/events`, `/api/logs/stream`) are authorized like any request
+when they open, and then re-checked every 15 s with a read that does **not** extend the session:
+they close as soon as the session is locked, revoked or idle-expired, the account is disabled, or
+the role loses the required permission. An open tab therefore cannot keep an idle session alive.
+Writes apply backpressure, so a slow client stalls only its own stream.
+
 ## Desktop session locking **[P2]**
 
 The API persists the lock on the session row. Locked sessions cannot query host data, administer
@@ -134,19 +142,34 @@ The agent is the only component with root privileges. Its interface is deliberat
   (`root:otuken 0640`, created by the agent). The agent also proves the key back, so the API never
   talks to an impostor socket. Unauthenticated peers get a single `fatal` frame and are disconnected
   after 5 s at most.
-- **Operation registry [P1]:** the agent executes only operations defined in
+- **Operation registry [P1, P3]:** the agent executes only operations defined in
   `packages/agent-protocol/src/operations.ts`. Each operation has a zod parameter schema, a result
-  schema (results are validated before they are sent), a required permission, a timeout, and a
-  `mutating` flag that triggers audit logging. There is **no generic command execution operation**,
-  and none will be added.
-- **Defense in depth [P1]:** every request carries the acting user (id, username, role, session,
-  IP). The agent re-derives permissions from the role and evaluates an operation policy
-  (`apps/agent/src/policy.ts`). For example, a later rule will refuse to stop `ssh`, `otuken-agent`
-  or other protected units regardless of role. Unknown roles or malformed frames close the
-  connection.
-- **Resource limits [P1]:** at most 4 connections, 16 in-flight requests per connection, 1 MiB per
-  frame, and per-operation timeouts with cancellation (`AbortSignal`) when the API disconnects.
-  Unexpected handler errors return a generic message and never leak internals.
+  (or, for stream operations, event) schema validated before anything is sent, a required
+  permission, a timeout or maximum stream duration, and a `mutating` flag that triggers audit
+  logging. Stream operations are read-only by type. There is **no generic command execution
+  operation**, and none will be added.
+- **Command execution inside the agent [P3]:** the few system tools the agent uses
+  (`systemctl`, `journalctl`, `smartctl`, `vcgencmd`) are run with `execFile`/`spawn`, never a
+  shell, by absolute path from a fixed list of system directories, with a fixed minimal
+  environment (`PATH`, `LANG=C.UTF-8`, no pager, no colors), a hard timeout with `SIGKILL`, and an
+  output size cap. Arguments come from validated parameters (unit names match a strict pattern and
+  are passed after `--`). `systemctl` always runs with `--no-ask-password`.
+- **Defense in depth [P1, P3]:** every request carries the acting user (id, username, role,
+  session, IP). The agent re-derives permissions from the role and evaluates an operation policy
+  (`apps/agent/src/policy.ts`). Protected units (`apps/agent/src/protection.ts`: SSH, Tailscale,
+  Otuken and its agent, D-Bus, polkit, NetworkManager/networking, `systemd-*`, gettys, user
+  managers, plus `protectedUnits` from `agent.yaml`) accept only `start`, regardless of role, so
+  Otuken can neither lock the owner out of a headless server nor change those units' boot setup. Unknown
+  roles or malformed frames close the connection.
+- **Least disclosure [P3]:** process command lines can contain credentials passed as arguments;
+  the agent returns them only to actors whose role holds `system:manage`.
+- **Resource limits [P1, P3]:** at most 4 connections, 16 in-flight requests and 8 streams per
+  connection, 8 concurrent `journalctl --follow` processes, 1 MiB per request frame and 16 MiB per
+  response frame (larger results fail cleanly instead of breaking the connection), per-operation
+  timeouts, one-hour maximum stream duration, and cancellation (`AbortSignal`, killing child
+  processes) when the API disconnects. Streams respect socket backpressure on the agent side and a
+  bounded per-stream queue on the API side. Unexpected handler errors return a generic message and
+  never leak internals.
 - **Configuration [P1]:** the agent reads only root-owned configuration (`/etc/otuken/agent.yaml`)
   and never trusts files that the `otuken` user can write.
 - **systemd hardening [planned, Phase 8]:** `ProtectSystem`, `ProtectHome`, `PrivateTmp`,
@@ -166,6 +189,10 @@ unprivileged and exposes a small attack surface.
   privileges.
 - The setup token is printed to the console only in development mode. In production the log line
   names the file instead.
+- A development agent reads real host data where it exists but its policy refuses every service
+  change against the real host (`DEVELOPMENT_MODE`). Where systemd/journald are missing (macOS),
+  or with `OTUKEN_AGENT_SIMULATE=1`, service and log operations use an in-memory simulator whose
+  data is marked `source: "simulated"` and labeled in the UI. Production never simulates.
 
 ## Audit log **[P1]**
 

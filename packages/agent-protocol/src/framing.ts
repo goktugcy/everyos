@@ -5,6 +5,12 @@
  */
 export const DEFAULT_MAX_MESSAGE_BYTES = 1024 * 1024;
 
+/**
+ * Agent → API frames may be larger (a full service list or a page of long log
+ * lines). The agent refuses to send anything above this limit.
+ */
+export const DEFAULT_MAX_RESPONSE_BYTES = 16 * 1024 * 1024;
+
 export class FrameTooLargeError extends Error {
   constructor(limit: number) {
     super(`Protocol message exceeds ${limit} bytes`);

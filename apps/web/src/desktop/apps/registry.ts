@@ -1,8 +1,8 @@
 import type { Permission } from "@otuken/shared";
-import { Activity, Folder, Gauge, Settings, Users } from "lucide-react";
+import { Activity, Boxes, Folder, Gauge, ScrollText, Settings, Users } from "lucide-react";
 import type { AppId, DesktopAppManifest } from "./types.ts";
 
-/** Built-in apps. Later phases register Docker, Services, Logs, Files, Terminal and the App Store here. */
+/** Built-in apps. Later phases register Docker, Files, Terminal and the App Store here. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
   {
     id: "otuken.system",
@@ -12,12 +12,65 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     category: "system",
     requiredPermission: "system:read",
     window: {
-      defaultSize: { width: 760, height: 640 },
+      defaultSize: { width: 980, height: 720 },
       minSize: { width: 420, height: 360 },
       instancing: "single",
     },
-    keywords: ["sistem", "system", "donanım", "hardware", "cpu", "bellek", "memory"],
+    keywords: [
+      "sistem",
+      "system",
+      "izleyici",
+      "monitor",
+      "donanım",
+      "hardware",
+      "cpu",
+      "işlemci",
+      "bellek",
+      "memory",
+      "disk",
+      "depolama",
+      "storage",
+      "ağ",
+      "network",
+      "tailscale",
+      "işlemler",
+      "processes",
+      "sıcaklık",
+      "temperature",
+    ],
     load: () => import("./system/system-app.tsx"),
+  },
+  {
+    id: "otuken.services",
+    titleKey: "apps.services",
+    icon: Boxes,
+    tint: "from-violet-400 to-fuchsia-600",
+    category: "system",
+    requiredPermission: "services:read",
+    requiredCapability: "systemd",
+    window: {
+      defaultSize: { width: 1000, height: 640 },
+      minSize: { width: 420, height: 360 },
+      instancing: "single",
+    },
+    keywords: ["servisler", "services", "systemd", "birimler", "units", "daemon"],
+    load: () => import("./services/services-app.tsx"),
+  },
+  {
+    id: "otuken.logs",
+    titleKey: "apps.logs",
+    icon: ScrollText,
+    tint: "from-zinc-400 to-zinc-600",
+    category: "system",
+    requiredPermission: "logs:read",
+    requiredCapability: "journald",
+    window: {
+      defaultSize: { width: 1000, height: 640 },
+      minSize: { width: 420, height: 320 },
+      instancing: "single",
+    },
+    keywords: ["günlükler", "logs", "journal", "journald", "kayıtlar", "hata", "errors"],
+    load: () => import("./logs/logs-app.tsx"),
   },
   {
     id: "otuken.settings",

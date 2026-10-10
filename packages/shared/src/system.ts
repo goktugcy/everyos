@@ -21,6 +21,7 @@ export const CAPABILITY_REASONS = [
   "socket-missing",
   "permission-denied",
   "unsupported-hardware",
+  "tool-missing",
 ] as const;
 
 export type CapabilityReason = (typeof CAPABILITY_REASONS)[number];

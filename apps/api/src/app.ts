@@ -12,8 +12,11 @@ import { securityHeaders } from "./middleware/security-headers.ts";
 import { accountRoutes } from "./modules/account/routes.ts";
 import { auditRoutes } from "./modules/audit/routes.ts";
 import { authRoutes } from "./modules/auth/routes.ts";
+import { eventRoutes } from "./modules/events/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
+import { logRoutes } from "./modules/logs/routes.ts";
 import { preferenceRoutes } from "./modules/preferences/routes.ts";
+import { serviceRoutes } from "./modules/services/routes.ts";
 import { setupRoutes } from "./modules/setup/routes.ts";
 import { systemRoutes } from "./modules/system/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
@@ -49,6 +52,9 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/users", userRoutes(services));
   api.route("/audit", auditRoutes(services));
   api.route("/system", systemRoutes(services));
+  api.route("/services", serviceRoutes(services));
+  api.route("/logs", logRoutes(services));
+  api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
   api.route("/wallpapers", wallpaperRoutes(services));
   api.all("*", () => {

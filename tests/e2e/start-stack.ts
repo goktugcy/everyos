@@ -27,6 +27,8 @@ const env = {
   OTUKEN_WEB_DIR: join(root, "dist/web"),
   OTUKEN_PORT: String(E2E_PORT),
   OTUKEN_LOG_LEVEL: "warn",
+  // Deterministic systemd/journald data on every OS (CI runners have real systemd).
+  OTUKEN_AGENT_SIMULATE: "1",
 };
 
 const children: ChildProcess[] = [

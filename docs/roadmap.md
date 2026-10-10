@@ -66,12 +66,41 @@ local measurement, not a Raspberry Pi or cross-browser performance guarantee. Ho
 Docker controls and host file management remain in their respective later phases. Shared UI
 package extraction remains explicitly deferred as described in D11.
 
-## Phase 3 — Linux integration
+## Phase 3 — Linux integration (implemented; verified on a Raspberry Pi 5 without root)
 
-Metric collectors (CPU, memory, disk, network, load, temperature, Raspberry Pi throttling) in the
-agent, a shared SSE topic stream, bounded in-memory history, systemd unit management with a
-protected-unit policy, journald log streaming with filters, Tailscale status through LocalAPI,
-the first system widgets, and **real measurements on the Raspberry Pi 5**.
+Implemented: metric collectors (CPU, per-core, memory, swap, load, network, disk I/O, thermal
+zones, drive temperatures, CPU frequency, fans), storage usage, Raspberry Pi throttling, NVMe SMART
+health, network interfaces/gateways/DNS/internet reachability, Tailscale status through LocalAPI,
+process list; agent stream operations with backpressure; `MetricsHub` with bounded in-memory
+history; a shared SSE topic stream; systemd unit listing/detail/actions with a protected-unit
+policy and audit; journald queries with cursor paging and live streaming; System Monitor, Services
+and Logs apps; resources and network menu bar modules; development simulator.
+
+Verified on 2026-10-10 on a Raspberry Pi 5 Model B Rev 1.1 (8 GB, NVMe, Ubuntu 26.04.1, kernel
+7.0.0-1020-raspi, systemd 259, Tailscale 1.104, Docker host), as an unprivileged user in a
+temporary directory with the system Node.js 22.23 (no packages installed):
+
+- Every collector result validated against its schema; systemd JSON output, `systemctl show`
+  format, journald cursor paging (no overlap, correct order), unit/priority/grep/since filters and
+  `journalctl --follow` behave as the fixtures assume. Tailscale LocalAPI is readable without root.
+- Found and fixed: the firmware `get_throttled` sysfs node does not exist on this kernel and
+  `/dev/vcio` is root-only (reported as `permission-denied`, available to the root agent);
+  container links (`k-p-e-*`, `br_kasm_sidecar`) were counted as Ethernet and in host traffic
+  (now classified by their `device` link; only physical NICs count); NVMe temperature is read from
+  hwmon without smartctl; protected units now accept only `start` (Ubuntu's `ssh.service` is
+  socket-activated); `/proc` reads used 64 KiB buffers per file, inflating agent RSS by ~70 MiB
+  per process listing (now bounded 4 KiB chunks with limited concurrency); journald output fields
+  are restricted (−44% output).
+- Measured (development mode, Node.js 22): agent RSS ≈ 92 MiB idle and ≈ 113 MiB after repeated
+  heavy requests; API RSS ≈ 86 MiB (162 MiB peak during first-run setup, from scrypt's 64 MiB
+  memory cost); CPU ≈ 0.3–0.5% of one core for each process with or without a live subscriber.
+  Typical latencies: metrics 30–40 ms, services list ≈ 1 s (two `systemctl` calls on 330 units),
+  processes ≈ 0.6 s (500 ms CPU sampling window), logs ≈ 20 ms.
+
+Not yet verified (needs root or production packaging, Phase 8): the agent running as root with
+`/run/otuken` and the socket group, `vcgencmd`/`smartctl` output as root, real service actions,
+Node.js 26 on the Pi, and the `tailscale serve` header recipe. System widgets move to Phase 6
+together with the widget platform.
 
 ## Phase 4 — Docker management
 

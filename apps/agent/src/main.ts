@@ -4,9 +4,20 @@ import { AgentServer } from "@otuken/agent-protocol";
 import { createLogger, serializeError } from "@otuken/logger";
 import { loadKeyFile } from "@otuken/security";
 import { OTUKEN_VERSION } from "@otuken/shared";
-import { ConfigError, loadAgentConfig, resolveGroupId } from "./config.ts";
+import {
+  createInternetProbe,
+  createJournalSource,
+  createSimulator,
+  createSystemdManager,
+  detectCapabilities,
+  REAL_HOST,
+  type LogSource,
+  type ServiceManager,
+} from "@otuken/system";
+import { ConfigError, loadAgentConfig, resolveGroupId, type AgentConfig } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
 import { createPolicy } from "./policy.ts";
+import { createUnitProtection } from "./protection.ts";
 
 /**
  * Ensures a directory exists and that the API's group can traverse it
@@ -20,6 +31,27 @@ function prepareGroupDirectory(path: string, groupId: number | null): void {
   if (info.uid !== 0 || (info.mode & 0o002) !== 0) return;
   if (info.gid !== groupId) chownSync(path, 0, groupId);
   if ((info.mode & 0o777) !== 0o750) chmodSync(path, 0o750);
+}
+
+/**
+ * Picks the real systemd/journald backends, or the simulator in development
+ * when they are missing (macOS) or explicitly requested. Production never
+ * uses simulated data: missing tools surface as "unsupported" errors.
+ */
+async function selectBackends(
+  config: AgentConfig,
+): Promise<{ services: ServiceManager; logs: LogSource }> {
+  const capabilities = await detectCapabilities(REAL_HOST, null);
+  const simulator = config.mode === "development" ? createSimulator() : null;
+  const services =
+    simulator && (config.simulate || !capabilities.systemd.available)
+      ? simulator.services
+      : createSystemdManager();
+  const logs =
+    simulator && (config.simulate || !capabilities.journald.available)
+      ? simulator.logs
+      : createJournalSource();
+  return { services, logs };
 }
 
 async function main(): Promise<void> {
@@ -53,12 +85,29 @@ async function main(): Promise<void> {
   });
   if (socketGroupId !== null && isRoot) chownSync(config.agentKeyFile, 0, socketGroupId);
 
+  const isProtected = createUnitProtection(config.protectedUnits);
+  const { services, logs } = await selectBackends(config);
+  if (services.source === "simulated" || logs.source === "simulated") {
+    logger.warn("Using simulated systemd/journald data (development only)", {
+      services: services.source,
+      logs: logs.source,
+    });
+  }
+
   const server = new AgentServer({
     socketPath: config.socketPath,
     agentKey,
     agentVersion: OTUKEN_VERSION,
-    handlers: createHandlers({ mode: config.mode, version: OTUKEN_VERSION, startedAt: Date.now() }),
-    policy: createPolicy(),
+    handlers: createHandlers({
+      mode: config.mode,
+      version: OTUKEN_VERSION,
+      startedAt: Date.now(),
+      services,
+      logs,
+      isProtected,
+      internet: createInternetProbe(config.internetCheckTargets),
+    }),
+    policy: createPolicy({ mode: config.mode, isProtected, servicesSource: services.source }),
     logger,
     socketMode: socketGroupId === null ? 0o600 : 0o660,
     socketGroupId: isRoot ? socketGroupId : null,

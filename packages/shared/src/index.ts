@@ -5,11 +5,27 @@
  */
 export * from "./api-types.ts";
 export * from "./errors.ts";
+export * from "./host.ts";
 export * from "./locale.ts";
 export * from "./permissions.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
 export type { CapabilityStatus, SystemInfo } from "./schemas/system.ts";
+export type {
+  CpuTimes,
+  HardwareStatus,
+  LogEntry,
+  LogPage,
+  LogQuery,
+  MetricsSample,
+  NetworkStatus,
+  ProcessList,
+  ServiceDetail,
+  ServiceList,
+  ServiceUnit,
+  StorageUsage,
+  TailscaleStatus,
+} from "./schemas/host.ts";
 export type {
   AppearancePreferences,
   CustomTheme,

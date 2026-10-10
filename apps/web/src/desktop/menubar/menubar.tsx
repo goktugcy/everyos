@@ -20,7 +20,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
 import { cn } from "../../lib/cn.ts";
-import { useSessionStore } from "../../stores/session-store.ts";
+import { usePermissions, useSessionStore } from "../../stores/session-store.ts";
 import { Clock } from "../../features/shell/clock.tsx";
 import { getApp } from "../apps/registry.ts";
 import type { AppId } from "../apps/types.ts";
@@ -34,6 +34,7 @@ import { useWindowManager, wm } from "../state/window-store.ts";
 import { useAgentStatus, useAgentStatusPolling } from "./agent-status.ts";
 import { menubarButton } from "./menubar-button.ts";
 import { QuickSettings } from "./quick-settings.tsx";
+import { NetworkModule, ResourcesModule } from "./system-modules.tsx";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -131,6 +132,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
     state.focusedId ? state.windows[state.focusedId] : undefined,
   );
   const show = (module: MenubarModuleId) => !hidden.includes(module);
+  const canReadSystem = usePermissions().includes("system:read");
 
   const focusedApp = focused ? getApp(focused.appId) : undefined;
   const otukenMenu: MenuEntry[] = [
@@ -317,6 +319,8 @@ export function Menubar({ insecure }: { insecure: boolean }) {
             <span className="hidden md:inline">{t("transport.insecureTitle")}</span>
           </span>
         ) : null}
+        {show("resources") && canReadSystem ? <ResourcesModule /> : null}
+        {show("network") && canReadSystem ? <NetworkModule /> : null}
         {show("agent") ? <AgentIndicator /> : null}
         {show("desktops") ? <DesktopSwitcher /> : null}
         {show("search") ? (

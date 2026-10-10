@@ -3,9 +3,11 @@ import {
   AgentClientError,
   type Actor,
   type AgentConnectionState,
-  type OperationName,
+  type OperationEvent,
   type OperationParams,
   type OperationResult,
+  type StreamOperationName,
+  type UnaryOperationName,
 } from "@otuken/agent-protocol";
 import type { Logger } from "@otuken/logger";
 import { KeyFileError, loadKeyFile } from "@otuken/security";
@@ -64,7 +66,7 @@ export class LazyAgentGateway implements AgentGateway {
     this.#client?.stop();
   }
 
-  call<N extends OperationName>(
+  call<N extends UnaryOperationName>(
     op: N,
     params: OperationParams<N>,
     actor: Actor,
@@ -73,5 +75,15 @@ export class LazyAgentGateway implements AgentGateway {
     if (!this.#client)
       return Promise.reject(new AgentClientError("AGENT_UNAVAILABLE", "Agent key not available"));
     return this.#client.call(op, params, actor, options);
+  }
+
+  async *stream<N extends StreamOperationName>(
+    op: N,
+    params: OperationParams<N>,
+    actor: Actor,
+    options?: { signal?: AbortSignal },
+  ): AsyncGenerator<OperationEvent<N>, void, undefined> {
+    if (!this.#client) throw new AgentClientError("AGENT_UNAVAILABLE", "Agent key not available");
+    yield* this.#client.stream(op, params, actor, options);
   }
 }

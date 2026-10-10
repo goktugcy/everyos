@@ -14,6 +14,19 @@ const AgentConfigFileSchema = z.strictObject({
   /** Group allowed to connect to the socket (name or numeric gid). */
   socketGroup: z.union([z.string().min(1), z.number().int().nonnegative()]).optional(),
   logLevel: z.enum(LOG_LEVELS).optional(),
+  /**
+   * Extra units (exact names or `*` globs) that Otuken may only start, on top
+   * of the built-in list.
+   */
+  protectedUnits: z
+    .array(z.string().regex(/^[A-Za-z0-9:_.@*\\-]{1,256}$/))
+    .max(200)
+    .optional(),
+  /** "host:port" endpoints probed (TCP) to tell LAN-only from internet access; [] disables it. */
+  internetCheckTargets: z
+    .array(z.string().regex(/^(\[[0-9a-fA-F:.]+\]|[A-Za-z0-9.-]{1,253}):\d{1,5}$/))
+    .max(5)
+    .optional(),
 });
 
 export type AgentMode = "production" | "development";
@@ -26,7 +39,17 @@ export interface AgentConfig {
   logLevel: LogLevel;
   logFormat: "json" | "pretty";
   configFile: string | null;
+  protectedUnits: string[];
+  internetCheckTargets: string[];
+  /**
+   * Development only: answer service and log operations from the in-memory
+   * simulator even when systemd is present (deterministic e2e tests).
+   */
+  simulate: boolean;
 }
+
+/** Public anycast resolvers on HTTPS; only contacted when network status is requested. */
+export const DEFAULT_INTERNET_CHECK_TARGETS = ["1.1.1.1:443", "9.9.9.9:443"];
 
 const PRODUCTION_DEFAULTS = {
   configFile: "/etc/otuken/agent.yaml",
@@ -81,6 +104,11 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
           socketGroup: null,
         };
 
+  const simulate = env.OTUKEN_AGENT_SIMULATE === "1";
+  if (simulate && mode !== "development") {
+    throw new ConfigError("OTUKEN_AGENT_SIMULATE is only allowed in development mode");
+  }
+
   const envLevel = env.OTUKEN_LOG_LEVEL;
   if (envLevel !== undefined && !isLogLevel(envLevel))
     throw new ConfigError(`Invalid OTUKEN_LOG_LEVEL: ${envLevel}`);
@@ -93,6 +121,9 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     logLevel: envLevel ?? file.logLevel ?? (mode === "development" ? "debug" : "info"),
     logFormat: mode === "development" ? "pretty" : "json",
     configFile,
+    protectedUnits: file.protectedUnits ?? [],
+    internetCheckTargets: file.internetCheckTargets ?? DEFAULT_INTERNET_CHECK_TARGETS,
+    simulate,
   };
 }
 
