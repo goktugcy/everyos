@@ -29,6 +29,7 @@ const AGENT_CODE_ERRORS: Partial<Record<string, (error: AgentClientError) => Api
   unsupported: () =>
     new ApiError(501, "HOST_CAPABILITY_UNAVAILABLE", "This host does not support the operation"),
   busy: () => new ApiError(429, "RATE_LIMITED", "Too many concurrent operations"),
+  conflict: (error) => new ApiError(409, "CONFLICT", error.message.slice(0, 300)),
   invalid_params: () => new ApiError(400, "VALIDATION_FAILED", "Invalid parameters"),
   // Policy reasons are written by the agent for display (e.g. protected units).
   policy_denied: (error) =>
@@ -78,6 +79,7 @@ export async function callAgent<N extends UnaryOperationName>(
     else if (
       c.req.raw.signal.aborted ||
       error.agentCode === "not_found" ||
+      error.agentCode === "conflict" ||
       error.agentCode === "unsupported"
     ) {
       logger.debug("Agent operation did not complete", { op, code: error.agentCode });

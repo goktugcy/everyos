@@ -1,8 +1,17 @@
 import type { Permission } from "@otuken/shared";
-import { Activity, Boxes, Folder, Gauge, ScrollText, Settings, Users } from "lucide-react";
+import {
+  Activity,
+  Boxes,
+  Container,
+  Folder,
+  Gauge,
+  ScrollText,
+  Settings,
+  Users,
+} from "lucide-react";
 import type { AppId, DesktopAppManifest } from "./types.ts";
 
-/** Built-in apps. Later phases register Docker, Files, Terminal and the App Store here. */
+/** Built-in apps. Later phases register Files, Terminal and the App Store here. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
   {
     id: "otuken.system",
@@ -39,6 +48,32 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
       "temperature",
     ],
     load: () => import("./system/system-app.tsx"),
+  },
+  {
+    id: "otuken.docker",
+    titleKey: "apps.docker",
+    icon: Container,
+    tint: "from-sky-500 to-blue-700",
+    category: "system",
+    requiredPermission: "docker:read",
+    requiredCapability: "docker",
+    window: {
+      defaultSize: { width: 1100, height: 720 },
+      minSize: { width: 420, height: 360 },
+      instancing: "single",
+    },
+    keywords: [
+      "docker",
+      "konteyner",
+      "container",
+      "compose",
+      "imaj",
+      "image",
+      "volume",
+      "ağ",
+      "network",
+    ],
+    load: () => import("./docker/docker-app.tsx"),
   },
   {
     id: "otuken.services",

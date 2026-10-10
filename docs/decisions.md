@@ -137,3 +137,17 @@ need, they work through every reverse proxy and `tailscale serve`, reconnect aut
 reuse cookie authentication and the CSRF model unchanged. Topics are multiplexed on one
 `/api/events` connection to stay within browsers' per-origin connection limits; log tails are a
 separate stream because they carry per-viewer filters.
+
+## D16 — Docker discovery does not establish ownership (2026-10)
+
+Use the Engine API through the agent for discovery, detail, lifecycle, stats and logs. Container
+labels are untrusted metadata, so explicit Compose imports in SQLite are the only source of
+imported ownership. Managed ownership is reserved for the Phase 5 installer. External containers
+have a limited lifecycle action set; project actions require import and revalidate the recorded
+local Compose files. Existing host configuration remains the owner's responsibility. No automatic
+cleanup or prune is introduced.
+
+Compose uses its CLI to preserve existing host files, environment files and multi-file projects.
+The agent uses fixed argument arrays, minimal environment and the same explicit Unix socket as
+discovery. Only start is allowed for a project containing a protected container: up/update may
+recreate services and therefore cannot bypass protection.

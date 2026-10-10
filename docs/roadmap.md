@@ -8,8 +8,8 @@ that looks finished is not enough.
 | ----- | ----------------------- | ------------- |
 | 1     | Foundation              | **Completed** |
 | 2     | Desktop shell           | **Completed** |
-| 3     | Linux integration       | Planned       |
-| 4     | Docker management       | Planned       |
+| 3     | Linux integration       | Implemented   |
+| 4     | Docker management       | Implemented   |
 | 5     | Multi-catalog App Store | Planned       |
 | 6     | Widget platform         | Planned       |
 | 7     | Advanced tools          | Planned       |
@@ -107,6 +107,14 @@ together with the widget platform.
 Docker Engine API through the agent, discovery of containers and Compose projects (marked as
 Otuken-managed, imported or external), lifecycle operations with ownership-aware restrictions,
 live logs, stats, and image, volume and network views. Nothing is ever removed automatically.
+
+Implemented and verified with real read-only Docker on the Raspberry Pi 5: Engine/Compose
+discovery, ownership-aware imports/actions, protected-container/project policy, logs and live
+stats, resource inventories and explicit unused-resource deletion. Browser tests use the labeled
+simulator for lifecycle/deletion and cover desktop/mobile permissions and error recovery.
+See [docker-management.md](docker-management.md) for measurements and limits. Real mutations and
+root-agent deployment still need dedicated disposable-host acceptance; existing owner resources
+were not modified. Managed ownership and App Store installs remain Phase 5.
 
 ## Phase 5 — Multi-catalog App Store
 

@@ -39,6 +39,12 @@ export function isAllowedOnProtected(action: ServiceAction): boolean {
   return ALLOWED_ON_PROTECTED.has(action);
 }
 
+/** Containers matching these patterns may only be started (configured in agent.yaml). */
+export function createContainerProtection(patterns: readonly string[]): (name: string) => boolean {
+  const compiled = patterns.map(globToRegExp);
+  return (name) => compiled.some((pattern) => pattern.test(name));
+}
+
 function globToRegExp(pattern: string): RegExp {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replaceAll("*", ".*");
   return new RegExp(`^${escaped}$`);

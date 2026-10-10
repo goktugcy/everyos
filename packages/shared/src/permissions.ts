@@ -11,6 +11,8 @@ export const PERMISSIONS = [
   "logs:read",
   "docker:read",
   "docker:manage",
+  /** Deleting Docker data (volumes). Granted to administrators only. */
+  "docker:delete",
   "apps:read",
   "apps:manage",
   "catalogs:manage",

@@ -82,6 +82,30 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "services.get": notUsed,
     "services.control": notUsed,
     "logs.query": notUsed,
+    "docker.status": notUsed,
+    "docker.containers.list": notUsed,
+    "docker.containers.get": notUsed,
+    "docker.containers.stats": notUsed,
+    "docker.containers.control": notUsed,
+    "docker.images.list": notUsed,
+    "docker.images.remove": notUsed,
+    "docker.volumes.list": notUsed,
+    "docker.volumes.remove": notUsed,
+    "docker.networks.list": notUsed,
+    "docker.networks.remove": notUsed,
+    "docker.compose.projects": notUsed,
+    "docker.compose.check": notUsed,
+    "docker.compose.run": notUsed,
+    // eslint-disable-next-line require-yield -- not used in these tests
+    async *"docker.containers.logs"() {
+      await Promise.resolve();
+      notUsed();
+    },
+    // eslint-disable-next-line require-yield -- not used in these tests
+    async *"docker.events"() {
+      await Promise.resolve();
+      notUsed();
+    },
     async *"logs.follow"(_params, { signal }) {
       for (let n = 0; n < 3 && !signal.aborted; n++) yield await Promise.resolve(entry(n));
     },

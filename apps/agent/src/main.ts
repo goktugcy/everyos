@@ -5,19 +5,23 @@ import { createLogger, serializeError } from "@otuken/logger";
 import { loadKeyFile } from "@otuken/security";
 import { OTUKEN_VERSION } from "@otuken/shared";
 import {
+  createDockerClient,
+  createDockerSimulator,
   createInternetProbe,
   createJournalSource,
   createSimulator,
   createSystemdManager,
   detectCapabilities,
+  pathKind,
   REAL_HOST,
+  type DockerApi,
   type LogSource,
   type ServiceManager,
 } from "@otuken/system";
 import { ConfigError, loadAgentConfig, resolveGroupId, type AgentConfig } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
 import { createPolicy } from "./policy.ts";
-import { createUnitProtection } from "./protection.ts";
+import { createContainerProtection, createUnitProtection } from "./protection.ts";
 
 /**
  * Ensures a directory exists and that the API's group can traverse it
@@ -40,7 +44,8 @@ function prepareGroupDirectory(path: string, groupId: number | null): void {
  */
 async function selectBackends(
   config: AgentConfig,
-): Promise<{ services: ServiceManager; logs: LogSource }> {
+  isProtectedContainer: (name: string) => boolean,
+): Promise<{ services: ServiceManager; logs: LogSource; docker: DockerApi }> {
   const capabilities = await detectCapabilities(REAL_HOST, null);
   const simulator = config.mode === "development" ? createSimulator() : null;
   const services =
@@ -51,7 +56,17 @@ async function selectBackends(
     simulator && (config.simulate || !capabilities.journald.available)
       ? simulator.logs
       : createJournalSource();
-  return { services, logs };
+  const dockerSocketPresent = config.dockerSocket
+    ? (await pathKind(config.dockerSocket)) !== "missing"
+    : capabilities.docker.available || capabilities.docker.reason === "permission-denied";
+  const docker =
+    config.mode === "development" && (config.simulate || !dockerSocketPresent)
+      ? createDockerSimulator({ isProtected: isProtectedContainer })
+      : createDockerClient({
+          ...(config.dockerSocket ? { socketPaths: [config.dockerSocket] } : {}),
+          isProtected: isProtectedContainer,
+        });
+  return { services, logs, docker };
 }
 
 async function main(): Promise<void> {
@@ -86,11 +101,17 @@ async function main(): Promise<void> {
   if (socketGroupId !== null && isRoot) chownSync(config.agentKeyFile, 0, socketGroupId);
 
   const isProtected = createUnitProtection(config.protectedUnits);
-  const { services, logs } = await selectBackends(config);
-  if (services.source === "simulated" || logs.source === "simulated") {
-    logger.warn("Using simulated systemd/journald data (development only)", {
+  const isProtectedContainer = createContainerProtection(config.protectedContainers);
+  const { services, logs, docker } = await selectBackends(config, isProtectedContainer);
+  if (
+    services.source === "simulated" ||
+    logs.source === "simulated" ||
+    docker.source === "simulated"
+  ) {
+    logger.warn("Using simulated host data (development only)", {
       services: services.source,
       logs: logs.source,
+      docker: docker.source,
     });
   }
 
@@ -106,8 +127,15 @@ async function main(): Promise<void> {
       logs,
       isProtected,
       internet: createInternetProbe(config.internetCheckTargets),
+      docker,
+      isProtectedContainer,
     }),
-    policy: createPolicy({ mode: config.mode, isProtected, servicesSource: services.source }),
+    policy: createPolicy({
+      mode: config.mode,
+      isProtected,
+      servicesSource: services.source,
+      dockerSource: docker.source,
+    }),
     logger,
     socketMode: socketGroupId === null ? 0o600 : 0o660,
     socketGroupId: isRoot ? socketGroupId : null,

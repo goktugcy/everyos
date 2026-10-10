@@ -36,6 +36,7 @@ export const AGENT_ERROR_CODES = [
   "invalid_params",
   "not_found",
   "unsupported",
+  "conflict",
   "forbidden",
   "policy_denied",
   "busy",

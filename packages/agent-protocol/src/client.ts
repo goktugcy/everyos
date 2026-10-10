@@ -86,6 +86,7 @@ function mapAgentError(code: AgentErrorCode, message: string): AgentClientError 
     case "invalid_params":
     case "not_found":
     case "unsupported":
+    case "conflict":
     case "cancelled":
     case "failed":
       return new AgentClientError("AGENT_OPERATION_FAILED", message, code);

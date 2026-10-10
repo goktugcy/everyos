@@ -112,6 +112,7 @@ async function main(): Promise<void> {
     logger.info("Shutting down", { signal });
     clearInterval(maintenanceTimer);
     services.metrics.stop();
+    services.docker.stop();
     const forceExit = setTimeout(() => process.exit(1), 10_000);
     forceExit.unref();
     server.close(() => {

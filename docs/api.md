@@ -110,7 +110,7 @@ deleting an account removes its wallpapers. Wallpaper uploads are the only excep
 
 Agent errors map to stable codes on every host endpoint: `AGENT_UNAVAILABLE` (503),
 `AGENT_TIMEOUT` (504), `AGENT_OPERATION_DENIED` (403, `details.reason` carries the agent's policy
-reason, prefixed `PROTECTED_UNIT:` or `DEVELOPMENT_MODE:`), `HOST_CAPABILITY_UNAVAILABLE` (501, e.g.
+reason, prefixed `PROTECTED_UNIT:`, `PROTECTED_CONTAINER:` or `DEVELOPMENT_MODE:`), `HOST_CAPABILITY_UNAVAILABLE` (501, e.g.
 no systemd/journald), `NOT_FOUND` (404), `RATE_LIMITED` (429, too many concurrent agent streams) and
 `AGENT_OPERATION_FAILED` (502).
 
@@ -147,10 +147,39 @@ managers, plus any configured in `agent.yaml`) accept only `start`, for every ro
 
 ## Event stream
 
-`GET /events?topics=metrics` opens one multiplexed server-sent event stream per tab. Each topic
-requires its own permission (`metrics` → `system:read`). Events: `ready`, then `metrics` with a
-`MetricsSnapshot` every 2 s. A slow client skips snapshots instead of queueing them.
+`GET /events?topics=metrics,docker` opens one multiplexed server-sent event stream per tab. Each
+topic requires its own permission (`metrics` → `system:read`, `docker` → `docker:read`). Events:
+`ready`, `metrics` with a `MetricsSnapshot` every 2 s, `docker.stats` with a `DockerStatsSnapshot`
+every 5 s, and `docker.change` with a lifecycle notification. Sampling runs while subscribed.
+A slow client receives the latest pending snapshot/notification instead of an unbounded queue;
+clients refetch inventories on changes and reconnects.
 
-Every stream (`/events`, `/logs/stream`) re-checks access every 15 s without extending the session:
+Every stream (`/events`, `/logs/stream`, Docker logs) re-checks access every 15 s without extending the session:
 it closes when the session is locked, revoked or expired, the account is disabled, or the role no
 longer grants the permission. Opening a stream from a locked session returns `423`.
+
+## Docker
+
+Routes reject unknown query/body fields. Queries are empty except for logs; image/network/import
+deletion accepts no body. Identifiers are validated before reaching the agent. Resource conflicts
+map to `CONFLICT` (409). Mutations and import changes are audited.
+
+| Method & path                          | Permission                  | Description                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /docker`                          | `docker:read`               | Engine availability/reason, versions, counts, Compose availability and source.                                                                                                                                                                                                                                                  |
+| `GET /docker/containers`               | `docker:read`               | Includes stopped containers, ports, health, project, protection and ownership.                                                                                                                                                                                                                                                  |
+| `GET /docker/containers/:id`           | `docker:read`               | Detail, mounts, limits, risks, sanitized health output/labels and environment names only. Command/entrypoint requires `docker:manage`.                                                                                                                                                                                          |
+| `POST /docker/containers/:id/actions`  | `docker:manage`             | `{ action: "start" \| "stop" \| "restart" }` → `202 { accepted: true }`. Protected containers accept only start.                                                                                                                                                                                                                |
+| `GET /docker/containers/:id/logs`      | `docker:read` + `logs:read` | SSE line/end/error events. Query tail 0–5000 (default 200), follow true/false (default false), since epoch ms. Error carries `{ code }`; maximum duration one hour.                                                                                                                                                             |
+| `GET /docker/containers/:id/stats`     | `docker:read`               | `{ id, resolutionMs, points }`: in-memory history, initially empty. Use a full container ID.                                                                                                                                                                                                                                    |
+| `GET /docker/stats`                    | `docker:read`               | Latest rates; samples on demand if older than 10 s.                                                                                                                                                                                                                                                                             |
+| `GET /docker/images`                   | `docker:read`               | Tags, size, dangling status and container references.                                                                                                                                                                                                                                                                           |
+| `DELETE /docker/images/:id`            | `docker:manage`             | Removes only an unused image, without force.                                                                                                                                                                                                                                                                                    |
+| `GET /docker/volumes`                  | `docker:read`               | Volumes, sizes when measurable and container references.                                                                                                                                                                                                                                                                        |
+| `DELETE /docker/volumes/:name`         | `docker:delete`             | Admin only; `{ confirmName }` must equal the name. Refuses in-use volumes; permanently deletes data.                                                                                                                                                                                                                            |
+| `GET /docker/networks`                 | `docker:read`               | Drivers, subnets and references.                                                                                                                                                                                                                                                                                                |
+| `DELETE /docker/networks/:id`          | `docker:manage`             | Removes unused networks without force. Built-in bridge/host/none cannot be removed.                                                                                                                                                                                                                                             |
+| `GET /docker/projects`                 | `docker:read`               | Discovered projects plus imports without containers.                                                                                                                                                                                                                                                                            |
+| `POST /docker/projects/:name/import`   | `docker:manage`             | `{ acknowledgeManager?: boolean }` → 201. Validates discovered Compose files and records import. Another manager hint requires true. Changes no Docker resources.                                                                                                                                                               |
+| `DELETE /docker/projects/:name/import` | `docker:manage`             | Forgets import; changes no containers/files/volumes.                                                                                                                                                                                                                                                                            |
+| `POST /docker/projects/:name/actions`  | `docker:manage`             | `{ action: "up" \| "start" \| "stop" \| "restart" \| "update" \| "down" }` → `{ ok, output }`. Imported projects only; agent revalidates files/protection. A project containing a protected container accepts only start. Update pulls then recreates; down keeps volumes/images. `ok: false` reports a failed Compose command. |

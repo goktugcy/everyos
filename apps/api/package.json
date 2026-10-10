@@ -19,5 +19,8 @@
     "hono": "catalog:",
     "yaml": "catalog:",
     "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@otuken/system": "workspace:*"
   }
 }

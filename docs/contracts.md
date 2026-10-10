@@ -292,7 +292,7 @@ export type RiskFlag =
 - Fetching uses an SSRF-safe client: http(s) only, public addresses only unless allowed
   explicitly, redirects re-validated, plus size and time limits.
 
-## 5. Implemented contracts (Phases 1–2)
+## 5. Implemented contracts (Phases 1–4)
 
 - **HTTP API:** [api.md](api.md).
 - **Agent operations:** `packages/agent-protocol/src/operations.ts`. Each operation declares a
@@ -301,3 +301,6 @@ export type RiskFlag =
   `apps/agent/src/policy.ts`. Adding an operation means adding all three, plus tests.
 - **Error codes:** `packages/shared/src/errors.ts`. Every code must have a translation in every
   locale (enforced by tests).
+- **Docker views:** zod-free types/constants in `packages/shared/src/docker.ts`, runtime schemas
+  in `packages/shared/src/schemas/docker.ts`. Only SQLite imports establish imported ownership;
+  labels are discovery data. See [docker-management.md](docker-management.md).

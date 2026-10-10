@@ -4,6 +4,7 @@
  * (type-only exports are erased at runtime).
  */
 export * from "./api-types.ts";
+export * from "./docker.ts";
 export * from "./errors.ts";
 export * from "./host.ts";
 export * from "./locale.ts";
@@ -11,6 +12,28 @@ export * from "./permissions.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
 export type { CapabilityStatus, SystemInfo } from "./schemas/system.ts";
+export type {
+  ComposeActionResult,
+  ComposeFileCheck,
+  ComposeProject,
+  ComposeProjectList,
+  ComposeProjectView,
+  ContainerDetail,
+  ContainerList,
+  ContainerLogLine,
+  ContainerStatsList,
+  ContainerStatsSample,
+  ContainerSummary,
+  DockerContainerView,
+  DockerEvent,
+  DockerStatus,
+  ImageList,
+  ImageSummary,
+  NetworkList,
+  NetworkSummary,
+  VolumeList,
+  VolumeSummary,
+} from "./schemas/docker.ts";
 export type {
   CpuTimes,
   HardwareStatus,

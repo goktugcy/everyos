@@ -72,12 +72,22 @@ protectedUnits:
 # access. Probed at most once a minute and only when network status is requested.
 # Default: ["1.1.1.1:443", "9.9.9.9:443"]. An empty list disables the check.
 internetCheckTargets: []
+# Containers Otuken may only start, including through Compose (up/update can recreate).
+protectedContainers:
+  - portainer
+  - "traefik*"
+# Optional: discovery and Compose actions both use this Unix socket.
+dockerSocket: /var/run/docker.sock
 ```
 
 The agent honours `OTUKEN_ENV`, `OTUKEN_AGENT_CONFIG`, `OTUKEN_AGENT_SOCKET`,
 `OTUKEN_AGENT_KEY_FILE` and `OTUKEN_LOG_LEVEL`. In development only, `OTUKEN_AGENT_SIMULATE=1`
-answers service and log operations from the in-memory simulator even when systemd exists (the e2e
+answers service, log and Docker operations from in-memory simulators even when host tools exist (the e2e
 suite uses it). The agent refuses to start with this variable in production.
+
+Development discovers real Docker through the configured Unix socket when present but refuses
+every real Docker mutation. Without a socket it uses clearly labeled simulated data. Production
+never substitutes simulated Docker. The API needs no Docker socket access.
 
 ## Remote access recipes
 

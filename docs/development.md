@@ -30,6 +30,11 @@ coverage includes window drag/resize/snap and restoration, dock/context menus, f
 themes, virtual desktops, API-enforced locking across reloads, mobile transitions, and recovery
 from failed preference loads. Desktop/mobile screenshots are written to the test output directory.
 
+Phase 3/4 browser tests set `OTUKEN_AGENT_SIMULATE=1`: Docker lifecycle, Compose import/down/up,
+volume deletion, logs, live stats and error recovery run against the in-memory simulator, never
+the developer's containers. Socket-level Docker tests use temporary fake Unix-socket servers;
+Compose tests mock execution and inspect the exact arguments and environment.
+
 After signing in, open System from the dock for real host information, or Settings for appearance,
 desktop/dock, account and security preferences. Folder icons organize application shortcuts;
 they do not operate on host files. Keyboard shortcuts are listed in Settings → Desktop and Dock.
@@ -52,6 +57,12 @@ On the first start, the API prints the **setup token** (development only). It is
 `./.dev/data/setup-token`. To start over, stop `pnpm dev` and delete `./.dev`.
 
 Development mode never runs as root and never modifies the host.
+
+Docker uses real read-only data when the Unix socket exists; otherwise it uses labeled simulated
+data. Otuken never changes Docker group membership or socket permissions. Development refuses
+mutations even when the account can access Docker. See [configuration.md](configuration.md) for
+custom sockets/protected containers and [docker-management.md](docker-management.md) for host
+verification limits.
 
 ## Tests
 

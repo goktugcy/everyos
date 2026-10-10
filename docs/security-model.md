@@ -79,9 +79,9 @@ flowchart LR
   Every operation derives ownership from the session, never from a submitted user id. Viewers
   retain read-only access to host resources.
 
-## Live streams **[P3]**
+## Live streams **[P3, P4]**
 
-Server-sent event streams (`/api/events`, `/api/logs/stream`) are authorized like any request
+Server-sent event streams (`/api/events`, `/api/logs/stream`, container logs) are authorized like any request
 when they open, and then re-checked every 15 s with a read that does **not** extend the session:
 they close as soon as the session is locked, revoked or idle-expired, the account is disabled, or
 the role loses the required permission. An open tab therefore cannot keep an idle session alive.
@@ -190,11 +190,33 @@ unprivileged and exposes a small attack surface.
 - The setup token is printed to the console only in development mode. In production the log line
   names the file instead.
 - A development agent reads real host data where it exists but its policy refuses every service
-  change against the real host (`DEVELOPMENT_MODE`). Where systemd/journald are missing (macOS),
-  or with `OTUKEN_AGENT_SIMULATE=1`, service and log operations use an in-memory simulator whose
+  or Docker change against the real host (`DEVELOPMENT_MODE`). Where systemd/journald or the
+  Docker socket are missing, or with `OTUKEN_AGENT_SIMULATE=1`, the corresponding operations
+  use an in-memory simulator whose
   data is marked `source: "simulated"` and labeled in the UI. Production never simulates.
 
-## Audit log **[P1]**
+## Docker ownership and operations **[P4]**
+
+- Only the agent accesses Engine or Compose. Requests use negotiated versions, size limits and
+  timeouts. Compose uses fixed argument arrays without a shell, a bounded output tail, a shared
+  10-minute deadline and an explicit `DOCKER_HOST` matching discovery's Unix socket.
+- Labels are discovery metadata. SQLite imports establish imported ownership; managed ownership
+  is Phase 5. Compose actions require import and revalidate bounded regular YAML files with a
+  services mapping. Another manager hint requires explicit acknowledgment.
+- `protectedContainers` names/globs accept only start. Compose up/stop/restart/update/down for a
+  project containing a protected container are refused independently of role.
+- Images/networks must be unused; built-in networks cannot be deleted. Volume deletion additionally
+  requires admin-only `docker:delete` and the exact name typed back. No force or prune is used;
+  Compose down never requests volume/image removal.
+- Mutations/import changes audit target/action/outcome, never Compose output or environment values.
+  Inspect exposes environment names, hides commands from viewers and masks sensitive label names.
+  Logs require both `docker:read` and `logs:read`. Applications can write secrets into logs/health
+  output; those outputs remain sensitive and are not guaranteed to be secret-free.
+- Local Compose files can change after import and remain trusted host configuration, not immutable
+  Otuken-managed data. Labels cannot cause execution without an explicit import/action. Remote
+  catalog validation and installation policy remain Phase 5 work.
+
+## Audit log **[P1, P4]**
 
 Security-relevant actions are written to `audit_events` and mirrored to journald: setup, login
 (success, failure and reason), second-factor failures, logout, session revocation, password

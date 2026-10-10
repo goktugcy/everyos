@@ -16,7 +16,12 @@ export interface ApiResource<T> {
  * visible. Changing `path` refetches immediately and keeps showing the
  * previous data until the new response arrives.
  */
-export function useApiResource<T>(path: string | null, refreshMs: number | null): ApiResource<T> {
+export function useApiResource<T>(
+  path: string | null,
+  refreshMs: number | null,
+  /** Any value; a change refetches immediately (e.g. a Docker change counter). */
+  refreshKey?: unknown,
+): ApiResource<T> {
   const [state, setState] = useState<Omit<ApiResource<T>, "reload">>({
     data: null,
     error: null,
@@ -62,7 +67,7 @@ export function useApiResource<T>(path: string | null, refreshMs: number | null)
       if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [path, refreshMs, generation]);
+  }, [path, refreshMs, generation, refreshKey]);
 
   return { ...state, reload };
 }

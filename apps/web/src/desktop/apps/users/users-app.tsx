@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { PASSWORD_MIN_LENGTH, ROLES, type AdminUserView, type Role } from "@otuken/shared";
 import {
   KeyRound,
@@ -29,10 +30,7 @@ function useRoleOptions() {
   return ROLES.map((role) => ({ value: role, label: t(`roles.${role}`) }));
 }
 
-function policyError(
-  t: ReturnType<typeof useTranslation>["t"],
-  error: unknown,
-): string | undefined {
+function policyError(t: TFunction, error: unknown): string | undefined {
   const violations = passwordViolations(error);
   return violations.length > 0
     ? violations

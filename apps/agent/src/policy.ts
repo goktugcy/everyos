@@ -5,14 +5,26 @@ import type { AgentMode } from "./config.ts";
 /** Stable prefixes of denial reasons so clients can explain them in their own language. */
 export const POLICY_REASONS = {
   protectedUnit: "PROTECTED_UNIT",
+  protectedContainer: "PROTECTED_CONTAINER",
   developmentMode: "DEVELOPMENT_MODE",
 } as const;
+
+/** Docker operations that change the host's Docker state. */
+const DOCKER_MUTATIONS = new Set([
+  "docker.containers.control",
+  "docker.images.remove",
+  "docker.volumes.remove",
+  "docker.networks.remove",
+  "docker.compose.run",
+]);
 
 export interface PolicyOptions {
   mode: AgentMode;
   isProtected: (unit: string) => boolean;
   /** Where service operations are answered from; the simulator never touches the host. */
   servicesSource: "host" | "simulated";
+  /** Same for Docker operations. */
+  dockerSource: "host" | "simulated";
 }
 
 /**
@@ -22,6 +34,14 @@ export interface PolicyOptions {
  */
 export function createPolicy(options: PolicyOptions): OperationPolicy {
   return (op, params) => {
+    if (DOCKER_MUTATIONS.has(op)) {
+      return options.mode === "development" && options.dockerSource === "host"
+        ? {
+            allowed: false,
+            reason: `${POLICY_REASONS.developmentMode}: changing Docker on the host is disabled in development mode`,
+          }
+        : { allowed: true };
+    }
     if (op !== "services.control") return { allowed: true };
     const { unit, action } = params as {
       unit: string;

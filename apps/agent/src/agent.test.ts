@@ -4,8 +4,15 @@ import { join } from "node:path";
 import type { Actor } from "@otuken/agent-protocol";
 import { silentLogger } from "@otuken/logger";
 import type { SystemInfo } from "@otuken/shared";
-import { createSimulator, ServiceError, type ServiceManager } from "@otuken/system";
-import { describe, expect, it } from "vitest";
+import {
+  createDockerClient,
+  createDockerSimulator,
+  createSimulator,
+  ServiceError,
+  type DockerApi,
+  type ServiceManager,
+} from "@otuken/system";
+import { describe, expect, it, vi } from "vitest";
 import {
   ConfigError,
   DEFAULT_INTERNET_CHECK_TARGETS,
@@ -14,7 +21,7 @@ import {
 } from "./config.ts";
 import { createHandlers, type HandlerDependencies } from "./handlers.ts";
 import { createPolicy } from "./policy.ts";
-import { createUnitProtection } from "./protection.ts";
+import { createContainerProtection, createUnitProtection } from "./protection.ts";
 
 const actorContext = {
   actor: { kind: "system", component: "test" } as const,
@@ -39,6 +46,8 @@ function deps(overrides: Partial<HandlerDependencies> = {}): HandlerDependencies
     logs: simulator.logs,
     isProtected: createUnitProtection(),
     internet: () => Promise.resolve({ state: "disabled", checkedAt: null, latencyMs: null }),
+    docker: createDockerSimulator({ now: () => 1_760_000_000_000 }),
+    isProtectedContainer: createContainerProtection(["portainer", "traefik*"]),
     ...overrides,
   };
 }
@@ -183,7 +192,12 @@ describe("unit protection and policy", () => {
   });
 
   it("blocks disruptive actions on protected units for every role", () => {
-    const policy = createPolicy({ mode: "production", isProtected, servicesSource: "host" });
+    const policy = createPolicy({
+      mode: "production",
+      isProtected,
+      servicesSource: "host",
+      dockerSource: "host",
+    });
     expect(
       policy("services.control", { unit: "ssh.service", action: "stop" }, admin),
     ).toMatchObject({ allowed: false });
@@ -207,7 +221,12 @@ describe("unit protection and policy", () => {
   });
 
   it("never lets a development agent change host services", () => {
-    const onHost = createPolicy({ mode: "development", isProtected, servicesSource: "host" });
+    const onHost = createPolicy({
+      mode: "development",
+      isProtected,
+      servicesSource: "host",
+      dockerSource: "host",
+    });
     expect(
       onHost("services.control", { unit: "jellyfin.service", action: "start" }, admin),
     ).toMatchObject({
@@ -218,6 +237,7 @@ describe("unit protection and policy", () => {
       mode: "development",
       isProtected,
       servicesSource: "simulated",
+      dockerSource: "simulated",
     });
     expect(
       simulated("services.control", { unit: "jellyfin.service", action: "start" }, admin).allowed,
@@ -289,5 +309,124 @@ describe("host operation handlers", () => {
     first.abort();
     await pending;
     await stream.return?.();
+  });
+});
+
+describe("docker handlers and policy", () => {
+  const viewer: Actor = { kind: "user", userId: "u3", username: "viewer", role: "viewer" };
+
+  it("never changes Docker on the host from a development agent", () => {
+    const policy = createPolicy({
+      mode: "development",
+      isProtected: () => false,
+      servicesSource: "simulated",
+      dockerSource: "host",
+    });
+    for (const op of ["docker.containers.control", "docker.volumes.remove", "docker.compose.run"]) {
+      expect(policy(op, {}, admin)).toMatchObject({
+        allowed: false,
+        reason: expect.stringContaining("DEVELOPMENT_MODE") as string,
+      });
+    }
+    expect(policy("docker.containers.list", {}, admin).allowed).toBe(true);
+    const simulated = createPolicy({
+      mode: "development",
+      isProtected: () => false,
+      servicesSource: "simulated",
+      dockerSource: "simulated",
+    });
+    expect(simulated("docker.containers.control", {}, admin).allowed).toBe(true);
+  });
+
+  it("only starts protected containers", async () => {
+    const handlers = createHandlers(deps());
+    const { containers } = await handlers["docker.containers.list"]({}, contextFor(admin));
+    const portainer = containers.find((c) => c.name === "portainer")!;
+    await expect(
+      handlers["docker.containers.control"](
+        { id: portainer.id, action: "stop" },
+        contextFor(admin),
+      ),
+    ).rejects.toMatchObject({
+      code: "policy_denied",
+      message: expect.stringContaining("PROTECTED_CONTAINER") as string,
+    });
+    await expect(
+      handlers["docker.containers.control"](
+        { id: portainer.id, action: "start" },
+        contextFor(admin),
+      ),
+    ).resolves.toEqual({ accepted: true });
+    const jellyfin = containers.find((c) => c.name === "jellyfin")!;
+    await expect(
+      handlers["docker.containers.control"](
+        { id: jellyfin.id, action: "restart" },
+        contextFor(operator),
+      ),
+    ).resolves.toEqual({ accepted: true });
+  });
+
+  it("hides container commands from actors who cannot manage Docker", async () => {
+    const handlers = createHandlers(deps());
+    const { containers } = await handlers["docker.containers.list"]({}, contextFor(admin));
+    const id = containers[0]!.id;
+    expect(
+      (await handlers["docker.containers.get"]({ id }, contextFor(viewer))).command,
+    ).toBeNull();
+    expect(
+      (await handlers["docker.containers.get"]({ id }, contextFor(admin))).command,
+    ).not.toBeNull();
+  });
+
+  it("cannot bypass container protection with Compose actions", async () => {
+    const docker = createDockerSimulator();
+    const runCompose = vi.fn((...args: Parameters<DockerApi["runCompose"]>) =>
+      docker.runCompose(...args),
+    );
+    const handlers = createHandlers(
+      deps({
+        docker: { ...docker, runCompose },
+        isProtectedContainer: (name) => name === "jellyfin",
+      }),
+    );
+    const params = {
+      project: "media",
+      workingDir: "/srv/media",
+      configFiles: ["/srv/media/compose.yaml"],
+    };
+    for (const actor of [admin, operator]) {
+      for (const action of ["up", "stop", "restart", "update", "down"] as const) {
+        await expect(
+          handlers["docker.compose.run"]({ ...params, action }, contextFor(actor)),
+        ).rejects.toMatchObject({
+          code: "policy_denied",
+          message: expect.stringContaining("PROTECTED_CONTAINER") as string,
+        });
+      }
+    }
+    expect(runCompose).not.toHaveBeenCalled();
+    await expect(
+      handlers["docker.compose.run"]({ ...params, action: "start" }, contextFor(admin)),
+    ).resolves.toMatchObject({ ok: true });
+    expect(runCompose).toHaveBeenCalledOnce();
+  });
+
+  it("reports hosts without Docker as unsupported", async () => {
+    const handlers = createHandlers(
+      deps({ docker: createDockerClient({ socketPaths: ["/nonexistent/docker.sock"] }) }),
+    );
+    await expect(handlers["docker.containers.list"]({}, contextFor(admin))).rejects.toMatchObject({
+      code: "unsupported",
+    });
+    expect((await handlers["docker.status"]({}, contextFor(admin))).status.available).toBe(false);
+  });
+
+  it("maps conflicts (resources in use) to the conflict code", async () => {
+    const handlers = createHandlers(deps());
+    await expect(
+      handlers["docker.volumes.remove"]({ name: "cloud_db" }, contextFor(admin)),
+    ).rejects.toMatchObject({
+      code: "conflict",
+    });
   });
 });

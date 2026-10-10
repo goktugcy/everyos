@@ -8,6 +8,7 @@ export type AppId =
   | "otuken.system"
   | "otuken.services"
   | "otuken.logs"
+  | "otuken.docker"
   | "otuken.settings"
   | "otuken.users"
   | "otuken.audit"

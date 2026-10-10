@@ -15,7 +15,8 @@ flowchart LR
   A -- "SQLite (WAL)" --> D[(/var/lib/otuken/otuken.db)]
   A -- "Unix socket · NDJSON<br/>mutual HMAC handshake<br/>typed operations only" --> G[otuken-agent.service<br/>root, systemd-hardened]
   G -- "/proc, /sys, /etc (read)" --> H[(Host)]
-  G -. "later phases: systemd, journald,<br/>Docker socket, apt" .-> H
+  G -- "systemd, journald, Docker Unix socket" --> H
+  G -. "later phases: package management" .-> H
 ```
 
 The browser never reaches the agent, and the API never runs privileged code itself. The API is the
@@ -72,6 +73,9 @@ flowchart TD
   never imported by `apps/web`.
 - No cycles. The agent depends on the smallest possible set of third-party packages (`zod`, `yaml`)
   because it runs as root.
+- The API never imports `@otuken/system` at runtime (it has no host access of its own). Its tests
+  use the development Docker simulator from that package through a dev dependency, so API tests
+  exercise the same simulated Docker the development agent serves.
 
 ## Runtime and build decisions
 
@@ -85,6 +89,23 @@ flowchart TD
 - **TypeScript 6.0** (not 7): typescript-eslint does not support the Go-based TypeScript 7 yet.
 
 Details and alternatives considered are recorded in [decisions.md](decisions.md).
+
+## Docker management (Phase 4)
+
+`packages/system/src/docker` implements bounded HTTP requests to Docker Engine over a Unix
+socket, API version negotiation, safe view parsers, log demultiplexing and controlled Compose CLI
+execution. Only the agent imports this backend at runtime. Fixed registered Docker operations
+carry permissions, schemas, timeouts and a development-mode mutation guard.
+
+The API stores explicit Compose imports in SQLite (`docker_projects`, migration 0003). Labels
+provide discovery metadata and manager hints; they never grant Otuken ownership. `DockerHub`
+samples running containers every 5 s while subscribed, derives rates from cumulative counters,
+keeps up to 15 minutes of history for at most 300 containers, and relays lifecycle events through
+the shared `docker` SSE topic. History resets on API restart.
+
+The lazy Docker desktop/mobile app displays grouped containers, ownership, health/security risks,
+detail, live logs/charts, Compose imports/actions and image/volume/network inventories. See
+[docker-management.md](docker-management.md) for ownership rules and verification limits.
 
 ## Request lifecycle (API)
 

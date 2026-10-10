@@ -30,7 +30,7 @@ export class CommandError extends Error {
   }
 }
 
-const SAFE_ENV = {
+export const SAFE_ENV: Readonly<Record<string, string>> = {
   PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
   LANG: "C.UTF-8",
   LC_ALL: "C.UTF-8",
@@ -167,4 +167,74 @@ export async function* streamLines(
     lines.close();
     kill();
   }
+}
+
+export interface CaptureResult {
+  exitCode: number | null;
+  /** The tail of stdout and stderr interleaved, at most `maxOutputBytes`. */
+  output: string;
+}
+
+/**
+ * Runs a long tool (e.g. `docker compose up`) and keeps only the end of its
+ * combined output. A non-zero exit is a normal result, not an exception;
+ * missing tools, timeouts and aborts still throw `CommandError`.
+ */
+export function runCapture(
+  file: string,
+  args: readonly string[],
+  options: {
+    timeoutMs: number;
+    signal?: AbortSignal;
+    env?: Record<string, string>;
+    cwd?: string;
+    maxOutputBytes?: number;
+  },
+): Promise<CaptureResult> {
+  if (options.signal?.aborted)
+    return Promise.reject(new CommandError("aborted", `${file} was aborted`));
+  const max = options.maxOutputBytes ?? 16 * 1024;
+  return new Promise((resolve, reject) => {
+    const child = spawn(file, [...args], {
+      env: options.env ?? SAFE_ENV,
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+      ...(options.cwd ? { cwd: options.cwd } : {}),
+    });
+    let tail = Buffer.alloc(0);
+    const collect = (chunk: Buffer) => {
+      tail = Buffer.concat([tail, chunk]);
+      if (tail.length > max * 2) tail = tail.subarray(tail.length - max);
+    };
+    child.stdout.on("data", collect);
+    child.stderr.on("data", collect);
+    let failure: CommandError | null = null;
+    const stop = (error: CommandError) => {
+      failure ??= error;
+      child.kill("SIGKILL");
+    };
+    const timer = setTimeout(
+      () => stop(new CommandError("timeout", `${file} timed out`)),
+      options.timeoutMs,
+    );
+    const onAbort = () => stop(new CommandError("aborted", `${file} was aborted`));
+    options.signal?.addEventListener("abort", onAbort, { once: true });
+    child.once("error", (error: NodeJS.ErrnoException) => {
+      clearTimeout(timer);
+      options.signal?.removeEventListener("abort", onAbort);
+      reject(
+        error.code === "ENOENT" ? new CommandError("not-found", `${file} is not installed`) : error,
+      );
+    });
+    child.once("close", (code) => {
+      clearTimeout(timer);
+      options.signal?.removeEventListener("abort", onAbort);
+      if (failure) reject(failure);
+      else
+        resolve({
+          exitCode: code,
+          output: tail.subarray(Math.max(0, tail.length - max)).toString("utf8"),
+        });
+    });
+  });
 }

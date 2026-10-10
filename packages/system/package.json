@@ -2,7 +2,7 @@
   "name": "@otuken/system",
   "version": "0.1.0",
   "private": true,
-  "description": "Linux host integration for Otuken: host information and capability detection from /proc, /sys and /etc, with no fabricated values.",
+  "description": "Linux host integration for Otuken: host information, metrics, systemd, journald, Tailscale and Docker, with no fabricated values.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@otuken/shared": "workspace:*"
+    "@otuken/shared": "workspace:*",
+    "yaml": "catalog:"
   }
 }

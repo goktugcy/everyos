@@ -12,6 +12,7 @@ import { securityHeaders } from "./middleware/security-headers.ts";
 import { accountRoutes } from "./modules/account/routes.ts";
 import { auditRoutes } from "./modules/audit/routes.ts";
 import { authRoutes } from "./modules/auth/routes.ts";
+import { dockerRoutes } from "./modules/docker/routes.ts";
 import { eventRoutes } from "./modules/events/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
 import { logRoutes } from "./modules/logs/routes.ts";
@@ -54,6 +55,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/system", systemRoutes(services));
   api.route("/services", serviceRoutes(services));
   api.route("/logs", logRoutes(services));
+  api.route("/docker", dockerRoutes(services));
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
   api.route("/wallpapers", wallpaperRoutes(services));

@@ -337,6 +337,10 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.6.5
+    devDependencies:
+      '@otuken/system':
+        specifier: workspace:*
+        version: link:../../packages/system
 
   apps/web:
     dependencies:
@@ -468,6 +472,9 @@ importers:
       '@otuken/shared':
         specifier: workspace:*
         version: link:../shared
+      yaml:
+        specifier: 'catalog:'
+        version: 2.9.1
 
   packages/theme:
     dependencies:

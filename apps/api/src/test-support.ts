@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { AgentClientError, type Actor, type AgentConnectionState } from "@otuken/agent-protocol";
 import { migrate, openDatabase, OTUKEN_MIGRATIONS, type Database } from "@otuken/database";
 import { silentLogger } from "@otuken/logger";
+import { createDockerSimulator, DockerError, type DockerApi } from "@otuken/system";
 import {
   CSRF_HEADER,
   type LogEntry,
@@ -161,6 +162,21 @@ export function sampleLogEntry(n: number): LogEntry {
 
 type FakeHandler = (params: unknown) => unknown;
 
+/** Maps simulator errors to what the real agent client would report. */
+function toAgentError(error: unknown): Error {
+  if (!(error instanceof DockerError))
+    return error instanceof Error ? error : new Error(String(error));
+  const code =
+    error.kind === "not-found"
+      ? "not_found"
+      : error.kind === "conflict"
+        ? "conflict"
+        : error.kind === "invalid"
+          ? "invalid_params"
+          : "failed";
+  return new AgentClientError("AGENT_OPERATION_FAILED", error.message, code);
+}
+
 /**
  * In-memory agent for API tests. Every operation has a realistic default
  * answer; `handlers` overrides individual operations (throw to simulate an
@@ -268,6 +284,66 @@ export class FakeAgent implements AgentGateway {
     }
   }
 
+  /** Docker operations are answered by the development simulator, like a development agent. */
+  #docker: DockerApi | null = null;
+  get docker(): DockerApi {
+    // Tests install their clock after constructing FakeAgent; start the simulator afterward.
+    this.#docker ??= createDockerSimulator({
+      now: () => this.now(),
+      isProtected: (name) => name === "portainer",
+    });
+    return this.#docker;
+  }
+
+  #dockerCall(op: string, params: unknown): Promise<unknown> | null {
+    const docker = this.docker;
+    const p = params as Record<string, string>;
+    const wrap = <T>(key: string, promise: Promise<T>) =>
+      promise.then((value) => ({ source: docker.source, [key]: value }));
+    switch (op) {
+      case "docker.status":
+        return docker.status();
+      case "docker.containers.list":
+        return wrap("containers", docker.listContainers());
+      case "docker.containers.get":
+        return docker.inspectContainer(p.id!, { showCommand: true });
+      case "docker.containers.stats":
+        return docker
+          .listContainers()
+          .then((list) => docker.stats(list.filter((c) => c.state === "running").map((c) => c.id)))
+          .then((samples) => ({ source: docker.source, samples }));
+      case "docker.containers.control":
+        return docker.controlContainer(p.id!, p.action as "start").then(() => ({ accepted: true }));
+      case "docker.images.list":
+        return wrap("images", docker.listImages());
+      case "docker.images.remove":
+        return docker.removeImage(p.id!).then(() => ({ removed: true }));
+      case "docker.volumes.list":
+        return wrap("volumes", docker.listVolumes());
+      case "docker.volumes.remove":
+        return docker.removeVolume(p.name!).then(() => ({ removed: true }));
+      case "docker.networks.list":
+        return wrap("networks", docker.listNetworks());
+      case "docker.networks.remove":
+        return docker.removeNetwork(p.id!).then(() => ({ removed: true }));
+      case "docker.compose.projects":
+        return wrap("projects", docker.listProjects());
+      case "docker.compose.check":
+        return docker.checkProject(p.project!);
+      case "docker.compose.run": {
+        const run = params as {
+          project: string;
+          workingDir: string;
+          configFiles: string[];
+          action: "up";
+        };
+        return docker.runCompose(run.project, run.workingDir, run.configFiles, run.action);
+      }
+      default:
+        return null;
+    }
+  }
+
   call: AgentGateway["call"] = (op, params, actor) => {
     this.calls.push({ op, params, actor });
     if (this.state !== "connected") {
@@ -275,9 +351,14 @@ export class FakeAgent implements AgentGateway {
     }
     try {
       const handler = this.handlers.get(op);
-      return Promise.resolve(handler ? handler(params) : this.#defaults(op, params)) as never;
+      const result = handler
+        ? handler(params)
+        : (this.#dockerCall(op, params) ?? this.#defaults(op, params));
+      return Promise.resolve(result).catch((error: unknown) => {
+        throw toAgentError(error);
+      }) as never;
     } catch (error) {
-      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+      return Promise.reject(toAgentError(error));
     }
   };
 
@@ -292,9 +373,18 @@ export class FakeAgent implements AgentGateway {
     this.calls.push({ op, params, actor });
     if (this.state !== "connected")
       throw new AgentClientError("AGENT_UNAVAILABLE", "not connected");
+    const signal = options.signal ?? new AbortController().signal;
+    if (op === "docker.containers.logs") {
+      const { id, tail, follow } = params as { id: string; tail: number; follow: boolean };
+      yield* this.docker.logs(id, { tail, follow }, signal);
+      return;
+    }
+    if (op === "docker.events") {
+      yield* this.docker.events(signal);
+      return;
+    }
     for (const entry of this.logEntries) yield entry;
-    const signal = options.signal;
-    if (signal && !signal.aborted) {
+    if (!signal.aborted) {
       await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }));
     }
   } as unknown as AgentGateway["stream"];
@@ -451,4 +541,75 @@ export async function completeSetup(
 
 export async function json<T = Record<string, unknown>>(response: Response): Promise<T> {
   return (await response.json()) as T;
+}
+
+/** A completed setup plus signed-in operator and viewer clients. */
+export async function withRoles() {
+  const ctx = await createTestContext();
+  const admin = new TestClient(ctx);
+  await completeSetup(ctx, admin);
+  const users: Record<"operator" | "viewer", TestClient> = {} as never;
+  for (const role of ["operator", "viewer"] as const) {
+    await admin.post("/api/users", {
+      username: role,
+      displayName: role,
+      password: STRONG_PASSWORD,
+      role,
+    });
+    const client = new TestClient(ctx, role === "operator" ? "192.0.2.10" : "192.0.2.11");
+    const login = await client.login(role, STRONG_PASSWORD);
+    if (login.status !== 200) throw new Error(`login as ${role} failed: ${login.status}`);
+    users[role] = client;
+  }
+  return { ctx, admin, ...users };
+}
+
+/** Reads server-sent events until `count` events (other than comments) arrived. */
+export async function readEvents(response: Response, count: number, timeoutMs = 2_000) {
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  const events: Array<{ event: string; data: unknown }> = [];
+  const deadline = Date.now() + timeoutMs;
+  while (events.length < count && Date.now() < deadline) {
+    const chunk = await Promise.race([
+      reader.read(),
+      new Promise<{ done: true; value: undefined }>((resolve) =>
+        setTimeout(
+          () => resolve({ done: true, value: undefined }),
+          Math.max(1, deadline - Date.now()),
+        ),
+      ),
+    ]);
+    if (chunk.done) break;
+    buffer += decoder.decode(chunk.value as Uint8Array, { stream: true });
+    let index = buffer.indexOf("\n\n");
+    while (index !== -1) {
+      const block = buffer.slice(0, index);
+      buffer = buffer.slice(index + 2);
+      const event = /^event: (.*)$/m.exec(block)?.[1];
+      const data = /^data: (.*)$/m.exec(block)?.[1];
+      if (event) events.push({ event, data: data ? (JSON.parse(data) as unknown) : null });
+      index = buffer.indexOf("\n\n");
+    }
+  }
+  return { events, reader };
+}
+
+export async function streamEnds(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  timeoutMs = 2_000,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const chunk = await Promise.race([
+      reader.read(),
+      new Promise<null>((resolve) =>
+        setTimeout(() => resolve(null), Math.max(1, deadline - Date.now())),
+      ),
+    ]);
+    if (chunk === null) return false;
+    if (chunk.done) return true;
+  }
+  return false;
 }

@@ -28,7 +28,9 @@ test("system monitor shows live metrics, processes and storage", async ({ page }
   await expect(page.getByTestId("menubar-resources")).toContainText(/%\d/);
   // At least one chart draws a line once two samples exist.
   await expect
-    .poll(() => app.locator('[role="group"] svg path[d*="L"]').count(), { timeout: 15_000 })
+    .poll(() => app.locator('[role="group"] svg path[fill="none"][d*="L"]').count(), {
+      timeout: 15_000,
+    })
     .toBeGreaterThan(0);
   await page.screenshot({ path: test.info().outputPath("overview.png"), animations: "disabled" });
 

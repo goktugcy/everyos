@@ -27,6 +27,20 @@ const AgentConfigFileSchema = z.strictObject({
     .array(z.string().regex(/^(\[[0-9a-fA-F:.]+\]|[A-Za-z0-9.-]{1,253}):\d{1,5}$/))
     .max(5)
     .optional(),
+  /**
+   * Containers (names or `*` globs) Otuken may only start, never stop or
+   * restart — e.g. the reverse proxy that serves Otuken itself.
+   */
+  protectedContainers: z
+    .array(z.string().regex(/^[A-Za-z0-9_.*-]{1,256}$/))
+    .max(200)
+    .optional(),
+  /** Docker Engine socket (default: /var/run/docker.sock, then /run/docker.sock). */
+  dockerSocket: z
+    .string()
+    .regex(/^\/[^\0]+$/)
+    .max(1024)
+    .optional(),
 });
 
 export type AgentMode = "production" | "development";
@@ -41,6 +55,8 @@ export interface AgentConfig {
   configFile: string | null;
   protectedUnits: string[];
   internetCheckTargets: string[];
+  protectedContainers: string[];
+  dockerSocket: string | null;
   /**
    * Development only: answer service and log operations from the in-memory
    * simulator even when systemd is present (deterministic e2e tests).
@@ -123,6 +139,8 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     configFile,
     protectedUnits: file.protectedUnits ?? [],
     internetCheckTargets: file.internetCheckTargets ?? DEFAULT_INTERNET_CHECK_TARGETS,
+    protectedContainers: file.protectedContainers ?? [],
+    dockerSocket: file.dockerSocket ?? null,
     simulate,
   };
 }
