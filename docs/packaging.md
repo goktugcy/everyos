@@ -90,6 +90,7 @@ Verify the public-key fingerprint independently, then place the key in a root-ow
 no symlink or writable ancestor. Do not trust a key supplied by the same unverified download.
 
 ```sh
+sudo apt-get update
 sudo python3 install.py --public-key /root/everyos-release.pem
 sudo everyos status
 sudo everyos doctor

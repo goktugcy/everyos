@@ -28,6 +28,11 @@ packages, public key and installer were downloaded without GitHub authentication
 using the actual update transport. See [the publication record](phase8-acceptance.json) for the
 publisher fingerprint, source commit and package hashes.
 
+The same release now includes the self-contained `install.sh` bootstrap and its detached
+signature. The public one-command installation was verified on a fresh disposable Debian 12
+ARM64 host; its record is `verification.oneCommandBootstrap` in the acceptance file. These assets
+were added from a follow-up commit without replacing the original tag, packages or signed manifest.
+
 After the owner's repository rename, the updater and bootstrap installer recognize the old
 `https://github.com/goktugcy/otuken/releases` root as the new EveryOS source. Existing installations
 use the new URL on configuration reads, without rewriting their root-owned file or replacing the

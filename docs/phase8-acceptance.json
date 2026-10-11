@@ -298,6 +298,111 @@
         }
       },
       "notes": "The tagged GitHub workflow built and signed the published packages. Both package bodies and the latest signed metadata were downloaded without authentication using the actual updater HTTPS transport and checked against the independently held publisher public key. The installer matches the tagged source. Publication checks do not rerun the earlier Linux VM install/recovery acceptance; those builds and scenarios remain recorded separately. Subsequent documentation commits do not move the immutable release tag."
+    },
+    "oneCommandBootstrap": {
+      "passed": true,
+      "verifiedAt": "2026-10-11T19:25:45.112726+00:00",
+      "sourceCommit": "a26d9efe85f848addcf3e9226ddabef62f4e28b1",
+      "taggedPackageCommit": "5a0e53d0fcde9afc7c61582577800e6545623635",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.0",
+      "command": "curl -fsSL https://github.com/goktugcy/everyos/releases/latest/download/install.sh | sudo bash",
+      "assets": [
+        {
+          "file": "install.sh",
+          "size": 13905,
+          "sha256": "bdaf05d83bf38ac5a53baba23be0d0f386eb8a1cecd8d0265713e0aed6155755"
+        },
+        {
+          "file": "install.sh.sig",
+          "size": 64,
+          "sha256": "7f014f8af63aa2ab880252d1a51094dd7607c636c3c2ae97459976f06f14d62f"
+        }
+      ],
+      "anonymousDownloadVerified": true,
+      "detachedSignatureVerifiedWithIndependentPublisherKey": true,
+      "reviewedPythonAndPublisherPublicKeyEmbedded": true,
+      "immutableTagPackagesAndSignedManifestUnchanged": true,
+      "futureTaggedWorkflowPublishesBootstrap": true,
+      "targetedTests": {
+        "command": "pnpm exec vitest run packages/release/src/bootstrap.test.ts packages/release/src/release.test.ts packages/release/src/transport.test.ts",
+        "files": 3,
+        "tests": 11,
+        "passed": true
+      },
+      "finalTemplateSignerTest": {
+        "tests": 1,
+        "passed": true
+      },
+      "rootAndReleaseTypecheck": true,
+      "affectedTypeScriptLint": true,
+      "formatAndDiffCheck": true,
+      "bashSyntaxCheck": true,
+      "macOSRefusedBeforeHostChanges": true,
+      "publicInstallation": {
+        "environment": "New disposable Lima VZ ARM64 Debian 12 guest; no host mounts, dynamic port forwarding or repository checkout",
+        "architecture": "arm64",
+        "platform": "Debian GNU/Linux 12 (bookworm)",
+        "kernel": "6.1.0-53-cloud-arm64",
+        "version": "0.1.0",
+        "health": {
+          "status": "ok",
+          "checks": {
+            "database": "ok",
+            "agent": "connected"
+          }
+        },
+        "source": "https://github.com/goktugcy/everyos/releases",
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "cachedPackageSha256": "aa41b6b3b1a4a66ba60dd095f989e1ed7bb07d2ae56a82f84d924c7b386f7714",
+        "temporaryFilesRemoved": true,
+        "existingInstallationRefusedBeforeAPT": true,
+        "databaseInodeConfigAndServicePidsPreserved": true
+      },
+      "notes": "The first candidate exposed empty cloud-image APT indexes; refreshing existing APT package lists fixed dependency resolution. The final public pipe-to-Bash command then installed the signed public package on a new clean guest. Verification checked real API/agent health, root-owned trust, cached package hash, temporary-file cleanup and repeat-install refusal preserving database inode, configuration and service PIDs. This additive bootstrap uses the same production publisher key and unchanged tagged Python installer; existing release packages, manifest and tag were not replaced. ARM64 was exercised for this wrapper; earlier AMD64 package/update/recovery acceptance remains recorded separately.",
+      "disposableGuestsAndDownloadedImageCacheRemoved": true,
+      "preexistingBrowserCIFailures": {
+        "sourceCommit": "a46b92cf01677e334aaf52937bd435e352a32b14",
+        "workflowUrl": "https://github.com/goktugcy/everyos/actions/runs/38166753484",
+        "architectures": ["amd64", "arm64"],
+        "failedTests": [
+          "tests/e2e/power-folder-icons.spec.ts:9",
+          "tests/e2e/tools-finder.spec.ts:88",
+          "tests/e2e/tools-terminal.spec.ts:120"
+        ],
+        "notes": "These three browser cases already failed on both CI architectures before the bootstrap change. They remain a separate UI/test investigation; the bootstrap does not change web code, bundles or these tests. This acceptance record does not claim that the full browser suite passed."
+      },
+      "codeCI": {
+        "workflowUrl": "https://github.com/goktugcy/everyos/actions/runs/38167747358",
+        "sourceCommit": "a26d9efe85f848addcf3e9226ddabef62f4e28b1",
+        "conclusion": "failure",
+        "checks": {
+          "Dependency audit": {
+            "Audit production dependencies": "success"
+          },
+          "Lint, typecheck, test, build (amd64)": {
+            "Check formatting": "success",
+            "Lint": "success",
+            "Typecheck": "success",
+            "Unit and integration tests": "success",
+            "Build": "success",
+            "End-to-end tests": "failure"
+          },
+          "Lint, typecheck, test, build (arm64)": {
+            "Check formatting": "success",
+            "Lint": "success",
+            "Typecheck": "success",
+            "Unit and integration tests": "success",
+            "Build": "success",
+            "End-to-end tests": "failure"
+          }
+        },
+        "failedBrowserTests": [
+          "tests/e2e/power-folder-icons.spec.ts:9",
+          "tests/e2e/tools-finder.spec.ts:88",
+          "tests/e2e/tools-terminal.spec.ts:120"
+        ],
+        "notes": "Formatting, lint, typecheck, unit/integration tests, build and dependency audit passed on the configured CI runners. The browser suite failed the same three cases as the pre-bootstrap commit; full CI is not green. Bootstrap-specific tests and the real public Linux installation passed separately."
+      }
     }
   },
   "operationalRequirements": [
