@@ -1,5 +1,5 @@
 import { randomInt } from "node:crypto";
-import { sha256Hex } from "@otuken/security";
+import { sha256Hex } from "@everyos/security";
 
 // Lowercase alphabet without visually ambiguous characters (0/o, 1/l/i).
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";

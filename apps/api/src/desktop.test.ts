@@ -1,8 +1,8 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import type { ApiErrorBody, SessionInfo, WallpaperInfo } from "@otuken/shared";
-import type { AppearancePreferences, PreferenceDocuments } from "@otuken/shared/schemas";
+import type { ApiErrorBody, SessionInfo, WallpaperInfo } from "@everyos/shared";
+import type { AppearancePreferences, PreferenceDocuments } from "@everyos/shared/schemas";
 import { describe, expect, it } from "vitest";
 import { probeImage } from "./modules/wallpapers/image-probe.ts";
 import {
@@ -74,6 +74,33 @@ async function admin() {
 }
 
 describe("preferences API", () => {
+  it("loads legacy app and wallpaper identifiers without dropping saved preferences", async () => {
+    const { ctx, client } = await admin();
+    const userId = ctx.db.get<{ id: string }>("SELECT id FROM users WHERE username='admin'")!.id;
+    ctx.services.preferences.set(userId, "appearance", {
+      ...appearance,
+      wallpaper: { kind: "preset", id: "otuken-dusk" },
+    });
+    ctx.services.preferences.set(userId, "dock", {
+      version: 1,
+      pinned: ["otuken.files", "otuken.settings"],
+      style: "floating",
+      position: "bottom",
+      iconSize: 48,
+      magnification: true,
+      autoHide: false,
+      opacity: 0.8,
+    });
+    const stored = await json<{ preferences: Partial<PreferenceDocuments> }>(
+      await client.get("/api/preferences"),
+    );
+    expect(stored.preferences.appearance?.wallpaper).toEqual({
+      kind: "preset",
+      id: "everyos-dusk",
+    });
+    expect(stored.preferences.dock?.pinned).toEqual(["everyos.files", "everyos.settings"]);
+  });
+
   it("stores validated documents per user", async () => {
     const { ctx, client } = await admin();
     expect(await json(await client.get("/api/preferences"))).toEqual({ preferences: {} });
@@ -144,7 +171,7 @@ describe("preferences API", () => {
       windows: [
         {
           id: "w1",
-          appId: "otuken.settings",
+          appId: "everyos.settings",
           desktopId: "d1",
           title: "Ayarlar",
           bounds: { x: 100, y: 80, width: 800, height: 600 },
@@ -169,7 +196,7 @@ describe("preferences API", () => {
         {
           kind: "app",
           id: "i1",
-          appId: "otuken.system",
+          appId: "everyos.system",
           desktopId: "d1",
           cell: { col: 0, row: 0 },
           folderId: null,

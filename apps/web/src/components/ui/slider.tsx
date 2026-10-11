@@ -40,7 +40,7 @@ export function Slider({
         className="relative flex h-5 w-full touch-none select-none items-center"
       >
         <SliderPrimitive.Track className="relative h-1.5 grow overflow-hidden rounded-full bg-hover/15">
-          <SliderPrimitive.Range className="absolute h-full rounded-full bg-[rgb(var(--otk-accent))]" />
+          <SliderPrimitive.Range className="absolute h-full rounded-full bg-[rgb(var(--everyos-accent))]" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
           aria-labelledby={id}

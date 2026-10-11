@@ -1,4 +1,4 @@
-import { ERROR_CODES, SUPPORTED_LOCALES } from "@otuken/shared";
+import { ERROR_CODES, SUPPORTED_LOCALES } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import { resources } from "./index.ts";
 

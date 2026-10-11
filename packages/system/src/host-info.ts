@@ -1,5 +1,5 @@
 import * as os from "node:os";
-import type { SystemInfo } from "@otuken/shared";
+import type { SystemInfo } from "@everyos/shared";
 import { detectCapabilities } from "./capabilities.ts";
 import { readTextOrNull } from "./fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "./host-paths.ts";

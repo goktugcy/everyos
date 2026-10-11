@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES, type Locale } from "@otuken/shared";
+import { SUPPORTED_LOCALES, type Locale } from "@everyos/shared";
 import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { applyLocale } from "../app/i18n.ts";

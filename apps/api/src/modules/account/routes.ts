@@ -5,15 +5,15 @@ import {
   generateTotpSecret,
   hashRecoveryCode,
   verifyTotp,
-} from "@otuken/auth";
-import { type RecoveryCodesResponse, type TotpEnrollmentResponse } from "@otuken/shared";
+} from "@everyos/auth";
+import { type RecoveryCodesResponse, type TotpEnrollmentResponse } from "@everyos/shared";
 import {
   ChangePasswordRequestSchema,
   PasswordConfirmationSchema,
   TotpDisableRequestSchema,
   TotpEnableRequestSchema,
   UpdateAccountRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import type { AppEnv, AuthState } from "../../context.ts";
 import { ApiError, rateLimited } from "../../http/errors.ts";
@@ -104,7 +104,7 @@ export function accountRoutes(services: Services): Hono<AppEnv> {
       secret,
       otpauthUri: buildOtpauthUri({
         secret,
-        issuer: "Otuken",
+        issuer: "EveryOS",
         accountName: `${auth.user.username}@${hostname()}`,
       }),
     };

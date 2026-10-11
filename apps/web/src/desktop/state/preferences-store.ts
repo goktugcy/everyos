@@ -11,9 +11,9 @@ import type {
   SecurityPreferences,
   WidgetPreferences,
   WindowSession,
-} from "@otuken/shared";
-import { defaultWidgetPreferences, migrateWidgets } from "@otuken/widget-sdk";
-import { DEFAULT_APPEARANCE } from "@otuken/theme";
+} from "@everyos/shared";
+import { defaultWidgetPreferences, migrateWidgets } from "@everyos/widget-sdk";
+import { DEFAULT_APPEARANCE } from "@everyos/theme";
 import type { TFunction } from "i18next";
 import { create } from "zustand";
 import { api, ApiRequestError } from "../../lib/api.ts";

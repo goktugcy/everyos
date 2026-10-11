@@ -1,4 +1,4 @@
-import type { Rect } from "@otuken/window-manager";
+import type { Rect } from "@everyos/window-manager";
 import { create } from "zustand";
 
 /** The snap target shown while dragging a window (null when none). */
@@ -26,7 +26,7 @@ export function SnapPreview() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute z-[5000] rounded-otk-lg border-2 border-accent/70 bg-[rgb(var(--otk-accent)/0.14)] backdrop-blur-sm transition-all duration-150"
+      className="pointer-events-none absolute z-[5000] rounded-everyos-lg border-2 border-accent/70 bg-[rgb(var(--everyos-accent)/0.14)] backdrop-blur-sm transition-all duration-150"
       style={{
         transform: `translate3d(${rect.x + 6}px, ${rect.y + 6}px, 0)`,
         width: rect.width - 12,

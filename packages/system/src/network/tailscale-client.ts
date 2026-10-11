@@ -1,5 +1,5 @@
 import { request } from "node:http";
-import type { TailscaleDetails, TailscalePeers, TailscaleStatus } from "@otuken/shared";
+import type { TailscaleDetails, TailscalePeers, TailscaleStatus } from "@everyos/shared";
 import { pathKind } from "../fs-utils.ts";
 import {
   parseTailscaleDetails,

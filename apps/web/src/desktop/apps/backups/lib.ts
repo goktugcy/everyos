@@ -1,4 +1,4 @@
-import type { BackupJobView, BackupView } from "@otuken/shared";
+import type { BackupJobView, BackupView } from "@everyos/shared";
 import type { TFunction } from "i18next";
 import { reasonText } from "../../notifications/content.ts";
 
@@ -31,7 +31,7 @@ export function stageText(
   return job.appId ? `${stage}: ${appName(job.appId)}` : stage;
 }
 
-/** Verification problem codes such as "checksum:otuken.db.gz" as text. */
+/** Verification problem codes such as "checksum:everyos.db.gz" as text. */
 export function verificationText(t: TFunction, error: string | null): string {
   if (!error) return "";
   const [kind, file] = error.split(":");

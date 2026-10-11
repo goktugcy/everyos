@@ -6,7 +6,7 @@ import {
   type TaskType,
   type TaskView,
   type DockerContainerView,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import {
   CircleCheck,
   CircleSlash,
@@ -483,7 +483,7 @@ export default function TasksApp() {
         ) : null}
         {list.data && list.data.tasks.length > 0 ? (
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="sticky top-0 z-10 bg-[rgb(var(--otk-surface)/0.95)] text-xs text-fg-muted">
+            <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
               <tr>
                 <th scope="col" className="px-4 py-1.5 font-semibold">
                   {t("tasks.columns.name")}

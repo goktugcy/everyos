@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/agent-protocol",
+  "name": "@everyos/agent-protocol",
   "version": "0.1.0",
   "private": true,
-  "description": "Typed, authenticated protocol between the unprivileged Otuken API and the privileged local agent over a Unix domain socket.",
+  "description": "Typed, authenticated protocol between the unprivileged EveryOS API and the privileged local agent over a Unix domain socket.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -11,9 +11,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@otuken/logger": "workspace:*",
-    "@otuken/security": "workspace:*",
-    "@otuken/shared": "workspace:*",
+    "@everyos/logger": "workspace:*",
+    "@everyos/security": "workspace:*",
+    "@everyos/shared": "workspace:*",
     "zod": "catalog:"
   }
 }

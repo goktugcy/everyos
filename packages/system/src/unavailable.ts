@@ -1,4 +1,4 @@
-import type { CapabilityReason } from "@otuken/shared";
+import type { CapabilityReason } from "@everyos/shared";
 
 /** A collector cannot run on this host; the reason is shown instead of fabricated data. */
 export class UnavailableError extends Error {

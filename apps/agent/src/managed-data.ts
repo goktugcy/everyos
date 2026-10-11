@@ -1,6 +1,6 @@
 import { chmod, chown, copyFile, lstat, mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { OperationError } from "@otuken/agent-protocol";
+import { OperationError } from "@everyos/agent-protocol";
 
 /** Copy only regular owned-instance data, while its source containers are stopped. */
 export async function copyManagedData(

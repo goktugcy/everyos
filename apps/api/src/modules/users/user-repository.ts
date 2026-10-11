@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { Database } from "@otuken/database";
+import type { Database } from "@everyos/database";
 import {
   isLocale,
   type AdminUserView,
   type Locale,
   type PublicUser,
   type Role,
-} from "@otuken/shared";
+} from "@everyos/shared";
 
 interface UserRow {
   id: string;

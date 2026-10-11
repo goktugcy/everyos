@@ -1,4 +1,4 @@
-import type { AptUpdates, PackageInfo, UpdateJobView } from "@otuken/shared";
+import type { AptUpdates, PackageInfo, UpdateJobView } from "@everyos/shared";
 import { AlertTriangle, CircleCheck, Loader2, PackageCheck, RefreshCw, X } from "lucide-react";
 import { Tabs } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -66,7 +66,7 @@ function JobLog({ job, onDone }: { job: UpdateJobView; onDone: (job: UpdateJobVi
       </div>
       <pre
         ref={log}
-        className="max-h-48 min-h-20 overflow-auto rounded-otk-md bg-black/40 p-2 font-mono text-[0.72rem] leading-relaxed text-slate-200"
+        className="max-h-48 min-h-20 overflow-auto rounded-everyos-md bg-black/40 p-2 font-mono text-[0.72rem] leading-relaxed text-slate-200"
       >
         {lines.join("\n")}
       </pre>
@@ -212,7 +212,7 @@ export default function UpdatesApp() {
           <Tabs.Trigger
             key={value}
             value={value}
-            className="rounded-t-otk-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:text-fg"
+            className="rounded-t-everyos-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:text-fg"
           >
             {t(`updates.tabs.${value}`)}
           </Tabs.Trigger>
@@ -313,7 +313,7 @@ export default function UpdatesApp() {
                   className="w-full min-w-[560px] text-left text-sm"
                   data-testid="update-table"
                 >
-                  <thead className="sticky top-0 z-10 bg-[rgb(var(--otk-surface)/0.95)] text-xs text-fg-muted">
+                  <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
                     <tr>
                       {canManage ? (
                         <th scope="col" className="w-8 px-3 py-1.5">
@@ -328,7 +328,7 @@ export default function UpdatesApp() {
                                   : new Set(),
                               )
                             }
-                            className="accent-[rgb(var(--otk-accent))]"
+                            className="accent-[rgb(var(--everyos-accent))]"
                           />
                         </th>
                       ) : null}
@@ -352,7 +352,7 @@ export default function UpdatesApp() {
                         key={pkg.name}
                         className={cn(
                           "cursor-default border-t border-line hover:bg-hover/5",
-                          details === pkg.name && "bg-[rgb(var(--otk-accent)/0.12)]",
+                          details === pkg.name && "bg-[rgb(var(--everyos-accent)/0.12)]",
                         )}
                         onClick={() => setDetails(pkg.name)}
                         data-testid="update-row"
@@ -371,7 +371,7 @@ export default function UpdatesApp() {
                                   return next;
                                 })
                               }
-                              className="accent-[rgb(var(--otk-accent))]"
+                              className="accent-[rgb(var(--everyos-accent))]"
                             />
                           </td>
                         ) : null}
@@ -419,7 +419,7 @@ export default function UpdatesApp() {
         ) : null}
         <ul className="flex flex-col gap-2">
           {history.data?.jobs.map((entry) => (
-            <li key={entry.id} className="glass-inset rounded-otk-md p-3 text-sm">
+            <li key={entry.id} className="glass-inset rounded-everyos-md p-3 text-sm">
               <details>
                 <summary className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="font-medium">
@@ -436,7 +436,7 @@ export default function UpdatesApp() {
                     </span>
                   ) : null}
                 </summary>
-                <pre className="mt-2 max-h-64 overflow-auto rounded-otk-sm bg-black/40 p-2 font-mono text-[0.72rem] text-slate-200">
+                <pre className="mt-2 max-h-64 overflow-auto rounded-everyos-sm bg-black/40 p-2 font-mono text-[0.72rem] text-slate-200">
                   {entry.output || "—"}
                 </pre>
               </details>

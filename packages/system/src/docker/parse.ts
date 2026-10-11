@@ -14,7 +14,7 @@ import {
   type ImageSummary,
   type NetworkSummary,
   type VolumeSummary,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { sanitizeLogText } from "../linux/journal.ts";
 
 /*
@@ -414,7 +414,7 @@ export function composeProjects(containers: readonly ListedContainer[]): Compose
   return [...projects.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** Lifecycle events Otuken relays; healthcheck `exec_*` events (which carry commands) are dropped. */
+/** Lifecycle events EveryOS relays; healthcheck `exec_*` events (which carry commands) are dropped. */
 export const RELAYED_EVENTS: Record<DockerEvent["type"], readonly string[]> = {
   container: [
     "create",

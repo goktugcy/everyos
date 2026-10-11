@@ -1,4 +1,4 @@
-import { nextRun, parseCron } from "@otuken/shared";
+import { nextRun, parseCron } from "@everyos/shared";
 
 /** Schedule presets offered by the editor; anything else is a custom cron expression. */
 export type ScheduleForm =

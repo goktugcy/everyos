@@ -4,7 +4,7 @@ import {
   type RecoveryCodesResponse,
   type SessionSummary,
   type TotpEnrollmentResponse,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { Check, Copy, Laptop } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ function RecoveryCodes({ codes, onDone }: { codes: string[]; onDone: () => void 
       <Alert tone="warning" title={t("account.recovery.title")}>
         {t("account.recovery.help")}
       </Alert>
-      <ul className="glass-inset grid grid-cols-2 gap-x-6 gap-y-1.5 rounded-otk-md p-4 font-mono text-sm">
+      <ul className="glass-inset grid grid-cols-2 gap-x-6 gap-y-1.5 rounded-everyos-md p-4 font-mono text-sm">
         {codes.map((code) => (
           <li key={code}>{code}</li>
         ))}
@@ -119,11 +119,11 @@ export function TwoFactorSection({
       <form className="flex flex-col gap-4" onSubmit={confirm}>
         <p className="text-sm text-fg-muted">{t("account.totp.scan")}</p>
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          <img src={qr} alt="" className="size-40 shrink-0 rounded-otk-md bg-white p-1" />
+          <img src={qr} alt="" className="size-40 shrink-0 rounded-everyos-md bg-white p-1" />
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             <div className="flex flex-col gap-1">
               <span className="text-xs text-fg-subtle">{t("account.totp.secret")}</span>
-              <code className="glass-inset break-all rounded-otk-sm px-3 py-2 font-mono text-xs">
+              <code className="glass-inset break-all rounded-everyos-sm px-3 py-2 font-mono text-xs">
                 {enrollment.secret}
               </code>
             </div>
@@ -359,7 +359,7 @@ export function SessionsSection() {
       {sessions?.map((session) => (
         <div
           key={session.id}
-          className="glass-inset flex items-center gap-3 rounded-otk-md px-3.5 py-3"
+          className="glass-inset flex items-center gap-3 rounded-everyos-md px-3.5 py-3"
         >
           <Laptop className="size-4 shrink-0 text-fg-subtle" aria-hidden />
           <div className="flex min-w-0 flex-1 flex-col">

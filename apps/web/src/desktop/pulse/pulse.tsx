@@ -1,4 +1,4 @@
-import type { BackupJobView, UpdateJobView } from "@otuken/shared";
+import type { BackupJobView, UpdateJobView } from "@everyos/shared";
 import { EyeOff, Inbox, LayoutDashboard, Settings2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -270,7 +270,7 @@ export function Pulse() {
         );
       }}
     >
-      <div className="flex h-[var(--otk-menubar-height)] items-center">
+      <div className="flex h-[var(--everyos-menubar-height)] items-center">
         <ContextMenuArea entries={menu}>
           <button
             ref={triggerRef}
@@ -289,7 +289,7 @@ export function Pulse() {
             <PulseMatrix mode={mode} busy={busy} />
             {unread > 0 ? (
               <span
-                className="absolute -right-0.5 top-1/2 size-[7px] -translate-y-1/2 rounded-full bg-[rgb(var(--otk-accent))] shadow-[0_0_8px_rgb(var(--otk-accent)/0.9)]"
+                className="absolute -right-0.5 top-1/2 size-[7px] -translate-y-1/2 rounded-full bg-[rgb(var(--everyos-accent))] shadow-[0_0_8px_rgb(var(--everyos-accent)/0.9)]"
                 aria-hidden
               />
             ) : null}
@@ -299,7 +299,7 @@ export function Pulse() {
 
       {open ? (
         <div
-          className="glass-strong otk-enter pointer-events-auto mt-1.5 flex h-[296px] w-[min(700px,calc(100vw-24px))] flex-col rounded-otk-lg p-4 text-fg"
+          className="glass-strong everyos-enter pointer-events-auto mt-1.5 flex h-[296px] w-[min(700px,calc(100vw-24px))] flex-col rounded-everyos-lg p-4 text-fg"
           data-testid="pulse-panel"
         >
           <div className="mb-3 flex items-center gap-2">

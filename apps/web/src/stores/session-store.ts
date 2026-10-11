@@ -1,4 +1,4 @@
-import type { BootstrapResponse, Permission, SessionInfo } from "@otuken/shared";
+import type { BootstrapResponse, Permission, SessionInfo } from "@everyos/shared";
 import { create } from "zustand";
 import { applyLocale } from "../app/i18n.ts";
 import {

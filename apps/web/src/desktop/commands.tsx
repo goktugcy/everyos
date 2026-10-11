@@ -1,4 +1,4 @@
-import { RENDER_MODES, THEME_PRESET_IDS } from "@otuken/shared";
+import { RENDER_MODES, THEME_PRESET_IDS } from "@everyos/shared";
 import type { TFunction } from "i18next";
 import {
   ArrowLeftToLine,

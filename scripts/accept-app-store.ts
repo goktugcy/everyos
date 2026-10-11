@@ -30,18 +30,18 @@ import type {
 
 assert.equal(process.platform, "linux");
 assert.equal(process.getuid?.(), 0);
-assert.equal(process.env.OTUKEN_DISPOSABLE_ACCEPTANCE, "1", "Disposable-host opt-in required");
+assert.equal(process.env.EVERYOS_DISPOSABLE_ACCEPTANCE, "1", "Disposable-host opt-in required");
 const docker = (...args: string[]) =>
   execFileSync("docker", args, {
     encoding: "utf8",
     timeout: 180_000,
     stdio: ["pipe", "pipe", "pipe"],
   }).trim();
-assert.ok(process.env.OTUKEN_ACCEPTANCE_DOCKER_ID);
-assert.equal(docker("info", "--format", "{{.ID}}"), process.env.OTUKEN_ACCEPTANCE_DOCKER_ID);
+assert.ok(process.env.EVERYOS_ACCEPTANCE_DOCKER_ID);
+assert.equal(docker("info", "--format", "{{.ID}}"), process.env.EVERYOS_ACCEPTANCE_DOCKER_ID);
 assert.equal(docker("ps", "-aq"), "", "Acceptance daemon must start empty");
-const dist = process.env.OTUKEN_ACCEPTANCE_DIST ?? "/opt/otuken-share/dist";
-const state = mkdtempSync(`${process.env.OTUKEN_ACCEPTANCE_STATE_ROOT ?? "/tmp"}/otuken-phase5-`);
+const dist = process.env.EVERYOS_ACCEPTANCE_DIST ?? "/opt/everyos-share/dist";
+const state = mkdtempSync(`${process.env.EVERYOS_ACCEPTANCE_STATE_ROOT ?? "/tmp"}/everyos-phase5-`);
 chmodSync(state, 0o755);
 const data = join(state, "api"),
   run = join(state, "run"),
@@ -82,9 +82,9 @@ const launch = (kind: "api" | "agent") => {
     {
       env: {
         ...process.env,
-        OTUKEN_ENV: "production",
-        OTUKEN_CONFIG: apiConfig,
-        OTUKEN_AGENT_CONFIG: agentConfig,
+        EVERYOS_ENV: "production",
+        EVERYOS_CONFIG: apiConfig,
+        EVERYOS_AGENT_CONFIG: agentConfig,
       },
       ...(kind === "api" ? { uid: 1000, gid: 1000 } : {}),
       stdio: ["ignore", fd, fd],
@@ -127,7 +127,7 @@ async function request<T>(
     headers: {
       Cookie: cookie,
       Origin: base,
-      "x-otuken-csrf": csrf,
+      "x-everyos-csrf": csrf,
       "Content-Type": "application/json",
     },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -149,7 +149,7 @@ const finished = (id: string) =>
     (job) => job.stage === "succeeded" || job.stage === "failed",
     170_000,
   );
-const fixtureImage = "otuken-phase5-fixture:current";
+const fixtureImage = "everyos-phase5-fixture:current";
 const template = (mode: string) =>
   `services:\n  app:\n    image: ${fixtureImage}\n    pull_policy: never\n    user: '1000:1000'\n    environment:\n      ACCEPTANCE_SECRET: \${APP_SECRET}\n    ports: ['18765:8080']\n    volumes: ['\${APP_DATA_DIR}/www:/data']\n    command: ['sh', '-c', 'test "$(cat /image-version)" = good || exit 1; ${mode === "slow" ? "sleep 8; " : ""}test -f /data/index.html || echo persisted-data > /data/index.html; exec httpd -f -p 8080 -h /data']\n    healthcheck:\n      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080']\n      interval: 1s\n${mode === "slow" ? "      start_period: 15s\n" : ""}      timeout: 1s\n      retries: 2\nx-casaos:\n  title: Acceptance ${mode}\n  architectures: [amd64, arm64]\n`;
 // Escape shell dollars as Compose literals; only APP_SECRET and APP_DATA_DIR interpolate.
@@ -188,9 +188,9 @@ try {
       join(contextDir, "Dockerfile"),
       "FROM busybox:1.37\nCOPY version /image-version\n",
     );
-    docker("build", "--quiet", "--tag", `otuken-phase5-fixture:${version}`, contextDir);
+    docker("build", "--quiet", "--tag", `everyos-phase5-fixture:${version}`, contextDir);
   }
-  docker("tag", "otuken-phase5-fixture:good", fixtureImage);
+  docker("tag", "everyos-phase5-fixture:good", fixtureImage);
   agentProcess = launch("agent");
   apiProcess = launch("api");
   assert.ok(apiProcess.pid);
@@ -263,25 +263,25 @@ try {
   const inline = await load("inline"),
     inlineJob = await install(inline, 18769);
   assert.equal((await finished(inlineJob.id)).stage, "succeeded");
-  assert.equal(statfsSync(`/run/otuken/app-configs/${inlineJob.appId}`).type, 0x01021994);
+  assert.equal(statfsSync(`/run/everyos/app-configs/${inlineJob.appId}`).type, 0x01021994);
   assert.equal(
-    readFileSync(`/run/otuken/app-configs/${inlineJob.appId}/config0`, "utf8"),
+    readFileSync(`/run/everyos/app-configs/${inlineJob.appId}/config0`, "utf8"),
     `token=${secret}`,
   );
   assert.ok(
-    !readFileSync(`/var/lib/otuken/apps/${inlineJob.appId}/deployment.box`, "utf8").includes(
+    !readFileSync(`/var/lib/everyos/apps/${inlineJob.appId}/deployment.box`, "utf8").includes(
       secret,
     ),
   );
   pass(
     "embedded secret configuration is readable by nonroot containers and exists only on verified tmpfs",
   );
-  const appDir = `/var/lib/otuken/apps/${first.appId}`;
+  const appDir = `/var/lib/everyos/apps/${first.appId}`;
   assert.ok(readFileSync(join(appDir, "deployment.box"), "utf8").startsWith("v1."));
   for (const name of readdirSync(appDir).filter((name) => name !== "data"))
     assert.ok(!readFileSync(join(appDir, name), "utf8").includes(secret));
   assert.ok(!JSON.stringify(await apps()).includes(secret));
-  const db = new DatabaseSync(join(data, "otuken.db"), { readOnly: true });
+  const db = new DatabaseSync(join(data, "everyos.db"), { readOnly: true });
   assert.ok(
     !JSON.stringify(db.prepare("SELECT sealed_compose FROM installed_apps").all()).includes(secret),
   );
@@ -292,7 +292,7 @@ try {
   assert.equal((await apps()).find((app) => app.id === first.appId)!.state, "stopped");
   assert.equal((await control(first.appId, "start")).stage, "succeeded");
   pass("real stop/start lifecycle");
-  docker("tag", "otuken-phase5-fixture:bad", fixtureImage);
+  docker("tag", "everyos-phase5-fixture:bad", fixtureImage);
   const update = await control(first.appId, "update");
   assert.equal(update.stage, "failed");
   assert.equal(update.rollback, "succeeded");
@@ -317,7 +317,7 @@ try {
   );
   assert.equal(await (await fetch("http://127.0.0.1:18765")).text(), "persisted-data\n");
   pass("failed installation removes only its own containers");
-  docker("tag", "otuken-phase5-fixture:good", fixtureImage);
+  docker("tag", "everyos-phase5-fixture:good", fixtureImage);
   assert.equal((await control(failed.appId, "retry")).stage, "succeeded");
   pass("failed installation retries without adopting unrelated state");
   assert.equal((await control(first.appId, "stop")).stage, "succeeded");
@@ -423,7 +423,7 @@ try {
     checks,
   };
   writeFileSync(
-    `${process.env.OTUKEN_ACCEPTANCE_STATE_ROOT ?? "/tmp"}/otuken-phase5-acceptance.json`,
+    `${process.env.EVERYOS_ACCEPTANCE_STATE_ROOT ?? "/tmp"}/everyos-phase5-acceptance.json`,
     JSON.stringify(result, null, 2) + "\n",
   );
   console.log(`Acceptance passed: ${checks.length} scenarios`);

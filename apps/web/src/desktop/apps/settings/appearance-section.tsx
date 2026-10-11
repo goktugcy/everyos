@@ -5,14 +5,14 @@ import {
   WINDOW_ANIMATIONS,
   type CustomTheme,
   type ThemeEffects,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import {
   DEFAULT_APPEARANCE,
   exportTheme,
   importTheme,
   requestedEffects,
   THEME_PRESETS,
-} from "@otuken/theme";
+} from "@everyos/theme";
 import { Download, FileUp, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -56,13 +56,13 @@ function ThemeCard({
         onClick={onSelect}
         data-theme-option={id}
         className={cn(
-          "group flex w-full flex-col gap-2 rounded-otk-md p-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent",
-          selected ? "bg-[rgb(var(--otk-accent)/0.18)]" : "hover:bg-hover/8",
+          "group flex w-full flex-col gap-2 rounded-everyos-md p-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          selected ? "bg-[rgb(var(--everyos-accent)/0.18)]" : "hover:bg-hover/8",
         )}
       >
         <span
           className={cn(
-            "relative block aspect-[16/10] overflow-hidden rounded-otk-sm border",
+            "relative block aspect-[16/10] overflow-hidden rounded-everyos-sm border",
             selected ? "border-accent" : "border-line",
           )}
         >
@@ -142,7 +142,7 @@ export default function AppearanceSection() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `otuken-theme-${custom.name.replace(/[^\p{L}\p{N}]+/gu, "-").toLowerCase() || "custom"}.json`;
+    link.download = `everyos-theme-${custom.name.replace(/[^\p{L}\p{N}]+/gu, "-").toLowerCase() || "custom"}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1_000);
   };
@@ -204,8 +204,8 @@ export default function AppearanceSection() {
               <li
                 key={custom.id}
                 className={cn(
-                  "flex items-center gap-3 rounded-otk-md p-2",
-                  selected && "bg-[rgb(var(--otk-accent)/0.15)]",
+                  "flex items-center gap-3 rounded-everyos-md p-2",
+                  selected && "bg-[rgb(var(--everyos-accent)/0.15)]",
                 )}
               >
                 <span
@@ -298,7 +298,7 @@ export default function AppearanceSection() {
               updatePreference("appearance", (a) => ({ ...a, accent: event.target.value }))
             }
             aria-label={t("settings.appearance.accent")}
-            className="h-10 w-16 cursor-pointer rounded-otk-sm border border-line bg-transparent"
+            className="h-10 w-16 cursor-pointer rounded-everyos-sm border border-line bg-transparent"
           />
           <Button
             variant="ghost"

@@ -1,4 +1,4 @@
-import type { IconSize } from "@otuken/shared";
+import type { IconSize } from "@everyos/shared";
 import { toTriplet } from "./color.ts";
 import type { ResolvedTheme } from "./resolve.ts";
 import { WALLPAPER_PRESETS } from "./wallpapers.ts";
@@ -15,41 +15,41 @@ export function themeCssVariables(theme: ResolvedTheme): Record<string, string> 
   const wallpaperColors =
     theme.wallpaper.kind === "preset"
       ? WALLPAPER_PRESETS[theme.wallpaper.id].colors
-      : WALLPAPER_PRESETS["otuken-dusk"].colors;
+      : WALLPAPER_PRESETS["everyos-dusk"].colors;
   const radius = Math.round(effects.radius);
 
   return {
-    "--otk-accent": toTriplet(palette.accent),
-    "--otk-accent-strong": toTriplet(palette.accentStrong),
-    "--otk-accent-contrast": toTriplet(theme.accentContrast),
-    "--otk-button-from": toTriplet(theme.button.from),
-    "--otk-button-to": toTriplet(theme.button.to),
-    "--otk-danger": toTriplet(palette.danger),
-    "--otk-success": toTriplet(palette.success),
-    "--otk-warning": toTriplet(palette.warning),
-    "--otk-text": toTriplet(palette.text),
-    "--otk-text-muted": toTriplet(palette.textMuted),
-    "--otk-text-subtle": toTriplet(palette.textSubtle),
-    "--otk-surface": toTriplet(palette.surface),
-    "--otk-surface-opacity": effects.surfaceOpacity.toFixed(3),
-    "--otk-surface-strong-opacity": Math.min(1, effects.surfaceOpacity + 0.18).toFixed(3),
-    "--otk-border": toTriplet(palette.border),
-    "--otk-border-opacity": (effects.borderIntensity * 0.3).toFixed(3),
-    "--otk-highlight-opacity": dark ? "0.1" : "0.55",
-    "--otk-shadow-opacity": effects.shadowIntensity.toFixed(3),
-    "--otk-hover": dark ? "255 255 255" : "15 23 42",
-    "--otk-inset": dark ? "0 0 0" : "255 255 255",
-    "--otk-inset-opacity": dark ? "0.28" : "0.7",
-    "--otk-blur": `${effects.blur}px`,
-    "--otk-saturate": dark ? "165%" : "140%",
-    "--otk-radius-lg": `${radius}px`,
-    "--otk-radius-md": `${Math.max(6, Math.round(radius * 0.64))}px`,
-    "--otk-radius-sm": `${Math.max(4, Math.round(radius * 0.45))}px`,
-    "--otk-font-scale": theme.fontScale.toFixed(3),
-    "--otk-icon-size": `${ICON_PIXELS[theme.iconSize]}px`,
-    "--otk-wallpaper-base": wallpaperColors.base,
-    "--otk-wallpaper-a": toTriplet(wallpaperColors.a),
-    "--otk-wallpaper-b": toTriplet(wallpaperColors.b),
-    "--otk-wallpaper-c": toTriplet(wallpaperColors.c),
+    "--everyos-accent": toTriplet(palette.accent),
+    "--everyos-accent-strong": toTriplet(palette.accentStrong),
+    "--everyos-accent-contrast": toTriplet(theme.accentContrast),
+    "--everyos-button-from": toTriplet(theme.button.from),
+    "--everyos-button-to": toTriplet(theme.button.to),
+    "--everyos-danger": toTriplet(palette.danger),
+    "--everyos-success": toTriplet(palette.success),
+    "--everyos-warning": toTriplet(palette.warning),
+    "--everyos-text": toTriplet(palette.text),
+    "--everyos-text-muted": toTriplet(palette.textMuted),
+    "--everyos-text-subtle": toTriplet(palette.textSubtle),
+    "--everyos-surface": toTriplet(palette.surface),
+    "--everyos-surface-opacity": effects.surfaceOpacity.toFixed(3),
+    "--everyos-surface-strong-opacity": Math.min(1, effects.surfaceOpacity + 0.18).toFixed(3),
+    "--everyos-border": toTriplet(palette.border),
+    "--everyos-border-opacity": (effects.borderIntensity * 0.3).toFixed(3),
+    "--everyos-highlight-opacity": dark ? "0.1" : "0.55",
+    "--everyos-shadow-opacity": effects.shadowIntensity.toFixed(3),
+    "--everyos-hover": dark ? "255 255 255" : "15 23 42",
+    "--everyos-inset": dark ? "0 0 0" : "255 255 255",
+    "--everyos-inset-opacity": dark ? "0.28" : "0.7",
+    "--everyos-blur": `${effects.blur}px`,
+    "--everyos-saturate": dark ? "165%" : "140%",
+    "--everyos-radius-lg": `${radius}px`,
+    "--everyos-radius-md": `${Math.max(6, Math.round(radius * 0.64))}px`,
+    "--everyos-radius-sm": `${Math.max(4, Math.round(radius * 0.45))}px`,
+    "--everyos-font-scale": theme.fontScale.toFixed(3),
+    "--everyos-icon-size": `${ICON_PIXELS[theme.iconSize]}px`,
+    "--everyos-wallpaper-base": wallpaperColors.base,
+    "--everyos-wallpaper-a": toTriplet(wallpaperColors.a),
+    "--everyos-wallpaper-b": toTriplet(wallpaperColors.b),
+    "--everyos-wallpaper-c": toTriplet(wallpaperColors.c),
   };
 }

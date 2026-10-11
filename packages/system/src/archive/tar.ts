@@ -1,7 +1,7 @@
 import type { Writable } from "node:stream";
 
 /*
- * A small POSIX tar (ustar + pax) implementation for Otuken backups. It writes
+ * A small POSIX tar (ustar + pax) implementation for EveryOS backups. It writes
  * and reads regular files, directories and symbolic links only; the readers of
  * backups decide what else to reject. No external `tar` binary is involved, so
  * the same code runs in the unprivileged API and in the agent.

@@ -53,13 +53,13 @@ export function LockScreen() {
     >
       <WallpaperView spec={theme.wallpaper} className="scale-105 blur-md" />
       <div className="absolute inset-0 bg-black/25" aria-hidden />
-      <div className="otk-enter relative flex w-[min(92vw,380px)] flex-col items-center gap-6">
+      <div className="everyos-enter relative flex w-[min(92vw,380px)] flex-col items-center gap-6">
         <p className="text-4xl font-light tracking-tight text-white drop-shadow-lg">
           <Clock seconds={clockSeconds} />
         </p>
         <form
           onSubmit={(event) => void submit(event)}
-          className="glass-strong flex w-full flex-col gap-4 rounded-otk-lg p-6"
+          className="glass-strong flex w-full flex-col gap-4 rounded-everyos-lg p-6"
         >
           <div className="flex flex-col items-center gap-2 text-center">
             <span className="grid size-14 place-items-center rounded-full button-accent text-lg font-bold">

@@ -1,4 +1,4 @@
-import type { IntegrationAdapter, IntegrationView } from "@otuken/shared";
+import type { IntegrationAdapter, IntegrationView } from "@everyos/shared";
 import { useApiResource } from "../../features/system/use-api-resource.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 

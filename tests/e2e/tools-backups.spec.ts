@@ -25,7 +25,7 @@ test("backups are created, verified, downloaded and restored with a safety backu
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("yedek");
   await page.getByRole("option", { name: "Yedekler" }).click();
-  const app = page.locator('[data-app-id="otuken.backups"]');
+  const app = page.locator('[data-app-id="everyos.backups"]');
   await expect(app.getByTestId("backups-app")).toContainText("Henüz yedek yok.");
   await expect(app.getByTestId("backup-storage")).toContainText("Konum:");
 
@@ -96,7 +96,7 @@ test("backups are created, verified, downloaded and restored with a safety backu
     page.waitForEvent("download"),
     download.getByRole("button", { name: "İndir" }).click(),
   ]);
-  expect(file.suggestedFilename()).toMatch(/^otuken-backup-\d{8}-\d{6}-[a-f0-9]{6}\.tar$/);
+  expect(file.suggestedFilename()).toMatch(/^everyos-backup-\d{8}-\d{6}-[a-f0-9]{6}\.tar$/);
 
   await safety.getByRole("button", { name: "Sil", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Sil" }).click();

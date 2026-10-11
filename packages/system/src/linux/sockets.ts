@@ -1,6 +1,6 @@
 /*
  * /proc/net/{tcp,tcp6,udp,udp6} parsing. Addresses are hex, each 32-bit word
- * in host (little-endian) byte order on the platforms Otuken supports.
+ * in host (little-endian) byte order on the platforms EveryOS supports.
  */
 
 export interface ProcNetSocket {

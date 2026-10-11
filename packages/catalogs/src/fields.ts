@@ -1,6 +1,6 @@
 import { isIP } from "node:net";
 import { RE2JS } from "re2js";
-import type { InstallField, LocalizedText } from "@otuken/shared";
+import type { InstallField, LocalizedText } from "@everyos/shared";
 import { object, text } from "./compose.ts";
 import { CatalogError } from "./fetch.ts";
 

@@ -1,4 +1,4 @@
-import type { ContainerState, HealthState, LocalizedText } from "@otuken/shared";
+import type { ContainerState, HealthState, LocalizedText } from "@everyos/shared";
 import { Boxes } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLiveDocker, useLiveDockerSubscription } from "../../../features/docker/live-docker.ts";

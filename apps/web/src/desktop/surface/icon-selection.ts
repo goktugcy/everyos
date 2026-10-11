@@ -1,4 +1,4 @@
-import type { Point, Rect } from "@otuken/window-manager";
+import type { Point, Rect } from "@everyos/window-manager";
 import { cellKey, type Cell, type GridMetrics } from "./icon-grid.ts";
 
 export interface SelectionModifiers {

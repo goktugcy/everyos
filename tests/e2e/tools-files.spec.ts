@@ -8,7 +8,7 @@ test("files can be created, uploaded, edited, moved, duplicated, downloaded and 
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
   await page.keyboard.press("Enter");
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   await expect(files.getByTestId("files-app")).toBeVisible();
   // Work in the configured location; the home's standard folders are fixed.
   await files
@@ -36,7 +36,7 @@ test("files can be created, uploaded, edited, moved, duplicated, downloaded and 
 
   // Text files open in the editor; Ctrl+S saves.
   await row("rapor.txt").dblclick();
-  const editor = page.locator('[data-app-id="otuken.editor"]');
+  const editor = page.locator('[data-app-id="everyos.editor"]');
   const text = editor.getByRole("textbox", { name: "rapor.txt içeriği" });
   await expect(text).toHaveValue("İlk satır\n");
   await text.focus();

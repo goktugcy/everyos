@@ -1,4 +1,4 @@
-import type { ContainerState, DockerOwnership, HealthState } from "@otuken/shared";
+import type { ContainerState, DockerOwnership, HealthState } from "@everyos/shared";
 import { ApiRequestError } from "../../../lib/api.ts";
 import type { TFunction } from "i18next";
 import {
@@ -85,7 +85,7 @@ export function OwnershipBadge({ ownership }: { ownership: DockerOwnership }) {
         "font-medium",
         ownership === "external"
           ? "bg-hover/8 text-fg-muted"
-          : "bg-[rgb(var(--otk-accent)/0.18)] text-fg",
+          : "bg-[rgb(var(--everyos-accent)/0.18)] text-fg",
       )}
       title={t(`docker.ownershipHelp.${ownership}`)}
     >

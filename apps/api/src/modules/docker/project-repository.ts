@@ -1,4 +1,4 @@
-import type { Database } from "@otuken/database";
+import type { Database } from "@everyos/database";
 
 export interface ImportedProject {
   name: string;
@@ -37,7 +37,7 @@ function toProject(row: ProjectRow): ImportedProject {
   };
 }
 
-/** Compose projects the owner imported into Otuken (the only source of "imported" ownership). */
+/** Compose projects the owner imported into EveryOS (the only source of "imported" ownership). */
 export class DockerProjectRepository {
   readonly #db: Database;
   readonly #now: () => number;

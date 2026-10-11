@@ -1,4 +1,4 @@
-import { SetupRequestSchema } from "@otuken/shared/schemas";
+import { SetupRequestSchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { ApiError, rateLimited } from "../../http/errors.ts";

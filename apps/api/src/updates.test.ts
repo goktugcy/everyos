@@ -1,4 +1,4 @@
-import type { AptUpdates, NotificationList, PackageInfo, UpdateJobView } from "@otuken/shared";
+import type { AptUpdates, NotificationList, PackageInfo, UpdateJobView } from "@everyos/shared";
 import { describe, expect, it, vi } from "vitest";
 import { UpdateService } from "./modules/updates/update-service.ts";
 import { json, readEvents, withRoles, type TestContext } from "./test-support.ts";

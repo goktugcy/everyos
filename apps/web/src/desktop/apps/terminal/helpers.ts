@@ -1,4 +1,4 @@
-import type { TerminalClientMessage, TerminalServerMessage } from "@otuken/shared";
+import type { TerminalClientMessage, TerminalServerMessage } from "@everyos/shared";
 
 export type EndReason =
   | "exited"
@@ -65,7 +65,7 @@ export function terminalUrl(origin: string, cols: number, rows: number, session:
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function sessionKey(userId: string, windowId: string): string {
-  return `otuken.terminal:${userId}:${windowId}`;
+  return `everyos.terminal:${userId}:${windowId}`;
 }
 
 export function readSession(key: string): string | null {

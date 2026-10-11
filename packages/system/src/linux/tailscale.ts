@@ -3,7 +3,7 @@ import type {
   TailscalePeer,
   TailscalePeers,
   TailscaleStatus,
-} from "@otuken/shared";
+} from "@everyos/shared";
 
 const str = (value: unknown, max = 256): string | null =>
   typeof value === "string" && value.length > 0 ? value.slice(0, max) : null;
@@ -17,7 +17,7 @@ const strings = (value: unknown, limit: number, max = 64): string[] =>
     : [];
 
 /**
- * Tailscale LocalAPI `GET /localapi/v0/status` → the subset Otuken shows.
+ * Tailscale LocalAPI `GET /localapi/v0/status` → the subset EveryOS shows.
  * Unknown fields are ignored; nothing about other devices beyond counts is kept.
  */
 export function parseTailscaleStatus(json: unknown): TailscaleStatus {
@@ -150,7 +150,7 @@ export function parseServeConfig(json: unknown, depth = 0): ServeHandler[] {
 /**
  * This node in detail, from LocalAPI status, preferences and Serve
  * configuration. Preferences and Serve are optional (older versions or
- * restricted access); only the fields Otuken shows are kept.
+ * restricted access); only the fields EveryOS shows are kept.
  */
 export function parseTailscaleDetails(
   statusJson: unknown,

@@ -1,5 +1,5 @@
-import type { WidgetInstance } from "@otuken/shared";
-import { getWidget, ordered } from "@otuken/widget-sdk";
+import type { WidgetInstance } from "@everyos/shared";
+import { getWidget, ordered } from "@everyos/widget-sdk";
 import { PanelRight } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -46,7 +46,7 @@ export function MenubarWidgets() {
       ))}
       <button
         type="button"
-        className={cn(menubarButton, open && "bg-[rgb(var(--otk-accent)/0.2)]")}
+        className={cn(menubarButton, open && "bg-[rgb(var(--everyos-accent)/0.2)]")}
         aria-pressed={open}
         aria-label={t("widgets.sidebar.label")}
         title={open ? t("widgets.sidebar.hide") : t("widgets.sidebar.show")}

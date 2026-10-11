@@ -1,4 +1,4 @@
-import { THROTTLE_FLAGS, type HardwareStatus, type ThrottleFlag } from "@otuken/shared";
+import { THROTTLE_FLAGS, type HardwareStatus, type ThrottleFlag } from "@everyos/shared";
 
 /**
  * Raspberry Pi firmware throttling state (`vcgencmd get_throttled` or the

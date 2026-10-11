@@ -1,4 +1,4 @@
-import type { ServiceDetail } from "@otuken/shared";
+import type { ServiceDetail } from "@everyos/shared";
 
 /*
  * Parsers for `systemctl` machine-readable output (systemd ≥ 248):

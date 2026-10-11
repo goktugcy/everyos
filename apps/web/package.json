@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/web",
+  "name": "@everyos/web",
   "version": "0.1.0",
   "private": true,
-  "description": "Otuken web desktop client (React + Vite).",
+  "description": "EveryOS web desktop client (React + Vite).",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,10 +17,10 @@
     "@dnd-kit/sortable": "catalog:",
     "@dnd-kit/utilities": "catalog:",
     "@fontsource-variable/inter": "catalog:",
-    "@otuken/i18n": "workspace:*",
-    "@otuken/shared": "workspace:*",
-    "@otuken/theme": "workspace:*",
-    "@otuken/window-manager": "workspace:*",
+    "@everyos/i18n": "workspace:*",
+    "@everyos/shared": "workspace:*",
+    "@everyos/theme": "workspace:*",
+    "@everyos/window-manager": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "i18next": "catalog:",
@@ -32,7 +32,7 @@
     "tailwind-merge": "catalog:",
     "uqr": "catalog:",
     "zustand": "catalog:",
-    "@otuken/widget-sdk": "workspace:*"
+    "@everyos/widget-sdk": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

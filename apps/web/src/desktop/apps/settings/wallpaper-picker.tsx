@@ -4,7 +4,7 @@ import {
   WALLPAPER_PRESET_IDS,
   type WallpaperInfo,
   type WallpaperSpec,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { Check, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,7 +51,7 @@ function Tile({
         title={label}
         onClick={onClick}
         className={cn(
-          "relative block aspect-[16/10] w-full overflow-hidden rounded-otk-md border outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          "relative block aspect-[16/10] w-full overflow-hidden rounded-everyos-md border outline-none focus-visible:ring-2 focus-visible:ring-accent",
           selected ? "border-accent ring-2 ring-accent" : "border-line",
         )}
       >
@@ -281,7 +281,7 @@ export function WallpaperPicker() {
               value={solid}
               onChange={(e) => setSolid(e.target.value)}
               aria-label={t("settings.appearance.solidColor")}
-              className="h-10 w-14 cursor-pointer rounded-otk-sm border border-line bg-transparent"
+              className="h-10 w-14 cursor-pointer rounded-everyos-sm border border-line bg-transparent"
             />
             <Button
               variant="secondary"
@@ -302,14 +302,14 @@ export function WallpaperPicker() {
               value={gradient.from}
               onChange={(e) => setGradient((g) => ({ ...g, from: e.target.value }))}
               aria-label={`${t("settings.appearance.gradient")} 1`}
-              className="h-10 w-14 cursor-pointer rounded-otk-sm border border-line bg-transparent"
+              className="h-10 w-14 cursor-pointer rounded-everyos-sm border border-line bg-transparent"
             />
             <input
               type="color"
               value={gradient.to}
               onChange={(e) => setGradient((g) => ({ ...g, to: e.target.value }))}
               aria-label={`${t("settings.appearance.gradient")} 2`}
-              className="h-10 w-14 cursor-pointer rounded-otk-sm border border-line bg-transparent"
+              className="h-10 w-14 cursor-pointer rounded-everyos-sm border border-line bg-transparent"
             />
             <Button
               variant="secondary"

@@ -71,7 +71,7 @@ test("folder presets and private uploads persist across views and power details 
     )
     .toBe(true);
   await folder.dblclick();
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   await files
     .getByTestId("files-sidebar")
     .getByRole("button", { name: desktop, exact: true })
@@ -91,7 +91,7 @@ test("folder presets and private uploads persist across views and power details 
   await files.getByRole("button", { name: "Kapat", exact: true }).first().click();
   await page.getByRole("button", { name: "Hızlı ayarlar", exact: true }).click();
   await page.getByRole("button", { name: "Tüm görünüm ayarları…", exact: true }).click();
-  const settings = page.locator('[data-app-id="otuken.settings"]');
+  const settings = page.locator('[data-app-id="everyos.settings"]');
   await settings.getByRole("radio", { name: "Kehribar", exact: true }).click();
   await expect(folder.locator('[data-folder-icon="amber"]')).toBeVisible();
   await expect

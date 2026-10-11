@@ -17,7 +17,7 @@ export function DropdownMenuContent({
         sideOffset={sideOffset}
         collisionPadding={8}
         className={cn(
-          "glass-strong otk-enter z-50 min-w-56 rounded-otk-md p-1.5 text-sm",
+          "glass-strong everyos-enter z-50 min-w-56 rounded-everyos-md p-1.5 text-sm",
           className,
         )}
         {...props}
@@ -27,7 +27,7 @@ export function DropdownMenuContent({
 }
 
 const itemClass =
-  "flex h-9 cursor-default select-none items-center gap-2.5 rounded-[calc(var(--otk-radius-md)-6px)] px-2.5 text-fg outline-none data-[disabled]:opacity-45 data-[highlighted]:bg-[rgb(var(--otk-accent)/0.18)]";
+  "flex h-9 cursor-default select-none items-center gap-2.5 rounded-[calc(var(--everyos-radius-md)-6px)] px-2.5 text-fg outline-none data-[disabled]:opacity-45 data-[highlighted]:bg-[rgb(var(--everyos-accent)/0.18)]";
 
 export function DropdownMenuItem({
   className,

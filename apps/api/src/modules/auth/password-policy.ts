@@ -1,4 +1,4 @@
-import { checkPasswordPolicy } from "@otuken/auth";
+import { checkPasswordPolicy } from "@everyos/auth";
 import { ApiError } from "../../http/errors.ts";
 
 /** Throws AUTH_PASSWORD_POLICY with the list of violations for the UI. */

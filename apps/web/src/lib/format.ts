@@ -1,5 +1,5 @@
-import { intlLocaleTag } from "@otuken/i18n";
-import { isLocale } from "@otuken/shared";
+import { intlLocaleTag } from "@everyos/i18n";
+import { isLocale } from "@everyos/shared";
 
 export function localeTag(language: string): string {
   return isLocale(language) ? intlLocaleTag[language] : language;

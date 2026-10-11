@@ -3,7 +3,7 @@ import { signIn } from "./helpers.ts";
 
 /*
  * Phase 3 host integration. The e2e stack runs the agent with
- * OTUKEN_AGENT_SIMULATE=1, so systemd and journald data come from the
+ * EVERYOS_AGENT_SIMULATE=1, so systemd and journald data come from the
  * development simulator (and are labelled as simulated); metrics, storage
  * and processes are real readings of the machine running the tests.
  */
@@ -16,7 +16,7 @@ test("system monitor shows live metrics, processes and storage", async ({ page }
     .getByTestId("dock")
     .getByRole("button", { name: "Sistem İzleyici", exact: true })
     .click();
-  const app = page.locator('[data-app-id="otuken.system"]');
+  const app = page.locator('[data-app-id="everyos.system"]');
   await expect(app.getByRole("tab", { name: "Genel bakış", exact: true })).toHaveAttribute(
     "aria-selected",
     "true",
@@ -52,7 +52,7 @@ test("services can be inspected and controlled, protected units cannot be stoppe
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("servis");
   await page.keyboard.press("Enter");
-  const app = page.locator('[data-app-id="otuken.services"]');
+  const app = page.locator('[data-app-id="everyos.services"]');
   await expect(app).toBeVisible();
   await expect(app.getByTestId("simulated-badge").first()).toBeVisible();
 
@@ -102,11 +102,11 @@ test("logs open filtered from a service and follow new entries live", async ({ p
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("servis");
   await page.keyboard.press("Enter");
-  const services = page.locator('[data-app-id="otuken.services"]');
+  const services = page.locator('[data-app-id="everyos.services"]');
   await services.getByRole("button", { name: /jellyfin\.service/ }).click();
   await services.getByRole("button", { name: "Günlükleri göster", exact: true }).click();
 
-  const logs = page.locator('[data-app-id="otuken.logs"]');
+  const logs = page.locator('[data-app-id="everyos.logs"]');
   await expect(logs).toBeVisible();
   await expect(logs.getByRole("textbox", { name: "Servis" })).toHaveValue("jellyfin.service");
   await expect(

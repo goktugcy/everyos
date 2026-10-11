@@ -71,14 +71,14 @@ export function MobileShell() {
         inert={locked}
         data-testid="mobile-shell"
       >
-        <WallpaperView spec={theme.wallpaper} fallback={{ kind: "preset", id: "otuken-dusk" }} />
+        <WallpaperView spec={theme.wallpaper} fallback={{ kind: "preset", id: "everyos-dusk" }} />
         <header className="glass-strong relative z-10 flex h-12 shrink-0 items-center gap-2 rounded-none border-x-0 border-t-0 px-3 pt-[env(safe-area-inset-top)]">
           {open && manifest ? (
             <>
               <button
                 type="button"
                 onClick={() => setOpen(null)}
-                className="flex h-9 items-center gap-1 rounded-otk-sm pr-2 text-sm text-fg hover:bg-hover/10"
+                className="flex h-9 items-center gap-1 rounded-everyos-sm pr-2 text-sm text-fg hover:bg-hover/10"
                 aria-label={t("mobile.back")}
               >
                 <ChevronLeft className="size-5" aria-hidden />
@@ -111,7 +111,7 @@ export function MobileShell() {
             <p className="text-2xl font-semibold tracking-tight drop-shadow">
               {t("shell.welcome", { name: user?.displayName ?? "" })}
             </p>
-            <label className="glass flex h-11 items-center gap-2 rounded-otk-md px-3">
+            <label className="glass flex h-11 items-center gap-2 rounded-everyos-md px-3">
               <Search className="size-4 text-fg-subtle" aria-hidden />
               <input
                 value={query}
@@ -127,12 +127,14 @@ export function MobileShell() {
                   <button
                     type="button"
                     onClick={() => setOpen({ appId: app.id, appState: undefined, title: "" })}
-                    className="flex w-full flex-col items-center gap-1.5 rounded-otk-md p-1 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="flex w-full flex-col items-center gap-1.5 rounded-everyos-md p-1 outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <AppIcon manifest={app} size={56} />
                     <span
                       className="max-w-full truncate rounded-md px-1.5 text-[0.72rem] font-medium text-fg"
-                      style={{ background: "rgb(var(--otk-surface) / var(--otk-surface-opacity))" }}
+                      style={{
+                        background: "rgb(var(--everyos-surface) / var(--everyos-surface-opacity))",
+                      }}
                     >
                       {app.title}
                     </span>
@@ -144,7 +146,7 @@ export function MobileShell() {
               <button
                 type="button"
                 onClick={() => void lock()}
-                className="glass flex h-11 items-center justify-center gap-2 rounded-otk-md text-sm"
+                className="glass flex h-11 items-center justify-center gap-2 rounded-everyos-md text-sm"
               >
                 <Lock className="size-4" aria-hidden />
                 {t("quickSettings.lock")}
@@ -152,7 +154,7 @@ export function MobileShell() {
               <button
                 type="button"
                 onClick={() => void signOut()}
-                className="glass flex h-11 items-center justify-center gap-2 rounded-otk-md text-sm"
+                className="glass flex h-11 items-center justify-center gap-2 rounded-everyos-md text-sm"
               >
                 <LogOut className="size-4" aria-hidden />
                 {t("shell.menu.signOut")}

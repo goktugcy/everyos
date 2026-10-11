@@ -8,7 +8,7 @@ test("scheduled tasks are created from predefined actions, run on demand and kee
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("zamanlanmış");
   await page.getByRole("option", { name: "Zamanlanmış Görevler" }).click();
-  const app = page.locator('[data-app-id="otuken.tasks"]');
+  const app = page.locator('[data-app-id="everyos.tasks"]');
   await expect(app.getByTestId("tasks-app")).toContainText("Henüz zamanlanmış görev yok.");
 
   await app.getByRole("button", { name: "Görev ekle" }).click();

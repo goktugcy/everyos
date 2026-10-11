@@ -1,7 +1,7 @@
 # Update manager (Phase 7)
 
-The **Updates** app (`otuken.updates`) lists upgradable APT packages, explains each one and runs
-package-list refreshes and upgrades as background jobs. Nothing ever starts on its own: Otuken
+The **Updates** app (`everyos.updates`) lists upgradable APT packages, explains each one and runs
+package-list refreshes and upgrades as background jobs. Nothing ever starts on its own: EveryOS
 never upgrades the operating system automatically. Scheduling a refresh or a security upgrade is
 an explicit choice in the scheduler ([tasks.md](tasks.md)).
 
@@ -60,6 +60,6 @@ is unknown and the package list shows the current state.
 
 ## Limitations
 
-- Kernel and firmware updates may need a reboot; Otuken does not reboot the host.
+- Kernel and firmware updates may need a reboot; EveryOS does not reboot the host.
 - Held packages and phased updates are left to apt's own rules.
 - Only APT is supported (Debian, Ubuntu, Raspberry Pi OS).

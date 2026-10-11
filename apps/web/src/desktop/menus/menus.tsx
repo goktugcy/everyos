@@ -7,9 +7,9 @@ import { requestConfirm } from "./confirm.tsx";
 import { filterMenu, formatShortcut, type MenuEntry } from "./menu-model.ts";
 
 const contentClass =
-  "glass-strong otk-enter z-[8000] min-w-56 rounded-otk-md p-1.5 text-sm text-fg";
+  "glass-strong everyos-enter z-[8000] min-w-56 rounded-everyos-md p-1.5 text-sm text-fg";
 const itemClass =
-  "relative flex h-8 cursor-default select-none items-center gap-2.5 rounded-[calc(var(--otk-radius-md)-6px)] px-2.5 outline-none data-[disabled]:opacity-45 data-[highlighted]:bg-[rgb(var(--otk-accent)/0.2)]";
+  "relative flex h-8 cursor-default select-none items-center gap-2.5 rounded-[calc(var(--everyos-radius-md)-6px)] px-2.5 outline-none data-[disabled]:opacity-45 data-[highlighted]:bg-[rgb(var(--everyos-accent)/0.2)]";
 
 type Primitives = typeof CM | typeof DM;
 

@@ -25,9 +25,9 @@ import {
   type OperationContext,
   type OperationParams,
   type OperationResult,
-} from "@otuken/agent-protocol";
-import { readTar, safeRelativePath, sinkTo, TarWriter } from "@otuken/system/archive";
-import type { Logger } from "@otuken/logger";
+} from "@everyos/agent-protocol";
+import { readTar, safeRelativePath, sinkTo, TarWriter } from "@everyos/system/archive";
+import type { Logger } from "@everyos/logger";
 import type { ManagedAppManager } from "./managed-apps.ts";
 
 /** Decompressed content of a file (read errors end the stream instead of hanging it). */

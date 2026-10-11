@@ -18,8 +18,8 @@ import type {
   ImageSummary,
   NetworkSummary,
   VolumeSummary,
-} from "@otuken/shared";
-import type { PostgresStats } from "@otuken/shared/schemas";
+} from "@everyos/shared";
+import type { PostgresStats } from "@everyos/shared/schemas";
 import { mapLimit, pathKind } from "../fs-utils.ts";
 import { checkComposeFiles, ComposeError, detectCompose, runCompose } from "./compose.ts";
 import { resolveManagedImages } from "./managed-images.ts";
@@ -69,7 +69,7 @@ export interface LogOptions {
 
 /**
  * Typed access to Docker. There is no generic passthrough: every Engine API
- * call Otuken makes is one of these methods, with fixed paths and
+ * call EveryOS makes is one of these methods, with fixed paths and
  * validated identifiers.
  */
 export interface DockerApi {
@@ -120,7 +120,7 @@ const DEFAULT_SOCKETS = ["/var/run/docker.sock", "/run/docker.sock"];
 const SQL_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]{0,62}$/;
 /** Images of PostgreSQL and its common distributions; exec is refused for anything else. */
 const POSTGRES_IMAGE = /(^|\/)(postgres|postgresql|pgvector|pgvecto-rs|postgis)(:|@|$)/;
-/** The only statement Otuken runs inside PostgreSQL containers: read-only, fixed, no user input. */
+/** The only statement EveryOS runs inside PostgreSQL containers: read-only, fixed, no user input. */
 export const POSTGRES_STATS_SQL =
   "BEGIN READ ONLY; SELECT json_build_object(" +
   "'connections', (SELECT count(*) FROM pg_stat_activity), " +
@@ -154,7 +154,7 @@ export function parsePostgresStats(line: string): PostgresStats {
       }),
   };
 }
-/** Newest Engine API version Otuken was written against; older servers are used at their version. */
+/** Newest Engine API version EveryOS was written against; older servers are used at their version. */
 const CLIENT_API_VERSION = "1.51";
 /** `stats?one-shot=true` needs 1.41 (Docker 20.10). */
 const MIN_API_VERSION = "1.41";

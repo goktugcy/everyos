@@ -1,4 +1,4 @@
-import { permissionsForRole, type SessionInfo } from "@otuken/shared";
+import { permissionsForRole, type SessionInfo } from "@everyos/shared";
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { AppEnv } from "../../context.ts";
@@ -7,9 +7,9 @@ import { toPublicUser, type User } from "../users/user-repository.ts";
 import type { Session } from "./session-service.ts";
 
 /** Plain-HTTP cookie name. */
-export const SESSION_COOKIE = "otuken_session";
+export const SESSION_COOKIE = "everyos_session";
 /** HTTPS cookie name; the __Host- prefix forbids Domain and requires Secure + Path=/. */
-export const SECURE_SESSION_COOKIE = "__Host-otuken_session";
+export const SECURE_SESSION_COOKIE = "__Host-everyos_session";
 
 function useSecureCookie(c: Context<AppEnv>, services: Services): boolean {
   switch (services.config.security.cookieSecure) {
@@ -23,7 +23,12 @@ function useSecureCookie(c: Context<AppEnv>, services: Services): boolean {
 }
 
 export function readSessionToken(c: Context<AppEnv>): string | undefined {
-  return getCookie(c, SECURE_SESSION_COOKIE) ?? getCookie(c, SESSION_COOKIE);
+  return (
+    getCookie(c, SECURE_SESSION_COOKIE) ??
+    getCookie(c, "__Host-otuken_session") ??
+    getCookie(c, SESSION_COOKIE) ??
+    getCookie(c, "otuken_session")
+  );
 }
 
 export function setSessionCookie(
@@ -45,6 +50,8 @@ export function setSessionCookie(
 export function clearSessionCookie(c: Context<AppEnv>): void {
   deleteCookie(c, SESSION_COOKIE, { path: "/" });
   deleteCookie(c, SECURE_SESSION_COOKIE, { path: "/", secure: true });
+  deleteCookie(c, "otuken_session", { path: "/" });
+  deleteCookie(c, "__Host-otuken_session", { path: "/", secure: true });
 }
 
 export function buildSessionInfo(services: Services, user: User, session: Session): SessionInfo {

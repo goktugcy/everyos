@@ -1,7 +1,8 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { BlockList, isIP } from "node:net";
 import { join } from "node:path";
-import { isLogLevel, LOG_LEVELS, type LogLevel } from "@otuken/logger";
+import { isLogLevel, LOG_LEVELS, type LogLevel } from "@everyos/logger";
+import { resolveEnvironment } from "@everyos/shared";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
@@ -20,9 +21,9 @@ const OriginSchema = z.url().refine((value) => {
   return (
     (url.protocol === "https:" || url.protocol === "http:") && url.pathname === "/" && !url.search
   );
-}, "must be an origin such as https://otuken.example.ts.net");
+}, "must be an origin such as https://everyos.example.ts.net");
 
-/** Shape of /etc/otuken/config.yaml. Every field is optional. */
+/** Shape of /etc/everyos/config.yaml. Every field is optional. */
 const ConfigFileSchema = z.strictObject({
   server: z
     .strictObject({
@@ -175,32 +176,51 @@ function parsePort(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
   const port = Number(value);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
-    throw new ConfigError(`Invalid OTUKEN_PORT: ${value}`);
+    throw new ConfigError(`Invalid EVERYOS_PORT: ${value}`);
   return port;
 }
 
 /**
  * Resolves configuration from (highest precedence first) environment
  * variables, the YAML config file, and mode-specific defaults. Defaults bind
- * to loopback only; exposing Otuken on the LAN is an explicit decision.
+ * to loopback only; exposing EveryOS on the LAN is an explicit decision.
  */
 export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
-  const mode: RuntimeMode = env.OTUKEN_ENV === "development" ? "development" : "production";
-  const explicitConfig = env.OTUKEN_CONFIG;
-  const configFile = explicitConfig ?? (mode === "production" ? "/etc/otuken/config.yaml" : null);
+  env = resolveEnvironment(env);
+  const mode: RuntimeMode = env.EVERYOS_ENV === "development" ? "development" : "production";
+  const explicitConfig = env.EVERYOS_CONFIG;
+  const configFile =
+    explicitConfig ??
+    (mode === "production"
+      ? existsSync("/etc/everyos/config.yaml") || !existsSync("/etc/otuken/config.yaml")
+        ? "/etc/everyos/config.yaml"
+        : "/etc/otuken/config.yaml"
+      : null);
   const file = configFile ? readConfigFile(configFile, Boolean(explicitConfig)) : {};
 
-  const devRoot = env.OTUKEN_DEV_ROOT;
+  const devRoot = env.EVERYOS_DEV_ROOT;
   if (mode === "development" && !devRoot) {
-    throw new ConfigError("Development mode requires OTUKEN_DEV_ROOT (set by `pnpm dev`)");
+    throw new ConfigError("Development mode requires EVERYOS_DEV_ROOT (set by `pnpm dev`)");
   }
   const defaults =
     mode === "production"
       ? {
-          dataDir: "/var/lib/otuken",
-          webDir: "/usr/lib/otuken/web",
-          agentSocket: "/run/otuken/agent.sock",
-          agentKeyFile: "/etc/otuken/agent.key",
+          dataDir:
+            existsSync("/var/lib/everyos") || !existsSync("/var/lib/otuken/otuken.db")
+              ? "/var/lib/everyos"
+              : "/var/lib/otuken",
+          webDir:
+            existsSync("/usr/lib/everyos/web") || !existsSync("/usr/lib/otuken/web")
+              ? "/usr/lib/everyos/web"
+              : "/usr/lib/otuken/web",
+          agentSocket:
+            existsSync("/run/everyos/agent.sock") || !existsSync("/run/otuken/agent.sock")
+              ? "/run/everyos/agent.sock"
+              : "/run/otuken/agent.sock",
+          agentKeyFile:
+            existsSync("/etc/everyos/agent.key") || !existsSync("/etc/otuken/agent.key")
+              ? "/etc/everyos/agent.key"
+              : "/etc/otuken/agent.key",
         }
       : {
           dataDir: join(devRoot!, "data"),
@@ -209,32 +229,35 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
           agentKeyFile: join(devRoot!, "secrets", "agent.key"),
         };
 
-  const dataDir = env.OTUKEN_DATA_DIR ?? file.paths?.dataDir ?? defaults.dataDir;
-  const envLevel = env.OTUKEN_LOG_LEVEL;
+  const dataDir = env.EVERYOS_DATA_DIR ?? file.paths?.dataDir ?? defaults.dataDir;
+  const envLevel = env.EVERYOS_LOG_LEVEL;
   if (envLevel !== undefined && !isLogLevel(envLevel))
-    throw new ConfigError(`Invalid OTUKEN_LOG_LEVEL: ${envLevel}`);
+    throw new ConfigError(`Invalid EVERYOS_LOG_LEVEL: ${envLevel}`);
 
   const trustedProxies = file.server?.trustedProxies ?? [];
   const config: ApiConfig = {
     mode,
     configFile,
     server: {
-      host: env.OTUKEN_HOST ?? file.server?.host ?? "127.0.0.1",
-      port: parsePort(env.OTUKEN_PORT) ?? file.server?.port ?? DEFAULT_PORT,
+      host: env.EVERYOS_HOST ?? file.server?.host ?? "127.0.0.1",
+      port: parsePort(env.EVERYOS_PORT) ?? file.server?.port ?? DEFAULT_PORT,
       trustedProxies,
       publicOrigins: (file.server?.publicOrigins ?? []).map((origin) => new URL(origin).origin),
       tls: file.server?.tls ?? null,
     },
     paths: {
       dataDir,
-      databaseFile: join(dataDir, "otuken.db"),
+      databaseFile:
+        existsSync(join(dataDir, "everyos.db")) || !existsSync(join(dataDir, "otuken.db"))
+          ? join(dataDir, "everyos.db")
+          : join(dataDir, "otuken.db"),
       backupDir: join(dataDir, "backups"),
-      webDir: env.OTUKEN_WEB_DIR ?? file.paths?.webDir ?? defaults.webDir,
+      webDir: env.EVERYOS_WEB_DIR ?? file.paths?.webDir ?? defaults.webDir,
       secretKeyFile:
-        env.OTUKEN_SECRET_KEY_FILE ?? file.paths?.secretKeyFile ?? join(dataDir, "secret.key"),
+        env.EVERYOS_SECRET_KEY_FILE ?? file.paths?.secretKeyFile ?? join(dataDir, "secret.key"),
       setupTokenFile: join(dataDir, "setup-token"),
-      agentSocket: env.OTUKEN_AGENT_SOCKET ?? file.paths?.agentSocket ?? defaults.agentSocket,
-      agentKeyFile: env.OTUKEN_AGENT_KEY_FILE ?? file.paths?.agentKeyFile ?? defaults.agentKeyFile,
+      agentSocket: env.EVERYOS_AGENT_SOCKET ?? file.paths?.agentSocket ?? defaults.agentSocket,
+      agentKeyFile: env.EVERYOS_AGENT_KEY_FILE ?? file.paths?.agentKeyFile ?? defaults.agentKeyFile,
     },
     security: {
       sessionIdleMs: (file.security?.sessionIdleMinutes ?? 720) * 60_000,
@@ -259,7 +282,7 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       homesDir: file.files?.homes === false ? null : join(dataDir, "homes"),
     },
     backups: {
-      dir: env.OTUKEN_BACKUP_DIR ?? file.backups?.dir ?? join(dataDir, "backups", "archives"),
+      dir: env.EVERYOS_BACKUP_DIR ?? file.backups?.dir ?? join(dataDir, "backups", "archives"),
       minFreeBytes: (file.backups?.minFreeMiB ?? 1024) * 1024 * 1024,
       maxUploadBytes: (file.backups?.maxUploadMiB ?? 64 * 1024) * 1024 * 1024,
     },

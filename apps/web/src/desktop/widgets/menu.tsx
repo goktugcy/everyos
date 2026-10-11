@@ -1,5 +1,5 @@
-import type { WidgetInstance, WidgetPlacement } from "@otuken/shared";
-import { getWidget, sizesFor, supportsPlacement } from "@otuken/widget-sdk";
+import type { WidgetInstance, WidgetPlacement } from "@everyos/shared";
+import { getWidget, sizesFor, supportsPlacement } from "@everyos/widget-sdk";
 import type { TFunction } from "i18next";
 import {
   ArrowDown,

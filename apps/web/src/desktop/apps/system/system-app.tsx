@@ -37,7 +37,7 @@ export default function SystemApp() {
           <Tabs.Trigger
             key={id}
             value={id}
-            className="-mb-px whitespace-nowrap rounded-t-otk-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-fg"
+            className="-mb-px whitespace-nowrap rounded-t-everyos-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-fg"
           >
             {t(`monitor.tabs.${id}`)}
           </Tabs.Trigger>

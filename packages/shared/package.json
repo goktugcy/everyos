@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/shared",
+  "name": "@everyos/shared",
   "version": "0.1.0",
   "private": true,
-  "description": "Runtime-agnostic contracts shared by the Otuken web client, API and agent: permissions, roles, error codes and API schemas.",
+  "description": "Runtime-agnostic contracts shared by the EveryOS web client, API and agent: permissions, roles, error codes and API schemas.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

@@ -1,4 +1,4 @@
-import type { AptUpdates, PackageInfo } from "@otuken/shared";
+import type { AptUpdates, PackageInfo } from "@everyos/shared";
 import type { AptManager, AptUpgradeEvent } from "../apt/manager.ts";
 
 const PACKAGES: AptUpdates["packages"] = [
@@ -84,7 +84,7 @@ export function createAptSimulator(now: () => number = Date.now): AptManager {
         summary: `${name} (simulated package)`,
         description: `${name} (simulated package)\nDevelopment data, not read from this computer.`,
         homepage: null,
-        maintainer: "Otuken simulator",
+        maintainer: "EveryOS simulator",
         origins: entry ? entry.suites.split(",").map((suite) => `${suite}/main`) : [],
       };
       return Promise.resolve(info);

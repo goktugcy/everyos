@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { createServer } from "node:http";
 import { PassThrough } from "node:stream";
-import type { TerminalServerMessage } from "@otuken/shared";
+import type { TerminalServerMessage } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import { attachTerminalGateway, authorizeUpgrade } from "./modules/terminal/gateway.ts";
 import { TerminalService, type TerminalViewer } from "./modules/terminal/terminal-service.ts";

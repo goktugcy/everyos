@@ -41,7 +41,7 @@ export const NOTIFICATION_KINDS = {
   "internet-offline": { category: "network", permission: "system:read", condition: true },
   "tailscale-offline": { category: "network", permission: "system:read", condition: true },
   "tailscale-key-expiry": { category: "network", permission: "system:read", condition: true },
-  /** Otuken is reachable from the public internet through Tailscale Funnel. */
+  /** EveryOS is reachable from the public internet through Tailscale Funnel. */
   "tailscale-funnel": { category: "security", permission: "system:manage", condition: true },
   "agent-unavailable": { category: "system", permission: "system:read", condition: true },
   "app-succeeded": { category: "apps", permission: "apps:read", condition: false },

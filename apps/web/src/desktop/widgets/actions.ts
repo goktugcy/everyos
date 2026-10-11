@@ -5,7 +5,7 @@ import {
   type WidgetPlacement,
   type WidgetPreferences,
   type WidgetSize,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import {
   addWidget,
   changePlacement,
@@ -18,8 +18,8 @@ import {
   reorderWidget,
   resizeWidget,
   updateWidget,
-} from "@otuken/widget-sdk";
-import { workArea, type Viewport } from "@otuken/window-manager";
+} from "@everyos/widget-sdk";
+import { workArea, type Viewport } from "@everyos/window-manager";
 import { resetPreference, updatePreference, usePreferences } from "../state/preferences-store.ts";
 import { wm } from "../state/window-store.ts";
 import { effectiveCells, type ScreenGrid } from "./geometry.ts";

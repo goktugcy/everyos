@@ -1,5 +1,5 @@
 /*
- * Zod-free update manager contracts (docs/updates.md). Otuken never upgrades
+ * Zod-free update manager contracts (docs/updates.md). EveryOS never upgrades
  * the operating system on its own: every refresh and upgrade is started by an
  * administrator.
  */

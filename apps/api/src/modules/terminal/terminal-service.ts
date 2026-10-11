@@ -1,13 +1,13 @@
 import { randomUUID } from "node:crypto";
-import type { Actor } from "@otuken/agent-protocol";
-import type { Logger } from "@otuken/logger";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
 import type {
   Role,
   TerminalServerMessage,
   TerminalSessionView,
   TerminalStatus,
-} from "@otuken/shared";
-import { TerminalClientMessageSchema } from "@otuken/shared/schemas";
+} from "@everyos/shared";
+import { TerminalClientMessageSchema } from "@everyos/shared/schemas";
 import type { WebSocket } from "ws";
 import type { AuditLog } from "../audit/audit-log.ts";
 import type { AgentGateway } from "../../services.ts";

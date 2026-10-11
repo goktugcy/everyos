@@ -5,9 +5,9 @@ import type {
   MetricsHistory,
   MetricsSnapshot,
   ServiceList,
-} from "@otuken/shared";
-import { AgentClientError } from "@otuken/agent-protocol";
-import { silentLogger } from "@otuken/logger";
+} from "@everyos/shared";
+import { AgentClientError } from "@everyos/agent-protocol";
+import { silentLogger } from "@everyos/logger";
 import { describe, expect, it } from "vitest";
 import { MetricsHub } from "./modules/metrics/metrics-hub.ts";
 import { computePoint, computeSnapshot, downsample } from "./modules/metrics/rates.ts";

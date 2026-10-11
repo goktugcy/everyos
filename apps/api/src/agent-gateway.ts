@@ -8,9 +8,9 @@ import {
   type OperationResult,
   type StreamOperationName,
   type UnaryOperationName,
-} from "@otuken/agent-protocol";
-import type { Logger } from "@otuken/logger";
-import { KeyFileError, loadKeyFile } from "@otuken/security";
+} from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
+import { KeyFileError, loadKeyFile } from "@everyos/security";
 import type { AgentGateway } from "./services.ts";
 
 const KEY_RETRY_MS = 5_000;

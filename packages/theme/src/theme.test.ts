@@ -1,4 +1,8 @@
-import { THEME_PRESET_IDS, WALLPAPER_PRESET_IDS, type AppearancePreferences } from "@otuken/shared";
+import {
+  THEME_PRESET_IDS,
+  WALLPAPER_PRESET_IDS,
+  type AppearancePreferences,
+} from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import {
   contrastRatio,
@@ -160,20 +164,20 @@ describe("render modes", () => {
 describe("CSS variables", () => {
   it("emits triplets and units for every token", () => {
     const vars = themeCssVariables(resolveTheme(DEFAULT_APPEARANCE));
-    expect(vars["--otk-accent"]).toBe("125 211 252");
-    expect(vars["--otk-blur"]).toBe("16px");
-    expect(vars["--otk-radius-lg"]).toBe("22px");
-    expect(vars["--otk-icon-size"]).toBe("52px");
+    expect(vars["--everyos-accent"]).toBe("125 211 252");
+    expect(vars["--everyos-blur"]).toBe("16px");
+    expect(vars["--everyos-radius-lg"]).toBe("22px");
+    expect(vars["--everyos-icon-size"]).toBe("52px");
     for (const [name, value] of Object.entries(vars)) {
-      expect(name.startsWith("--otk-")).toBe(true);
+      expect(name.startsWith("--everyos-")).toBe(true);
       expect(value).not.toMatch(/[;{}<>]/);
     }
   });
 
   it("switches neutral overlays for light themes", () => {
     const vars = themeCssVariables(resolveTheme(settings({ themeId: "liquid-light" })));
-    expect(vars["--otk-hover"]).toBe("15 23 42");
-    expect(vars["--otk-inset"]).toBe("255 255 255");
+    expect(vars["--everyos-hover"]).toBe("15 23 42");
+    expect(vars["--everyos-inset"]).toBe("255 255 255");
   });
 
   it("covers every wallpaper preset", () => {
@@ -198,6 +202,20 @@ describe("theme files", () => {
     expect(text).not.toContain("private");
     const imported = importTheme(text, "t2");
     expect(imported).toEqual({ ok: true, theme: { ...theme, id: "t2", wallpaper: null } });
+  });
+
+  it("imports legacy theme files and exports the EveryOS format", () => {
+    const legacy = {
+      format: "otuken-theme",
+      schemaVersion: 1,
+      theme: { ...theme, wallpaper: { kind: "preset", id: "otuken-dusk" } },
+    };
+    const imported = importTheme(JSON.stringify(legacy), "migrated");
+    expect(imported).toMatchObject({
+      ok: true,
+      theme: { wallpaper: { kind: "preset", id: "everyos-dusk" } },
+    });
+    if (imported.ok) expect(JSON.parse(exportTheme(imported.theme)).format).toBe("everyos-theme");
   });
 
   it("rejects malformed or out-of-range files", () => {

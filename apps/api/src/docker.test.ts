@@ -10,8 +10,8 @@ import type {
   ImageList,
   NetworkList,
   VolumeList,
-} from "@otuken/shared";
-import { silentLogger } from "@otuken/logger";
+} from "@everyos/shared";
+import { silentLogger } from "@everyos/logger";
 import { describe, expect, it } from "vitest";
 import { computeContainerPoint, DockerHub } from "./modules/docker/docker-hub.ts";
 import { FakeAgent, json, readEvents, withRoles, type TestClient } from "./test-support.ts";

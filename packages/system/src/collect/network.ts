@@ -1,6 +1,6 @@
 import { connect } from "node:net";
 import * as os from "node:os";
-import type { InternetState, NetworkInterfaceKind, NetworkStatus } from "@otuken/shared";
+import type { InternetState, NetworkInterfaceKind, NetworkStatus } from "@everyos/shared";
 import { listDirOrEmpty, pathKind, readTextOrNull } from "../fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "../host-paths.ts";
 import { parseIpv4Routes, parseIpv6Routes, parseResolvConf } from "../linux/procfs.ts";

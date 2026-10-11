@@ -1,4 +1,4 @@
-import type { HealthResponse } from "@otuken/shared";
+import type { HealthResponse } from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { api } from "../../lib/api.ts";

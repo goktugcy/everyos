@@ -1,4 +1,4 @@
-import type { TopicMessage, TopicUnavailableReason } from "@otuken/shared";
+import type { TopicMessage, TopicUnavailableReason } from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { subscribeTopic } from "../../lib/event-stream.ts";

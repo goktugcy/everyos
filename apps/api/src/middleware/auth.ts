@@ -1,4 +1,4 @@
-import { ROLE_PERMISSIONS, type Permission } from "@otuken/shared";
+import { ROLE_PERMISSIONS, type Permission } from "@everyos/shared";
 import type { Context, MiddlewareHandler } from "hono";
 import type { AppEnv, AuthState } from "../context.ts";
 import { ApiError, forbidden, unauthenticated } from "../http/errors.ts";

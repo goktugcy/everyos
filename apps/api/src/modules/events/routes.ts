@@ -4,8 +4,8 @@ import {
   type NotificationEvent,
   type Permission,
   type TopicMessage,
-} from "@otuken/shared";
-import { EventStreamQuerySchema } from "@otuken/shared/schemas";
+} from "@everyos/shared";
+import { EventStreamQuerySchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { forbidden } from "../../http/errors.ts";

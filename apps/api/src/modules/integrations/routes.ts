@@ -2,7 +2,7 @@ import {
   IntegrationActionRequestSchema,
   IntegrationCreateRequestSchema,
   IntegrationUpdateRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";
@@ -15,7 +15,7 @@ const IdParams = z.strictObject({ id: z.string().uuid() });
 
 /**
  * Application integrations for widgets. Creating one is the administrator's
- * explicit consent for Otuken to read that app's API; credentials are write-only.
+ * explicit consent for EveryOS to read that app's API; credentials are write-only.
  */
 export function integrationRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();

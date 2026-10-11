@@ -1,13 +1,13 @@
 # Browser terminal (Phase 7.3)
 
-The lazy `otuken.terminal` desktop app connects to a real agent pseudo-terminal through the
+The lazy `everyos.terminal` desktop app connects to a real agent pseudo-terminal through the
 same-origin API WebSocket. Each window has its own shell. The browser cannot select an account,
 choose a shell, or run a command through an HTTP execution endpoint.
 
 ## Configuration and identity
 
 Production is disabled until the owner configures an existing, regular system account in
-`/etc/otuken/agent.yaml` and restarts the agent:
+`/etc/everyos/agent.yaml` and restarts the agent:
 
 ```yaml
 terminal:
@@ -19,16 +19,16 @@ terminal:
 Python 3 provides the PTY; the interpreter and shell must exist at absolute paths. The agent
 resolves the account, drops UID/GID and supplementary groups before starting the shell, and uses
 its home directory and a fixed environment. The UI shows the actual account and shell from the
-server's `ready` frame. All Otuken administrators use the configured system identity, rather than
-an operating-system account derived from their Otuken username.
+server's `ready` frame. All EveryOS administrators use the configured system identity, rather than
+an operating-system account derived from their EveryOS username.
 
 Root is refused by default. `allowRoot: true` is an explicit owner-only configuration escape
 hatch; the client never offers it. Prefer a dedicated account with only the host access it needs.
 The shell has that account's ordinary OS permissions: it is not a sandbox, and interactive
-commands do not go through Otuken's service/container operation safeguards. Its ability to use
+commands do not go through EveryOS's service/container operation safeguards. Its ability to use
 `sudo` or other installed tools is determined by the host's account policy.
 
-In development, `OTUKEN_DEV_TERMINAL=1 pnpm dev` enables a real PTY as the developer's own
+In development, `EVERYOS_DEV_TERMINAL=1 pnpm dev` enables a real PTY as the developer's own
 unprivileged account. The e2e stack enables this flag in its disposable state directory. This is
 not a terminal simulator and does not grant root access.
 
@@ -49,7 +49,7 @@ Disabled status reasons are `not-configured`, `user-missing`, `root-refused`, an
 - A dropped connection has a 60-second reconnect grace period. The API retains at most 256 KiB
   of output for replay. A newer attachment replaces the older socket.
 - Opening and closing write audit events with actor, system account, session ID, outcome and
-  close reason. Keystrokes and shell output are not audited or persisted by Otuken; output can
+  close reason. Keystrokes and shell output are not audited or persisted by EveryOS; output can
   contain secrets. The configured shell may maintain its own history.
 
 ## HTTP and WebSocket protocol

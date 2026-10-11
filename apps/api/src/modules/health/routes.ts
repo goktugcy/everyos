@@ -1,9 +1,9 @@
 import {
   DEFAULT_LOCALE,
-  OTUKEN_VERSION,
+  EVERYOS_VERSION,
   type BootstrapResponse,
   type HealthResponse,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import type { Services } from "../../services.ts";
@@ -31,8 +31,8 @@ export function healthRoutes(services: Services): Hono<AppEnv> {
   app.get("/bootstrap", (c) => {
     const client = c.get("client");
     const body: BootstrapResponse = {
-      product: "otuken",
-      version: OTUKEN_VERSION,
+      product: "everyos",
+      version: EVERYOS_VERSION,
       setupRequired: services.setup.isSetupRequired(),
       defaultLocale: DEFAULT_LOCALE,
       transport: { secure: client.secure, loopback: client.loopback },

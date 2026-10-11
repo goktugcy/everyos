@@ -2,7 +2,7 @@ import { lookup } from "node:dns/promises";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
-import { addressAllowed } from "@otuken/catalogs";
+import { addressAllowed } from "@everyos/catalogs";
 
 export class IntegrationHttpError extends Error {
   readonly kind: "offline" | "auth" | "status" | "invalid" | "unsafe-address" | "too-large";
@@ -71,7 +71,7 @@ export async function requestText(
         headers: {
           Accept: "application/json, text/plain;q=0.9, */*;q=0.1",
           "Accept-Encoding": "identity",
-          "User-Agent": "Otuken-Widgets/1",
+          "User-Agent": "EveryOS-Widgets/1",
           ...(body
             ? { "Content-Type": "application/json", "Content-Length": String(body.length) }
             : {}),

@@ -1,4 +1,4 @@
-import { LogFilterSchema, LogQuerySchema } from "@otuken/shared/schemas";
+import { LogFilterSchema, LogQuerySchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { agentActor, callAgent, toApiError } from "../../http/agent.ts";

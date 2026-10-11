@@ -1,14 +1,16 @@
-import { readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { userInfo } from "node:os";
-import { isLogLevel, LOG_LEVELS, type LogLevel } from "@otuken/logger";
+import { dirname } from "node:path";
+import { isLogLevel, LOG_LEVELS, type LogLevel } from "@everyos/logger";
+import { resolveEnvironment } from "@everyos/shared";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import type { TerminalConfig } from "./terminal.ts";
 
 /**
  * Agent configuration. In production it is read from a root-owned file
- * (/etc/otuken/agent.yaml) that the unprivileged API cannot modify; the
- * agent never reads policy from locations writable by the otuken user.
+ * (/etc/everyos/agent.yaml) that the unprivileged API cannot modify; the
+ * agent never reads policy from locations writable by the everyos user.
  */
 const AgentConfigFileSchema = z.strictObject({
   socketPath: z.string().min(1).optional(),
@@ -17,7 +19,7 @@ const AgentConfigFileSchema = z.strictObject({
   socketGroup: z.union([z.string().min(1), z.number().int().nonnegative()]).optional(),
   logLevel: z.enum(LOG_LEVELS).optional(),
   /**
-   * Extra units (exact names or `*` globs) that Otuken may only start, on top
+   * Extra units (exact names or `*` globs) that EveryOS may only start, on top
    * of the built-in list.
    */
   protectedUnits: z
@@ -30,8 +32,8 @@ const AgentConfigFileSchema = z.strictObject({
     .max(5)
     .optional(),
   /**
-   * Containers (names or `*` globs) Otuken may only start, never stop or
-   * restart — e.g. the reverse proxy that serves Otuken itself.
+   * Containers (names or `*` globs) EveryOS may only start, never stop or
+   * restart — e.g. the reverse proxy that serves EveryOS itself.
    */
   protectedContainers: z
     .array(z.string().regex(/^[A-Za-z0-9_.*-]{1,256}$/))
@@ -75,6 +77,7 @@ export type AgentMode = "production" | "development";
 
 export interface AgentConfig {
   mode: AgentMode;
+  appsRoot: string;
   socketPath: string;
   agentKeyFile: string;
   socketGroup: string | number | null;
@@ -85,7 +88,7 @@ export interface AgentConfig {
   internetCheckTargets: string[];
   protectedContainers: string[];
   dockerSocket: string | null;
-  /** Overrides the tailscaled socket search (development also reads OTUKEN_TAILSCALE_SOCKET). */
+  /** Overrides the tailscaled socket search (development also reads EVERYOS_TAILSCALE_SOCKET). */
   tailscaleSocket: string | null;
   terminal: TerminalConfig | null;
   /**
@@ -99,10 +102,10 @@ export interface AgentConfig {
 export const DEFAULT_INTERNET_CHECK_TARGETS = ["1.1.1.1:443", "9.9.9.9:443"];
 
 const PRODUCTION_DEFAULTS = {
-  configFile: "/etc/otuken/agent.yaml",
-  socketPath: "/run/otuken/agent.sock",
-  agentKeyFile: "/etc/otuken/agent.key",
-  socketGroup: "otuken",
+  configFile: "/etc/everyos/agent.yaml",
+  socketPath: "/run/everyos/agent.sock",
+  agentKeyFile: "/etc/everyos/agent.key",
+  socketGroup: "everyos",
 };
 
 export class ConfigError extends Error {
@@ -128,42 +131,64 @@ function readConfigFile(path: string, required: boolean): z.infer<typeof AgentCo
 }
 
 export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
-  const mode: AgentMode = env.OTUKEN_ENV === "development" ? "development" : "production";
-  const explicitConfig = env.OTUKEN_AGENT_CONFIG;
+  env = resolveEnvironment(env);
+  const mode: AgentMode = env.EVERYOS_ENV === "development" ? "development" : "production";
+  const explicitConfig = env.EVERYOS_AGENT_CONFIG;
   const configFile =
-    explicitConfig ?? (mode === "production" ? PRODUCTION_DEFAULTS.configFile : null);
+    explicitConfig ??
+    (mode === "production"
+      ? existsSync(PRODUCTION_DEFAULTS.configFile) || !existsSync("/etc/otuken/agent.yaml")
+        ? PRODUCTION_DEFAULTS.configFile
+        : "/etc/otuken/agent.yaml"
+      : null);
   const file = configFile ? readConfigFile(configFile, Boolean(explicitConfig)) : {};
 
-  const devRoot = env.OTUKEN_DEV_ROOT;
+  const devRoot = env.EVERYOS_DEV_ROOT;
   if (
     mode === "development" &&
     !devRoot &&
-    (!env.OTUKEN_AGENT_SOCKET || !env.OTUKEN_AGENT_KEY_FILE)
+    (!env.EVERYOS_AGENT_SOCKET || !env.EVERYOS_AGENT_KEY_FILE)
   ) {
-    throw new ConfigError("Development mode requires OTUKEN_DEV_ROOT (set by `pnpm dev`)");
+    throw new ConfigError("Development mode requires EVERYOS_DEV_ROOT (set by `pnpm dev`)");
   }
   const defaults =
     mode === "production"
-      ? PRODUCTION_DEFAULTS
+      ? configFile === "/etc/otuken/agent.yaml" ||
+        (!explicitConfig &&
+          !existsSync(PRODUCTION_DEFAULTS.configFile) &&
+          !existsSync(PRODUCTION_DEFAULTS.agentKeyFile) &&
+          existsSync("/etc/otuken/agent.key"))
+        ? {
+            socketPath: "/run/otuken/agent.sock",
+            agentKeyFile: "/etc/otuken/agent.key",
+            socketGroup: "otuken",
+          }
+        : PRODUCTION_DEFAULTS
       : {
           socketPath: `${devRoot}/run/agent.sock`,
           agentKeyFile: `${devRoot}/secrets/agent.key`,
           socketGroup: null,
         };
 
-  const simulate = env.OTUKEN_AGENT_SIMULATE === "1";
+  const simulate = env.EVERYOS_AGENT_SIMULATE === "1";
   if (simulate && mode !== "development") {
-    throw new ConfigError("OTUKEN_AGENT_SIMULATE is only allowed in development mode");
+    throw new ConfigError("EVERYOS_AGENT_SIMULATE is only allowed in development mode");
   }
 
-  const envLevel = env.OTUKEN_LOG_LEVEL;
+  const envLevel = env.EVERYOS_LOG_LEVEL;
   if (envLevel !== undefined && !isLogLevel(envLevel))
-    throw new ConfigError(`Invalid OTUKEN_LOG_LEVEL: ${envLevel}`);
+    throw new ConfigError(`Invalid EVERYOS_LOG_LEVEL: ${envLevel}`);
 
   return {
     mode,
-    socketPath: env.OTUKEN_AGENT_SOCKET ?? file.socketPath ?? defaults.socketPath,
-    agentKeyFile: env.OTUKEN_AGENT_KEY_FILE ?? file.agentKeyFile ?? defaults.agentKeyFile,
+    appsRoot:
+      mode === "production"
+        ? existsSync("/var/lib/everyos/apps") || !existsSync("/var/lib/otuken/apps")
+          ? "/var/lib/everyos/apps"
+          : "/var/lib/otuken/apps"
+        : `${devRoot ?? dirname(env.EVERYOS_AGENT_SOCKET ?? defaults.socketPath)}/agent-apps`,
+    socketPath: env.EVERYOS_AGENT_SOCKET ?? file.socketPath ?? defaults.socketPath,
+    agentKeyFile: env.EVERYOS_AGENT_KEY_FILE ?? file.agentKeyFile ?? defaults.agentKeyFile,
     socketGroup: file.socketGroup ?? defaults.socketGroup,
     logLevel: envLevel ?? file.logLevel ?? (mode === "development" ? "debug" : "info"),
     logFormat: mode === "development" ? "pretty" : "json",
@@ -173,7 +198,7 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     protectedContainers: file.protectedContainers ?? [],
     dockerSocket: file.dockerSocket ?? null,
     tailscaleSocket:
-      (mode === "development" ? env.OTUKEN_TAILSCALE_SOCKET : undefined) ??
+      (mode === "development" ? env.EVERYOS_TAILSCALE_SOCKET : undefined) ??
       file.tailscaleSocket ??
       null,
     terminal: terminalConfig(mode, env, file.terminal),
@@ -181,7 +206,7 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
   };
 }
 
-/** Development: OTUKEN_DEV_TERMINAL=1 opens shells as the developer (the agent's own account). */
+/** Development: EVERYOS_DEV_TERMINAL=1 opens shells as the developer (the agent's own account). */
 function terminalConfig(
   mode: AgentMode,
   env: NodeJS.ProcessEnv,
@@ -194,10 +219,10 @@ function terminalConfig(
       allowRoot: file.allowRoot ?? false,
       python: file.python ?? "/usr/bin/python3",
     };
-  if (mode !== "development" || env.OTUKEN_DEV_TERMINAL !== "1") return null;
+  if (mode !== "development" || env.EVERYOS_DEV_TERMINAL !== "1") return null;
   const python = findOnPath("python3", env.PATH ?? "");
   return python
-    ? { user: userInfo().username, shell: env.OTUKEN_DEV_TERMINAL_SHELL, allowRoot: false, python }
+    ? { user: userInfo().username, shell: env.EVERYOS_DEV_TERMINAL_SHELL, allowRoot: false, python }
     : null;
 }
 

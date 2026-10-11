@@ -1,6 +1,6 @@
 import { homedir } from "node:os";
 import { lstat, readFile, realpath, stat } from "node:fs/promises";
-import type { ComposeAction, ComposeActionResult, ComposeFileCheck } from "@otuken/shared";
+import type { ComposeAction, ComposeActionResult, ComposeFileCheck } from "@everyos/shared";
 import { parse as parseYaml } from "yaml";
 import { CommandError, findExecutable, runCapture, SAFE_ENV } from "../exec.ts";
 import { sanitizeLogText } from "../linux/journal.ts";

@@ -6,7 +6,7 @@ import {
   type IntegrationAudience,
   type IntegrationView,
   type TopicUnavailableReason,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { CheckCircle2, KeyRound, Pencil, Plug, Plus, TriangleAlert, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -163,7 +163,7 @@ function IntegrationItem({
     : [integration.options.container, integration.options.database].filter(Boolean).join(" · ");
   return (
     <li
-      className="flex flex-col gap-2 rounded-otk-md bg-hover/5 p-3"
+      className="flex flex-col gap-2 rounded-everyos-md bg-hover/5 p-3"
       data-testid="integration-item"
     >
       <div className="flex flex-wrap items-start justify-between gap-2">

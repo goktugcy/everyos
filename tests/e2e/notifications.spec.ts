@@ -56,7 +56,7 @@ test("security notifications pop up, are counted, read, muted and cleared per us
 
   // Muting a category: still listed, but no pop-up and no badge.
   await center.getByRole("button", { name: "Bildirim ayarları" }).click();
-  const settings = page.locator('[data-app-id="otuken.settings"]');
+  const settings = page.locator('[data-app-id="everyos.settings"]');
   await settings.getByRole("switch", { name: "Güvenlik bildirimleri" }).click();
   await expect
     .poll(async () => {

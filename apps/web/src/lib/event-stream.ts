@@ -1,4 +1,4 @@
-import { EVENT_TOPICS, type EventTopic, type TopicMessage } from "@otuken/shared";
+import { EVENT_TOPICS, type EventTopic, type TopicMessage } from "@everyos/shared";
 import { useSessionStore } from "../stores/session-store.ts";
 import { api } from "./api.ts";
 

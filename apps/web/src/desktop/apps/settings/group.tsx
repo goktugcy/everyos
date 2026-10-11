@@ -21,7 +21,7 @@ export function SettingsGroup({
           <p className="text-xs leading-relaxed text-fg-muted">{description}</p>
         ) : null}
       </div>
-      <div className="glass-inset flex flex-col gap-4 rounded-otk-lg p-4">{children}</div>
+      <div className="glass-inset flex flex-col gap-4 rounded-everyos-lg p-4">{children}</div>
     </section>
   );
 }

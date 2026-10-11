@@ -1,4 +1,4 @@
-import type { WallpaperMimeType } from "@otuken/shared";
+import type { WallpaperMimeType } from "@everyos/shared";
 
 export interface ImageInfo {
   mime: WallpaperMimeType;

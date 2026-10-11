@@ -1,12 +1,12 @@
-import type { Actor } from "@otuken/agent-protocol";
-import type { Logger } from "@otuken/logger";
-import type { NotificationKind } from "@otuken/shared";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
+import type { NotificationKind } from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import { collectAlerts, type AlertSources, type TaggedAlert } from "../widgets/providers.ts";
 import type { NotificationService } from "./notification-service.ts";
 import { analyzeTailscale } from "../system/tailscale.ts";
 
-/** What the Tailscale checks need to know about this Otuken. */
+/** What the Tailscale checks need to know about this EveryOS. */
 export interface TailscaleContext {
   server: { port: number; publicOrigins: readonly string[] };
   isTrustedProxy: (address: string) => boolean;

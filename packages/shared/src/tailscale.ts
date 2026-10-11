@@ -1,8 +1,8 @@
 import type { TailscaleDetails, TailscaleStatus } from "./schemas/host.ts";
 
 /*
- * Tailscale overview (docs/tailscale.md): this node, remote access to Otuken
- * through Tailscale Serve/Funnel, and warnings worth acting on. Otuken never
+ * Tailscale overview (docs/tailscale.md): this node, remote access to EveryOS
+ * through Tailscale Serve/Funnel, and warnings worth acting on. EveryOS never
  * changes the Tailscale configuration; it only reads and explains it.
  */
 
@@ -27,13 +27,13 @@ export interface TailscaleWarning {
 }
 
 export interface TailscaleRemoteAccess {
-  /** Port the Otuken API listens on. */
+  /** Port the EveryOS API listens on. */
   port: number;
-  /** Serve handlers that forward to Otuken. */
+  /** Serve handlers that forward to EveryOS. */
   urls: Array<{ url: string; funnel: boolean; originAllowed: boolean }>;
   /** The local proxy (127.0.0.1) is a trusted proxy, so client addresses and HTTPS are detected. */
   proxyTrusted: boolean;
-  /** How to publish Otuken on the tailnet when it is not yet published. */
+  /** How to publish EveryOS on the tailnet when it is not yet published. */
   suggestion: { url: string; command: string } | null;
 }
 

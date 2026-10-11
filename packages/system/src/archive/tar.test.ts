@@ -157,7 +157,7 @@ describe("tar", () => {
   });
 
   it.skipIf(!hasTar)("interoperates with the system tar", async () => {
-    temp = mkdtempSync(join(tmpdir(), "otuken-tar-"));
+    temp = mkdtempSync(join(tmpdir(), "everyos-tar-"));
     const deep = `${"klasör-".repeat(20)}/${"b".repeat(120)}`;
     mkdirSync(join(temp, "src", "data", deep), { recursive: true });
     writeFileSync(join(temp, "src", "data", deep, "f.txt"), "sistem");

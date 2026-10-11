@@ -13,9 +13,9 @@ const AppIdsSchema = z
 
 /** Names a backup may contain (anything else in an archive is rejected). */
 export const BACKUP_FILE_NAME =
-  /^(?:manifest\.json|otuken\.db\.gz|config\.yaml|wallpapers\.tar\.gz|homes\.tar\.gz|apps\/[0-9a-f-]{36}\.data\.tar\.gz)$/;
+  /^(?:manifest\.json|(?:everyos|otuken)\.db\.gz|config\.yaml|wallpapers\.tar\.gz|homes\.tar\.gz|apps\/[0-9a-f-]{36}\.data\.tar\.gz)$/;
 
-export const BackupManifestSchema = z
+const BackupManifestV1Schema = z
   .strictObject({
     format: z.literal(BACKUP_FORMAT),
     version: z.literal(BACKUP_FORMAT_VERSION),
@@ -24,7 +24,7 @@ export const BackupManifestSchema = z
     trigger: z.enum(["manual", "schedule", "pre-restore"]),
     createdBy: z.string().max(64).nullable(),
     note: z.string().max(200).nullable(),
-    otukenVersion: z.string().max(32),
+    everyosVersion: z.string().max(32),
     schemaVersion: z.number().int().positive(),
     hostname: z.string().max(255),
     keyId: z.string().regex(/^[a-f0-9]{32}$/),
@@ -82,6 +82,15 @@ export const BackupManifestSchema = z
     "home archive mismatch",
   );
 
+/** Normalize the former product name without changing checksummed archive payloads. */
+export const BackupManifestSchema = z.preprocess((value: unknown) => {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return value;
+  const raw = value as Record<string, unknown>;
+  if (raw.format !== "otuken-backup" || "everyosVersion" in raw) return value;
+  const { otukenVersion, ...rest } = raw;
+  return { ...rest, format: BACKUP_FORMAT, everyosVersion: otukenVersion };
+}, BackupManifestV1Schema);
+
 export const BackupCreateRequestSchema = z.strictObject({
   /** Apps whose data to include (each is stopped while its data is copied). */
   apps: AppIdsSchema.default([]),
@@ -105,7 +114,7 @@ export const BackupDownloadQuerySchema = z.strictObject({
 
 export const RestoreRequestSchema = z
   .strictObject({
-    /** Otuken's own data: nothing, every user's desktop, or the whole database. */
+    /** EveryOS's own data: nothing, every user's desktop, or the whole database. */
     settings: z.enum(["none", "desktop", "database"]),
     /** Apps whose data to restore (each is stopped while its data is replaced). */
     apps: AppIdsSchema,

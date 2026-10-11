@@ -1,15 +1,15 @@
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { AgentClientError, type Actor, type AgentConnectionState } from "@otuken/agent-protocol";
-import { migrate, openDatabase, OTUKEN_MIGRATIONS, type Database } from "@otuken/database";
-import { silentLogger } from "@otuken/logger";
+import { AgentClientError, type Actor, type AgentConnectionState } from "@everyos/agent-protocol";
+import { migrate, openDatabase, EVERYOS_MIGRATIONS, type Database } from "@everyos/database";
+import { silentLogger } from "@everyos/logger";
 import {
   createAptSimulator,
   createDockerSimulator,
   DockerError,
   type DockerApi,
-} from "@otuken/system";
+} from "@everyos/system";
 import {
   CSRF_HEADER,
   type LogEntry,
@@ -18,7 +18,7 @@ import {
   type ServiceList,
   type SessionInfo,
   type SystemInfo,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { Hono } from "hono";
 import { createApp } from "./app.ts";
 import { loadApiConfig, type ApiConfig } from "./config.ts";
@@ -31,7 +31,7 @@ export const STRONG_PASSWORD = "mavi-gokyuzu-ve-daglar-42";
 
 export const sampleSystemInfo: SystemInfo = {
   source: "host",
-  hostname: "otuken-test",
+  hostname: "everyos-test",
   platform: "linux",
   arch: "arm64",
   kernel: "6.8.0",
@@ -160,7 +160,7 @@ export function sampleLogEntry(n: number): LogEntry {
     unit: "ssh.service",
     identifier: "sshd",
     pid: 100,
-    hostname: "otuken-test",
+    hostname: "everyos-test",
     message: `entry ${n}`,
   };
 }
@@ -294,7 +294,7 @@ export class FakeAgent implements AgentGateway {
         if (unit === "ssh.service") {
           throw new AgentClientError(
             "AGENT_OPERATION_DENIED",
-            'PROTECTED_UNIT: ssh.service is protected; "stop" is not allowed from Otuken',
+            'PROTECTED_UNIT: ssh.service is protected; "stop" is not allowed from EveryOS',
             "policy_denied",
           );
         }
@@ -462,12 +462,12 @@ export interface TestContext {
 export async function createTestContext(
   options: { configure?: (config: ApiConfig) => void; webDir?: string } = {},
 ): Promise<TestContext> {
-  const dir = mkdtempSync(join(tmpdir(), "otuken-api-"));
-  const config = loadApiConfig({ OTUKEN_ENV: "development", OTUKEN_DEV_ROOT: dir });
+  const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));
+  const config = loadApiConfig({ EVERYOS_ENV: "development", EVERYOS_DEV_ROOT: dir });
   if (options.webDir) config.paths.webDir = options.webDir;
   options.configure?.(config);
   const db = openDatabase(config.paths.databaseFile);
-  await migrate(db, OTUKEN_MIGRATIONS);
+  await migrate(db, EVERYOS_MIGRATIONS);
   const agent = new FakeAgent();
   const clock = { now: 1_760_000_000_000 };
   agent.now = () => clock.now;

@@ -6,7 +6,7 @@ import {
   type WidgetPlacement,
   type WidgetPreferences,
   type WidgetSize,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { cellsOf, sizesFor, supportsPlacement } from "./compat.ts";
 import { defaultConfig } from "./config.ts";
 import { getWidget } from "./manifests.ts";

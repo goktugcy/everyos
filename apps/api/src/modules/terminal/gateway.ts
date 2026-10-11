@@ -1,7 +1,7 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
-import { ROLE_PERMISSIONS } from "@otuken/shared";
-import { TerminalConnectQuerySchema } from "@otuken/shared/schemas";
+import { ROLE_PERMISSIONS } from "@everyos/shared";
+import { TerminalConnectQuerySchema } from "@everyos/shared/schemas";
 import { WebSocketServer } from "ws";
 import { resolveClientInfo } from "../../http/client-info.ts";
 import { SECURE_SESSION_COOKIE, SESSION_COOKIE } from "../auth/session-cookie.ts";

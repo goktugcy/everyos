@@ -1,5 +1,5 @@
 import { stat } from "node:fs/promises";
-import type { AptUpdates } from "@otuken/shared";
+import type { AptUpdates } from "@everyos/shared";
 import { findExecutable, runCommand } from "../exec.ts";
 import { parseAptUpgradable } from "../linux/apt.ts";
 import { UnavailableError } from "../unavailable.ts";
@@ -16,7 +16,7 @@ async function listsUpdatedAt(): Promise<number | null> {
 }
 
 /**
- * Pending package updates from the local package lists. Read-only: Otuken
+ * Pending package updates from the local package lists. Read-only: EveryOS
  * never runs `apt update`; the lists are as fresh as apt's own timers left them.
  */
 export async function collectAptUpdates(): Promise<AptUpdates> {

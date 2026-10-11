@@ -1,4 +1,4 @@
-import type { FileEntry, FileRootView } from "@otuken/shared";
+import type { FileEntry, FileRootView } from "@everyos/shared";
 import { useEffect, useState } from "react";
 import { usePermissions } from "../../stores/session-store.ts";
 import { filesApi, useFilesRevision, type FileLocation } from "../apps/files/lib.ts";

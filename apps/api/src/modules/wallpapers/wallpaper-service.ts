@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import type { Database } from "@otuken/database";
-import { randomToken } from "@otuken/security";
+import type { Database } from "@everyos/database";
+import { randomToken } from "@everyos/security";
 import {
   MAX_FOLDER_ICON_BYTES,
   MAX_FOLDER_ICON_EDGE,
@@ -13,7 +13,7 @@ import {
   MAX_WALLPAPERS_PER_USER,
   type WallpaperInfo,
   type WallpaperMimeType,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { ApiError } from "../../http/errors.ts";
 import { probeImage } from "./image-probe.ts";
 

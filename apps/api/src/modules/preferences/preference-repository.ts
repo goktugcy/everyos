@@ -1,7 +1,7 @@
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
-import { PREFERENCE_KEYS, type PreferenceKey } from "@otuken/shared";
-import { PREFERENCE_SCHEMAS, type PreferenceDocuments } from "@otuken/shared/schemas";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
+import { PREFERENCE_KEYS, type PreferenceKey } from "@everyos/shared";
+import { PREFERENCE_SCHEMAS, type PreferenceDocuments } from "@everyos/shared/schemas";
 
 interface PreferenceRow {
   key: string;

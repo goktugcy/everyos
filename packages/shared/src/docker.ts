@@ -1,6 +1,6 @@
 /*
  * Zod-free constants and view types for Docker management. Runtime schemas
- * live in "@otuken/shared/schemas" (schemas/docker.ts).
+ * live in "@everyos/shared/schemas" (schemas/docker.ts).
  */
 
 export const CONTAINER_ACTIONS = ["start", "stop", "restart"] as const;
@@ -33,11 +33,11 @@ export const HEALTH_STATES = ["healthy", "unhealthy", "starting", "none"] as con
 export type HealthState = (typeof HEALTH_STATES)[number];
 
 /**
- * Who manages a Docker resource. Decided only from Otuken's own records,
+ * Who manages a Docker resource. Decided only from EveryOS's own records,
  * never from container labels (images can carry arbitrary labels).
- * - managed: installed by the Otuken App Store (Phase 5)
+ * - managed: installed by the EveryOS App Store (Phase 5)
  * - imported: a Compose project the owner explicitly imported
- * - external: everything else; Otuken never claims ownership
+ * - external: everything else; EveryOS never claims ownership
  */
 export const DOCKER_OWNERSHIP = ["managed", "imported", "external"] as const;
 
@@ -64,7 +64,7 @@ export const CONTAINER_RISKS = [
 
 export type ContainerRisk = (typeof CONTAINER_RISKS)[number];
 
-/** Docker object identifiers accepted by Otuken (no names, paths or options). */
+/** Docker object identifiers accepted by EveryOS (no names, paths or options). */
 export const CONTAINER_ID_PATTERN = /^[a-f0-9]{12,64}$/;
 export const IMAGE_ID_PATTERN = /^(sha256:)?[a-f0-9]{12,64}$/;
 export const NETWORK_ID_PATTERN = /^[a-f0-9]{12,64}$/;

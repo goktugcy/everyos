@@ -1,4 +1,4 @@
-import type { AppJobView, CatalogAppView, InstalledAppView } from "@otuken/shared";
+import type { AppJobView, CatalogAppView, InstalledAppView } from "@everyos/shared";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -120,7 +120,7 @@ export function InstallDialog({
                 src={url}
                 loading="lazy"
                 alt={t("appStore.screenshot", { index: index + 1 })}
-                className="h-36 max-w-64 shrink-0 rounded-otk-sm object-contain"
+                className="h-36 max-w-64 shrink-0 rounded-everyos-sm object-contain"
               />
             ))}
           </div>

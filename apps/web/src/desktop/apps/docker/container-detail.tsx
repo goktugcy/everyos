@@ -5,8 +5,8 @@ import type {
   ContainerStatsHistory,
   ContainerStatsPoint,
   DockerOwnership,
-} from "@otuken/shared";
-import { isErrorCode } from "@otuken/shared";
+} from "@everyos/shared";
+import { isErrorCode } from "@everyos/shared";
 import { ArrowLeft, Lock, Pause, Play, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -122,7 +122,7 @@ function Overview({ detail }: { detail: Detail }) {
             {detail.ports.map((port) => (
               <li
                 key={`${port.privatePort}/${port.type}/${port.publicPort ?? ""}`}
-                className="glass-inset rounded-otk-sm px-2 py-1"
+                className="glass-inset rounded-everyos-sm px-2 py-1"
               >
                 {port.publicPort !== null ? `${port.publicPort} → ` : ""}
                 {port.privatePort}/{port.type}
@@ -158,7 +158,7 @@ function Overview({ detail }: { detail: Detail }) {
         <p className="text-xs text-fg-subtle">{t("docker.detail.envHelp")}</p>
         <ul className="flex flex-wrap gap-1.5 font-mono text-xs">
           {detail.envKeys.map((key) => (
-            <li key={key} className="glass-inset rounded-otk-sm px-2 py-0.5">
+            <li key={key} className="glass-inset rounded-everyos-sm px-2 py-0.5">
               {key}
             </li>
           ))}
@@ -249,7 +249,7 @@ function Stats({ id, running }: { id: string; running: boolean }) {
             {
               id: "cpu",
               label: t("docker.stats.cpu"),
-              color: "var(--otk-chart-1)",
+              color: "var(--everyos-chart-1)",
               values: points.map((p) => p.cpuPercent),
             },
           ],
@@ -278,7 +278,7 @@ function Stats({ id, running }: { id: string; running: boolean }) {
             {
               id: "mem",
               label: t("docker.stats.memory"),
-              color: "var(--otk-chart-1)",
+              color: "var(--everyos-chart-1)",
               values: points.map((p) => p.memoryBytes),
             },
           ],
@@ -300,13 +300,13 @@ function Stats({ id, running }: { id: string; running: boolean }) {
             {
               id: "rx",
               label: t("monitor.download"),
-              color: "var(--otk-chart-1)",
+              color: "var(--everyos-chart-1)",
               values: points.map((p) => p.netRxBytesPerSec),
             },
             {
               id: "tx",
               label: t("monitor.upload"),
-              color: "var(--otk-chart-2)",
+              color: "var(--everyos-chart-2)",
               values: points.map((p) => p.netTxBytesPerSec),
             },
           ],
@@ -328,13 +328,13 @@ function Stats({ id, running }: { id: string; running: boolean }) {
             {
               id: "read",
               label: t("monitor.read"),
-              color: "var(--otk-chart-1)",
+              color: "var(--everyos-chart-1)",
               values: points.map((p) => p.blockReadBytesPerSec),
             },
             {
               id: "write",
               label: t("monitor.write"),
-              color: "var(--otk-chart-2)",
+              color: "var(--everyos-chart-2)",
               values: points.map((p) => p.blockWriteBytesPerSec),
             },
           ],
@@ -433,7 +433,7 @@ function Logs({ id }: { id: string }) {
       </div>
       <ResourceError error={error} />
       <div
-        className="glass-inset max-h-[28rem] min-h-40 overflow-auto rounded-otk-md p-2"
+        className="glass-inset max-h-[28rem] min-h-40 overflow-auto rounded-everyos-md p-2"
         data-testid="docker-logs"
       >
         {lines.length === 0 ? (
@@ -532,7 +532,7 @@ export function ContainerDetailPanel({
         <button
           type="button"
           onClick={onBack}
-          className="grid size-8 shrink-0 place-items-center rounded-otk-sm text-fg-muted outline-none hover:bg-hover/10 focus-visible:ring-2 focus-visible:ring-accent @3xl:hidden"
+          className="grid size-8 shrink-0 place-items-center rounded-everyos-sm text-fg-muted outline-none hover:bg-hover/10 focus-visible:ring-2 focus-visible:ring-accent @3xl:hidden"
           aria-label={t("common.back")}
         >
           <ArrowLeft className="size-4" aria-hidden />

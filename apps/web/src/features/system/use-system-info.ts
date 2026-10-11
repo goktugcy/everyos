@@ -1,4 +1,4 @@
-import type { SystemInfo } from "@otuken/shared";
+import type { SystemInfo } from "@everyos/shared";
 import { useEffect, useState } from "react";
 import { api } from "../../lib/api.ts";
 

@@ -3,7 +3,7 @@ import type {
   TailscaleDetails,
   TailscaleOverview,
   TailscaleStatus,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import { analyzeTailscale, serveTarget } from "./modules/system/tailscale.ts";
 import { json, withRoles, type TestContext } from "./test-support.ts";
@@ -106,7 +106,7 @@ function useTailscale(ctx: TestContext, s: TailscaleStatus, d: TailscaleDetails)
 }
 
 describe("tailscale analysis", () => {
-  it("recognizes Serve targets that point at Otuken", () => {
+  it("recognizes Serve targets that point at EveryOS", () => {
     expect(serveTarget("7470")).toEqual({ host: "127.0.0.1", port: 7470 });
     expect(serveTarget("localhost:7470")).toEqual({ host: "localhost", port: 7470 });
     expect(serveTarget("http://127.0.0.1:7470")).toEqual({ host: "127.0.0.1", port: 7470 });
@@ -114,7 +114,7 @@ describe("tailscale analysis", () => {
     expect(serveTarget("http://example.com")).toEqual({ host: "example.com", port: 80 });
   });
 
-  it("suggests the recommended Serve setup when Otuken is not published", () => {
+  it("suggests the recommended Serve setup when EveryOS is not published", () => {
     const result = analyze(status(), details());
     expect(result.warnings).toEqual([]);
     expect(result.remoteAccess).toEqual({
@@ -128,7 +128,7 @@ describe("tailscale analysis", () => {
     });
   });
 
-  it("checks a published Otuken against its configuration", () => {
+  it("checks a published EveryOS against its configuration", () => {
     const configured = analyze(
       status(),
       details([proxy("http://127.0.0.1:7470"), proxy("http://127.0.0.1:3000", false, 8443)]),

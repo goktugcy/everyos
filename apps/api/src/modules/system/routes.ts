@@ -2,8 +2,8 @@ import {
   EmptyDesktopQuerySchema,
   MetricsHistoryQuerySchema,
   ProcessQuerySchema,
-} from "@otuken/shared/schemas";
-import type { TailscaleOverview } from "@otuken/shared";
+} from "@everyos/shared/schemas";
+import type { TailscaleOverview } from "@everyos/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { callAgent } from "../../http/agent.ts";

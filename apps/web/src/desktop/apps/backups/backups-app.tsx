@@ -1,4 +1,4 @@
-import type { BackupOverview, BackupView } from "@otuken/shared";
+import type { BackupOverview, BackupView } from "@everyos/shared";
 import {
   CircleCheck,
   Download,
@@ -226,7 +226,7 @@ export default function BackupsApp() {
         ) : null}
         {data && data.backups.length > 0 ? (
           <table className="w-full min-w-[760px] text-left text-sm">
-            <thead className="sticky top-0 z-10 bg-[rgb(var(--otk-surface)/0.95)] text-xs text-fg-muted">
+            <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
               <tr>
                 <th scope="col" className="px-4 py-1.5 font-semibold">
                   {t("backups.columns.created")}

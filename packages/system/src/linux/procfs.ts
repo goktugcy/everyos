@@ -1,4 +1,4 @@
-import type { CpuTimes, MetricsSample } from "@otuken/shared";
+import type { CpuTimes, MetricsSample } from "@everyos/shared";
 
 /*
  * Pure parsers for Linux /proc files. Each takes the file content and

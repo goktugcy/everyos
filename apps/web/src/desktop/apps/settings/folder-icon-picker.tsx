@@ -4,7 +4,7 @@ import {
   WALLPAPER_MIME_TYPES,
   type FolderIconSpec,
   type WallpaperInfo,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -107,7 +107,7 @@ export function FolderIconPicker({
                 onClick={() => onChange(spec)}
                 data-folder-icon-option={id}
                 className={cn(
-                  "flex w-full flex-col items-center gap-1 rounded-otk-md border p-2 outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50",
+                  "flex w-full flex-col items-center gap-1 rounded-everyos-md border p-2 outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50",
                   selected ? "border-accent bg-accent/10" : "border-line hover:bg-hover/8",
                 )}
               >

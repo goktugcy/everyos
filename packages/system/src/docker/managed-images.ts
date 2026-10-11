@@ -1,5 +1,5 @@
 import { parse, stringify } from "yaml";
-import type { AppImage } from "@otuken/shared";
+import type { AppImage } from "@everyos/shared";
 import { findExecutable, runCapture, SAFE_ENV } from "../exec.ts";
 import { homedir } from "node:os";
 

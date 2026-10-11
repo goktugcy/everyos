@@ -1,12 +1,12 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import type { Logger } from "@otuken/logger";
-import { randomToken, safeEqual } from "@otuken/security";
+import type { Logger } from "@everyos/logger";
+import { randomToken, safeEqual } from "@everyos/security";
 import type { UserRepository } from "../users/user-repository.ts";
 
 /**
  * First-run setup is gated by a one-time token stored in a file that only the
- * otuken user (and root) can read. This prevents anyone else on the network
+ * everyos user (and root) can read. This prevents anyone else on the network
  * from claiming a freshly installed instance before its owner does.
  */
 export class SetupService {

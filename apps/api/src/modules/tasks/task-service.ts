@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Actor } from "@otuken/agent-protocol";
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
 import {
   nextRun,
   parseCron,
@@ -14,7 +14,7 @@ import {
   type TaskRunView,
   type TaskType,
   type TaskView,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { ApiError, forbidden, notFound } from "../../http/errors.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
 import type { NotificationService } from "../notifications/notification-service.ts";

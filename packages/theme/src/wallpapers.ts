@@ -1,4 +1,4 @@
-import type { WallpaperPresetId } from "@otuken/shared";
+import type { WallpaperPresetId } from "@everyos/shared";
 
 /**
  * Built-in wallpapers are generated with CSS gradients (no image assets), so
@@ -17,8 +17,8 @@ export interface WallpaperPreset {
 }
 
 export const WALLPAPER_PRESETS: Record<WallpaperPresetId, WallpaperPreset> = {
-  "otuken-dusk": {
-    id: "otuken-dusk",
+  "everyos-dusk": {
+    id: "everyos-dusk",
     scheme: "dark",
     style: "dusk",
     colors: { base: "#070b18", a: "#38bdf8", b: "#6366f1", c: "#10b981" },

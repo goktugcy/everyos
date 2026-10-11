@@ -1,4 +1,4 @@
-import { DEFAULT_APPEARANCE } from "@otuken/theme";
+import { DEFAULT_APPEARANCE } from "@everyos/theme";
 import { expect, it, vi } from "vitest";
 import { relocateFolderIcons } from "./folder-icon-ops.ts";
 

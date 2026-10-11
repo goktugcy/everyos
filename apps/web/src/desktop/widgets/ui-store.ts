@@ -1,4 +1,4 @@
-import type { IntegrationAdapter, LocalizedText, WidgetPlacement } from "@otuken/shared";
+import type { IntegrationAdapter, LocalizedText, WidgetPlacement } from "@everyos/shared";
 import { create } from "zustand";
 
 /** An installed app whose widgets the user may want to add ("Available widgets…"). */
@@ -6,7 +6,7 @@ export interface WidgetOffer {
   appId: string;
   name: LocalizedText;
   adapters: IntegrationAdapter[];
-  /** Address the Otuken server can reach the app at (pre-fills a new connection). */
+  /** Address the EveryOS server can reach the app at (pre-fills a new connection). */
   baseUrl: string | null;
 }
 

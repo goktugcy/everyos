@@ -1,12 +1,13 @@
 /*
  * Zod-free entry point, safe for browser bundles. Validation schemas live in
- * "@otuken/shared/schemas"; only their inferred *types* are re-exported here
+ * "@everyos/shared/schemas"; only their inferred *types* are re-exported here
  * (type-only exports are erased at runtime).
  */
 export * from "./api-types.ts";
 export * from "./catalogs.ts";
 export * from "./docker.ts";
 export * from "./errors.ts";
+export * from "./environment.ts";
 export * from "./files.ts";
 export * from "./host.ts";
 export * from "./locale.ts";
@@ -91,9 +92,9 @@ export type {
 } from "./schemas/api.ts";
 
 /** Single coordinated product version (see docs/decisions.md). */
-export const OTUKEN_VERSION = "0.1.0";
+export const EVERYOS_VERSION = "0.1.0";
 
 /** HTTP header carrying the per-session CSRF token on state-changing requests. */
-export const CSRF_HEADER = "x-otuken-csrf";
+export const CSRF_HEADER = "x-everyos-csrf";
 
 export * from "./power.ts";

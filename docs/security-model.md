@@ -1,6 +1,6 @@
-# Otuken security model
+# EveryOS security model
 
-Otuken manages a server: anyone who controls an administrator session can, by design, change the
+EveryOS manages a server: anyone who controls an administrator session can, by design, change the
 host. The security model therefore concentrates on (1) making sure only the right people get a
 session, (2) limiting what each role can do, (3) keeping the privileged component small and
 non-generic, and (4) leaving an audit trail.
@@ -16,9 +16,9 @@ flowchart LR
     N[Network clients]
     C[Catalog content<br/>compose files, metadata, icons]
   end
-  subgraph Otuken
+  subgraph EveryOS
     W[Web client]
-    A[API · user otuken]
+    A[API · user everyos]
     G[Agent · root]
   end
   H[Host OS, Docker daemon]
@@ -48,18 +48,18 @@ flowchart LR
   untrusted hop from the right **[P1]**.
 - The UI warns when the connection is plain HTTP from a non-loopback address; plain HTTP is never
   silently treated like HTTPS **[P1]**.
-- Otuken never opens firewall ports **[policy]**.
+- EveryOS never opens firewall ports **[policy]**.
 
 ## Authentication
 
-| Mechanism                | Details                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| First-run setup **[P1]** | `POST /api/setup` works only while no user exists, and requires a one-time token. The token is written to `/var/lib/otuken/setup-token` (mode 0600) and is readable only by the `otuken` user and root. The token file is deleted after setup and the endpoint answers `409` from then on. Admin creation re-checks "no users" inside a write transaction. |
-| Passwords **[P1]**       | scrypt (N=2¹⁶, r=8, p=2, 16-byte salt, self-describing format with transparent rehash when parameters increase). Unicode NFKC normalization. The policy requires 10–256 characters, rejects passwords that contain the username or are common, and rejects repetitive ones.                                                                                |
-| Timing **[P1]**          | Unknown usernames run a dummy verification so response time does not reveal which accounts exist. Unknown user and wrong password return the same error.                                                                                                                                                                                                   |
-| Sessions **[P1]**        | 256-bit random token in an `HttpOnly`, `SameSite=Strict` cookie (`__Host-` prefix and `Secure` over HTTPS). Only the SHA-256 of the token is stored. Sessions have a 12 h idle timeout and a 7-day absolute lifetime (both configurable). Logout, password change, account disabling and admin password resets revoke sessions server-side.                |
-| Second factor **[P1]**   | Optional TOTP (RFC 6238, SHA-1, 30 s, 6 digits, ±1 step) with replay protection: the last accepted step is persisted. The challenge is bound to the client IP, valid for 5 minutes, and allows at most 5 attempts. Users get 10 single-use recovery codes, stored as hashes. Disabling 2FA requires the password and a valid code.                         |
-| Brute force **[P1]**     | In-memory progressive lockouts per IP (20 failures / 15 min) and per account (5 failures, lock starting at 1 min, doubling up to 15 min). Re-authentication inside a session is limited separately. Lockouts are temporary by design, so an attacker cannot permanently lock out the administrator.                                                        |
+| Mechanism                | Details                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| First-run setup **[P1]** | `POST /api/setup` works only while no user exists, and requires a one-time token. The token is written to `/var/lib/everyos/setup-token` (mode 0600) and is readable only by the `everyos` user and root. The token file is deleted after setup and the endpoint answers `409` from then on. Admin creation re-checks "no users" inside a write transaction. |
+| Passwords **[P1]**       | scrypt (N=2¹⁶, r=8, p=2, 16-byte salt, self-describing format with transparent rehash when parameters increase). Unicode NFKC normalization. The policy requires 10–256 characters, rejects passwords that contain the username or are common, and rejects repetitive ones.                                                                                  |
+| Timing **[P1]**          | Unknown usernames run a dummy verification so response time does not reveal which accounts exist. Unknown user and wrong password return the same error.                                                                                                                                                                                                     |
+| Sessions **[P1]**        | 256-bit random token in an `HttpOnly`, `SameSite=Strict` cookie (`__Host-` prefix and `Secure` over HTTPS). Only the SHA-256 of the token is stored. Sessions have a 12 h idle timeout and a 7-day absolute lifetime (both configurable). Logout, password change, account disabling and admin password resets revoke sessions server-side.                  |
+| Second factor **[P1]**   | Optional TOTP (RFC 6238, SHA-1, 30 s, 6 digits, ±1 step) with replay protection: the last accepted step is persisted. The challenge is bound to the client IP, valid for 5 minutes, and allows at most 5 attempts. Users get 10 single-use recovery codes, stored as hashes. Disabling 2FA requires the password and a valid code.                           |
+| Brute force **[P1]**     | In-memory progressive lockouts per IP (20 failures / 15 min) and per account (5 failures, lock starting at 1 min, doubling up to 15 min). Re-authentication inside a session is limited separately. Lockouts are temporary by design, so an attacker cannot permanently lock out the administrator.                                                          |
 
 ## Authorization
 
@@ -109,7 +109,7 @@ For state-changing requests:
 1. Requests whose `Sec-Fetch-Site` is not `same-origin` or `none` are rejected.
 2. If `Origin` is present, it must equal the origin the browser used (derived from `Host`, or from
    trusted forwarded headers) or one of `server.publicOrigins`.
-3. Authenticated requests must send `X-Otuken-CSRF`, whose value is
+3. Authenticated requests must send `X-EveryOS-CSRF`, whose value is
    HMAC(server key, session id). The credential-submission endpoints (setup, login) need no token
    but still pass the origin checks.
 
@@ -121,7 +121,7 @@ Every response carries a strict CSP (`script-src 'self'`, `object-src 'none'`,
 
 ## Secrets at rest **[P1]**
 
-- `/var/lib/otuken/secret.key` holds a 256-bit master key, created on first start with mode 0600.
+- `/var/lib/everyos/secret.key` holds a 256-bit master key, created on first start with mode 0600.
   HKDF-SHA256 derives independent subkeys per purpose (`otuken/secret-box/v1`, `otuken/csrf/v1`, …).
 - Secrets that must be recoverable (TOTP seeds now, application API tokens later) are encrypted
   with AES-256-GCM. The ciphertext is bound to its row and purpose through additional
@@ -135,12 +135,12 @@ Every response carries a strict CSP (`script-src 'self'`, `object-src 'none'`,
 The agent is the only component with root privileges. Its interface is deliberately narrow:
 
 - **Transport [P1]:** Unix domain socket only, never TCP. In production the socket is
-  `root:otuken 0660` inside `/run/otuken` (`root:otuken 0750`). The socket is created under a
+  `root:everyos 0660` inside `/run/everyos` (`root:everyos 0750`). The socket is created under a
   restrictive umask, so it is never briefly world-accessible.
 - **Peer authentication [P1]:** Node.js cannot read `SO_PEERCRED`. Peer identity is enforced at
-  group level instead: filesystem permissions allow only `root` and the `otuken` group to connect,
-  and a mutual HMAC-SHA256 challenge–response proves possession of `/etc/otuken/agent.key`
-  (`root:otuken 0640`, created by the agent). The agent also proves the key back, so the API never
+  group level instead: filesystem permissions allow only `root` and the `everyos` group to connect,
+  and a mutual HMAC-SHA256 challenge–response proves possession of `/etc/everyos/agent.key`
+  (`root:everyos 0640`, created by the agent). The agent also proves the key back, so the API never
   talks to an impostor socket. Unauthenticated peers get a single `fatal` frame and are disconnected
   after 5 s at most.
 - **Operation registry [P1, P3]:** the agent executes only operations defined in
@@ -158,9 +158,9 @@ The agent is the only component with root privileges. Its interface is deliberat
 - **Defense in depth [P1, P3]:** every request carries the acting user (id, username, role,
   session, IP). The agent re-derives permissions from the role and evaluates an operation policy
   (`apps/agent/src/policy.ts`). Protected units (`apps/agent/src/protection.ts`: SSH, Tailscale,
-  Otuken and its agent, D-Bus, polkit, NetworkManager/networking, `systemd-*`, gettys, user
+  EveryOS and its agent, D-Bus, polkit, NetworkManager/networking, `systemd-*`, gettys, user
   managers, plus `protectedUnits` from `agent.yaml`) accept only `start`, regardless of role, so
-  Otuken can neither lock the owner out of a headless server nor change those units' boot setup. Unknown
+  EveryOS can neither lock the owner out of a headless server nor change those units' boot setup. Unknown
   roles or malformed frames close the connection.
 - **Least disclosure [P3]:** process command lines can contain credentials passed as arguments;
   the agent returns them only to actors whose role holds `system:manage`.
@@ -171,8 +171,8 @@ The agent is the only component with root privileges. Its interface is deliberat
   processes) when the API disconnects. Streams respect socket backpressure on the agent side and a
   bounded per-stream queue on the API side. Unexpected handler errors return a generic message and
   never leak internals.
-- **Configuration [P1]:** the agent reads only root-owned configuration (`/etc/otuken/agent.yaml`)
-  and never trusts files that the `otuken` user can write.
+- **Configuration [P1]:** the agent reads only root-owned configuration (`/etc/everyos/agent.yaml`)
+  and never trusts files that the `everyos` user can write.
 - **systemd hardening [planned, Phase 8]:** `ProtectSystem`, `ProtectHome`, `PrivateTmp`,
   `NoNewPrivileges` (where compatible with the operation set), `RestrictAddressFamilies=AF_UNIX`,
   `KillMode=control-group` (so no child process outlives the agent), plus `MemoryMax` and
@@ -185,14 +185,14 @@ unprivileged and exposes a small attack surface.
 
 ## Development mode
 
-- `OTUKEN_ENV=development` keeps all state in `./.dev` with 0600 keys and sockets.
+- `EVERYOS_ENV=development` keeps all state in `./.dev` with 0600 keys and sockets.
 - The dev orchestrator and the agent refuse to run as root, so development never holds real
   privileges.
 - The setup token is printed to the console only in development mode. In production the log line
   names the file instead.
 - A development agent reads real host data where it exists but its policy refuses every service
   or Docker change against the real host (`DEVELOPMENT_MODE`). Where systemd/journald or the
-  Docker socket are missing, or with `OTUKEN_AGENT_SIMULATE=1`, the corresponding operations
+  Docker socket are missing, or with `EVERYOS_AGENT_SIMULATE=1`, the corresponding operations
   use an in-memory simulator whose
   data is marked `source: "simulated"` and labeled in the UI. Production never simulates.
 
@@ -214,12 +214,12 @@ unprivileged and exposes a small attack surface.
   Logs require both `docker:read` and `logs:read`. Applications can write secrets into logs/health
   output; those outputs remain sensitive and are not guaranteed to be secret-free.
 - Local Compose files can change after import and remain trusted host configuration, not immutable
-  Otuken-managed data. Labels cannot cause execution without an explicit import/action. Remote
+  EveryOS-managed data. Labels cannot cause execution without an explicit import/action. Remote
   catalog validation and installation policy remain Phase 5 work.
 
 ## Widgets and application integrations **[P6]**
 
-- **Built-in code only.** Widget renderers and app adapters are compiled into Otuken. Catalogs
+- **Built-in code only.** Widget renderers and app adapters are compiled into EveryOS. Catalogs
   can at most be _matched_ to a built-in adapter, and matching uses deployed image repositories,
   never catalog claims. No remote or third-party JavaScript runs in the desktop.
 - **Data minimization in the API.** Feeds return only what widgets display:
@@ -283,13 +283,13 @@ unprivileged and exposes a small attack surface.
   checksums. Restores verify first, take a safety backup, refuse database restores from another
   installation's secret, and stage database replacement for the next start. App data is only read
   or replaced while the app is stopped; the agent validates archives completely before extracting
-  them into a fresh directory without following links and strips setuid/setgid bits. Otuken
+  them into a fresh directory without following links and strips setuid/setgid bits. EveryOS
   account homes and trash are also backed up, with bounded no-follow archives, drained file
   requests, fully validated extraction, account-id matching, safety backups and rollback on failed
   directory swaps. Restoring homes never creates accounts or changes arbitrary file roots.
 - **Tailscale** ([tailscale.md](tailscale.md)): read-only LocalAPI `GET` requests; only displayed
-  fields leave the agent; the device list is administrator-only; exposure of Otuken through Funnel
-  raises a security notification. Otuken never changes the Tailscale configuration.
+  fields leave the agent; the device list is administrator-only; exposure of EveryOS through Funnel
+  raises a security notification. EveryOS never changes the Tailscale configuration.
 - **Terminal** ([terminal.md](terminal.md)): the agent, API gateway and browser client use the
   administrator-only `terminal:access` permission. Disabled until an account is configured;
   root requires explicit agent configuration. Cookie-authenticated upgrades check Origin and

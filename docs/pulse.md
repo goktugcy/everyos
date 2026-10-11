@@ -1,7 +1,7 @@
 # Menu bar and pulse
 
 The desktop's menu bar follows macOS, without a background: items sit directly on the wallpaper
-(a soft shadow, or a light halo in light themes, keeps them legible). On the left are the Otuken
+(a soft shadow, or a light halo in light themes, keeps them legible). On the left are the EveryOS
 logo menu and the focused app's name in bold; on the right, monochrome status items (widgets,
 notifications, resources, network, agent, desktops, search, quick settings) and the clock as
 "Paz 11 Eki 14:33". Windows use macOS "traffic lights" on the left with a centered title; desktop
@@ -49,7 +49,7 @@ pulse") or Settings › Desktop › Pulse. The `pulse` preference document store
 
 **Shelf**
 
-The shelf keeps **references** to files in Otuken's file locations (at most 48, stored in the
+The shelf keeps **references** to files in EveryOS's file locations (at most 48, stored in the
 `pulse` preference so they follow the user to other browsers). Nothing is copied by the shelf
 itself.
 

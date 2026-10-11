@@ -1,4 +1,4 @@
-import type { BatteryReading, PowerStatus } from "@otuken/shared";
+import type { BatteryReading, PowerStatus } from "@everyos/shared";
 import { listDirOrEmpty, readTextOrNull } from "../fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "../host-paths.ts";
 

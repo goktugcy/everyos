@@ -30,7 +30,7 @@ export function Value({
 export function Sparkline({
   values,
   max,
-  color = "var(--otk-chart-1)",
+  color = "var(--everyos-chart-1)",
   className,
 }: {
   values: ReadonlyArray<number | null>;
@@ -83,7 +83,7 @@ export function Bar({
   const clamped = Math.max(0, Math.min(100, percent));
   return (
     <div
-      className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--otk-accent)/0.16)]"
+      className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--everyos-accent)/0.16)]"
       aria-hidden
     >
       <div

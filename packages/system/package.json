@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/system",
+  "name": "@everyos/system",
   "version": "0.1.0",
   "private": true,
-  "description": "Linux host integration for Otuken: host information, metrics, systemd, journald, Tailscale and Docker, with no fabricated values.",
+  "description": "Linux host integration for EveryOS: host information, metrics, systemd, journald, Tailscale and Docker, with no fabricated values.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -12,7 +12,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@otuken/shared": "workspace:*",
+    "@everyos/shared": "workspace:*",
     "yaml": "catalog:"
   }
 }

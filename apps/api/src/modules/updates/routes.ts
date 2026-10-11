@@ -1,4 +1,4 @@
-import { PackageNameSchema, UpgradeRequestSchema } from "@otuken/shared/schemas";
+import { PackageNameSchema, UpgradeRequestSchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";

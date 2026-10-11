@@ -1,19 +1,24 @@
 # Backup and restore (Phase 7)
 
-The **Backups** app (`otuken.backups`) creates, verifies, downloads, uploads and restores
-backups of Otuken itself and of the data of apps installed through the App Store. Backups run
+The **Backups** app (`everyos.backups`) creates, verifies, downloads, uploads and restores
+backups of EveryOS itself and of the data of apps installed through the App Store. Backups run
 as background jobs, one at a time, independent of the HTTP request that started them.
+
+New manifests use `format: "everyos-backup"`, `version: 1` and `everyosVersion`. Older
+`otuken-backup` manifests with `otukenVersion`, `otuken.db.gz` and the old archive prefix remain
+importable and restorable. Renaming archive metadata never changes the checksummed file bytes
+or the encryption key identity.
 
 ## What a backup contains
 
-| File                       | Contents                                                                                                                                                          |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `otuken.db.gz`             | A consistent snapshot of the Otuken database, taken with SQLite's online backup API (never a file copy), with the `sessions` table emptied and the file vacuumed. |
-| `config.yaml`              | The configuration file, when it exists and is readable. For reference only; it is never restored automatically.                                                   |
-| `wallpapers.tar.gz`        | Uploaded wallpapers (`<dataDir>/wallpapers/<userId>/<file>`).                                                                                                     |
-| `apps/<appId>.data.tar.gz` | The app data directory of each selected app (see below).                                                                                                          |
-| `homes.tar.gz`             | Existing Otuken account homes, including standard folders, Desktop files, folder-name metadata and private trash.                                                 |
-| `manifest.json`            | Format version, creation time and trigger, Otuken and schema versions, contents, and the size and SHA-256 of every file. Written last.                            |
+| File                       | Contents                                                                                                                                                           |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `everyos.db.gz`            | A consistent snapshot of the EveryOS database, taken with SQLite's online backup API (never a file copy), with the `sessions` table emptied and the file vacuumed. |
+| `config.yaml`              | The configuration file, when it exists and is readable. For reference only; it is never restored automatically.                                                    |
+| `wallpapers.tar.gz`        | Uploaded wallpapers (`<dataDir>/wallpapers/<userId>/<file>`).                                                                                                      |
+| `apps/<appId>.data.tar.gz` | The app data directory of each selected app (see below).                                                                                                           |
+| `homes.tar.gz`             | Existing EveryOS account homes, including standard folders, Desktop files, folder-name metadata and private trash.                                                 |
+| `manifest.json`            | Format version, creation time and trigger, EveryOS and schema versions, contents, and the size and SHA-256 of every file. Written last.                            |
 
 The database holds accounts, desktop layouts, widgets, preferences, catalogs, managed app
 records (including their sealed Compose files), scheduled tasks, notifications and the audit
@@ -27,18 +32,18 @@ upload, last verification).
 
 ```yaml
 backups:
-  dir: /mnt/usb/otuken-backups # default <dataDir>/backups/archives (e.g. a separate disk)
+  dir: /mnt/usb/everyos-backups # default <dataDir>/backups/archives (e.g. a separate disk)
   minFreeMiB: 1024 # backups never leave less free space than this
   maxUploadMiB: 65536 # largest archive accepted by "Upload backup"
 ```
 
 The location must be a directory owned by the API user and not world-writable; otherwise backups
-are disabled with a reason instead of failing startup. `OTUKEN_BACKUP_DIR` overrides `dir`.
+are disabled with a reason instead of failing startup. `EVERYOS_BACKUP_DIR` overrides `dir`.
 
 ## Personal homes
 
 Every manual, scheduled and pre-restore safety backup includes existing homes for accounts in
-the database snapshot. These are Otuken's `<homesDir>/<userId>` directories, not host OS `/home`
+the database snapshot. These are EveryOS's `<homesDir>/<userId>` directories, not host OS `/home`
 folders or arbitrary configured file locations. Capture runs as the unprivileged API; no agent
 operation or extra permission is introduced. A bounded tar.gz stream records directories, regular
 files and symlinks without following links; special files and other file systems are skipped and
@@ -48,7 +53,7 @@ counted in `contents.homes` and shown as excluded entries in the backup list. Li
 File requests for affected accounts are blocked temporarily and pending file operations drain
 before capture/replacement. External host changes can still happen: changed files fail capture
 rather than producing a falsely verified backup. This is not a snapshot of applications writing
-the same files outside Otuken. Free-space reserves and cancellation apply to the stream.
+the same files outside EveryOS. Free-space reserves and cancellation apply to the stream.
 
 Restore preview lists homes matched to current account **ids**. The explicit **Restore personal
 home folders** checkbox replaces only those homes; newer or removed accounts are not overwritten
@@ -71,8 +76,8 @@ files unless the homes checkbox is also selected.
 ## App data
 
 An app's data can be backed up when **every** mount of its Compose project is a bind mount
-under its Otuken app data directory (the same rule as copying data between installs). Apps
-with named volumes or host paths are shown as unsupported: Otuken does not pretend it can
+under its EveryOS app data directory (the same rule as copying data between installs). Apps
+with named volumes or host paths are shown as unsupported: EveryOS does not pretend it can
 capture them consistently. Apps without mounts keep no persistent data.
 
 Consistency comes from **stopping the app**: the API stops a running app through the normal app
@@ -164,16 +169,16 @@ every task.
 | `GET`    | `/api/backups/:id/download` | `backups:restore` | `?ticket=` → `application/x-tar`                            |
 | `POST`   | `/api/backups/upload`       | `backups:restore` | Raw tar body, `Content-Length` required                     |
 
-The downloaded archive is a plain tar with one top-level directory `otuken-backup-<id>/`; it can
+The downloaded archive is a plain tar with one top-level directory `everyos-backup-<id>/`; it can
 be inspected with standard tools (`tar -tf`).
 
 ## Limitations
 
 - Volume-based app data is not backed up (no volume-aware strategy yet). Arbitrary file roots and
-  host OS homes are not captured; only Otuken-managed personal homes are included.
+  host OS homes are not captured; only EveryOS-managed personal homes are included.
 - Restoring onto a different host requires copying `secret.key` first; restoring app data
   needs the app to be installed with the same id. A full disaster-recovery flow (re-deploying
   apps from restored records) is not implemented.
-- `config.yaml` is never written by Otuken; compare and restore it manually.
+- `config.yaml` is never written by EveryOS; compare and restore it manually.
 - Backups are not encrypted at rest beyond file permissions; put the backup location on an
   encrypted disk if the host's threat model requires it.

@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES, type Locale, type PublicUser } from "@otuken/shared";
+import { SUPPORTED_LOCALES, type Locale, type PublicUser } from "@everyos/shared";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";

@@ -1,13 +1,13 @@
 /*
  * Zod-free constants for host integration (metrics, services, logs,
- * network). Runtime schemas live in "@otuken/shared/schemas" (schemas/host.ts).
+ * network). Runtime schemas live in "@everyos/shared/schemas" (schemas/host.ts).
  */
 
 export const SERVICE_ACTIONS = ["start", "stop", "restart", "reload", "enable", "disable"] as const;
 
 export type ServiceAction = (typeof SERVICE_ACTIONS)[number];
 
-/** systemd unit names Otuken accepts (no paths, no options, no globbing). */
+/** systemd unit names EveryOS accepts (no paths, no options, no globbing). */
 export const UNIT_NAME_PATTERN =
   /^[A-Za-z0-9][A-Za-z0-9:_.\\@-]{0,250}\.(service|socket|timer|target|path|mount)$/;
 

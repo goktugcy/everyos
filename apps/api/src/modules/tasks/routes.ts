@@ -2,7 +2,7 @@ import {
   TaskCalendarQuerySchema,
   TaskCreateRequestSchema,
   TaskUpdateRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";

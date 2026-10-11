@@ -1,5 +1,5 @@
 import * as os from "node:os";
-import type { CpuTimes, MetricsSample } from "@otuken/shared";
+import type { CpuTimes, MetricsSample } from "@everyos/shared";
 import { listDirOrEmpty, pathKind, readTextOrNull } from "../fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "../host-paths.ts";
 import {

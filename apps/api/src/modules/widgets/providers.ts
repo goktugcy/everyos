@@ -1,11 +1,11 @@
-import { AgentClientError, type Actor } from "@otuken/agent-protocol";
+import { AgentClientError, type Actor } from "@everyos/agent-protocol";
 import {
   CAPABILITY_REASONS,
   type LocalizedText,
   type Permission,
   type SystemAlert,
   type TopicUnavailableReason,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import type { DataProvider, ProviderResult } from "./data-hub.ts";
 

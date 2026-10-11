@@ -10,7 +10,7 @@ import {
   ImageSummarySchema,
   NetworkSummarySchema,
   VolumeSummarySchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { afterEach, describe, expect, it } from "vitest";
 import { createDockerSimulator } from "../simulated/docker-simulator.ts";
 import { createDockerClient, DockerError } from "./client.ts";
@@ -545,7 +545,7 @@ describe("docker client", () => {
       ["app_proxy", false],
       ["model-runner", false],
     ]);
-    // Newer servers are addressed at the version Otuken was written for.
+    // Newer servers are addressed at the version EveryOS was written for.
     expect(requests.at(-1)).toMatch(/^GET \/v1\.51\/containers\/json\?all=1/);
   });
 

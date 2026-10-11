@@ -1,9 +1,9 @@
 import { chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
-import { AgentServer } from "@otuken/agent-protocol";
-import { createLogger, serializeError } from "@otuken/logger";
-import { deriveKey, loadKeyFile, SecretBox } from "@otuken/security";
-import { OTUKEN_VERSION } from "@otuken/shared";
+import { AgentServer } from "@everyos/agent-protocol";
+import { createLogger, serializeError } from "@everyos/logger";
+import { deriveKey, loadKeyFile, SecretBox } from "@everyos/security";
+import { EVERYOS_VERSION } from "@everyos/shared";
 import {
   createDockerClient,
   createDockerSimulator,
@@ -19,7 +19,7 @@ import {
   type DockerApi,
   type LogSource,
   type ServiceManager,
-} from "@otuken/system";
+} from "@everyos/system";
 import { ConfigError, loadAgentConfig, resolveGroupId, type AgentConfig } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
 import { TerminalManager } from "./terminal.ts";
@@ -30,7 +30,7 @@ import { createContainerProtection, createUnitProtection } from "./protection.ts
 
 /**
  * Ensures a directory exists and that the API's group can traverse it
- * (root:otuken 0750). Shared or world-writable directories (e.g. /tmp) and
+ * (root:everyos 0750). Shared or world-writable directories (e.g. /tmp) and
  * directories owned by other users are never modified.
  */
 function prepareGroupDirectory(path: string, groupId: number | null): void {
@@ -77,7 +77,7 @@ async function selectBackends(
 async function main(): Promise<void> {
   const config = loadAgentConfig();
   const logger = createLogger({
-    name: "otuken-agent",
+    name: "everyos-agent",
     level: config.logLevel,
     format: config.logFormat,
   });
@@ -96,7 +96,7 @@ async function main(): Promise<void> {
   prepareGroupDirectory(dirname(config.socketPath), groupId);
 
   // The agent (root in production) owns the shared key. It is created on first
-  // start as root:otuken 0640 so the API can read but not modify it.
+  // start as root:everyos 0640 so the API can read but not modify it.
   prepareGroupDirectory(dirname(config.agentKeyFile), groupId);
   const agentKey = loadKeyFile(config.agentKeyFile, {
     create: true,
@@ -131,10 +131,7 @@ async function main(): Promise<void> {
   const apps = new ManagedAppManager({
     docker,
     secrets: new SecretBox(deriveKey(agentKey, "otuken/agent-apps/v1")),
-    root:
-      config.mode === "production"
-        ? "/var/lib/otuken/apps"
-        : `${process.env.OTUKEN_DEV_ROOT ?? dirname(config.socketPath)}/agent-apps`,
+    root: config.appsRoot,
     isProtected: isProtectedContainer,
   });
   const appData = new AppDataBackups({ apps, logger });
@@ -143,10 +140,10 @@ async function main(): Promise<void> {
     maxStreamsPerConnection: 32,
     socketPath: config.socketPath,
     agentKey,
-    agentVersion: OTUKEN_VERSION,
+    agentVersion: EVERYOS_VERSION,
     handlers: createHandlers({
       mode: config.mode,
-      version: OTUKEN_VERSION,
+      version: EVERYOS_VERSION,
       startedAt: Date.now(),
       services,
       logs,
@@ -172,8 +169,8 @@ async function main(): Promise<void> {
     socketGroupId: isRoot ? socketGroupId : null,
   });
   await server.listen();
-  logger.info("Otuken agent started", {
-    version: OTUKEN_VERSION,
+  logger.info("EveryOS agent started", {
+    version: EVERYOS_VERSION,
     mode: config.mode,
     pid: process.pid,
   });
@@ -207,7 +204,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  const logger = createLogger({ name: "otuken-agent" });
+  const logger = createLogger({ name: "everyos-agent" });
   logger.fatal("Agent failed to start", { error });
   process.exitCode = 1;
 });

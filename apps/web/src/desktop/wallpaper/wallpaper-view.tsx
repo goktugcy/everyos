@@ -1,5 +1,5 @@
-import type { WallpaperSpec } from "@otuken/shared";
-import { toTriplet, WALLPAPER_PRESETS, type WallpaperPreset } from "@otuken/theme";
+import type { WallpaperSpec } from "@everyos/shared";
+import { toTriplet, WALLPAPER_PRESETS, type WallpaperPreset } from "@everyos/theme";
 import { memo, useState, type CSSProperties } from "react";
 import { cn } from "../../lib/cn.ts";
 
@@ -53,19 +53,19 @@ function PresetLayers({ preset }: { preset: WallpaperPreset }) {
       {preset.style === "aurora" ? (
         <>
           <div
-            className="otk-aurora-blob absolute -left-[10%] top-[-20%] h-[70vh] w-[120vw] rotate-[-8deg] opacity-70"
+            className="everyos-aurora-blob absolute -left-[10%] top-[-20%] h-[70vh] w-[120vw] rotate-[-8deg] opacity-70"
             style={{
               background: `linear-gradient(180deg, transparent, rgb(${toTriplet(colors.a)} / ${alpha}) 45%, transparent)`,
             }}
           />
           <div
-            className="otk-aurora-blob absolute -right-[10%] top-[-5%] h-[60vh] w-[110vw] rotate-[6deg] opacity-60 [animation-delay:-20s]"
+            className="everyos-aurora-blob absolute -right-[10%] top-[-5%] h-[60vh] w-[110vw] rotate-[6deg] opacity-60 [animation-delay:-20s]"
             style={{
               background: `linear-gradient(180deg, transparent, rgb(${toTriplet(colors.b)} / ${alpha}) 50%, transparent)`,
             }}
           />
           <div
-            className="otk-aurora-blob absolute left-[15%] top-[10%] h-[50vh] w-[70vw] opacity-40 [animation-delay:-34s]"
+            className="everyos-aurora-blob absolute left-[15%] top-[10%] h-[50vh] w-[70vw] opacity-40 [animation-delay:-34s]"
             style={glow(colors.c, alpha)}
           />
         </>
@@ -79,15 +79,15 @@ function PresetLayers({ preset }: { preset: WallpaperPreset }) {
       ) : (
         <>
           <div
-            className="otk-aurora-blob absolute -left-[20%] -top-[30%] h-[85vh] w-[85vw] rounded-full opacity-70"
+            className="everyos-aurora-blob absolute -left-[20%] -top-[30%] h-[85vh] w-[85vw] rounded-full opacity-70"
             style={glow(colors.a, alpha)}
           />
           <div
-            className="otk-aurora-blob absolute -right-[25%] -top-[10%] h-[80vh] w-[75vw] rounded-full opacity-65 [animation-delay:-16s]"
+            className="everyos-aurora-blob absolute -right-[25%] -top-[10%] h-[80vh] w-[75vw] rounded-full opacity-65 [animation-delay:-16s]"
             style={glow(colors.b, alpha)}
           />
           <div
-            className="otk-aurora-blob absolute left-[20%] top-[25%] h-[60vh] w-[60vw] rounded-full opacity-45 [animation-delay:-32s]"
+            className="everyos-aurora-blob absolute left-[20%] top-[25%] h-[60vh] w-[60vw] rounded-full opacity-45 [animation-delay:-32s]"
             style={glow(colors.c, alpha)}
           />
         </>
@@ -120,7 +120,7 @@ export const WallpaperView = memo(function WallpaperView({
   const [failed, setFailed] = useState<string | null>(null);
   const effective =
     spec.kind === "image" && failed === spec.wallpaperId
-      ? (fallback ?? { kind: "preset", id: "otuken-dusk" })
+      ? (fallback ?? { kind: "preset", id: "everyos-dusk" })
       : spec;
 
   let content;

@@ -8,7 +8,7 @@ import {
   migrate,
   MigrationError,
   openDatabase,
-  OTUKEN_MIGRATIONS,
+  EVERYOS_MIGRATIONS,
   TransactionError,
   type Database,
   type Migration,
@@ -16,8 +16,8 @@ import {
 
 const opened: Database[] = [];
 function tempDb(): { db: Database; dir: string } {
-  const dir = mkdtempSync(join(tmpdir(), "otuken-db-"));
-  const db = openDatabase(join(dir, "otuken.db"));
+  const dir = mkdtempSync(join(tmpdir(), "everyos-db-"));
+  const db = openDatabase(join(dir, "everyos.db"));
   opened.push(db);
   return { db, dir };
 }
@@ -74,9 +74,9 @@ describe("Database", () => {
   it("supports named parameters", () => {
     const { db } = tempDb();
     db.exec("CREATE TABLE n (id INTEGER, name TEXT) STRICT");
-    db.run("INSERT INTO n VALUES (:id, :name)", { id: 7, name: "otuken" });
+    db.run("INSERT INTO n VALUES (:id, :name)", { id: 7, name: "everyos" });
     expect(db.get<{ name: string }>("SELECT name FROM n WHERE id = :id", { id: 7 })?.name).toBe(
-      "otuken",
+      "everyos",
     );
   });
 
@@ -174,10 +174,10 @@ describe("migrate", () => {
     ).rejects.toBeInstanceOf(MigrationError);
   });
 
-  it("applies the real Otuken schema", async () => {
+  it("applies the real EveryOS schema", async () => {
     const { db } = tempDb();
-    const result = await migrate(db, OTUKEN_MIGRATIONS);
-    expect(result.to).toBe(OTUKEN_MIGRATIONS.length);
+    const result = await migrate(db, EVERYOS_MIGRATIONS);
+    expect(result.to).toBe(EVERYOS_MIGRATIONS.length);
     const tables = db
       .all<{ name: string }>("SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name")
       .map((r) => r.name);
@@ -197,7 +197,7 @@ describe("migrate", () => {
     "upgrades v4 with installation tables present=%s without data loss",
     async (hasApps) => {
       const { db, dir } = tempDb();
-      await migrate(db, OTUKEN_MIGRATIONS.slice(0, 4));
+      await migrate(db, EVERYOS_MIGRATIONS.slice(0, 4));
       db.run(
         "INSERT INTO catalogs (id, name, url, format) VALUES (?, ?, ?, ?)",
         "existing-catalog",
@@ -231,10 +231,10 @@ describe("migrate", () => {
         // Reproduce the catalog-only v4 already applied by a live development watcher.
         db.exec("DROP TABLE app_jobs; DROP TABLE installed_apps;");
       }
-      const result = await migrate(db, OTUKEN_MIGRATIONS, { backupDir: join(dir, "backups") });
+      const result = await migrate(db, EVERYOS_MIGRATIONS, { backupDir: join(dir, "backups") });
       // Every migration after v4 runs, whatever later phases add.
       expect(result.applied).toEqual(
-        OTUKEN_MIGRATIONS.filter((m) => m.version > 4).map((m) => m.version),
+        EVERYOS_MIGRATIONS.filter((m) => m.version > 4).map((m) => m.version),
       );
       expect(
         db.get<{ name: string }>("SELECT name FROM catalogs WHERE id = ?", "existing-catalog")
@@ -257,8 +257,8 @@ describe("migrate", () => {
       const backup = openDatabase(result.backupPath!, { readOnly: true });
       opened.push(backup);
       expect(currentSchemaVersion(backup)).toBe(4);
-      expect(currentSchemaVersion(db)).toBe(OTUKEN_MIGRATIONS.at(-1)!.version);
-      expect((await migrate(db, OTUKEN_MIGRATIONS)).applied).toEqual([]);
+      expect(currentSchemaVersion(db)).toBe(EVERYOS_MIGRATIONS.at(-1)!.version);
+      expect((await migrate(db, EVERYOS_MIGRATIONS)).applied).toEqual([]);
     },
   );
 });

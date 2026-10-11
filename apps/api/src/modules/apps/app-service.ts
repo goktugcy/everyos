@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Actor } from "@otuken/agent-protocol";
+import type { Actor } from "@everyos/agent-protocol";
 import {
   CatalogError,
   inspectCompose,
@@ -7,10 +7,10 @@ import {
   parseCompose,
   prepareInstall,
   selectArchitecture,
-} from "@otuken/catalogs";
-import type { Database } from "@otuken/database";
-import { detectAdapters } from "@otuken/widget-sdk";
-import type { SecretBox } from "@otuken/security";
+} from "@everyos/catalogs";
+import type { Database } from "@everyos/database";
+import { detectAdapters } from "@everyos/widget-sdk";
+import type { SecretBox } from "@everyos/security";
 import type {
   AppAction,
   AppDataSupport,
@@ -18,7 +18,7 @@ import type {
   CatalogApp,
   InstalledAppView,
   LocalizedText,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
 import type { CatalogService } from "../catalogs/catalog-service.ts";
@@ -142,7 +142,7 @@ export class AppService {
   }
 
   /**
-   * Whether an installed app's data can be backed up from its Otuken app data
+   * Whether an installed app's data can be backed up from its EveryOS app data
    * directory (every mount is a bind under it), or null when it is not installed.
    */
   dataSupport(id: string): AppDataSupport | null {

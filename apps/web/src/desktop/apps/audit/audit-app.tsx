@@ -1,4 +1,4 @@
-import type { AuditEvent, AuditPage } from "@otuken/shared";
+import type { AuditEvent, AuditPage } from "@everyos/shared";
 import { ChevronDown, ChevronRight, Search } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -83,7 +83,7 @@ export default function AuditApp() {
           setApplied(value);
         }}
       >
-        <label className="glass-inset flex h-9 flex-1 items-center gap-2 rounded-otk-md px-3">
+        <label className="glass-inset flex h-9 flex-1 items-center gap-2 rounded-everyos-md px-3">
           <Search className="size-4 text-fg-subtle" aria-hidden />
           <input
             value={filter}
@@ -104,7 +104,7 @@ export default function AuditApp() {
       ) : null}
       <div className="min-h-0 flex-1 overflow-auto">
         <table className="w-full min-w-[720px] border-collapse text-left text-sm">
-          <thead className="sticky top-0 z-10 bg-[rgb(var(--otk-surface)/0.95)] text-xs uppercase tracking-wider text-fg-muted">
+          <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs uppercase tracking-wider text-fg-muted">
             <tr>
               <th scope="col" className="w-8 px-3 py-2" />
               <th scope="col" className="px-3 py-2 font-semibold">
@@ -211,7 +211,7 @@ function AuditRow({
         <tr className="border-b border-line">
           <td />
           <td colSpan={6} className="px-3 pb-3">
-            <pre className="glass-inset overflow-x-auto rounded-otk-sm p-3 font-mono text-xs text-fg-muted">
+            <pre className="glass-inset overflow-x-auto rounded-everyos-sm p-3 font-mono text-xs text-fg-muted">
               {JSON.stringify(event.details, null, 2)}
             </pre>
           </td>

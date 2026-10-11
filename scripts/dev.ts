@@ -22,8 +22,8 @@ if (process.getuid?.() === 0) {
 
 const env = {
   ...process.env,
-  OTUKEN_ENV: "development",
-  OTUKEN_DEV_ROOT: devRoot,
+  EVERYOS_ENV: "development",
+  EVERYOS_DEV_ROOT: devRoot,
   FORCE_COLOR: process.env.FORCE_COLOR ?? "1",
 };
 
@@ -83,5 +83,5 @@ run("api", node, ["--watch", "--watch-preserve-output", "src/main.ts"], join(roo
 run("web", node, [resolveViteCli()], join(root, "apps/web"));
 
 console.log(
-  `\nOtuken development environment\n  web  → http://127.0.0.1:5173\n  api  → http://127.0.0.1:7470\n  data → ${devRoot}\n`,
+  `\nEveryOS development environment\n  web  → http://127.0.0.1:5173\n  api  → http://127.0.0.1:7470\n  data → ${devRoot}\n`,
 );

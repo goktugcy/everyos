@@ -1,6 +1,6 @@
 import { rmSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
-import type { CatalogAppView, CatalogView } from "@otuken/shared";
+import type { CatalogAppView, CatalogView } from "@everyos/shared";
 import { createApp } from "./app.ts";
 import { CatalogService } from "./modules/catalogs/catalog-service.ts";
 import { json, withRoles, type TestContext } from "./test-support.ts";

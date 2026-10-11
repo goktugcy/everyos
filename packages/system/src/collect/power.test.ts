@@ -1,7 +1,7 @@
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { PowerStatusSchema } from "@otuken/shared/schemas";
+import { PowerStatusSchema } from "@everyos/shared/schemas";
 import { afterEach, describe, expect, it } from "vitest";
 import { collectPower } from "./power.ts";
 

@@ -1,4 +1,4 @@
-import { ROLES } from "@otuken/shared";
+import { ROLES } from "@everyos/shared";
 import { z } from "zod";
 
 export const PROTOCOL_VERSION = 1;

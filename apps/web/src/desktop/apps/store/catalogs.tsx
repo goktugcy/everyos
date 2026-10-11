@@ -1,4 +1,4 @@
-import { CATALOG_FORMATS, type CatalogFormat, type CatalogView } from "@otuken/shared";
+import { CATALOG_FORMATS, type CatalogFormat, type CatalogView } from "@everyos/shared";
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -128,7 +128,7 @@ export function CatalogCard({
     }
   };
   return (
-    <article className="glass-inset flex flex-col gap-3 rounded-otk-md p-4">
+    <article className="glass-inset flex flex-col gap-3 rounded-everyos-md p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">{catalog.name}</h3>
         <span className="text-xs text-fg-muted">

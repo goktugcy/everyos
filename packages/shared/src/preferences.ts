@@ -1,6 +1,6 @@
 /*
  * Per-user preference documents (zod-free constants). The matching runtime
- * schemas live in "@otuken/shared/schemas" (schemas/preferences.ts) and the
+ * schemas live in "@everyos/shared/schemas" (schemas/preferences.ts) and the
  * document types are re-exported from the package root.
  */
 
@@ -35,7 +35,7 @@ export const THEME_PRESET_IDS = [
 export type ThemePresetId = (typeof THEME_PRESET_IDS)[number];
 
 export const WALLPAPER_PRESET_IDS = [
-  "otuken-dusk",
+  "everyos-dusk",
   "aurora",
   "frost",
   "graphite",

@@ -37,12 +37,18 @@ export const WallpaperUploadHeadersSchema = z.strictObject({
 export const AppIdSchema = z
   .string()
   .max(64)
-  .regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/, "app-id");
+  .regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/, "app-id")
+  .transform((id) => (id.startsWith("otuken.") ? `everyos.${id.slice(7)}` : id));
 
 /* Appearance */
 
 export const WallpaperSpecSchema = z.discriminatedUnion("kind", [
-  z.strictObject({ kind: z.literal("preset"), id: z.enum(WALLPAPER_PRESET_IDS) }),
+  z.strictObject({
+    kind: z.literal("preset"),
+    id: z
+      .enum([...WALLPAPER_PRESET_IDS, "otuken-dusk"])
+      .transform((id) => (id === "otuken-dusk" ? "everyos-dusk" : id)),
+  }),
   z.strictObject({
     kind: z.literal("gradient"),
     from: HexColorSchema,

@@ -25,7 +25,7 @@ import { basename, dirname, join, sep } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import type { Logger } from "@otuken/logger";
+import type { Logger } from "@everyos/logger";
 import {
   MAX_TEXT_FILE_BYTES,
   STANDARD_FOLDERS,
@@ -39,7 +39,7 @@ import {
   type StandardFolder,
   type TextFile,
   type TrashListing,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { ApiError, notFound } from "../../http/errors.ts";
 import {
   discardTrashItem,
@@ -383,7 +383,7 @@ export class FileService {
     return views.filter((view) => view.kind !== "system" || view.available);
   }
 
-  /** Creates the home and its standard folders (again, if one was removed outside Otuken). */
+  /** Creates the home and its standard folders (again, if one was removed outside EveryOS). */
   async #ensureHome(root: FileRootConfig): Promise<Record<StandardFolder, string>> {
     await mkdir(root.path, { recursive: true, mode: 0o700 });
     const names = await this.#folderNames(root);
@@ -645,7 +645,7 @@ export class FileService {
       await this.#ensureSpace(parent, data.length);
       if (existing.uid === process.getuid?.()) {
         // Own files are replaced atomically, keeping their permissions.
-        const temp = join(parent, `.${basename(entry)}.otuken-${randomUUID()}.tmp`);
+        const temp = join(parent, `.${basename(entry)}.everyos-${randomUUID()}.tmp`);
         const handle = await open(
           temp,
           constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL,
@@ -719,7 +719,7 @@ export class FileService {
     if (!overwrite && (await exists(target)))
       throw new ApiError(409, "CONFLICT", "An item with this name already exists");
     await this.#ensureSpace(real, length);
-    const temp = join(real, `.otuken-upload-${randomUUID()}.part`);
+    const temp = join(real, `.everyos-upload-${randomUUID()}.part`);
     let received = 0;
     const counter = new Transform({
       transform(chunk: Buffer, _encoding, callback) {

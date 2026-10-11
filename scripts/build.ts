@@ -3,11 +3,11 @@
  * esbuild and stages the web client next to them.
  *
  *   dist/
- *     api/server.mjs     Otuken API (runs as the `otuken` user)
+ *     api/server.mjs     EveryOS API (runs as the `everyos` user)
  *     agent/agent.mjs    privileged agent
  *     web/               static web client (+ .br/.gz siblings)
  *
- * Otuken has no native Node addons, so the same output runs on ARM64 and
+ * EveryOS has no native Node addons, so the same output runs on ARM64 and
  * AMD64; packaging only needs to add the matching Node.js runtime.
  * Run `pnpm build` (it builds the web client first).
  */
@@ -31,7 +31,7 @@ const webDist = join(root, "apps/web/dist");
 
 if (!existsSync(join(webDist, "index.html"))) {
   console.error(
-    "Web client is not built. Run `pnpm --filter @otuken/web build` first (or `pnpm build`).",
+    "Web client is not built. Run `pnpm --filter @everyos/web build` first (or `pnpm build`).",
   );
   process.exit(1);
 }
@@ -39,8 +39,8 @@ if (!existsSync(join(webDist, "index.html"))) {
 rmSync(dist, { recursive: true, force: true });
 
 const banner =
-  "import { createRequire as __otukenCreateRequire } from 'node:module';" +
-  "const require = __otukenCreateRequire(import.meta.url);";
+  "import { createRequire as __everyosCreateRequire } from 'node:module';" +
+  "const require = __everyosCreateRequire(import.meta.url);";
 
 async function bundle(entry: string, outfile: string): Promise<void> {
   const result = await build({
@@ -98,4 +98,4 @@ const version = (
   JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { version: string }
 ).version;
 writeFileSync(join(dist, "VERSION"), `${version}\n`);
-console.log(`Done: dist/ (Otuken ${version})`);
+console.log(`Done: dist/ (EveryOS ${version})`);

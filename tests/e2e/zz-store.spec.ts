@@ -9,13 +9,13 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("mağaza");
   await page.keyboard.press("Enter");
-  const store = page.locator('[data-app-id="otuken.store"]');
+  const store = page.locator('[data-app-id="everyos.store"]');
   await expect(store).toBeVisible();
   await store.getByRole("tab", { name: "Katalog kaynakları", exact: true }).click();
   await store.getByRole("button", { name: "Katalog ekle" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Ad", { exact: true }).fill("Original E2E");
-  const port = Number(process.env.OTUKEN_E2E_PORT ?? 7480);
+  const port = Number(process.env.EVERYOS_E2E_PORT ?? 7480);
   await dialog.getByLabel("Kaynak URL’si").fill(`http://127.0.0.1:${port + 1}/catalog.yml`);
   await dialog.getByLabel("Özel ağ adreslerinden indirmeye izin ver").check();
   await dialog.getByRole("button", { name: "Katalog ekle" }).click();
@@ -90,7 +90,7 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   });
   await app.getByRole("button", { name: "Kaldır", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Kaldır", exact: true }).click();
-  await expect(store).toContainText("Henüz Otuken ile kurulmuş uygulama yok.");
+  await expect(store).toContainText("Henüz EveryOS ile kurulmuş uygulama yok.");
   // Widgets of an uninstalled app say so and offer removal instead of showing stale data.
   await store.getByRole("button", { name: "Kapat", exact: true }).first().click();
   await expect(store).toHaveCount(0);

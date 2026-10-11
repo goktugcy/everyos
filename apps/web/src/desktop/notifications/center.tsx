@@ -5,7 +5,7 @@ import {
   type NotificationList,
   type NotificationSeverity,
   type NotificationView,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import {
   Bell,
   BellOff,
@@ -93,8 +93,8 @@ function NotificationItem({
   return (
     <li
       className={cn(
-        "group/item relative flex gap-3 rounded-otk-md px-3 py-2.5",
-        notification.read ? "opacity-80" : "bg-[rgb(var(--otk-accent)/0.08)]",
+        "group/item relative flex gap-3 rounded-everyos-md px-3 py-2.5",
+        notification.read ? "opacity-80" : "bg-[rgb(var(--everyos-accent)/0.08)]",
         muted && "opacity-60",
       )}
       data-testid="notification"
@@ -145,7 +145,7 @@ function NotificationItem({
 }
 
 const selectClass =
-  "glass-inset h-8 rounded-otk-sm px-2 text-xs text-fg outline-none focus-visible:ring-2 focus-visible:ring-accent [&>option]:bg-[rgb(var(--otk-surface))]";
+  "glass-inset h-8 rounded-everyos-sm px-2 text-xs text-fg outline-none focus-visible:ring-2 focus-visible:ring-accent [&>option]:bg-[rgb(var(--everyos-surface))]";
 
 function CenterBody() {
   const { t } = useTranslation();
@@ -215,7 +215,7 @@ function CenterBody() {
               className={cn(
                 "rounded-full px-2.5 py-1 text-xs font-medium",
                 unreadOnly === value
-                  ? "bg-[rgb(var(--otk-accent)/0.24)] text-fg"
+                  ? "bg-[rgb(var(--everyos-accent)/0.24)] text-fg"
                   : "text-fg-muted hover:text-fg",
               )}
             >
@@ -254,7 +254,7 @@ function CenterBody() {
             type="checkbox"
             checked={grouped}
             onChange={(event) => setGrouped(event.target.checked)}
-            className="accent-[rgb(var(--otk-accent))]"
+            className="accent-[rgb(var(--everyos-accent))]"
           />
           {t("notifications.group")}
         </label>
@@ -295,7 +295,7 @@ function CenterBody() {
         {cursor ? (
           <button
             type="button"
-            className="mx-auto mt-2 block rounded-otk-sm px-3 py-1.5 text-xs text-accent hover:bg-hover/8"
+            className="mx-auto mt-2 block rounded-everyos-sm px-3 py-1.5 text-xs text-accent hover:bg-hover/8"
             onClick={() => void loadMore()}
           >
             {t("notifications.older")}
@@ -348,7 +348,7 @@ export function NotificationBell() {
           align="end"
           sideOffset={8}
           collisionPadding={8}
-          className="glass-strong otk-enter z-[8000] flex max-h-[min(75vh,640px)] w-[min(94vw,26rem)] flex-col rounded-otk-lg text-fg"
+          className="glass-strong everyos-enter z-[8000] flex max-h-[min(75vh,640px)] w-[min(94vw,26rem)] flex-col rounded-everyos-lg text-fg"
           aria-label={t("notifications.title")}
           data-testid="notification-center"
         >
@@ -380,7 +380,7 @@ export function NotificationBell() {
           <div className="flex justify-end border-t border-line px-4 py-2">
             <button
               type="button"
-              className="rounded-otk-sm px-2 py-1 text-xs text-fg-muted hover:bg-hover/8 hover:text-fg"
+              className="rounded-everyos-sm px-2 py-1 text-xs text-fg-muted hover:bg-hover/8 hover:text-fg"
               onClick={() => void notificationActions.dismiss({ all: true })}
             >
               {t("notifications.clearAll")}

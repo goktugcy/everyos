@@ -1,4 +1,4 @@
-import { randomToken } from "@otuken/security";
+import { randomToken } from "@everyos/security";
 
 export interface LoginChallenge {
   id: string;

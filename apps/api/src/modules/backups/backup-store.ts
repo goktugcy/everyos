@@ -17,15 +17,15 @@ import {
   type BackupManifest,
   type BackupVerification,
   type BackupView,
-} from "@otuken/shared";
-import { BACKUP_FILE_NAME, BackupManifestSchema } from "@otuken/shared/schemas";
+} from "@everyos/shared";
+import { BACKUP_FILE_NAME, BackupManifestSchema } from "@everyos/shared/schemas";
 import {
   archiveSize,
   readTar,
   TarError,
   TarWriter,
   type TarWriteHeader,
-} from "@otuken/system/archive";
+} from "@everyos/system/archive";
 import { ApiError, notFound } from "../../http/errors.ts";
 
 interface Info {
@@ -108,7 +108,7 @@ export class BackupStore {
     const info = await lstat(this.dir);
     if (!info.isDirectory()) throw new Error(`Backup location is not a directory: ${this.dir}`);
     if (process.getuid && info.uid !== process.getuid())
-      throw new Error(`Backup location must be owned by the Otuken user: ${this.dir}`);
+      throw new Error(`Backup location must be owned by the EveryOS user: ${this.dir}`);
     if ((info.mode & 0o002) !== 0)
       throw new Error(`Backup location must not be world-writable: ${this.dir}`);
   }
@@ -144,6 +144,15 @@ export class BackupStore {
     return parsed.data;
   }
 
+  async databaseFile(id: string): Promise<string> {
+    const manifest = await this.manifest(id);
+    const files = manifest.files.filter(
+      (file) => file.name === "everyos.db.gz" || file.name === "otuken.db.gz",
+    );
+    if (files.length !== 1) throw invalidBackup("database");
+    return this.file(id, files[0]!.name);
+  }
+
   async #info(id: string): Promise<Info> {
     try {
       return {
@@ -168,7 +177,7 @@ export class BackupStore {
       trigger: manifest.trigger,
       createdBy: manifest.createdBy,
       note: manifest.note,
-      otukenVersion: manifest.otukenVersion,
+      everyosVersion: manifest.everyosVersion,
       schemaVersion: manifest.schemaVersion,
       hostname: manifest.hostname,
       size: manifest.files.reduce((sum, file) => sum + file.size, 0),
@@ -261,7 +270,7 @@ export class BackupStore {
   /* ------------------------------------------------------------ transfer */
 
   #downloadEntries(manifest: BackupManifest): Array<TarWriteHeader & { path: string | null }> {
-    const top = `otuken-backup-${manifest.id}`;
+    const top = `everyos-backup-${manifest.id}`;
     const manifestBytes = Buffer.byteLength(JSON.stringify(manifest, null, 2));
     return [
       { name: top, type: "directory", mode: 0o700, mtime: manifest.createdAt, path: null },
@@ -294,7 +303,7 @@ export class BackupStore {
     const entries = this.#downloadEntries(manifest);
     return {
       size: archiveSize(entries),
-      name: `otuken-backup-${id}.tar`,
+      name: `everyos-backup-${id}.tar`,
       write: async (sink) => {
         const writer = new TarWriter(sink);
         for (const entry of entries) {
@@ -332,7 +341,7 @@ export class BackupStore {
       const written = new Map<string, { size: number; sha256: string }>();
       for await (const entry of readTar(source, { maxEntries: 200, maxBytes })) {
         const [first, ...rest] = entry.name.split("/");
-        if (!first || !/^otuken-backup-\d{8}-\d{6}-[a-f0-9]{6}$/.test(first))
+        if (!first || !/^(?:everyos|otuken)-backup-\d{8}-\d{6}-[a-f0-9]{6}$/.test(first))
           throw invalidBackup("layout");
         top ??= first;
         if (first !== top) throw invalidBackup("layout");
@@ -359,7 +368,10 @@ export class BackupStore {
       const parsed = BackupManifestSchema.safeParse(
         JSON.parse(await readFile(join(work, "manifest.json"), "utf8")),
       );
-      if (!parsed.success || `otuken-backup-${parsed.data.id}` !== top)
+      if (
+        !parsed.success ||
+        (top !== `everyos-backup-${parsed.data.id}` && top !== `otuken-backup-${parsed.data.id}`)
+      )
         throw invalidBackup("manifest");
       const manifest = parsed.data;
       if (written.size !== manifest.files.length + 1) throw invalidBackup("files");

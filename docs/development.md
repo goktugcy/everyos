@@ -25,30 +25,30 @@ The first `pnpm test:e2e` run on a machine needs the browser binary:
 `pnpm exec playwright install --only-shell chromium`.
 
 The end-to-end stack uses disposable state under `tests/e2e/.state` and port 7480 by default
-(`OTUKEN_E2E_PORT` overrides it); it does not reuse or stop a running development stack. Phase 2
+(`EVERYOS_E2E_PORT` overrides it); it does not reuse or stop a running development stack. Phase 2
 coverage includes window drag/resize/snap and restoration, dock/context menus, folders, all seven
 themes, virtual desktops, API-enforced locking across reloads, mobile transitions, and recovery
 from failed preference loads. Desktop/mobile screenshots are written to the test output directory.
 
-Phase 3/4 browser tests set `OTUKEN_AGENT_SIMULATE=1`: Docker lifecycle, Compose import/down/up,
+Phase 3/4 browser tests set `EVERYOS_AGENT_SIMULATE=1`: Docker lifecycle, Compose import/down/up,
 volume deletion, logs, live stats and error recovery run against the in-memory simulator, never
 the developer's containers. Socket-level Docker tests use temporary fake Unix-socket servers;
 Compose tests mock execution and inspect the exact arguments and environment.
 
 After signing in, open System from the dock for real host information, or Settings for appearance,
 desktop/dock, account and security preferences. Files and folders on the desktop live in the
-home's Desktop folder (inside Otuken's data directory, not the host's home directories). Keyboard
+home's Desktop folder (inside EveryOS's data directory, not the host's home directories). Keyboard
 shortcuts are listed in Settings → Desktop and Dock.
 
 ## Development mode
 
 `pnpm dev` (see `scripts/dev.ts`) creates `./.dev/{data,run,secrets}` and starts:
 
-| Process | Command                               | Notes                                              |
-| ------- | ------------------------------------- | -------------------------------------------------- |
-| agent   | `node --watch apps/agent/src/main.ts` | socket `./.dev/run/agent.sock` (0600)              |
-| api     | `node --watch apps/api/src/main.ts`   | `127.0.0.1:7470`, database `./.dev/data/otuken.db` |
-| web     | `vite`                                | `127.0.0.1:5173`, proxies `/api` to the API        |
+| Process | Command                               | Notes                                               |
+| ------- | ------------------------------------- | --------------------------------------------------- |
+| agent   | `node --watch apps/agent/src/main.ts` | socket `./.dev/run/agent.sock` (0600)               |
+| api     | `node --watch apps/api/src/main.ts`   | `127.0.0.1:7470`, database `./.dev/data/everyos.db` |
+| web     | `vite`                                | `127.0.0.1:5173`, proxies `/api` to the API         |
 
 TypeScript runs directly through Node's type stripping, so there is no build step in the loop.
 Code must therefore use erasable syntax only: no `enum`, `namespace` or constructor parameter
@@ -60,7 +60,7 @@ On the first start, the API prints the **setup token** (development only). It is
 Development mode never runs as root and never modifies the host.
 
 Docker uses real read-only data when the Unix socket exists; otherwise it uses labeled simulated
-data. Otuken never changes Docker group membership or socket permissions. Development refuses
+data. EveryOS never changes Docker group membership or socket permissions. Development refuses
 mutations even when the account can access Docker. See [configuration.md](configuration.md) for
 custom sockets/protected containers and [docker-management.md](docker-management.md) for host
 verification limits.

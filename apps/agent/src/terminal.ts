@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import type { Writable } from "node:stream";
-import { OperationError, type Actor } from "@otuken/agent-protocol";
-import type { Logger } from "@otuken/logger";
-import type { TerminalStatus } from "@otuken/shared";
+import { OperationError, type Actor } from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
+import type { TerminalStatus } from "@everyos/shared";
 
 /** agent.yaml `terminal:` — the terminal stays disabled until an account is configured. */
 export interface TerminalConfig {

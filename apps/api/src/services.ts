@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { AgentClient } from "@otuken/agent-protocol";
+import type { AgentClient } from "@everyos/agent-protocol";
 import {
   createDummyVerifier,
   DEFAULT_SCRYPT_PARAMS,
@@ -7,10 +7,10 @@ import {
   verifyPassword,
   type PasswordVerification,
   type ScryptParams,
-} from "@otuken/auth";
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
-import { deriveKey, SecretBox } from "@otuken/security";
+} from "@everyos/auth";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
+import { deriveKey, SecretBox } from "@everyos/security";
 import { createProxyMatcher, type ApiConfig } from "./config.ts";
 import { AuditLog } from "./modules/audit/audit-log.ts";
 import { LoginChallengeStore } from "./modules/auth/login-challenges.ts";

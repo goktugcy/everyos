@@ -1,4 +1,4 @@
-import type { AppAction, AppJobView, InstalledAppView } from "@otuken/shared";
+import type { AppAction, AppJobView, InstalledAppView } from "@everyos/shared";
 import { PanelsTopLeft } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,7 +61,7 @@ export function InstalledCard({
     }
   };
   return (
-    <article className="glass-inset flex flex-col gap-3 rounded-otk-md p-4">
+    <article className="glass-inset flex flex-col gap-3 rounded-everyos-md p-4">
       <div className="flex flex-wrap justify-between gap-2">
         <h3 className="font-semibold">{localized(app.name, i18n.language)}</h3>
         <span className="flex items-center gap-2 text-xs">

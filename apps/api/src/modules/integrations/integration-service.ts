@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Actor } from "@otuken/agent-protocol";
-import type { Database } from "@otuken/database";
-import type { SecretBox } from "@otuken/security";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Database } from "@everyos/database";
+import type { SecretBox } from "@everyos/security";
 import {
   INTEGRATION_TOPIC_PATTERN,
   type IntegrationAdapter,
@@ -9,8 +9,8 @@ import {
   type IntegrationOptions,
   type IntegrationView,
   type Permission,
-} from "@otuken/shared";
-import { AgentClientError } from "@otuken/agent-protocol";
+} from "@everyos/shared";
+import { AgentClientError } from "@everyos/agent-protocol";
 import { ApiError } from "../../http/errors.ts";
 import type { AgentGateway } from "../../services.ts";
 import type { DataProvider, ProviderResult } from "../widgets/data-hub.ts";

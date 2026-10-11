@@ -1,4 +1,4 @@
-import { THROTTLE_FLAGS, type HardwareStatus } from "@otuken/shared";
+import { THROTTLE_FLAGS, type HardwareStatus } from "@everyos/shared";
 import { AlertTriangle, CheckCircle2, CircleSlash, OctagonAlert } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLiveMetrics } from "../../../features/metrics/live-metrics.ts";
@@ -158,7 +158,7 @@ export function HardwareTab() {
               hardware.data.nvme.devices.map((device) => (
                 <div
                   key={device.device}
-                  className="glass-inset flex flex-col gap-2 rounded-otk-md p-3"
+                  className="glass-inset flex flex-col gap-2 rounded-everyos-md p-3"
                 >
                   <div className="flex items-center justify-between gap-2 text-sm">
                     <span className="font-mono font-semibold">{device.device}</span>

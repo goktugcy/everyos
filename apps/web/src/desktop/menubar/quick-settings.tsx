@@ -1,5 +1,5 @@
-import { RENDER_MODES, THEME_PRESET_IDS } from "@otuken/shared";
-import { THEME_PRESETS } from "@otuken/theme";
+import { RENDER_MODES, THEME_PRESET_IDS } from "@everyos/shared";
+import { THEME_PRESETS } from "@everyos/theme";
 import { Check, Lock, SlidersHorizontal, Palette } from "lucide-react";
 import { Popover, Switch, ToggleGroup } from "radix-ui";
 import { useTranslation } from "react-i18next";
@@ -49,7 +49,7 @@ export function QuickSettings() {
           align="end"
           sideOffset={8}
           collisionPadding={8}
-          className="glass-strong otk-enter z-[8000] flex w-80 flex-col gap-4 rounded-otk-lg p-4 text-sm text-fg"
+          className="glass-strong everyos-enter z-[8000] flex w-80 flex-col gap-4 rounded-everyos-lg p-4 text-sm text-fg"
           aria-label={t("menubar.quickSettings")}
         >
           <section className="flex flex-col gap-2">
@@ -98,14 +98,14 @@ export function QuickSettings() {
                   renderMode: value as typeof current.renderMode,
                 }))
               }
-              className="glass-inset grid grid-cols-3 gap-1 rounded-otk-md p-1"
+              className="glass-inset grid grid-cols-3 gap-1 rounded-everyos-md p-1"
               aria-label={t("quickSettings.renderMode")}
             >
               {RENDER_MODES.map((mode) => (
                 <ToggleGroup.Item
                   key={mode}
                   value={mode}
-                  className="rounded-[calc(var(--otk-radius-md)-4px)] px-2 py-1.5 text-xs font-medium text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=on]:bg-[rgb(var(--otk-accent)/0.22)] data-[state=on]:text-fg"
+                  className="rounded-[calc(var(--everyos-radius-md)-4px)] px-2 py-1.5 text-xs font-medium text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=on]:bg-[rgb(var(--everyos-accent)/0.22)] data-[state=on]:text-fg"
                 >
                   {t(`renderModes.${mode}`)}
                 </ToggleGroup.Item>
@@ -144,7 +144,7 @@ export function QuickSettings() {
             <Popover.Close asChild>
               <button
                 type="button"
-                className="flex flex-1 items-center gap-2 rounded-otk-md px-3 py-2 text-left hover:bg-hover/10"
+                className="flex flex-1 items-center gap-2 rounded-everyos-md px-3 py-2 text-left hover:bg-hover/10"
                 onClick={() => desktop.openSettings("appearance")}
               >
                 <Palette className="size-4 text-fg-subtle" aria-hidden />
@@ -154,7 +154,7 @@ export function QuickSettings() {
             <Popover.Close asChild>
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-otk-md px-3 py-2 hover:bg-hover/10"
+                className="flex items-center gap-2 rounded-everyos-md px-3 py-2 hover:bg-hover/10"
                 onClick={() => void lock()}
               >
                 <Lock className="size-4 text-fg-subtle" aria-hidden />
@@ -186,7 +186,7 @@ export function Toggle({
       onCheckedChange={onCheckedChange}
       disabled={disabled === true}
       aria-label={label}
-      className="relative h-6 w-10 shrink-0 rounded-full bg-hover/20 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 data-[state=checked]:bg-[rgb(var(--otk-accent))]"
+      className="relative h-6 w-10 shrink-0 rounded-full bg-hover/20 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 data-[state=checked]:bg-[rgb(var(--everyos-accent))]"
     >
       <Switch.Thumb className="block size-5 translate-x-0.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-[18px]" />
     </Switch.Root>

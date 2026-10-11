@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = Number(process.env.OTUKEN_E2E_PORT ?? 7480);
+const port = Number(process.env.EVERYOS_E2E_PORT ?? 7480);
 
 export default defineConfig({
   testDir: ".",

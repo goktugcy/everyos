@@ -1,4 +1,4 @@
-import type { CapabilityId, CapabilityStatus } from "@otuken/shared";
+import type { CapabilityId, CapabilityStatus } from "@everyos/shared";
 import { listDirOrEmpty, pathKind } from "./fs-utils.ts";
 import { hostPath, type HostPaths } from "./host-paths.ts";
 

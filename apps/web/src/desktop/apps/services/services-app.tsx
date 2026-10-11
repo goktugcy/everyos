@@ -1,4 +1,4 @@
-import type { ServiceAction, ServiceDetail, ServiceList, ServiceUnit } from "@otuken/shared";
+import type { ServiceAction, ServiceDetail, ServiceList, ServiceUnit } from "@everyos/shared";
 import type { TFunction } from "i18next";
 import { ArrowLeft, Lock, ScrollText, Search } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -122,7 +122,7 @@ function ServiceDetailPanel({
         <button
           type="button"
           onClick={onBack}
-          className="grid size-8 shrink-0 place-items-center rounded-otk-sm text-fg-muted outline-none hover:bg-hover/10 focus-visible:ring-2 focus-visible:ring-accent @3xl:hidden"
+          className="grid size-8 shrink-0 place-items-center rounded-everyos-sm text-fg-muted outline-none hover:bg-hover/10 focus-visible:ring-2 focus-visible:ring-accent @3xl:hidden"
           aria-label={t("common.back")}
         >
           <ArrowLeft className="size-4" aria-hidden />
@@ -219,7 +219,7 @@ function ServiceDetailPanel({
               <Button
                 size="sm"
                 variant="secondary"
-                onClick={() => desktop.openApp("otuken.logs", { appState: { unit } })}
+                onClick={() => desktop.openApp("everyos.logs", { appState: { unit } })}
               >
                 <ScrollText className="size-4" aria-hidden />
                 {t("services.viewLogs")}
@@ -257,7 +257,7 @@ export default function ServicesApp() {
         )}
       >
         <div className="flex flex-col gap-2 border-b border-line p-3">
-          <label className="glass-inset flex h-9 items-center gap-2 rounded-otk-md px-3">
+          <label className="glass-inset flex h-9 items-center gap-2 rounded-everyos-md px-3">
             <Search className="size-4 text-fg-subtle" aria-hidden />
             <input
               value={query}
@@ -278,7 +278,7 @@ export default function ServicesApp() {
                   className={cn(
                     "rounded-full px-2.5 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     filter === id
-                      ? "bg-[rgb(var(--otk-accent)/0.25)] font-semibold text-fg"
+                      ? "bg-[rgb(var(--everyos-accent)/0.25)] font-semibold text-fg"
                       : "text-fg-muted hover:bg-hover/10",
                   )}
                 >
@@ -309,7 +309,7 @@ export default function ServicesApp() {
                 aria-current={selected === unit.name ? "true" : undefined}
                 className={cn(
                   "flex w-full items-center gap-3 border-b border-line px-3 py-2 text-left outline-none hover:bg-hover/5 focus-visible:bg-hover/10",
-                  selected === unit.name && "bg-[rgb(var(--otk-accent)/0.14)]",
+                  selected === unit.name && "bg-[rgb(var(--everyos-accent)/0.14)]",
                 )}
               >
                 <span className="min-w-0 flex-1">

@@ -1,9 +1,9 @@
-import { DEFAULT_LOCALE } from "@otuken/shared";
+import { DEFAULT_LOCALE } from "@everyos/shared";
 import {
   CreateUserRequestSchema,
   ResetPasswordRequestSchema,
   UpdateUserRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv, AuthState } from "../../context.ts";
 import { ApiError, notFound } from "../../http/errors.ts";

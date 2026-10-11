@@ -321,7 +321,7 @@ export const ServiceUnitSchema = z.object({
   active: name,
   sub: name,
   unitFileState: name.nullable(),
-  /** Protected units cannot be stopped, disabled or restarted from Otuken. */
+  /** Protected units cannot be stopped, disabled or restarted from EveryOS. */
   protected: z.boolean(),
 });
 

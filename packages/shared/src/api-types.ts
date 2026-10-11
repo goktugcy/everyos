@@ -3,7 +3,7 @@ import type { Permission, Role } from "./permissions.ts";
 
 /*
  * Response contracts of the HTTP API. Request bodies are validated with the
- * zod schemas in "@otuken/shared/schemas"; their inferred types are
+ * zod schemas in "@everyos/shared/schemas"; their inferred types are
  * re-exported from the package root as type-only exports so browser bundles
  * never include zod.
  */
@@ -20,12 +20,12 @@ export interface HealthResponse {
 }
 
 export interface BootstrapResponse {
-  product: "otuken";
+  product: "everyos";
   version: string;
   setupRequired: boolean;
   defaultLocale: Locale;
   transport: {
-    /** True when the browser reached Otuken over HTTPS (directly or via a trusted proxy). */
+    /** True when the browser reached EveryOS over HTTPS (directly or via a trusted proxy). */
     secure: boolean;
     /** True when the client connected from the loopback interface. */
     loopback: boolean;

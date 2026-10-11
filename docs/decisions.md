@@ -5,7 +5,7 @@ Short records of decisions that are not obvious from the code. Newest last.
 ## D1 — Node.js 26 as the runtime (2026-10)
 
 **Decision:** Target Node.js 26. It becomes LTS on 2026-10-28 and is supported until 2029-04-30.
-The `.deb` package will ship its own Node runtime under `/usr/lib/otuken/node`.
+The `.deb` package will ship its own Node runtime under `/usr/lib/everyos/node`.
 **Why:** Distribution Node packages are too old and vary across Ubuntu/Debian releases. Node 26
 gives us `node:sqlite` as a release candidate, built-in TypeScript type stripping, and long
 support. Node 24 leaves active LTS on 2026-10-20.
@@ -14,7 +14,7 @@ support. Node 24 leaves active LTS on 2026-10-20.
 ## D2 — `node:sqlite` instead of better-sqlite3
 
 **Decision:** Use the built-in `node:sqlite` (stability 1.2, release candidate since v25.7), wrapped
-by `@otuken/database`.
+by `@everyos/database`.
 **Why:** It removes the only native addon. Otherwise we would need per-architecture, per-ABI
 prebuilt binaries in CI and in the package. It also provides online backups (`backup()`), which
 the pre-migration backup uses.
@@ -64,8 +64,8 @@ the extra hop matters.
 
 ## D8 — Zod-free browser contracts
 
-**Decision:** The root entry of `@otuken/shared` contains only types and constants. Zod schemas
-live in `@otuken/shared/schemas`.
+**Decision:** The root entry of `@everyos/shared` contains only types and constants. Zod schemas
+live in `@everyos/shared/schemas`.
 **Why:** The schemas are top-level side-effectful calls that bundlers cannot tree-shake. Importing
 them pulled about 90 KB (minified) of zod into the web client. The initial web chunk is now
 329 KB raw / 105 KB gzip.
@@ -73,7 +73,7 @@ them pulled about 90 KB (minified) of zod into the web client. The initial web c
 ## D9 — First-run setup token
 
 **Decision:** Creating the first account requires a token from
-`/var/lib/otuken/setup-token` (0600).
+`/var/lib/everyos/setup-token` (0600).
 **Why:** It prevents anyone on the network from claiming a fresh instance before its owner (the
 same pattern as Jenkins and Grafana's admin bootstrap). In development the token is also printed
 to the console.
@@ -125,7 +125,7 @@ process start-up cost shows up in Raspberry Pi measurements.
 
 macOS development machines and CI need deterministic service and log data. A simulator implements
 the same interfaces in memory and is selected only in development (automatically when the tool is
-missing, or with `OTUKEN_AGENT_SIMULATE=1`). Every simulated response carries
+missing, or with `EVERYOS_AGENT_SIMULATE=1`). Every simulated response carries
 `source: "simulated"`, which the UI labels, and the agent refuses the variable in production.
 Metrics, storage and processes are never simulated; on macOS they are real readings with
 Linux-only fields reported as unavailable.
@@ -243,13 +243,13 @@ server secret are refused, because encrypted secrets (including 2FA) could not b
 App data is captured only while the app is stopped: copying a running database file by file is
 not a consistent backup. The agent's stream protocol has no flow control, so archives are pulled
 in 512 KiB chunks by the API and pushed back in chunks for a restore; the agent never reads or
-writes files at paths chosen by the API. Archives are produced and validated by Otuken's own
+writes files at paths chosen by the API. Archives are produced and validated by EveryOS's own
 tar code (regular files, directories and symlinks only) instead of the system `tar`, so
 validation and extraction rules are explicit and identical on every host.
 
 ## D23 — Tailscale is read and explained, never configured (2026-10)
 
-Otuken reads tailscaled's LocalAPI and compares Serve/Funnel handlers with its own configuration
+EveryOS reads tailscaled's LocalAPI and compares Serve/Funnel handlers with its own configuration
 (published URL, `publicOrigins`, trusted proxy) instead of offering buttons that change Tailscale.
 Changing network exposure from the web UI would be an administrative action with a large blast
 radius, and the CLI remains the single place where it happens. Public exposure through Funnel
@@ -261,9 +261,9 @@ Normal file deletion moves into private per-account storage on the source root, 
 recoverable without copying or deleting it across filesystems. Original paths are metadata; they
 are validated again at restore time, and existing names are never silently overwritten. Internal
 trash storage is unreachable through ordinary file routes. Permanent deletion is a distinct
-authorized, confirmed and audited action. This is Otuken's trash, independent of a host desktop.
+authorized, confirmed and audited action. This is EveryOS's trash, independent of a host desktop.
 
-Existing Otuken home directories, including their private trash, join all backup triggers. Homes
+Existing EveryOS home directories, including their private trash, join all backup triggers. Homes
 are API-owned data, so the unprivileged API captures/restores them without adding an agent
 operation. Archive contents are declared by account id in the manifest; restore matches only
 existing ids and is separately selected. Safety backup, draining active file operations, private
@@ -284,3 +284,24 @@ restore and account deletion complete without a new image store or database migr
 references are validated against ownership, and used assets cannot be deleted.
 
 See [power and folder icons](power-and-folder-icons.md) for formats, limits and behaviour.
+
+## D26 — EveryOS naming with backwards-compatible stored data (2026-10)
+
+EveryOS is the product name. Workspace packages use `@everyos/*`, environment variables use
+`EVERYOS_*`, built-in app ids use `everyos.*`, and fresh Linux installations default to
+`/etc/everyos`, `/var/lib/everyos`, `/usr/lib/everyos` and `/run/everyos`. Fresh databases are
+`everyos.db`; downloads and new backup/theme manifests also use the new name.
+
+The rename must not reinitialize an existing installation. API and agent configuration accept
+`OTUKEN_*` aliases, with `EVERYOS_*` taking precedence. The default config paths fall back to
+existing `/etc/otuken` files, the API reuses an existing legacy database, and no host directory,
+account, service or container is renamed automatically. Existing app ids and the dusk wallpaper
+id normalize on preference reads. Browser language/theme caches and session cookies can still be
+read under their old names. Legacy theme and backup archives remain importable and restorable.
+
+Version-1 cryptographic salts, derivation purposes, recovery-code hashes and agent handshake
+domains retain their original bytes. Managed Compose project ids (`otk-*`), Compose placeholders
+and inline-file extension names, private trash directories and home folder metadata keep their
+persisted identifiers; changing these without a migration could lose access to owned data or
+weaken protection. Both the old and new systemd service names are protected. The repository URL
+continues to point at the actual GitHub repository until the owner renames it separately.

@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import type { AptUpdates, PackageInfo } from "@otuken/shared";
+import type { AptUpdates, PackageInfo } from "@everyos/shared";
 import { CommandError, findExecutable, runCapture, runCommand, SAFE_ENV } from "../exec.ts";
 import { parseAptPolicy, parseAptShow, parseAptSummary } from "../linux/apt.ts";
 import { collectAptUpdates } from "../collect/apt.ts";

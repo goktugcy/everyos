@@ -1,4 +1,4 @@
-import type { SystemInfo, WidgetPlacement, WidgetSize } from "@otuken/shared";
+import type { SystemInfo, WidgetPlacement, WidgetSize } from "@everyos/shared";
 import {
   BUILT_IN_WIDGETS,
   missingConfig,
@@ -7,7 +7,7 @@ import {
   widgetAvailability,
   type WidgetCategory,
   type WidgetManifest,
-} from "@otuken/widget-sdk";
+} from "@everyos/widget-sdk";
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -85,7 +85,7 @@ function GalleryCard({
   return (
     <li
       className={cn(
-        "glass-inset flex flex-col gap-2.5 rounded-otk-lg p-3.5",
+        "glass-inset flex flex-col gap-2.5 rounded-everyos-lg p-3.5",
         blocked && "opacity-75",
       )}
       data-testid="gallery-item"
@@ -259,7 +259,7 @@ function GalleryBody({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <label className="glass-inset flex h-9 min-w-48 flex-1 items-center gap-2 rounded-otk-md px-3">
+        <label className="glass-inset flex h-9 min-w-48 flex-1 items-center gap-2 rounded-everyos-md px-3">
           <Search className="size-4 text-fg-subtle" aria-hidden />
           <input
             value={query}
@@ -302,7 +302,7 @@ function GalleryBody({
             className={cn(
               chip,
               category === option
-                ? "bg-[rgb(var(--otk-accent)/0.24)] text-fg"
+                ? "bg-[rgb(var(--everyos-accent)/0.24)] text-fg"
                 : "bg-hover/6 text-fg-muted hover:text-fg",
             )}
           >

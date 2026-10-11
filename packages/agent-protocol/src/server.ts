@@ -1,7 +1,7 @@
 import { chmodSync, chownSync, lstatSync, unlinkSync } from "node:fs";
 import { connect, createServer, type Server, type Socket } from "node:net";
-import { silentLogger, type Logger } from "@otuken/logger";
-import { roleHasPermission } from "@otuken/shared";
+import { silentLogger, type Logger } from "@everyos/logger";
+import { roleHasPermission } from "@everyos/shared";
 import {
   DEFAULT_MAX_MESSAGE_BYTES,
   DEFAULT_MAX_RESPONSE_BYTES,

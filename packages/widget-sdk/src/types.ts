@@ -6,7 +6,7 @@ import type {
   Permission,
   WidgetPlacement,
   WidgetSize,
-} from "@otuken/shared";
+} from "@everyos/shared";
 
 /** Declarative configuration fields; the configuration UI and validation are generated from them. */
 export type WidgetConfigField =

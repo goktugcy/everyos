@@ -1,5 +1,5 @@
-import { WIDGET_CELL_PX, WIDGET_CUSTOM_LIMITS, type WidgetInstance } from "@otuken/shared";
-import { cellsOf } from "@otuken/widget-sdk";
+import { WIDGET_CELL_PX, WIDGET_CUSTOM_LIMITS, type WidgetInstance } from "@everyos/shared";
+import { cellsOf } from "@everyos/widget-sdk";
 import { GripVertical } from "lucide-react";
 import {
   memo,
@@ -141,7 +141,7 @@ const DesktopWidget = memo(function DesktopWidget({
       {preview ? (
         <div
           aria-hidden
-          className="pointer-events-none fixed rounded-otk-lg border-2 border-dashed border-[rgb(var(--otk-accent)/0.7)] bg-[rgb(var(--otk-accent)/0.08)]"
+          className="pointer-events-none fixed rounded-everyos-lg border-2 border-dashed border-[rgb(var(--everyos-accent)/0.7)] bg-[rgb(var(--everyos-accent)/0.08)]"
           style={cellBox(preview.cell, preview.size, grid)}
         />
       ) : null}

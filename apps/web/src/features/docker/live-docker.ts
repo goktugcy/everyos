@@ -1,4 +1,4 @@
-import type { DockerChangeEvent, DockerStatsSnapshot } from "@otuken/shared";
+import type { DockerChangeEvent, DockerStatsSnapshot } from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { subscribeTopic, type StreamStatus } from "../../lib/event-stream.ts";

@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/auth",
+  "name": "@everyos/auth",
   "version": "0.1.0",
   "private": true,
-  "description": "Credential primitives for Otuken: scrypt password hashing, password policy, RFC 6238 TOTP and recovery codes.",
+  "description": "Credential primitives for EveryOS: scrypt password hashing, password policy, RFC 6238 TOTP and recovery codes.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@otuken/security": "workspace:*",
-    "@otuken/shared": "workspace:*"
+    "@everyos/security": "workspace:*",
+    "@everyos/shared": "workspace:*"
   }
 }

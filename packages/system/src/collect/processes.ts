@@ -1,4 +1,4 @@
-import type { ProcessList } from "@otuken/shared";
+import type { ProcessList } from "@everyos/shared";
 import { findExecutable, runCommand } from "../exec.ts";
 import { listDirOrEmpty, mapLimit, readBytesOrNull, readTextOrNull } from "../fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "../host-paths.ts";

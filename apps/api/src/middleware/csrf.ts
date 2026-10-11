@@ -1,4 +1,4 @@
-import { CSRF_HEADER } from "@otuken/shared";
+import { CSRF_HEADER } from "@everyos/shared";
 import type { MiddlewareHandler } from "hono";
 import type { AppEnv } from "../context.ts";
 import { ApiError } from "../http/errors.ts";

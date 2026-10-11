@@ -98,14 +98,14 @@ temporary directory with the system Node.js 22.23 (no packages installed):
   processes ≈ 0.6 s (500 ms CPU sampling window), logs ≈ 20 ms.
 
 Not yet verified (needs root or production packaging, Phase 8): the agent running as root with
-`/run/otuken` and the socket group, `vcgencmd`/`smartctl` output as root, real service actions,
+`/run/everyos` and the socket group, `vcgencmd`/`smartctl` output as root, real service actions,
 Node.js 26 on the Pi, and the `tailscale serve` header recipe. System widgets were delivered with
 the Phase 6 widget platform.
 
 ## Phase 4 — Docker management
 
 Docker Engine API through the agent, discovery of containers and Compose projects (marked as
-Otuken-managed, imported or external), lifecycle operations with ownership-aware restrictions,
+EveryOS-managed, imported or external), lifecycle operations with ownership-aware restrictions,
 live logs, stats, and image, volume and network views. Nothing is ever removed automatically.
 
 Implemented and verified with real read-only Docker on the Raspberry Pi 5: Engine/Compose
@@ -195,5 +195,5 @@ root agent on real hardware, and the restart after a staged database restore und
 ## Phase 8 — Packaging and hardening
 
 Debian packages for arm64 and amd64 with a bundled Node runtime, systemd units with sandboxing, an
-`otuken` CLI (`status`, `doctor`, `version`, `backup`, `restore`, `update`), a verified installer,
+`everyos` CLI (`status`, `doctor`, `version`, `backup`, `restore`, `update`), a verified installer,
 install/upgrade/purge tests in disposable VMs, release automation, and a security review.

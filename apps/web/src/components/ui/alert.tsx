@@ -24,7 +24,11 @@ export function Alert({
   return (
     <div
       role={tone === "danger" || tone === "warning" ? "alert" : "status"}
-      className={cn("flex gap-3 rounded-otk-md border px-3.5 py-3 text-sm", toneClass, className)}
+      className={cn(
+        "flex gap-3 rounded-everyos-md border px-3.5 py-3 text-sm",
+        toneClass,
+        className,
+      )}
     >
       <Icon className="mt-0.5 size-4 shrink-0 opacity-90" aria-hidden />
       <div className="flex min-w-0 flex-col gap-0.5 leading-relaxed">

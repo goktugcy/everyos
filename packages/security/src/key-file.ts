@@ -37,7 +37,7 @@ function parseKey(contents: string, path: string): Buffer {
 function assertPermissions(path: string): void {
   if (process.platform === "win32") return;
   const { mode } = statSync(path);
-  // Group-read is allowed (root:otuken 0640 for the agent key); group-write and
+  // Group-read is allowed (root:everyos 0640 for the agent key); group-write and
   // any access for "other" is not.
   if ((mode & 0o027) !== 0) {
     throw new KeyFileError(

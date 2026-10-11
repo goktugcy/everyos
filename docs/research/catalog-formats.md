@@ -1,7 +1,7 @@
-# Third-party app catalog formats: reference for Otuken catalog adapters
+# Third-party app catalog formats: reference for EveryOS catalog adapters
 
 Status: research reference, verified against upstream on **2026-10-10**.
-Audience: people implementing Otuken catalog adapters (TypeScript/Node, Docker Compose deployment).
+Audience: people implementing EveryOS catalog adapters (TypeScript/Node, Docker Compose deployment).
 
 Everything below was checked against the upstream repositories and published artifacts listed in
 [Sources](#14-sources). Numbers come from scripts that parse the downloaded archives (they never execute
@@ -267,7 +267,7 @@ The CasaOS client interpolates compose with `compose-go`
 
 Path conventions (not variables): `/DATA/AppData/<app>/...` holds app state and `/DATA/Media`,
 `/DATA/Downloads`, … hold user data. Many apps hard-code the folder instead of using `$AppID`. 35 official
-and 195 Big Bear apps use `/DATA/AppData/<literal>/` only, for example `/DATA/AppData/bazarr`. **Otuken
+and 195 Big Bear apps use `/DATA/AppData/<literal>/` only, for example `/DATA/AppData/bazarr`. **EveryOS
 must rewrite every `/DATA/...` prefix to its own data roots.** The v2 build does not substitute anything; the
 substitution happens in the client at install time.
 
@@ -316,7 +316,7 @@ The CasaOS client also strips `runtime: nvidia` when no NVIDIA GPU is detected
 - Icons, screenshots and logos are third-party trademarks or artwork. Apache-2.0 on the repo does not
   grant trademark rights (Apache-2.0 §6).
 - Fetching at runtime on the user's machine raises no redistribution question. Bundling a snapshot in
-  Otuken releases requires preserving the license text.
+  EveryOS releases requires preserving the license text.
 
 ### 2.10 Versioning
 
@@ -476,7 +476,7 @@ Version reliability: in 50 of 466 apps, `config.json.version` differs from the m
     (`common/helpers/env-helpers.ts`).
   - A branch is selected with the URL form `https://github.com/<o>/<r>/tree/<branch>`
     (`repos.helpers.ts: getRepoBaseUrlAndBranch`).
-- Archive equivalent for Otuken: `https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master`
+- Archive equivalent for EveryOS: `https://codeload.github.com/runtipi/runtipi-appstore/tar.gz/refs/heads/master`
   (8.7 MB). Codeload responses had no `Content-Length` but did have an `ETag`.
 
 ### 5.2 Layout
@@ -672,10 +672,10 @@ exist yet.
 `LICENSE` is **GNU GPL v3**. This is not legal advice; practical reading:
 - Fetching the catalog at runtime on the user's machine and generating compose from it locally does not
   distribute it, so there is no conflict.
-- **Bundling or redistributing** Runtipi catalog content inside Otuken artifacts (release tarballs,
+- **Bundling or redistributing** Runtipi catalog content inside EveryOS artifacts (release tarballs,
   prebuilt indexes, a hosted mirror) should be treated as distributing GPL-3.0 material. Keep it as a
   separately licensed data package (GPL-3.0, with source and attribution), or avoid bundling it.
-- Do not copy the content into Otuken's own (differently licensed) code tree.
+- Do not copy the content into EveryOS's own (differently licensed) code tree.
 
 ### 5.8 Versioning and gotchas
 
@@ -684,9 +684,9 @@ exist yet.
   `v1.7.8` vs `latest`; `electrs` `v0.12.0` vs `v0.9.2`).
 - Image refs: 88.4% fixed tags, 11.6% `latest` or untagged, and **0 digests**.
 - `container_name` is never set (the builder relies on the project name). 29.6% of apps are multi-service.
-- Platform secrets leak into app env in Runtipi's design (the base `.env` includes `JWT_SECRET`). Otuken
+- Platform secrets leak into app env in Runtipi's design (the base `.env` includes `JWT_SECRET`). EveryOS
   must not copy this; provide an explicit allow-list of platform variables instead.
-- `${ROOT_FOLDER_HOST}/media/...` hard-codes Runtipi's directory layout. Map it to Otuken's shared media
+- `${ROOT_FOLDER_HOST}/media/...` hard-codes Runtipi's directory layout. Map it to EveryOS's shared media
   root.
 
 ---
@@ -994,7 +994,7 @@ Spot check:
 - **Coolify (no claim):** 23 of 23 main images have arm64. Two were unresolvable: one variable tag, one on
   codeberg.org.
 - **Conclusion:** declarations are mostly right but not authoritative. Sidecars were not checked.
-  **Otuken should verify against the registry manifest at import or install time**, as the CasaOS v2
+  **EveryOS should verify against the registry manifest at import or install time**, as the CasaOS v2
   builder does.
 
 ### 8.6 Secrets and versions (heuristics)
@@ -1048,9 +1048,9 @@ field.
 | `minPlatformVersion` | – | `min_tipi_version` (not portable) | `minversion` (not portable) | – | – |
 
 Normalization rules worth fixing in code:
-- **Placeholder translation table**, from source token to Otuken token:
+- **Placeholder translation table**, from source token to EveryOS token:
 
-  | Source token | Otuken token |
+  | Source token | EveryOS token |
   |---|---|
   | `$AppID`, `${AppID}` | `{{app.instanceId}}` |
   | `$PUID`, `$PGID` | `{{host.uid}}`, `{{host.gid}}` |
@@ -1189,7 +1189,7 @@ What the numbers mean for an install-time policy:
 | `devices` | **Warn** and show the list. Allow GPU nodes (`/dev/dri`, `/dev/nvidia*`) with a hardware consent; block raw disks (`/dev/sd*`, `/dev/nvme*`) unless explicitly granted. | up to 7.3% (CasaOS, mostly media transcoding) |
 | `sysctls` | **Warn**; allow only namespaced (`net.*`) sysctls | ≤1.1% |
 | Host ports < 1024 | **Warn** about conflicts (DNS 53, HTTP 80/443) | 12.4% in Big Bear |
-| Fixed `container_name` | **Rewrite** (prefix with the Otuken instance id) to avoid cross-catalog collisions | 95.5% CasaOS, 52.4% Big Bear |
+| Fixed `container_name` | **Rewrite** (prefix with the EveryOS instance id) to avoid cross-catalog collisions | 95.5% CasaOS, 52.4% Big Bear |
 | `build:` | **Block** (never build from catalog content) | 0% observed, so there is no cost |
 | Unpinned images (`latest`, untagged, variable tag) | **Warn**. Resolve to a digest at install time and record it, as the CasaOS v2 builder does. | 10.3% CasaOS, 11.6% Runtipi, 32.7% Coolify of image refs; about 1% Big Bear, 0% Umbrel |
 | Arch mismatch | **Block** when the registry manifest lacks the host platform for any service image; ignore the declared list when it conflicts with the registry | Declarations are wrong in both directions (§8.5) |

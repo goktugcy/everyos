@@ -1,5 +1,5 @@
-import type { InstalledAppView, IntegrationAdapter } from "@otuken/shared";
-import { getWidget, widgetsForAdapter, type WidgetManifest } from "@otuken/widget-sdk";
+import type { InstalledAppView, IntegrationAdapter } from "@everyos/shared";
+import { getWidget, widgetsForAdapter, type WidgetManifest } from "@everyos/widget-sdk";
 import { Check } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -41,7 +41,7 @@ function OfferItem({
   const [error, setError] = useState<string | null>(null);
   return (
     <li
-      className="flex items-center justify-between gap-3 rounded-otk-md bg-hover/5 p-3"
+      className="flex items-center justify-between gap-3 rounded-everyos-md bg-hover/5 p-3"
       data-testid="offer-item"
       data-widget={manifest.id}
     >
@@ -81,7 +81,7 @@ function AdapterSection({ offer, adapter }: { offer: WidgetOffer; adapter: Integ
     <section className="flex flex-col gap-2" aria-label={app}>
       <h3 className="text-sm font-semibold">{app}</h3>
       {!loading && !integration ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-otk-md bg-hover/5 p-3 text-xs text-fg-muted">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-everyos-md bg-hover/5 p-3 text-xs text-fg-muted">
           <span>
             {canManage ? t("widgets.offer.connect") : t("widgets.gallery.askAdmin", { app })}
           </span>

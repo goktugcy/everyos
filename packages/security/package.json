@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/security",
+  "name": "@everyos/security",
   "version": "0.1.0",
   "private": true,
-  "description": "Security primitives for Otuken: host master key handling, authenticated encryption of secrets at rest, key derivation and constant-time helpers.",
+  "description": "Security primitives for EveryOS: host master key handling, authenticated encryption of secrets at rest, key derivation and constant-time helpers.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

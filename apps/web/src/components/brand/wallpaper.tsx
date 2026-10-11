@@ -6,7 +6,7 @@ export function Wallpaper() {
   const theme = useThemeStore((state) => state.theme);
   const spec =
     theme.wallpaper.kind === "image"
-      ? { kind: "preset" as const, id: "otuken-dusk" as const }
+      ? { kind: "preset" as const, id: "everyos-dusk" as const }
       : theme.wallpaper;
   return (
     <div className="fixed inset-0 -z-10">

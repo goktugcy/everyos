@@ -1,4 +1,4 @@
-import { effectiveRect } from "@otuken/window-manager";
+import { effectiveRect } from "@everyos/window-manager";
 import { Copy, Maximize2, Minimize2, Minus, PanelLeft, PanelRight, Square, X } from "lucide-react";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,7 +45,7 @@ function TrafficLight({
       onClick={onClick}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
-      className="otk-traffic"
+      className="everyos-traffic"
     >
       {children}
     </button>
@@ -182,9 +182,9 @@ export const WindowFrame = memo(function WindowFrame({
         if (!focused) wm().focus(id);
       }}
       className={cn(
-        "otk-window-enter glass-strong pointer-events-auto absolute left-0 top-0 flex flex-col overflow-hidden outline-none",
-        fullscreen || maximized ? "rounded-none" : "rounded-otk-lg",
-        !focused && "[--otk-surface-strong-opacity:var(--otk-surface-opacity)]",
+        "everyos-window-enter glass-strong pointer-events-auto absolute left-0 top-0 flex flex-col overflow-hidden outline-none",
+        fullscreen || maximized ? "rounded-none" : "rounded-everyos-lg",
+        !focused && "[--everyos-surface-strong-opacity:var(--everyos-surface-opacity)]",
       )}
       style={{
         transform: `translate3d(${rect.x}px, ${rect.y}px, 0)`,
@@ -205,7 +205,7 @@ export const WindowFrame = memo(function WindowFrame({
           onDoubleClick={() => wm().toggleMaximize(id)}
         >
           <div
-            className="otk-traffic-group relative z-10 flex items-center gap-2"
+            className="everyos-traffic-group relative z-10 flex items-center gap-2"
             data-active={focused}
           >
             <TrafficLight kind="close" label={t("window.close")} onClick={() => wm().close(id)}>

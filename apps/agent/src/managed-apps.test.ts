@@ -11,13 +11,13 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
-import type { OperationContext } from "@otuken/agent-protocol";
-import { silentLogger } from "@otuken/logger";
-import { createDockerSimulator } from "@otuken/system";
+import type { OperationContext } from "@everyos/agent-protocol";
+import { silentLogger } from "@everyos/logger";
+import { createDockerSimulator } from "@everyos/system";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ManagedAppManager } from "./managed-apps.ts";
 import { createPolicy } from "./policy.ts";
-import { SecretBox } from "@otuken/security";
+import { SecretBox } from "@everyos/security";
 import { randomBytes } from "node:crypto";
 
 const directories: string[] = [];
@@ -34,7 +34,7 @@ const context = (role: "admin" | "operator" = "admin"): OperationContext => ({
   logger: silentLogger,
 });
 async function fixture() {
-  const dir = await realpath(await mkdtemp(join(tmpdir(), "otuken-managed-test-")));
+  const dir = await realpath(await mkdtemp(join(tmpdir(), "everyos-managed-test-")));
   directories.push(dir);
   const docker = createDockerSimulator();
   const run = vi.fn(docker.runCompose.bind(docker));
@@ -188,7 +188,7 @@ describe("managed application agent", () => {
         context(),
       ),
     ).rejects.toThrow("unresolved");
-    const other = await mkdtemp(join(tmpdir(), "otuken-link-target-"));
+    const other = await mkdtemp(join(tmpdir(), "everyos-link-target-"));
     directories.push(other);
     const link = join(other, "link");
     await symlink(f.root, link);

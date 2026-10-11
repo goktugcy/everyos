@@ -1,5 +1,5 @@
-import type { WidgetInstance } from "@otuken/shared";
-import { ordered } from "@otuken/widget-sdk";
+import type { WidgetInstance } from "@everyos/shared";
+import { ordered } from "@everyos/widget-sdk";
 import { PanelRightClose, Plus } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -64,7 +64,7 @@ export function WidgetSidebar() {
           <p>{t("widgets.sidebar.empty")}</p>
           <button
             type="button"
-            className="button-accent rounded-otk-sm px-3 py-1.5 text-sm font-medium"
+            className="button-accent rounded-everyos-sm px-3 py-1.5 text-sm font-medium"
             onClick={() => widgetUi.openGallery("sidebar")}
           >
             {t("widgets.menu.addWidget")}

@@ -4,10 +4,10 @@ import {
   createCatalogFetcher,
   readCatalog,
   type CatalogFetcher,
-} from "@otuken/catalogs";
-import type { Database } from "@otuken/database";
-import { detectAdapters } from "@otuken/widget-sdk";
-import type { CatalogApp, CatalogAppView, CatalogFormat, CatalogView } from "@otuken/shared";
+} from "@everyos/catalogs";
+import type { Database } from "@everyos/database";
+import { detectAdapters } from "@everyos/widget-sdk";
+import type { CatalogApp, CatalogAppView, CatalogFormat, CatalogView } from "@everyos/shared";
 
 interface CatalogRow {
   id: string;

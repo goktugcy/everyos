@@ -32,7 +32,7 @@ export function StatTile({
   detail?: ReactNode;
 }) {
   return (
-    <div className="glass-inset flex min-w-0 flex-col gap-0.5 rounded-otk-md px-3 py-2.5">
+    <div className="glass-inset flex min-w-0 flex-col gap-0.5 rounded-everyos-md px-3 py-2.5">
       <span className="text-xs text-fg-muted">{label}</span>
       <span className="truncate text-xl font-semibold text-fg">{value}</span>
       {detail ? <span className="truncate text-xs text-fg-subtle">{detail}</span> : null}
@@ -61,7 +61,7 @@ export function Meter({
   return (
     <div className="flex items-center gap-2">
       <div
-        className="h-2 flex-1 overflow-hidden rounded-full bg-[rgb(var(--otk-accent)/0.16)]"
+        className="h-2 flex-1 overflow-hidden rounded-full bg-[rgb(var(--everyos-accent)/0.16)]"
         role="meter"
         aria-label={label}
         aria-valuemin={0}

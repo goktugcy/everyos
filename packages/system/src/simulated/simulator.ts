@@ -6,7 +6,7 @@ import type {
   ServiceDetail,
   ServiceUnit,
   TimerSummary,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { LogFilter, LogSource } from "../logs/journal-client.ts";
 import { ServiceError, type ServiceManager } from "../services/systemd-client.ts";
 
@@ -92,16 +92,16 @@ const INITIAL_UNITS: SimUnit[] = [
     memoryBytes: 18_874_368,
   },
   {
-    name: "otuken.service",
-    description: "Otuken API",
+    name: "everyos.service",
+    description: "EveryOS API",
     active: "active",
     sub: "running",
     enabled: "enabled",
     memoryBytes: 78_643_200,
   },
   {
-    name: "otuken-agent.service",
-    description: "Otuken privileged agent",
+    name: "everyos-agent.service",
+    description: "EveryOS privileged agent",
     active: "active",
     sub: "running",
     enabled: "enabled",
@@ -158,7 +158,7 @@ export function createSimulator(now: () => number = Date.now): Simulator {
       unit,
       identifier: unit?.replace(/\.service$/, "") ?? "kernel",
       pid: unit ? 1000 + (sequence % 900) : null,
-      hostname: "otuken-dev",
+      hostname: "everyos-dev",
       message,
     };
     entries.push(entry);

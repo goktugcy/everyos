@@ -1,6 +1,6 @@
 # Security policy
 
-Otuken is pre-release software (0.x). Only the latest commit on `main` receives fixes.
+EveryOS is pre-release software (0.x). Only the latest commit on `main` receives fixes.
 
 ## Reporting a vulnerability
 

@@ -4,7 +4,7 @@ import {
   type ComposeActionResult,
   type ComposeFileCheck,
   type ComposeProjectView,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { AlertTriangle, Layers } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -80,7 +80,7 @@ function ImportDialog({
                 type="checkbox"
                 checked={acknowledged}
                 onChange={(event) => setAcknowledged(event.target.checked)}
-                className="size-4 accent-[rgb(var(--otk-accent))]"
+                className="size-4 accent-[rgb(var(--everyos-accent))]"
               />
               {t("docker.projects.acknowledge")}
             </label>
@@ -182,7 +182,7 @@ function ProjectCard({
 
   return (
     <li
-      className="glass-inset flex flex-col gap-3 rounded-otk-md p-3"
+      className="glass-inset flex flex-col gap-3 rounded-everyos-md p-3"
       data-testid={`project-${project.name}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -282,7 +282,7 @@ function ProjectCard({
           >
             {result.ok ? t("docker.projects.output") : t("docker.projects.failed")}
           </summary>
-          <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-otk-sm bg-black/25 p-2 font-mono text-xs">
+          <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded-everyos-sm bg-black/25 p-2 font-mono text-xs">
             {result.output || "—"}
           </pre>
         </details>

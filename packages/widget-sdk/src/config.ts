@@ -1,4 +1,4 @@
-import type { WidgetConfigValue, WidgetInstance, WidgetPreferences } from "@otuken/shared";
+import type { WidgetConfigValue, WidgetInstance, WidgetPreferences } from "@everyos/shared";
 import { getWidget } from "./manifests.ts";
 import type { WidgetConfigField, WidgetManifest } from "./types.ts";
 

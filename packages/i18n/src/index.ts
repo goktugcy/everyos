@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "@otuken/shared";
+import { DEFAULT_LOCALE, type Locale } from "@everyos/shared";
 import { en } from "./locales/en.ts";
 import { tr, type Messages } from "./locales/tr.ts";
 

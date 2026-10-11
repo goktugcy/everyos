@@ -49,9 +49,9 @@ export default function SettingsApp() {
                   aria-current={active ? "page" : undefined}
                   onClick={() => setSection(id)}
                   className={cn(
-                    "flex h-9 w-full items-center gap-2.5 rounded-otk-md px-2.5 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    "flex h-9 w-full items-center gap-2.5 rounded-everyos-md px-2.5 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     active
-                      ? "bg-[rgb(var(--otk-accent)/0.2)] font-medium text-fg"
+                      ? "bg-[rgb(var(--everyos-accent)/0.2)] font-medium text-fg"
                       : "text-fg-muted hover:bg-hover/8 hover:text-fg",
                   )}
                 >

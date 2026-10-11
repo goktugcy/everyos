@@ -1,4 +1,4 @@
-import type { HardwareStatus } from "@otuken/shared";
+import type { HardwareStatus } from "@everyos/shared";
 import { access, constants } from "node:fs/promises";
 import { CommandError, findExecutable, runCommand } from "../exec.ts";
 import { listDirOrEmpty, readTextOrNull } from "../fs-utils.ts";

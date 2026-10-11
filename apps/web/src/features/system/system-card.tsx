@@ -1,4 +1,4 @@
-import { CAPABILITY_IDS, type SystemInfo } from "@otuken/shared";
+import { CAPABILITY_IDS, type SystemInfo } from "@everyos/shared";
 import {
   CheckCircle2,
   CircleSlash,
@@ -21,7 +21,7 @@ import type { SystemInfoState } from "./use-system-info.ts";
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="flex items-center gap-3 py-2.5">
-      <span className="grid size-8 shrink-0 place-items-center rounded-otk-sm bg-hover/6 text-fg-subtle [&>svg]:size-4">
+      <span className="grid size-8 shrink-0 place-items-center rounded-everyos-sm bg-hover/6 text-fg-subtle [&>svg]:size-4">
         {icon}
       </span>
       <dt className="w-32 shrink-0 text-sm text-fg-muted">{label}</dt>

@@ -1,11 +1,11 @@
-import type { StorageUsage, WidgetConfigValue, WidgetInstance, WidgetSize } from "@otuken/shared";
+import type { StorageUsage, WidgetConfigValue, WidgetInstance, WidgetSize } from "@everyos/shared";
 import {
   getWidget,
   normalizeConfig,
   sizesFor,
   type WidgetConfigField,
   type WidgetManifest,
-} from "@otuken/widget-sdk";
+} from "@everyos/widget-sdk";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui/button.tsx";
@@ -29,7 +29,7 @@ import { useWidgetUi, widgetUi } from "./ui-store.ts";
 type Config = Record<string, WidgetConfigValue>;
 
 const selectClass =
-  "glass-inset h-10 w-full appearance-none rounded-otk-md px-3 text-sm text-fg outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--otk-accent)/0.25)] [&_option]:bg-[rgb(var(--otk-surface))] [&_option]:text-fg";
+  "glass-inset h-10 w-full appearance-none rounded-everyos-md px-3 text-sm text-fg outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--everyos-accent)/0.25)] [&_option]:bg-[rgb(var(--everyos-surface))] [&_option]:text-fg";
 
 function FieldRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -258,10 +258,10 @@ function ConfigField({
                   const checked = selected.includes(entity);
                   return (
                     <li key={entity}>
-                      <label className="flex items-center gap-2 rounded-otk-sm px-1 py-1 text-sm hover:bg-hover/6">
+                      <label className="flex items-center gap-2 rounded-everyos-sm px-1 py-1 text-sm hover:bg-hover/6">
                         <input
                           type="checkbox"
-                          className="size-4 accent-[rgb(var(--otk-accent))]"
+                          className="size-4 accent-[rgb(var(--everyos-accent))]"
                           checked={checked}
                           disabled={!checked && selected.length >= field.maxItems}
                           onChange={(event) =>

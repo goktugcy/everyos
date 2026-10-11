@@ -17,15 +17,15 @@ import {
 import { basename, dirname, join, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createGunzip, createGzip } from "node:zlib";
-import type { BackupHomeContent } from "@otuken/shared";
-import { decodeMountField } from "@otuken/system";
+import type { BackupHomeContent } from "@everyos/shared";
+import { decodeMountField } from "@everyos/system";
 import {
   readTar,
   safeRelativePath,
   sinkTo,
   TarWriter,
   type TarWriteHeader,
-} from "@otuken/system/archive";
+} from "@everyos/system/archive";
 import { invalidBackup, SpaceGuard } from "./backup-store.ts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -69,7 +69,7 @@ async function removeStage(stage: string): Promise<void> {
 }
 type SourceEntry = { path: string; header: TarWriteHeader; inode: number; modifiedAt: number };
 
-/** Only Otuken account homes are captured; host OS homes and escaping link targets are never read. */
+/** Only EveryOS account homes are captured; host OS homes and escaping link targets are never read. */
 export async function archiveHomes(options: {
   root: string | null;
   users: readonly { id: string; username: string }[];

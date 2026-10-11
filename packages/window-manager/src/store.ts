@@ -1,4 +1,4 @@
-import type { PersistedWindow, WindowLayout, WindowSession } from "@otuken/shared";
+import type { PersistedWindow, WindowLayout, WindowSession } from "@everyos/shared";
 import { createStore, type StoreApi } from "zustand/vanilla";
 import {
   cascadePosition,

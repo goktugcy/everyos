@@ -1,4 +1,4 @@
-import type { NotificationView } from "@otuken/shared";
+import type { NotificationView } from "@everyos/shared";
 import { describe, expect, it, vi } from "vitest";
 import { shouldToast, unreadTotal } from "./store.ts";
 

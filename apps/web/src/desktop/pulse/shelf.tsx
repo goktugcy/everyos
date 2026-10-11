@@ -1,4 +1,4 @@
-import type { FileProperties, FileRootView, ShelfItem } from "@otuken/shared";
+import type { FileProperties, FileRootView, ShelfItem } from "@everyos/shared";
 import {
   Download,
   File,
@@ -59,7 +59,7 @@ const setShelf = (update: (shelf: ShelfItem[]) => ShelfItem[]) =>
   updatePreference("pulse", (doc) => ({ ...doc, shelf: update(doc.shelf) }));
 
 /**
- * The shelf: references to files in Otuken's file locations. Files dropped
+ * The shelf: references to files in EveryOS's file locations. Files dropped
  * from the computer are uploaded to the chosen destination first; files
  * dragged from a Files window are only referenced. Items can be dragged back
  * into any Files window (move, or copy with Alt/Ctrl) or onto the computer.
@@ -187,7 +187,7 @@ export function PulseShelf() {
       <section
         className={cn(
           "flex w-56 shrink-0 flex-col gap-2 rounded-2xl border border-dashed p-3 transition-colors",
-          over ? "border-[rgb(var(--otk-accent))] bg-hover/10" : "border-line bg-hover/5",
+          over ? "border-[rgb(var(--everyos-accent))] bg-hover/10" : "border-line bg-hover/5",
         )}
         data-testid="pulse-dropzone"
       >
@@ -205,7 +205,7 @@ export function PulseShelf() {
             <button
               type="button"
               onClick={() => setChoosing((value) => !value)}
-              className="text-[0.68rem] font-medium text-[rgb(var(--otk-accent))] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+              className="text-[0.68rem] font-medium text-[rgb(var(--everyos-accent))] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
             >
               {t("pulse.shelf.change")}
             </button>
@@ -280,11 +280,11 @@ export function PulseShelf() {
                   ) : null}
                 </span>
                 {upload.error ? (
-                  <span className="text-[rgb(var(--otk-danger))]">{upload.error}</span>
+                  <span className="text-[rgb(var(--everyos-danger))]">{upload.error}</span>
                 ) : (
                   <span className="h-1 overflow-hidden rounded-full bg-hover/15">
                     <span
-                      className="block h-full bg-[rgb(var(--otk-accent))]"
+                      className="block h-full bg-[rgb(var(--everyos-accent))]"
                       style={{
                         width: `${upload.total ? (upload.loaded / upload.total) * 100 : 0}%`,
                       }}
@@ -313,7 +313,7 @@ export function PulseShelf() {
           ) : null}
         </div>
         {error ? (
-          <p className="mb-1 text-[0.7rem] text-[rgb(var(--otk-danger))]">
+          <p className="mb-1 text-[0.7rem] text-[rgb(var(--everyos-danger))]">
             {errorMessage(t, error)}
           </p>
         ) : null}
@@ -364,7 +364,7 @@ export function PulseShelf() {
                       aria-label={t("pulse.shelf.show", { name })}
                       title={t("pulse.shelf.show", { name })}
                       onClick={() =>
-                        desktop.openApp("otuken.files", {
+                        desktop.openApp("everyos.files", {
                           newInstance: true,
                           appState: {
                             root: item.root,
@@ -372,7 +372,7 @@ export function PulseShelf() {
                           },
                         })
                       }
-                      className="grid size-5 place-items-center rounded-full bg-[rgb(var(--otk-surface)/0.9)] text-fg hover:text-fg"
+                      className="grid size-5 place-items-center rounded-full bg-[rgb(var(--everyos-surface)/0.9)] text-fg hover:text-fg"
                     >
                       <FolderOpen className="size-3" aria-hidden />
                     </button>
@@ -382,7 +382,7 @@ export function PulseShelf() {
                         download={name}
                         aria-label={t("pulse.shelf.download", { name })}
                         title={t("pulse.shelf.download", { name })}
-                        className="grid size-5 place-items-center rounded-full bg-[rgb(var(--otk-surface)/0.9)] text-fg hover:text-fg"
+                        className="grid size-5 place-items-center rounded-full bg-[rgb(var(--everyos-surface)/0.9)] text-fg hover:text-fg"
                       >
                         <Download className="size-3" aria-hidden />
                       </a>
@@ -392,7 +392,7 @@ export function PulseShelf() {
                       aria-label={t("pulse.shelf.remove", { name })}
                       title={t("pulse.shelf.remove", { name })}
                       onClick={() => setShelf((current) => shelfRemove(current, item))}
-                      className="grid size-5 place-items-center rounded-full bg-[rgb(var(--otk-surface)/0.9)] text-fg hover:text-fg"
+                      className="grid size-5 place-items-center rounded-full bg-[rgb(var(--everyos-surface)/0.9)] text-fg hover:text-fg"
                     >
                       <X className="size-3" aria-hidden />
                     </button>

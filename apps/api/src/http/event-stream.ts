@@ -1,4 +1,4 @@
-import { ROLE_PERMISSIONS, type Permission } from "@otuken/shared";
+import { ROLE_PERMISSIONS, type Permission } from "@everyos/shared";
 import type { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import type { AppEnv } from "../context.ts";

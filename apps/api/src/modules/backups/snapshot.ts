@@ -1,16 +1,16 @@
 import { randomBytes } from "node:crypto";
-import { constants, createReadStream, createWriteStream } from "node:fs";
+import { constants, createReadStream, createWriteStream, existsSync } from "node:fs";
 import { lstat, mkdir, open, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createGunzip, createGzip } from "node:zlib";
-import { openDatabase, type Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
-import type { LocalizedText } from "@otuken/shared";
-import { readTar, safeRelativePath, TarWriter, sinkTo } from "@otuken/system/archive";
+import { openDatabase, type Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
+import type { LocalizedText } from "@everyos/shared";
+import { readTar, safeRelativePath, TarWriter, sinkTo } from "@everyos/system/archive";
 
 /*
- * Database snapshots and the Otuken-side parts of a restore (docs/backups.md).
+ * Database snapshots and the EveryOS-side parts of a restore (docs/backups.md).
  * Snapshots use SQLite's online backup API, never a file copy of a live
  * database, and leave out sessions so a backup never carries a usable login.
  */
@@ -349,7 +349,7 @@ export async function stageDatabaseRestore(options: {
   await rm(dir, { recursive: true, force: true });
   await mkdir(dir, { mode: 0o700 });
   try {
-    await gunzipFile(options.snapshotGz, join(dir, "otuken.db"));
+    await gunzipFile(options.snapshotGz, join(dir, "everyos.db"));
     if (options.wallpapersArchive)
       await pipeline(
         createReadStream(options.wallpapersArchive),
@@ -392,7 +392,9 @@ export async function applyPendingRestore(options: {
   const pending = await pendingRestore(options.dataDir);
   if (!pending) return null;
   const dir = restoreDir(options.dataDir);
-  const staged = join(dir, "otuken.db");
+  const staged = existsSync(join(dir, "everyos.db"))
+    ? join(dir, "everyos.db")
+    : join(dir, "otuken.db");
   const stamp = new Date(options.now ?? Date.now()).toISOString().replace(/[:.]/g, "-");
   try {
     const check = openDatabase(staged, { readOnly: true });

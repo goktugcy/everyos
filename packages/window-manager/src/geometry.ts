@@ -1,4 +1,4 @@
-import type { SnapZone, WindowLayout } from "@otuken/shared";
+import type { SnapZone, WindowLayout } from "@everyos/shared";
 
 export interface Point {
   x: number;

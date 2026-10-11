@@ -30,7 +30,7 @@ export function Dialog({
         />
         <DialogPrimitive.Content
           className={cn(
-            "glass-strong otk-enter fixed left-1/2 top-1/2 z-50 flex max-h-[min(88dvh,760px)] w-[min(94vw,560px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-otk-lg",
+            "glass-strong everyos-enter fixed left-1/2 top-1/2 z-50 flex max-h-[min(88dvh,760px)] w-[min(94vw,560px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-everyos-lg",
             className,
           )}
         >
@@ -50,7 +50,7 @@ export function Dialog({
               )}
             </div>
             <DialogPrimitive.Close
-              className="grid size-8 place-items-center rounded-otk-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
+              className="grid size-8 place-items-center rounded-everyos-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
               aria-label={t("common.close")}
             >
               <X className="size-4" aria-hidden />

@@ -6,12 +6,12 @@ import type {
   FileSearchResult,
   TextFile,
   TrashListing,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { create } from "zustand";
 import { api, ApiRequestError, uploadWithProgress } from "../../../lib/api.ts";
 
 /** Drag payload between Files windows and the pulse shelf: `{ root, paths }`. */
-export const FILES_DRAG_TYPE = "application/x-otuken-files";
+export const FILES_DRAG_TYPE = "application/x-everyos-files";
 
 export interface FileLocation {
   root: string;

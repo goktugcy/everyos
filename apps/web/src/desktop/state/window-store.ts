@@ -1,11 +1,11 @@
-import type { DockPreferences } from "@otuken/shared";
+import type { DockPreferences } from "@everyos/shared";
 import {
   createWindowManager,
   type Insets,
   type Viewport,
   type WindowManagerActions,
   type WindowManagerState,
-} from "@otuken/window-manager";
+} from "@everyos/window-manager";
 import { useStore } from "zustand";
 
 export const MENUBAR_HEIGHT = 36;

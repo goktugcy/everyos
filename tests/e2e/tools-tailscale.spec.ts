@@ -8,12 +8,12 @@ test("the Tailscale app explains this node, remote access and the tailnet's devi
   // The menu bar's network panel leads to the Tailscale app.
   await page.getByTestId("menubar-network").click();
   await page.getByRole("button", { name: "Tailscale ayrıntıları" }).click();
-  const app = page.locator('[data-app-id="otuken.tailscale"]');
-  await expect(app.getByTestId("tailscale-app")).toContainText("otuken-e2e");
+  const app = page.locator('[data-app-id="everyos.tailscale"]');
+  await expect(app.getByTestId("tailscale-app")).toContainText("everyos-e2e");
 
   // Published with Serve, but the origin is not configured: the app says so.
   const remote = app.getByTestId("tailscale-remote");
-  await expect(remote).toContainText("https://otuken-e2e.example-tailnet.ts.net");
+  await expect(remote).toContainText("https://everyos-e2e.example-tailnet.ts.net");
   await expect(remote).toContainText("Yalnızca tailnet içinden");
   await expect(app.getByTestId("tailscale-warning").first()).toContainText(
     "server.publicOrigins listesinde değil",

@@ -1,12 +1,12 @@
-import type { Actor } from "@otuken/agent-protocol";
-import type { Logger } from "@otuken/logger";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
 import type {
   MetricRange,
   MetricsHistory,
   MetricsPoint,
   MetricsSample,
   MetricsSnapshot,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import { computePoint, computeSnapshot, downsample } from "./rates.ts";
 

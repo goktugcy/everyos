@@ -1,4 +1,4 @@
-import { AUTO_LOCK_MINUTES, type AutoLockMinutes } from "@otuken/shared";
+import { AUTO_LOCK_MINUTES, type AutoLockMinutes } from "@everyos/shared";
 import { useTranslation } from "react-i18next";
 import { Select } from "../../../components/ui/select.tsx";
 import {

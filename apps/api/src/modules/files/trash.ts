@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
 import { join } from "node:path";
-import type { TrashEntry } from "@otuken/shared";
-import { TrashEntrySchema } from "@otuken/shared/schemas";
+import type { TrashEntry } from "@everyos/shared";
+import { TrashEntrySchema } from "@everyos/shared/schemas";
 import { ApiError, notFound } from "../../http/errors.ts";
 
 export const TRASH_DIRECTORY = ".otuken-trash";

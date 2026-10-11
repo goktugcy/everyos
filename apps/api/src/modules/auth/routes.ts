@@ -1,11 +1,11 @@
-import { hashRecoveryCode, verifyTotp } from "@otuken/auth";
-import { type LoginResponse } from "@otuken/shared";
+import { hashRecoveryCode, verifyTotp } from "@everyos/auth";
+import { type LoginResponse } from "@everyos/shared";
 import {
   EmptyDesktopQuerySchema,
   LoginRequestSchema,
   LoginTotpRequestSchema,
   UnlockRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { ApiError, notFound, rateLimited } from "../../http/errors.ts";

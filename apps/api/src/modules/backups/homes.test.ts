@@ -3,8 +3,8 @@ import { mkdir, mkdtemp, readFile, readdir, realpath, symlink, writeFile } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync, gunzipSync } from "node:zlib";
-import type { BackupHomeContent } from "@otuken/shared";
-import { TarWriter, type TarWriteHeader } from "@otuken/system/archive";
+import type { BackupHomeContent } from "@everyos/shared";
+import { TarWriter, type TarWriteHeader } from "@everyos/system/archive";
 import { describe, expect, it } from "vitest";
 import { SpaceGuard } from "./backup-store.ts";
 import { archiveHomes, assertHomesUnmounted, restoreHomes, validateHomes } from "./homes.ts";
@@ -45,7 +45,7 @@ const directory = (name: string): TarWriteHeader => ({
 
 describe("home backup archive", () => {
   it("refuses mounted descendants and escaped mount paths while allowing unrelated mounts", async () => {
-    const root = await realpath(await mkdtemp(join(tmpdir(), "otuken homes mounted ")));
+    const root = await realpath(await mkdtemp(join(tmpdir(), "everyos homes mounted ")));
     const id = randomUUID();
     const escape = (path: string) => path.replaceAll(" ", "\\040");
     const line = (path: string) => `42 1 8:1 / ${escape(path)} rw - ext4 /dev/test rw`;
@@ -60,11 +60,11 @@ describe("home backup archive", () => {
     ).resolves.toBeUndefined();
   });
   it("captures actual files and links, without reading an outside target or unknown account directory", async () => {
-    const root = await mkdtemp(join(tmpdir(), "otuken-home-archive-"));
+    const root = await mkdtemp(join(tmpdir(), "everyos-home-archive-"));
     const user = randomUUID();
     await mkdir(join(root, user));
     await writeFile(join(root, user, "note.txt"), "inside");
-    const outside = await mkdtemp(join(tmpdir(), "otuken-home-outside-"));
+    const outside = await mkdtemp(join(tmpdir(), "everyos-home-outside-"));
     await writeFile(join(outside, "secret.txt"), "NEVER_ARCHIVE_THIS_TARGET");
     await symlink(outside, join(root, user, "escape"));
     const unrelated = randomUUID();
@@ -90,7 +90,7 @@ describe("home backup archive", () => {
   });
 
   it("rejects unsafe paths, duplicate entries, missing parents and writes through symlinks before changing a home", async () => {
-    const root = await mkdtemp(join(tmpdir(), "otuken-home-unsafe-"));
+    const root = await mkdtemp(join(tmpdir(), "everyos-home-unsafe-"));
     const user = randomUUID();
     const prefix = `homes/${user}`;
     const variants: TarWriteHeader[][] = [
@@ -126,12 +126,12 @@ describe("home backup archive", () => {
   });
 
   it("rolls earlier home swaps back when a later destination is a symlink", async () => {
-    const root = await mkdtemp(join(tmpdir(), "otuken-home-rollback-"));
+    const root = await mkdtemp(join(tmpdir(), "everyos-home-rollback-"));
     const first = randomUUID();
     const second = randomUUID();
     await mkdir(join(root, first));
     await writeFile(join(root, first, "old.txt"), "original");
-    const outside = await mkdtemp(join(tmpdir(), "otuken-home-rollback-outside-"));
+    const outside = await mkdtemp(join(tmpdir(), "everyos-home-rollback-outside-"));
     await writeFile(join(outside, "keep.txt"), "outside");
     await symlink(outside, join(root, second));
     const file = await archive(root, [
@@ -164,7 +164,7 @@ describe("home backup archive", () => {
   });
 
   it("rejects mismatched manifest totals and respects cancellation and the disk reserve", async () => {
-    const root = await mkdtemp(join(tmpdir(), "otuken-home-limits-"));
+    const root = await mkdtemp(join(tmpdir(), "everyos-home-limits-"));
     const user = randomUUID();
     await mkdir(join(root, user));
     await writeFile(join(root, user, "a.txt"), "data");

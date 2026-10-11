@@ -1,7 +1,7 @@
-import type { Messages } from "@otuken/i18n";
-import { widgetKey } from "@otuken/widget-sdk";
+import type { Messages } from "@everyos/i18n";
+import { widgetKey } from "@everyos/widget-sdk";
 import type { TFunction } from "i18next";
-import type { LayoutError } from "@otuken/widget-sdk";
+import type { LayoutError } from "@everyos/widget-sdk";
 
 type ItemKey = keyof Messages["widgets"]["items"];
 

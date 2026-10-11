@@ -49,7 +49,7 @@ test("selected desktop files copy and cut together into Files folders", async ({
     await page.keyboard.press("Control+k");
     await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
     await page.getByRole("option", { name: "Dosyalar", exact: true }).click();
-    const files = page.locator('[data-app-id="otuken.files"]');
+    const files = page.locator('[data-app-id="everyos.files"]');
     await files
       .getByTestId("files-sidebar")
       .getByRole("button", { name: documents, exact: true })
@@ -72,7 +72,7 @@ test("selected desktop files copy and cut together into Files folders", async ({
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
   await page.getByRole("option", { name: "Dosyalar", exact: true }).click();
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   await files
     .getByTestId("files-sidebar")
     .getByRole("button", { name: documents, exact: true })
@@ -256,7 +256,7 @@ test("desktop multi-selection, marquee, group movement and recoverable trash wor
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("çöp");
   await page.getByRole("option", { name: "Çöp Kutusu", exact: true }).click();
-  const trash = page.locator('[data-app-id="otuken.trash"]');
+  const trash = page.locator('[data-app-id="everyos.trash"]');
   await trash.getByLabel(`${names[0]} öğesini seç`).check();
   await trash.getByLabel(`${names[1]} öğesini seç`).check();
   await trash.getByRole("button", { name: "Geri yükle", exact: true }).click();

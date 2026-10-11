@@ -1,12 +1,12 @@
 import { createReadStream } from "node:fs";
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import { WALLPAPER_MIME_TYPES } from "@otuken/shared";
+import { WALLPAPER_MIME_TYPES } from "@everyos/shared";
 import {
   EmptyDesktopQuerySchema,
   WallpaperParamsSchema,
   WallpaperUploadHeadersSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { ApiError, notFound } from "../../http/errors.ts";

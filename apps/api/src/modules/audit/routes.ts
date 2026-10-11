@@ -1,4 +1,4 @@
-import { AuditQuerySchema } from "@otuken/shared/schemas";
+import { AuditQuerySchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { parseQuery } from "../../http/validation.ts";

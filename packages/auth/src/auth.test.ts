@@ -1,4 +1,4 @@
-import { PASSWORD_MIN_LENGTH } from "@otuken/shared";
+import { PASSWORD_MIN_LENGTH } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import {
   base32Decode,
@@ -150,10 +150,10 @@ describe("TOTP", () => {
     const uri = buildOtpauthUri({
       secret: "JBSWY3DPEHPK3PXP",
       accountName: "goktug@pi5",
-      issuer: "Otuken",
+      issuer: "EveryOS",
     });
     expect(uri).toBe(
-      "otpauth://totp/Otuken:goktug%40pi5?secret=JBSWY3DPEHPK3PXP&issuer=Otuken&algorithm=SHA1&digits=6&period=30",
+      "otpauth://totp/EveryOS:goktug%40pi5?secret=JBSWY3DPEHPK3PXP&issuer=EveryOS&algorithm=SHA1&digits=6&period=30",
     );
   });
 });

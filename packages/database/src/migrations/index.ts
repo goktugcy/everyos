@@ -10,8 +10,8 @@ import { migration0008 } from "./0008-notifications.ts";
 import { migration0009 } from "./0009-update-jobs.ts";
 import { migration0010 } from "./0010-scheduled-tasks.ts";
 
-/** Ordered list of all Otuken schema migrations. Append only. */
-export const OTUKEN_MIGRATIONS: readonly Migration[] = [
+/** Ordered list of all EveryOS schema migrations. Append only. */
+export const EVERYOS_MIGRATIONS: readonly Migration[] = [
   migration0001,
   migration0002,
   migration0003,

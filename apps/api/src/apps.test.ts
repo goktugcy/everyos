@@ -1,6 +1,6 @@
 import { rmSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import type { AppJobView, CatalogView, InstalledAppView, NotificationList } from "@otuken/shared";
+import type { AppJobView, CatalogView, InstalledAppView, NotificationList } from "@everyos/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 import { AppService } from "./modules/apps/app-service.ts";

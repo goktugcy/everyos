@@ -1,5 +1,5 @@
-import { resources, type Messages } from "@otuken/i18n";
-import { DEFAULT_LOCALE, isLocale, type Locale } from "@otuken/shared";
+import { resources, type Messages } from "@everyos/i18n";
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@everyos/shared";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -10,11 +10,11 @@ declare module "i18next" {
   }
 }
 
-const STORAGE_KEY = "otuken.locale";
+const STORAGE_KEY = "everyos.locale";
 
 function readStoredLocale(): Locale | null {
   try {
-    const value = localStorage.getItem(STORAGE_KEY);
+    const value = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem("otuken.locale");
     return isLocale(value) ? value : null;
   } catch {
     return null;

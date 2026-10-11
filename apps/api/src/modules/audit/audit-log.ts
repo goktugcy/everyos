@@ -1,6 +1,6 @@
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
-import type { AuditEvent, AuditOutcome, AuditPage } from "@otuken/shared";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
+import type { AuditEvent, AuditOutcome, AuditPage } from "@everyos/shared";
 
 export interface AuditEntry {
   action: string;

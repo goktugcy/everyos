@@ -1,4 +1,4 @@
-import type { TaskType } from "@otuken/shared";
+import type { TaskType } from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import type { AppService } from "../apps/app-service.ts";
 import type { BackupService } from "../backups/backup-service.ts";

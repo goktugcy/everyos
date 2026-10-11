@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { DockPreferences } from "@otuken/shared";
+import type { DockPreferences } from "@everyos/shared";
 import { AppWindow, LayoutGrid, MonitorUp, Pin, PinOff, XCircle } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import {
@@ -43,7 +43,7 @@ import { updatePreference, usePreferences } from "../state/preferences-store.ts"
 import { useWindowManager, wm } from "../state/window-store.ts";
 import { gridMetrics } from "../surface/icon-grid.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
-import { workArea } from "@otuken/window-manager";
+import { workArea } from "@everyos/window-manager";
 
 interface DockWindow {
   id: string;
@@ -88,7 +88,7 @@ function WithTooltip({
         <Tooltip.Content
           side={side}
           sideOffset={10}
-          className="glass-strong z-[8500] rounded-otk-sm px-2.5 py-1 text-xs font-medium text-fg"
+          className="glass-strong z-[8500] rounded-everyos-sm px-2.5 py-1 text-xs font-medium text-fg"
         >
           {label}
         </Tooltip.Content>
@@ -217,7 +217,7 @@ function DockItem({
           <button
             type="button"
             aria-label={label}
-            className="otk-dock-button grid place-items-center rounded-otk-md outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-accent"
+            className="everyos-dock-button grid place-items-center rounded-everyos-md outline-none transition-transform duration-150 focus-visible:ring-2 focus-visible:ring-accent"
             style={{
               width: dock.iconSize,
               height: dock.iconSize,
@@ -268,7 +268,7 @@ function TaskbarWindow({ window, focused }: { window: DockWindow; focused: boole
           else state.focus(window.id);
         }}
         className={cn(
-          "flex h-9 max-w-52 items-center gap-2 rounded-otk-sm px-2.5 text-xs font-medium",
+          "flex h-9 max-w-52 items-center gap-2 rounded-everyos-sm px-2.5 text-xs font-medium",
           focused && !window.minimized ? "bg-hover/15 text-fg" : "text-fg-muted hover:bg-hover/8",
         )}
       >
@@ -338,7 +338,7 @@ export function Dock() {
   // Magnification: scale icons by pointer distance, written straight to CSS variables.
   const onPointerMove = (event: ReactPointerEvent) => {
     if (!magnify || !listRef.current) return;
-    for (const button of listRef.current.querySelectorAll<HTMLElement>(".otk-dock-button")) {
+    for (const button of listRef.current.querySelectorAll<HTMLElement>(".everyos-dock-button")) {
       const box = button.getBoundingClientRect();
       const center = vertical ? box.top + box.height / 2 : box.left + box.width / 2;
       const distance = Math.abs((vertical ? event.clientY : event.clientX) - center);
@@ -346,14 +346,15 @@ export function Dock() {
     }
   };
   const resetScale = () => {
-    for (const button of listRef.current?.querySelectorAll<HTMLElement>(".otk-dock-button") ?? [])
+    for (const button of listRef.current?.querySelectorAll<HTMLElement>(".everyos-dock-button") ??
+      [])
       button.style.removeProperty("--dock-scale");
   };
 
   const positionClass = {
     bottom: floating ? "bottom-2.5 left-1/2" : "inset-x-0 bottom-0",
-    left: floating ? "left-2.5 top-1/2" : "bottom-0 left-0 top-[var(--otk-menubar-height)]",
-    right: floating ? "right-2.5 top-1/2" : "bottom-0 right-0 top-[var(--otk-menubar-height)]",
+    left: floating ? "left-2.5 top-1/2" : "bottom-0 left-0 top-[var(--everyos-menubar-height)]",
+    right: floating ? "right-2.5 top-1/2" : "bottom-0 right-0 top-[var(--everyos-menubar-height)]",
   }[dock.position];
   const hidden = dock.autoHide && !revealed;
   const centering = floating ? (vertical ? "translateY(-50%)" : "translateX(-50%)") : "";
@@ -412,7 +413,7 @@ export function Dock() {
           aria-hidden
           className={cn(
             "glass-strong absolute inset-0",
-            floating ? "rounded-otk-lg" : "rounded-none border-x-0 border-b-0",
+            floating ? "rounded-everyos-lg" : "rounded-none border-x-0 border-b-0",
           )}
           style={{ opacity: dock.opacity }}
         />
@@ -428,7 +429,7 @@ export function Dock() {
               type="button"
               aria-label={t("dock.launcher")}
               onClick={openLauncher}
-              className="grid place-items-center rounded-otk-md text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
+              className="grid place-items-center rounded-everyos-md text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
               style={{ width: dock.iconSize, height: dock.iconSize }}
             >
               <LayoutGrid style={{ width: dock.iconSize * 0.46, height: dock.iconSize * 0.46 }} />

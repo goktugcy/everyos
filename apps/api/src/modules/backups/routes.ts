@@ -7,7 +7,7 @@ import {
   BackupPinRequestSchema,
   BackupSettingsSchema,
   RestoreRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";
@@ -16,7 +16,7 @@ import { ApiError } from "../../http/errors.ts";
 import { confirmPassword } from "../../http/reauth.ts";
 import { parseJsonBody, parseParams, parseQuery } from "../../http/validation.ts";
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
-import { sinkTo } from "@otuken/system/archive";
+import { sinkTo } from "@everyos/system/archive";
 import type { Services } from "../../services.ts";
 
 const Id = z.strictObject({ id: BackupIdSchema });

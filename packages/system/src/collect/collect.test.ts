@@ -7,7 +7,7 @@ import {
   NetworkStatusSchema,
   ProcessListSchema,
   StorageUsageSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { describe, expect, it } from "vitest";
 import { CommandError, findExecutable, runCommand, streamLines } from "../exec.ts";
 import { mapLimit, readBytesOrNull } from "../fs-utils.ts";
@@ -225,11 +225,11 @@ describe("command execution", () => {
     const yes = await findExecutable("yes");
     const controller = new AbortController();
     const lines: string[] = [];
-    for await (const line of streamLines(yes!, ["otuken"], { signal: controller.signal })) {
+    for await (const line of streamLines(yes!, ["everyos"], { signal: controller.signal })) {
       lines.push(line);
       if (lines.length === 3) controller.abort();
     }
-    expect(lines).toEqual(["otuken", "otuken", "otuken"]);
+    expect(lines).toEqual(["everyos", "everyos", "everyos"]);
   });
 });
 

@@ -26,7 +26,7 @@ export class TransactionError extends Error {
 /**
  * Thin, synchronous wrapper around `node:sqlite`.
  *
- * All SQLite access in Otuken goes through this class so the underlying
+ * All SQLite access in EveryOS goes through this class so the underlying
  * driver can be swapped (e.g. for better-sqlite3) without touching callers.
  * Transactions are synchronous on purpose: an async callback could interleave
  * with other requests while the write lock is held.
@@ -91,7 +91,7 @@ export class Database {
    */
   transaction<T>(fn: () => T, mode: "deferred" | "immediate" = "immediate"): T {
     const depth = this.#transactionDepth;
-    const savepoint = `otuken_sp_${depth}`;
+    const savepoint = `everyos_sp_${depth}`;
     this.#db.exec(depth === 0 ? `BEGIN ${mode.toUpperCase()}` : `SAVEPOINT ${savepoint}`);
     this.#transactionDepth++;
     try {

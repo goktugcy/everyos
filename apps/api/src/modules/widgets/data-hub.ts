@@ -1,5 +1,5 @@
-import type { Logger } from "@otuken/logger";
-import type { Permission, TopicMessage, TopicUnavailableReason } from "@otuken/shared";
+import type { Logger } from "@everyos/logger";
+import type { Permission, TopicMessage, TopicUnavailableReason } from "@everyos/shared";
 
 export type ProviderResult =
   | { status: "ok"; data: unknown }

@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import type { Actor } from "@otuken/agent-protocol";
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
-import type { UpdateJobAction, UpdateJobView } from "@otuken/shared";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
+import type { UpdateJobAction, UpdateJobView } from "@everyos/shared";
 import { ApiError } from "../../http/errors.ts";
 import type { AgentGateway } from "../../services.ts";
 import type { AuditLog } from "../audit/audit-log.ts";

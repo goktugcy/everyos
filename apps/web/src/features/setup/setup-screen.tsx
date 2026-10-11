@@ -3,7 +3,7 @@ import {
   SUPPORTED_LOCALES,
   type Locale,
   type SessionInfo,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { Check, Copy } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -60,7 +60,7 @@ function CopyableCommand({ command }: { command: string }) {
     }
   };
   return (
-    <div className="glass-inset flex items-center justify-between gap-2 rounded-otk-md py-1.5 pl-3.5 pr-1.5">
+    <div className="glass-inset flex items-center justify-between gap-2 rounded-everyos-md py-1.5 pl-3.5 pr-1.5">
       <code className="truncate font-mono text-[0.8rem] text-accent">{command}</code>
       <Button
         variant="ghost"
@@ -167,7 +167,7 @@ export function SetupScreen() {
                   lang={locale}
                   onClick={() => applyLocale(locale)}
                   className={cn(
-                    "glass-inset flex h-16 items-center justify-between rounded-otk-md px-4 text-left text-sm font-medium transition-colors",
+                    "glass-inset flex h-16 items-center justify-between rounded-everyos-md px-4 text-left text-sm font-medium transition-colors",
                     selected
                       ? "border-accent/70 bg-accent/12 text-fg"
                       : "text-fg-muted hover:text-fg",

@@ -1,4 +1,4 @@
-import type { ServiceUnit } from "@otuken/shared";
+import type { ServiceUnit } from "@everyos/shared";
 import type { TFunction } from "i18next";
 import { CircleCheck, CircleDashed, CircleX, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

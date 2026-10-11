@@ -1,4 +1,4 @@
-import { AppInstallRequestSchema, CatalogIdSchema } from "@otuken/shared/schemas";
+import { AppInstallRequestSchema, CatalogIdSchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";

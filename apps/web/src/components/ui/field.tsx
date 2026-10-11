@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "../../lib/cn.ts";
 
 export const inputClassName =
-  "glass-inset h-11 w-full rounded-otk-md px-3.5 text-[0.95rem] text-fg placeholder:text-fg-subtle/80 transition-[border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--otk-accent)/0.25)] aria-[invalid=true]:border-danger/70";
+  "glass-inset h-11 w-full rounded-everyos-md px-3.5 text-[0.95rem] text-fg placeholder:text-fg-subtle/80 transition-[border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--everyos-accent)/0.25)] aria-[invalid=true]:border-danger/70";
 
 export interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
   label: string;
@@ -64,7 +64,7 @@ export function PasswordField(props: Omit<FieldProps, "type" | "trailing">) {
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="grid size-9 place-items-center rounded-otk-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
+          className="grid size-9 place-items-center rounded-everyos-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
           aria-label={visible ? t("common.hidePassword") : t("common.showPassword")}
           aria-pressed={visible}
         >

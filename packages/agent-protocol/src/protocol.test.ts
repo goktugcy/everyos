@@ -2,7 +2,7 @@ import { mkdtempSync, statSync, writeFileSync } from "node:fs";
 import { connect } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LogEntry, SystemInfo } from "@otuken/shared";
+import type { LogEntry, SystemInfo } from "@everyos/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import {

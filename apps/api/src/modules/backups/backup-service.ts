@@ -3,13 +3,13 @@ import { constants, createReadStream } from "node:fs";
 import { copyFile, lstat, open, readFile, stat } from "node:fs/promises";
 import { hostname } from "node:os";
 import { join } from "node:path";
-import type { Actor } from "@otuken/agent-protocol";
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
 import {
   BACKUP_FORMAT,
   BACKUP_FORMAT_VERSION,
-  OTUKEN_VERSION,
+  EVERYOS_VERSION,
   type BackupAppContent,
   type BackupJobStage,
   type BackupJobView,
@@ -21,8 +21,8 @@ import {
   type BackupView,
   type RestorePreview,
   type RestoreScope,
-} from "@otuken/shared";
-import { APP_DATA_CHUNK_BYTES, BackupSettingsSchema } from "@otuken/shared/schemas";
+} from "@everyos/shared";
+import { APP_DATA_CHUNK_BYTES, BackupSettingsSchema } from "@everyos/shared/schemas";
 import { toApiError } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import type { AgentGateway } from "../../services.ts";
@@ -108,7 +108,7 @@ export interface BackupServiceDependencies {
   /** Fingerprint of the server secret (see BackupManifest.keyId). */
   keyId: string;
   supervised: boolean;
-  /** Restarts Otuken (only when supervised) so a staged database restore is applied. */
+  /** Restarts EveryOS (only when supervised) so a staged database restore is applied. */
   requestRestart?: () => void;
 }
 
@@ -351,8 +351,8 @@ export class BackupService {
     try {
       await guard.require(databaseSize);
       stage("database");
-      const schemaVersion = await snapshotDatabase(db, join(work, "otuken.db.gz"), work);
-      const summary = await withSnapshot(join(work, "otuken.db.gz"), work, inspectSnapshot);
+      const schemaVersion = await snapshotDatabase(db, join(work, "everyos.db.gz"), work);
+      const summary = await withSnapshot(join(work, "everyos.db.gz"), work, inspectSnapshot);
       if (!summary.ok) throw new JobFailure("snapshot-integrity");
       stage("files");
       let config = false;
@@ -393,7 +393,7 @@ export class BackupService {
       stage("verify");
       const files = [];
       for (const name of [
-        "otuken.db.gz",
+        "everyos.db.gz",
         ...(config ? ["config.yaml"] : []),
         ...(wallpapers ? ["wallpapers.tar.gz"] : []),
         ...(homes.length ? ["homes.tar.gz"] : []),
@@ -410,7 +410,7 @@ export class BackupService {
         trigger: options.trigger,
         createdBy: actor.username,
         note: options.note,
-        otukenVersion: OTUKEN_VERSION,
+        everyosVersion: EVERYOS_VERSION,
         schemaVersion,
         hostname: hostname().slice(0, 255),
         keyId: this.#deps.keyId,
@@ -607,7 +607,7 @@ export class BackupService {
     }
     const summary = problem
       ? null
-      : await withSnapshot(this.#store.file(id, "otuken.db.gz"), this.#store.dir, inspectSnapshot);
+      : await withSnapshot(await this.#store.databaseFile(id), this.#store.dir, inspectSnapshot);
     const verification: BackupVerification = {
       at: this.#deps.now(),
       ok: !problem && Boolean(summary?.ok),
@@ -824,7 +824,7 @@ export class BackupService {
           : null;
         if (request.settings === "desktop") {
           stage("restore-settings");
-          await withSnapshot(this.#store.file(id, "otuken.db.gz"), this.#store.dir, (snapshot) =>
+          await withSnapshot(await this.#store.databaseFile(id), this.#store.dir, (snapshot) =>
             restoreDesktop({
               db: this.#deps.db,
               snapshot,
@@ -837,7 +837,7 @@ export class BackupService {
           stage("stage-database");
           await stageDatabaseRestore({
             dataDir: this.#deps.dataDir,
-            snapshotGz: this.#store.file(id, "otuken.db.gz"),
+            snapshotGz: await this.#store.databaseFile(id),
             wallpapersArchive: wallpapers,
             pending: { backupId: id, requestedBy: actor.username, requestedAt: this.#deps.now() },
           });
@@ -858,7 +858,7 @@ export class BackupService {
           },
         });
         if (job.restart === "automatic") {
-          this.#logger.warn("Restarting Otuken to apply the restored database", { backupId: id });
+          this.#logger.warn("Restarting EveryOS to apply the restored database", { backupId: id });
           const timer = setTimeout(() => this.#deps.requestRestart?.(), 1_500);
           timer.unref();
         }

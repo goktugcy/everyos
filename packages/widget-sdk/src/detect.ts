@@ -1,4 +1,4 @@
-import type { IntegrationAdapter } from "@otuken/shared";
+import type { IntegrationAdapter } from "@everyos/shared";
 import { BUILT_IN_WIDGETS } from "./manifests.ts";
 import type { WidgetManifest } from "./types.ts";
 
@@ -22,7 +22,7 @@ export function repositoryOf(image: string): string {
   return reference.replace(/^library\//, "");
 }
 
-/** Images known to run an app Otuken has a built-in adapter for. */
+/** Images known to run an app EveryOS has a built-in adapter for. */
 const RULES: ReadonlyArray<[IntegrationAdapter, RegExp]> = [
   ["jellyfin", /^(jellyfin\/jellyfin|linuxserver\/jellyfin|hotio\/jellyfin)$/],
   ["immich", /^(immich-app\/immich-server|altran1502\/immich-server)$/],

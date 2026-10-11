@@ -1,5 +1,5 @@
-import type { IconSize } from "@otuken/shared";
-import type { Point, Rect } from "@otuken/window-manager";
+import type { IconSize } from "@everyos/shared";
+import type { Point, Rect } from "@everyos/window-manager";
 
 export interface Cell {
   col: number;

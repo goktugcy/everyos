@@ -1,5 +1,5 @@
 import { readdir, readlink } from "node:fs/promises";
-import type { SocketSummary } from "@otuken/shared";
+import type { SocketSummary } from "@everyos/shared";
 import { mapLimit, readTextOrNull } from "../fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "../host-paths.ts";
 import { isListening, parseProcNet, type ProcNetSocket } from "../linux/sockets.ts";

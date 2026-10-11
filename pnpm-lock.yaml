@@ -298,22 +298,22 @@ importers:
 
   apps/agent:
     dependencies:
-      '@otuken/agent-protocol':
+      '@everyos/agent-protocol':
         specifier: workspace:*
         version: link:../../packages/agent-protocol
-      '@otuken/catalogs':
+      '@everyos/catalogs':
         specifier: workspace:*
         version: link:../../packages/catalogs
-      '@otuken/logger':
+      '@everyos/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@otuken/security':
+      '@everyos/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@otuken/system':
+      '@everyos/system':
         specifier: workspace:*
         version: link:../../packages/system
       yaml:
@@ -328,31 +328,31 @@ importers:
       '@hono/node-server':
         specifier: 'catalog:'
         version: 2.1.4(hono@4.13.13)
-      '@otuken/agent-protocol':
+      '@everyos/agent-protocol':
         specifier: workspace:*
         version: link:../../packages/agent-protocol
-      '@otuken/auth':
+      '@everyos/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@otuken/catalogs':
+      '@everyos/catalogs':
         specifier: workspace:*
         version: link:../../packages/catalogs
-      '@otuken/database':
+      '@everyos/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@otuken/logger':
+      '@everyos/logger':
         specifier: workspace:*
         version: link:../../packages/logger
-      '@otuken/security':
+      '@everyos/security':
         specifier: workspace:*
         version: link:../../packages/security
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@otuken/system':
+      '@everyos/system':
         specifier: workspace:*
         version: link:../../packages/system
-      '@otuken/widget-sdk':
+      '@everyos/widget-sdk':
         specifier: workspace:*
         version: link:../../packages/widget-sdk
       hono:
@@ -386,19 +386,19 @@ importers:
       '@fontsource-variable/inter':
         specifier: 'catalog:'
         version: 5.3.0
-      '@otuken/i18n':
+      '@everyos/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../../packages/shared
-      '@otuken/theme':
+      '@everyos/theme':
         specifier: workspace:*
         version: link:../../packages/theme
-      '@otuken/widget-sdk':
+      '@everyos/widget-sdk':
         specifier: workspace:*
         version: link:../../packages/widget-sdk
-      '@otuken/window-manager':
+      '@everyos/window-manager':
         specifier: workspace:*
         version: link:../../packages/window-manager
       '@xterm/addon-fit':
@@ -462,13 +462,13 @@ importers:
 
   packages/agent-protocol:
     dependencies:
-      '@otuken/logger':
+      '@everyos/logger':
         specifier: workspace:*
         version: link:../logger
-      '@otuken/security':
+      '@everyos/security':
         specifier: workspace:*
         version: link:../security
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
       zod:
@@ -477,16 +477,16 @@ importers:
 
   packages/auth:
     dependencies:
-      '@otuken/security':
+      '@everyos/security':
         specifier: workspace:*
         version: link:../security
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/catalogs:
     dependencies:
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
       re2js:
@@ -498,13 +498,13 @@ importers:
 
   packages/database:
     dependencies:
-      '@otuken/logger':
+      '@everyos/logger':
         specifier: workspace:*
         version: link:../logger
 
   packages/i18n:
     dependencies:
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
 
@@ -520,7 +520,7 @@ importers:
 
   packages/system:
     dependencies:
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
       yaml:
@@ -529,19 +529,19 @@ importers:
 
   packages/theme:
     dependencies:
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/widget-sdk:
     dependencies:
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
 
   packages/window-manager:
     dependencies:
-      '@otuken/shared':
+      '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
       zustand:

@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/window-manager",
+  "name": "@everyos/window-manager",
   "version": "0.1.0",
   "private": true,
-  "description": "Framework-independent window manager for the Otuken desktop: window lifecycle, focus and z-order, snapping, tiling, virtual desktops, viewport clamping and session persistence.",
+  "description": "Framework-independent window manager for the EveryOS desktop: window lifecycle, focus and z-order, snapping, tiling, virtual desktops, viewport clamping and session persistence.",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@otuken/shared": "workspace:*",
+    "@everyos/shared": "workspace:*",
     "zustand": "catalog:"
   }
 }

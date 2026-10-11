@@ -1,4 +1,4 @@
-import type { ThemeEffects, ThemePresetId, WallpaperPresetId } from "@otuken/shared";
+import type { ThemeEffects, ThemePresetId, WallpaperPresetId } from "@everyos/shared";
 
 export interface ThemePalette {
   scheme: "dark" | "light";
@@ -45,7 +45,7 @@ export const THEME_PRESETS: Record<ThemePresetId, ThemePreset> = {
       shadowIntensity: 0.55,
       radius: 22,
     },
-    wallpaper: "otuken-dusk",
+    wallpaper: "everyos-dusk",
   },
   "frost-blue": {
     id: "frost-blue",

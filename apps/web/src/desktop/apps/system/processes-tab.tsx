@@ -1,4 +1,4 @@
-import type { ProcessList } from "@otuken/shared";
+import type { ProcessList } from "@everyos/shared";
 import { useTranslation } from "react-i18next";
 import { Select } from "../../../components/ui/select.tsx";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
@@ -49,7 +49,7 @@ export function ProcessesTab() {
       {list.data ? (
         <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full min-w-[640px] text-left text-sm" data-testid="process-table">
-            <thead className="sticky top-0 z-10 bg-[rgb(var(--otk-surface)/0.95)] text-xs text-fg-muted">
+            <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
               <tr>
                 <th scope="col" className="px-2 py-1.5 text-right font-semibold">
                   {t("monitor.processes.pid")}

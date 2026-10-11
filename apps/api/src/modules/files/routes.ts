@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import type { FileRootsResponse } from "@otuken/shared";
+import type { FileRootsResponse } from "@everyos/shared";
 import {
   DeleteRequestSchema,
   FileSettingsSchema,
@@ -15,7 +15,7 @@ import {
   TransferRequestSchema,
   TrashItemRequestSchema,
   TrashDeleteRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono, type Context, type MiddlewareHandler } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { ApiError } from "../../http/errors.ts";

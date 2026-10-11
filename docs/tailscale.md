@@ -1,8 +1,8 @@
 # Tailscale integration (Phase 7)
 
-Tailscale is optional. Otuken works fully without it; when it is not installed or its LocalAPI is
+Tailscale is optional. EveryOS works fully without it; when it is not installed or its LocalAPI is
 not reachable, the Tailscale app shows why ("not detected", "permission denied") and the menu bar
-hides its Tailscale link. Otuken **never changes the Tailscale configuration**: it reads
+hides its Tailscale link. EveryOS **never changes the Tailscale configuration**: it reads
 tailscaled's LocalAPI and explains what it finds.
 
 ## Data sources
@@ -18,10 +18,10 @@ or `/run/tailscale/tailscaled.sock`; `tailscaleSocket` in `agent.yaml` overrides
 | `/localapi/v0/serve-config` | Serve and Funnel handlers                                                 |
 
 Preferences and the Serve configuration are optional: older versions or restricted access simply
-show "not readable". Only the fields Otuken displays are kept; keys and user records never leave the
+show "not readable". Only the fields EveryOS displays are kept; keys and user records never leave the
 agent. Responses are capped at 4 MiB.
 
-## What Otuken shows
+## What EveryOS shows
 
 - **Connection** (everyone with `system:read`, also in the menu bar and the Tailscale widget):
   state, node name, MagicDNS name, tailnet, addresses, exit node, peer counts, version and health
@@ -34,7 +34,7 @@ agent. Responses are capped at 4 MiB.
   region, or idle), traffic and exit-node role. A device list reveals personal hostnames, so
   viewers and operators only see counts.
 
-## Remote access to Otuken
+## Remote access to EveryOS
 
 The API recognizes Serve handlers (web proxies and TCP forwards) that point at its own port on a
 local address and checks them against its configuration. The recommended setup is:
@@ -50,22 +50,22 @@ server:
   publicOrigins: ["https://<machine>.<tailnet>.ts.net"]
 ```
 
-When Tailscale runs but Otuken is not published, the app suggests exactly this command for the
+When Tailscale runs but EveryOS is not published, the app suggests exactly this command for the
 node's MagicDNS name. It does not run it.
 
 ## Warnings
 
-| Warning             | Severity | Meaning                                                                             |
-| ------------------- | -------- | ----------------------------------------------------------------------------------- |
-| `needs-login`       | warning  | tailscaled waits for sign-in or device approval                                     |
-| `not-running`       | warning  | Tailscale is stopped or starting                                                    |
-| `key-expiring`      | warning  | The node key expires within 14 days; remote access stops when it does               |
-| `key-expired`       | critical | The node key has expired                                                            |
-| `exit-node-offline` | warning  | The exit node in use is offline                                                     |
-| `funnel-public`     | critical | Otuken is reachable from the public internet through Funnel                         |
-| `origin-missing`    | warning  | A Serve URL for Otuken is not in `server.publicOrigins` (changes would be rejected) |
-| `proxy-untrusted`   | warning  | Otuken is behind Serve but `127.0.0.1` is not a trusted proxy                       |
-| `health`            | info     | tailscaled's own health messages                                                    |
+| Warning             | Severity | Meaning                                                                              |
+| ------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `needs-login`       | warning  | tailscaled waits for sign-in or device approval                                      |
+| `not-running`       | warning  | Tailscale is stopped or starting                                                     |
+| `key-expiring`      | warning  | The node key expires within 14 days; remote access stops when it does                |
+| `key-expired`       | critical | The node key has expired                                                             |
+| `exit-node-offline` | warning  | The exit node in use is offline                                                      |
+| `funnel-public`     | critical | EveryOS is reachable from the public internet through Funnel                         |
+| `origin-missing`    | warning  | A Serve URL for EveryOS is not in `server.publicOrigins` (changes would be rejected) |
+| `proxy-untrusted`   | warning  | EveryOS is behind Serve but `127.0.0.1` is not a trusted proxy                       |
+| `health`            | info     | tailscaled's own health messages                                                     |
 
 The host monitor turns two of them into notification conditions, raised and resolved
 automatically: `tailscale-key-expiry` (everyone with `system:read`) and `tailscale-funnel`

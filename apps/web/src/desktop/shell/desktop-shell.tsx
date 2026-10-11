@@ -1,4 +1,4 @@
-import { reassignDesktops } from "@otuken/widget-sdk";
+import { reassignDesktops } from "@everyos/widget-sdk";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
@@ -116,7 +116,7 @@ function DesktopWorkspace() {
       <div className="fixed inset-0 overflow-hidden" inert={locked} data-testid="desktop">
         <WallpaperView
           spec={desktopWallpaper ?? theme.wallpaper}
-          fallback={{ kind: "preset", id: "otuken-dusk" }}
+          fallback={{ kind: "preset", id: "everyos-dusk" }}
         />
         <DesktopSurface />
         <WidgetDesktopLayer />
@@ -205,7 +205,7 @@ export function DesktopShell() {
     if (loadError) {
       return (
         <div className="flex min-h-dvh items-center justify-center p-6">
-          <div className="glass-strong flex max-w-md flex-col gap-4 rounded-otk-lg p-6">
+          <div className="glass-strong flex max-w-md flex-col gap-4 rounded-everyos-lg p-6">
             <Alert tone="danger">{errorMessage(t, loadError)}</Alert>
             <Button
               onClick={() => {

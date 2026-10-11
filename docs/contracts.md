@@ -1,4 +1,4 @@
-# Otuken contracts
+# EveryOS contracts
 
 This document describes the implemented desktop and window-manager contracts (Phase 2), and planned
 widget and catalog contracts. The agent operation contract and HTTP API exist in code and are
@@ -11,7 +11,7 @@ shapes and will be refined alongside implementation.
 
 ## 1. Desktop application contract (Phase 2)
 
-Every built-in Otuken app (Settings, Docker, Files, Terminal, App Store, …) registers with the
+Every built-in EveryOS app (Settings, Docker, Files, Terminal, App Store, …) registers with the
 desktop through a static manifest and a lazily imported component. The desktop never imports app
 code at startup; it loads an app only when the user opens it (code splitting per app).
 
@@ -285,7 +285,7 @@ export type RiskFlag =
 
 ### 4.3 Rules
 
-- Placeholders are translated to Otuken tokens (`$AppID` → `{{app.instanceId}}`,
+- Placeholders are translated to EveryOS tokens (`$AppID` → `{{app.instanceId}}`,
   `${APP_DATA_DIR}` → `{{paths.appData}}`, `SERVICE_PASSWORD_*` → `{{secret.generate}}`, …).
   **Unknown variables block installation** until the user provides a value. They are never
   resolved from the host environment.
@@ -318,12 +318,12 @@ export type RiskFlag =
   [app-store.md](app-store.md) for the complete current contract and compatibility limits.
 - **Widgets:** zod-free constants/types in `packages/shared/src/widgets.ts`, schemas in
   `packages/shared/src/schemas/widgets.ts`, manifests/layout/compatibility helpers in
-  `@otuken/widget-sdk`, providers in `apps/api/src/modules/widgets`, integrations in
+  `@everyos/widget-sdk`, providers in `apps/api/src/modules/widgets`, integrations in
   `apps/api/src/modules/integrations`. See [widgets.md](widgets.md).
 - **Phase 7 tools:** zod-free types in `packages/shared/src/{notifications,files,updates,tasks,
 backups,tailscale}.ts` and `cron.ts`; strict request and agent schemas in the matching
   `packages/shared/src/schemas/*.ts` (Tailscale details and peers in `schemas/host.ts`). Backup
-  archives are versioned by `manifest.json` (`format: "otuken-backup"`, `version: 1`); the tar
-  reader and writer are `@otuken/system/archive`. See [notifications.md](notifications.md),
+  archives are versioned by `manifest.json` (`format: "everyos-backup"`, `version: 1`); the tar
+  reader and writer are `@everyos/system/archive`. See [notifications.md](notifications.md),
   [files.md](files.md), [updates.md](updates.md), [tasks.md](tasks.md), [backups.md](backups.md)
   and [tailscale.md](tailscale.md).

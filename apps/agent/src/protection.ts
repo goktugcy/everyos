@@ -1,11 +1,13 @@
-import type { ServiceAction } from "@otuken/shared";
+import type { ServiceAction } from "@everyos/shared";
 
 /**
- * Units Otuken must never disrupt: the platform itself, remote access paths
+ * Units EveryOS must never disrupt: the platform itself, remote access paths
  * (SSH, Tailscale) and core OS plumbing. Losing any of them can lock the
  * owner out of a headless server. Patterns use `*` as a wildcard.
  */
 export const BUILT_IN_PROTECTED_UNITS = [
+  "everyos.service",
+  "everyos-agent.service",
   "otuken.service",
   "otuken-agent.service",
   "ssh.service",

@@ -1,4 +1,4 @@
-import type { LoginResponse } from "@otuken/shared";
+import type { LoginResponse } from "@everyos/shared";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthLayout } from "../../components/auth-layout.tsx";

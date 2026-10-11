@@ -1,4 +1,4 @@
-import type { MenubarModuleId } from "@otuken/shared";
+import type { MenubarModuleId } from "@everyos/shared";
 import {
   AppWindow,
   Copy,
@@ -57,7 +57,7 @@ function AgentIndicator() {
       <span
         className={cn(
           "size-[7px] rounded-full",
-          connected ? "bg-success shadow-[0_0_6px_rgb(var(--otk-success)/0.8)]" : "bg-danger",
+          connected ? "bg-success shadow-[0_0_6px_rgb(var(--everyos-success)/0.8)]" : "bg-danger",
         )}
         aria-hidden
       />
@@ -140,7 +140,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
   const canReadSystem = usePermissions().includes("system:read");
 
   const focusedApp = focused ? getApp(focused.appId) : undefined;
-  const otukenMenu: MenuEntry[] = [
+  const everyosMenu: MenuEntry[] = [
     {
       kind: "item",
       id: "about",
@@ -153,7 +153,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
       id: "settings",
       label: t("menubar.settings"),
       icon: <Settings />,
-      onSelect: () => desktop.openApp("otuken.settings"),
+      onSelect: () => desktop.openApp("everyos.settings"),
     },
     { kind: "separator", id: "s1" },
     {
@@ -288,11 +288,11 @@ export function Menubar({ insecure }: { insecure: boolean }) {
   return (
     <header
       data-testid="menubar"
-      className="menubar-glass fixed inset-x-0 top-0 z-[70] flex h-[var(--otk-menubar-height)] items-center gap-0.5 px-2.5 pt-[env(safe-area-inset-top)]"
+      className="menubar-glass fixed inset-x-0 top-0 z-[70] flex h-[var(--everyos-menubar-height)] items-center gap-0.5 px-2.5 pt-[env(safe-area-inset-top)]"
     >
       <MenuDropdown
         label={t("shell.menu.label")}
-        entries={otukenMenu}
+        entries={everyosMenu}
         trigger={
           <button type="button" className={cn(menubarButton, "px-2.5")}>
             <LogoMark className="!size-[17px]" />

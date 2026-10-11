@@ -4,7 +4,7 @@ import {
   type OperationParams,
   type OperationResult,
   type UnaryOperationName,
-} from "@otuken/agent-protocol";
+} from "@everyos/agent-protocol";
 import type { Context } from "hono";
 import type { AppEnv, AuthState } from "../context.ts";
 import { requireAuth } from "../middleware/auth.ts";

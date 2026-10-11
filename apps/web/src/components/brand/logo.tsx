@@ -1,8 +1,9 @@
 import { useId } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../lib/cn.ts";
 
 /**
- * The Otuken mark: a protective sky ring around a mountain ridge, with a
+ * The EveryOS mark: a protective sky ring around a mountain ridge, with a
  * single star marking the center — centrality, protection, nature and sky.
  */
 export function LogoMark({ className, title }: { className?: string; title?: string }) {
@@ -50,10 +51,11 @@ export function LogoMark({ className, title }: { className?: string; title?: str
 }
 
 export function Wordmark({ className }: { className?: string }) {
+  const { t } = useTranslation();
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark className="size-8" />
-      <span className="text-lg font-semibold tracking-[0.02em]">Otuken</span>
+      <span className="text-lg font-semibold tracking-[0.02em]">{t("brand.name")}</span>
     </span>
   );
 }

@@ -1,19 +1,19 @@
-# Otuken architecture
+# EveryOS architecture
 
-Otuken is a **modular monolith** with three runtime responsibilities and exactly two long-running
+EveryOS is a **modular monolith** with three runtime responsibilities and exactly two long-running
 processes on the host:
 
-| Process                | Runs as                 | Listens on                                                | Responsibility                                                                             |
-| ---------------------- | ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `otuken.service`       | `otuken` (unprivileged) | TCP `127.0.0.1:7470` by default (configurable)            | HTTP API, sessions, authorization, SQLite, serving the web client, background maintenance  |
-| `otuken-agent.service` | `root` (hardened unit)  | Unix socket `/run/otuken/agent.sock` (`root:otuken 0660`) | Executes a fixed registry of validated host operations requested by the API                |
-| Web client             | the user's browser      | –                                                         | Desktop UI. Never performs privileged work; talks only to the API over same-origin HTTP(S) |
+| Process                 | Runs as                  | Listens on                                                  | Responsibility                                                                             |
+| ----------------------- | ------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `everyos.service`       | `everyos` (unprivileged) | TCP `127.0.0.1:7470` by default (configurable)              | HTTP API, sessions, authorization, SQLite, serving the web client, background maintenance  |
+| `everyos-agent.service` | `root` (hardened unit)   | Unix socket `/run/everyos/agent.sock` (`root:everyos 0660`) | Executes a fixed registry of validated host operations requested by the API                |
+| Web client              | the user's browser       | –                                                           | Desktop UI. Never performs privileged work; talks only to the API over same-origin HTTP(S) |
 
 ```mermaid
 flowchart LR
-  B[Browser<br/>React desktop] -- "HTTPS / HTTP same-origin<br/>cookie session + CSRF token" --> A[otuken.service<br/>Hono API · user otuken]
-  A -- "SQLite (WAL)" --> D[(/var/lib/otuken/otuken.db)]
-  A -- "Unix socket · NDJSON<br/>mutual HMAC handshake<br/>typed operations only" --> G[otuken-agent.service<br/>root, systemd-hardened]
+  B[Browser<br/>React desktop] -- "HTTPS / HTTP same-origin<br/>cookie session + CSRF token" --> A[everyos.service<br/>Hono API · user everyos]
+  A -- "SQLite (WAL)" --> D[(/var/lib/everyos/everyos.db)]
+  A -- "Unix socket · NDJSON<br/>mutual HMAC handshake<br/>typed operations only" --> G[everyos-agent.service<br/>root, systemd-hardened]
   G -- "/proc, /sys, /etc (read)" --> H[(Host)]
   G -- "systemd, journald, Docker Unix socket" --> H
   G -. "later phases: package management" .-> H
@@ -69,13 +69,13 @@ flowchart TD
   i18n --> shared
 ```
 
-- `@otuken/shared` (root entry) must stay **runtime-agnostic and zod-free** so the browser bundle
-  does not ship server-side validation. Zod schemas live in `@otuken/shared/schemas`.
+- `@everyos/shared` (root entry) must stay **runtime-agnostic and zod-free** so the browser bundle
+  does not ship server-side validation. Zod schemas live in `@everyos/shared/schemas`.
 - Node-only packages (`database`, `auth`, `security`, `system`, `logger`, `agent-protocol`) are
   never imported by `apps/web`.
 - No cycles. The agent depends on the smallest possible set of third-party packages (`zod`, `yaml`)
   because it runs as root.
-- The API never imports `@otuken/system` at runtime (it has no host access of its own). Its tests
+- The API never imports `@everyos/system` at runtime (it has no host access of its own). Its tests
   use the development Docker simulator from that package through a dev dependency, so API tests
   exercise the same simulated Docker the development agent serves.
 
@@ -100,7 +100,7 @@ execution. Only the agent imports this backend at runtime. Fixed registered Dock
 carry permissions, schemas, timeouts and a development-mode mutation guard.
 
 The API stores explicit Compose imports in SQLite (`docker_projects`, migration 0003). Labels
-provide discovery metadata and manager hints; they never grant Otuken ownership. `DockerHub`
+provide discovery metadata and manager hints; they never grant EveryOS ownership. `DockerHub`
 samples running containers every 5 s while subscribed, derives rates from cumulative counters,
 keeps up to 15 minutes of history for at most 300 containers, and relays lifecycle events through
 the shared `docker` SSE topic. History resets on API restart.
@@ -111,7 +111,7 @@ detail, live logs/charts, Compose imports/actions and image/volume/network inven
 
 ## Widget platform (Phase 6)
 
-`@otuken/widget-sdk` holds the built-in manifests and the pure layout, configuration,
+`@everyos/widget-sdk` holds the built-in manifests and the pure layout, configuration,
 compatibility and adapter-detection logic. The web client and the API share it. The API's
 `DataHub` (`apps/api/src/modules/widgets`) runs one reference-counted collector per data topic and
 filters results per subscriber:
@@ -136,12 +136,12 @@ pieces (agent operations, SSE stream, audit log) rather than new infrastructure:
 - **Files** (`modules/files`): `FileService` in the API's own identity over configured roots.
 - **Updates** (`modules/updates`): background apt jobs through the agent's `AptManager`, one at a
   time, with streamed output and history.
-- **Scheduler** (`modules/tasks`): a 30-second clock, cron parsing in `@otuken/shared`, and
+- **Scheduler** (`modules/tasks`): a 30-second clock, cron parsing in `@everyos/shared`, and
   executors that call the same services as the interactive features.
 - **Backups** (`modules/backups`): `BackupStore` (directories, manifests, verification, transfer),
   database snapshots and staged restores (`snapshot.ts`, applied by `main.ts` before the database
   opens), and `BackupService` jobs. App data goes through the agent's `AppDataBackups` in chunks;
-  `@otuken/system/archive` is the shared tar implementation.
+  `@everyos/system/archive` is the shared tar implementation.
 - **Tailscale** (`modules/system/tailscale.ts`): read-only LocalAPI details from the agent and an
   analysis of remote access and warnings, used by the API route and the host monitor.
 
@@ -164,13 +164,13 @@ pieces (agent operations, SSE stream, audit log) rather than new infrastructure:
 
 ## Data storage
 
-SQLite (`/var/lib/otuken/otuken.db`) in WAL mode with `synchronous=NORMAL` and foreign keys on.
+SQLite (`/var/lib/everyos/everyos.db`) in WAL mode with `synchronous=NORMAL` and foreign keys on.
 
 - Migrations live in `packages/database/src/migrations`. They are numbered consecutively and append-only.
   Each runs in its own transaction.
 - Before an existing database is migrated, an online backup is written to
-  `/var/lib/otuken/backups/pre-migration-v<from>-to-v<to>-<timestamp>.db`. The last 5 are kept.
-- If the database was migrated by a newer Otuken release, startup is refused instead of risking data
+  `/var/lib/everyos/backups/pre-migration-v<from>-to-v<to>-<timestamp>.db`. The last 5 are kept.
+- If the database was migrated by a newer EveryOS release, startup is refused instead of risking data
   loss.
 - High-frequency metrics are **not** stored in SQLite. Phase 3 keeps them in memory with bounded
   ring buffers.
@@ -189,7 +189,7 @@ themselves are files (their history must survive a database restore).
 ## Desktop client (Phase 2)
 
 `apps/web/src/desktop` contains the static application registry, desktop/mobile shells, menus,
-launcher, dock, icon/folder operations and the thin React binding to `@otuken/window-manager`.
+launcher, dock, icon/folder operations and the thin React binding to `@everyos/window-manager`.
 System, Settings, Users, Audit and Files apps load lazily and each window has an error boundary.
 System data comes from the existing real agent operation. The desktop shows the app shortcuts and,
 like macOS, the contents of the user's home Desktop folder (docs/files.md).
@@ -237,24 +237,24 @@ task runs, live system values, jobs) and a file shelf; see [pulse.md](pulse.md).
 
 ## Host filesystem layout (production)
 
-| Path                      | Owner / mode      | Contents                                                                                                                                                           |
-| ------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/usr/lib/otuken/`        | root, 0755        | program files: Node runtime, `api/`, `agent/`, `web/`                                                                                                              |
-| `/etc/otuken/config.yaml` | root:otuken, 0640 | API configuration (optional; secure defaults apply without it)                                                                                                     |
-| `/etc/otuken/agent.yaml`  | root, 0600        | agent configuration and policy (never writable by `otuken`)                                                                                                        |
-| `/etc/otuken/agent.key`   | root:otuken, 0640 | shared key for the API⇄agent handshake (created by the agent)                                                                                                      |
-| `/var/lib/otuken/`        | otuken, 0750      | `otuken.db`, `backups/` (pre-migration and pre-restore databases, `archives/`), `restore/` (a staged restore), `secret.key` (0600), `setup-token` (first run only) |
-| `/run/otuken/`            | root:otuken, 0750 | `agent.sock` (0660)                                                                                                                                                |
-| `/var/log/otuken/`        | –                 | reserved; logs go to journald                                                                                                                                      |
+| Path                       | Owner / mode       | Contents                                                                                                                                                            |
+| -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/usr/lib/everyos/`        | root, 0755         | program files: Node runtime, `api/`, `agent/`, `web/`                                                                                                               |
+| `/etc/everyos/config.yaml` | root:everyos, 0640 | API configuration (optional; secure defaults apply without it)                                                                                                      |
+| `/etc/everyos/agent.yaml`  | root, 0600         | agent configuration and policy (never writable by `everyos`)                                                                                                        |
+| `/etc/everyos/agent.key`   | root:everyos, 0640 | shared key for the API⇄agent handshake (created by the agent)                                                                                                       |
+| `/var/lib/everyos/`        | everyos, 0750      | `everyos.db`, `backups/` (pre-migration and pre-restore databases, `archives/`), `restore/` (a staged restore), `secret.key` (0600), `setup-token` (first run only) |
+| `/run/everyos/`            | root:everyos, 0750 | `agent.sock` (0660)                                                                                                                                                 |
+| `/var/log/everyos/`        | –                  | reserved; logs go to journald                                                                                                                                       |
 
-App Store data and root-owned deployment records live under `/var/lib/otuken/apps/<instance>`
+App Store data and root-owned deployment records live under `/var/lib/everyos/apps/<instance>`
 (private root and instance directories). Application removal preserves its data. Decrypted embedded
-configuration uses private root-owned tmpfs at `/run/otuken/app-configs/<instance>`; durable
+configuration uses private root-owned tmpfs at `/run/everyos/app-configs/<instance>`; durable
 configuration stays encrypted. See [app-store.md](app-store.md).
 
 ## Development mode
 
-`pnpm dev` starts the agent, the API and Vite with `OTUKEN_ENV=development` and all state under
+`pnpm dev` starts the agent, the API and Vite with `EVERYOS_ENV=development` and all state under
 `./.dev`. Development mode:
 
 - refuses to run as root (both the orchestrator and the agent);

@@ -1,4 +1,4 @@
-import type { TrashEntry, TrashListing } from "@otuken/shared";
+import type { TrashEntry, TrashListing } from "@everyos/shared";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

@@ -47,7 +47,7 @@ export function Launcher() {
       keywords: command.keywords,
       section: "commands",
       icon: (
-        <span className="grid size-7 place-items-center rounded-otk-sm bg-hover/10 text-fg-muted [&>svg]:size-4">
+        <span className="grid size-7 place-items-center rounded-everyos-sm bg-hover/10 text-fg-muted [&>svg]:size-4">
           {command.icon}
         </span>
       ),
@@ -108,7 +108,7 @@ export function Launcher() {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[7000] bg-black/30" />
         <Dialog.Content
-          className="glass-strong otk-enter fixed left-1/2 top-[14vh] z-[7001] flex max-h-[70vh] w-[min(94vw,620px)] -translate-x-1/2 flex-col overflow-hidden rounded-otk-lg"
+          className="glass-strong everyos-enter fixed left-1/2 top-[14vh] z-[7001] flex max-h-[70vh] w-[min(94vw,620px)] -translate-x-1/2 flex-col overflow-hidden rounded-everyos-lg"
           aria-describedby={undefined}
         >
           <Dialog.Title className="sr-only">{t("launcher.title")}</Dialog.Title>
@@ -165,9 +165,9 @@ export function Launcher() {
                         onPointerMove={() => setActive(position)}
                         onClick={() => run(result)}
                         className={cn(
-                          "flex cursor-default items-center gap-3 rounded-otk-md px-3 py-2 text-sm",
+                          "flex cursor-default items-center gap-3 rounded-everyos-md px-3 py-2 text-sm",
                           position === active
-                            ? "bg-[rgb(var(--otk-accent)/0.2)] text-fg"
+                            ? "bg-[rgb(var(--everyos-accent)/0.2)] text-fg"
                             : "text-fg-muted",
                         )}
                       >

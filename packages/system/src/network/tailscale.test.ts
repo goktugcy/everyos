@@ -106,7 +106,7 @@ afterEach(() => {
 });
 
 async function fakeLocalApi(routes: Record<string, { status?: number; body: unknown }>) {
-  const dir = mkdtempSync(join(tmpdir(), "otuken-ts-"));
+  const dir = mkdtempSync(join(tmpdir(), "everyos-ts-"));
   directories.push(dir);
   const socket = join(dir, "tailscaled.sock");
   const server = createServer((request, response) => {

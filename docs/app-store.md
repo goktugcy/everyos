@@ -74,14 +74,14 @@ overridden.
 Each UUID receives `otk-<UUID-without-dashes>`; existing projects/directories are rejected. Ownership
 comes from SQLite and a private agent configuration hash rather than labels. A private install
 intent permits interrupted directory/marker recovery. `${APP_DATA_DIR}` resolves under
-`/var/lib/otuken/apps/<instance>/data`. Root/instance parents are private; new bind directories allow
+`/var/lib/everyos/apps/<instance>/data`. Root/instance parents are private; new bind directories allow
 container UIDs to write through mounts without chmod of existing data. Existing components are
 checked for symlinks. Removal retains data and writes an ownership tombstone.
 
 The API seals configuration with `app:<instance>:compose:v1`. The agent seals its pinned deployment
 with a key derived from the persistent agent key and `app:<instance>:deployment:v1`. Compose receives
 stdin, fixed arguments and the discovery socket; secrets never become arguments or plaintext disk
-files. Embedded configs use read-only files under `/run/otuken/app-configs/<instance>/configN`, with
+files. Embedded configs use read-only files under `/run/everyos/app-configs/<instance>/configN`, with
 private root-owned parents on verified Linux tmpfs. Missing/non-tmpfs storage fails explicitly.
 After host reboot, an App Store start/retry may be needed to rematerialize these runtime files.
 
@@ -153,11 +153,11 @@ node scripts/build-app-acceptance.ts
 
 Run `dist/accept-app-store.mjs` only in a new disposable Linux VM/runtime with Node 26, Docker
 CLI/Compose, an empty daemon and shared agent/daemon bind paths. Set
-`OTUKEN_DISPOSABLE_ACCEPTANCE=1`, `OTUKEN_ACCEPTANCE_DOCKER_ID` to that daemon's ID,
-`OTUKEN_ACCEPTANCE_DIST` to the absolute build path and optionally
-`OTUKEN_ACCEPTANCE_STATE_ROOT` to a private output directory. A different/nonempty daemon is refused.
+`EVERYOS_DISPOSABLE_ACCEPTANCE=1`, `EVERYOS_ACCEPTANCE_DOCKER_ID` to that daemon's ID,
+`EVERYOS_ACCEPTANCE_DIST` to the absolute build path and optionally
+`EVERYOS_ACCEPTANCE_STATE_ROOT` to a private output directory. A different/nonempty daemon is refused.
 The API runs as UID/GID 1000 and the result JSON contains no secrets. The shared
-`/run/otuken/app-configs` mount must be tmpfs. Test data and the foreign-resource fixture remain for
+`/run/everyos/app-configs` mount must be tmpfs. Test data and the foreign-resource fixture remain for
 inspection; discard or stop only that dedicated VM afterwards.
 
 Migration 5 repairs early catalog-only v4 development databases without resetting data. Migration 6

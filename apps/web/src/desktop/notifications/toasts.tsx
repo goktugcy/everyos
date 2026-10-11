@@ -1,4 +1,4 @@
-import type { NotificationView } from "@otuken/shared";
+import type { NotificationView } from "@everyos/shared";
 import { X } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,7 +22,7 @@ function Toast({ notification }: { notification: NotificationView }) {
   }, [notification.id, notification.severity]);
   return (
     <li
-      className="glass-strong otk-enter pointer-events-auto flex w-80 gap-3 rounded-otk-lg p-3 text-fg"
+      className="glass-strong everyos-enter pointer-events-auto flex w-80 gap-3 rounded-everyos-lg p-3 text-fg"
       role={notification.severity === "critical" ? "alert" : "status"}
       data-testid="notification-toast"
     >

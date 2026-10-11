@@ -1,4 +1,4 @@
-import type { CatalogApp, InstallRisk } from "@otuken/shared";
+import type { CatalogApp, InstallRisk } from "@everyos/shared";
 import { parse, stringify } from "yaml";
 import { CatalogError } from "./fetch.ts";
 
@@ -238,7 +238,7 @@ export function inspectCompose(
           secret: SECRET.test(key),
           default: null,
           generated:
-            /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX|SUPABASEANON|SUPABASESERVICE)|OTUKEN_SECRET_)/.test(
+            /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX|SUPABASEANON|SUPABASESERVICE)|EVERYOS_SECRET_|OTUKEN_SECRET_)/.test(
               key,
             ),
         });
@@ -257,7 +257,7 @@ export function inspectCompose(
         secret: SECRET.test(key),
         default: fallback,
         generated:
-          /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX|SUPABASEANON|SUPABASESERVICE)|OTUKEN_SECRET_)/.test(
+          /^(SERVICE_(PASSWORD|USER|LOWERCASEUSER|BASE64|REALBASE64|HEX|SUPABASEANON|SUPABASESERVICE)|EVERYOS_SECRET_|OTUKEN_SECRET_)/.test(
             key,
           ),
       });

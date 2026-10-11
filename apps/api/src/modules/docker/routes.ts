@@ -3,7 +3,7 @@ import type {
   ContainerDetail,
   DockerContainerView,
   DockerOwnership,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import {
   ComposeActionRequestSchema,
   ComposeProjectNameSchema,
@@ -14,7 +14,7 @@ import {
   NetworkIdSchema,
   VolumeNameSchema,
   VolumeRemoveRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -44,7 +44,7 @@ export function dockerRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   const projects = services.dockerProjects;
 
-  /** Ownership comes only from Otuken's records, never from container labels. */
+  /** Ownership comes only from EveryOS's records, never from container labels. */
   const ownershipOf = (project: string | null): DockerOwnership =>
     project !== null && services.apps.owns(project)
       ? "managed"

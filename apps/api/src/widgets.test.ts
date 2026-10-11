@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { silentLogger } from "@otuken/logger";
-import type { ApiErrorBody, IntegrationView, Permission, TopicMessage } from "@otuken/shared";
+import { silentLogger } from "@everyos/logger";
+import type { ApiErrorBody, IntegrationView, Permission, TopicMessage } from "@everyos/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { parseKumaMetrics } from "./modules/integrations/adapters.ts";
 import { DataHub, type DataProvider } from "./modules/widgets/data-hub.ts";

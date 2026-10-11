@@ -1,4 +1,4 @@
-# AGENTS.md — working on Otuken
+# AGENTS.md — working on EveryOS
 
 Instructions for AI coding agents and human contributors working in this repository.
 
@@ -18,7 +18,7 @@ Instructions for AI coding agents and human contributors working in this reposit
   labeled in the UI.
 - Never claim that tests passed without running them. Never fabricate benchmark numbers; measure
   them.
-- Otuken never owns the host. Do not modify, stop or remove existing services, containers,
+- EveryOS never owns the host. Do not modify, stop or remove existing services, containers,
   volumes or images without an explicit, confirmed user action.
 - Do not perform destructive operations on a real host without the owner's explicit approval.
 - Ask only when a decision materially affects requirements, security, compatibility or irreversible
@@ -38,7 +38,7 @@ Instructions for AI coding agents and human contributors working in this reposit
    browser unless the user must see them once (TOTP enrollment, recovery codes).
 6. Remote catalog content is data: it is never executed or dynamically imported, and never rendered
    as HTML.
-7. The browser bundle stays zod-free: import schemas only from `@otuken/shared/schemas` in server
+7. The browser bundle stays zod-free: import schemas only from `@everyos/shared/schemas` in server
    code.
 
 ## Code conventions
@@ -48,7 +48,7 @@ Instructions for AI coding agents and human contributors working in this reposit
 - Relative imports include the `.ts`/`.tsx` extension.
 - Small modules with explicit dependencies (constructor or factory injection), and no unnecessary
   abstraction layers.
-- Logging uses `@otuken/logger` with structured fields. `console.*` is a lint error outside
+- Logging uses `@everyos/logger` with structured fields. `console.*` is a lint error outside
   scripts and tests.
 - Match the surrounding code's style and comment density. Comments explain _why_, not _what_.
 
@@ -63,5 +63,5 @@ pnpm build && pnpm test:e2e
 ## Definition of done
 
 Implementation exists, works with real data, enforces permissions on the server, handles errors,
-has passing tests, integrates with the rest of Otuken, shows the real state in the UI, and updates
+has passing tests, integrates with the rest of EveryOS, shows the real state in the UI, and updates
 the docs (`docs/`). Report incomplete parts explicitly.

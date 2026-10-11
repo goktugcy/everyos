@@ -5,7 +5,7 @@ import {
   type NotificationEvent,
   type NotificationPreferences,
   type NotificationView,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { api } from "../../lib/api.ts";

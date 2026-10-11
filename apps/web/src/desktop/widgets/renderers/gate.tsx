@@ -1,4 +1,4 @@
-import type { WidgetInstance, WidgetSize } from "@otuken/shared";
+import type { WidgetInstance, WidgetSize } from "@everyos/shared";
 import { CircleSlash, Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";

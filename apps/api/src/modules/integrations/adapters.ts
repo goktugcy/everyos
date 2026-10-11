@@ -1,4 +1,4 @@
-import type { IntegrationAdapter, IntegrationOptions, PostgresStats } from "@otuken/shared";
+import type { IntegrationAdapter, IntegrationOptions, PostgresStats } from "@everyos/shared";
 import { joinUrl, requestJson, requestText, type HttpOptions } from "./http.ts";
 
 /*
@@ -80,7 +80,7 @@ function http(context: AdapterContext, headers: Record<string, string> = {}) {
 /* ------------------------------- Jellyfin ------------------------------- */
 
 const jellyfinAuth = (context: AdapterContext) => ({
-  Authorization: `MediaBrowser Client="Otuken", Device="Otuken", DeviceId="otuken-widgets", Version="1", Token="${secret(context)}"`,
+  Authorization: `MediaBrowser Client="EveryOS", Device="EveryOS", DeviceId="everyos-widgets", Version="1", Token="${secret(context)}"`,
 });
 
 const jellyfin: AdapterDefinition = {

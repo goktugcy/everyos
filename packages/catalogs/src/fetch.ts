@@ -134,7 +134,7 @@ export function createCatalogFetcher(
               headers: {
                 Accept: "*/*",
                 "Accept-Encoding": "identity",
-                "User-Agent": "Otuken-Catalog/1",
+                "User-Agent": "EveryOS-Catalog/1",
               },
               lookup: (_hostname, _options, callback) =>
                 callback(null, pinned.address, pinned.family),

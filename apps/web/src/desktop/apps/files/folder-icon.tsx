@@ -1,4 +1,4 @@
-import type { FolderIconPresetId, FolderIconSpec } from "@otuken/shared";
+import type { FolderIconPresetId, FolderIconSpec } from "@everyos/shared";
 import { Folder, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { usePreferences } from "../../state/preferences-store.ts";
@@ -47,7 +47,7 @@ export function FolderIcon({
     )?.icon ??
     appearance.folderIcon ?? { kind: "preset", id: "classic" };
   const preset = selected.kind === "preset" ? selected.id : "classic";
-  const color = COLORS[preset] ?? "rgb(var(--otk-accent))";
+  const color = COLORS[preset] ?? "rgb(var(--everyos-accent))";
   const glyph =
     preset === "soft" ? (
       <svg viewBox="0 0 64 64" className="size-full" fill="none">
@@ -98,7 +98,7 @@ export function FolderIcon({
           style={{
             width: size * 0.34,
             height: size * 0.34,
-            color: "rgb(var(--otk-accent-strong))",
+            color: "rgb(var(--everyos-accent-strong))",
           }}
         />
       ) : null}

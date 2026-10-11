@@ -1,4 +1,4 @@
-import type { OperationPolicy } from "@otuken/agent-protocol";
+import type { OperationPolicy } from "@everyos/agent-protocol";
 import { isAllowedOnProtected } from "./protection.ts";
 import type { AgentMode } from "./config.ts";
 
@@ -33,7 +33,7 @@ export interface PolicyOptions {
 /**
  * Operation-specific rules applied after the permission check. They hold
  * regardless of the caller's role: not even an admin can stop the agent or
- * SSH through Otuken, and a development agent never changes the host.
+ * SSH through EveryOS, and a development agent never changes the host.
  */
 export function createPolicy(options: PolicyOptions): OperationPolicy {
   return (op, params) => {
@@ -67,7 +67,7 @@ export function createPolicy(options: PolicyOptions): OperationPolicy {
     if (options.isProtected(unit) && !isAllowedOnProtected(action)) {
       return {
         allowed: false,
-        reason: `${POLICY_REASONS.protectedUnit}: ${unit} is protected; "${action}" is not allowed from Otuken`,
+        reason: `${POLICY_REASONS.protectedUnit}: ${unit} is protected; "${action}" is not allowed from EveryOS`,
       };
     }
     return { allowed: true };

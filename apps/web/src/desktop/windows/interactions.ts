@@ -5,7 +5,7 @@ import {
   type Rect,
   type Size,
   type Viewport,
-} from "@otuken/window-manager";
+} from "@everyos/window-manager";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { wm } from "../state/window-store.ts";
 import { setSnapPreview } from "./snap-preview.tsx";

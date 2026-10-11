@@ -1,4 +1,4 @@
-import type { LogEntry, LogPage, LogQuery } from "@otuken/shared";
+import type { LogEntry, LogPage, LogQuery } from "@everyos/shared";
 import { findExecutable, runCommand, streamLines } from "../exec.ts";
 import { parseJournalLine } from "../linux/journal.ts";
 
@@ -30,7 +30,7 @@ function filterArgs(filter: LogFilter): string[] {
 }
 
 /**
- * Only the fields Otuken shows (cursor and timestamps are always included).
+ * Only the fields EveryOS shows (cursor and timestamps are always included).
  * Measured on a Raspberry Pi 5: ~44% less output to transfer and parse.
  */
 const OUTPUT_FIELDS =

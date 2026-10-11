@@ -1,5 +1,9 @@
-import { CatalogError } from "@otuken/catalogs";
-import { CatalogIdSchema, CatalogRequestSchema, CatalogUpdateSchema } from "@otuken/shared/schemas";
+import { CatalogError } from "@everyos/catalogs";
+import {
+  CatalogIdSchema,
+  CatalogRequestSchema,
+  CatalogUpdateSchema,
+} from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";

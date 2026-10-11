@@ -11,8 +11,8 @@ import { createServer, type ServerResponse } from "node:http";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
 // Keep it short: Unix socket paths inside it are limited to about 100 bytes.
-export const E2E_STATE_DIR = process.env.OTUKEN_E2E_STATE_DIR ?? join(here, ".state");
-export const E2E_PORT = Number(process.env.OTUKEN_E2E_PORT ?? 7480);
+export const E2E_STATE_DIR = process.env.EVERYOS_E2E_STATE_DIR ?? join(here, ".state");
+export const E2E_PORT = Number(process.env.EVERYOS_E2E_PORT ?? 7480);
 
 if (!existsSync(join(root, "dist/api/server.mjs"))) {
   console.error("dist/ is missing. Run `pnpm build` first.");
@@ -24,22 +24,22 @@ mkdirSync(E2E_STATE_DIR, { recursive: true });
 
 const env = {
   ...process.env,
-  OTUKEN_ENV: "development",
-  OTUKEN_DEV_ROOT: E2E_STATE_DIR,
-  OTUKEN_WEB_DIR: join(root, "dist/web"),
-  OTUKEN_PORT: String(E2E_PORT),
-  OTUKEN_LOG_LEVEL: "warn",
+  EVERYOS_ENV: "development",
+  EVERYOS_DEV_ROOT: E2E_STATE_DIR,
+  EVERYOS_WEB_DIR: join(root, "dist/web"),
+  EVERYOS_PORT: String(E2E_PORT),
+  EVERYOS_LOG_LEVEL: "warn",
   // Deterministic systemd/journald data on every OS (CI runners have real systemd).
-  OTUKEN_AGENT_SIMULATE: "1",
+  EVERYOS_AGENT_SIMULATE: "1",
   // A real PTY, running only as the unprivileged test runner's account.
-  OTUKEN_DEV_TERMINAL: "1",
+  EVERYOS_DEV_TERMINAL: "1",
   // The stand-in tailscaled below (the real LocalAPI client and parsers run against it).
-  OTUKEN_TAILSCALE_SOCKET: join(E2E_STATE_DIR, "tailscaled.sock"),
+  EVERYOS_TAILSCALE_SOCKET: join(E2E_STATE_DIR, "tailscaled.sock"),
 };
 
 /**
  * Minimal stand-in for tailscaled's LocalAPI on a Unix socket (test fixture
- * only; invented names and documentation addresses). Otuken is published with
+ * only; invented names and documentation addresses). EveryOS is published with
  * Serve but its origin is not configured, so the app shows that warning.
  */
 const day = 24 * 60 * 60_000;
@@ -51,7 +51,7 @@ const tailscaled = createServer((request, response) => {
     "/localapi/v0/serve-config": {
       TCP: { "443": { HTTPS: true } },
       Web: {
-        "otuken-e2e.example-tailnet.ts.net:443": {
+        "everyos-e2e.example-tailnet.ts.net:443": {
           Handlers: { "/": { Proxy: `http://127.0.0.1:${E2E_PORT}` } },
         },
       },
@@ -61,7 +61,7 @@ const tailscaled = createServer((request, response) => {
   response.writeHead(body ? 200 : 404, { "Content-Type": "application/json" });
   response.end(JSON.stringify(body ?? {}));
 });
-tailscaled.listen(env.OTUKEN_TAILSCALE_SOCKET);
+tailscaled.listen(env.EVERYOS_TAILSCALE_SOCKET);
 
 function tailscaleStatus(peers: boolean) {
   return {
@@ -69,8 +69,8 @@ function tailscaleStatus(peers: boolean) {
     BackendState: "Running",
     TailscaleIPs: ["100.100.100.10"],
     Self: {
-      HostName: "otuken-e2e",
-      DNSName: "otuken-e2e.example-tailnet.ts.net.",
+      HostName: "everyos-e2e",
+      DNSName: "everyos-e2e.example-tailnet.ts.net.",
       OS: "linux",
       Online: true,
       Relay: "fra",

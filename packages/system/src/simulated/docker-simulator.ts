@@ -13,13 +13,13 @@ import type {
   ImageSummary,
   NetworkSummary,
   VolumeSummary,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { DockerError, type DockerApi } from "../docker/client.ts";
 
 /*
  * Development-only stand-in for the Docker Engine, used when the agent runs
  * in development mode without a Docker socket (or with
- * OTUKEN_AGENT_SIMULATE=1). Every response is marked `source: "simulated"`.
+ * EVERYOS_AGENT_SIMULATE=1). Every response is marked `source: "simulated"`.
  * Nothing here touches the host.
  */
 
@@ -331,7 +331,7 @@ export function createDockerSimulator(
   const setState = (c: SimContainer, state: ContainerState, action: string) => {
     c.state = state;
     c.startedAt = state === "running" ? now() : c.startedAt;
-    log(c, `[otuken simulator] ${action}`);
+    log(c, `[everyos simulator] ${action}`);
     emit("container", action, c.id, c.name);
   };
 

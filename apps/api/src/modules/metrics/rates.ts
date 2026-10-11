@@ -1,4 +1,4 @@
-import type { CpuTimes, MetricsPoint, MetricsSample, MetricsSnapshot } from "@otuken/shared";
+import type { CpuTimes, MetricsPoint, MetricsSample, MetricsSnapshot } from "@everyos/shared";
 
 /*
  * Turns raw cumulative counters (as sampled by the agent) into rates.

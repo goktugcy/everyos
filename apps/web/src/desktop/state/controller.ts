@@ -1,5 +1,5 @@
-import type { Permission } from "@otuken/shared";
-import type { WindowSpec } from "@otuken/window-manager";
+import type { Permission } from "@everyos/shared";
+import type { WindowSpec } from "@everyos/window-manager";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import type { AppId, DesktopAppManifest } from "../apps/types.ts";
 import type { SettingsSection } from "../commands.tsx";
@@ -51,7 +51,7 @@ export const desktop = {
   minimizeWindow: (id: string) => wm().minimize(id),
   closeWindow: (id: string) => wm().close(id),
   openSettings(section: SettingsSection, extra: Record<string, unknown> = {}) {
-    desktop.openApp("otuken.settings", { appState: { ...extra, section } });
+    desktop.openApp("everyos.settings", { appState: { ...extra, section } });
   },
   /** Ids of the virtual desktops in order (from preferences). */
   desktopIds(): string[] {

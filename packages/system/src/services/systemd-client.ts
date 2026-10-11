@@ -4,7 +4,7 @@ import {
   type ServiceDetail,
   type ServiceList,
   type TimerSummary,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { CommandError, findExecutable, runCommand } from "../exec.ts";
 import {
   parseListTimers,

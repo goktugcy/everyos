@@ -1,19 +1,17 @@
 <p align="center">
-  <img src="apps/web/public/favicon.svg" width="72" height="72" alt="Otuken logo" />
+  <img src="apps/web/public/favicon.svg" width="72" height="72" alt="EveryOS logo" />
 </p>
 
-<h1 align="center">Otuken</h1>
+<h1 align="center">EveryOS</h1>
 
 <p align="center"><em>A modern, customizable desktop experience for your self-hosted infrastructure.</em></p>
 
-Otuken is an open-source, self-hosted Linux server management platform with a web desktop
+EveryOS is an open-source, self-hosted Linux server management platform with a web desktop
 interface inspired by "Liquid Glass" design. You install it on an existing Debian- or Ubuntu-based
 server (it is not a Linux distribution) and use it alongside your existing services and containers,
 without taking them over.
 
-The name comes from **Ötüken**, the historical and symbolic center of the ancient Turkic world.
-
-> **Status: early development (v0.1.0, Phases 1–5 implemented).** Authentication,
+> **Status: early development (v0.1.0, Phases 1–7 implemented).** Authentication,
 > the desktop/mobile shell, Linux integration, Docker management and the multi-catalog
 > [App Store](docs/app-store.md) work end to end. Deployment, image rollback and recovery passed
 > disposable Linux-host acceptance. Production packaging remains open (see the
@@ -55,11 +53,11 @@ Other commands: `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm 
 [docs/development.md](docs/development.md).
 
 Production installation (a Debian package for arm64 and amd64 with systemd units) arrives in
-Phase 8. Until then, Otuken is meant for development and evaluation.
+Phase 8. Until then, EveryOS is meant for development and evaluation.
 
 ## Architecture in one paragraph
 
-A **Hono** API runs as the unprivileged `otuken` user, serves the **React** client, stores state in
+A **Hono** API runs as the unprivileged `everyos` user, serves the **React** client, stores state in
 **SQLite** (`node:sqlite`, WAL, versioned migrations with automatic backups) and talks to a small
 **privileged agent** over a Unix socket using a typed, mutually authenticated protocol. There are no
 native addons: the build produces two bundled server files plus static assets that run unchanged on

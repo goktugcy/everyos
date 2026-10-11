@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { CatalogApp, CatalogFormat } from "@otuken/shared";
+import type { CatalogApp, CatalogFormat } from "@everyos/shared";
 import { stringify } from "yaml";
 import { readZip, safePath } from "./archive.ts";
 import {

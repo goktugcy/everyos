@@ -1,4 +1,4 @@
-import type { Permission } from "@otuken/shared";
+import type { Permission } from "@everyos/shared";
 import {
   ComposeActionRequestSchema,
   ComposeActionResultSchema,
@@ -67,7 +67,7 @@ import {
   AppDataImportChunkSchema,
   AppDataImportCommitSchema,
   AppDataImportResultSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { z } from "zod";
 
 interface ContractBase<P extends z.ZodType> {

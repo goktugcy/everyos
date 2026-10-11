@@ -1,15 +1,15 @@
 # File manager (Phase 7)
 
 The file manager never exposes the host file system by default. Every user gets a private
-**home** inside Otuken's data directory; an administrator configures shared **locations** in
-`/etc/otuken/config.yaml`; and read-only **system** locations exist only after an administrator
+**home** inside EveryOS's data directory; an administrator configures shared **locations** in
+`/etc/everyos/config.yaml`; and read-only **system** locations exist only after an administrator
 turns them on. Nothing else is reachable.
 
 ```yaml
 files:
   roots:
     - { id: media, name: Medya, path: /srv/media }
-    - { id: backups, name: Yedekler, path: /var/backups/otuken, readOnly: true }
+    - { id: backups, name: Yedekler, path: /var/backups/everyos, readOnly: true }
   maxUploadMiB: 16384 # default 16 GiB per file
   minFreeMiB: 1024 # uploads and copies always leave this much free space
   homes: true # private home folders under <dataDir>/homes (default)
@@ -24,7 +24,7 @@ Downloads, Pictures, Music and Videos**, named in the user's language at that mo
 ("Masaüstü, Belgeler, İndirilenler, Resimler, Müzik, Videolar" in Turkish) and recorded in
 `.otuken-folders.json`. A standard folder added by a later version is named in the user's
 current language; existing names never change. They are fixed: they cannot be renamed, moved or
-deleted (`FILES_PROTECTED`), and a folder removed outside Otuken is created again. Their contents
+deleted (`FILES_PROTECTED`), and a folder removed outside EveryOS is created again. Their contents
 are the user's. Existing homes, including their Desktop files and private trash, are included
 in every backup ([backups.md](backups.md)). The folder-name manifest is protected against writes
 and unsafe path components, including changes through symlink aliases.
@@ -46,7 +46,7 @@ they are configured, and `/api/files/*` then answers `FILES_DISABLED`.
 
 File operations run in the **API process as its unprivileged user**, not in the root agent. So
 the operating system remains the final boundary: even a path trick could only reach what the
-`otuken` user may access anyway. Grant that user access to data folders with normal permissions
+`everyos` user may access anyway. Grant that user access to data folders with normal permissions
 (group membership, ACLs).
 
 Every request uses `{ root, path }`, where `path` is relative to the root:
@@ -87,7 +87,7 @@ Read-only roots refuse writes with `FILES_READ_ONLY`. A full disk returns
 
 ## Desktop app
 
-The **Files** app (`otuken.files`) looks like the macOS Finder and provides:
+The **Files** app (`everyos.files`) looks like the macOS Finder and provides:
 
 - **Navigation:** a sidebar with Favourites (the home and its standard folders, always present),
   Locations and, for administrators, System; back/forward/up; the folder's name as the title;
@@ -107,7 +107,7 @@ The **Files** app (`otuken.files`) looks like the macOS Finder and provides:
 - **Uploads:** files dropped from the operating system or chosen in a picker upload with progress,
   and ask before replacing an existing file.
 - **Previews and editing:** images open in a preview. Text files open in the **Text Editor**
-  (`otuken.editor`), which saves with Ctrl+S, detects concurrent changes and can revert.
+  (`everyos.editor`), which saves with Ctrl+S, detects concurrent changes and can revert.
 - Every change made in the tab (any Files window, the desktop, the pulse shelf) makes all views
   of a folder list it again.
 
@@ -154,7 +154,7 @@ before moving, and symlinks move as links. Parent/child and duplicate selections
 A cross-device rename fails safely with the original intact; no copy-and-delete fallback is used.
 The trash consumes disk space until explicitly emptied.
 
-The **Trash** app (`otuken.trash`) opens from the launcher, the Files sidebar or desktop context
+The **Trash** app (`everyos.trash`) opens from the launcher, the Files sidebar or desktop context
 menu. Each account sees only its own trash, including on shared roots. Restoring refuses an
 occupied original name or a missing/escaping original parent; files use an exclusive hard-link
 or exclusive-copy fallback, and folders reserve their names before moving back. Multi-item
@@ -164,7 +164,7 @@ restored or emptied, and every mutation needs `files:write` and is audited.
 
 `.otuken-trash` is inaccessible to ordinary list, search, download, text, transfer and mutation
 routes even when hidden files are shown, including symlink aliases. It is storage owned by
-Otuken, not an implementation of the host OS's Trash or the freedesktop Trash specification.
+EveryOS, not an implementation of the host OS's Trash or the freedesktop Trash specification.
 
 | Endpoint                    | Permission    | Input / result                                                     |
 | --------------------------- | ------------- | ------------------------------------------------------------------ |

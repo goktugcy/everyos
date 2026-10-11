@@ -1,4 +1,4 @@
-import type { PostgresStats } from "@otuken/shared";
+import type { PostgresStats } from "@everyos/shared";
 import { Film, Music, Play, Power, Tv } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -402,7 +402,7 @@ export function HomeAssistantControlsWidget(props: WidgetRenderProps) {
                       title={entity.entityId}
                       onClick={() => void run(entity.entityId)}
                       className={cn(
-                        "flex w-full min-w-0 items-center gap-1.5 rounded-otk-sm px-2 py-1.5 text-left text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50",
+                        "flex w-full min-w-0 items-center gap-1.5 rounded-everyos-sm px-2 py-1.5 text-left text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50",
                         on ? "button-accent" : "bg-hover/8 text-fg hover:bg-hover/14",
                       )}
                     >

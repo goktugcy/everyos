@@ -1,4 +1,4 @@
-import { WindowSessionSchema } from "@otuken/shared/schemas";
+import { WindowSessionSchema } from "@everyos/shared/schemas";
 import { describe, expect, it } from "vitest";
 import {
   clampBounds,
@@ -25,7 +25,7 @@ const viewport: Viewport = {
 const work = workArea(viewport);
 
 const settings: WindowSpec = {
-  appId: "otuken.settings",
+  appId: "everyos.settings",
   title: "Ayarlar",
   defaultSize: { width: 900, height: 640 },
   minSize: { width: 480, height: 360 },
@@ -33,7 +33,7 @@ const settings: WindowSpec = {
 };
 const folder: WindowSpec = {
   ...settings,
-  appId: "otuken.folder",
+  appId: "everyos.folder",
   title: "Klasör",
   instancing: "multiple",
 };
@@ -260,7 +260,7 @@ describe("persistence", () => {
     const restored = manager();
     restored.getState().hydrate(session, (appId) => (appId === folder.appId ? folder : null));
     expect(Object.values(restored.getState().windows).map((w) => w.appId)).toEqual([
-      "otuken.folder",
+      "everyos.folder",
     ]);
   });
 });

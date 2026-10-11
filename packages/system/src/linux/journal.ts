@@ -1,4 +1,4 @@
-import type { LogEntry } from "@otuken/shared";
+import type { LogEntry } from "@everyos/shared";
 
 const MAX_MESSAGE = 16_384;
 

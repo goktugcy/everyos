@@ -1,5 +1,5 @@
-import type { DesktopPreferences } from "@otuken/shared";
-import { DesktopPreferencesSchema } from "@otuken/shared/schemas";
+import type { DesktopPreferences } from "@everyos/shared";
+import { DesktopPreferencesSchema } from "@everyos/shared/schemas";
 import { describe, expect, it } from "vitest";
 import { cellAt, gridMetrics, placeItems } from "../surface/icon-grid.ts";
 import {
@@ -25,7 +25,7 @@ function base(): DesktopPreferences {
       {
         kind: "app",
         id: "a",
-        appId: "otuken.system",
+        appId: "everyos.system",
         desktopId: "d1",
         cell: { col: 0, row: 0 },
         folderId: null,
@@ -33,7 +33,7 @@ function base(): DesktopPreferences {
       {
         kind: "app",
         id: "b",
-        appId: "otuken.settings",
+        appId: "everyos.settings",
         desktopId: "d1",
         cell: { col: 0, row: 1 },
         folderId: null,
@@ -64,7 +64,7 @@ describe("icon grid", () => {
         {
           kind: "app",
           id: "a",
-          appId: "otuken.system",
+          appId: "everyos.system",
           desktopId: "d1",
           cell: { col: 0, row: 0 },
           folderId: null,
@@ -72,7 +72,7 @@ describe("icon grid", () => {
         {
           kind: "app",
           id: "b",
-          appId: "otuken.users",
+          appId: "everyos.users",
           desktopId: "d1",
           cell: { col: 0, row: 0 },
           folderId: null,
@@ -80,7 +80,7 @@ describe("icon grid", () => {
         {
           kind: "app",
           id: "c",
-          appId: "otuken.audit",
+          appId: "everyos.audit",
           desktopId: "d1",
           cell: { col: 9, row: 9 },
           folderId: null,
@@ -116,11 +116,11 @@ describe("desktop operations", () => {
   it("adds shortcuts to the first free cell, around the Desktop folder's entries", () => {
     const doc = addShortcut(
       { ...base(), files: [{ name: "Notlar", cell: { col: 0, row: 2 } }] },
-      "otuken.users",
+      "everyos.users",
       "d1",
       metrics,
     );
-    expect(doc.items.at(-1)).toMatchObject({ appId: "otuken.users", cell: { col: 0, row: 3 } });
+    expect(doc.items.at(-1)).toMatchObject({ appId: "everyos.users", cell: { col: 0, row: 3 } });
     valid(doc);
   });
 
@@ -205,12 +205,12 @@ describe("desktop operations", () => {
 
   it("adds and removes virtual desktops without losing icons", () => {
     const { doc: two, id } = addDesktop(base(), "İkinci");
-    const withIcon = addShortcut(two, "otuken.audit", id!, metrics);
+    const withIcon = addShortcut(two, "everyos.audit", id!, metrics);
     const removed = removeDesktop(withIcon, id!, metrics);
     expect(removed.desktops.map((d) => d.id)).toEqual(["d1"]);
-    expect(removed.items.find((i) => i.kind === "app" && i.appId === "otuken.audit")).toMatchObject(
-      { desktopId: "d1" },
-    );
+    expect(
+      removed.items.find((i) => i.kind === "app" && i.appId === "everyos.audit"),
+    ).toMatchObject({ desktopId: "d1" });
     expect(removeDesktop(base(), "d1", metrics)).toEqual(base());
     valid(removed);
   });
@@ -222,7 +222,7 @@ describe("desktop operations", () => {
   });
 
   it("prunes shortcuts to apps that are no longer available", () => {
-    const doc = pruneUnavailable(base(), (appId) => appId !== "otuken.settings");
+    const doc = pruneUnavailable(base(), (appId) => appId !== "everyos.settings");
     expect(doc.items.map((i) => i.id)).toEqual(["a"]);
   });
 });

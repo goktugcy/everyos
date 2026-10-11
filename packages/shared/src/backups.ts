@@ -8,16 +8,16 @@ import type { LocalizedText } from "./catalogs.ts";
 /** `YYYYMMDD-HHMMSS-xxxxxx` (UTC time plus a random suffix). */
 export const BACKUP_ID_PATTERN = /^\d{8}-\d{6}-[a-f0-9]{6}$/;
 
-export const BACKUP_FORMAT = "otuken-backup";
+export const BACKUP_FORMAT = "everyos-backup";
 export const BACKUP_FORMAT_VERSION = 1;
 
 export type BackupTrigger = "manual" | "schedule" | "pre-restore";
 
 /** How an installed app's data can be backed up. */
 export type AppDataSupport =
-  /** Everything the app stores lives in its Otuken app data directory. */
+  /** Everything the app stores lives in its EveryOS app data directory. */
   | "supported"
-  /** Some data is in Docker volumes or host paths Otuken cannot capture consistently. */
+  /** Some data is in Docker volumes or host paths EveryOS cannot capture consistently. */
   | "unsupported"
   /** The app declares no persistent storage. */
   | "none";
@@ -56,7 +56,7 @@ export interface BackupManifest {
   trigger: BackupTrigger;
   createdBy: string | null;
   note: string | null;
-  otukenVersion: string;
+  everyosVersion: string;
   /** Database schema version of the snapshot. */
   schemaVersion: number;
   hostname: string;
@@ -67,7 +67,7 @@ export interface BackupManifest {
     config: boolean;
     wallpapers: boolean;
     apps: BackupAppContent[];
-    /** Otuken-managed homes, including Desktop files and their private trash. Absent in older backups. */
+    /** EveryOS-managed homes, including Desktop files and their private trash. Absent in older backups. */
     homes?: BackupHomeContent[];
   };
   files: BackupManifestFile[];
@@ -76,7 +76,7 @@ export interface BackupManifest {
 export interface BackupVerification {
   at: number;
   ok: boolean;
-  /** Machine-readable reason when not ok (e.g. "checksum:otuken.db.gz"). */
+  /** Machine-readable reason when not ok (e.g. "checksum:everyos.db.gz"). */
   error: string | null;
 }
 
@@ -86,7 +86,7 @@ export interface BackupView {
   trigger: BackupTrigger;
   createdBy: string | null;
   note: string | null;
-  otukenVersion: string;
+  everyosVersion: string;
   schemaVersion: number;
   hostname: string;
   /** Total size of the stored files. */
@@ -135,7 +135,7 @@ export interface BackupJobView {
   /** The backup created, or the one being restored. */
   backupId: string | null;
   error: string | null;
-  /** After a database restore: "automatic" (Otuken restarts itself) or "manual". */
+  /** After a database restore: "automatic" (EveryOS restarts itself) or "manual". */
   restart: "automatic" | "manual" | null;
 }
 
@@ -168,7 +168,7 @@ export interface BackupOverview {
     /** Space always left free on that filesystem. */
     reserveBytes: number;
   };
-  /** Whether a database restore can restart Otuken automatically. */
+  /** Whether a database restore can restart EveryOS automatically. */
   supervised: boolean;
 }
 

@@ -1,5 +1,5 @@
-import { WIDGET_CELL_PX, type WidgetInstance } from "@otuken/shared";
-import { cellsOf, type DesktopGrid } from "@otuken/widget-sdk";
+import { WIDGET_CELL_PX, type WidgetInstance } from "@everyos/shared";
+import { cellsOf, type DesktopGrid } from "@everyos/widget-sdk";
 
 /** The desktop grid plus its top-left corner on screen. */
 export type ScreenGrid = DesktopGrid & { originX: number; originY: number };

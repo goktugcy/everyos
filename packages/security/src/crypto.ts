@@ -29,6 +29,7 @@ export function safeEqual(a: string, b: string): boolean {
  * `otuken/secret-box/v1`.
  */
 export function deriveKey(masterKey: Buffer, purpose: string, length = 32): Buffer {
+  // Version-1 domains stay stable across the product rename so stored secrets remain readable.
   return Buffer.from(
     hkdfSync("sha256", masterKey, Buffer.from("otuken-hkdf-salt-v1"), Buffer.from(purpose), length),
   );

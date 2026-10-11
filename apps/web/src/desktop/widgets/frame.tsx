@@ -1,5 +1,5 @@
-import type { WidgetInstance } from "@otuken/shared";
-import { cellsOf, getWidget, missingConfig, widgetAvailability } from "@otuken/widget-sdk";
+import type { WidgetInstance } from "@everyos/shared";
+import { cellsOf, getWidget, missingConfig, widgetAvailability } from "@everyos/widget-sdk";
 import { FlaskConical, Lock, MoreHorizontal, Settings2 } from "lucide-react";
 import {
   Component,
@@ -138,7 +138,7 @@ export function WidgetFrame({
         data-testid="widget"
         data-widget={instance.widgetId}
         className={cn(
-          "group/widget relative isolate flex flex-col overflow-hidden rounded-otk-lg text-fg",
+          "group/widget relative isolate flex flex-col overflow-hidden rounded-everyos-lg text-fg",
           className,
         )}
         style={style}
@@ -146,7 +146,7 @@ export function WidgetFrame({
         {/* Opacity applies to the glass only; text stays fully legible. */}
         <div
           aria-hidden
-          className="glass absolute inset-0 -z-10 rounded-otk-lg"
+          className="glass absolute inset-0 -z-10 rounded-everyos-lg"
           style={{ opacity: instance.opacity }}
         />
         <header

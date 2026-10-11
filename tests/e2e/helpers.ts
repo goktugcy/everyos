@@ -7,9 +7,9 @@ import {
   type SessionInfo,
 } from "../../packages/shared/src/index.ts";
 
-/** Throwaway stack state; `OTUKEN_E2E_STATE_DIR` lets two runs use separate directories. */
+/** Throwaway stack state; `EVERYOS_E2E_STATE_DIR` lets two runs use separate directories. */
 export const stateDir =
-  process.env.OTUKEN_E2E_STATE_DIR ?? join(dirname(fileURLToPath(import.meta.url)), ".state");
+  process.env.EVERYOS_E2E_STATE_DIR ?? join(dirname(fileURLToPath(import.meta.url)), ".state");
 export const PASSWORD = "mavi-gokyuzu-ve-daglar-42";
 
 /**

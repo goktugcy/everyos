@@ -1,5 +1,5 @@
-import { WidgetManifestSchema, WidgetPreferencesSchema } from "@otuken/shared/schemas";
-import { PERMISSIONS, type WidgetPreferences } from "@otuken/shared";
+import { WidgetManifestSchema, WidgetPreferencesSchema } from "@everyos/shared/schemas";
+import { PERMISSIONS, type WidgetPreferences } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import {
   addWidget,

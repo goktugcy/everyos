@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { PASSWORD_MIN_LENGTH, ROLES, type AdminUserView, type Role } from "@otuken/shared";
+import { PASSWORD_MIN_LENGTH, ROLES, type AdminUserView, type Role } from "@everyos/shared";
 import {
   KeyRound,
   MoreHorizontal,
@@ -304,7 +304,7 @@ export default function UsersApp() {
         ) : null}
         {users ? (
           <table className="w-full min-w-[680px] border-collapse text-left text-sm">
-            <thead className="sticky top-0 bg-[rgb(var(--otk-surface)/0.95)] text-xs uppercase tracking-wider text-fg-muted">
+            <thead className="sticky top-0 bg-[rgb(var(--everyos-surface)/0.95)] text-xs uppercase tracking-wider text-fg-muted">
               <tr>
                 <th scope="col" className="px-4 py-2 font-semibold">
                   {t("users.displayName")}
@@ -401,7 +401,7 @@ export default function UsersApp() {
                         trigger={
                           <button
                             type="button"
-                            className="grid size-8 place-items-center rounded-otk-sm text-fg-muted hover:bg-hover/10 hover:text-fg"
+                            className="grid size-8 place-items-center rounded-everyos-sm text-fg-muted hover:bg-hover/10 hover:text-fg"
                           >
                             <MoreHorizontal className="size-4" aria-hidden />
                           </button>

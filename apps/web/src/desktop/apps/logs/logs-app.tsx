@@ -1,4 +1,4 @@
-import { LOG_PRIORITIES, type LogEntry, type LogPage } from "@otuken/shared";
+import { LOG_PRIORITIES, type LogEntry, type LogPage } from "@everyos/shared";
 import { Pause, Play, Search } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -204,7 +204,7 @@ export default function LogsApp() {
             value={draft.unit}
             onChange={(event) => setDraft({ ...draft, unit: event.target.value })}
             placeholder={t("logs.unitPlaceholder")}
-            className="glass-inset h-10 rounded-otk-md px-3 font-mono text-sm text-fg outline-none placeholder:font-sans placeholder:text-fg-subtle"
+            className="glass-inset h-10 rounded-everyos-md px-3 font-mono text-sm text-fg outline-none placeholder:font-sans placeholder:text-fg-subtle"
             spellCheck={false}
             autoCapitalize="off"
           />
@@ -226,7 +226,7 @@ export default function LogsApp() {
         />
         <label className="flex min-w-40 flex-1 flex-col gap-1.5">
           <span className="text-[0.8rem] font-medium text-fg-muted">{t("logs.search")}</span>
-          <span className="glass-inset flex h-10 items-center gap-2 rounded-otk-md px-3">
+          <span className="glass-inset flex h-10 items-center gap-2 rounded-everyos-md px-3">
             <Search className="size-4 text-fg-subtle" aria-hidden />
             <input
               value={draft.grep}

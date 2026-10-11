@@ -1,4 +1,4 @@
-import { MAX_SHELF_ITEMS, type ShelfItem } from "@otuken/shared";
+import { MAX_SHELF_ITEMS, type ShelfItem } from "@everyos/shared";
 
 /* ----------------------------- calendar ----------------------------- */
 

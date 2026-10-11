@@ -1,6 +1,6 @@
 import { readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import type { Logger } from "@otuken/logger";
+import type { Logger } from "@everyos/logger";
 import type { Database } from "./database.ts";
 
 export interface Migration {
@@ -17,15 +17,15 @@ export class MigrationError extends Error {
   }
 }
 
-/** Raised when the database was migrated by a newer Otuken release. */
+/** Raised when the database was migrated by a newer EveryOS release. */
 export class DatabaseTooNewError extends MigrationError {
   readonly databaseVersion: number;
   readonly supportedVersion: number;
 
   constructor(databaseVersion: number, supportedVersion: number) {
     super(
-      `Database schema version ${databaseVersion} is newer than this Otuken release supports (${supportedVersion}). ` +
-        "Refusing to start to avoid data loss; upgrade Otuken or restore a compatible backup.",
+      `Database schema version ${databaseVersion} is newer than this EveryOS release supports (${supportedVersion}). ` +
+        "Refusing to start to avoid data loss; upgrade EveryOS or restore a compatible backup.",
     );
     this.name = "DatabaseTooNewError";
     this.databaseVersion = databaseVersion;

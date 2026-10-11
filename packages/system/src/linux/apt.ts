@@ -1,4 +1,4 @@
-import type { AptUpdates } from "@otuken/shared";
+import type { AptUpdates } from "@everyos/shared";
 
 /**
  * `apt list --upgradable` (C locale), e.g.

@@ -1,12 +1,12 @@
-import type { Actor } from "@otuken/agent-protocol";
-import type { Logger } from "@otuken/logger";
+import type { Actor } from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
 import type {
   ContainerStatsHistory,
   ContainerStatsPoint,
   ContainerStatsSample,
   DockerChangeEvent,
   DockerStatsSnapshot,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 
 const SYSTEM_ACTOR: Actor = { kind: "system", component: "docker" };

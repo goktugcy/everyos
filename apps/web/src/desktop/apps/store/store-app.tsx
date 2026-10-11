@@ -1,4 +1,4 @@
-import type { AppJobView, CatalogAppView, CatalogView, InstalledAppView } from "@otuken/shared";
+import type { AppJobView, CatalogAppView, CatalogView, InstalledAppView } from "@everyos/shared";
 import { Package, Store } from "lucide-react";
 import { Tabs } from "radix-ui";
 import { useCallback, useState } from "react";
@@ -77,7 +77,7 @@ export default function StoreApp() {
           <Tabs.Trigger
             key={value}
             value={value}
-            className="whitespace-nowrap rounded-t-otk-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:text-fg"
+            className="whitespace-nowrap rounded-t-everyos-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:text-fg"
           >
             {t(`appStore.${value}`)}
           </Tabs.Trigger>
@@ -126,15 +126,15 @@ export default function StoreApp() {
                   key={app.id}
                   type="button"
                   onClick={() => setSelected(app)}
-                  className="glass-inset flex items-start gap-3 rounded-otk-md p-4 text-left outline-none transition-colors hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+                  className="glass-inset flex items-start gap-3 rounded-everyos-md p-4 text-left outline-none transition-colors hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <div className="grid size-11 shrink-0 place-items-center rounded-otk-sm bg-accent/10 text-accent">
+                  <div className="grid size-11 shrink-0 place-items-center rounded-everyos-sm bg-accent/10 text-accent">
                     {app.icon ? (
                       <img
                         loading="lazy"
                         src={app.icon}
                         alt=""
-                        className="size-10 rounded-otk-sm object-contain"
+                        className="size-10 rounded-everyos-sm object-contain"
                         onError={(event) => {
                           event.currentTarget.hidden = true;
                         }}

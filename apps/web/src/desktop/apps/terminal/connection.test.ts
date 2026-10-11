@@ -64,7 +64,7 @@ beforeEach(() => {
   );
   vi.stubGlobal("fetch", request);
   vi.stubGlobal("WebSocket", Socket);
-  vi.stubGlobal("location", { origin: "https://otuken.example" });
+  vi.stubGlobal("location", { origin: "https://everyos.example" });
   vi.stubGlobal("sessionStorage", {
     getItem: (key: string) => storage.get(key) ?? null,
     setItem: (key: string, value: string) => storage.set(key, value),
@@ -162,7 +162,7 @@ it("deletes immediately on window close with CSRF and keepalive and cancels retr
     expect.objectContaining({
       method: "DELETE",
       keepalive: true,
-      headers: expect.objectContaining({ "x-otuken-csrf": "test-csrf" }),
+      headers: expect.objectContaining({ "x-everyos-csrf": "test-csrf" }),
     }),
   );
   await vi.advanceTimersByTimeAsync(60_000);

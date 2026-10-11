@@ -48,6 +48,12 @@ describe("SecretBox", () => {
 });
 
 describe("crypto helpers", () => {
+  it("preserves the version-1 key derivation across the product rename", () => {
+    expect(deriveKey(key, "otuken/secret-box/v1").toString("hex")).toBe(
+      "067f8b11d6ae259cd0401cf3b8bcccad729b4896c02d85d4ea1ea7af0931fe2a",
+    );
+  });
+
   it("derives distinct, deterministic subkeys per purpose", () => {
     const a1 = deriveKey(key, "otuken/a/v1");
     const a2 = deriveKey(key, "otuken/a/v1");
@@ -71,7 +77,7 @@ describe("crypto helpers", () => {
 });
 
 describe("loadKeyFile", () => {
-  const dir = () => mkdtempSync(join(tmpdir(), "otuken-key-"));
+  const dir = () => mkdtempSync(join(tmpdir(), "everyos-key-"));
 
   it("creates a key with restrictive permissions and reloads it", () => {
     const path = join(dir(), "nested", "secret.key");

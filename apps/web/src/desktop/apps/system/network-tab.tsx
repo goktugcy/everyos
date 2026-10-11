@@ -1,4 +1,4 @@
-import type { NetworkInterfaceKind, NetworkStatus, TailscaleStatus } from "@otuken/shared";
+import type { NetworkInterfaceKind, NetworkStatus, TailscaleStatus } from "@everyos/shared";
 import { CircleCheck, CircleSlash, Globe, WifiOff } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -121,7 +121,7 @@ function InterfaceCard({ nic, rate }: { nic: InterfaceInfo; rate: InterfaceRate 
   const { t, i18n } = useTranslation();
   const language = i18n.language;
   return (
-    <li className="glass-inset flex flex-col gap-1.5 rounded-otk-md p-3 text-sm">
+    <li className="glass-inset flex flex-col gap-1.5 rounded-everyos-md p-3 text-sm">
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono font-semibold">{nic.name}</span>
         <span className="flex items-center gap-1.5 text-xs text-fg-muted">
@@ -214,7 +214,7 @@ export function NetworkTab() {
             </ul>
             {secondary.length > 0 ? (
               <details className="group">
-                <summary className="cursor-pointer select-none rounded-otk-sm py-1 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent">
+                <summary className="cursor-pointer select-none rounded-everyos-sm py-1 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent">
                   {t("monitor.net.virtualInterfaces", { count: secondary.length })}
                 </summary>
                 <ul className="mt-2 grid gap-2 @2xl:grid-cols-2">

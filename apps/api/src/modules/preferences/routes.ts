@@ -1,10 +1,10 @@
-import { isPreferenceKey, THEME_PRESET_IDS, type PreferenceKey } from "@otuken/shared";
+import { isPreferenceKey, THEME_PRESET_IDS, type PreferenceKey } from "@everyos/shared";
 import {
   EmptyDesktopQuerySchema,
   PreferenceParamsSchema,
   PREFERENCE_SCHEMAS,
   type AppearancePreferences,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { ApiError, notFound } from "../../http/errors.ts";

@@ -1,12 +1,12 @@
-import { deriveKey, hmacSha256, randomToken, safeEqual } from "@otuken/security";
+import { deriveKey, hmacSha256, randomToken, safeEqual } from "@everyos/security";
 
 /**
  * Mutual challenge–response authentication over the Unix socket.
  *
- * Filesystem permissions on the socket (root:otuken 0660 inside a 0750
+ * Filesystem permissions on the socket (root:everyos 0660 inside a 0750
  * runtime directory) are the primary access control. The handshake adds a
  * second, independent check: only a process that can read the shared agent
- * key (root or members of the `otuken` group) can complete it, and the agent
+ * key (root or members of the `everyos` group) can complete it, and the agent
  * proves possession of the same key so the API never talks to an impostor.
  */
 const CLIENT_LABEL = "otuken-agent/v1/client";

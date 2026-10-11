@@ -6,7 +6,7 @@ import type {
   ThemeEffects,
   WallpaperSpec,
   WindowAnimation,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { BLACK, composite, contrastRatio, mix, parseHex, toHex, WHITE, type Rgb } from "./color.ts";
 import { THEME_PRESETS, type ThemePalette } from "./presets.ts";
 import { WALLPAPER_PRESETS } from "./wallpapers.ts";

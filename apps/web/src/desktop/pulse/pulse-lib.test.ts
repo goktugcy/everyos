@@ -1,4 +1,4 @@
-import type { ShelfItem } from "@otuken/shared";
+import type { ShelfItem } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import { numberedName } from "../apps/files/lib.ts";
 import {

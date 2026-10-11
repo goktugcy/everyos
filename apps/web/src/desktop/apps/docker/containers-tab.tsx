@@ -1,4 +1,4 @@
-import type { ContainerList, DockerContainerView } from "@otuken/shared";
+import type { ContainerList, DockerContainerView } from "@everyos/shared";
 import { Lock, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,7 +51,7 @@ function ContainerRow({
       aria-current={selected ? "true" : undefined}
       className={cn(
         "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b border-line px-3 py-2 text-left outline-none hover:bg-hover/5 focus-visible:bg-hover/10",
-        selected && "bg-[rgb(var(--otk-accent)/0.14)]",
+        selected && "bg-[rgb(var(--everyos-accent)/0.14)]",
       )}
     >
       <span className="min-w-0">
@@ -107,7 +107,7 @@ export function ContainersTab({ refreshKey }: { refreshKey: number }) {
         )}
       >
         <div className="flex flex-col gap-2 border-b border-line p-3">
-          <label className="glass-inset flex h-9 items-center gap-2 rounded-otk-md px-3">
+          <label className="glass-inset flex h-9 items-center gap-2 rounded-everyos-md px-3">
             <Search className="size-4 text-fg-subtle" aria-hidden />
             <input
               value={query}
@@ -132,7 +132,7 @@ export function ContainersTab({ refreshKey }: { refreshKey: number }) {
                   className={cn(
                     "rounded-full px-2.5 py-1 text-xs outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     filter === id
-                      ? "bg-[rgb(var(--otk-accent)/0.25)] font-semibold text-fg"
+                      ? "bg-[rgb(var(--everyos-accent)/0.25)] font-semibold text-fg"
                       : "text-fg-muted hover:bg-hover/10",
                   )}
                 >
@@ -153,7 +153,7 @@ export function ContainersTab({ refreshKey }: { refreshKey: number }) {
         <div className="min-h-0 flex-1 overflow-y-auto" data-testid="container-list">
           {groups.map(([project, items]) => (
             <section key={project || "standalone"} aria-label={project || t("docker.standalone")}>
-              <h3 className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-[rgb(var(--otk-surface))] px-3 py-1.5 text-xs font-semibold text-fg-muted">
+              <h3 className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-[rgb(var(--everyos-surface))] px-3 py-1.5 text-xs font-semibold text-fg-muted">
                 <span className="truncate">{project || t("docker.standalone")}</span>
                 {items[0] ? <OwnershipBadge ownership={items[0].ownership} /> : null}
               </h3>

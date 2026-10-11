@@ -1,8 +1,8 @@
 {
-  "name": "otuken-monorepo",
+  "name": "everyos-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Otuken — a modern, customizable desktop experience for your self-hosted infrastructure.",
+  "description": "EveryOS — a modern, customizable desktop experience for your self-hosted infrastructure.",
   "type": "module",
   "packageManager": "pnpm@12.6.0",
   "engines": {
@@ -14,7 +14,7 @@
   },
   "scripts": {
     "dev": "node scripts/dev.ts",
-    "build": "pnpm --filter @otuken/web build && node scripts/build.ts",
+    "build": "pnpm --filter @everyos/web build && node scripts/build.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --config tests/e2e/playwright.config.ts",

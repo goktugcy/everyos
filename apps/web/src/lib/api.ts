@@ -1,4 +1,4 @@
-import { CSRF_HEADER, isErrorCode, type ApiErrorBody, type ErrorCode } from "@otuken/shared";
+import { CSRF_HEADER, isErrorCode, type ApiErrorBody, type ErrorCode } from "@everyos/shared";
 
 export type ClientErrorCode = ErrorCode | "NETWORK" | "UNKNOWN";
 

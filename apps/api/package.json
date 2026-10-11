@@ -1,8 +1,8 @@
 {
-  "name": "@otuken/api",
+  "name": "@everyos/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Otuken HTTP API (Hono). Runs as the unprivileged otuken user and serves the web client.",
+  "description": "EveryOS HTTP API (Hono). Runs as the unprivileged everyos user and serves the web client.",
   "type": "module",
   "scripts": {
     "dev": "node --watch --watch-preserve-output src/main.ts",
@@ -10,19 +10,19 @@
   },
   "dependencies": {
     "@hono/node-server": "catalog:",
-    "@otuken/agent-protocol": "workspace:*",
-    "@otuken/auth": "workspace:*",
-    "@otuken/catalogs": "workspace:*",
-    "@otuken/database": "workspace:*",
-    "@otuken/logger": "workspace:*",
-    "@otuken/security": "workspace:*",
-    "@otuken/shared": "workspace:*",
+    "@everyos/agent-protocol": "workspace:*",
+    "@everyos/auth": "workspace:*",
+    "@everyos/catalogs": "workspace:*",
+    "@everyos/database": "workspace:*",
+    "@everyos/logger": "workspace:*",
+    "@everyos/security": "workspace:*",
+    "@everyos/shared": "workspace:*",
     "hono": "catalog:",
     "yaml": "catalog:",
     "ws": "catalog:",
     "zod": "catalog:",
-    "@otuken/widget-sdk": "workspace:*",
-    "@otuken/system": "workspace:*"
+    "@everyos/widget-sdk": "workspace:*",
+    "@everyos/system": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "catalog:"

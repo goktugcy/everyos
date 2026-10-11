@@ -7,7 +7,7 @@ import {
   type WidgetInstance,
   type WidgetPlacement,
   type WidgetSize,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { WidgetManifest } from "./types.ts";
 
 export interface WidgetContext {

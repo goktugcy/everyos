@@ -6,7 +6,7 @@ import type {
   NotificationPreferences,
   Permission,
   SecurityPreferences,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import type { TFunction } from "i18next";
 import { allowedApps } from "../apps/registry.ts";
 import { newId } from "./ids.ts";

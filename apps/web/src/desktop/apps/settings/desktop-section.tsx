@@ -1,5 +1,5 @@
-import { DOCK_POSITIONS, DOCK_STYLES, MAX_DESKTOPS, MENUBAR_MODULE_IDS } from "@otuken/shared";
-import { workArea } from "@otuken/window-manager";
+import { DOCK_POSITIONS, DOCK_STYLES, MAX_DESKTOPS, MENUBAR_MODULE_IDS } from "@everyos/shared";
+import { workArea } from "@everyos/window-manager";
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button.tsx";

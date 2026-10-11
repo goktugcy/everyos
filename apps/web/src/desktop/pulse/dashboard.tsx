@@ -1,4 +1,4 @@
-import type { BackupJobView, TaskOccurrence, UpdateJobView } from "@otuken/shared";
+import type { BackupJobView, TaskOccurrence, UpdateJobView } from "@everyos/shared";
 import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,7 @@ function Meter({ label, value, text }: { label: string; value: number | null; te
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-hover/12">
         <div
-          className="h-full rounded-full bg-[rgb(var(--otk-accent))] transition-[width] duration-500"
+          className="h-full rounded-full bg-[rgb(var(--everyos-accent))] transition-[width] duration-500"
           style={{ width: `${Math.max(0, Math.min(100, value ?? 0))}%` }}
         />
       </div>
@@ -52,7 +52,7 @@ function SystemColumn({
           id: "backup",
           label: t(backup.kind === "restore" ? "backups.restoring" : "backups.creating"),
           detail: t(`backups.stages.${backup.stage}`),
-          open: () => desktop.openApp("otuken.backups"),
+          open: () => desktop.openApp("everyos.backups"),
         }
       : null,
     update
@@ -60,7 +60,7 @@ function SystemColumn({
           id: "update",
           label: t("pulse.updating"),
           detail: update.packages ? update.packages.join(", ") : t("pulse.allPackages"),
-          open: () => desktop.openApp("otuken.updates"),
+          open: () => desktop.openApp("everyos.updates"),
         }
       : null,
   ].filter((job) => job !== null);
@@ -208,7 +208,7 @@ export function PulseDashboard({
                   "relative mx-auto grid size-[26px] place-items-center rounded-full text-[0.72rem] tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent",
                   cell.inMonth ? "text-fg" : "text-fg-subtle/60",
                   isToday &&
-                    "bg-[rgb(var(--otk-accent))] font-semibold text-[rgb(var(--otk-accent-contrast))]",
+                    "bg-[rgb(var(--everyos-accent))] font-semibold text-[rgb(var(--everyos-accent-contrast))]",
                   !isToday && cell.key === selected && "bg-hover/15",
                   !isToday && cell.key !== selected && "hover:bg-hover/10",
                 )}
@@ -219,8 +219,8 @@ export function PulseDashboard({
                     className={cn(
                       "absolute bottom-0.5 size-1 rounded-full",
                       isToday
-                        ? "bg-[rgb(var(--otk-accent-contrast))]"
-                        : "bg-[rgb(var(--otk-accent))]",
+                        ? "bg-[rgb(var(--everyos-accent-contrast))]"
+                        : "bg-[rgb(var(--everyos-accent))]",
                     )}
                     aria-hidden
                   />
@@ -253,10 +253,10 @@ export function PulseDashboard({
               <li key={`${event.taskId}-${event.at}`}>
                 <button
                   type="button"
-                  onClick={() => desktop.openApp("otuken.tasks")}
+                  onClick={() => desktop.openApp("everyos.tasks")}
                   className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1 text-left outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <span className="h-6 w-0.5 shrink-0 rounded-full bg-[rgb(var(--otk-accent))]" />
+                  <span className="h-6 w-0.5 shrink-0 rounded-full bg-[rgb(var(--everyos-accent))]" />
                   <span className="w-11 shrink-0 text-[0.72rem] tabular-nums text-fg-muted">
                     {formatClock(event.at, language)}
                   </span>

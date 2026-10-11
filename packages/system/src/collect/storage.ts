@@ -1,5 +1,5 @@
 import { statfs } from "node:fs/promises";
-import type { StorageUsage } from "@otuken/shared";
+import type { StorageUsage } from "@everyos/shared";
 import { readTextOrNull } from "../fs-utils.ts";
 import { hostPath, REAL_HOST, type HostPaths } from "../host-paths.ts";
 import { parseMounts, type MountEntry } from "../linux/procfs.ts";

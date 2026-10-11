@@ -6,12 +6,12 @@ import {
   type OperationContext,
   type OperationParams,
   type OperationResult,
-} from "@otuken/agent-protocol";
-import { inspectCompose, object, parseCompose } from "@otuken/catalogs/compose";
-import type { DockerApi } from "@otuken/system";
+} from "@everyos/agent-protocol";
+import { inspectCompose, object, parseCompose } from "@everyos/catalogs/compose";
+import type { DockerApi } from "@everyos/system";
 import { stringify } from "yaml";
-import type { AppImage } from "@otuken/shared";
-import type { SecretBox } from "@otuken/security";
+import type { AppImage } from "@everyos/shared";
+import type { SecretBox } from "@everyos/security";
 import { copyManagedData } from "./managed-data.ts";
 import { materializeConfigs } from "./managed-configs.ts";
 

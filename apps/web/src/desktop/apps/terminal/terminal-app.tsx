@@ -1,4 +1,4 @@
-import type { TerminalSessionView, TerminalStatus } from "@otuken/shared";
+import type { TerminalSessionView, TerminalStatus } from "@everyos/shared";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
@@ -70,7 +70,7 @@ function Sessions({ onClose }: { onClose: () => void }) {
           {sessions?.map((session) => (
             <li
               key={session.id}
-              className="glass-inset flex items-center gap-3 rounded-otk-sm p-3"
+              className="glass-inset flex items-center gap-3 rounded-everyos-sm p-3"
               data-testid="terminal-session"
             >
               <div className="min-w-0 flex-1 text-sm">

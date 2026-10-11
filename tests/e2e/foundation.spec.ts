@@ -8,7 +8,8 @@ test.describe.configure({ mode: "serial" });
 
 test("first-run setup creates the administrator and opens the shell", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Otuken'e hoş geldiniz" })).toBeVisible();
+  await expect(page).toHaveTitle("EveryOS");
+  await expect(page.getByRole("heading", { name: "EveryOS'e hoş geldiniz" })).toBeVisible();
 
   // Turkish is preselected; continue to token verification.
   await expect(page.getByRole("radio", { name: "Türkçe" })).toHaveAttribute("aria-checked", "true");
@@ -58,7 +59,7 @@ test("sign out and sign back in, switching the language", async ({ page }) => {
   // Switch to English; the preference is saved to the account.
   await page.getByTestId("dock").getByRole("button", { name: "Ayarlar", exact: true }).click();
   await page
-    .locator('[data-app-id="otuken.settings"]')
+    .locator('[data-app-id="everyos.settings"]')
     .getByRole("button", { name: "Hesap", exact: true })
     .click();
   await page.getByRole("combobox", { name: "Arayüz dili" }).selectOption("en");
@@ -100,7 +101,7 @@ test("windows drag, resize, snap, minimize and restore their layout after reload
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await signIn(page);
-  const system = page.locator('[data-app-id="otuken.system"]');
+  const system = page.locator('[data-app-id="everyos.system"]');
   const dockButton = page
     .getByTestId("dock")
     .getByRole("button", { name: "Sistem İzleyici", exact: true });
@@ -218,7 +219,7 @@ test("the desktop shows the home's Desktop folder; its folders open in Files", a
 
   // Like every folder, it opens in Files with the sidebar.
   await folder.dblclick();
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   await expect(files.getByTestId("files-title")).toHaveText("Araçlar");
   const sidebar = files.getByTestId("files-sidebar");
   await sidebar.getByRole("button", { name: "Masaüstü", exact: true }).click();
@@ -267,7 +268,7 @@ test("app groups from earlier versions become real folders on the desktop", asyn
             {
               kind: "app",
               id: "a1",
-              appId: "otuken.system",
+              appId: "everyos.system",
               desktopId: "d1",
               cell: null,
               folderId: "g1",
@@ -308,7 +309,7 @@ test("launcher search, virtual desktops and dock menus use the same window state
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("donanım");
   await page.keyboard.press("Enter");
-  const system = page.locator('[data-app-id="otuken.system"]');
+  const system = page.locator('[data-app-id="everyos.system"]');
   await expect(system).toBeVisible();
   await page.getByRole("button", { name: "Masaüstü ekle", exact: true }).click();
   await expect(system).toBeHidden();
@@ -324,7 +325,7 @@ test("launcher search, virtual desktops and dock menus use the same window state
     .click({ button: "right" });
   await page.getByRole("menuitem", { name: "Dock'tan kaldır", exact: true }).click();
   await expect
-    .poll(async () => (await preferences(page)).dock?.pinned.includes("otuken.system"))
+    .poll(async () => (await preferences(page)).dock?.pinned.includes("everyos.system"))
     .toBe(false);
   await expect.poll(async () => (await preferences(page)).desktop?.desktops.length).toBe(2);
   await page.reload();
@@ -354,7 +355,7 @@ test("locking is enforced by the API and survives reload without losing windows"
   await lock.getByLabel("Parola", { exact: true }).fill(PASSWORD);
   await lock.getByRole("button", { name: "Kilidi aç", exact: true }).click();
   await expect(lock).toBeHidden();
-  await expect(page.locator('[data-app-id="otuken.system"]')).toBeVisible();
+  await expect(page.locator('[data-app-id="everyos.system"]')).toBeVisible();
   expect((await page.request.get("/api/system/info")).status()).toBe(200);
 });
 
@@ -366,7 +367,7 @@ test("desktop and mobile transitions preserve windows and mobile settings are sa
     .getByTestId("dock")
     .getByRole("button", { name: "Sistem İzleyici", exact: true })
     .click();
-  await expect(page.locator('[data-app-id="otuken.system"]')).toBeVisible();
+  await expect(page.locator('[data-app-id="everyos.system"]')).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByTestId("mobile-shell")).toBeVisible();
   await page.getByRole("button", { name: "Ayarlar", exact: true }).click();
@@ -379,7 +380,7 @@ test("desktop and mobile transitions preserve windows and mobile settings are sa
   await expect(page.locator("html")).toHaveAttribute("data-theme", "aurora");
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.getByTestId("desktop")).toBeVisible();
-  await expect(page.locator('[data-app-id="otuken.system"]')).toBeVisible();
+  await expect(page.locator('[data-app-id="everyos.system"]')).toBeVisible();
 });
 
 test("a failed preferences load shows an error and recovers without replacing saved data", async ({
@@ -416,7 +417,7 @@ test("users and audit use real records, and mobile sign-out clears another user'
     .getByRole("button", { name: "Denetim Kaydı", exact: true })
     .click();
   await expect(
-    page.locator('[data-app-id="otuken.audit"]').getByText("users.create", { exact: true }),
+    page.locator('[data-app-id="everyos.audit"]').getByText("users.create", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Hızlı ayarlar", exact: true }).click();
   await page.getByRole("radio", { name: "Aurora", exact: true }).click();
@@ -459,7 +460,7 @@ test("dragging remains responsive with ten Files windows open", async ({ page })
           activeDesktopId: "d1",
           windows: Array.from({ length: 10 }, (_, index) => ({
             id: `w${index}`,
-            appId: "otuken.files",
+            appId: "everyos.files",
             desktopId: "d1",
             title: "Dosyalar",
             bounds: { x: 200 + index * 25, y: 80 + index * 25, width: 560, height: 360 },
@@ -473,7 +474,7 @@ test("dragging remains responsive with ten Files windows open", async ({ page })
     ).status(),
   ).toBe(204);
   await page.reload();
-  await expect(page.locator('[data-app-id="otuken.files"]')).toHaveCount(10);
+  await expect(page.locator('[data-app-id="everyos.files"]')).toHaveCount(10);
   await expect(page.getByTestId("files-title").filter({ hasText: "goktug" })).toHaveCount(10);
   await page.evaluate(
     () =>

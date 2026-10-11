@@ -1,5 +1,5 @@
-import { OperationError, type OperationHandlers } from "@otuken/agent-protocol";
-import { roleHasPermission, type ProcessList, type SystemInfo } from "@otuken/shared";
+import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
+import { roleHasPermission, type ProcessList, type SystemInfo } from "@everyos/shared";
 import {
   createAptManager,
   type AptManager,
@@ -24,7 +24,7 @@ import {
   type InternetProbeResult,
   type LogSource,
   type ServiceManager,
-} from "@otuken/system";
+} from "@everyos/system";
 import type { AgentMode } from "./config.ts";
 import { POLICY_REASONS } from "./policy.ts";
 import type { ManagedAppManager } from "./managed-apps.ts";
@@ -299,7 +299,7 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
       ) {
         throw new OperationError(
           "policy_denied",
-          `${POLICY_REASONS.protectedContainer}: ${container.name} is protected; "${action}" is not allowed from Otuken`,
+          `${POLICY_REASONS.protectedContainer}: ${container.name} is protected; "${action}" is not allowed from EveryOS`,
         );
       }
       const control = () => docker.controlContainer(container.id, action).catch(toOperationError);
@@ -379,7 +379,7 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
         if (protectedContainer) {
           throw new OperationError(
             "policy_denied",
-            `${POLICY_REASONS.protectedContainer}: ${protectedContainer.name} is protected; Compose "${action}" is not allowed from Otuken`,
+            `${POLICY_REASONS.protectedContainer}: ${protectedContainer.name} is protected; Compose "${action}" is not allowed from EveryOS`,
           );
         }
       }

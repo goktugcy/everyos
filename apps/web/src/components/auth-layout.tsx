@@ -26,11 +26,11 @@ export function AuthLayout({
       <div className="absolute right-4 top-4">
         <LanguageSwitcher />
       </div>
-      <main className="otk-enter flex w-full max-w-[440px] flex-col gap-5">
+      <main className="everyos-enter flex w-full max-w-[440px] flex-col gap-5">
         <div className="flex flex-col items-center gap-3 text-center">
           <LogoMark
             className="size-16 drop-shadow-[0_8px_30px_rgb(125_211_252/0.35)]"
-            title="Otuken"
+            title={t("brand.name")}
           />
           <div className="flex flex-col gap-1.5">
             <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -42,7 +42,7 @@ export function AuthLayout({
             {t("transport.insecureBody")}
           </Alert>
         ) : null}
-        <section className="glass rounded-otk-lg p-6 sm:p-7">{children}</section>
+        <section className="glass rounded-everyos-lg p-6 sm:p-7">{children}</section>
         <footer className="text-center text-xs text-fg-subtle">
           {t("brand.tagline")}
           {bootstrap ? (

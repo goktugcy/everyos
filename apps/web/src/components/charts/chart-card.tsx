@@ -36,7 +36,7 @@ export function ChartCard({
 
   return (
     <section
-      className="glass-inset flex min-w-0 flex-col gap-2 rounded-otk-md p-3"
+      className="glass-inset flex min-w-0 flex-col gap-2 rounded-everyos-md p-3"
       aria-label={title}
     >
       <div className="flex items-start justify-between gap-2">
@@ -68,7 +68,7 @@ export function ChartCard({
         <button
           type="button"
           onClick={() => setTable((value) => !value)}
-          className="grid size-7 shrink-0 place-items-center rounded-otk-sm text-fg-subtle outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
+          className="grid size-7 shrink-0 place-items-center rounded-everyos-sm text-fg-subtle outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
           aria-pressed={table}
           aria-label={table ? t("monitor.showChart") : t("monitor.showTable")}
           title={table ? t("monitor.showChart") : t("monitor.showTable")}
@@ -90,7 +90,7 @@ export function ChartCard({
       ) : table ? (
         <div className="max-h-56 overflow-auto">
           <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-[rgb(var(--otk-surface)/0.95)] text-fg-muted">
+            <thead className="sticky top-0 bg-[rgb(var(--everyos-surface)/0.95)] text-fg-muted">
               <tr>
                 <th scope="col" className="py-1 pr-3 font-semibold">
                   {t("monitor.time")}

@@ -8,7 +8,7 @@ test("pending updates are listed, inspected and upgraded only after confirmation
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("güncelleme");
   await page.getByRole("option", { name: "Güncellemeler" }).click();
-  const app = page.locator('[data-app-id="otuken.updates"]');
+  const app = page.locator('[data-app-id="everyos.updates"]');
   await expect(app.getByTestId("updates-app")).toContainText("5 güncelleme bekliyor");
   await expect(app).toContainText("2 güvenlik");
   // The e2e agent answers from the apt simulator and says so.

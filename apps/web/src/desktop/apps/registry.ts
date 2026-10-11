@@ -1,4 +1,4 @@
-import type { Permission } from "@otuken/shared";
+import type { Permission } from "@everyos/shared";
 import {
   Activity,
   Boxes,
@@ -22,7 +22,7 @@ import type { AppId, DesktopAppManifest } from "./types.ts";
 /** Built-in apps, imported only when their windows open. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
   {
-    id: "otuken.trash",
+    id: "everyos.trash",
     titleKey: "apps.trash",
     icon: Trash2,
     tint: "from-slate-300 to-slate-500",
@@ -37,7 +37,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./files/trash-app.tsx"),
   },
   {
-    id: "otuken.store",
+    id: "everyos.store",
     titleKey: "apps.store",
     icon: Store,
     tint: "from-emerald-400 to-teal-600",
@@ -64,7 +64,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./store/store-app.tsx"),
   },
   {
-    id: "otuken.system",
+    id: "everyos.system",
     titleKey: "apps.system",
     icon: Gauge,
     tint: "from-sky-400 to-indigo-500",
@@ -100,7 +100,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./system/system-app.tsx"),
   },
   {
-    id: "otuken.docker",
+    id: "everyos.docker",
     titleKey: "apps.docker",
     icon: Container,
     tint: "from-sky-500 to-blue-700",
@@ -126,7 +126,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./docker/docker-app.tsx"),
   },
   {
-    id: "otuken.services",
+    id: "everyos.services",
     titleKey: "apps.services",
     icon: Boxes,
     tint: "from-violet-400 to-fuchsia-600",
@@ -142,7 +142,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./services/services-app.tsx"),
   },
   {
-    id: "otuken.logs",
+    id: "everyos.logs",
     titleKey: "apps.logs",
     icon: ScrollText,
     tint: "from-zinc-400 to-zinc-600",
@@ -158,7 +158,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./logs/logs-app.tsx"),
   },
   {
-    id: "otuken.settings",
+    id: "everyos.settings",
     titleKey: "apps.settings",
     icon: Settings,
     tint: "from-slate-400 to-slate-600",
@@ -183,7 +183,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./settings/settings-app.tsx"),
   },
   {
-    id: "otuken.users",
+    id: "everyos.users",
     titleKey: "apps.users",
     icon: Users,
     tint: "from-emerald-400 to-teal-600",
@@ -198,7 +198,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./users/users-app.tsx"),
   },
   {
-    id: "otuken.audit",
+    id: "everyos.audit",
     titleKey: "apps.audit",
     icon: Activity,
     tint: "from-amber-400 to-orange-600",
@@ -213,7 +213,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./audit/audit-app.tsx"),
   },
   {
-    id: "otuken.files",
+    id: "everyos.files",
     titleKey: "apps.files",
     icon: HardDrive,
     tint: "from-amber-300 to-orange-500",
@@ -238,7 +238,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./files/files-app.tsx"),
   },
   {
-    id: "otuken.updates",
+    id: "everyos.updates",
     titleKey: "apps.updates",
     icon: PackageCheck,
     tint: "from-lime-400 to-emerald-600",
@@ -262,7 +262,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./updates/updates-app.tsx"),
   },
   {
-    id: "otuken.tasks",
+    id: "everyos.tasks",
     titleKey: "apps.tasks",
     icon: CalendarClock,
     tint: "from-violet-400 to-indigo-600",
@@ -277,7 +277,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./tasks/tasks-app.tsx"),
   },
   {
-    id: "otuken.terminal",
+    id: "everyos.terminal",
     titleKey: "apps.terminal",
     icon: SquareTerminal,
     tint: "from-slate-400 to-zinc-700",
@@ -292,7 +292,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./terminal/terminal-app.tsx"),
   },
   {
-    id: "otuken.backups",
+    id: "everyos.backups",
     titleKey: "apps.backups",
     icon: ArchiveRestore,
     tint: "from-amber-400 to-orange-600",
@@ -307,7 +307,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./backups/backups-app.tsx"),
   },
   {
-    id: "otuken.tailscale",
+    id: "everyos.tailscale",
     titleKey: "apps.tailscale",
     icon: Waypoints,
     tint: "from-slate-400 to-zinc-700",
@@ -322,7 +322,7 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
     load: () => import("./tailscale/tailscale-app.tsx"),
   },
   {
-    id: "otuken.editor",
+    id: "everyos.editor",
     titleKey: "apps.editor",
     icon: FileText,
     tint: "from-slate-300 to-slate-500",

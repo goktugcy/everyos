@@ -14,7 +14,7 @@ test("Files looks like Finder: fixed favourites, icon and list views, terminal a
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
   await page.keyboard.press("Enter");
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   const sidebar = files.getByTestId("files-sidebar");
   const row = (name: string) => files.getByTestId("file-row").filter({ hasText: name });
 
@@ -50,7 +50,7 @@ test("Files looks like Finder: fixed favourites, icon and list views, terminal a
   // "Open Terminal" from the folder's context menu.
   await files.getByTestId("file-list").click({ button: "right", position: { x: 300, y: 200 } });
   await page.getByRole("menuitem", { name: "Terminal aç" }).click();
-  const terminal = page.locator('[data-app-id="otuken.terminal"]');
+  const terminal = page.locator('[data-app-id="everyos.terminal"]');
   await expect(terminal).toHaveCount(1);
   await terminal.locator('button[data-kind="close"]').click();
   await expect(terminal).toHaveCount(0);
@@ -108,7 +108,7 @@ test("files drag between Files windows and the desktop, which is the Desktop fol
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
   await page.keyboard.press("Enter");
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   await files.getByTestId("files-sidebar").getByRole("button", { name: "Belgeler" }).click();
   await expect(files.getByTestId("files-title")).toHaveText("Belgeler");
   await files

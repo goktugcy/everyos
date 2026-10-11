@@ -9,17 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "button-accent shadow-[0_10px_30px_-12px_rgb(var(--otk-accent-strong)/0.9),inset_0_1px_0_rgb(255_255_255/0.35)] hover:brightness-110",
+          "button-accent shadow-[0_10px_30px_-12px_rgb(var(--everyos-accent-strong)/0.9),inset_0_1px_0_rgb(255_255_255/0.35)] hover:brightness-110",
         secondary: "glass-inset text-fg hover:bg-hover/10",
         ghost: "text-fg-muted hover:bg-hover/8 hover:text-fg",
         danger:
           "bg-danger/90 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25)] hover:bg-danger",
       },
       size: {
-        sm: "h-8 rounded-otk-sm px-3 text-sm",
-        md: "h-10 rounded-otk-md px-4 text-sm",
-        lg: "h-12 rounded-otk-md px-5 text-base",
-        icon: "size-9 rounded-otk-sm",
+        sm: "h-8 rounded-everyos-sm px-3 text-sm",
+        md: "h-10 rounded-everyos-md px-4 text-sm",
+        lg: "h-12 rounded-everyos-md px-5 text-base",
+        icon: "size-9 rounded-everyos-sm",
       },
     },
     defaultVariants: { variant: "primary", size: "md" },

@@ -1,4 +1,4 @@
-import type { PowerStatus } from "@otuken/shared";
+import type { PowerStatus } from "@everyos/shared";
 import { Battery, BatteryLow, BatteryMedium, BatteryFull, PlugZap } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useTranslation } from "react-i18next";
@@ -56,7 +56,7 @@ export function PowerModule() {
           align="end"
           sideOffset={8}
           collisionPadding={8}
-          className="glass-strong otk-enter z-[8000] flex max-h-[80dvh] w-80 flex-col gap-3 overflow-y-auto rounded-otk-lg p-4 text-sm text-fg"
+          className="glass-strong everyos-enter z-[8000] flex max-h-[80dvh] w-80 flex-col gap-3 overflow-y-auto rounded-everyos-lg p-4 text-sm text-fg"
         >
           <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">
             {t("power.title")}

@@ -27,7 +27,7 @@ export const CAPABILITY_REASONS = [
 export type CapabilityReason = (typeof CAPABILITY_REASONS)[number];
 
 /**
- * `host` — values were read from the machine Otuken runs on.
+ * `host` — values were read from the machine EveryOS runs on.
  * `simulated` — development-only synthetic values; the UI must label them.
  */
 export const DATA_SOURCES = ["host", "simulated"] as const;

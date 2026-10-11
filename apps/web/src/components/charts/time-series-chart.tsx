@@ -234,7 +234,7 @@ export function TimeSeriesChart({
                     cy={y(s.values[index]!)}
                     r={4}
                     fill={s.color}
-                    stroke="rgb(var(--otk-surface))"
+                    stroke="rgb(var(--everyos-surface))"
                     strokeWidth={2}
                   />
                 );
@@ -263,7 +263,7 @@ export function TimeSeriesChart({
                     cy={y(value)}
                     r={4}
                     fill={s.color}
-                    stroke="rgb(var(--otk-surface))"
+                    stroke="rgb(var(--everyos-surface))"
                     strokeWidth={2}
                   />
                 );
@@ -275,7 +275,7 @@ export function TimeSeriesChart({
 
       {activeTime !== undefined ? (
         <div
-          className="glass-strong pointer-events-none absolute top-1 z-10 min-w-36 rounded-otk-sm px-3 py-2 text-xs shadow-lg"
+          className="glass-strong pointer-events-none absolute top-1 z-10 min-w-36 rounded-everyos-sm px-3 py-2 text-xs shadow-lg"
           style={
             flip
               ? { right: Math.max(4, width - tooltipLeft + 12) }

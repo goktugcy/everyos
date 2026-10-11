@@ -1,4 +1,4 @@
-import type { Database } from "@otuken/database";
+import type { Database } from "@everyos/database";
 
 const KEY = "files";
 

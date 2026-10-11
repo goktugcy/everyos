@@ -1,4 +1,4 @@
-import type { ApiErrorBody } from "@otuken/shared";
+import type { ApiErrorBody } from "@everyos/shared";
 import { Hono, type MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";

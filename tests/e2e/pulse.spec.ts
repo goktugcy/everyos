@@ -62,7 +62,7 @@ test("the pulse opens a dashboard and a shelf that takes files, and can be hidde
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
   await page.keyboard.press("Enter");
-  const files = page.locator('[data-app-id="otuken.files"]');
+  const files = page.locator('[data-app-id="everyos.files"]');
   await files.getByTestId("files-sidebar").getByRole("button", { name: "İndirilenler" }).click();
   const row = files.getByTestId("file-row").filter({ hasText: "pulse-e2e (2).txt" });
   await row.dragTo(page.getByTestId("pulse-trigger"));

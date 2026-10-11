@@ -4,7 +4,7 @@ import type {
   NotificationList,
   NotificationView,
   ServiceList,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import type { NotificationChange } from "./modules/notifications/notification-service.ts";

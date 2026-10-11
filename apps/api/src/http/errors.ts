@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@otuken/shared";
+import type { ErrorCode } from "@everyos/shared";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export class ApiError extends Error {

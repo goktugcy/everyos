@@ -1,5 +1,5 @@
 import { connect, type Socket } from "node:net";
-import { silentLogger, type Logger } from "@otuken/logger";
+import { silentLogger, type Logger } from "@everyos/logger";
 import { DEFAULT_MAX_RESPONSE_BYTES, encodeFrame, LineDecoder } from "./framing.ts";
 import { clientMac, createNonce, deriveAgentAuthKey, verifyServerProof } from "./handshake.ts";
 import {

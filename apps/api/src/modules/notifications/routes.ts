@@ -1,7 +1,7 @@
 import {
   NotificationListQuerySchema,
   NotificationStateRequestSchema,
-} from "@otuken/shared/schemas";
+} from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { parseJsonBody, parseQuery } from "../../http/validation.ts";

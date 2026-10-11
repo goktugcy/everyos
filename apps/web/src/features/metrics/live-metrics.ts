@@ -1,4 +1,4 @@
-import type { MetricsHistory, MetricsPoint, MetricsSnapshot } from "@otuken/shared";
+import type { MetricsHistory, MetricsPoint, MetricsSnapshot } from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { api } from "../../lib/api.ts";

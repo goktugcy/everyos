@@ -1,7 +1,7 @@
 # Widget platform (Phase 6)
 
 Widgets show live host and application data on the desktop, in a right-hand sidebar and in the
-menu bar. Every widget is **built in**: manifests live in `@otuken/widget-sdk`, renderers in
+menu bar. Every widget is **built in**: manifests live in `@everyos/widget-sdk`, renderers in
 `apps/web/src/desktop/widgets/renderers`, and collection on the server. App Store catalogs can only
 be matched to a built-in adapter. They never ship widget code, and no remote JavaScript is ever
 loaded into the desktop.
@@ -20,7 +20,7 @@ browser tab ── one EventSource ──► /api/events?topics=metrics,data.sto
 ## 1. Manifests
 
 `WidgetManifest` (`packages/widget-sdk/src/types.ts`, validated by `WidgetManifestSchema` in
-`@otuken/shared/schemas`):
+`@everyos/shared/schemas`):
 
 | Field                | Meaning                                                                                                                                                                                                                                                                                                    |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -157,7 +157,7 @@ tab's single event stream and drops the cached value with the last reader. On th
 
 ## 4. Application integrations
 
-`POST /api/integrations` (`apps:manage`) is the administrator's explicit consent for Otuken to read
+`POST /api/integrations` (`apps:manage`) is the administrator's explicit consent for EveryOS to read
 an app's API. Integrations are stored in the `integrations` table (migration 0007) as follows:
 
 - **Credentials** are sealed with the secret box (context `integration:<id>:secret:v1`). They are

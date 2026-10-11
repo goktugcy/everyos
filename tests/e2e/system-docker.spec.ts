@@ -3,7 +3,7 @@ import { PASSWORD, signIn } from "./helpers.ts";
 
 /*
  * Phase 4 Docker management against the development Docker simulator
- * (OTUKEN_AGENT_SIMULATE=1 in the e2e stack), so it runs the same on macOS
+ * (EVERYOS_AGENT_SIMULATE=1 in the e2e stack), so it runs the same on macOS
  * and CI and never touches a real Docker host.
  */
 
@@ -13,7 +13,7 @@ async function openDocker(page: Page) {
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("docker");
   await page.keyboard.press("Enter");
-  const app = page.locator('[data-app-id="otuken.docker"]');
+  const app = page.locator('[data-app-id="everyos.docker"]');
   await expect(app).toBeVisible();
   return app;
 }
@@ -191,7 +191,7 @@ test("a mobile viewer can inspect Docker without management or log access", asyn
   expect(
     (
       await page.request.post(`/api/docker/containers/${id}/actions`, {
-        headers: { "x-otuken-csrf": session.csrfToken },
+        headers: { "x-everyos-csrf": session.csrfToken },
         data: { action: "stop" },
       })
     ).status(),

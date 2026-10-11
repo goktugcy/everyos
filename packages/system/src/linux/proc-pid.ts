@@ -14,7 +14,7 @@ export interface PidStat {
   startTicks: number;
 }
 
-/** USER_HZ is 100 on every Linux architecture Otuken targets (x86-64, arm64). */
+/** USER_HZ is 100 on every Linux architecture EveryOS targets (x86-64, arm64). */
 export const CLOCK_TICKS_PER_SECOND = 100;
 
 export function parsePidStat(text: string): PidStat | null {

@@ -18,7 +18,7 @@ import type {
   FileSearchResult,
   TextFile,
   TrashListing,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import type { ApiConfig } from "./config.ts";
 import {
@@ -58,7 +58,7 @@ describe("private recoverable trash", () => {
     const { admin, root } = await setup();
     mkdirSync(join(root, "report"));
     writeFileSync(join(root, "report", "notes.txt"), "recover me");
-    const outside = mkdtempSync(join(tmpdir(), "otuken-trash-outside-"));
+    const outside = mkdtempSync(join(tmpdir(), "everyos-trash-outside-"));
     writeFileSync(join(outside, "secret.txt"), "unchanged");
     symlinkSync(outside, join(root, "escape"));
     expect(
@@ -225,7 +225,7 @@ describe("private recoverable trash", () => {
         .status,
     ).toBe(400);
     const second = await setup();
-    const outside = mkdtempSync(join(tmpdir(), "otuken-trash-link-"));
+    const outside = mkdtempSync(join(tmpdir(), "everyos-trash-link-"));
     symlinkSync(outside, join(second.root, ".otuken-trash"));
     writeFileSync(join(second.root, "keep.txt"), "keep");
     expect(
@@ -301,7 +301,7 @@ describe("private recoverable trash", () => {
 describe("file manager", () => {
   it("lists only inside the root and never follows links out of it", async () => {
     const { admin, viewer, root } = await setup();
-    const outside = mkdtempSync(join(tmpdir(), "otuken-outside-"));
+    const outside = mkdtempSync(join(tmpdir(), "everyos-outside-"));
     writeFileSync(join(outside, "secret.txt"), "outside");
     mkdirSync(join(root, "docs"));
     writeFileSync(join(root, "docs", "a.txt"), "hello");
@@ -412,7 +412,7 @@ describe("file manager", () => {
         })
       ).status,
     ).toBe(403);
-    expect(readdirSync(root).filter((n) => n.includes("otuken"))).toEqual([]);
+    expect(readdirSync(root).filter((n) => n.includes("everyos"))).toEqual([]);
   });
 
   it("streams uploads without overwriting by accident and checks free space", async () => {
@@ -440,7 +440,7 @@ describe("file manager", () => {
     expect((await upload("short.dat", "0123456789", {}, { "content-length": "4" })).status).toBe(
       400,
     );
-    expect(readdirSync(root).filter((n) => n.startsWith(".otuken") || n === "short.dat")).toEqual(
+    expect(readdirSync(root).filter((n) => n.startsWith(".everyos") || n === "short.dat")).toEqual(
       [],
     );
     expect((await upload("../x", "x")).status).toBe(400);

@@ -45,8 +45,8 @@ describe("terminal protocol helpers", () => {
     expect(terminalSize(NaN, Infinity)).toEqual({ type: "resize", cols: 80, rows: 24 });
   });
   it("uses same-origin ws/wss and resumes only the requested session", () => {
-    const url = new URL(terminalUrl("https://otuken.example", 100, 32, id));
-    expect(url.origin).toBe("wss://otuken.example");
+    const url = new URL(terminalUrl("https://everyos.example", 100, 32, id));
+    expect(url.origin).toBe("wss://everyos.example");
     expect(url.pathname).toBe("/api/terminal/ws");
     expect(url.searchParams.get("session")).toBe(id);
     expect(url.searchParams.get("cols")).toBe("100");

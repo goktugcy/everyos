@@ -1,10 +1,10 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { createServer as createHttpsServer } from "node:https";
 import { serve } from "@hono/node-server";
-import { migrate, openDatabase, OTUKEN_MIGRATIONS } from "@otuken/database";
-import { createLogger, serializeError } from "@otuken/logger";
-import { loadKeyFile } from "@otuken/security";
-import { OTUKEN_VERSION } from "@otuken/shared";
+import { migrate, openDatabase, EVERYOS_MIGRATIONS } from "@everyos/database";
+import { createLogger, serializeError } from "@everyos/logger";
+import { loadKeyFile } from "@everyos/security";
+import { EVERYOS_VERSION } from "@everyos/shared";
 import { LazyAgentGateway } from "./agent-gateway.ts";
 import { createApp } from "./app.ts";
 import { isExposedBinding, loadApiConfig } from "./config.ts";
@@ -14,7 +14,7 @@ import { applyPendingRestore } from "./modules/backups/snapshot.ts";
 import type { Server } from "node:http";
 
 const MAINTENANCE_INTERVAL_MS = 60 * 60_000;
-/** Exit status asking the service manager to start Otuken again (EX_TEMPFAIL). */
+/** Exit status asking the service manager to start EveryOS again (EX_TEMPFAIL). */
 const RESTART_EXIT_CODE = 75;
 
 async function main(): Promise<void> {
@@ -22,19 +22,19 @@ async function main(): Promise<void> {
   // New files (database, backups, secrets) are never world-readable.
   process.umask(0o027);
   const logger = createLogger({
-    name: "otuken",
+    name: "everyos",
     level: config.logging.level,
     format: config.logging.format,
   });
-  logger.info("Starting Otuken API", {
-    version: OTUKEN_VERSION,
+  logger.info("Starting EveryOS API", {
+    version: EVERYOS_VERSION,
     mode: config.mode,
     node: process.version,
   });
 
   if (process.getuid?.() === 0) {
     logger.warn(
-      "The API is running as root. It is designed to run as the unprivileged 'otuken' user.",
+      "The API is running as root. It is designed to run as the unprivileged 'everyos' user.",
     );
   }
   if (isExposedBinding(config.server.host) && !config.server.tls) {
@@ -60,7 +60,7 @@ async function main(): Promise<void> {
     logger,
   });
   const db = openDatabase(config.paths.databaseFile);
-  const migration = await migrate(db, OTUKEN_MIGRATIONS, {
+  const migration = await migrate(db, EVERYOS_MIGRATIONS, {
     backupDir: config.paths.backupDir,
     logger,
   });
@@ -132,7 +132,7 @@ async function main(): Promise<void> {
         : {}),
     },
     (info) => {
-      logger.info("Otuken API listening", {
+      logger.info("EveryOS API listening", {
         url: `${tls ? "https" : "http"}://${info.family === "IPv6" ? `[${info.address}]` : info.address}:${info.port}`,
       });
     },
@@ -182,6 +182,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  createLogger({ name: "otuken" }).fatal("Otuken API failed to start", { error });
+  createLogger({ name: "everyos" }).fatal("EveryOS API failed to start", { error });
   process.exitCode = 1;
 });

@@ -7,7 +7,7 @@ import type {
   AlertSummary,
   TailscaleStatus,
   TimerSummary,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { AlertTriangle, ArrowDown, ArrowUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -369,17 +369,17 @@ function TwoSeries({
         <Sparkline
           values={second}
           max={max}
-          color="var(--otk-chart-2)"
+          color="var(--everyos-chart-2)"
           className="absolute inset-0"
         />
       </div>
       <div className="flex gap-3 text-[0.7rem] text-fg-muted">
         <span className="flex items-center gap-1">
-          <span className="h-0.5 w-3 rounded-full bg-[var(--otk-chart-1)]" aria-hidden />
+          <span className="h-0.5 w-3 rounded-full bg-[var(--everyos-chart-1)]" aria-hidden />
           {firstLabel}
         </span>
         <span className="flex items-center gap-1">
-          <span className="h-0.5 w-3 rounded-full bg-[var(--otk-chart-2)]" aria-hidden />
+          <span className="h-0.5 w-3 rounded-full bg-[var(--everyos-chart-2)]" aria-hidden />
           {secondLabel}
         </span>
       </div>

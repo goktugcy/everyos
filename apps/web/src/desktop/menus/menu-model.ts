@@ -1,4 +1,4 @@
-import type { Permission } from "@otuken/shared";
+import type { Permission } from "@everyos/shared";
 import type { ReactNode } from "react";
 
 export interface ConfirmOptions {

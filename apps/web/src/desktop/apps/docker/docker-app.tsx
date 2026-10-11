@@ -1,4 +1,4 @@
-import type { DockerStatus } from "@otuken/shared";
+import type { DockerStatus } from "@everyos/shared";
 import { Tabs } from "radix-ui";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -43,7 +43,7 @@ export default function DockerApp() {
             <Tabs.Trigger
               key={id}
               value={id}
-              className="-mb-px whitespace-nowrap rounded-t-otk-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-fg"
+              className="-mb-px whitespace-nowrap rounded-t-everyos-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-fg"
             >
               {t(`docker.tabs.${id}`)}
             </Tabs.Trigger>

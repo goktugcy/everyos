@@ -10,7 +10,7 @@ async function openTerminal(page: Page) {
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("terminal");
   await page.getByRole("option", { name: "Terminal", exact: true }).click();
-  const app = page.locator('[data-app-id="otuken.terminal"]').last();
+  const app = page.locator('[data-app-id="everyos.terminal"]').last();
   await expect(app.getByTestId("terminal-app")).toHaveAttribute("data-terminal-phase", "connected");
   return app;
 }
@@ -66,11 +66,11 @@ test("terminal runs a real shell, reloads the same session and closes it with th
   const id = initial[0]!.id;
   await app.getByRole("textbox", { name: "Terminal girdisi" }).focus();
   // The output assertion matches a standalone line, not the echoed command.
-  await page.keyboard.type("echo otuken-e2e");
+  await page.keyboard.type("echo everyos-e2e");
   await page.keyboard.press("Enter");
   const output = app
     .locator(".xterm-accessibility-tree > div")
-    .filter({ hasText: /^otuken-e2e\s*$/ });
+    .filter({ hasText: /^everyos-e2e\s*$/ });
   await expect(output).toHaveCount(1);
   await page.evaluate(() => navigator.clipboard.writeText("printf 'clipboard-ğ\\n'"));
   const modifier = await page.evaluate(() =>
@@ -87,19 +87,19 @@ test("terminal runs a real shell, reloads the same session and closes it with th
   await expect
     .poll(async () =>
       (await preferences(page)).windows?.windows.some(
-        (window) => window.appId === "otuken.terminal",
+        (window) => window.appId === "everyos.terminal",
       ),
     )
     .toBe(true);
   await page.reload();
-  const restored = page.locator('[data-app-id="otuken.terminal"]');
+  const restored = page.locator('[data-app-id="everyos.terminal"]');
   await expect(restored.getByTestId("terminal-app")).toHaveAttribute(
     "data-terminal-phase",
     "connected",
   );
   await expect(restored).toContainText("Oturuma yeniden bağlandı");
   await expect(
-    restored.locator(".xterm-accessibility-tree > div").filter({ hasText: /^otuken-e2e\s*$/ }),
+    restored.locator(".xterm-accessibility-tree > div").filter({ hasText: /^everyos-e2e\s*$/ }),
   ).toHaveCount(1);
   expect((await sessions(page)).map((session) => session.id)).toEqual([id]);
   await restored.getByRole("textbox", { name: "Terminal girdisi" }).focus();
@@ -164,9 +164,9 @@ test("terminal supports multiple windows, seven themes and explicit restart afte
     "connected",
   );
   await expect.poll(async () => (await sessions(page)).length).toBe(2);
-  while (await page.locator('[data-app-id="otuken.terminal"]').count())
+  while (await page.locator('[data-app-id="everyos.terminal"]').count())
     await page
-      .locator('[data-app-id="otuken.terminal"]')
+      .locator('[data-app-id="everyos.terminal"]')
       .last()
       .getByRole("button", { name: "Kapat", exact: true })
       .click();
@@ -264,7 +264,7 @@ test("a viewer cannot discover or open the terminal, including the WebSocket", a
       }),
   );
   expect(opened).toBe(false);
-  await expect(page.locator('[data-app-id="otuken.terminal"]')).toHaveCount(0);
+  await expect(page.locator('[data-app-id="everyos.terminal"]')).toHaveCount(0);
 });
 
 test("disabled status explains every reason and configuration without opening a shell", async ({
@@ -283,7 +283,7 @@ test("disabled status explains every reason and configuration without opening a 
     await page.keyboard.press("Control+k");
     await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("terminal");
     await page.getByRole("option", { name: "Terminal", exact: true }).click();
-    const app = page.locator('[data-app-id="otuken.terminal"]');
+    const app = page.locator('[data-app-id="everyos.terminal"]');
     await expect(app.getByTestId("terminal-disabled")).toContainText(text!);
     await expect(app).toContainText("terminal.user");
     await expect(app.locator(".xterm")).toHaveCount(0);
@@ -299,7 +299,7 @@ test("closing a restored terminal before status loads still ends its shell", asy
   await expect
     .poll(async () =>
       (await preferences(page)).windows?.windows.some(
-        (window) => window.appId === "otuken.terminal",
+        (window) => window.appId === "everyos.terminal",
       ),
     )
     .toBe(true);
@@ -309,7 +309,7 @@ test("closing a restored terminal before status loads still ends its shell", asy
   });
   await page.reload();
   await expect.poll(() => requested).toBe(true);
-  const app = page.locator('[data-app-id="otuken.terminal"]');
+  const app = page.locator('[data-app-id="everyos.terminal"]');
   await expect(app.getByRole("button", { name: "Kapat", exact: true })).toBeVisible();
   await expect(app.locator(".xterm")).toHaveCount(0);
   await app.getByRole("button", { name: "Kapat", exact: true }).click();

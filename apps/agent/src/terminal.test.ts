@@ -1,7 +1,7 @@
 import { statSync } from "node:fs";
 import { userInfo } from "node:os";
-import { silentLogger } from "@otuken/logger";
-import type { Actor } from "@otuken/agent-protocol";
+import { silentLogger } from "@everyos/logger";
+import type { Actor } from "@everyos/agent-protocol";
 import { describe, expect, it } from "vitest";
 import { TerminalManager } from "./terminal.ts";
 
@@ -60,7 +60,7 @@ describe("terminal manager", () => {
     expect(root.status()).toEqual({ enabled: false, reason: "root-refused" });
     const missing = new TerminalManager({
       config: {
-        user: "otuken-no-such-user",
+        user: "everyos-no-such-user",
         allowRoot: false,
         python: python ?? "/usr/bin/python3",
       },
@@ -79,7 +79,7 @@ describe("terminal manager", () => {
       expect(manager.status()).toMatchObject({ enabled: true, shell: "/bin/sh" });
       const sessionId = "6c4b7c2e-0a8e-4f43-9c66-2f8f1f6f6d01";
       const result = await collect(manager, sessionId, async (send) => {
-        send("echo otuken-$((40+2))\n");
+        send("echo everyos-$((40+2))\n");
         await new Promise((resolve) => setTimeout(resolve, 200));
         // Someone else cannot type into this session.
         expect(() =>
@@ -92,7 +92,7 @@ describe("terminal manager", () => {
         send("exit 3\n");
       });
       expect(result.started).toBe(true);
-      expect(result.output).toContain("otuken-42");
+      expect(result.output).toContain("everyos-42");
       expect(result.output).toContain("40 120");
       expect(result.code).toBe(3);
       expect(() => manager.input(sessionId, "", me)).toThrow(/No such terminal/);

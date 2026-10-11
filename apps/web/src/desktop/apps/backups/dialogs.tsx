@@ -1,4 +1,4 @@
-import type { BackupAppOption, BackupSettings, BackupView, RestorePreview } from "@otuken/shared";
+import type { BackupAppOption, BackupSettings, BackupView, RestorePreview } from "@everyos/shared";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -208,7 +208,7 @@ export function DownloadDialog({ backup, onClose }: { backup: BackupView; onClos
       });
       const link = document.createElement("a");
       link.href = url;
-      link.download = `otuken-backup-${backup.id}.tar`;
+      link.download = `everyos-backup-${backup.id}.tar`;
       link.rel = "noopener";
       document.body.append(link);
       link.click();
@@ -393,7 +393,7 @@ export function RestoreDialog({
           </label>
           {settings === "database" ? (
             <div
-              className="rounded-otk-md border border-line p-3 text-xs"
+              className="rounded-everyos-md border border-line p-3 text-xs"
               data-testid="restore-diff"
             >
               <p className="mb-1 font-semibold">{t("backups.diff.users")}</p>

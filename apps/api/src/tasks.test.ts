@@ -1,4 +1,4 @@
-import type { NotificationList, TaskRunView, TaskView } from "@otuken/shared";
+import type { NotificationList, TaskRunView, TaskView } from "@everyos/shared";
 import { describe, expect, it, vi } from "vitest";
 import { taskExecutors } from "./modules/tasks/executors.ts";
 import { TaskService } from "./modules/tasks/task-service.ts";

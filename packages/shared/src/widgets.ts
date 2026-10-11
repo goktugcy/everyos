@@ -1,8 +1,8 @@
 /*
  * Zod-free widget platform constants and types (manifests, layouts,
  * integrations, data topics). Runtime schemas live in
- * "@otuken/shared/schemas" (schemas/widgets.ts); built-in manifests live in
- * "@otuken/widget-sdk".
+ * "@everyos/shared/schemas" (schemas/widgets.ts); built-in manifests live in
+ * "@everyos/widget-sdk".
  */
 
 export const WIDGET_SCHEMA_VERSION = 1;
@@ -68,7 +68,7 @@ export interface WidgetPreferences {
 /* ---------------------------- integrations ---------------------------- */
 
 /**
- * Application adapters built into Otuken. Catalogs can only *declare* that
+ * Application adapters built into EveryOS. Catalogs can only *declare* that
  * an app supports one of these; they can never ship widget code.
  */
 export const INTEGRATION_ADAPTERS = [
@@ -189,7 +189,7 @@ export interface SocketSummary {
 
 export interface AptUpdates {
   source: "host" | "simulated";
-  /** Package lists are not refreshed by Otuken; this is when apt last refreshed them. */
+  /** Package lists are not refreshed by EveryOS; this is when apt last refreshed them. */
   listsUpdatedAt: number | null;
   total: number;
   security: number;

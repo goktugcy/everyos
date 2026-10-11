@@ -1,4 +1,4 @@
-import type { TextFile } from "@otuken/shared";
+import type { TextFile } from "@everyos/shared";
 import { RotateCcw, Save } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";

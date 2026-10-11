@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { OTUKEN_VERSION } from "@otuken/shared";
+import { EVERYOS_VERSION } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import {
   ConfigError,
@@ -24,16 +24,16 @@ describe("API config", () => {
       tls: null,
     });
     expect(config.paths).toMatchObject({
-      dataDir: "/var/lib/otuken",
-      databaseFile: "/var/lib/otuken/otuken.db",
-      secretKeyFile: "/var/lib/otuken/secret.key",
-      agentSocket: "/run/otuken/agent.sock",
-      webDir: "/usr/lib/otuken/web",
+      dataDir: "/var/lib/everyos",
+      databaseFile: "/var/lib/everyos/everyos.db",
+      secretKeyFile: "/var/lib/everyos/secret.key",
+      agentSocket: "/run/everyos/agent.sock",
+      webDir: "/usr/lib/everyos/web",
     });
   });
 
   it("merges file values and environment overrides", () => {
-    const dir = mkdtempSync(join(tmpdir(), "otuken-cfg-"));
+    const dir = mkdtempSync(join(tmpdir(), "everyos-cfg-"));
     const file = join(dir, "config.yaml");
     writeFileSync(
       file,
@@ -42,37 +42,55 @@ describe("API config", () => {
         "  host: 100.64.0.10",
         "  port: 8443",
         "  trustedProxies: [127.0.0.1, 10.0.0.0/8]",
-        "  publicOrigins: ['https://otuken.tail.ts.net']",
+        "  publicOrigins: ['https://everyos.tail.ts.net']",
         "security:",
         "  sessionIdleMinutes: 30",
         "logging:",
         "  level: warn",
       ].join("\n"),
     );
-    const config = loadApiConfig({ OTUKEN_CONFIG: file, OTUKEN_PORT: "9000" });
+    const config = loadApiConfig({ EVERYOS_CONFIG: file, EVERYOS_PORT: "9000" });
     expect(config.server).toMatchObject({
       host: "100.64.0.10",
       port: 9000,
       trustedProxies: ["127.0.0.1", "10.0.0.0/8"],
     });
-    expect(config.server.publicOrigins).toEqual(["https://otuken.tail.ts.net"]);
+    expect(config.server.publicOrigins).toEqual(["https://everyos.tail.ts.net"]);
     expect(config.security.sessionIdleMs).toBe(30 * 60_000);
     expect(config.logging.level).toBe("warn");
   });
 
   it("rejects unknown keys and invalid values", () => {
-    const dir = mkdtempSync(join(tmpdir(), "otuken-cfg-"));
+    const dir = mkdtempSync(join(tmpdir(), "everyos-cfg-"));
     const file = join(dir, "config.yaml");
     writeFileSync(file, "server:\n  hots: 0.0.0.0\n");
-    expect(() => loadApiConfig({ OTUKEN_CONFIG: file })).toThrow(ConfigError);
+    expect(() => loadApiConfig({ EVERYOS_CONFIG: file })).toThrow(ConfigError);
     writeFileSync(file, "server:\n  trustedProxies: ['not-an-ip']\n");
-    expect(() => loadApiConfig({ OTUKEN_CONFIG: file })).toThrow(/IP address or CIDR/);
-    expect(() => loadApiConfig({ OTUKEN_PORT: "70000" })).toThrow(ConfigError);
-    expect(() => loadApiConfig({ OTUKEN_CONFIG: join(dir, "missing.yaml") })).toThrow(ConfigError);
+    expect(() => loadApiConfig({ EVERYOS_CONFIG: file })).toThrow(/IP address or CIDR/);
+    expect(() => loadApiConfig({ EVERYOS_PORT: "70000" })).toThrow(ConfigError);
+    expect(() => loadApiConfig({ EVERYOS_CONFIG: join(dir, "missing.yaml") })).toThrow(ConfigError);
   });
 
   it("requires a dev root in development mode", () => {
-    expect(() => loadApiConfig({ OTUKEN_ENV: "development" })).toThrow(ConfigError);
+    expect(() => loadApiConfig({ EVERYOS_ENV: "development" })).toThrow(ConfigError);
+  });
+
+  it("keeps legacy environment settings and databases, preferring EveryOS overrides", () => {
+    const dir = mkdtempSync(join(tmpdir(), "everyos-legacy-config-"));
+    writeFileSync(join(dir, "otuken.db"), "existing database");
+    const config = loadApiConfig({
+      OTUKEN_ENV: "development",
+      OTUKEN_DEV_ROOT: dir,
+      OTUKEN_DATA_DIR: dir,
+      OTUKEN_PORT: "9000",
+      EVERYOS_PORT: "9001",
+    });
+    expect(config.server.port).toBe(9001);
+    expect(config.paths.databaseFile).toBe(join(dir, "otuken.db"));
+    writeFileSync(join(dir, "everyos.db"), "new database");
+    expect(loadApiConfig({ EVERYOS_DATA_DIR: dir }).paths.databaseFile).toBe(
+      join(dir, "everyos.db"),
+    );
   });
 
   it("detects exposed bindings", () => {
@@ -114,15 +132,15 @@ describe("client info", () => {
         host: "internal",
         "x-forwarded-for": "6.6.6.6, 203.0.113.7, 172.16.0.3",
         "x-forwarded-proto": "https",
-        "x-forwarded-host": "otuken.example",
+        "x-forwarded-host": "everyos.example",
       }),
       trusted,
     );
     expect(info).toMatchObject({
       ip: "203.0.113.7",
       secure: true,
-      host: "otuken.example",
-      expectedOrigin: "https://otuken.example",
+      host: "everyos.example",
+      expectedOrigin: "https://everyos.example",
     });
   });
 
@@ -179,6 +197,6 @@ describe("version", () => {
     const root = JSON.parse(
       readFileSync(new URL("../../../package.json", import.meta.url), "utf8"),
     ) as { version: string };
-    expect(OTUKEN_VERSION).toBe(root.version);
+    expect(EVERYOS_VERSION).toBe(root.version);
   });
 });

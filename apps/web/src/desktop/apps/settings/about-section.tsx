@@ -19,13 +19,13 @@ export default function AboutSection() {
     <div className="flex flex-col items-center gap-5 py-4 text-center">
       <LogoMark className="size-20" />
       <div>
-        <p className="text-2xl font-semibold">Otuken</p>
+        <p className="text-2xl font-semibold">{t("brand.name")}</p>
         <p className="text-sm text-fg-muted">{t("brand.tagline")}</p>
       </div>
       <p className="max-w-md text-sm leading-relaxed text-fg-muted">
         {t("settings.about.description")}
       </p>
-      <dl className="glass-inset grid w-full max-w-sm grid-cols-2 gap-x-4 gap-y-2 rounded-otk-lg p-4 text-left text-sm">
+      <dl className="glass-inset grid w-full max-w-sm grid-cols-2 gap-x-4 gap-y-2 rounded-everyos-lg p-4 text-left text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="contents">
             <dt className="text-fg-muted">{label}</dt>

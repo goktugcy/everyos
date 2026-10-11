@@ -28,7 +28,7 @@ export function ConfirmHost() {
     <AlertDialog.Root open={request !== null} onOpenChange={(open) => !open && finish(false)}>
       <AlertDialog.Portal>
         <AlertDialog.Overlay className="fixed inset-0 z-[9000] bg-black/40" />
-        <AlertDialog.Content className="glass-strong otk-enter fixed left-1/2 top-1/2 z-[9001] flex w-[min(92vw,440px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-otk-lg p-6">
+        <AlertDialog.Content className="glass-strong everyos-enter fixed left-1/2 top-1/2 z-[9001] flex w-[min(92vw,440px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-everyos-lg p-6">
           <AlertDialog.Title className="text-lg font-semibold">{request?.title}</AlertDialog.Title>
           <AlertDialog.Description className="text-sm leading-relaxed text-fg-muted">
             {request?.body}

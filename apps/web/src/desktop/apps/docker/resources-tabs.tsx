@@ -1,4 +1,4 @@
-import type { ImageList, NetworkList, VolumeList, VolumeSummary } from "@otuken/shared";
+import type { ImageList, NetworkList, VolumeList, VolumeSummary } from "@everyos/shared";
 import { Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";

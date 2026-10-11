@@ -1,4 +1,4 @@
-import type { NetworkStatus, TailscaleStatus } from "@otuken/shared";
+import type { NetworkStatus, TailscaleStatus } from "@everyos/shared";
 import { Activity, Globe, Network, WifiOff } from "lucide-react";
 import { Popover } from "radix-ui";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { menubarButton } from "./menubar-button.ts";
 export { PowerModule } from "./power-module.tsx";
 
 const popoverClass =
-  "glass-strong otk-enter z-[8000] flex w-80 flex-col gap-3 rounded-otk-lg p-4 text-sm text-fg";
+  "glass-strong everyos-enter z-[8000] flex w-80 flex-col gap-3 rounded-everyos-lg p-4 text-sm text-fg";
 
 /** Live CPU / memory readout in the menu bar (requires system:read). */
 export function ResourcesModule() {
@@ -94,7 +94,7 @@ export function ResourcesModule() {
             <button
               type="button"
               className="self-start text-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
-              onClick={() => desktop.openApp("otuken.system", { appState: { tab: "overview" } })}
+              onClick={() => desktop.openApp("everyos.system", { appState: { tab: "overview" } })}
             >
               {t("menubar.openMonitor")}
             </button>
@@ -163,7 +163,7 @@ export function NetworkModule() {
                   <button
                     type="button"
                     className="self-start text-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
-                    onClick={() => desktop.openApp("otuken.tailscale")}
+                    onClick={() => desktop.openApp("everyos.tailscale")}
                   >
                     {t("menubar.openTailscale")}
                   </button>
@@ -175,7 +175,7 @@ export function NetworkModule() {
             <button
               type="button"
               className="self-start text-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
-              onClick={() => desktop.openApp("otuken.system", { appState: { tab: "network" } })}
+              onClick={() => desktop.openApp("everyos.system", { appState: { tab: "network" } })}
             >
               {t("menubar.openNetwork")}
             </button>

@@ -1,4 +1,4 @@
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@otuken/shared";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@everyos/shared";
 import { normalizePassword } from "./password.ts";
 
 export type PasswordPolicyViolation =
@@ -43,6 +43,8 @@ const COMMON_PASSWORDS = new Set([
   "changeme123",
   "raspberry123",
   "raspberrypi",
+  "everyos1234",
+  "everyosadmin",
   "otuken1234",
   "otukenadmin",
   "sifre12345",

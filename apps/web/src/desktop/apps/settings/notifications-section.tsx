@@ -2,7 +2,7 @@ import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_SEVERITIES,
   type NotificationSeverity,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { useTranslation } from "react-i18next";
 import { Select } from "../../../components/ui/select.tsx";
 import { Toggle } from "../../menubar/quick-settings.tsx";
@@ -48,7 +48,7 @@ export default function NotificationsSection() {
             const muted = preferences.mutedCategories.includes(category);
             return (
               <li key={category}>
-                <label className="flex items-center justify-between gap-3 rounded-otk-md px-2 py-1.5 text-sm hover:bg-hover/6">
+                <label className="flex items-center justify-between gap-3 rounded-everyos-md px-2 py-1.5 text-sm hover:bg-hover/6">
                   <span>{t(`notifications.categories.${category}`)}</span>
                   <Toggle
                     label={t("notifications.notifyAbout", {

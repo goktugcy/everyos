@@ -2,7 +2,7 @@ import type { Messages } from "./tr.ts";
 
 export const en: Messages = {
   common: {
-    appName: "Otuken",
+    appName: "EveryOS",
     continue: "Continue",
     back: "Back",
     cancel: "Cancel",
@@ -42,7 +42,7 @@ export const en: Messages = {
     en: "English",
   },
   brand: {
-    name: "Otuken",
+    name: "EveryOS",
     tagline: "A modern, customizable desktop experience for your self-hosted infrastructure.",
   },
   roles: {
@@ -53,10 +53,10 @@ export const en: Messages = {
   transport: {
     insecureTitle: "Unencrypted connection",
     insecureBody:
-      "You are connected to Otuken over plain HTTP. Your password and session can be read on the network. Use HTTPS or Tailscale for remote access.",
+      "You are connected to EveryOS over plain HTTP. Your password and session can be read on the network. Use HTTPS or Tailscale for remote access.",
   },
   setup: {
-    title: "Welcome to Otuken",
+    title: "Welcome to EveryOS",
     subtitle: "Let's create the administrator account to start managing your server.",
     steps: {
       language: "Language",
@@ -68,7 +68,7 @@ export const en: Messages = {
     tokenTitle: "Setup token",
     tokenHelp:
       "To keep your server safe, only someone with direct access to it can complete the first-run setup. Show the token on the server with:",
-    tokenCommand: "sudo cat /var/lib/otuken/setup-token",
+    tokenCommand: "sudo cat /var/lib/everyos/setup-token",
     tokenDevHint: "In development mode the token is also printed to the API console.",
     tokenLabel: "Setup token",
     accountTitle: "Administrator account",
@@ -101,8 +101,8 @@ export const en: Messages = {
   },
   shell: {
     menu: {
-      label: "Otuken menu",
-      about: "About Otuken",
+      label: "EveryOS menu",
+      about: "About EveryOS",
       accountSecurity: "Account security",
       signOut: "Sign out",
     },
@@ -111,7 +111,7 @@ export const en: Messages = {
     foundationNotice:
       "The foundation layer is running: authentication, the privileged agent connection and real system information. The desktop shell arrives in the next phase.",
     aboutBody:
-      "Otuken is an open-source web desktop for managing your existing Linux server without disrupting it.",
+      "EveryOS is an open-source web desktop for managing your existing Linux server without disrupting it.",
   },
   system: {
     title: "System",
@@ -236,7 +236,7 @@ export const en: Messages = {
       "root-refused": "The configured root account is not allowed. Use a separate regular account.",
       "python-missing": "The Python 3 interpreter needed for the PTY was not found.",
       configure:
-        "On the server, set terminal.user in /etc/otuken/agent.yaml to a regular system account, then restart the Otuken agent service.",
+        "On the server, set terminal.user in /etc/everyos/agent.yaml to a regular system account, then restart the EveryOS agent service.",
     },
     reasons: {
       exited: "The shell exited.",
@@ -271,7 +271,7 @@ export const en: Messages = {
     dataSource: "Copy data from installation",
     freshData: "Create new application data",
     dataCopyHint:
-      "Only a stopped installation's Otuken-owned data is copied. The source is preserved; external paths and named volumes are not migrated.",
+      "Only a stopped installation's EveryOS-owned data is copied. The source is preserved; external paths and named volumes are not migrated.",
     copyConfirmTitle: "Copy installation data",
     copyConfirmBody:
       "The selected stopped installation's data will be copied into a separate directory for the new instance. Source data is preserved. The copy must be compatible with the target application version.",
@@ -330,9 +330,9 @@ export const en: Messages = {
     adminRequired:
       "This template requests host access. Administrator approval is required to install it.",
     installHint:
-      "Each installation creates a separate Otuken project. Passwords are stored encrypted and are never shown again.",
+      "Each installation creates a separate EveryOS project. Passwords are stored encrypted and are never shown again.",
     installError: "Check installation inputs, architecture compatibility, and catalog version.",
-    installedEmpty: "No apps have been installed with Otuken yet.",
+    installedEmpty: "No apps have been installed with EveryOS yet.",
     states: {
       running: "Running",
       degraded: "Unhealthy or incomplete services",
@@ -553,7 +553,7 @@ export const en: Messages = {
     "liquid-light": "Liquid Light",
   },
   wallpapers: {
-    "otuken-dusk": "Ötüken Dusk",
+    "everyos-dusk": "EveryOS Dusk",
     aurora: "Northern Lights",
     frost: "Frost",
     graphite: "Graphite",
@@ -618,8 +618,8 @@ export const en: Messages = {
       imported: "Theme imported.",
       importErrors: {
         "not-json": "The file could not be read: it is not valid JSON.",
-        "wrong-format": "This is not an Otuken theme file.",
-        "unsupported-version": "This theme file belongs to a newer Otuken version.",
+        "wrong-format": "This is not an EveryOS theme file.",
+        "unsupported-version": "This theme file belongs to a newer EveryOS version.",
         "invalid-field": "The theme file contains an invalid value.",
       },
       accent: "Accent color",
@@ -740,7 +740,7 @@ export const en: Messages = {
     },
     about: {
       description:
-        "Otuken is an open-source web desktop for managing your existing Linux server without disrupting it.",
+        "EveryOS is an open-source web desktop for managing your existing Linux server without disrupting it.",
       version: "Version",
       mode: "Mode",
       modes: {
@@ -963,7 +963,7 @@ export const en: Messages = {
     startup: "On boot",
     protected: "Protected",
     protectedHelp:
-      "This service is required for Otuken, remote access or the operating system. Otuken can only start it; it cannot be stopped, restarted or have its boot setting changed.",
+      "This service is required for EveryOS, remote access or the operating system. EveryOS can only start it; it cannot be stopped, restarted or have its boot setting changed.",
     select: "Select a service to see its details.",
     empty: "No matching services.",
     count: "{{count}} services",
@@ -1068,14 +1068,14 @@ export const en: Messages = {
     empty: "No matching containers.",
     select: "Select a container to see its details.",
     ownership: {
-      managed: "Otuken",
+      managed: "EveryOS",
       imported: "Imported",
       external: "External",
     },
     ownershipHelp: {
-      managed: "Installed by the Otuken App Store.",
-      imported: "The Compose project was imported into Otuken; project actions are available.",
-      external: "Otuken does not manage this container; it can only start, stop and restart it.",
+      managed: "Installed by the EveryOS App Store.",
+      imported: "The Compose project was imported into EveryOS; project actions are available.",
+      external: "EveryOS does not manage this container; it can only start, stop and restart it.",
     },
     states: {
       created: "Created",
@@ -1105,7 +1105,7 @@ export const en: Messages = {
     submitted: "Request sent: {{action}}",
     protected: "Protected",
     protectedHelp:
-      "This container is marked protected in the agent settings; Otuken can only start it.",
+      "This container is marked protected in the agent settings; EveryOS can only start it.",
     developmentHint: "Real Docker resources cannot be changed in development mode.",
     readOnlyHint: "You can view Docker but not manage it.",
     inUse: "Cannot be deleted while in use.",
@@ -1186,15 +1186,15 @@ export const en: Messages = {
       unimport: "Remove import",
       importTitle: "Import {{name}}?",
       importBody:
-        "Otuken will be able to manage this project with its Compose files (start, stop, update, take down). The files are validated on the server; importing changes no resources.",
+        "EveryOS will be able to manage this project with its Compose files (start, stop, update, take down). The files are validated on the server; importing changes no resources.",
       managerWarning:
-        "This project appears to be managed by {{manager}}. Changes made from Otuken may conflict with that tool.",
+        "This project appears to be managed by {{manager}}. Changes made from EveryOS may conflict with that tool.",
       acknowledge: "I understand the risk, import anyway",
       unimportTitle: "Remove the import of {{name}}?",
       unimportBody:
-        "Otuken will no longer manage this project. Containers, volumes and files stay as they are.",
+        "EveryOS will no longer manage this project. Containers, volumes and files stay as they are.",
       externalHelp:
-        "External project: Otuken can only start and stop its containers one by one. Import it for project actions.",
+        "External project: EveryOS can only start and stop its containers one by one. Import it for project actions.",
       actions: {
         up: "Start (up)",
         start: "Start",
@@ -1483,7 +1483,7 @@ export const en: Messages = {
     integrations: {
       title: "App connections",
       description:
-        "Connect apps so widgets can read their data. Creating a connection is your explicit consent for Otuken to read that app's API. Credentials are stored encrypted and never shown again.",
+        "Connect apps so widgets can read their data. Creating a connection is your explicit consent for EveryOS to read that app's API. Credentials are stored encrypted and never shown again.",
       add: "Add connection",
       edit: "Edit connection",
       empty: "There are no app connections yet.",
@@ -1492,7 +1492,7 @@ export const en: Messages = {
       name: "Name",
       baseUrl: "Address",
       baseUrlHint:
-        "E.g. http://192.168.1.10:8096. It must be reachable from the Otuken server; redirects are not followed and cloud metadata addresses are blocked.",
+        "E.g. http://192.168.1.10:8096. It must be reachable from the EveryOS server; redirects are not followed and cloud metadata addresses are blocked.",
       secretKeep: "Leave empty to keep the stored credential.",
       clearSecret: "Delete the stored credential",
       username: "User name (optional)",
@@ -1801,8 +1801,8 @@ export const en: Messages = {
         body: "This server's Tailscale key expires in {{days}} days; remote access stops unless it is renewed.",
       },
       "tailscale-funnel": {
-        title: "Otuken is public on the internet",
-        body: "Otuken is public through Tailscale Funnel: {{url}}. Turning Funnel off is recommended.",
+        title: "EveryOS is public on the internet",
+        body: "EveryOS is public through Tailscale Funnel: {{url}}. Turning Funnel off is recommended.",
       },
       "agent-unavailable": {
         title: "System agent unreachable",
@@ -1835,7 +1835,7 @@ export const en: Messages = {
     hideSystem: "Hide system locations",
     systemConfirm: {
       title: "Show system locations?",
-      body: "The server's Linux directories (/, /home, /etc, /var/log…) are shown to administrators, read-only. Otuken reads them with its own user's permissions and cannot change any of them. This setting is recorded in the audit log.",
+      body: "The server's Linux directories (/, /home, /etc, /var/log…) are shown to administrators, read-only. EveryOS reads them with its own user's permissions and cannot change any of them. This setting is recorded in the audit log.",
       confirm: "Show",
     },
     system: {
@@ -1866,7 +1866,7 @@ export const en: Messages = {
     truncated: "showing the first 5,000 items",
     readOnly: "Read-only",
     disabled:
-      "No file locations are configured on this server. An administrator sets files.roots in /etc/otuken/config.yaml.",
+      "No file locations are configured on this server. An administrator sets files.roots in /etc/everyos/config.yaml.",
     outsideLink: "This link points outside the allowed location and cannot be opened.",
     newFolderName: "New folder",
     newFileName: "New text document.txt",
@@ -2064,18 +2064,18 @@ export const en: Messages = {
   tailscale: {
     unavailableTitle: "Tailscale is not available",
     unavailableHint:
-      "Otuken works fully without Tailscale. Install Tailscale on the server for remote access.",
+      "EveryOS works fully without Tailscale. Install Tailscale on the server for remote access.",
     connectionTitle: "Connection",
-    remoteTitle: "Remote access to Otuken",
-    notPublished: "Otuken is not published with Tailscale Serve.",
+    remoteTitle: "Remote access to EveryOS",
+    notPublished: "EveryOS is not published with Tailscale Serve.",
     public: "Public on the internet (Funnel)",
     tailnetOnly: "Only from within the tailnet",
     originOk: "publicOrigins set",
     originMissing: "publicOrigins entry missing",
-    suggestion: "To open Otuken over HTTPS at {{url}} within your tailnet, run on the server:",
+    suggestion: "To open EveryOS over HTTPS at {{url}} within your tailnet, run on the server:",
     suggestionConfig:
-      "Then add 127.0.0.1 to server.trustedProxies and {{url}} to server.publicOrigins in /etc/otuken/config.yaml.",
-    readOnly: "Otuken never changes the Tailscale configuration; it only reads and explains it.",
+      "Then add 127.0.0.1 to server.trustedProxies and {{url}} to server.publicOrigins in /etc/everyos/config.yaml.",
+    readOnly: "EveryOS never changes the Tailscale configuration; it only reads and explains it.",
     selfTitle: "This device",
     serveTitle: "Serve and Funnel",
     funnel: "Funnel: public on the internet",
@@ -2130,7 +2130,7 @@ export const en: Messages = {
         "This device's Tailscale key has expired; it cannot reach the tailnet. Sign in again on the server.",
       "exit-node-offline": "The exit node in use ({{name}}) is offline; internet traffic may fail.",
       "funnel-public":
-        "Otuken is public on the internet through Tailscale Funnel ({{url}}). An administration panel should not be open to everyone; turn Funnel off (tailscale funnel reset).",
+        "EveryOS is public on the internet through Tailscale Funnel ({{url}}). An administration panel should not be open to everyone; turn Funnel off (tailscale funnel reset).",
       "origin-missing":
         "{{url}} is not in server.publicOrigins; changes made from that address are rejected.",
       "proxy-untrusted":
@@ -2144,21 +2144,21 @@ export const en: Messages = {
       "Files and trash belonging to {{users}} are replaced with the backed-up contents. Current contents are backed up first for safety. Other accounts' files are kept.",
     homesUnavailable: "This backup has no home folders that can currently be restored.",
     intro:
-      "Backs up Otuken's database, configuration, desktop settings, personal home folders and the data of selected apps. Every backup is verified with checksums.",
+      "Backs up EveryOS's database, configuration, desktop settings, personal home folders and the data of selected apps. Every backup is verified with checksums.",
     create: "Create backup",
     createIntro:
-      "A consistent snapshot of the Otuken database (without sessions), the configuration file, wallpapers and existing personal home folders (including trash) are backed up.",
+      "A consistent snapshot of the EveryOS database (without sessions), the configuration file, wallpapers and existing personal home folders (including trash) are backed up.",
     start: "Start backup",
     note: "Note",
     notePlaceholder: "Optional, e.g. before an upgrade",
     appData: "App data",
-    noApps: "No apps installed with Otuken.",
+    noApps: "No apps installed with EveryOS.",
     stopHint:
       "Selected apps are stopped briefly during the backup so their data can be copied consistently, then started again.",
     dataSupport: {
       supported: "Supported",
       unsupported:
-        "Its data is in Docker volumes or directories outside Otuken and cannot be backed up consistently",
+        "Its data is in Docker volumes or directories outside EveryOS and cannot be backed up consistently",
       none: "Keeps no persistent data",
     },
     settings: "Settings",
@@ -2184,9 +2184,9 @@ export const en: Messages = {
       "Restore complete. If you restored desktop settings, reload the page to see the changes.",
     reloadPage: "Reload page",
     restartAutomatic:
-      "The database restore is prepared; Otuken is restarting. You will need to sign in again afterwards.",
+      "The database restore is prepared; EveryOS is restarting. You will need to sign in again afterwards.",
     restartManual:
-      "The database restore is prepared. Restart the Otuken service to apply it; you will need to sign in again afterwards.",
+      "The database restore is prepared. Restart the EveryOS service to apply it; you will need to sign in again afterwards.",
     columns: {
       created: "Created",
       contents: "Contents",
@@ -2210,7 +2210,7 @@ export const en: Messages = {
     pinned: "Pinned",
     pin: "Pin (never removed by retention)",
     unpin: "Unpin",
-    otherKey: "Created with another Otuken installation's secret key",
+    otherKey: "Created with another EveryOS installation's secret key",
     ok: "Verified",
     verify: "Verify",
     verifyErrors: {
@@ -2232,22 +2232,22 @@ export const en: Messages = {
     restoreFrom: "Backup from {{date}}",
     verified: "Backup verified: all files and the database are intact.",
     verifyFailed: "The backup could not be verified: {{reason}}. It cannot be restored.",
-    restoreSettings: "Otuken data",
+    restoreSettings: "EveryOS data",
     scope: {
-      none: "Leave Otuken's data unchanged",
+      none: "Leave EveryOS's data unchanged",
       noneHint: "Only the selected home folders and app data are restored.",
       desktop: "Desktop and preferences",
       desktopHint:
         "Layout, widgets, preferences and wallpapers are restored right away for: {{users}}. Accounts are not changed.",
-      database: "The entire Otuken database",
+      database: "The entire EveryOS database",
       databaseHintAutomatic:
-        "Accounts, settings, app records and tasks return to their state in the backup. Otuken restarts automatically; everyone has to sign in again.",
+        "Accounts, settings, app records and tasks return to their state in the backup. EveryOS restarts automatically; everyone has to sign in again.",
       databaseHintManual:
-        "Accounts, settings, app records and tasks return to their state in the backup. Applied when Otuken restarts; everyone has to sign in again.",
+        "Accounts, settings, app records and tasks return to their state in the backup. Applied when EveryOS restarts; everyone has to sign in again.",
     },
     blocked: {
       invalid: "The backup failed verification and cannot be used.",
-      "newer-schema": "The backup was made by a newer Otuken version and cannot be restored here.",
+      "newer-schema": "The backup was made by a newer EveryOS version and cannot be restored here.",
       "different-key":
         "The backup was made with another installation's secret key; encrypted settings and two-factor authentication could not be read, so the database cannot be restored.",
     },
@@ -2343,9 +2343,9 @@ export const en: Messages = {
         "Restarts the selected systemd service. Protected services cannot be restarted.",
       "container.restart": "Finds the selected container by name and restarts it.",
       "app.update":
-        "Updates an app installed with Otuken; rolls back to the previous images on problems.",
+        "Updates an app installed with EveryOS; rolls back to the previous images on problems.",
       "backup.create":
-        "Backs up Otuken's data and the app data selected in the Backups settings; applies the retention policy.",
+        "Backs up EveryOS's data and the app data selected in the Backups settings; applies the retention policy.",
     },
     modes: {
       hourly: "Every hour",

@@ -1,5 +1,5 @@
-import type { DesktopItem, FileEntry } from "@otuken/shared";
-import { workArea, type Point, type Rect } from "@otuken/window-manager";
+import type { DesktopItem, FileEntry } from "@everyos/shared";
+import { workArea, type Point, type Rect } from "@everyos/window-manager";
 import {
   AppWindow,
   ArrowDownAZ,
@@ -99,7 +99,7 @@ import {
   type Cell,
   type GridMetrics,
 } from "./icon-grid.ts";
-import { ICON_PIXELS } from "@otuken/theme";
+import { ICON_PIXELS } from "@everyos/theme";
 import { isDesktopShortcut } from "../shortcut-keys.ts";
 import {
   iconsInRect,
@@ -221,10 +221,10 @@ function DesktopIcon(props: IconProps) {
       aria-pressed={selected}
       draggable={native !== null && !renaming}
       className={cn(
-        "group absolute left-0 top-0 flex flex-col items-center gap-1.5 rounded-otk-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "group absolute left-0 top-0 flex flex-col items-center gap-1.5 rounded-everyos-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
         native ? "touch-manipulation" : "touch-none",
         selected && !props.folder && "bg-hover/10",
-        props.dropTarget && "bg-[rgb(var(--otk-accent)/0.18)] ring-2 ring-accent",
+        props.dropTarget && "bg-[rgb(var(--everyos-accent)/0.18)] ring-2 ring-accent",
       )}
       style={{
         transform: `translate3d(${rect.x}px, ${rect.y}px, 0)`,
@@ -247,7 +247,7 @@ function DesktopIcon(props: IconProps) {
     >
       <span
         className={cn(
-          "grid place-items-center rounded-otk-md",
+          "grid place-items-center rounded-everyos-md",
           selected && props.folder && "bg-hover/20 ring-1 ring-accent/40",
         )}
       >
@@ -278,7 +278,7 @@ function DesktopIcon(props: IconProps) {
       ) : (
         <span
           className={cn(
-            "otk-icon-label line-clamp-2 max-w-full rounded-[5px] px-1.5 py-0.5 text-center text-[0.72rem] font-medium leading-tight text-fg",
+            "everyos-icon-label line-clamp-2 max-w-full rounded-[5px] px-1.5 py-0.5 text-center text-[0.72rem] font-medium leading-tight text-fg",
             native && "wrap-break-word",
           )}
           data-selected={selected && !props.folder}
@@ -324,7 +324,7 @@ function FileGlyph({
       height: size,
       filter: "drop-shadow(0 1px 2px rgb(0 0 0 / 0.35))",
       ...(isFolder(entry)
-        ? { color: "rgb(var(--otk-accent))", fill: "rgb(var(--otk-accent) / 0.45)" }
+        ? { color: "rgb(var(--everyos-accent))", fill: "rgb(var(--everyos-accent) / 0.45)" }
         : { color: "rgb(71 85 105)", fill: "rgb(255 255 255 / 0.92)" }),
     },
   });
@@ -499,9 +499,10 @@ export function DesktopSurface() {
     const target = entryLocation(entry.name);
     const kind = kindOf(entry);
     // Folders open in a Files window, with the sidebar, like every other folder.
-    if (kind === "folder") desktop.openApp("otuken.files", { newInstance: true, appState: target });
+    if (kind === "folder")
+      desktop.openApp("everyos.files", { newInstance: true, appState: target });
     else if (kind === "image") setPreview(target);
-    else if (kind === "text") desktop.openWindow("otuken.editor", target);
+    else if (kind === "text") desktop.openWindow("everyos.editor", target);
     else download(target);
   };
 
@@ -511,7 +512,7 @@ export function DesktopSurface() {
   };
 
   const openDesktopFolder = () => {
-    if (location) desktop.openApp("otuken.files", { newInstance: true, appState: location });
+    if (location) desktop.openApp("everyos.files", { newInstance: true, appState: location });
   };
 
   const create = async (kind: "folder" | "file") => {
@@ -912,7 +913,7 @@ export function DesktopSurface() {
         label: t("apps.trash"),
         icon: <Trash2 />,
         disabled: !permissions.includes("files:read"),
-        onSelect: () => desktop.openApp("otuken.trash"),
+        onSelect: () => desktop.openApp("everyos.trash"),
       },
       {
         kind: "submenu",
@@ -1286,7 +1287,7 @@ export function DesktopSurface() {
         <div
           className={cn(
             "absolute inset-0 z-10",
-            dropTarget === "desktop" && "bg-[rgb(var(--otk-accent)/0.05)]",
+            dropTarget === "desktop" && "bg-[rgb(var(--everyos-accent)/0.05)]",
           )}
           role="group"
           aria-label={t("desktop.workspace")}
@@ -1368,7 +1369,7 @@ export function DesktopSurface() {
           {selectedCount > 1 ? (
             <span
               role="status"
-              className="pointer-events-none absolute bottom-24 left-4 rounded-otk-md bg-surface/80 px-3 py-2 text-xs text-fg"
+              className="pointer-events-none absolute bottom-24 left-4 rounded-everyos-md bg-surface/80 px-3 py-2 text-xs text-fg"
             >
               {t("desktop.selectedCount", { count: selectedCount })}
             </span>
@@ -1376,7 +1377,7 @@ export function DesktopSurface() {
           {notice ? (
             <div
               role={notice.error ? "alert" : "status"}
-              className="glass-strong absolute bottom-24 left-4 flex max-w-sm items-start gap-2 rounded-otk-md px-3 py-2 text-xs text-fg shadow-lg"
+              className="glass-strong absolute bottom-24 left-4 flex max-w-sm items-start gap-2 rounded-everyos-md px-3 py-2 text-xs text-fg shadow-lg"
             >
               <span className={cn("min-w-0 flex-1", notice.error && "text-danger")}>
                 {notice.text}

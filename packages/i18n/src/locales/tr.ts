@@ -19,7 +19,7 @@ import type {
   ThemePresetId,
   TopicUnavailableReason,
   WallpaperPresetId,
-} from "@otuken/shared";
+} from "@everyos/shared";
 
 /**
  * Turkish is the source locale: its shape defines the set of keys every other
@@ -27,7 +27,7 @@ import type {
  */
 export const tr = {
   common: {
-    appName: "Otuken",
+    appName: "EveryOS",
     continue: "Devam et",
     back: "Geri",
     cancel: "Vazgeç",
@@ -66,7 +66,7 @@ export const tr = {
     en: "English",
   },
   brand: {
-    name: "Otuken",
+    name: "EveryOS",
     tagline: "Kendi altyapınız için modern ve özelleştirilebilir bir masaüstü deneyimi.",
   },
   roles: {
@@ -77,10 +77,10 @@ export const tr = {
   transport: {
     insecureTitle: "Bağlantı şifrelenmemiş",
     insecureBody:
-      "Otuken'e düz HTTP üzerinden erişiyorsunuz. Parolanız ve oturum bilginiz ağda okunabilir. Uzaktan erişim için HTTPS veya Tailscale kullanın.",
+      "EveryOS'e düz HTTP üzerinden erişiyorsunuz. Parolanız ve oturum bilginiz ağda okunabilir. Uzaktan erişim için HTTPS veya Tailscale kullanın.",
   },
   setup: {
-    title: "Otuken'e hoş geldiniz",
+    title: "EveryOS'e hoş geldiniz",
     subtitle: "Sunucunuzu yönetmeye başlamak için yönetici hesabını oluşturalım.",
     steps: {
       language: "Dil",
@@ -92,7 +92,7 @@ export const tr = {
     tokenTitle: "Kurulum anahtarı",
     tokenHelp:
       "Güvenliğiniz için ilk kurulumu yalnızca sunucuya doğrudan erişimi olan kişi tamamlayabilir. Anahtarı sunucuda şu komutla görüntüleyin:",
-    tokenCommand: "sudo cat /var/lib/otuken/setup-token",
+    tokenCommand: "sudo cat /var/lib/everyos/setup-token",
     tokenDevHint: "Geliştirme modunda anahtar API konsoluna da yazdırılır.",
     tokenLabel: "Kurulum anahtarı",
     accountTitle: "Yönetici hesabı",
@@ -126,8 +126,8 @@ export const tr = {
   },
   shell: {
     menu: {
-      label: "Otuken menüsü",
-      about: "Otuken hakkında",
+      label: "EveryOS menüsü",
+      about: "EveryOS hakkında",
       accountSecurity: "Hesap güvenliği",
       signOut: "Oturumu kapat",
     },
@@ -136,7 +136,7 @@ export const tr = {
     foundationNotice:
       "Temel katman çalışıyor: kimlik doğrulama, ayrıcalıklı ajan bağlantısı ve gerçek sistem bilgisi. Masaüstü kabuğu bir sonraki aşamada eklenecek.",
     aboutBody:
-      "Otuken, mevcut Linux sunucunuzu bozmadan yönetmeniz için tasarlanmış açık kaynaklı bir web masaüstüdür.",
+      "EveryOS, mevcut Linux sunucunuzu bozmadan yönetmeniz için tasarlanmış açık kaynaklı bir web masaüstüdür.",
   },
   system: {
     title: "Sistem",
@@ -262,7 +262,7 @@ export const tr = {
         "Yapılandırılan root hesabına izin verilmiyor. Ayrı bir normal hesap kullanın.",
       "python-missing": "PTY için gereken Python 3 yorumlayıcısı bulunamadı.",
       configure:
-        "Sunucuda /etc/otuken/agent.yaml dosyasındaki terminal.user alanına bir normal sistem hesabı yazın ve Otuken agent hizmetini yeniden başlatın.",
+        "Sunucuda /etc/everyos/agent.yaml dosyasındaki terminal.user alanına bir normal sistem hesabı yazın ve EveryOS agent hizmetini yeniden başlatın.",
     },
     reasons: {
       exited: "Kabuk sona erdi.",
@@ -296,7 +296,7 @@ export const tr = {
     dataSource: "Verileri alınacak kurulum",
     freshData: "Yeni uygulama verileri oluştur",
     dataCopyHint:
-      "Yalnızca durdurulmuş bir kurulumun Otuken’e ait verileri kopyalanır. Kaynak kurulum korunur; harici dizinler ve named volume’lar taşınmaz.",
+      "Yalnızca durdurulmuş bir kurulumun EveryOS’e ait verileri kopyalanır. Kaynak kurulum korunur; harici dizinler ve named volume’lar taşınmaz.",
     copyConfirmTitle: "Kurulum verilerini kopyala",
     copyConfirmBody:
       "Seçilen durdurulmuş kurulumun verileri yeni kurulumun ayrı dizinine kopyalanacak. Kaynak veriler silinmez. Kopya, hedef uygulamanın sürümüyle uyumlu olmalıdır.",
@@ -355,9 +355,9 @@ export const tr = {
     acknowledge: "Gösterilen riskleri inceledim ve bu kurulum için kabul ediyorum.",
     adminRequired: "Bu şablon host erişimi istiyor. Kurulum için yönetici onayı gerekir.",
     installHint:
-      "Her kurulum ayrı bir Otuken projesi oluşturur. Şifreler şifreli saklanır ve tekrar gösterilmez.",
+      "Her kurulum ayrı bir EveryOS projesi oluşturur. Şifreler şifreli saklanır ve tekrar gösterilmez.",
     installError: "Kurulum girdilerini, mimari uyumluluğunu ve katalog sürümünü kontrol edin.",
-    installedEmpty: "Henüz Otuken ile kurulmuş uygulama yok.",
+    installedEmpty: "Henüz EveryOS ile kurulmuş uygulama yok.",
     states: {
       running: "Çalışıyor",
       degraded: "Sağlıksız veya eksik servis",
@@ -582,7 +582,7 @@ export const tr = {
     "liquid-light": "Liquid Light",
   } satisfies Record<ThemePresetId, string>,
   wallpapers: {
-    "otuken-dusk": "Ötüken Alacakaranlığı",
+    "everyos-dusk": "EveryOS Alacakaranlığı",
     aurora: "Kuzey Işıkları",
     frost: "Ayaz",
     graphite: "Grafit",
@@ -647,8 +647,8 @@ export const tr = {
       imported: "Tema içe aktarıldı.",
       importErrors: {
         "not-json": "Dosya okunamadı: geçerli bir JSON değil.",
-        "wrong-format": "Bu bir Otuken tema dosyası değil.",
-        "unsupported-version": "Bu tema dosyası daha yeni bir Otuken sürümüne ait.",
+        "wrong-format": "Bu bir EveryOS tema dosyası değil.",
+        "unsupported-version": "Bu tema dosyası daha yeni bir EveryOS sürümüne ait.",
         "invalid-field": "Tema dosyasında geçersiz bir değer var.",
       },
       accent: "Vurgu rengi",
@@ -770,7 +770,7 @@ export const tr = {
     },
     about: {
       description:
-        "Otuken, mevcut Linux sunucunuzu bozmadan yönetmeniz için tasarlanmış açık kaynaklı bir web masaüstüdür.",
+        "EveryOS, mevcut Linux sunucunuzu bozmadan yönetmeniz için tasarlanmış açık kaynaklı bir web masaüstüdür.",
       version: "Sürüm",
       mode: "Çalışma modu",
       modes: {
@@ -994,7 +994,7 @@ export const tr = {
     startup: "Açılışta",
     protected: "Korumalı",
     protectedHelp:
-      "Bu servis Otuken'in, uzaktan erişimin veya işletim sisteminin çalışması için gerekli. Otuken üzerinden yalnızca başlatılabilir; durdurulamaz, yeniden başlatılamaz ve açılış ayarı değiştirilemez.",
+      "Bu servis EveryOS'in, uzaktan erişimin veya işletim sisteminin çalışması için gerekli. EveryOS üzerinden yalnızca başlatılabilir; durdurulamaz, yeniden başlatılamaz ve açılış ayarı değiştirilemez.",
     select: "Ayrıntıları görmek için bir servis seçin.",
     empty: "Eşleşen servis yok.",
     count: "{{count}} servis",
@@ -1099,15 +1099,15 @@ export const tr = {
     empty: "Eşleşen konteyner yok.",
     select: "Ayrıntıları görmek için bir konteyner seçin.",
     ownership: {
-      managed: "Otuken",
+      managed: "EveryOS",
       imported: "İçe aktarıldı",
       external: "Harici",
     },
     ownershipHelp: {
-      managed: "Otuken Uygulama Mağazası tarafından kuruldu.",
-      imported: "Compose projesi Otuken'e içe aktarıldı; proje işlemleri yapılabilir.",
+      managed: "EveryOS Uygulama Mağazası tarafından kuruldu.",
+      imported: "Compose projesi EveryOS'e içe aktarıldı; proje işlemleri yapılabilir.",
       external:
-        "Otuken bu konteyneri yönetmiyor; yalnızca başlatma, durdurma ve yeniden başlatma yapılabilir.",
+        "EveryOS bu konteyneri yönetmiyor; yalnızca başlatma, durdurma ve yeniden başlatma yapılabilir.",
     },
     states: {
       created: "Oluşturuldu",
@@ -1137,7 +1137,7 @@ export const tr = {
     submitted: "İstek gönderildi: {{action}}",
     protected: "Korumalı",
     protectedHelp:
-      "Bu konteyner ajan ayarlarında korumalı olarak işaretlendi; Otuken üzerinden yalnızca başlatılabilir.",
+      "Bu konteyner ajan ayarlarında korumalı olarak işaretlendi; EveryOS üzerinden yalnızca başlatılabilir.",
     developmentHint: "Geliştirme modunda gerçek Docker kaynakları değiştirilemez.",
     readOnlyHint: "Docker'ı yönetme yetkiniz yok; yalnızca görüntüleyebilirsiniz.",
     inUse: "Kullanımda olduğu için silinemez.",
@@ -1218,15 +1218,15 @@ export const tr = {
       unimport: "İçe aktarmayı kaldır",
       importTitle: "{{name}} içe aktarılsın mı?",
       importBody:
-        "Otuken bu projeyi Compose dosyalarıyla yönetebilecek (başlatma, durdurma, güncelleme, kaldırma). Dosyalar sunucuda doğrulanır; içe aktarma hiçbir kaynağı değiştirmez.",
+        "EveryOS bu projeyi Compose dosyalarıyla yönetebilecek (başlatma, durdurma, güncelleme, kaldırma). Dosyalar sunucuda doğrulanır; içe aktarma hiçbir kaynağı değiştirmez.",
       managerWarning:
-        "Bu proje {{manager}} tarafından yönetiliyor gibi görünüyor. Otuken'den yapılan değişiklikler o araçla çakışabilir.",
+        "Bu proje {{manager}} tarafından yönetiliyor gibi görünüyor. EveryOS'den yapılan değişiklikler o araçla çakışabilir.",
       acknowledge: "Riski anlıyorum, yine de içe aktar",
       unimportTitle: "{{name}} için içe aktarma kaldırılsın mı?",
       unimportBody:
-        "Otuken bu projeyi artık yönetmez. Konteynerler, volume'lar ve dosyalar olduğu gibi kalır.",
+        "EveryOS bu projeyi artık yönetmez. Konteynerler, volume'lar ve dosyalar olduğu gibi kalır.",
       externalHelp:
-        "Harici proje: Otuken yalnızca konteynerlerini tek tek başlatıp durdurabilir. Proje işlemleri için içe aktarın.",
+        "Harici proje: EveryOS yalnızca konteynerlerini tek tek başlatıp durdurabilir. Proje işlemleri için içe aktarın.",
       actions: {
         up: "Başlat (up)",
         start: "Başlat",
@@ -1515,7 +1515,7 @@ export const tr = {
     integrations: {
       title: "Uygulama bağlantıları",
       description:
-        "Widget'ların uygulama verilerini okuyabilmesi için bağlantı kurun. Bağlantı kurmak, Otuken'in o uygulamanın API'sini okumasına verdiğiniz açık onaydır. Kimlik bilgileri şifrelenerek saklanır ve bir daha gösterilmez.",
+        "Widget'ların uygulama verilerini okuyabilmesi için bağlantı kurun. Bağlantı kurmak, EveryOS'in o uygulamanın API'sini okumasına verdiğiniz açık onaydır. Kimlik bilgileri şifrelenerek saklanır ve bir daha gösterilmez.",
       add: "Bağlantı ekle",
       edit: "Bağlantıyı düzenle",
       empty: "Henüz uygulama bağlantısı yok.",
@@ -1524,7 +1524,7 @@ export const tr = {
       name: "Ad",
       baseUrl: "Adres",
       baseUrlHint:
-        "Ör. http://192.168.1.10:8096. Otuken sunucusundan erişilebilir olmalı; yönlendirmeler izlenmez ve bulut meta veri adresleri engellenir.",
+        "Ör. http://192.168.1.10:8096. EveryOS sunucusundan erişilebilir olmalı; yönlendirmeler izlenmez ve bulut meta veri adresleri engellenir.",
       secretKeep: "Kayıtlı kimlik bilgisini korumak için boş bırakın.",
       clearSecret: "Kayıtlı kimlik bilgisini sil",
       username: "Kullanıcı adı (isteğe bağlı)",
@@ -1837,8 +1837,8 @@ export const tr = {
         body: "Bu sunucunun Tailscale anahtarının dolmasına {{days}} gün kaldı; yenilenmezse uzaktan erişim kesilir.",
       },
       "tailscale-funnel": {
-        title: "Otuken internete açık",
-        body: "Otuken Tailscale Funnel ile herkese açık: {{url}}. Funnel'ı kapatmanız önerilir.",
+        title: "EveryOS internete açık",
+        body: "EveryOS Tailscale Funnel ile herkese açık: {{url}}. Funnel'ı kapatmanız önerilir.",
       },
       "agent-unavailable": {
         title: "Sistem ajanına ulaşılamıyor",
@@ -1877,7 +1877,7 @@ export const tr = {
     hideSystem: "Sistem konumlarını gizle",
     systemConfirm: {
       title: "Sistem konumları gösterilsin mi?",
-      body: "Sunucunun Linux dizinleri (/, /home, /etc, /var/log…) yöneticilere salt okunur olarak gösterilir. Otuken bunları kendi kullanıcısının izinleriyle okur ve hiçbirini değiştiremez. Bu ayar denetim kaydına yazılır.",
+      body: "Sunucunun Linux dizinleri (/, /home, /etc, /var/log…) yöneticilere salt okunur olarak gösterilir. EveryOS bunları kendi kullanıcısının izinleriyle okur ve hiçbirini değiştiremez. Bu ayar denetim kaydına yazılır.",
       confirm: "Göster",
     },
     system: {
@@ -1908,7 +1908,7 @@ export const tr = {
     truncated: "ilk 5 000 öğe gösteriliyor",
     readOnly: "Salt okunur",
     disabled:
-      "Bu sunucuda dosya konumu tanımlanmamış. Yönetici /etc/otuken/config.yaml dosyasında files.roots ayarını yapmalı.",
+      "Bu sunucuda dosya konumu tanımlanmamış. Yönetici /etc/everyos/config.yaml dosyasında files.roots ayarını yapmalı.",
     outsideLink: "Bu bağlantı izin verilen konumun dışını gösteriyor ve açılamaz.",
     newFolderName: "Yeni klasör",
     newFileName: "Yeni metin belgesi.txt",
@@ -2103,19 +2103,19 @@ export const tr = {
   tailscale: {
     unavailableTitle: "Tailscale kullanılamıyor",
     unavailableHint:
-      "Otuken Tailscale olmadan da tam çalışır. Uzaktan erişim için sunucuya Tailscale kurulabilir.",
+      "EveryOS Tailscale olmadan da tam çalışır. Uzaktan erişim için sunucuya Tailscale kurulabilir.",
     connectionTitle: "Bağlantı",
-    remoteTitle: "Otuken'e uzaktan erişim",
-    notPublished: "Otuken, Tailscale Serve ile yayımlanmıyor.",
+    remoteTitle: "EveryOS'e uzaktan erişim",
+    notPublished: "EveryOS, Tailscale Serve ile yayımlanmıyor.",
     public: "İnternete açık (Funnel)",
     tailnetOnly: "Yalnızca tailnet içinden",
     originOk: "publicOrigins ayarlı",
     originMissing: "publicOrigins ayarı eksik",
     suggestion:
-      "Otuken'i tailnet içinde {{url}} adresinden HTTPS ile açmak için sunucuda çalıştırın:",
+      "EveryOS'i tailnet içinde {{url}} adresinden HTTPS ile açmak için sunucuda çalıştırın:",
     suggestionConfig:
-      "Ardından /etc/otuken/config.yaml dosyasında server.trustedProxies listesine 127.0.0.1 ve server.publicOrigins listesine {{url}} ekleyin.",
-    readOnly: "Otuken Tailscale yapılandırmasını değiştirmez; yalnızca okur ve açıklar.",
+      "Ardından /etc/everyos/config.yaml dosyasında server.trustedProxies listesine 127.0.0.1 ve server.publicOrigins listesine {{url}} ekleyin.",
+    readOnly: "EveryOS Tailscale yapılandırmasını değiştirmez; yalnızca okur ve açıklar.",
     selfTitle: "Bu cihaz",
     serveTitle: "Serve ve Funnel",
     funnel: "Funnel: internete açık",
@@ -2171,7 +2171,7 @@ export const tr = {
       "exit-node-offline":
         "Kullanılan çıkış düğümü ({{name}}) çevrimdışı; internet trafiği aksayabilir.",
       "funnel-public":
-        "Otuken, Tailscale Funnel ile internete açık ({{url}}). Yönetim paneli herkesin erişimine açık olmamalı; Funnel'ı kapatın (tailscale funnel reset).",
+        "EveryOS, Tailscale Funnel ile internete açık ({{url}}). Yönetim paneli herkesin erişimine açık olmamalı; Funnel'ı kapatın (tailscale funnel reset).",
       "origin-missing":
         "{{url}} adresi server.publicOrigins listesinde değil; bu adresten yapılan değişiklikler reddedilir.",
       "proxy-untrusted":
@@ -2185,21 +2185,21 @@ export const tr = {
       "{{users}} hesaplarının dosyaları ve çöp kutuları yedekteki içerikle değiştirilir. Önce mevcut içerik güvenlik yedeğine alınır. Diğer hesapların dosyaları korunur.",
     homesUnavailable: "Bu yedekte şu anda geri yüklenebilir Ev klasörü yok.",
     intro:
-      "Otuken veritabanını, yapılandırmayı, masaüstü ayarlarını, kişisel Ev klasörlerini ve seçilen uygulamaların verilerini yedekler. Her yedek sağlama toplamlarıyla doğrulanır.",
+      "EveryOS veritabanını, yapılandırmayı, masaüstü ayarlarını, kişisel Ev klasörlerini ve seçilen uygulamaların verilerini yedekler. Her yedek sağlama toplamlarıyla doğrulanır.",
     create: "Yedek al",
     createIntro:
-      "Otuken veritabanının tutarlı bir anlık görüntüsü (oturumlar hariç), yapılandırma dosyası, duvar kağıtları ve mevcut kişisel Ev klasörleri (çöp kutuları dahil) yedeklenir.",
+      "EveryOS veritabanının tutarlı bir anlık görüntüsü (oturumlar hariç), yapılandırma dosyası, duvar kağıtları ve mevcut kişisel Ev klasörleri (çöp kutuları dahil) yedeklenir.",
     start: "Yedeklemeyi başlat",
     note: "Not",
     notePlaceholder: "İsteğe bağlı, ör. güncelleme öncesi",
     appData: "Uygulama verileri",
-    noApps: "Otuken ile kurulmuş uygulama yok.",
+    noApps: "EveryOS ile kurulmuş uygulama yok.",
     stopHint:
       "Seçilen uygulamalar, verileri tutarlı kopyalanabilsin diye yedekleme sırasında kısa süre durdurulur ve sonra yeniden başlatılır.",
     dataSupport: {
       supported: "Desteklenir",
       unsupported:
-        "Verileri Docker birimlerinde veya Otuken dışındaki dizinlerde; tutarlı yedeklenemez",
+        "Verileri Docker birimlerinde veya EveryOS dışındaki dizinlerde; tutarlı yedeklenemez",
       none: "Kalıcı veri tutmuyor",
     } satisfies Record<AppDataSupport, string>,
     settings: "Ayarlar",
@@ -2225,9 +2225,9 @@ export const tr = {
       "Geri yükleme tamamlandı. Masaüstü ayarlarını geri yüklediyseniz değişiklikleri görmek için sayfayı yenileyin.",
     reloadPage: "Sayfayı yenile",
     restartAutomatic:
-      "Veritabanı geri yükleme için hazırlandı; Otuken yeniden başlatılıyor. Ardından yeniden oturum açmanız gerekir.",
+      "Veritabanı geri yükleme için hazırlandı; EveryOS yeniden başlatılıyor. Ardından yeniden oturum açmanız gerekir.",
     restartManual:
-      "Veritabanı geri yükleme için hazırlandı. Uygulanması için Otuken servisini yeniden başlatın; ardından yeniden oturum açmanız gerekir.",
+      "Veritabanı geri yükleme için hazırlandı. Uygulanması için EveryOS servisini yeniden başlatın; ardından yeniden oturum açmanız gerekir.",
     columns: {
       created: "Oluşturulma",
       contents: "İçerik",
@@ -2251,7 +2251,7 @@ export const tr = {
     pinned: "Sabitlendi",
     pin: "Sabitle (saklama politikası silmesin)",
     unpin: "Sabitlemeyi kaldır",
-    otherKey: "Başka bir Otuken kurulumunun gizli anahtarıyla oluşturulmuş",
+    otherKey: "Başka bir EveryOS kurulumunun gizli anahtarıyla oluşturulmuş",
     ok: "Doğrulandı",
     verify: "Doğrula",
     verifyErrors: {
@@ -2273,22 +2273,22 @@ export const tr = {
     restoreFrom: "{{date}} tarihli yedek",
     verified: "Yedek doğrulandı: tüm dosyalar ve veritabanı sağlam.",
     verifyFailed: "Yedek doğrulanamadı: {{reason}}. Geri yüklenemez.",
-    restoreSettings: "Otuken verileri",
+    restoreSettings: "EveryOS verileri",
     scope: {
-      none: "Otuken verilerine dokunma",
+      none: "EveryOS verilerine dokunma",
       noneHint: "Yalnızca seçilen Ev klasörleri ve uygulama verileri geri yüklenir.",
       desktop: "Masaüstü ve tercihler",
       desktopHint:
         "Yerleşim, bileşenler, tercihler ve duvar kağıtları hemen geri yüklenir: {{users}}. Hesaplar değişmez.",
-      database: "Tüm Otuken veritabanı",
+      database: "Tüm EveryOS veritabanı",
       databaseHintAutomatic:
-        "Hesaplar, ayarlar, uygulama kayıtları ve görevler yedekteki haline döner. Otuken otomatik yeniden başlar; herkesin yeniden oturum açması gerekir.",
+        "Hesaplar, ayarlar, uygulama kayıtları ve görevler yedekteki haline döner. EveryOS otomatik yeniden başlar; herkesin yeniden oturum açması gerekir.",
       databaseHintManual:
-        "Hesaplar, ayarlar, uygulama kayıtları ve görevler yedekteki haline döner. Otuken yeniden başlatıldığında uygulanır; herkesin yeniden oturum açması gerekir.",
+        "Hesaplar, ayarlar, uygulama kayıtları ve görevler yedekteki haline döner. EveryOS yeniden başlatıldığında uygulanır; herkesin yeniden oturum açması gerekir.",
     },
     blocked: {
       invalid: "Yedek doğrulanamadığı için kullanılamaz.",
-      "newer-schema": "Yedek daha yeni bir Otuken sürümüyle alınmış; bu sürüme geri yüklenemez.",
+      "newer-schema": "Yedek daha yeni bir EveryOS sürümüyle alınmış; bu sürüme geri yüklenemez.",
       "different-key":
         "Yedek başka bir kurulumun gizli anahtarıyla alınmış; şifreli ayarlar ve iki adımlı doğrulama okunamayacağı için veritabanı geri yüklenemez.",
     },
@@ -2382,9 +2382,10 @@ export const tr = {
       "service.restart":
         "Seçilen systemd servisini yeniden başlatır. Korunan servisler yeniden başlatılamaz.",
       "container.restart": "Seçilen konteyneri adıyla bulur ve yeniden başlatır.",
-      "app.update": "Otuken ile kurulmuş uygulamayı günceller; sorun olursa önceki imajlara döner.",
+      "app.update":
+        "EveryOS ile kurulmuş uygulamayı günceller; sorun olursa önceki imajlara döner.",
       "backup.create":
-        "Otuken verilerinin ve Yedekler ayarlarında seçilen uygulama verilerinin yedeğini alır; saklama politikasını uygular.",
+        "EveryOS verilerinin ve Yedekler ayarlarında seçilen uygulama verilerinin yedeğini alır; saklama politikasını uygular.",
     } satisfies Record<TaskType, string>,
     modes: {
       hourly: "Her saat",

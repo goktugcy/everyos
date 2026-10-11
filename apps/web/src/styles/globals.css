@@ -1,70 +1,70 @@
 @import "tailwindcss";
 
 /*
- * Otuken design tokens.
+ * EveryOS design tokens.
  *
  * Every visual decision flows from CSS custom properties. The theme engine
- * (@otuken/theme) resolves the user's appearance settings into these
+ * (@everyos/theme) resolves the user's appearance settings into these
  * variables and sets them on <html> at runtime, so switching themes needs no
  * rebuild and no server restart. The values below are the Liquid Dark
  * defaults used before preferences load (first paint, sign-in screens).
  * Colors are "r g b" triplets so alpha can vary per use.
  */
 :root {
-  --otk-accent: 125 211 252;
-  --otk-accent-strong: 99 132 255;
-  --otk-accent-contrast: 11 16 32;
-  --otk-button-from: 125 211 252;
-  --otk-button-to: 99 132 255;
-  --otk-danger: 251 113 133;
-  --otk-success: 52 211 153;
-  --otk-warning: 251 191 36;
+  --everyos-accent: 125 211 252;
+  --everyos-accent-strong: 99 132 255;
+  --everyos-accent-contrast: 11 16 32;
+  --everyos-button-from: 125 211 252;
+  --everyos-button-to: 99 132 255;
+  --everyos-danger: 251 113 133;
+  --everyos-success: 52 211 153;
+  --everyos-warning: 251 191 36;
 
-  --otk-text: 241 245 251;
-  --otk-text-muted: 203 213 230;
-  --otk-text-subtle: 163 177 201;
+  --everyos-text: 241 245 251;
+  --everyos-text-muted: 203 213 230;
+  --everyos-text-subtle: 163 177 201;
 
-  --otk-surface: 16 22 38;
-  --otk-surface-opacity: 0.6;
-  --otk-surface-strong-opacity: 0.78;
-  --otk-border: 255 255 255;
-  --otk-border-opacity: 0.12;
-  --otk-highlight-opacity: 0.1;
-  --otk-shadow-opacity: 0.55;
-  --otk-hover: 255 255 255;
-  --otk-inset: 0 0 0;
-  --otk-inset-opacity: 0.28;
+  --everyos-surface: 16 22 38;
+  --everyos-surface-opacity: 0.6;
+  --everyos-surface-strong-opacity: 0.78;
+  --everyos-border: 255 255 255;
+  --everyos-border-opacity: 0.12;
+  --everyos-highlight-opacity: 0.1;
+  --everyos-shadow-opacity: 0.55;
+  --everyos-hover: 255 255 255;
+  --everyos-inset: 0 0 0;
+  --everyos-inset-opacity: 0.28;
 
-  --otk-blur: 16px;
-  --otk-saturate: 165%;
-  --otk-radius-sm: 10px;
-  --otk-radius-md: 14px;
-  --otk-radius-lg: 22px;
-  --otk-font-scale: 1;
-  --otk-icon-size: 52px;
+  --everyos-blur: 16px;
+  --everyos-saturate: 165%;
+  --everyos-radius-sm: 10px;
+  --everyos-radius-md: 14px;
+  --everyos-radius-lg: 22px;
+  --everyos-font-scale: 1;
+  --everyos-icon-size: 52px;
 
-  --otk-wallpaper-base: #070b18;
-  --otk-wallpaper-a: 56 189 248;
-  --otk-wallpaper-b: 99 102 241;
-  --otk-wallpaper-c: 16 185 129;
+  --everyos-wallpaper-base: #070b18;
+  --everyos-wallpaper-a: 56 189 248;
+  --everyos-wallpaper-b: 99 102 241;
+  --everyos-wallpaper-c: 16 185 129;
 
-  --otk-menubar-height: 36px;
+  --everyos-menubar-height: 36px;
 
   /*
    * Chart series colors (categorical slots 1–2), stepped per scheme and
    * validated for color-vision deficiency and contrast against every
    * built-in theme surface. Text never uses these colors.
    */
-  --otk-chart-1: #3987e5;
-  --otk-chart-2: #d95926;
+  --everyos-chart-1: #3987e5;
+  --everyos-chart-2: #d95926;
 
   color-scheme: dark;
 }
 
 [data-scheme="light"] {
   color-scheme: light;
-  --otk-chart-1: #2a78d6;
-  --otk-chart-2: #eb6834;
+  --everyos-chart-1: #2a78d6;
+  --everyos-chart-2: #eb6834;
 }
 
 @theme {
@@ -73,28 +73,28 @@
     sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 
-  --color-fg: rgb(var(--otk-text));
-  --color-fg-muted: rgb(var(--otk-text-muted));
-  --color-fg-subtle: rgb(var(--otk-text-subtle));
-  --color-accent: rgb(var(--otk-accent));
-  --color-accent-strong: rgb(var(--otk-accent-strong));
-  --color-accent-contrast: rgb(var(--otk-accent-contrast));
-  --color-danger: rgb(var(--otk-danger));
-  --color-success: rgb(var(--otk-success));
-  --color-warning: rgb(var(--otk-warning));
-  --color-line: rgb(var(--otk-border) / var(--otk-border-opacity));
+  --color-fg: rgb(var(--everyos-text));
+  --color-fg-muted: rgb(var(--everyos-text-muted));
+  --color-fg-subtle: rgb(var(--everyos-text-subtle));
+  --color-accent: rgb(var(--everyos-accent));
+  --color-accent-strong: rgb(var(--everyos-accent-strong));
+  --color-accent-contrast: rgb(var(--everyos-accent-contrast));
+  --color-danger: rgb(var(--everyos-danger));
+  --color-success: rgb(var(--everyos-success));
+  --color-warning: rgb(var(--everyos-warning));
+  --color-line: rgb(var(--everyos-border) / var(--everyos-border-opacity));
   /* Neutral overlay for hover/selection: white on dark themes, ink on light themes. */
-  --color-hover: rgb(var(--otk-hover));
+  --color-hover: rgb(var(--everyos-hover));
 
-  --radius-otk-sm: var(--otk-radius-sm);
-  --radius-otk-md: var(--otk-radius-md);
-  --radius-otk-lg: var(--otk-radius-lg);
+  --radius-everyos-sm: var(--everyos-radius-sm);
+  --radius-everyos-md: var(--everyos-radius-md);
+  --radius-everyos-lg: var(--everyos-radius-lg);
 }
 
 /* Base styles live in the base layer so utilities (e.g. focus-visible:outline-none) can override them. */
 @layer base {
   html {
-    font-size: calc(100% * var(--otk-font-scale));
+    font-size: calc(100% * var(--everyos-font-scale));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -103,8 +103,8 @@
   body {
     margin: 0;
     min-height: 100dvh;
-    background: var(--otk-wallpaper-base);
-    color: rgb(var(--otk-text));
+    background: var(--everyos-wallpaper-base);
+    color: rgb(var(--everyos-text));
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
     overscroll-behavior: none;
@@ -115,12 +115,12 @@
   }
 
   ::selection {
-    background: rgb(var(--otk-accent) / 0.35);
+    background: rgb(var(--everyos-accent) / 0.35);
   }
 
   /* Strong, consistent keyboard focus indicator (WCAG 2.4.7 / 2.4.11). */
   :focus-visible {
-    outline: 2px solid rgb(var(--otk-accent));
+    outline: 2px solid rgb(var(--everyos-accent));
     outline-offset: 2px;
   }
 }
@@ -136,32 +136,32 @@
   background:
     linear-gradient(
       180deg,
-      rgb(255 255 255 / var(--otk-highlight-opacity)),
+      rgb(255 255 255 / var(--everyos-highlight-opacity)),
       rgb(255 255 255 / 0.015) 42%
     ),
-    rgb(var(--otk-surface) / var(--otk-surface-opacity));
-  border: 1px solid rgb(var(--otk-border) / var(--otk-border-opacity));
+    rgb(var(--everyos-surface) / var(--everyos-surface-opacity));
+  border: 1px solid rgb(var(--everyos-border) / var(--everyos-border-opacity));
   box-shadow:
-    0 30px 70px -28px rgb(0 0 0 / var(--otk-shadow-opacity)),
-    inset 0 1px 0 0 rgb(255 255 255 / calc(var(--otk-highlight-opacity) * 1.4));
-  -webkit-backdrop-filter: blur(var(--otk-blur)) saturate(var(--otk-saturate));
-  backdrop-filter: blur(var(--otk-blur)) saturate(var(--otk-saturate));
+    0 30px 70px -28px rgb(0 0 0 / var(--everyos-shadow-opacity)),
+    inset 0 1px 0 0 rgb(255 255 255 / calc(var(--everyos-highlight-opacity) * 1.4));
+  -webkit-backdrop-filter: blur(var(--everyos-blur)) saturate(var(--everyos-saturate));
+  backdrop-filter: blur(var(--everyos-blur)) saturate(var(--everyos-saturate));
 }
 
 @utility glass-strong {
   background:
     linear-gradient(
       180deg,
-      rgb(255 255 255 / calc(var(--otk-highlight-opacity) * 0.8)),
+      rgb(255 255 255 / calc(var(--everyos-highlight-opacity) * 0.8)),
       rgb(255 255 255 / 0.01) 40%
     ),
-    rgb(var(--otk-surface) / var(--otk-surface-strong-opacity));
-  border: 1px solid rgb(var(--otk-border) / var(--otk-border-opacity));
+    rgb(var(--everyos-surface) / var(--everyos-surface-strong-opacity));
+  border: 1px solid rgb(var(--everyos-border) / var(--everyos-border-opacity));
   box-shadow:
-    0 30px 70px -28px rgb(0 0 0 / var(--otk-shadow-opacity)),
-    inset 0 1px 0 0 rgb(255 255 255 / calc(var(--otk-highlight-opacity) * 1.2));
-  -webkit-backdrop-filter: blur(calc(var(--otk-blur) * 1.25)) saturate(var(--otk-saturate));
-  backdrop-filter: blur(calc(var(--otk-blur) * 1.25)) saturate(var(--otk-saturate));
+    0 30px 70px -28px rgb(0 0 0 / var(--everyos-shadow-opacity)),
+    inset 0 1px 0 0 rgb(255 255 255 / calc(var(--everyos-highlight-opacity) * 1.2));
+  -webkit-backdrop-filter: blur(calc(var(--everyos-blur) * 1.25)) saturate(var(--everyos-saturate));
+  backdrop-filter: blur(calc(var(--everyos-blur) * 1.25)) saturate(var(--everyos-saturate));
 }
 
 /*
@@ -192,25 +192,29 @@
 
 /* Inset field surface used by inputs and wells. */
 @utility glass-inset {
-  background: rgb(var(--otk-inset) / var(--otk-inset-opacity));
-  border: 1px solid rgb(var(--otk-border) / calc(var(--otk-border-opacity) + 0.04));
+  background: rgb(var(--everyos-inset) / var(--everyos-inset-opacity));
+  border: 1px solid rgb(var(--everyos-border) / calc(var(--everyos-border-opacity) + 0.04));
   box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.18);
 }
 
 @utility button-accent {
-  background: linear-gradient(135deg, rgb(var(--otk-button-from)), rgb(var(--otk-button-to)));
-  color: rgb(var(--otk-accent-contrast));
+  background: linear-gradient(
+    135deg,
+    rgb(var(--everyos-button-from)),
+    rgb(var(--everyos-button-to))
+  );
+  color: rgb(var(--everyos-accent-contrast));
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   :root {
-    --otk-surface-opacity: 0.94 !important;
-    --otk-surface-strong-opacity: 0.97 !important;
+    --everyos-surface-opacity: 0.94 !important;
+    --everyos-surface-strong-opacity: 0.97 !important;
   }
 }
 
 /* Slow aurora drift. Only transforms and opacity animate (compositor-only). */
-@keyframes otk-drift {
+@keyframes everyos-drift {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
   }
@@ -222,7 +226,7 @@
   }
 }
 
-@keyframes otk-rise {
+@keyframes everyos-rise {
   from {
     opacity: 0;
     transform: translateY(10px) scale(0.985);
@@ -233,37 +237,37 @@
   }
 }
 
-@keyframes otk-window-fade {
+@keyframes everyos-window-fade {
   from {
     opacity: 0;
   }
 }
 
-@keyframes otk-window-scale {
+@keyframes everyos-window-scale {
   from {
     opacity: 0;
     scale: 0.94;
   }
 }
 
-.otk-aurora-blob {
+.everyos-aurora-blob {
   will-change: transform;
 }
 
-[data-wallpaper-animated="true"] .otk-aurora-blob {
-  animation: otk-drift 48s ease-in-out infinite;
+[data-wallpaper-animated="true"] .everyos-aurora-blob {
+  animation: everyos-drift 48s ease-in-out infinite;
 }
 
-.otk-enter {
-  animation: otk-rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.everyos-enter {
+  animation: everyos-rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-[data-window-animation="fade"] .otk-window-enter {
-  animation: otk-window-fade 160ms ease-out both;
+[data-window-animation="fade"] .everyos-window-enter {
+  animation: everyos-window-fade 160ms ease-out both;
 }
 
-[data-window-animation="scale"] .otk-window-enter {
-  animation: otk-window-scale 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+[data-window-animation="scale"] .everyos-window-enter {
+  animation: everyos-window-scale 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 [data-render="performance"] *,
@@ -288,26 +292,26 @@
  * Desktop icon labels: no plate, like macOS. A halo keeps them legible on any
  * wallpaper; a selected label gets an accent plate.
  */
-.otk-icon-label {
+.everyos-icon-label {
   text-shadow:
     0 1px 2px rgb(0 0 0 / 0.75),
     0 0 7px rgb(0 0 0 / 0.45);
 }
 
-[data-scheme="light"] .otk-icon-label {
+[data-scheme="light"] .everyos-icon-label {
   text-shadow:
     0 0 3px rgb(255 255 255 / 0.95),
     0 0 9px rgb(255 255 255 / 0.75);
 }
 
-.otk-icon-label[data-selected="true"] {
-  background: rgb(var(--otk-accent-strong) / 0.85);
+.everyos-icon-label[data-selected="true"] {
+  background: rgb(var(--everyos-accent-strong) / 0.85);
   color: rgb(255 255 255);
   text-shadow: none;
 }
 
 /* Window "traffic lights": close, minimize and zoom, with glyphs on hover. */
-.otk-traffic {
+.everyos-traffic {
   display: grid;
   place-items: center;
   width: 13px;
@@ -318,34 +322,34 @@
   outline-offset: 2px;
 }
 
-.otk-traffic > svg {
+.everyos-traffic > svg {
   width: 9px;
   height: 9px;
   stroke-width: 3;
   opacity: 0;
 }
 
-.otk-traffic-group:hover .otk-traffic > svg,
-.otk-traffic:focus-visible > svg {
+.everyos-traffic-group:hover .everyos-traffic > svg,
+.everyos-traffic:focus-visible > svg {
   opacity: 1;
 }
 
-.otk-traffic[data-kind="close"] {
+.everyos-traffic[data-kind="close"] {
   background: #ff5f57;
 }
 
-.otk-traffic[data-kind="minimize"] {
+.everyos-traffic[data-kind="minimize"] {
   background: #febc2e;
 }
 
-.otk-traffic[data-kind="zoom"] {
+.everyos-traffic[data-kind="zoom"] {
   background: #28c840;
 }
 
 /* Unfocused windows show neutral lights, like macOS. */
-.otk-traffic-group[data-active="false"]:not(:hover) .otk-traffic {
-  background: rgb(var(--otk-hover) / 0.22);
-  border-color: rgb(var(--otk-hover) / 0.12);
+.everyos-traffic-group[data-active="false"]:not(:hover) .everyos-traffic {
+  background: rgb(var(--everyos-hover) / 0.22);
+  border-color: rgb(var(--everyos-hover) / 0.12);
 }
 
 /*
@@ -353,7 +357,7 @@
  * shimmer; a running job sends a band of light across them; dragged files
  * make an arrow blink. Reduced motion and Performance mode stop all of it.
  */
-@keyframes otk-pulse-shimmer {
+@keyframes everyos-pulse-shimmer {
   0%,
   100% {
     opacity: 0.18;
@@ -364,7 +368,7 @@
 }
 
 /* Percentages are of the matrix width (SVG view box); the band is 35% wide. */
-@keyframes otk-pulse-sweep {
+@keyframes everyos-pulse-sweep {
   from {
     transform: translateX(-35%);
   }
@@ -373,21 +377,21 @@
   }
 }
 
-@keyframes otk-pulse-blink {
+@keyframes everyos-pulse-blink {
   50% {
     opacity: 0.35;
   }
 }
 
-.otk-pulse-shimmer {
-  animation: otk-pulse-shimmer 2.8s ease-in-out infinite;
+.everyos-pulse-shimmer {
+  animation: everyos-pulse-shimmer 2.8s ease-in-out infinite;
 }
 
-.otk-pulse-sweep {
+.everyos-pulse-sweep {
   transform-box: view-box;
-  animation: otk-pulse-sweep 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  animation: everyos-pulse-sweep 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
 
-.otk-pulse-blink {
-  animation: otk-pulse-blink 1s ease-in-out infinite;
+.everyos-pulse-blink {
+  animation: everyos-pulse-blink 1s ease-in-out infinite;
 }

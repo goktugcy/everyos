@@ -46,9 +46,9 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
           <rect width={WIDTH} height={HEIGHT} fill={`url(#${id}-dots)`} />
         </mask>
         <linearGradient id={`${id}-band`}>
-          <stop offset="0" stopColor="rgb(var(--otk-accent))" stopOpacity="0" />
-          <stop offset="0.5" stopColor="rgb(var(--otk-accent))" stopOpacity="1" />
-          <stop offset="1" stopColor="rgb(var(--otk-accent))" stopOpacity="0" />
+          <stop offset="0" stopColor="rgb(var(--everyos-accent))" stopOpacity="0" />
+          <stop offset="0.5" stopColor="rgb(var(--everyos-accent))" stopOpacity="1" />
+          <stop offset="1" stopColor="rgb(var(--everyos-accent))" stopOpacity="0" />
         </linearGradient>
       </defs>
       {cells.map(({ col, row }) => {
@@ -63,9 +63,9 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
               cx={cx}
               cy={cy}
               r={RADIUS}
-              className={lit ? "otk-pulse-blink" : undefined}
+              className={lit ? "everyos-pulse-blink" : undefined}
               style={{
-                fill: lit ? "rgb(var(--otk-accent))" : "rgb(var(--otk-text) / 0.2)",
+                fill: lit ? "rgb(var(--everyos-accent))" : "rgb(var(--everyos-text) / 0.2)",
                 ...(lit ? { animationDelay: `${(col % 12) * 40}ms` } : {}),
               }}
             />
@@ -78,9 +78,9 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
               cx={cx}
               cy={cy}
               r={RADIUS}
-              className="otk-pulse-shimmer"
+              className="everyos-pulse-shimmer"
               style={{
-                fill: "rgb(var(--otk-text))",
+                fill: "rgb(var(--everyos-text))",
                 animationDelay: `${col * 90 + row * 140}ms`,
               }}
             />
@@ -97,10 +97,10 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
             r={RADIUS}
             style={{
               fill: peak
-                ? "rgb(var(--otk-warning))"
+                ? "rgb(var(--everyos-warning))"
                 : lit
-                  ? `rgb(var(--otk-text) / ${0.6 + (col / MATRIX_COLS) * 0.38})`
-                  : "rgb(var(--otk-text) / 0.22)",
+                  ? `rgb(var(--everyos-text) / ${0.6 + (col / MATRIX_COLS) * 0.38})`
+                  : "rgb(var(--everyos-text) / 0.22)",
               transition: "fill 300ms ease",
             }}
           />
@@ -109,7 +109,7 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
       {busy ? (
         <g mask={`url(#${id}-mask)`}>
           <rect
-            className="otk-pulse-sweep"
+            className="everyos-pulse-sweep"
             width={WIDTH * 0.35}
             height={HEIGHT}
             fill={`url(#${id}-band)`}

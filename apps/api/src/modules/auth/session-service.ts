@@ -1,6 +1,6 @@
-import type { Database } from "@otuken/database";
-import { hmacSha256, randomToken, safeEqual, sha256Hex } from "@otuken/security";
-import type { SessionSummary } from "@otuken/shared";
+import type { Database } from "@everyos/database";
+import { hmacSha256, randomToken, safeEqual, sha256Hex } from "@everyos/security";
+import type { SessionSummary } from "@everyos/shared";
 
 export interface Session {
   id: string;

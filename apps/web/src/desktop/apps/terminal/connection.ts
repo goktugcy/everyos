@@ -1,4 +1,4 @@
-import type { TerminalClientMessage, TerminalStatus } from "@otuken/shared";
+import type { TerminalClientMessage, TerminalStatus } from "@everyos/shared";
 import { api, ApiRequestError } from "../../../lib/api.ts";
 import {
   closeReason,

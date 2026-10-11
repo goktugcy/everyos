@@ -1,7 +1,8 @@
 import { chmod, lstat, mkdir, realpath, statfs, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { OperationError } from "@otuken/agent-protocol";
-import { CONFIG_PLACEHOLDER, inlineFiles, object, parseCompose } from "@otuken/catalogs/compose";
+import { OperationError } from "@everyos/agent-protocol";
+import { CONFIG_PLACEHOLDER, inlineFiles, object, parseCompose } from "@everyos/catalogs/compose";
 import { stringify } from "yaml";
 
 /** Config contents live only on verified tmpfs; durable deployment records remain encrypted. */
@@ -12,9 +13,12 @@ export async function materializeConfigs(
 ): Promise<string> {
   const doc = parseCompose(input),
     files = inlineFiles(doc);
+  const root =
+    existsSync("/run/everyos/app-configs") || !existsSync("/run/otuken/app-configs")
+      ? "/run/everyos/app-configs"
+      : "/run/otuken/app-configs";
   if (files.length && !simulated) {
-    const root = "/run/otuken/app-configs",
-      dir = join(root, id);
+    const dir = join(root, id);
     await mkdir(root, { recursive: true, mode: 0o700 });
     for (const path of [root, dir]) {
       if (path === dir)
@@ -60,7 +64,7 @@ export async function materializeConfigs(
         if (typeof entry.source === "string" && entry.source.startsWith(`${CONFIG_PLACEHOLDER}/`))
           return {
             ...entry,
-            source: entry.source.replace(CONFIG_PLACEHOLDER, `/run/otuken/app-configs/${id}`),
+            source: entry.source.replace(CONFIG_PLACEHOLDER, `${root}/${id}`),
           };
         return raw;
       });

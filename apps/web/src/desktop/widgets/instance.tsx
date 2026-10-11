@@ -1,4 +1,4 @@
-import type { WidgetInstance } from "@otuken/shared";
+import type { WidgetInstance } from "@everyos/shared";
 import { createContext, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { widgetActions } from "./actions.ts";
@@ -31,7 +31,7 @@ export function StateActions({ remove = false }: { remove?: boolean }) {
     <span className="flex flex-wrap justify-center gap-1.5">
       <button
         type="button"
-        className="rounded-otk-sm bg-hover/10 px-2 py-1 text-xs font-medium text-fg hover:bg-hover/16"
+        className="rounded-everyos-sm bg-hover/10 px-2 py-1 text-xs font-medium text-fg hover:bg-hover/16"
         onClick={() => widgetUi.configure(instance.id)}
       >
         {t("widgets.menu.configure")}
@@ -39,7 +39,7 @@ export function StateActions({ remove = false }: { remove?: boolean }) {
       {remove ? (
         <button
           type="button"
-          className="rounded-otk-sm px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10"
+          className="rounded-everyos-sm px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10"
           onClick={() => widgetActions.remove(instance.id)}
         >
           {t("widgets.menu.remove")}

@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
-import type { CatalogApp } from "@otuken/shared";
+import type { CatalogApp } from "@everyos/shared";
 import {
   cleanCompose,
   CONFIG_PLACEHOLDER,

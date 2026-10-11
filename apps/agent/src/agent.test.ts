@@ -1,9 +1,9 @@
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Actor } from "@otuken/agent-protocol";
-import { silentLogger } from "@otuken/logger";
-import type { SystemInfo } from "@otuken/shared";
+import type { Actor } from "@everyos/agent-protocol";
+import { silentLogger } from "@everyos/logger";
+import type { SystemInfo } from "@everyos/shared";
 import {
   createDockerClient,
   createDockerSimulator,
@@ -11,7 +11,7 @@ import {
   ServiceError,
   type DockerApi,
   type ServiceManager,
-} from "@otuken/system";
+} from "@everyos/system";
 import { describe, expect, it, vi } from "vitest";
 import {
   ConfigError,
@@ -54,19 +54,20 @@ function deps(overrides: Partial<HandlerDependencies> = {}): HandlerDependencies
 
 describe("agent config", () => {
   it("uses hardened production defaults", () => {
-    const config = loadAgentConfig({ OTUKEN_AGENT_CONFIG: undefined });
+    const config = loadAgentConfig({ EVERYOS_AGENT_CONFIG: undefined });
     expect(config).toMatchObject({
       mode: "production",
-      socketPath: "/run/otuken/agent.sock",
-      agentKeyFile: "/etc/otuken/agent.key",
-      socketGroup: "otuken",
+      appsRoot: "/var/lib/everyos/apps",
+      socketPath: "/run/everyos/agent.sock",
+      agentKeyFile: "/etc/everyos/agent.key",
+      socketGroup: "everyos",
       logFormat: "json",
     });
   });
 
   it("requires an explicit dev root in development mode", () => {
-    expect(() => loadAgentConfig({ OTUKEN_ENV: "development" })).toThrow(ConfigError);
-    const config = loadAgentConfig({ OTUKEN_ENV: "development", OTUKEN_DEV_ROOT: "/tmp/otk" });
+    expect(() => loadAgentConfig({ EVERYOS_ENV: "development" })).toThrow(ConfigError);
+    const config = loadAgentConfig({ EVERYOS_ENV: "development", EVERYOS_DEV_ROOT: "/tmp/otk" });
     expect(config).toMatchObject({
       socketPath: "/tmp/otk/run/agent.sock",
       socketGroup: null,
@@ -74,17 +75,39 @@ describe("agent config", () => {
     });
   });
 
+  it("accepts legacy environment settings and protects both service names", () => {
+    const config = loadAgentConfig({
+      OTUKEN_ENV: "development",
+      OTUKEN_DEV_ROOT: "/tmp/everyos-legacy",
+      OTUKEN_AGENT_SOCKET: "/tmp/old.sock",
+      EVERYOS_AGENT_SOCKET: "/tmp/new.sock",
+    });
+    expect(config).toMatchObject({
+      mode: "development",
+      socketPath: "/tmp/new.sock",
+      appsRoot: "/tmp/everyos-legacy/agent-apps",
+    });
+    const protectedUnit = createUnitProtection();
+    for (const name of [
+      "everyos.service",
+      "everyos-agent.service",
+      "otuken.service",
+      "otuken-agent.service",
+    ])
+      expect(protectedUnit(name)).toBe(true);
+  });
+
   it("reads and validates an explicit config file", () => {
     const dir = mkdtempSync(join(tmpdir(), "otk-agent-"));
     const path = join(dir, "agent.yaml");
     writeFileSync(path, "socketPath: /run/custom.sock\nsocketGroup: 1001\nlogLevel: warn\n");
-    expect(loadAgentConfig({ OTUKEN_AGENT_CONFIG: path })).toMatchObject({
+    expect(loadAgentConfig({ EVERYOS_AGENT_CONFIG: path })).toMatchObject({
       socketPath: "/run/custom.sock",
       socketGroup: 1001,
       logLevel: "warn",
     });
     writeFileSync(path, "socketPath: /x\nrunAnything: true\n");
-    expect(() => loadAgentConfig({ OTUKEN_AGENT_CONFIG: path })).toThrow(/Invalid agent config/);
+    expect(() => loadAgentConfig({ EVERYOS_AGENT_CONFIG: path })).toThrow(/Invalid agent config/);
   });
 
   it("reads protection and connectivity settings", () => {
@@ -94,37 +117,37 @@ describe("agent config", () => {
       path,
       "protectedUnits: [nginx.service, 'docker*.service']\ninternetCheckTargets: []\n",
     );
-    expect(loadAgentConfig({ OTUKEN_AGENT_CONFIG: path })).toMatchObject({
+    expect(loadAgentConfig({ EVERYOS_AGENT_CONFIG: path })).toMatchObject({
       protectedUnits: ["nginx.service", "docker*.service"],
       internetCheckTargets: [],
     });
     expect(loadAgentConfig({}).internetCheckTargets).toEqual(DEFAULT_INTERNET_CHECK_TARGETS);
     writeFileSync(path, "protectedUnits: ['x; rm -rf /']\n");
-    expect(() => loadAgentConfig({ OTUKEN_AGENT_CONFIG: path })).toThrow(/Invalid agent config/);
+    expect(() => loadAgentConfig({ EVERYOS_AGENT_CONFIG: path })).toThrow(/Invalid agent config/);
   });
 
   it("only simulates host data in development mode", () => {
-    expect(() => loadAgentConfig({ OTUKEN_AGENT_SIMULATE: "1" })).toThrow(
+    expect(() => loadAgentConfig({ EVERYOS_AGENT_SIMULATE: "1" })).toThrow(
       /only allowed in development/,
     );
     expect(
       loadAgentConfig({
-        OTUKEN_ENV: "development",
-        OTUKEN_DEV_ROOT: "/tmp/otk",
-        OTUKEN_AGENT_SIMULATE: "1",
+        EVERYOS_ENV: "development",
+        EVERYOS_DEV_ROOT: "/tmp/otk",
+        EVERYOS_AGENT_SIMULATE: "1",
       }).simulate,
     ).toBe(true);
   });
 
   it("rejects invalid log levels", () => {
-    expect(() => loadAgentConfig({ OTUKEN_LOG_LEVEL: "loud" })).toThrow(ConfigError);
+    expect(() => loadAgentConfig({ EVERYOS_LOG_LEVEL: "loud" })).toThrow(ConfigError);
   });
 
   it("resolves group names from a group file", () => {
     const dir = mkdtempSync(join(tmpdir(), "otk-agent-"));
     const groupFile = join(dir, "group");
-    writeFileSync(groupFile, "root:x:0:\notuken:x:998:otuken\n");
-    expect(resolveGroupId("otuken", groupFile)).toBe(998);
+    writeFileSync(groupFile, "root:x:0:\neveryos:x:998:everyos\n");
+    expect(resolveGroupId("everyos", groupFile)).toBe(998);
     expect(resolveGroupId("42", groupFile)).toBe(42);
     expect(() => resolveGroupId("missing", groupFile)).toThrow(/does not exist/);
   });
@@ -191,7 +214,7 @@ describe("unit protection and policy", () => {
   it("protects remote access, the platform itself and configured units", () => {
     for (const unit of [
       "ssh.service",
-      "otuken-agent.service",
+      "everyos-agent.service",
       "tailscaled.service",
       "systemd-journald.service",
       "getty@tty1.service",

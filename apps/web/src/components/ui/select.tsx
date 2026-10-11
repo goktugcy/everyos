@@ -32,7 +32,7 @@ export function Select<T extends string>({
           id={id}
           value={value}
           onChange={(event) => onChange(event.target.value as T)}
-          className="glass-inset h-10 w-full appearance-none rounded-otk-md pl-3 pr-9 text-sm text-fg outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--otk-accent)/0.25)] [&>option]:bg-[rgb(var(--otk-surface))] [&>option]:text-fg"
+          className="glass-inset h-10 w-full appearance-none rounded-everyos-md pl-3 pr-9 text-sm text-fg outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--everyos-accent)/0.25)] [&>option]:bg-[rgb(var(--everyos-surface))] [&>option]:text-fg"
         >
           {options.map((option) => (
             <option key={option.value} value={option.value}>

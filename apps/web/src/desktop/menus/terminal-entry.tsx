@@ -1,4 +1,4 @@
-import type { Permission } from "@otuken/shared";
+import type { Permission } from "@everyos/shared";
 import { SquareTerminal } from "lucide-react";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import { desktop } from "../state/controller.ts";
@@ -9,7 +9,7 @@ export function openTerminalEntries(
   label: string,
   permissions: readonly Permission[],
 ): MenuEntry[] {
-  const manifest = getApp("otuken.terminal");
+  const manifest = getApp("everyos.terminal");
   if (!manifest || !isAppAllowed(manifest, permissions)) return [];
   return [
     {
@@ -17,7 +17,7 @@ export function openTerminalEntries(
       id: "open-terminal",
       label,
       icon: <SquareTerminal />,
-      onSelect: () => desktop.openWindow("otuken.terminal"),
+      onSelect: () => desktop.openWindow("everyos.terminal"),
     },
   ];
 }

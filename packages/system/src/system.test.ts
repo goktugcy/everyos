@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { SystemInfoSchema } from "@otuken/shared/schemas";
+import { SystemInfoSchema } from "@everyos/shared/schemas";
 import { afterEach, describe, expect, it } from "vitest";
 import { collectSystemInfo, cpuModelFromCpuinfo, parseOsRelease, type OsFacts } from "./index.ts";
 
@@ -47,7 +47,7 @@ ID_LIKE=debian
 `;
 
 const piFacts: OsFacts = {
-  hostname: () => "otuken-pi",
+  hostname: () => "everyos-pi",
   arch: () => "arm64",
   release: () => "6.8.0-1030-raspi",
   type: () => "Linux",
@@ -97,7 +97,7 @@ describe("collectSystemInfo", () => {
     expect(SystemInfoSchema.parse(info)).toEqual(info);
     expect(info).toMatchObject({
       source: "host",
-      hostname: "otuken-pi",
+      hostname: "everyos-pi",
       arch: "arm64",
       os: { id: "ubuntu", version: "24.04", prettyName: "Ubuntu 24.04.3 LTS" },
       cpu: { model: "ARM Cortex-A76", cores: 4 },

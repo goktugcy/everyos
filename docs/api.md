@@ -21,7 +21,7 @@ for logs; clients show the localized text for `code`. A `429` response carries `
 
 **State-changing requests** (`POST`, `PATCH`, `PUT`, `DELETE`) must satisfy the CSRF rules in
 [security-model.md](security-model.md#csrf-and-browser-hardening-p1). Authenticated requests send the
-`X-Otuken-CSRF` header with the `csrfToken` from the session.
+`X-EveryOS-CSRF` header with the `csrfToken` from the session.
 
 ## Public
 
@@ -148,7 +148,7 @@ no systemd/journald), `NOT_FOUND` (404), `RATE_LIMITED` (429, too many concurren
 | `GET /services/:unit`          | `services:read`   | Unit detail (main PID, active since, memory, CPU time, tasks, restarts, unit file, restart policy, type). Unit names are validated (`*.service` etc., no paths or options).                                       |
 | `POST /services/:unit/actions` | `services:manage` | Body `{ "action": "start" \| "stop" \| "restart" \| "reload" \| "enable" \| "disable" }` → `202 { accepted: true }`. Submitted with `--no-block`; poll the detail for the result. Audited as `services.<action>`. |
 
-Protected units (SSH, Tailscale, Otuken itself, D-Bus, networking, `systemd-*`, gettys, user
+Protected units (SSH, Tailscale, EveryOS itself, D-Bus, networking, `systemd-*`, gettys, user
 managers, plus any configured in `agent.yaml`) accept only `start`, for every role. `stop`,
 `restart`, `reload`, `enable` and `disable` are refused, so their boot configuration never changes
 (Ubuntu's `ssh.service`, for example, is socket-activated through `ssh.socket`).
@@ -254,7 +254,7 @@ File deletion moves items to private per-user trash. `GET /files/trash` lists th
 `POST /files/trash/restore { root, ids }` restores them without overwriting original names, and
 `POST /files/trash/delete { root, ids, confirm: true }` deletes them permanently. Reading requires
 `files:read`; both mutations require `files:write` and are audited. Backups include existing
-Otuken homes and trash; restore accepts an additional `homes: true` selection, with the normal
+EveryOS homes and trash; restore accepts an additional `homes: true` selection, with the normal
 restore permission, password, confirmation and safety backup.
 
 Each module has its own document with the full contract; all routes are strict about unknown

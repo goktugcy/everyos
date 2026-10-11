@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { generateTotp } from "@otuken/auth";
+import { generateTotp } from "@everyos/auth";
 import type {
   AdminUserView,
   ApiErrorBody,
@@ -12,7 +12,7 @@ import type {
   SessionInfo,
   SessionSummary,
   TotpEnrollmentResponse,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import {
   completeSetup,
@@ -113,7 +113,7 @@ describe("first-run setup", () => {
     });
     expect(response.status).toBe(201);
     const setCookie = response.headers.get("set-cookie") ?? "";
-    expect(setCookie).toMatch(/^otuken_session=/);
+    expect(setCookie).toMatch(/^everyos_session=/);
     expect(setCookie).toMatch(/HttpOnly/i);
     expect(setCookie).toMatch(/SameSite=Strict/i);
     expect(setCookie).not.toMatch(/Secure/i);
@@ -241,12 +241,12 @@ describe("CSRF protection", () => {
 
   it("accepts configured public origins", async () => {
     const ctx = await createTestContext({
-      configure: (config) => (config.server.publicOrigins = ["https://otuken.tail.ts.net"]),
+      configure: (config) => (config.server.publicOrigins = ["https://everyos.tail.ts.net"]),
     });
     const client = new TestClient(ctx);
     await completeSetup(ctx, client);
     const response = await client.post("/api/auth/logout", undefined, {
-      headers: { origin: "https://otuken.tail.ts.net" },
+      headers: { origin: "https://everyos.tail.ts.net" },
     });
     expect(response.status).toBe(204);
   });
@@ -368,7 +368,7 @@ describe("account security", () => {
     const enrollment = await json<TotpEnrollmentResponse>(
       await admin.post("/api/account/totp/enroll"),
     );
-    expect(enrollment.otpauthUri).toContain("otpauth://totp/Otuken:admin%40");
+    expect(enrollment.otpauthUri).toContain("otpauth://totp/EveryOS:admin%40");
 
     const badEnable = await admin.post("/api/account/totp/enable", { code: "000000" });
     expect(badEnable.status).toBe(400);
@@ -535,7 +535,7 @@ describe("HTTP hardening", () => {
     const forwarded = {
       "x-forwarded-for": "203.0.113.9",
       "x-forwarded-proto": "https",
-      "x-forwarded-host": "otuken.example",
+      "x-forwarded-host": "everyos.example",
     };
     const viaProxy = await json<BootstrapResponse>(
       await new TestClient(ctx, "10.0.0.1").get("/api/bootstrap", { headers: forwarded }),
@@ -556,11 +556,11 @@ describe("HTTP hardening", () => {
         password: STRONG_PASSWORD,
         locale: "tr",
       },
-      { headers: { ...forwarded, origin: "https://otuken.example" } },
+      { headers: { ...forwarded, origin: "https://everyos.example" } },
     );
     expect(response.status).toBe(201);
     const cookie = response.headers.get("set-cookie") ?? "";
-    expect(cookie).toMatch(/^__Host-otuken_session=/);
+    expect(cookie).toMatch(/^__Host-everyos_session=/);
     expect(cookie).toMatch(/Secure/);
     const audit = ctx.db.get<{ ip: string }>(
       "SELECT ip FROM audit_events WHERE action = 'setup.complete'",
@@ -571,10 +571,10 @@ describe("HTTP hardening", () => {
 
 describe("web client serving", () => {
   function webFixture(): string {
-    const dir = mkdtempSync(join(tmpdir(), "otuken-web-"));
+    const dir = mkdtempSync(join(tmpdir(), "everyos-web-"));
     mkdirSync(join(dir, "assets"));
-    writeFileSync(join(dir, "index.html"), "<!doctype html><title>Otuken</title>");
-    writeFileSync(join(dir, "assets", "app-abc123.js"), "console.log('otuken')");
+    writeFileSync(join(dir, "index.html"), "<!doctype html><title>EveryOS</title>");
+    writeFileSync(join(dir, "assets", "app-abc123.js"), "console.log('everyos')");
     writeFileSync(join(dir, "assets", "app-abc123.js.br"), "BROTLI");
     return dir;
   }
@@ -585,14 +585,14 @@ describe("web client serving", () => {
     const root = await client.get("/");
     expect(root.status).toBe(200);
     expect(root.headers.get("cache-control")).toBe("no-cache");
-    expect(await root.text()).toContain("<title>Otuken</title>");
+    expect(await root.text()).toContain("<title>EveryOS</title>");
     expect(await (await client.get("/settings/appearance")).text()).toContain(
-      "<title>Otuken</title>",
+      "<title>EveryOS</title>",
     );
 
     const asset = await client.get("/assets/app-abc123.js");
     expect(asset.headers.get("cache-control")).toContain("immutable");
-    expect(await asset.text()).toBe("console.log('otuken')");
+    expect(await asset.text()).toBe("console.log('everyos')");
     const brotli = await client.get("/assets/app-abc123.js", {
       headers: { "accept-encoding": "gzip, br" },
     });

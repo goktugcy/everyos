@@ -1,4 +1,4 @@
-import type { FileEntry } from "@otuken/shared";
+import type { FileEntry } from "@everyos/shared";
 import {
   File,
   FileArchive,
@@ -134,10 +134,13 @@ export function FileIconView({
                     className="size-14"
                     style={
                       folder
-                        ? { color: "rgb(var(--otk-accent))", fill: "rgb(var(--otk-accent) / 0.32)" }
+                        ? {
+                            color: "rgb(var(--everyos-accent))",
+                            fill: "rgb(var(--everyos-accent) / 0.32)",
+                          }
                         : {
-                            color: "rgb(var(--otk-text) / 0.75)",
-                            fill: "rgb(var(--otk-text) / 0.06)",
+                            color: "rgb(var(--everyos-text) / 0.75)",
+                            fill: "rgb(var(--everyos-text) / 0.06)",
                           }
                     }
                   />
@@ -150,7 +153,7 @@ export function FileIconView({
                   title={entry.name}
                   className={cn(
                     "line-clamp-2 max-w-full break-words rounded px-1.5 py-px text-center text-xs leading-snug",
-                    isSelected ? "bg-[rgb(var(--otk-accent-strong))] text-white" : "text-fg",
+                    isSelected ? "bg-[rgb(var(--everyos-accent-strong))] text-white" : "text-fg",
                   )}
                 >
                   {entry.name}

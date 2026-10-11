@@ -1,4 +1,4 @@
-import type { AppearancePreferences } from "@otuken/shared";
+import type { AppearancePreferences } from "@everyos/shared";
 import { useSessionStore } from "../../stores/session-store.ts";
 import { updatePreference, usePreferences } from "./preferences-store.ts";
 

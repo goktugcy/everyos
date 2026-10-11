@@ -75,7 +75,7 @@ export const ContainerSummarySchema = z.object({
   service: text(128).nullable(),
   networks: z.array(text(256)).max(64),
   managerHint: z.enum(DOCKER_MANAGERS).nullable(),
-  /** Configured in agent.yaml: may only be started from Otuken. */
+  /** Configured in agent.yaml: may only be started from EveryOS. */
   protected: z.boolean(),
 });
 
@@ -311,7 +311,7 @@ export const DockerEventSchema = z.object({
 
 export type DockerEvent = z.infer<typeof DockerEventSchema>;
 
-/** Container as returned by the API: summary plus Otuken's ownership view. */
+/** Container as returned by the API: summary plus EveryOS's ownership view. */
 export type DockerContainerView = ContainerSummary & {
   ownership: (typeof DOCKER_OWNERSHIP)[number];
 };

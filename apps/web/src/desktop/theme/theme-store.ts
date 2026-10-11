@@ -1,13 +1,13 @@
-import type { AppearancePreferences } from "@otuken/shared";
+import type { AppearancePreferences } from "@everyos/shared";
 import {
   DEFAULT_APPEARANCE,
   resolveTheme,
   themeCssVariables,
   type ResolvedTheme,
-} from "@otuken/theme";
+} from "@everyos/theme";
 import { create } from "zustand";
 
-const CACHE_KEY = "otuken.appearance";
+const CACHE_KEY = "everyos.appearance";
 
 interface ThemeState {
   appearance: AppearancePreferences;
@@ -16,9 +16,11 @@ interface ThemeState {
 
 function readCache(): AppearancePreferences | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(CACHE_KEY) ?? localStorage.getItem("otuken.appearance");
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as AppearancePreferences;
+    const parsed = JSON.parse(raw, (key: string, value: unknown) =>
+      key === "id" && value === "otuken-dusk" ? "everyos-dusk" : value,
+    ) as AppearancePreferences;
     // Uploaded images need a session; sign-in screens fall back to the theme default.
     return parsed.version === 1
       ? { ...parsed, wallpaper: parsed.wallpaper?.kind === "image" ? null : parsed.wallpaper }

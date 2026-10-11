@@ -3,7 +3,7 @@ import type {
   TailscalePeer,
   TailscalePeers,
   TailscaleWarning,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { CircleSlash, ExternalLink, Globe, Lock } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -116,7 +116,7 @@ function Peers() {
   );
 }
 
-/** Tailscale in detail: this node, remote access to Otuken, warnings and the tailnet's devices. */
+/** Tailscale in detail: this node, remote access to EveryOS, warnings and the tailnet's devices. */
 export default function TailscaleApp() {
   const { t, i18n } = useTranslation();
   const overview = useApiResource<TailscaleOverview>("/system/tailscale/overview", 30_000);
@@ -227,9 +227,9 @@ export default function TailscaleApp() {
             <p className="text-sm text-fg-muted">{t("tailscale.notPublished")}</p>
           )}
           {remoteAccess.suggestion ? (
-            <div className="flex flex-col gap-2 rounded-otk-md border border-line p-3 text-sm">
+            <div className="flex flex-col gap-2 rounded-everyos-md border border-line p-3 text-sm">
               <p>{t("tailscale.suggestion", { url: remoteAccess.suggestion.url })}</p>
-              <code className="block overflow-x-auto rounded-otk-sm bg-hover/8 px-2 py-1.5 font-mono text-xs">
+              <code className="block overflow-x-auto rounded-everyos-sm bg-hover/8 px-2 py-1.5 font-mono text-xs">
                 {remoteAccess.suggestion.command}
               </code>
               <p className="text-xs text-fg-muted">

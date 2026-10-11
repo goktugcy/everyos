@@ -1,6 +1,6 @@
-# Contributing to Otuken
+# Contributing to EveryOS
 
-Thank you for helping. Otuken manages real servers, so correctness and security come before speed.
+Thank you for helping. EveryOS manages real servers, so correctness and security come before speed.
 
 ## Before you start
 

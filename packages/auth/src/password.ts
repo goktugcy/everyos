@@ -106,6 +106,6 @@ export function createDummyVerifier(
   let dummyHash: Promise<string> | null = null;
   return async () => {
     dummyHash ??= hashPassword(randomBytes(16).toString("hex"), params);
-    await verifyPassword("otuken-dummy-password", await dummyHash, params);
+    await verifyPassword("everyos-dummy-password", await dummyHash, params);
   };
 }

@@ -15,7 +15,7 @@ and the permission needed to see it. Texts are rendered by the client from `kind
   - failed service, low disk space, container with problems;
   - under-voltage, throttling, NVMe health;
   - pending security updates;
-  - internet offline, Tailscale offline, Tailscale key expiring, Otuken public through Tailscale
+  - internet offline, Tailscale offline, Tailscale key expiring, EveryOS public through Tailscale
     Funnel ([tailscale.md](tailscale.md)), agent unreachable.
 
   `raise()` creates one notification. While the condition stays open, later calls are no-ops,

@@ -1,5 +1,5 @@
-import type { DesktopItem, DesktopPreferences, WallpaperSpec } from "@otuken/shared";
-import { MAX_DESKTOPS } from "@otuken/shared";
+import type { DesktopItem, DesktopPreferences, WallpaperSpec } from "@everyos/shared";
+import { MAX_DESKTOPS } from "@everyos/shared";
 import { cellKey, firstFreeCell, type Cell, type GridMetrics } from "../surface/icon-grid.ts";
 import { newId } from "./ids.ts";
 

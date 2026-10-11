@@ -8,14 +8,14 @@ validate requests/results; permissions are enforced in both the API and agent.
 
 | Ownership | Source                                    | Behavior                                                                                         |
 | --------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| External  | Discovery without an Otuken record        | Inspect, logs/stats and explicit container start/stop/restart. No Compose actions before import. |
+| External  | Discovery without an EveryOS record       | Inspect, logs/stats and explicit container start/stop/restart. No Compose actions before import. |
 | Imported  | Owner-authorized Compose import in SQLite | Container controls plus project up/start/stop/restart/update/down with validated host files.     |
 | Managed   | Reserved for the Phase 5 installer        | No Phase 4 action creates this ownership. Labels cannot grant it.                                |
 
 The Compose view groups discovered services and hints at CasaOS, Coolify, Runtipi or Portainer
 management. Import requires acknowledgment of another manager hint and validates absolute
 normalized YAML paths, regular files, size and a services mapping. Importing/removing an import
-changes only Otuken records. Imported projects remain visible after down and can be started with
+changes only EveryOS records. Imported projects remain visible after down and can be started with
 up from their recorded paths.
 
 Container stop/restart and Compose stop/restart/update/down require UI confirmation. Protected

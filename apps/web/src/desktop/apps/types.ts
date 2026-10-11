@@ -1,29 +1,29 @@
-import type { Messages } from "@otuken/i18n";
-import type { CapabilityId, Permission } from "@otuken/shared";
-import type { WindowSpec } from "@otuken/window-manager";
+import type { Messages } from "@everyos/i18n";
+import type { CapabilityId, Permission } from "@everyos/shared";
+import type { WindowSpec } from "@everyos/window-manager";
 import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type AppId =
-  | "otuken.system"
-  | "otuken.services"
-  | "otuken.logs"
-  | "otuken.docker"
-  | "otuken.store"
-  | "otuken.settings"
-  | "otuken.users"
-  | "otuken.audit"
-  | "otuken.files"
-  | "otuken.trash"
-  | "otuken.editor"
-  | "otuken.updates"
-  | "otuken.tasks"
-  | "otuken.terminal"
-  | "otuken.backups"
-  | "otuken.tailscale";
+  | "everyos.system"
+  | "everyos.services"
+  | "everyos.logs"
+  | "everyos.docker"
+  | "everyos.store"
+  | "everyos.settings"
+  | "everyos.users"
+  | "everyos.audit"
+  | "everyos.files"
+  | "everyos.trash"
+  | "everyos.editor"
+  | "everyos.updates"
+  | "everyos.tasks"
+  | "everyos.terminal"
+  | "everyos.backups"
+  | "everyos.tailscale";
 
 /**
- * Contract every built-in Otuken app fulfils (docs/contracts.md §1). The
+ * Contract every built-in EveryOS app fulfils (docs/contracts.md §1). The
  * component is imported lazily the first time a window of the app opens.
  */
 export interface DesktopAppManifest {

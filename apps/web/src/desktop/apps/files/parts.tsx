@@ -1,4 +1,4 @@
-import type { FileEntry, FileProperties } from "@otuken/shared";
+import type { FileEntry, FileProperties } from "@everyos/shared";
 import {
   File,
   FileArchive,
@@ -193,7 +193,7 @@ export function ImagePreview({
         <img
           src={filesApi.downloadUrl(location, true)}
           alt={t("files.preview")}
-          className="mx-auto max-h-[70vh] rounded-otk-md object-contain"
+          className="mx-auto max-h-[70vh] rounded-everyos-md object-contain"
         />
       ) : null}
     </Dialog>

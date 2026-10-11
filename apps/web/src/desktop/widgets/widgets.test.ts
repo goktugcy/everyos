@@ -1,6 +1,6 @@
-import { resources } from "@otuken/i18n";
-import type { TopicMessage, WidgetInstance } from "@otuken/shared";
-import { BUILT_IN_WIDGETS, widgetKey } from "@otuken/widget-sdk";
+import { resources } from "@everyos/i18n";
+import type { TopicMessage, WidgetInstance } from "@everyos/shared";
+import { BUILT_IN_WIDGETS, widgetKey } from "@everyos/widget-sdk";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { subscribeTopic, type TopicHandlers } from "../../lib/event-stream.ts";
 import { effectiveCells, visibleCell } from "./geometry.ts";

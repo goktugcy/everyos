@@ -5,8 +5,8 @@ import type {
   FileRootView,
   FileSearchResult,
   StandardFolder,
-} from "@otuken/shared";
-import type { Point, Rect } from "@otuken/window-manager";
+} from "@everyos/shared";
+import type { Point, Rect } from "@everyos/window-manager";
 import {
   ArrowLeft,
   ArrowRight,
@@ -89,7 +89,7 @@ type SortKey = "name" | "size" | "modifiedAt" | "kind";
 const DRAG_TYPE = FILES_DRAG_TYPE;
 
 const toolbarButton =
-  "grid size-8 shrink-0 place-items-center rounded-otk-sm text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 disabled:hover:bg-transparent";
+  "grid size-8 shrink-0 place-items-center rounded-everyos-sm text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 disabled:hover:bg-transparent";
 
 function useLocationState(roots: FileRootView[] | null) {
   const host = useAppHost();
@@ -277,7 +277,7 @@ export default function FilesApp() {
     const kind = kindOf(entry);
     if (kind === "folder") go(target);
     else if (kind === "image") setPreview(target);
-    else if (kind === "text") desktop.openWindow("otuken.editor", target);
+    else if (kind === "text") desktop.openWindow("everyos.editor", target);
     else download([target.path]);
   };
 
@@ -989,7 +989,7 @@ export default function FilesApp() {
           <div
             role="group"
             aria-label={t("files.view.label")}
-            className="glass-inset flex h-8 shrink-0 items-center rounded-otk-sm p-0.5"
+            className="glass-inset flex h-8 shrink-0 items-center rounded-everyos-sm p-0.5"
           >
             {(["icons", "list"] as const).map((mode) => (
               <button
@@ -1015,7 +1015,7 @@ export default function FilesApp() {
 
           <form
             role="search"
-            className="glass-inset flex h-8 items-center gap-1.5 rounded-otk-sm px-2"
+            className="glass-inset flex h-8 items-center gap-1.5 rounded-everyos-sm px-2"
             onSubmit={(event) => {
               event.preventDefault();
               if (!location || !searchText.trim()) return;
@@ -1115,7 +1115,7 @@ export default function FilesApp() {
                 <li key={result.path}>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-otk-sm px-2 py-1.5 text-left text-sm hover:bg-hover/8"
+                    className="flex w-full items-center gap-2 rounded-everyos-sm px-2 py-1.5 text-left text-sm hover:bg-hover/8"
                     onClick={() => {
                       if (!location) return;
                       const folder = result.type === "directory";
@@ -1152,7 +1152,7 @@ export default function FilesApp() {
               aria-multiselectable
               className={cn(
                 "relative min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
-                dropTarget === "list" && "bg-[rgb(var(--otk-accent)/0.06)]",
+                dropTarget === "list" && "bg-[rgb(var(--everyos-accent)/0.06)]",
               )}
               onKeyDown={onKeyDown}
               onPointerDown={beginMarquee}
@@ -1200,7 +1200,7 @@ export default function FilesApp() {
                     <col className="w-36" />
                     <col className="w-28" />
                   </colgroup>
-                  <thead className="sticky top-0 z-10 bg-[rgb(var(--otk-surface)/0.95)] text-xs text-fg-muted">
+                  <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
                     <tr>
                       {sortHeader("name", t("files.columns.name"))}
                       {sortHeader("size", t("files.columns.size"), "text-right")}
@@ -1219,7 +1219,9 @@ export default function FilesApp() {
                             {...itemProps(entry)}
                             className={cn(
                               "cursor-default select-none border-t border-line",
-                              isSelected ? "bg-[rgb(var(--otk-accent)/0.2)]" : "hover:bg-hover/5",
+                              isSelected
+                                ? "bg-[rgb(var(--everyos-accent)/0.2)]"
+                                : "hover:bg-hover/5",
                               isCut(entry) && "opacity-50",
                               dropTarget === `row:${entry.name}` &&
                                 "outline outline-2 -outline-offset-2 outline-accent",

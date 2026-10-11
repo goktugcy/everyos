@@ -1,21 +1,22 @@
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
-import { openDatabase } from "@otuken/database";
-import { silentLogger } from "@otuken/logger";
+import { openDatabase } from "@everyos/database";
+import { silentLogger } from "@everyos/logger";
 import type {
   BackupJobView,
   BackupOverview,
   BackupView,
+  BackupManifest,
   NotificationList,
   RestorePreview,
   TaskRunView,
   TaskView,
   FileRootsResponse,
   TrashListing,
-} from "@otuken/shared";
-import { TarWriter } from "@otuken/system/archive";
+} from "@everyos/shared";
+import { TarWriter } from "@everyos/system/archive";
 import { describe, expect, it, vi } from "vitest";
 import { applyPendingRestore, pendingRestore } from "./modules/backups/snapshot.ts";
 import {
@@ -48,7 +49,7 @@ async function backup(ctx: TestContext, client: TestClient, body: object = {}): 
 
 function snapshotOf(ctx: TestContext, id: string, workName = "check.db") {
   const path = join(ctx.dir, workName);
-  writeFileSync(path, gunzipSync(readFileSync(join(ctx.config.backups.dir, id, "otuken.db.gz"))));
+  writeFileSync(path, gunzipSync(readFileSync(join(ctx.config.backups.dir, id, "everyos.db.gz"))));
   return openDatabase(path, { readOnly: true });
 }
 
@@ -125,6 +126,66 @@ function fakeApp(ctx: TestContext) {
 }
 
 describe("backups", () => {
+  it("imports and restores a legacy archive with the original database and key identity", async () => {
+    const { ctx, admin } = await withRoles();
+    const prefs = { version: 1, toasts: false, toastMinSeverity: "critical", mutedCategories: [] };
+    expect(
+      (await admin.request("PUT", "/api/preferences/notifications", { body: prefs })).status,
+    ).toBe(204);
+    const id = await backup(ctx, admin);
+    const dir = join(ctx.config.backups.dir, id);
+    const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as BackupManifest;
+    const { everyosVersion, ...rest } = manifest;
+    const legacy = {
+      ...rest,
+      format: "otuken-backup",
+      otukenVersion: everyosVersion,
+      files: manifest.files.map((file) => ({
+        ...file,
+        name: file.name === "everyos.db.gz" ? "otuken.db.gz" : file.name,
+      })),
+    };
+    renameSync(join(dir, "everyos.db.gz"), join(dir, "otuken.db.gz"));
+    writeFileSync(join(dir, "manifest.json"), JSON.stringify(legacy));
+    expect(await ctx.services.backups.get(id)).toMatchObject({ sameKey: true, everyosVersion });
+    expect((await admin.get(`/api/backups/${id}/preview`)).status).toBe(200);
+
+    const chunks: Buffer[] = [];
+    const writer = new TarWriter((chunk) => {
+      chunks.push(Buffer.from(chunk));
+      return Promise.resolve();
+    });
+    const top = `otuken-backup-${id}`;
+    await writer.directory({ name: top, mode: 0o700, mtime: 0 });
+    for (const name of ["manifest.json", ...legacy.files.map((file) => file.name)]) {
+      const content = readFileSync(join(dir, name));
+      await writer.file(
+        { name: `${top}/${name}`, size: content.length, mode: 0o600, mtime: 0 },
+        content,
+      );
+    }
+    await writer.end();
+    const archive = Buffer.concat(chunks);
+    expect((await admin.delete(`/api/backups/${id}`)).status).toBe(204);
+    const uploaded = await admin.request("POST", "/api/backups/upload", {
+      rawBody: archive,
+      headers: { "content-length": String(archive.length), "content-type": "application/x-tar" },
+    });
+    expect(uploaded.status).toBe(201);
+    expect(await json<BackupView>(uploaded)).toMatchObject({ id, sameKey: true, everyosVersion });
+    expect(
+      (
+        await admin.post(`/api/backups/${id}/restore`, {
+          settings: "desktop",
+          apps: [],
+          password: STRONG_PASSWORD,
+          confirm: true,
+        })
+      ).status,
+    ).toBe(202);
+    expect(await finished(ctx, admin)).toMatchObject({ status: "succeeded", error: null });
+  });
+
   it("includes account homes and trash automatically and restores them after taking a safety backup", async () => {
     const { ctx, admin, operator } = await withRoles();
     const home = async (client: TestClient) =>
@@ -280,7 +341,12 @@ describe("backups", () => {
     const { ctx, admin } = await withRoles();
     const first = await backup(ctx, admin, { note: "ilk" });
     const dir = join(ctx.config.backups.dir, first);
-    expect(readdirSync(dir).sort()).toEqual(["apps", "info.json", "manifest.json", "otuken.db.gz"]);
+    expect(readdirSync(dir).sort()).toEqual([
+      "apps",
+      "everyos.db.gz",
+      "info.json",
+      "manifest.json",
+    ]);
     const snapshot = snapshotOf(ctx, first);
     expect(snapshot.get<{ n: number }>("SELECT COUNT(*) AS n FROM sessions")!.n).toBe(0);
     expect(snapshot.get<{ n: number }>("SELECT COUNT(*) AS n FROM users")!.n).toBe(3);
@@ -376,7 +442,7 @@ describe("backups", () => {
     );
     const download = await admin.get(url);
     expect(download.status).toBe(200);
-    expect(download.headers.get("content-disposition")).toContain(`otuken-backup-${id}.tar`);
+    expect(download.headers.get("content-disposition")).toContain(`everyos-backup-${id}.tar`);
     const archive = Buffer.from(await download.arrayBuffer());
     expect(archive.length).toBe(Number(download.headers.get("content-length")));
     expect((await admin.get(url)).status).toBe(403);
@@ -480,7 +546,7 @@ describe("backups", () => {
     // Tamper with the snapshot and re-seal the manifest, as someone with file access could.
     const dir = join(ctx.config.backups.dir, id);
     const snapshot = join(ctx.dir, "tamper.db");
-    writeFileSync(snapshot, gunzipSync(readFileSync(join(dir, "otuken.db.gz"))));
+    writeFileSync(snapshot, gunzipSync(readFileSync(join(dir, "everyos.db.gz"))));
     const db = openDatabase(snapshot);
     db.run(
       "INSERT INTO wallpapers(id, user_id, mime, size, width, height, file_name, created_at) VALUES ('w1', ?, 'image/png', 1, 1, 1, '../../secret.key', 1)",
@@ -493,12 +559,12 @@ describe("backups", () => {
     db.exec("PRAGMA journal_mode = DELETE");
     db.close();
     const gz = gzipSync(readFileSync(snapshot));
-    writeFileSync(join(dir, "otuken.db.gz"), gz);
+    writeFileSync(join(dir, "everyos.db.gz"), gz);
     const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as {
       files: { name: string; size: number; sha256: string }[];
     };
     manifest.files[0] = {
-      name: "otuken.db.gz",
+      name: "everyos.db.gz",
       size: gz.length,
       sha256: createHash("sha256").update(gz).digest("hex"),
     };

@@ -5,7 +5,7 @@ import {
   type ThemeEffects,
   type WallpaperPresetId,
   type WallpaperSpec,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { isHexColor } from "./color.ts";
 
 /**
@@ -14,7 +14,7 @@ import { isHexColor } from "./color.ts";
  * Imported files are validated field by field here (the browser does not
  * ship zod) and validated again by the API when saved.
  */
-export const THEME_FILE_FORMAT = "otuken-theme";
+export const THEME_FILE_FORMAT = "everyos-theme";
 export const THEME_FILE_VERSION = 1;
 
 export interface ThemeFile {
@@ -56,6 +56,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseWallpaper(value: unknown): WallpaperSpec | null | undefined {
   if (value === null) return null;
   if (!isRecord(value)) return undefined;
+  if (value.kind === "preset" && value.id === "otuken-dusk")
+    return { kind: "preset", id: "everyos-dusk" };
   if (value.kind === "preset" && (WALLPAPER_PRESET_IDS as readonly unknown[]).includes(value.id)) {
     return { kind: "preset", id: value.id as WallpaperPresetId };
   }
@@ -85,7 +87,11 @@ export function importTheme(
   } catch {
     return { ok: false, error: "not-json" };
   }
-  if (!isRecord(raw) || raw.format !== THEME_FILE_FORMAT || !isRecord(raw.theme)) {
+  if (
+    !isRecord(raw) ||
+    (raw.format !== THEME_FILE_FORMAT && raw.format !== "otuken-theme") ||
+    !isRecord(raw.theme)
+  ) {
     return { ok: false, error: "wrong-format" };
   }
   if (raw.schemaVersion !== THEME_FILE_VERSION) return { ok: false, error: "unsupported-version" };

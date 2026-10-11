@@ -3,7 +3,7 @@ import {
   type MetricRange,
   type MetricsHistory,
   type MetricsPoint,
-} from "@otuken/shared";
+} from "@everyos/shared";
 import { useTranslation } from "react-i18next";
 import { ChartCard } from "../../../components/charts/chart-card.tsx";
 import { Select } from "../../../components/ui/select.tsx";
@@ -166,7 +166,7 @@ export function OverviewTab() {
               {
                 id: "cpu",
                 label: t("monitor.cpu"),
-                color: "var(--otk-chart-1)",
+                color: "var(--everyos-chart-1)",
                 values: column(points, (p) => p.cpuPercent),
               },
             ],
@@ -190,7 +190,7 @@ export function OverviewTab() {
               {
                 id: "memory",
                 label: t("monitor.memory"),
-                color: "var(--otk-chart-1)",
+                color: "var(--everyos-chart-1)",
                 values: column(points, (p) => p.memoryUsedBytes),
               },
             ],
@@ -213,13 +213,13 @@ export function OverviewTab() {
               {
                 id: "rx",
                 label: t("monitor.download"),
-                color: "var(--otk-chart-1)",
+                color: "var(--everyos-chart-1)",
                 values: column(points, (p) => p.netRxBytesPerSec),
               },
               {
                 id: "tx",
                 label: t("monitor.upload"),
-                color: "var(--otk-chart-2)",
+                color: "var(--everyos-chart-2)",
                 values: column(points, (p) => p.netTxBytesPerSec),
               },
             ],
@@ -238,13 +238,13 @@ export function OverviewTab() {
               {
                 id: "read",
                 label: t("monitor.read"),
-                color: "var(--otk-chart-1)",
+                color: "var(--everyos-chart-1)",
                 values: column(points, (p) => p.diskReadBytesPerSec),
               },
               {
                 id: "write",
                 label: t("monitor.write"),
-                color: "var(--otk-chart-2)",
+                color: "var(--everyos-chart-2)",
                 values: column(points, (p) => p.diskWriteBytesPerSec),
               },
             ],

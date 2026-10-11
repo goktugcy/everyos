@@ -15,11 +15,11 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
-import type { OperationContext } from "@otuken/agent-protocol";
-import { silentLogger } from "@otuken/logger";
-import { SecretBox } from "@otuken/security";
-import { createDockerSimulator } from "@otuken/system";
-import { readTar, TarWriter } from "@otuken/system/archive";
+import type { OperationContext } from "@everyos/agent-protocol";
+import { silentLogger } from "@everyos/logger";
+import { SecretBox } from "@everyos/security";
+import { createDockerSimulator } from "@everyos/system";
+import { readTar, TarWriter } from "@everyos/system/archive";
 import { afterEach, describe, expect, it } from "vitest";
 import { AppDataBackups } from "./app-data-backup.ts";
 import { ManagedAppManager } from "./managed-apps.ts";
@@ -40,7 +40,7 @@ const context = (): OperationContext => ({
 });
 
 async function fixture() {
-  const dir = await realpath(await mkdtemp(join(tmpdir(), "otuken-appdata-test-")));
+  const dir = await realpath(await mkdtemp(join(tmpdir(), "everyos-appdata-test-")));
   directories.push(dir);
   const docker = createDockerSimulator();
   const apps = new ManagedAppManager({

@@ -3,7 +3,7 @@ import type {
   TailscaleRemoteAccess,
   TailscaleStatus,
   TailscaleWarning,
-} from "@otuken/shared";
+} from "@everyos/shared";
 
 const DAY = 24 * 60 * 60_000;
 /** Warn this long before the node key expires (remote access stops then). */
@@ -28,10 +28,10 @@ export interface TailscaleAnalysis {
 }
 
 /**
- * Explains what the Tailscale state means for this Otuken: whether it is
+ * Explains what the Tailscale state means for this EveryOS: whether it is
  * published on the tailnet (Serve) or the internet (Funnel), whether the
  * configuration matches (public origins, trusted proxy), and what needs
- * attention. Read-only: nothing here changes Tailscale or Otuken.
+ * attention. Read-only: nothing here changes Tailscale or EveryOS.
  */
 export function analyzeTailscale(input: {
   status: TailscaleStatus;
@@ -43,13 +43,13 @@ export function analyzeTailscale(input: {
   const { status, details, server, now } = input;
   const warnings: TailscaleWarning[] = [];
   const ownAddresses = new Set([...LOCAL_HOSTS, ...status.ips]);
-  const toOtuken = details.serve.handlers.filter((handler) => {
+  const toEveryOS = details.serve.handlers.filter((handler) => {
     if (handler.kind !== "proxy" && handler.kind !== "tcp") return false;
     const target = handler.target ? serveTarget(handler.target) : null;
     return target !== null && target.port === server.port && ownAddresses.has(target.host);
   });
   const origins = new Set(server.publicOrigins.map((origin) => origin.toLowerCase()));
-  const urls = toOtuken
+  const urls = toEveryOS
     .filter((handler) => handler.kind === "proxy" && handler.host)
     .map((handler) => {
       const origin = `https://${handler.host}${handler.port === 443 ? "" : `:${handler.port}`}`;
@@ -87,7 +87,7 @@ export function analyzeTailscale(input: {
         severity: "warning",
         params: { name: status.exitNode.name ?? "" },
       });
-    for (const handler of toOtuken.filter((entry) => entry.funnel)) {
+    for (const handler of toEveryOS.filter((entry) => entry.funnel)) {
       const host = handler.host || status.dnsName || "";
       warnings.push({
         kind: "funnel-public",

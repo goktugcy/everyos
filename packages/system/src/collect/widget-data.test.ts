@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { AptUpdatesSchema, SocketSummarySchema, TimerSummarySchema } from "@otuken/shared/schemas";
+import { AptUpdatesSchema, SocketSummarySchema, TimerSummarySchema } from "@everyos/shared/schemas";
 import { afterEach, describe, expect, it } from "vitest";
 import { createDockerClient, parsePostgresStats, POSTGRES_STATS_SQL } from "../docker/client.ts";
 import { parseAptUpgradable } from "../linux/apt.ts";

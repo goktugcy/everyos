@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { preferences, signIn } from "./helpers.ts";
 
-const port = Number(process.env.OTUKEN_E2E_PORT ?? 7480);
+const port = Number(process.env.EVERYOS_E2E_PORT ?? 7480);
 
 async function openWidgetSettings(page: Page) {
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("widget");
   await page.getByRole("option", { name: "Ayarlar: Widget'lar" }).click();
-  const settings = page.locator('[data-app-id="otuken.settings"]');
+  const settings = page.locator('[data-app-id="everyos.settings"]');
   await expect(settings.getByTestId("settings-widgets")).toBeVisible();
   return settings;
 }

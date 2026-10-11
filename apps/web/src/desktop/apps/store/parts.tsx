@@ -1,4 +1,4 @@
-import type { AppJobView, LocalizedText } from "@otuken/shared";
+import type { AppJobView, LocalizedText } from "@everyos/shared";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";

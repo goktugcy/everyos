@@ -4,7 +4,7 @@ import type { ITerminalOptions } from "@xterm/xterm";
 export function terminalOptions(element: HTMLElement): ITerminalOptions {
   const style = getComputedStyle(element);
   const color = (name: string) =>
-    `rgb(${style.getPropertyValue(`--otk-${name}`).trim().split(/\s+/).join(",")})`;
+    `rgb(${style.getPropertyValue(`--everyos-${name}`).trim().split(/\s+/).join(",")})`;
   return {
     fontFamily: style.fontFamily,
     fontSize: Number.parseFloat(style.fontSize),
@@ -13,7 +13,7 @@ export function terminalOptions(element: HTMLElement): ITerminalOptions {
       foreground: color("text"),
       cursor: color("accent"),
       cursorAccent: color("surface"),
-      selectionBackground: `rgba(${style.getPropertyValue("--otk-accent").trim().split(/\s+/).join(",")},0.3)`,
+      selectionBackground: `rgba(${style.getPropertyValue("--everyos-accent").trim().split(/\s+/).join(",")},0.3)`,
       black: color("text-subtle"),
       red: color("danger"),
       green: color("success"),

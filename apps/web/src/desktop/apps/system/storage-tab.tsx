@@ -1,4 +1,4 @@
-import type { StorageUsage } from "@otuken/shared";
+import type { StorageUsage } from "@everyos/shared";
 import { Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLiveMetrics } from "../../../features/metrics/live-metrics.ts";
@@ -37,7 +37,7 @@ export function StorageTab() {
                 return (
                   <li
                     key={`${mount.device}-${mount.mountpoint}`}
-                    className="glass-inset flex flex-col gap-2 rounded-otk-md p-3"
+                    className="glass-inset flex flex-col gap-2 rounded-everyos-md p-3"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                       <span className="flex items-center gap-1.5 font-mono text-sm font-semibold text-fg">

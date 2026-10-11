@@ -1,5 +1,5 @@
-import type { FileRootView, FileRootsResponse, StandardFolder } from "@otuken/shared";
-import { STANDARD_FOLDERS } from "@otuken/shared";
+import type { FileRootView, FileRootsResponse, StandardFolder } from "@everyos/shared";
+import { STANDARD_FOLDERS } from "@everyos/shared";
 import {
   Clapperboard,
   Computer,
@@ -262,7 +262,7 @@ export function FilesSidebar({
       <button
         type="button"
         className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] text-fg outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
-        onClick={() => desktop.openApp("otuken.trash")}
+        onClick={() => desktop.openApp("everyos.trash")}
       >
         <Trash2 className="size-4 text-fg-muted" aria-hidden />
         {t("apps.trash")}

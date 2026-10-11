@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { Database } from "@otuken/database";
-import type { Logger } from "@otuken/logger";
+import type { Database } from "@everyos/database";
+import type { Logger } from "@everyos/logger";
 import {
   NOTIFICATION_KINDS,
   NOTIFICATION_SEVERITIES,
@@ -12,7 +12,7 @@ import {
   type NotificationSeverity,
   type NotificationView,
   type Permission,
-} from "@otuken/shared";
+} from "@everyos/shared";
 
 /** A stored notification, independent of any viewer. */
 export interface StoredNotification {
