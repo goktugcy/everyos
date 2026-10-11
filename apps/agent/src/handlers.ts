@@ -1,4 +1,5 @@
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
+import { SelfUpdateManager } from "@everyos/release";
 import { roleHasPermission, type ProcessList, type SystemInfo } from "@everyos/shared";
 import {
   createAptManager,
@@ -175,6 +176,16 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
   };
 
   return {
+    "release.status": () => new SelfUpdateManager(deps.mode).status(),
+    "release.check": () => new SelfUpdateManager(deps.mode).status(true),
+    "release.install": (params, context) => {
+      if (context.actor.kind !== "user")
+        throw new OperationError("policy_denied", "Administrator required");
+      return new SelfUpdateManager(deps.mode).install(params, {
+        userId: context.actor.userId,
+        username: context.actor.username,
+      });
+    },
     "apps.inspect": ({ id }) => {
       if (!deps.apps)
         throw new OperationError("unsupported", "Managed applications are not configured");

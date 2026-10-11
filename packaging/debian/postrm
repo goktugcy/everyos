@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi
+# Account data, archives, secret keys and verified recovery packages survive purge.
+# Removing these requires a separate, explicit owner action.

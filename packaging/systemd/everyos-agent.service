@@ -1,0 +1,29 @@
+[Unit]
+Description=EveryOS privileged operation agent
+After=network.target run-everyos-app\x2dconfigs.mount
+Requires=run-everyos-app\x2dconfigs.mount
+
+[Service]
+Type=simple
+User=root
+Group=everyos
+ExecStart=/usr/lib/everyos/node/bin/node /usr/lib/everyos/agent/agent.mjs
+Environment=EVERYOS_ENV=production EVERYOS_AGENT_CONFIG=/etc/everyos/agent.yaml
+RuntimeDirectory=everyos
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=yes
+Restart=on-failure
+RestartSec=2
+UMask=0077
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+# APT and configured account PTYs require host filesystem/device access and setuid.
+# Docker consumes the host-visible app-configs mount; no private mount namespace here.
+
+[Install]
+WantedBy=multi-user.target

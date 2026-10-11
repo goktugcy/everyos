@@ -15,6 +15,7 @@ export * from "./notifications.ts";
 export * from "./permissions.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
+export * from "./self-update.ts";
 export * from "./terminal.ts";
 export * from "./updates.ts";
 export * from "./cron.ts";

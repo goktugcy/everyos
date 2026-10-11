@@ -7,7 +7,10 @@ import type { ServiceAction } from "@everyos/shared";
  */
 export const BUILT_IN_PROTECTED_UNITS = [
   "everyos.service",
+  "everyos-api.service",
   "everyos-agent.service",
+  "everyos-update.service",
+  "run-everyos-app\\x2dconfigs.mount",
   "otuken.service",
   "otuken-agent.service",
   "ssh.service",

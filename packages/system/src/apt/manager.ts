@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import type { AptUpdates, PackageInfo } from "@everyos/shared";
+import { RELEASE_VERSION_PATTERN, type AptUpdates, type PackageInfo } from "@everyos/shared";
 import { CommandError, findExecutable, runCapture, runCommand, SAFE_ENV } from "../exec.ts";
 import { parseAptPolicy, parseAptShow, parseAptSummary } from "../linux/apt.ts";
 import { collectAptUpdates } from "../collect/apt.ts";
@@ -99,12 +99,40 @@ export function createAptManager(): AptManager {
     },
 
     async *upgrade(packages, signal) {
+      if (packages?.some((name) => name.split(":")[0] === "everyos"))
+        throw new CommandError(
+          "failed",
+          "EveryOS must be updated through the signed release workflow",
+        );
       if (packages?.some((name) => !PACKAGE_NAME.test(name)))
         throw new CommandError("failed", "Invalid package name");
+      const selected =
+        packages ??
+        (await collectAptUpdates()).packages
+          .map((item) => item.name)
+          .filter((name) => name !== "everyos");
+      if (!selected.length) {
+        yield { type: "done", ok: true, exitCode: 0, upgraded: 0, busy: false };
+        return;
+      }
+      if (selected.some((name) => !PACKAGE_NAME.test(name)))
+        throw new CommandError("failed", "Invalid package name");
       const aptGet = await tool("apt-get");
+      const installed = await runCapture(
+        await tool("dpkg-query"),
+        ["--show", "--showformat=${Version}", "everyos"],
+        { timeoutMs: 10_000, signal, env: APT_ENV, maxOutputBytes: 1024 },
+      );
+      const everyosVersion = installed.exitCode === 0 ? installed.output.trim() : null;
+      if (everyosVersion && !RELEASE_VERSION_PATTERN.test(everyosVersion))
+        throw new CommandError("failed", "Unsupported installed EveryOS version");
       const args = [
         ...UPGRADE_OPTIONS,
-        ...(packages ? ["install", "--only-upgrade", "--", ...packages] : ["upgrade"]),
+        "install",
+        "--only-upgrade",
+        "--",
+        ...selected,
+        ...(everyosVersion ? [`everyos=${everyosVersion}`] : []),
       ];
       const child = spawn(aptGet, args, { env: APT_ENV, stdio: ["ignore", "pipe", "pipe"] });
       const kill = () => child.exitCode === null && child.kill("SIGTERM");

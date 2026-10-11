@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseAptPolicy, parseAptShow, parseAptSummary, parseAptUpgradable } from "../linux/apt.ts";
 import { createAptSimulator } from "../simulated/apt-simulator.ts";
+import { createAptManager } from "./manager.ts";
 
 const POLICY = `openssl:
   Installed: 3.0.13-0ubuntu3.5
@@ -33,6 +34,10 @@ Version: 3.0.13-0ubuntu3
 `;
 
 describe("apt parsers", () => {
+  it("refuses to bypass signed EveryOS updates through an APT package request", async () => {
+    const updates = createAptManager().upgrade(["everyos"], new AbortController().signal);
+    await expect(updates.next()).rejects.toThrow("signed release workflow");
+  });
   it("reads installed and candidate versions with the candidate's repositories", () => {
     expect(parseAptPolicy(POLICY)).toEqual({
       installed: "3.0.13-0ubuntu3.5",

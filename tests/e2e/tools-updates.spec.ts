@@ -1,14 +1,33 @@
 import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers.ts";
+import type { SelfUpdateStatus } from "../../packages/shared/src/index.ts";
 
 test("pending updates are listed, inspected and upgraded only after confirmation", async ({
   page,
 }) => {
   await signIn(page);
+  await page.getByTestId("dock").getByRole("button", { name: "Ayarlar", exact: true }).click();
+  const settings = page.locator('[data-app-id="everyos.settings"]');
+  await settings.getByRole("button", { name: "Hakkında", exact: true }).click();
+  const aboutUpdate = settings.getByTestId("settings-about").getByTestId("self-update-panel");
+  const status = (await (await page.request.get("/api/self-update")).json()) as SelfUpdateStatus;
+  await expect(aboutUpdate.getByText(status.installedVersion, { exact: true })).toBeVisible();
+  await expect(aboutUpdate).toContainText("Sürüm güncellemeleri geliştirme modunda kullanılamaz.");
+  await expect(
+    aboutUpdate.getByRole("button", { name: "Güncellemeleri denetle", exact: true }),
+  ).toBeDisabled();
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("güncelleme");
   await page.getByRole("option", { name: "Güncellemeler" }).click();
   const app = page.locator('[data-app-id="everyos.updates"]');
+  await app.getByRole("tab", { name: "EveryOS", exact: true }).click();
+  await expect(app.getByTestId("self-update-panel")).toContainText(
+    "Sürüm güncellemeleri geliştirme modunda kullanılamaz.",
+  );
+  await expect(
+    app.getByRole("button", { name: "Güncellemeleri denetle", exact: true }),
+  ).toBeDisabled();
+  await app.getByRole("tab", { name: "Paketler", exact: true }).click();
   await expect(app.getByTestId("updates-app")).toContainText("5 güncelleme bekliyor");
   await expect(app).toContainText("2 güvenlik");
   // The e2e agent answers from the apt simulator and says so.

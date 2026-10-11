@@ -307,6 +307,9 @@ importers:
       '@everyos/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@everyos/release':
+        specifier: workspace:*
+        version: link:../../packages/release
       '@everyos/security':
         specifier: workspace:*
         version: link:../../packages/security
@@ -325,9 +328,6 @@ importers:
 
   apps/api:
     dependencies:
-      '@hono/node-server':
-        specifier: 'catalog:'
-        version: 2.1.4(hono@4.13.13)
       '@everyos/agent-protocol':
         specifier: workspace:*
         version: link:../../packages/agent-protocol
@@ -343,6 +343,9 @@ importers:
       '@everyos/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@everyos/release':
+        specifier: workspace:*
+        version: link:../../packages/release
       '@everyos/security':
         specifier: workspace:*
         version: link:../../packages/security
@@ -355,6 +358,9 @@ importers:
       '@everyos/widget-sdk':
         specifier: workspace:*
         version: link:../../packages/widget-sdk
+      '@hono/node-server':
+        specifier: 'catalog:'
+        version: 2.1.4(hono@4.13.13)
       hono:
         specifier: 'catalog:'
         version: 4.13.13
@@ -383,9 +389,6 @@ importers:
       '@dnd-kit/utilities':
         specifier: 'catalog:'
         version: 3.2.2(react@19.3.0)
-      '@fontsource-variable/inter':
-        specifier: 'catalog:'
-        version: 5.3.0
       '@everyos/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -401,6 +404,9 @@ importers:
       '@everyos/window-manager':
         specifier: workspace:*
         version: link:../../packages/window-manager
+      '@fontsource-variable/inter':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@xterm/addon-fit':
         specifier: 'catalog:'
         version: 0.11.0
@@ -509,6 +515,18 @@ importers:
         version: link:../shared
 
   packages/logger: {}
+
+  packages/release:
+    dependencies:
+      '@everyos/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@everyos/shared':
+        specifier: workspace:*
+        version: link:../shared
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
 
   packages/security: {}
 

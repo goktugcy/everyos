@@ -1,0 +1,33 @@
+[Unit]
+Description=EveryOS HTTP API
+After=network.target everyos-agent.service
+Wants=everyos-agent.service
+
+[Service]
+Type=simple
+User=everyos
+Group=everyos
+ExecStart=/usr/lib/everyos/node/bin/node /usr/lib/everyos/api/server.mjs
+Environment=EVERYOS_ENV=production EVERYOS_CONFIG=/etc/everyos/config.yaml
+WorkingDirectory=/var/lib/everyos
+Restart=on-failure
+RestartForceExitStatus=75
+RestartSec=2
+UMask=0027
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ReadWritePaths=/var/lib/everyos
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,206 @@
+{
+  "date": "2026-10-11",
+  "scope": "EveryOS Phase 8 packaging, authenticated CLI, signed self-updates and recovery",
+  "version": "0.1.0",
+  "disposableLinuxHosts": [
+    {
+      "platform": "Debian GNU/Linux 12 (bookworm)",
+      "architecture": "arm64",
+      "source": "signed offline fixtures with an ephemeral test key",
+      "scenarios": [
+        {
+          "scenario": "verified-install-and-cli",
+          "passed": true,
+          "details": {
+            "architecture": "arm64",
+            "runtime": "v26.11.1"
+          }
+        },
+        {
+          "scenario": "authenticated-cli-backup-with-account-home",
+          "passed": true
+        },
+        {
+          "scenario": "invalid-signature-rejected-before-downtime",
+          "passed": true
+        },
+        {
+          "scenario": "truncated-download-rejected-with-services-running",
+          "passed": true
+        },
+        {
+          "scenario": "cli-upgrade-survives-api-agent-stop-preserves-config-keys-homes",
+          "passed": true
+        },
+        {
+          "scenario": "killed-worker-resumes-package-and-migrated-database-recovery",
+          "passed": true
+        },
+        {
+          "scenario": "dpkg-install-failure-recovers-prior-package-and-database",
+          "passed": true
+        },
+        {
+          "scenario": "unprivileged-api-hardening-and-host-visible-private-tmpfs",
+          "passed": true
+        },
+        {
+          "scenario": "purge-retains-data-homes-keys-backups-and-recovery-artifacts",
+          "passed": true
+        },
+        {
+          "scenario": "authenticated-cli-restore-preserves-homes-and-restarts-supervised-api",
+          "passed": true
+        }
+      ],
+      "environment": "Lima VZ; native ARM64 guest",
+      "passed": true,
+      "notes": "Initial implementation tested before the final root audit/directory fsync refinements; those final refinements are covered by the AMD64 guest."
+    },
+    {
+      "platform": "Debian GNU/Linux 12 (bookworm)",
+      "architecture": "amd64",
+      "source": "signed offline fixtures with an ephemeral test key",
+      "scenarios": [
+        {
+          "scenario": "verified-install-and-cli",
+          "passed": true,
+          "details": {
+            "architecture": "amd64",
+            "runtime": "v26.11.1"
+          }
+        },
+        {
+          "scenario": "authenticated-cli-backup-with-account-home",
+          "passed": true
+        },
+        {
+          "scenario": "invalid-signature-rejected-before-downtime",
+          "passed": true
+        },
+        {
+          "scenario": "truncated-download-rejected-with-services-running",
+          "passed": true
+        },
+        {
+          "scenario": "cli-upgrade-survives-api-agent-stop-preserves-config-keys-homes",
+          "passed": true
+        },
+        {
+          "scenario": "killed-worker-resumes-package-and-migrated-database-recovery",
+          "passed": true
+        },
+        {
+          "scenario": "dpkg-install-failure-recovers-prior-package-and-database",
+          "passed": true
+        },
+        {
+          "scenario": "unprivileged-api-hardening-and-host-visible-private-tmpfs",
+          "passed": true
+        },
+        {
+          "scenario": "purge-retains-data-homes-keys-backups-and-recovery-artifacts",
+          "passed": true
+        },
+        {
+          "scenario": "authenticated-cli-restore-preserves-homes-and-restarts-supervised-api",
+          "passed": true
+        },
+        {
+          "scenario": "private-root-update-audit-survives-database-rollback-purge-and-cli-restore",
+          "passed": true
+        }
+      ],
+      "environment": "Lima QEMU; x86_64 Linux CPU emulation",
+      "passed": true,
+      "notes": "Final production bundles and systemd units tested, including the durable private root audit."
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "everyos_0.1.0_arm64.deb",
+      "architecture": "arm64",
+      "bytes": 53650624,
+      "sha256": "225b62e59b6c92a4a996a9d5c4770d85b939f39ebd37bb5803013742b5494e0b"
+    },
+    {
+      "file": "everyos_0.1.0_amd64.deb",
+      "architecture": "amd64",
+      "bytes": 53897738,
+      "sha256": "8a5644fad5ac1d556f56afcc6f14e94d8d6268a7e9f4bf4d0e997927c14672e1"
+    }
+  ],
+  "verification": {
+    "projectCheck": {
+      "command": "pnpm check",
+      "passed": true,
+      "exitCode": 0,
+      "testFiles": 61,
+      "tests": 607,
+      "includes": ["format", "lint", "typecheck", "unit and integration tests"]
+    },
+    "build": {
+      "command": "pnpm build",
+      "passed": true
+    },
+    "browser": {
+      "command": "pnpm exec playwright test --config tests/e2e/playwright.config.ts tests/e2e/foundation.spec.ts tests/e2e/tools-updates.spec.ts --grep 'first-run setup|pending updates'",
+      "passed": true,
+      "tests": 2,
+      "notes": "Real development stack; the APT portion uses the explicitly labeled simulator. Packaged self-updates are exercised separately on Linux."
+    },
+    "signer": {
+      "passed": true,
+      "notes": "Actual signing script executed with an ephemeral Ed25519 fixture key; exact envelope signature and automatically derived schema version 10 verified."
+    },
+    "productionDependencyAudit": {
+      "command": "pnpm audit --prod --json",
+      "passed": true,
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0
+      }
+    },
+    "browserBundle": {
+      "passed": true,
+      "notes": "No zod matches in the generated browser JavaScript."
+    },
+    "aboutScreen": {
+      "passed": true,
+      "webTypecheck": true,
+      "rootTypecheck": true,
+      "affectedFileLint": true,
+      "build": true,
+      "browserTests": 2,
+      "packageArchitectures": ["arm64", "amd64"],
+      "notes": "Settings About and Updates EveryOS share one panel. The extended existing browser case verifies About against the real self-update API. API, agent, updater and CLI bundles remain byte-for-byte identical to the Linux-validated build; Linux VM acceptance was not repeated for this UI-only integration."
+    }
+  },
+  "operationalRequirements": [
+    "Production publisher signing secret and independently distributed public key must be configured before a live release. No release was published.",
+    "Release migrations are database-only; external data formats need a separately designed recovery contract.",
+    "Acceptance used only newly created disposable VMs; existing owner services, containers and data were not used for destructive tests."
+  ],
+  "artifactHistory": [
+    {
+      "description": "Packages before Settings About integration; final AMD64 Linux acceptance used that build.",
+      "artifacts": [
+        {
+          "file": "everyos_0.1.0_arm64.deb",
+          "architecture": "arm64",
+          "bytes": 53649792,
+          "sha256": "3a519930874ae4b3869a69de6bca740e907458bcbc9889f56f79783c7c429fd9"
+        },
+        {
+          "file": "everyos_0.1.0_amd64.deb",
+          "architecture": "amd64",
+          "bytes": 53898862,
+          "sha256": "cf7ff5d24a4151c2fb6baac374e69c20a39c37dc29aa47c6c932cfe4d9c8205c"
+        }
+      ]
+    }
+  ]
+}

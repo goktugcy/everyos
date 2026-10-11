@@ -1,9 +1,10 @@
+import { installedVersion } from "@everyos/release";
 import { chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import { AgentServer } from "@everyos/agent-protocol";
 import { createLogger, serializeError } from "@everyos/logger";
 import { deriveKey, loadKeyFile, SecretBox } from "@everyos/security";
-import { EVERYOS_VERSION } from "@everyos/shared";
+
 import {
   createDockerClient,
   createDockerSimulator,
@@ -140,10 +141,10 @@ async function main(): Promise<void> {
     maxStreamsPerConnection: 32,
     socketPath: config.socketPath,
     agentKey,
-    agentVersion: EVERYOS_VERSION,
+    agentVersion: installedVersion(),
     handlers: createHandlers({
       mode: config.mode,
-      version: EVERYOS_VERSION,
+      version: installedVersion(),
       startedAt: Date.now(),
       services,
       logs,
@@ -170,7 +171,7 @@ async function main(): Promise<void> {
   });
   await server.listen();
   logger.info("EveryOS agent started", {
-    version: EVERYOS_VERSION,
+    version: installedVersion(),
     mode: config.mode,
     pid: process.pid,
   });

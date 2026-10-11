@@ -1,0 +1,12 @@
+[Unit]
+Description=EveryOS transient embedded application configurations
+Before=everyos-agent.service
+
+[Mount]
+What=tmpfs
+Where=/run/everyos/app-configs
+Type=tmpfs
+Options=mode=0700,nodev,nosuid,noexec,size=64M
+
+[Install]
+WantedBy=multi-user.target

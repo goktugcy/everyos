@@ -1,5 +1,26 @@
 # Update manager (Phase 7)
 
+## EveryOS version updates (Phase 8)
+
+Settings → About and Updates → EveryOS share the same version-update panel, showing the real
+installed/available version, signed release notes and supervised job progress. Administrators
+can check and install directly from either screen. The same administrator-approved workflow
+is available through `everyos update`.
+It verifies the publisher signature, package hash/architecture/upgrade path and a fresh safety
+backup of the database and all account homes. A separate systemd worker survives API/agent
+restarts and recovers the prior package **and database** after a failed upgrade. Root-owned release
+trust configuration and a verified previous package are required; development mode cannot install
+host packages. See [packaging.md](packaging.md) for installation, release signing and recovery.
+
+The default release source is `https://github.com/goktugcy/otuken/releases`. The verified
+installer records this source and the independently supplied publisher public key in root-owned
+`/etc/everyos/release.json`. Checks read `latest/download/release.json`; installation downloads
+`download/v<VERSION>/everyos_<VERSION>_<ARCH>.deb` and verifies its signed identity and hash.
+The browser cannot change the source or trust key. A production signing secret and a published
+signed release are required before this default source can supply a live update.
+
+## Operating-system package updates
+
 The **Updates** app (`everyos.updates`) lists upgradable APT packages, explains each one and runs
 package-list refreshes and upgrades as background jobs. Nothing ever starts on its own: EveryOS
 never upgrades the operating system automatically. Scheduling a refresh or a security upgrade is
@@ -17,10 +38,13 @@ an explicit choice in the scheduler ([tasks.md](tasks.md)).
 
 ## Jobs
 
-| Action  | Command                                                                     |
-| ------- | --------------------------------------------------------------------------- |
-| Refresh | `apt-get update`                                                            |
-| Upgrade | `apt-get -y --no-remove … upgrade`, or `install --only-upgrade -- <names…>` |
+| Action  | Command                                                       |
+| ------- | ------------------------------------------------------------- |
+| Refresh | `apt-get update`                                              |
+| Upgrade | `apt-get -y --no-remove … install --only-upgrade -- <names…>` |
+
+The all-packages action resolves the current upgradable package list and excludes EveryOS. An
+explicit APT request for EveryOS is refused: self-updates use the signed release workflow above.
 
 Upgrades are unattended and conservative:
 

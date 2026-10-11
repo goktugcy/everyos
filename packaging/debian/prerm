@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+if [ "$1" = remove ] && [ -d /run/systemd/system ]; then
+  systemctl stop everyos-update.service everyos-api.service everyos-agent.service
+  systemctl disable everyos-update.service everyos-api.service everyos-agent.service
+  systemctl stop 'run-everyos-app\x2dconfigs.mount'
+fi

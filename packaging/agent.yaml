@@ -1,0 +1,6 @@
+socketPath: /run/everyos/agent.sock
+agentKeyFile: /etc/everyos/agent.key
+socketGroup: everyos
+logLevel: info
+appsRoot: /var/lib/everyos-agent/apps
+# Browser terminals remain disabled until an administrator selects an account.

@@ -37,6 +37,11 @@ export interface PolicyOptions {
  */
 export function createPolicy(options: PolicyOptions): OperationPolicy {
   return (op, params) => {
+    if (op === "release.install" && options.mode !== "production")
+      return {
+        allowed: false,
+        reason: `${POLICY_REASONS.developmentMode}: self-update requires a production installation`,
+      };
     if (DOCKER_MUTATIONS.has(op)) {
       return options.mode === "development" && options.dockerSource === "host"
         ? {

@@ -1,0 +1,2 @@
+#!/bin/sh
+exec /usr/lib/everyos/node/bin/node /usr/lib/everyos/cli/cli.mjs "$@"

@@ -19,3 +19,4 @@ export * from "./backups.ts";
 export * from "./pulse.ts";
 
 export * from "./power.ts";
+export * from "./self-update.ts";

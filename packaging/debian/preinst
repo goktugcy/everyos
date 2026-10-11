@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+if [ -e /var/lib/otuken/otuken.db ] && [ ! -e /var/lib/everyos/everyos.db ]; then
+  echo 'Legacy installation detected. Follow docs/packaging.md before installing EveryOS.' >&2
+  exit 1
+fi

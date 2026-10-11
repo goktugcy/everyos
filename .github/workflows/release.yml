@@ -1,0 +1,58 @@
+name: Signed EveryOS release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - name: Verify tag and source version
+        run: node -e 'if ("v" + JSON.parse(require("fs").readFileSync("package.json")).version !== process.env.GITHUB_REF_NAME) process.exit(1)'
+      - run: pnpm build
+      - run: python3 scripts/package.py --arch arm64
+      - run: python3 scripts/package.py --arch amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-packages
+          path: dist/packages/*.deb
+  sign:
+    needs: package
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-packages
+          path: dist/packages
+      - name: Sign release metadata
+        env:
+          EVERYOS_RELEASE_PRIVATE_KEY: ${{ secrets.EVERYOS_RELEASE_PRIVATE_KEY }}
+        run: |
+          umask 077
+          key_file=$(mktemp)
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s' "$EVERYOS_RELEASE_PRIVATE_KEY" > "$key_file"
+          node scripts/sign-release.ts --version "${GITHUB_REF_NAME#v}" --key-file "$key_file" --notes-file docs/release-notes.md
+      - name: Publish verified release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/packages/*.deb dist/packages/release.json packaging/install.py --verify-tag --title "EveryOS ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md

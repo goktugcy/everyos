@@ -13,6 +13,11 @@ import type { TerminalConfig } from "./terminal.ts";
  * agent never reads policy from locations writable by the everyos user.
  */
 const AgentConfigFileSchema = z.strictObject({
+  appsRoot: z
+    .string()
+    .regex(/^\/[^\0]+$/)
+    .max(1024)
+    .optional(),
   socketPath: z.string().min(1).optional(),
   agentKeyFile: z.string().min(1).optional(),
   /** Group allowed to connect to the socket (name or numeric gid). */
@@ -182,11 +187,12 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
   return {
     mode,
     appsRoot:
-      mode === "production"
+      file.appsRoot ??
+      (mode === "production"
         ? existsSync("/var/lib/everyos/apps") || !existsSync("/var/lib/otuken/apps")
           ? "/var/lib/everyos/apps"
           : "/var/lib/otuken/apps"
-        : `${devRoot ?? dirname(env.EVERYOS_AGENT_SOCKET ?? defaults.socketPath)}/agent-apps`,
+        : `${devRoot ?? dirname(env.EVERYOS_AGENT_SOCKET ?? defaults.socketPath)}/agent-apps`),
     socketPath: env.EVERYOS_AGENT_SOCKET ?? file.socketPath ?? defaults.socketPath,
     agentKeyFile: env.EVERYOS_AGENT_KEY_FILE ?? file.agentKeyFile ?? defaults.agentKeyFile,
     socketGroup: file.socketGroup ?? defaults.socketGroup,

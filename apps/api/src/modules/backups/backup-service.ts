@@ -1,3 +1,4 @@
+import { installedVersion } from "@everyos/release";
 import { createHash, randomBytes } from "node:crypto";
 import { constants, createReadStream } from "node:fs";
 import { copyFile, lstat, open, readFile, stat } from "node:fs/promises";
@@ -9,7 +10,6 @@ import type { Logger } from "@everyos/logger";
 import {
   BACKUP_FORMAT,
   BACKUP_FORMAT_VERSION,
-  EVERYOS_VERSION,
   type BackupAppContent,
   type BackupJobStage,
   type BackupJobView,
@@ -410,7 +410,7 @@ export class BackupService {
         trigger: options.trigger,
         createdBy: actor.username,
         note: options.note,
-        everyosVersion: EVERYOS_VERSION,
+        everyosVersion: installedVersion(),
         schemaVersion,
         hostname: hostname().slice(0, 255),
         keyId: this.#deps.keyId,

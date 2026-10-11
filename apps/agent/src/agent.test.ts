@@ -90,7 +90,10 @@ describe("agent config", () => {
     const protectedUnit = createUnitProtection();
     for (const name of [
       "everyos.service",
+      "everyos-api.service",
       "everyos-agent.service",
+      "everyos-update.service",
+      "run-everyos-app\\x2dconfigs.mount",
       "otuken.service",
       "otuken-agent.service",
     ])

@@ -305,3 +305,18 @@ and inline-file extension names, private trash directories and home folder metad
 persisted identifiers; changing these without a migration could lose access to owned data or
 weaken protection. Both the old and new systemd service names are protected. The repository URL
 continues to point at the actual GitHub repository until the owner renames it separately.
+
+## D27 — Signed releases and independent database-aware recovery (2026-10)
+
+EveryOS releases are separate from ordinary host APT updates. A root-owned Ed25519 trust anchor
+verifies bounded metadata and exact architecture-specific Debian packages. The browser and CLI
+use authenticated API operations; they cannot choose a privileged URL, key, script or command.
+The first installer caches its verified package so the first self-update has a recovery artifact.
+
+A dedicated root systemd worker survives API/agent restarts. A fresh verified archive preserves
+all account homes; an additional offline SQLite snapshot captures the exact downtime boundary.
+Durable transaction markers and package/schema/health checks recover the previous binary and
+database together after installation failure, failed migration or interruption. Release migrations
+are database-only until an external-data recovery contract exists. Root journal and fsynced audit
+records survive database restoration. Purge keeps data, keys, backups and cached recovery packages;
+deleting retained data is a separate owner action. See [packaging.md](packaging.md).

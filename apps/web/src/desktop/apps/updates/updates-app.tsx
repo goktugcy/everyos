@@ -14,8 +14,9 @@ import { usePermissions } from "../../../stores/session-store.ts";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { useAppStateField } from "../app-context.ts";
 import { LoadingBlock, ResourceError, SimulatedBadge } from "../system/parts.tsx";
+import { SelfUpdatePanel } from "../../../features/updates/self-update-panel.tsx";
 
-const TABS = ["packages", "history"] as const;
+const TABS = ["packages", "everyos", "history"] as const;
 
 function JobLog({ job, onDone }: { job: UpdateJobView; onDone: (job: UpdateJobView) => void }) {
   const { t } = useTranslation();
@@ -219,6 +220,9 @@ export default function UpdatesApp() {
         ))}
       </Tabs.List>
 
+      <Tabs.Content value="everyos" className="flex min-h-0 flex-1 flex-col outline-none">
+        <SelfUpdatePanel />
+      </Tabs.Content>
       <Tabs.Content value="packages" className="flex min-h-0 flex-1 flex-col outline-none">
         <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-line px-4 py-3">
           <div className="flex min-w-0 flex-1 flex-col">

@@ -67,6 +67,9 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
   return {
     "apps.run": notUsed,
     "apps.inspect": notUsed,
+    "release.status": notUsed,
+    "release.check": notUsed,
+    "release.install": notUsed,
     "agent.ping": () => ({
       pong: true,
       agentVersion: "test",

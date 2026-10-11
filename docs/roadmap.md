@@ -188,12 +188,31 @@ Implemented:
   and the device list for administrators ([tailscale.md](tailscale.md)).
 
 Verified with unit/API tests and browser tests (a stand-in tailscaled LocalAPI for Tailscale,
-the labelled apt simulator for updates). Not yet verified: apt upgrades and app-data backups with a
-root agent on real hardware, and the restart after a staged database restore under systemd
-(Phase 8 units).
+the labelled apt simulator for updates). Phase 8 additionally verifies staged database restore
+and API restart under the real packaged systemd unit. APT upgrades and app-data backups with a
+root agent on the owner's physical hardware remain separate hardware acceptance.
 
 ## Phase 8 — Packaging and hardening
+
+Implemented. See [packaging.md](packaging.md), [security review](phase8-security-review.md)
+and the measured [acceptance record](phase8-acceptance.json). Publishing a live release still
+requires the owner's protected signing secret and independently distributed public key.
 
 Debian packages for arm64 and amd64 with a bundled Node runtime, systemd units with sandboxing, an
 `everyos` CLI (`status`, `doctor`, `version`, `backup`, `restore`, `update`), a verified installer,
 install/upgrade/purge tests in disposable VMs, release automation, and a security review.
+
+Remote EveryOS version updates are part of this phase:
+
+- Publish version metadata and signed ARM64/AMD64 packages through a trusted release source.
+- Check for new versions and show the installed/available versions, release notes and update
+  status in the web UI; expose the same workflow through `everyos update`.
+- Require an explicit administrator action to apply an update. Verify the publisher signature,
+  checksum, architecture and supported upgrade path before installation; arbitrary download URLs
+  and remote scripts are never accepted as privileged operations.
+- Take a verified pre-update backup, preserve configuration and account homes, and run installation
+  through a supervised job that survives API/agent restarts. Report progress and the final outcome,
+  and audit the action without secrets.
+- Test interrupted downloads, invalid signatures, installation failures, service restarts and
+  recovery in disposable Linux VMs. Database migrations must have a compatible recovery path;
+  replacing binaries alone is not a database rollback.

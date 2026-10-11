@@ -1,0 +1,27 @@
+[Unit]
+Description=EveryOS verified package update and recovery worker
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/everyos/node/bin/node /usr/lib/everyos/update/worker.mjs
+User=root
+Group=root
+UMask=0077
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=45min
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+LockPersonality=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# Independent of the API and agent; dpkg and service recovery require host writes.
+
+[Install]
+WantedBy=multi-user.target

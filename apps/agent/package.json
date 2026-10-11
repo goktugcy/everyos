@@ -16,6 +16,7 @@
     "@everyos/shared": "workspace:*",
     "@everyos/system": "workspace:*",
     "yaml": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@everyos/release": "workspace:*"
   }
 }

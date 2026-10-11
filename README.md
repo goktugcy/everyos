@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/favicon.svg" width="72" height="72" alt="EveryOS logo" />
+  <img src="apps/web/public/everyos.png" width="72" height="72" alt="EveryOS logo" />
 </p>
 
 <h1 align="center">EveryOS</h1>

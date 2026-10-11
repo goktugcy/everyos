@@ -1,5 +1,8 @@
 import type { Permission } from "@everyos/shared";
 import {
+  ReleaseInstallSchema,
+  ReleaseJobSchema,
+  SelfUpdateStatusSchema,
   ComposeActionRequestSchema,
   ComposeActionResultSchema,
   ComposeFileCheckSchema,
@@ -129,6 +132,30 @@ function stream<P extends z.ZodType, E extends z.ZodType>(
 const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
+  "release.status": unary({
+    params: NoParams,
+    result: SelfUpdateStatusSchema,
+    permission: "system:read",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 10_000,
+  }),
+  "release.check": unary({
+    params: NoParams,
+    result: SelfUpdateStatusSchema,
+    permission: "system:read",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 120_000,
+  }),
+  "release.install": unary({
+    params: ReleaseInstallSchema,
+    result: ReleaseJobSchema,
+    permission: "system:manage",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 120_000,
+  }),
   "apps.inspect": unary({
     params: ManagedAppInspectSchema,
     result: ManagedAppInspectionSchema,

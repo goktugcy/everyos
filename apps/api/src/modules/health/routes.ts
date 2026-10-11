@@ -1,9 +1,5 @@
-import {
-  DEFAULT_LOCALE,
-  EVERYOS_VERSION,
-  type BootstrapResponse,
-  type HealthResponse,
-} from "@everyos/shared";
+import { installedVersion } from "@everyos/release";
+import { DEFAULT_LOCALE, type BootstrapResponse, type HealthResponse } from "@everyos/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import type { Services } from "../../services.ts";
@@ -32,7 +28,7 @@ export function healthRoutes(services: Services): Hono<AppEnv> {
     const client = c.get("client");
     const body: BootstrapResponse = {
       product: "everyos",
-      version: EVERYOS_VERSION,
+      version: installedVersion(),
       setupRequired: services.setup.isSetupRequired(),
       defaultLocale: DEFAULT_LOCALE,
       transport: { secure: client.secure, loopback: client.loopback },

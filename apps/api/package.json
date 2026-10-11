@@ -22,7 +22,8 @@
     "ws": "catalog:",
     "zod": "catalog:",
     "@everyos/widget-sdk": "workspace:*",
-    "@everyos/system": "workspace:*"
+    "@everyos/system": "workspace:*",
+    "@everyos/release": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "catalog:"

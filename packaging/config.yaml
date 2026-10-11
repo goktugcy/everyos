@@ -1,0 +1,12 @@
+server:
+  host: 127.0.0.1
+  port: 7470
+paths:
+  dataDir: /var/lib/everyos
+  webDir: /usr/lib/everyos/web
+  secretKeyFile: /var/lib/everyos/secret.key
+  agentSocket: /run/everyos/agent.sock
+  agentKeyFile: /etc/everyos/agent.key
+logging:
+  level: info
+  format: json

@@ -1,10 +1,11 @@
-import { mkdirSync, readFileSync } from "node:fs";
+import { installedVersion } from "@everyos/release";
+import { mkdirSync, readFileSync, existsSync } from "node:fs";
 import { createServer as createHttpsServer } from "node:https";
 import { serve } from "@hono/node-server";
 import { migrate, openDatabase, EVERYOS_MIGRATIONS } from "@everyos/database";
 import { createLogger, serializeError } from "@everyos/logger";
 import { loadKeyFile } from "@everyos/security";
-import { EVERYOS_VERSION } from "@everyos/shared";
+
 import { LazyAgentGateway } from "./agent-gateway.ts";
 import { createApp } from "./app.ts";
 import { isExposedBinding, loadApiConfig } from "./config.ts";
@@ -27,7 +28,7 @@ async function main(): Promise<void> {
     format: config.logging.format,
   });
   logger.info("Starting EveryOS API", {
-    version: EVERYOS_VERSION,
+    version: installedVersion(),
     mode: config.mode,
     node: process.version,
   });
@@ -97,7 +98,14 @@ async function main(): Promise<void> {
   const app = createApp(services);
   services.metrics.start();
   services.hostMonitor.start();
-  services.tasks.start();
+  const startTasks = () => {
+    if (config.mode === "production" && existsSync("/run/everyos-update-maintenance")) return;
+    clearInterval(taskStartTimer);
+    services.tasks.start();
+  };
+  const taskStartTimer = setInterval(startTasks, 1000);
+  taskStartTimer.unref();
+  startTasks();
 
   const runMaintenance = () => {
     try {
@@ -149,6 +157,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info("Shutting down", { signal });
     clearInterval(maintenanceTimer);
+    clearInterval(taskStartTimer);
     services.metrics.stop();
     services.docker.stop();
     services.widgetData.stop();

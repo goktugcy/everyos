@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+if [ "$1" = configure ]; then
+  if ! getent group everyos >/dev/null; then addgroup --system everyos; fi
+  if ! getent passwd everyos >/dev/null; then
+    adduser --system --ingroup everyos --home /var/lib/everyos --no-create-home --shell /usr/sbin/nologin everyos
+  fi
+  # Never recursively change existing user data or follow configuration symlinks.
+  for dir in /etc/everyos /var/lib/everyos /var/lib/everyos-updates /var/lib/everyos-agent; do
+    if [ -L "$dir" ]; then echo 'Unsafe EveryOS directory' >&2; exit 1; fi
+    mkdir -p "$dir"
+  done
+  chown root:everyos /etc/everyos
+  chmod 0750 /etc/everyos
+  chown everyos:everyos /var/lib/everyos
+  chmod 0750 /var/lib/everyos
+  chown root:root /var/lib/everyos-updates
+  chmod 0700 /var/lib/everyos-updates
+  chown root:root /var/lib/everyos-agent
+  chmod 0700 /var/lib/everyos-agent
+  for file in config.yaml agent.yaml agent.key; do
+    if [ -L "/etc/everyos/$file" ]; then echo 'Unsafe EveryOS configuration' >&2; exit 1; fi
+  done
+  if [ ! -e /etc/everyos/agent.key ]; then
+    (umask 077; openssl rand -base64 32 | tr "+/" "-_" | tr -d "=" > /etc/everyos/agent.key)
+  fi
+  chown root:everyos /etc/everyos/config.yaml /etc/everyos/agent.key
+  chmod 0640 /etc/everyos/config.yaml /etc/everyos/agent.key
+  chown root:root /etc/everyos/agent.yaml
+  chmod 0600 /etc/everyos/agent.yaml
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+    systemctl enable everyos-agent.service everyos-api.service everyos-update.service
+    if [ "${EVERYOS_PACKAGE_TRANSACTION:-0}" != 1 ]; then
+      systemctl restart everyos-agent.service everyos-api.service
+    fi
+  fi
+fi

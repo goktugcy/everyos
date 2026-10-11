@@ -17,6 +17,8 @@ import { catalogRoutes } from "./modules/catalogs/routes.ts";
 import { appRoutes } from "./modules/apps/routes.ts";
 import { eventRoutes } from "./modules/events/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
+import { selfUpdateRoutes } from "./modules/self-update/routes.ts";
+import { existsSync } from "node:fs";
 import { integrationRoutes } from "./modules/integrations/routes.ts";
 import { logRoutes } from "./modules/logs/routes.ts";
 import { notificationRoutes } from "./modules/notifications/routes.ts";
@@ -72,6 +74,16 @@ export function createApp(services: Services): Hono<AppEnv> {
   app.use("/api/*", enforceUnlocked);
 
   const api = new Hono<AppEnv>();
+  api.use("*", async (c, next) => {
+    if (
+      services.config.mode === "production" &&
+      existsSync("/run/everyos-update-maintenance") &&
+      !["/api/health", "/api/self-update", "/api/bootstrap"].includes(c.req.path)
+    )
+      throw new ApiError(503, "INTERNAL_ERROR", "EveryOS update maintenance is in progress");
+    await next();
+  });
+  api.route("/self-update", selfUpdateRoutes(services));
   api.route("/", healthRoutes(services));
   api.route("/", setupRoutes(services));
   api.route("/auth", authRoutes(services));
