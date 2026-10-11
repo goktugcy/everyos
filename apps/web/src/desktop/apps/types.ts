@@ -14,6 +14,7 @@ export type AppId =
   | "otuken.users"
   | "otuken.audit"
   | "otuken.files"
+  | "otuken.trash"
   | "otuken.editor"
   | "otuken.updates"
   | "otuken.tasks"

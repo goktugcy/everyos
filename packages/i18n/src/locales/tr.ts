@@ -225,6 +225,7 @@ export const tr = {
     },
   },
   apps: {
+    trash: "Çöp Kutusu",
     terminal: "Terminal",
     store: "Uygulama Mağazası",
     system: "Sistem İzleyici",
@@ -414,6 +415,7 @@ export const tr = {
     },
   },
   desktop: {
+    selectedCount: "{{count}} öğe seçildi",
     workspace: "Masaüstü",
     defaultName: "Masaüstü {{n}}",
     menu: {
@@ -1800,6 +1802,7 @@ export const tr = {
     } satisfies Record<NotificationKind, { title: string; body: string }>,
   },
   files: {
+    selectAll: "Tümünü seç",
     locations: "Konumlar",
     favorites: "Favoriler",
     homeHint: "Kişisel klasörünüz; yalnızca siz görebilirsiniz.",
@@ -1876,17 +1879,17 @@ export const tr = {
       duplicate: "Çoğalt",
       copyPath: "Yolu kopyala",
       properties: "Özellikler",
-      delete: "Sil",
+      delete: "Çöp kutusuna taşı",
       newFolder: "Yeni klasör",
       newFile: "Yeni metin belgesi",
       upload: "Dosya yükle",
       refresh: "Yenile",
     },
     deleteConfirm: {
-      title: "Silinsin mi?",
-      one: '"{{name}}" kalıcı olarak silinecek. Klasörlerin tüm içeriği de silinir; bu işlem geri alınamaz.',
-      many: "{{count}} öğe kalıcı olarak silinecek. Klasörlerin tüm içeriği de silinir; bu işlem geri alınamaz.",
-      confirm: "Kalıcı olarak sil",
+      title: "Çöp kutusuna taşınsın mı?",
+      one: '"{{name}}" içeriğiyle birlikte çöp kutusuna taşınacak. Daha sonra geri yükleyebilirsiniz.',
+      many: "{{count}} öğe içeriğiyle birlikte çöp kutusuna taşınacak. Daha sonra geri yükleyebilirsiniz.",
+      confirm: "Çöp kutusuna taşı",
     },
     replaceConfirm: {
       title: "Dosya zaten var",
@@ -1923,6 +1926,20 @@ export const tr = {
       overwrite: "Üzerine yaz",
       noFile: "Açılacak dosya yok.",
     },
+  },
+  trash: {
+    intro:
+      "Silinen dosyalar burada saklanır. Geri yükleme için özgün klasör bulunmalı ve aynı ad kullanılmıyor olmalıdır. Çöp kutusu boşaltılana kadar disk alanı kullanılır.",
+    empty: "Çöp kutusu boş.",
+    restore: "Geri yükle",
+    emptyAction: "Çöp kutusunu boşalt",
+    deletePermanently: "Kalıcı olarak sil",
+    deleteTitle: "{{count}} öğe kalıcı olarak silinsin mi?",
+    deleteBody:
+      "Seçilen öğeler ve klasörlerin tüm içeriği kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    originalLocation: "Özgün konum",
+    deletedAt: "Silinme zamanı",
+    selectItem: "{{name}} öğesini seç",
   },
   updates: {
     tabs: { packages: "Paketler", history: "Geçmiş" },
@@ -2097,11 +2114,15 @@ export const tr = {
     } satisfies Record<TailscaleWarningKind, string>,
   },
   backups: {
+    restoreHomes: "Kişisel Ev klasörlerini geri yükle",
+    restoreHomesHint:
+      "{{users}} hesaplarının dosyaları ve çöp kutuları yedekteki içerikle değiştirilir. Önce mevcut içerik güvenlik yedeğine alınır. Diğer hesapların dosyaları korunur.",
+    homesUnavailable: "Bu yedekte şu anda geri yüklenebilir Ev klasörü yok.",
     intro:
-      "Otuken veritabanını, yapılandırmayı, masaüstü ayarlarını ve seçilen uygulamaların verilerini yedekler. Her yedek sağlama toplamlarıyla doğrulanır.",
+      "Otuken veritabanını, yapılandırmayı, masaüstü ayarlarını, kişisel Ev klasörlerini ve seçilen uygulamaların verilerini yedekler. Her yedek sağlama toplamlarıyla doğrulanır.",
     create: "Yedek al",
     createIntro:
-      "Otuken veritabanının tutarlı bir anlık görüntüsü (oturumlar hariç), yapılandırma dosyası ve duvar kağıtları her zaman dahildir.",
+      "Otuken veritabanının tutarlı bir anlık görüntüsü (oturumlar hariç), yapılandırma dosyası, duvar kağıtları ve mevcut kişisel Ev klasörleri (çöp kutuları dahil) yedeklenir.",
     start: "Yedeklemeyi başlat",
     note: "Not",
     notePlaceholder: "İsteğe bağlı, ör. güncelleme öncesi",
@@ -2149,6 +2170,8 @@ export const tr = {
       actions: "İşlemler",
     },
     contents: {
+      homes: "{{count}} kişisel Ev klasörü",
+      homesSkipped: "{{count}} Ev öğesi yedek dışında",
       database: "Veritabanı",
       config: "Yapılandırma",
       wallpapers: "Duvar kağıtları",
@@ -2166,6 +2189,7 @@ export const tr = {
     ok: "Doğrulandı",
     verify: "Doğrula",
     verifyErrors: {
+      homes: "Ev klasörlerinin arşivi güvenlik ve bütünlük denetiminden geçmedi: {{file}}",
       missing: "Eksik dosya: {{file}}",
       size: "Boyut uyuşmuyor: {{file}}",
       checksum: "Sağlama toplamı uyuşmuyor: {{file}}",
@@ -2186,7 +2210,7 @@ export const tr = {
     restoreSettings: "Otuken verileri",
     scope: {
       none: "Otuken verilerine dokunma",
-      noneHint: "Yalnızca aşağıda seçilen uygulama verileri geri yüklenir.",
+      noneHint: "Yalnızca seçilen Ev klasörleri ve uygulama verileri geri yüklenir.",
       desktop: "Masaüstü ve tercihler",
       desktopHint:
         "Yerleşim, bileşenler, tercihler ve duvar kağıtları hemen geri yüklenir: {{users}}. Hesaplar değişmez.",
@@ -2246,6 +2270,9 @@ export const tr = {
       "transfer-checksum": "Aktarılan veri doğrulanamadı",
       "snapshot-integrity": "Veritabanı anlık görüntüsü bütünlük denetiminden geçmedi",
       "no-desktop-users": "Yedekte geri yüklenecek masaüstü ayarı yok",
+      "no-home-users": "Yedekte mevcut hesaplara geri yüklenebilecek Ev klasörü yok",
+      "home-unsupported":
+        "Mevcut Ev klasöründe yedeklenemeyen özel dosyalar veya bağlı diskler var; veri kaybını önlemek için geri yükleme durduruldu",
       "app-not-restorable": "Seçilen uygulamanın verileri geri yüklenemez",
       cancelled: "İşlem iptal edildi",
       BACKUP_INSUFFICIENT_SPACE: "Yedek için yeterli boş disk alanı yok",

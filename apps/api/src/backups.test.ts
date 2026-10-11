@@ -12,6 +12,8 @@ import type {
   RestorePreview,
   TaskRunView,
   TaskView,
+  FileRootsResponse,
+  TrashListing,
 } from "@otuken/shared";
 import { TarWriter } from "@otuken/system/archive";
 import { describe, expect, it, vi } from "vitest";
@@ -123,6 +125,157 @@ function fakeApp(ctx: TestContext) {
 }
 
 describe("backups", () => {
+  it("includes account homes and trash automatically and restores them after taking a safety backup", async () => {
+    const { ctx, admin, operator } = await withRoles();
+    const home = async (client: TestClient) =>
+      (await json<FileRootsResponse>(await client.get("/api/files/roots"))).roots.find(
+        (root) => root.kind === "home",
+      )!;
+    const adminHome = await home(admin);
+    const operatorHome = await home(operator);
+    const path = `${adminHome.folders!.desktop}/saved.txt`;
+    const trashedPath = `${adminHome.folders!.documents}/trash-note.txt`;
+    const write = async (client: TestClient, file: string, content: string) => {
+      const old = await client.get(
+        `/api/files/text?${new URLSearchParams({ root: "home", path: file }).toString()}`,
+      );
+      const etag = old.ok ? (await json<{ etag: string }>(old)).etag : null;
+      expect(
+        (
+          await client.request("PUT", "/api/files/text", {
+            body: { root: "home", path: file, content, etag },
+          })
+        ).status,
+      ).toBe(200);
+    };
+    await write(admin, path, "before backup");
+    await write(operator, `${operatorHome.folders!.documents}/operator.txt`, "operator before");
+    await write(admin, trashedPath, "recoverable in backup");
+    expect(
+      (await admin.post("/api/files/delete", { root: "home", paths: [trashedPath], confirm: true }))
+        .status,
+    ).toBe(204);
+    const trashed = (await json<TrashListing>(await admin.get("/api/files/trash"))).entries[0]!;
+    const id = await backup(ctx, admin);
+    const saved = (await overview(admin)).backups.find((entry) => entry.id === id)!;
+    expect(saved.contents.homes?.map((entry) => entry.username).sort()).toEqual([
+      "admin",
+      "operator",
+    ]);
+    expect(existsSync(join(ctx.config.backups.dir, id, "homes.tar.gz"))).toBe(true);
+    expect(saved.verification?.ok).toBe(true);
+
+    await write(admin, path, "after backup");
+    await write(operator, `${operatorHome.folders!.documents}/operator.txt`, "operator after");
+    expect(
+      (
+        await admin.post("/api/files/trash/delete", {
+          root: "home",
+          ids: [trashed.id],
+          confirm: true,
+        })
+      ).status,
+    ).toBe(204);
+    await write(admin, `${adminHome.folders!.desktop}/later.txt`, "created later");
+    expect(
+      (
+        await admin.post(`/api/backups/${id}/restore`, {
+          settings: "none",
+          apps: [],
+          homes: true,
+          password: STRONG_PASSWORD,
+          confirm: true,
+        })
+      ).status,
+    ).toBe(202);
+    expect(await finished(ctx, admin)).toMatchObject({ status: "succeeded", restart: null });
+    expect(
+      (
+        await json<{ content: string }>(
+          await admin.get(
+            `/api/files/text?${new URLSearchParams({ root: "home", path }).toString()}`,
+          ),
+        )
+      ).content,
+    ).toBe("before backup");
+    expect(
+      (
+        await admin.get(
+          `/api/files/text?${new URLSearchParams({ root: "home", path: `${adminHome.folders!.desktop}/later.txt` }).toString()}`,
+        )
+      ).status,
+    ).toBe(404);
+    const safety = (await overview(admin)).backups.find(
+      (entry) => entry.trigger === "pre-restore",
+    )!;
+    expect(
+      gunzipSync(readFileSync(join(ctx.config.backups.dir, safety.id, "homes.tar.gz"))).includes(
+        Buffer.from("after backup"),
+      ),
+    ).toBe(true);
+    expect((await json<TrashListing>(await admin.get("/api/files/trash"))).entries).toMatchObject([
+      { id: trashed.id, name: "trash-note.txt" },
+    ]);
+    expect(
+      (await admin.post("/api/files/trash/restore", { root: "home", ids: [trashed.id] })).status,
+    ).toBe(204);
+    expect(
+      (
+        await json<{ content: string }>(
+          await admin.get(
+            `/api/files/text?${new URLSearchParams({ root: "home", path: trashedPath }).toString()}`,
+          ),
+        )
+      ).content,
+    ).toBe("recoverable in backup");
+    expect(
+      ctx.db
+        .all<{ details: string }>(
+          "SELECT details FROM audit_events WHERE action = 'backups.restore'",
+        )
+        .some((row) => JSON.parse(row.details).homes === true),
+    ).toBe(true);
+  });
+
+  it("reads older backups without homes and includes homes in scheduled backups", async () => {
+    const { ctx, admin } = await withRoles();
+    const old = await backup(ctx, admin);
+    const manifestPath = join(ctx.config.backups.dir, old, "manifest.json");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as {
+      contents: { homes?: unknown };
+    };
+    delete manifest.contents.homes;
+    writeFileSync(manifestPath, JSON.stringify(manifest));
+    expect(
+      (await json<RestorePreview>(await admin.get(`/api/backups/${old}/preview`))).homes,
+    ).toEqual([]);
+    expect(
+      (
+        await admin.post(`/api/backups/${old}/restore`, {
+          settings: "none",
+          apps: [],
+          homes: true,
+          password: STRONG_PASSWORD,
+          confirm: true,
+        })
+      ).status,
+    ).toBe(202);
+    expect(await finished(ctx, admin)).toMatchObject({ status: "failed", error: "no-home-users" });
+    await admin.get("/api/files/roots");
+    const scheduled = ctx.services.backups.create(
+      { apps: [], trigger: "schedule" },
+      {
+        kind: "user",
+        userId: ctx.db.get<{ id: string }>("SELECT id FROM users WHERE username='admin'")!.id,
+        username: "admin",
+        role: "admin",
+      },
+    );
+    const result = await ctx.services.backups.wait(scheduled.id);
+    expect(result.status).toBe("succeeded");
+    expect((await ctx.services.backups.get(result.backupId!)).contents.homes).toHaveLength(1);
+  });
+
   it("creates verified backups of a session-free snapshot and applies retention", async () => {
     const { ctx, admin } = await withRoles();
     const first = await backup(ctx, admin, { note: "ilk" });

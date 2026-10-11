@@ -244,10 +244,10 @@ test("the desktop shows the home's Desktop folder; its folders open in Files", a
   await expect(folder).toBeVisible();
   await expect.poll(async () => (await system.boundingBox())!.x).toBeGreaterThan(250);
 
-  // Deleting from the desktop deletes the file, after a confirmation.
+  // Deleting from the desktop moves the file to trash after a confirmation.
   await surface.getByRole("button", { name: "liste.txt", exact: true }).click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Sil", exact: true }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Kalıcı olarak sil" }).click();
+  await page.getByRole("menuitem", { name: "Çöp kutusuna taşı", exact: true }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Çöp kutusuna taşı" }).click();
   await expect(surface.getByRole("button", { name: "liste.txt", exact: true })).toHaveCount(0);
   await expect.poll(() => desktopNames(page)).toEqual(["Araçlar"]);
   await clearDesktopFolder(page, session);

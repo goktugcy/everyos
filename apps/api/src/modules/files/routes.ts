@@ -13,6 +13,8 @@ import {
   RenameRequestSchema,
   TextWriteRequestSchema,
   TransferRequestSchema,
+  TrashItemRequestSchema,
+  TrashDeleteRequestSchema,
 } from "@otuken/shared/schemas";
 import { Hono, type Context, type MiddlewareHandler } from "hono";
 import type { AppEnv } from "../../context.ts";
@@ -75,10 +77,10 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
         auth.permissions.has("system:manage") && readFileSettings(services.db).systemRoots,
     });
   };
-  const enabled: MiddlewareHandler<AppEnv> = async (_c, next) => {
+  const enabled: MiddlewareHandler<AppEnv> = async (c, next) => {
     if (!services.files.enabled)
       throw new ApiError(404, "FILES_DISABLED", "No file locations are configured on this server");
-    await next();
+    await services.files.withAccess(requireAuth(c).user.id, next);
   };
   app.use("*", requirePermission("files:read"), enabled);
   const write = requirePermission("files:write");
@@ -92,7 +94,7 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
     const auth = requireAuth(c);
     services.audit.record({
       action: `files.${action}`,
-      outcome: "success",
+      outcome: details?.succeeded === false ? "failure" : "success",
       actor: { userId: auth.user.id, username: auth.user.username },
       ip: c.get("client").ip,
       target: target.slice(0, 512),
@@ -239,8 +241,43 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
 
   app.post("/delete", write, async (c) => {
     const { root, paths } = await parseJsonBody(c, DeleteRequestSchema);
-    await files(c).remove(root, paths);
-    audit(c, "delete", `${root}:${paths.join(", ")}`, { count: paths.length });
+    let succeeded = false;
+    try {
+      await files(c).remove(root, paths);
+      succeeded = true;
+    } finally {
+      audit(c, "delete", `${root}:${paths.join(", ")}`, {
+        count: paths.length,
+        mode: "trash",
+        succeeded,
+      });
+    }
+    return c.body(null, 204);
+  });
+
+  app.get("/trash", async (c) => c.json(await files(c).trash()));
+
+  app.post("/trash/restore", write, async (c) => {
+    const { root, ids } = await parseJsonBody(c, TrashItemRequestSchema);
+    let succeeded = false;
+    try {
+      await files(c).restoreTrash(root, ids);
+      succeeded = true;
+    } finally {
+      audit(c, "trash.restore", root, { ids, count: ids.length, succeeded });
+    }
+    return c.body(null, 204);
+  });
+
+  app.post("/trash/delete", write, async (c) => {
+    const { root, ids } = await parseJsonBody(c, TrashDeleteRequestSchema);
+    let succeeded = false;
+    try {
+      await files(c).deleteTrash(root, ids);
+      succeeded = true;
+    } finally {
+      audit(c, "trash.delete", root, { ids, count: ids.length, succeeded });
+    }
     return c.body(null, 204);
   });
 

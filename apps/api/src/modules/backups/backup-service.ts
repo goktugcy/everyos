@@ -29,6 +29,8 @@ import type { AgentGateway } from "../../services.ts";
 import type { AppService } from "../apps/app-service.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
 import type { NotificationService } from "../notifications/notification-service.ts";
+import type { FileService } from "../files/file-service.ts";
+import { archiveHomes, restoreHomes, validateHomes } from "./homes.ts";
 import {
   BackupStore,
   invalidBackup,
@@ -95,6 +97,7 @@ export interface BackupServiceDependencies {
   apps: AppService;
   audit: AuditLog;
   notifications: NotificationService;
+  files: FileService;
   logger: Logger;
   now: () => number;
   dir: string;
@@ -349,6 +352,8 @@ export class BackupService {
       await guard.require(databaseSize);
       stage("database");
       const schemaVersion = await snapshotDatabase(db, join(work, "otuken.db.gz"), work);
+      const summary = await withSnapshot(join(work, "otuken.db.gz"), work, inspectSnapshot);
+      if (!summary.ok) throw new JobFailure("snapshot-integrity");
       stage("files");
       let config = false;
       if (this.#deps.configFile) {
@@ -366,6 +371,20 @@ export class BackupService {
           join(work, "wallpapers.tar.gz"),
         )) > 0;
       const apps: BackupAppContent[] = [];
+      const homes = await this.#deps.files.withHomesLocked(
+        summary.users.map((user) => user.id),
+        () =>
+          archiveHomes({
+            root: this.#deps.files.homesDir,
+            users: summary.users,
+            target: join(work, "homes.tar.gz"),
+            guard,
+            signal,
+            progress: (bytes) => {
+              job.bytes += bytes;
+            },
+          }),
+      );
       for (const appId of options.apps) {
         const content = await this.#backupApp(appId, work, job, signal, actor, guard, stage);
         if (content) apps.push(content);
@@ -377,13 +396,12 @@ export class BackupService {
         "otuken.db.gz",
         ...(config ? ["config.yaml"] : []),
         ...(wallpapers ? ["wallpapers.tar.gz"] : []),
+        ...(homes.length ? ["homes.tar.gz"] : []),
         ...apps.filter((app) => app.data).map((app) => `apps/${app.id}.data.tar.gz`),
       ]) {
         const path = join(work, name);
         files.push({ name, size: (await stat(path)).size, sha256: await sha256File(path) });
       }
-      const summary = await withSnapshot(join(work, "otuken.db.gz"), work, inspectSnapshot);
-      if (!summary.ok) throw new JobFailure("snapshot-integrity");
       const manifest: BackupManifest = {
         format: BACKUP_FORMAT,
         version: BACKUP_FORMAT_VERSION,
@@ -396,7 +414,7 @@ export class BackupService {
         schemaVersion,
         hostname: hostname().slice(0, 255),
         keyId: this.#deps.keyId,
-        contents: { database: true, config, wallpapers, apps },
+        contents: { database: true, config, wallpapers, apps, homes },
         files,
       };
       await this.#store.publish(work, manifest, {
@@ -578,7 +596,15 @@ export class BackupService {
     verification: BackupVerification;
     summary: ReturnType<typeof inspectSnapshot> | null;
   }> {
-    const problem = await this.#store.checkFiles(id);
+    let problem = await this.#store.checkFiles(id);
+    const manifest = await this.#store.manifest(id);
+    if (!problem && manifest.contents.homes?.length) {
+      try {
+        await validateHomes(this.#store.file(id, "homes.tar.gz"), manifest.contents.homes);
+      } catch {
+        problem = "homes:homes.tar.gz";
+      }
+    }
     const summary = problem
       ? null
       : await withSnapshot(this.#store.file(id, "otuken.db.gz"), this.#store.dir, inspectSnapshot);
@@ -664,6 +690,14 @@ export class BackupService {
         catalogs: summary?.catalogs ?? 0,
       },
       desktopUsers,
+      homes: (manifest.contents.homes ?? []).map((home) => ({
+        ...home,
+        restorable: !this.#deps.files.homesDir
+          ? ("disabled" as const)
+          : currentUsers.some((user) => user.id === home.userId)
+            ? ("ok" as const)
+            : ("not-found" as const),
+      })),
       config,
       apps: manifest.contents.apps
         .filter((app) => app.data)
@@ -688,7 +722,7 @@ export class BackupService {
 
   restore(
     id: string,
-    request: { settings: "none" | RestoreScope; apps: string[] },
+    request: { settings: "none" | RestoreScope; apps: string[]; homes?: boolean },
     actor: UserActor,
   ): BackupJobView {
     return this.#startJob("restore", "manual", actor, id, async (job, signal) => {
@@ -716,6 +750,10 @@ export class BackupService {
         for (const appId of request.apps)
           if (preview.apps.find((app) => app.id === appId)?.restorable !== "ok")
             throw new JobFailure(`app-not-restorable:${appId}`);
+        const homeUsers = request.homes
+          ? preview.homes.filter((home) => home.restorable === "ok").map((home) => home.userId)
+          : [];
+        if (request.homes && !homeUsers.length) throw new JobFailure("no-home-users");
 
         // Always keep a way back: the current state, including the data being replaced.
         stage("safety");
@@ -724,6 +762,26 @@ export class BackupService {
           apps: request.apps,
           note: id,
         });
+
+        if (request.homes) {
+          stage("restore-data");
+          if (
+            (await this.#store.manifest(safety)).contents.homes?.some(
+              (home) => homeUsers.includes(home.userId) && home.skipped > 0,
+            )
+          )
+            throw new JobFailure("home-unsupported");
+          await this.#deps.files.withHomesLocked(homeUsers, () =>
+            restoreHomes({
+              archive: this.#store.file(id, "homes.tar.gz"),
+              root: this.#deps.files.homesDir!,
+              homes: preview.homes,
+              users: homeUsers,
+              reserveBytes: this.#deps.reserveBytes,
+              signal,
+            }),
+          );
+        }
 
         for (const appId of request.apps) {
           const wasRunning = await this.#appRunning(appId, actor);
@@ -792,7 +850,12 @@ export class BackupService {
           actor: { userId: actor.userId, username: actor.username },
           ip: actor.ip ?? null,
           target: id,
-          details: { settings: request.settings, apps: request.apps, safetyBackup: safety },
+          details: {
+            settings: request.settings,
+            apps: request.apps,
+            homes: request.homes ?? false,
+            safetyBackup: safety,
+          },
         });
         if (job.restart === "automatic") {
           this.#logger.warn("Restarting Otuken to apply the restored database", { backupId: id });
@@ -807,7 +870,11 @@ export class BackupService {
             actor: { userId: actor.userId, username: actor.username },
             ip: actor.ip ?? null,
             target: id,
-            details: { settings: request.settings, apps: request.apps },
+            details: {
+              settings: request.settings,
+              apps: request.apps,
+              homes: request.homes ?? false,
+            },
           });
       }
     });

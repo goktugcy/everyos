@@ -254,3 +254,18 @@ Otuken reads tailscaled's LocalAPI and compares Serve/Funnel handlers with its o
 Changing network exposure from the web UI would be an administrative action with a large blast
 radius, and the CLI remains the single place where it happens. Public exposure through Funnel
 raises a security notification.
+
+## D24 — Private trash on source roots and account homes in every backup (2026-10)
+
+Normal file deletion moves into private per-account storage on the source root, keeping data
+recoverable without copying or deleting it across filesystems. Original paths are metadata; they
+are validated again at restore time, and existing names are never silently overwritten. Internal
+trash storage is unreachable through ordinary file routes. Permanent deletion is a distinct
+authorized, confirmed and audited action. This is Otuken's trash, independent of a host desktop.
+
+Existing Otuken home directories, including their private trash, join all backup triggers. Homes
+are API-owned data, so the unprivileged API captures/restores them without adding an agent
+operation. Archive contents are declared by account id in the manifest; restore matches only
+existing ids and is separately selected. Safety backup, draining active file operations, private
+validated staging and rollback protect a replacement. Host mounts and unsupported current data
+are refused for replacement. Older version-1 manifests without homes remain readable.

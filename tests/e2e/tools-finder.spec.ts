@@ -28,7 +28,7 @@ test("Files looks like Finder: fixed favourites, icon and list views, terminal a
   // Standard folders cannot be deleted.
   await row("Resimler").click();
   await files.getByTestId("file-list").press("Delete");
-  await page.getByRole("alertdialog").getByRole("button", { name: "Kalıcı olarak sil" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Çöp kutusuna taşı" }).click();
   await expect(files).toContainText("Standart klasörler yeniden adlandırılamaz");
   await expect(row("Resimler")).toBeVisible();
 
@@ -44,7 +44,7 @@ test("Files looks like Finder: fixed favourites, icon and list views, terminal a
   await files.getByRole("button", { name: "Simgeler" }).click();
   await row("kare.png").click();
   await files.getByTestId("file-list").press("Delete");
-  await page.getByRole("alertdialog").getByRole("button", { name: "Kalıcı olarak sil" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Çöp kutusuna taşı" }).click();
   await expect(row("kare.png")).toHaveCount(0);
 
   // "Open Terminal" from the folder's context menu.
@@ -142,8 +142,8 @@ test("files drag between Files windows and the desktop, which is the Desktop fol
 
   // Deleted from the desktop (with the file inside).
   await onDesktop("Taşınacaklar").click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Sil", exact: true }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Kalıcı olarak sil" }).click();
+  await page.getByRole("menuitem", { name: "Çöp kutusuna taşı", exact: true }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Çöp kutusuna taşı" }).click();
   await expect(onDesktop("Taşınacaklar")).toHaveCount(0);
   await expect.poll(() => listing("Masaüstü")).toEqual([]);
 });

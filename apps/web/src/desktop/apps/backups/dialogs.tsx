@@ -271,12 +271,13 @@ export function RestoreDialog({
   const preview = useApiResource<RestorePreview>(`/backups/${backup.id}/preview`, null);
   const [settings, setSettings] = useState<"none" | "desktop" | "database">("none");
   const [apps, setApps] = useState<string[]>([]);
+  const [homes, setHomes] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const data = preview.data;
-  const nothing = settings === "none" && apps.length === 0;
+  const nothing = settings === "none" && apps.length === 0 && !homes;
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setBusy(true);
@@ -284,7 +285,7 @@ export function RestoreDialog({
     try {
       await api(`/backups/${backup.id}/restore`, {
         method: "POST",
-        body: { settings, apps, password, confirm: true },
+        body: { settings, apps, homes, password, confirm: true },
       });
       onStarted();
       onClose();
@@ -366,6 +367,30 @@ export function RestoreDialog({
               data.databaseBlocked !== null,
             )}
           </fieldset>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0"
+              checked={homes}
+              disabled={
+                !data.verification.ok || !data.homes.some((home) => home.restorable === "ok")
+              }
+              onChange={(event) => setHomes(event.target.checked)}
+            />
+            <span className="flex flex-col">
+              <span>{t("backups.restoreHomes")}</span>
+              <span className="text-xs text-fg-muted">
+                {data.homes.some((home) => home.restorable === "ok")
+                  ? t("backups.restoreHomesHint", {
+                      users: data.homes
+                        .filter((home) => home.restorable === "ok")
+                        .map((home) => home.username)
+                        .join(", "),
+                    })
+                  : t("backups.homesUnavailable")}
+              </span>
+            </span>
+          </label>
           {settings === "database" ? (
             <div
               className="rounded-otk-md border border-line p-3 text-xs"

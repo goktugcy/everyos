@@ -237,6 +237,13 @@ map to `CONFLICT` (409). Mutations and import changes are audited.
 
 ## Phase 7 tools
 
+File deletion moves items to private per-user trash. `GET /files/trash` lists the caller's items;
+`POST /files/trash/restore { root, ids }` restores them without overwriting original names, and
+`POST /files/trash/delete { root, ids, confirm: true }` deletes them permanently. Reading requires
+`files:read`; both mutations require `files:write` and are audited. Backups include existing
+Otuken homes and trash; restore accepts an additional `homes: true` selection, with the normal
+restore permission, password, confirmation and safety backup.
+
 Each module has its own document with the full contract; all routes are strict about unknown
 fields, require CSRF for changes, and audit every change.
 

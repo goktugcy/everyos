@@ -14,7 +14,7 @@ import {
   TriangleAlert,
   Upload,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
@@ -28,6 +28,7 @@ import { localized } from "../store/parts.tsx";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { CreateDialog, DownloadDialog, RestoreDialog, SettingsDialog } from "./dialogs.tsx";
 import { contentLabels, jobError, stageText, verificationText } from "./lib.ts";
+import { filesChanged } from "../files/lib.ts";
 
 type Open =
   | { kind: "create" }
@@ -85,6 +86,9 @@ export default function BackupsApp() {
   };
 
   const last = data?.lastJob;
+  useEffect(() => {
+    if (last?.kind === "restore" && last.status === "succeeded") filesChanged();
+  }, [last?.id, last?.kind, last?.status]);
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="backups-app">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">

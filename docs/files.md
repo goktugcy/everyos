@@ -25,7 +25,9 @@ Downloads, Pictures, Music and Videos**, named in the user's language at that mo
 `.otuken-folders.json`. A standard folder added by a later version is named in the user's
 current language; existing names never change. They are fixed: they cannot be renamed, moved or
 deleted (`FILES_PROTECTED`), and a folder removed outside Otuken is created again. Their contents
-are the user's. Homes are not part of backups yet.
+are the user's. Existing homes, including their Desktop files and private trash, are included
+in every backup ([backups.md](backups.md)). The folder-name manifest is protected against writes
+and unsafe path components, including changes through symlink aliases.
 
 ### System locations
 
@@ -77,7 +79,7 @@ to time-of-use). The impact is limited to what the API user can reach anyway.
 | `GET /files/download?root&path&inline`        | `files:read`  | Streamed, `Range` support. Always `attachment` with `application/octet-stream`, except raster images with `inline=true`. Sandbox CSP.                                  |
 | `PUT /files/text`                             | `files:write` | `etag: null` creates (fails if it exists). A stale `etag` returns `409`. Own files are replaced atomically; others' files are written in place to keep owner and mode. |
 | `POST /files/upload?root&path&name&overwrite` | `files:write` | Raw body, `Content-Length` required, streamed to a temporary file and linked into place (no silent overwrite). Checks size limit and free space.                       |
-| `POST /files/{mkdir,rename,copy,move,delete}` | `files:write` | Copy keeps symlinks as symlinks. Moves across file systems copy then delete. Delete needs `confirm: true` and never targets a root.                                    |
+| `POST /files/{mkdir,rename,copy,move,delete}` | `files:write` | Copy keeps symlinks as symlinks. Moves across file systems copy then delete. Delete needs `confirm: true`, moves to private trash and never targets a root.            |
 
 Read-only roots refuse writes with `FILES_READ_ONLY`. A full disk returns
 `FILES_INSUFFICIENT_SPACE` (507). Every change is audited (`files.mkdir`, `files.upload`,
@@ -93,7 +95,9 @@ The **Files** app (`otuken.files`) looks like the macOS Finder and provides:
 - **Views:** icons (the default, with thumbnails for images up to 8 MiB and glyphs on the
   standard folders) or a list with sortable columns, folders first; each window remembers its
   choice.
-- **Search and selection:** search; multi-selection with Ctrl/Cmd and Shift; keyboard actions
+- **Search and selection:** search; multi-selection with Ctrl/Cmd and Shift; drag an empty area
+  to draw a selection rectangle in both icon and list views (Shift adds, Ctrl/Cmd toggles);
+  Escape clears selection; keyboard actions
   (arrows, Enter, Backspace, Delete, F2, Ctrl+A/C/X/V).
 - **Context menus:** open, download, cut, copy, paste, rename, duplicate, copy path, properties,
   delete; on the background also the view and **Open Terminal** (with `terminal:access`, a new
@@ -118,7 +122,11 @@ desktop) next to the app shortcuts. Its items are ordinary files and folders:
 - **Opening** works as in Files: a folder opens in a Files window (with the sidebar), an image in
   the preview, a text file in the Text Editor, anything else downloads.
 - **Item menus and keys:** open, download, show in Files, cut, copy, paste into a folder, rename
-  (F2), properties, delete (Delete, with a confirmation; deleting is permanent).
+  (F2), properties, move to trash (Delete, with confirmation). Ctrl/Command-click toggles icons, Shift-click
+  selects a range, Ctrl/Command+A selects all and Escape clears the selection. Drawing on empty
+  desktop space selects intersecting icons in either direction; Shift adds and Ctrl/Command toggles
+  that area. Selected files cut, copy, move and go to trash together. Shortcuts are removed only
+  from the desktop; their apps are never uninstalled.
 - **Dragging:** items drag onto desktop folders, into Files windows, sidebar places and the
   pulse shelf (move, or copy with Alt/Ctrl). Files dragged from a Files window or the computer
   onto the desktop move or upload into the Desktop folder (uploads never overwrite: a taken name
@@ -136,3 +144,34 @@ the desktop. Without file access only the shortcuts are kept.
 
 Not yet supported: uploading whole folders from the browser, archive downloads of folders, and
 editing files larger than 1 MiB.
+
+## Recoverable trash
+
+Normal deletion in Files and on the desktop moves data by rename into
+`<root>/.otuken-trash/<userId>/<itemId>/item`, with private `info.json` recording the original
+relative path, name, type, size and deletion time. Directories are private, metadata is synced
+before moving, and symlinks move as links. Parent/child and duplicate selections are collapsed.
+A cross-device rename fails safely with the original intact; no copy-and-delete fallback is used.
+The trash consumes disk space until explicitly emptied.
+
+The **Trash** app (`otuken.trash`) opens from the launcher, the Files sidebar or desktop context
+menu. Each account sees only its own trash, including on shared roots. Restoring refuses an
+occupied original name or a missing/escaping original parent; files use an exclusive hard-link
+or exclusive-copy fallback, and folders reserve their names before moving back. Multi-item
+operations may partially succeed; views refresh to show the actual remaining items.
+Permanent deletion and emptying require a separate confirmation. Read-only roots cannot be
+restored or emptied, and every mutation needs `files:write` and is audited.
+
+`.otuken-trash` is inaccessible to ordinary list, search, download, text, transfer and mutation
+routes even when hidden files are shown, including symlink aliases. It is storage owned by
+Otuken, not an implementation of the host OS's Trash or the freedesktop Trash specification.
+
+| Endpoint                    | Permission    | Input / result                                                     |
+| --------------------------- | ------------- | ------------------------------------------------------------------ |
+| `GET /files/trash`          | `files:read`  | `{ entries, truncated }`; private entries across configured roots  |
+| `POST /files/trash/restore` | `files:write` | `{ root, ids }`, at most 500 UUIDs                                 |
+| `POST /files/trash/delete`  | `files:write` | `{ root, ids, confirm: true }`, permanently deletes selected items |
+
+Audit actions are `files.delete` with `mode: "trash"`, `files.trash.restore` and
+`files.trash.delete`; contents are never written into audit details. Validated requests are
+also audited when a batch stops after a partial change, with `succeeded: false`.

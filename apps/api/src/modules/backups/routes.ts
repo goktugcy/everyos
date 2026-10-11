@@ -125,7 +125,11 @@ export function backupRoutes(services: Services): Hono<AppEnv> {
     const input = await parseJsonBody(c, RestoreRequestSchema);
     const auth = requireAuth(c);
     await confirmPassword(services, c, auth, input.password, "backups.restore");
-    const job = backups.restore(id, { settings: input.settings, apps: input.apps }, actor(c));
+    const job = backups.restore(
+      id,
+      { settings: input.settings, apps: input.apps, homes: input.homes },
+      actor(c),
+    );
     return c.json(job, 202);
   });
 

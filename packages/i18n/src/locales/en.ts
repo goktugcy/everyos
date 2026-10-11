@@ -200,6 +200,7 @@ export const en: Messages = {
     },
   },
   apps: {
+    trash: "Trash",
     terminal: "Terminal",
     store: "App Store",
     system: "System Monitor",
@@ -388,6 +389,7 @@ export const en: Messages = {
     },
   },
   desktop: {
+    selectedCount: "{{count}} items selected",
     workspace: "Desktop",
     defaultName: "Desktop {{n}}",
     menu: {
@@ -1760,6 +1762,7 @@ export const en: Messages = {
     },
   },
   files: {
+    selectAll: "Select all",
     locations: "Locations",
     favorites: "Favourites",
     homeHint: "Your personal folder; only you can see it.",
@@ -1836,17 +1839,17 @@ export const en: Messages = {
       duplicate: "Duplicate",
       copyPath: "Copy path",
       properties: "Properties",
-      delete: "Delete",
+      delete: "Move to trash",
       newFolder: "New folder",
       newFile: "New text document",
       upload: "Upload files",
       refresh: "Refresh",
     },
     deleteConfirm: {
-      title: "Delete?",
-      one: '"{{name}}" will be deleted permanently, including everything inside folders. This cannot be undone.',
-      many: "{{count}} items will be deleted permanently, including everything inside folders. This cannot be undone.",
-      confirm: "Delete permanently",
+      title: "Move to trash?",
+      one: '"{{name}}" and its contents will move to the trash. You can restore them later.',
+      many: "{{count}} items and their contents will move to the trash. You can restore them later.",
+      confirm: "Move to trash",
     },
     replaceConfirm: {
       title: "File already exists",
@@ -1883,6 +1886,20 @@ export const en: Messages = {
       overwrite: "Overwrite",
       noFile: "No file to open.",
     },
+  },
+  trash: {
+    intro:
+      "Deleted files stay here. Restoring requires the original folder to exist and its original name to be free. Trash uses disk space until emptied.",
+    empty: "The trash is empty.",
+    restore: "Restore",
+    emptyAction: "Empty trash",
+    deletePermanently: "Delete permanently",
+    deleteTitle: "Permanently delete {{count}} items?",
+    deleteBody:
+      "The selected items and everything inside their folders will be deleted permanently. This cannot be undone.",
+    originalLocation: "Original location",
+    deletedAt: "Deleted at",
+    selectItem: "Select {{name}}",
   },
   updates: {
     tabs: { packages: "Packages", history: "History" },
@@ -2058,11 +2075,15 @@ export const en: Messages = {
     },
   },
   backups: {
+    restoreHomes: "Restore personal home folders",
+    restoreHomesHint:
+      "Files and trash belonging to {{users}} are replaced with the backed-up contents. Current contents are backed up first for safety. Other accounts' files are kept.",
+    homesUnavailable: "This backup has no home folders that can currently be restored.",
     intro:
-      "Backs up Otuken's database, configuration, desktop settings and the data of selected apps. Every backup is verified with checksums.",
+      "Backs up Otuken's database, configuration, desktop settings, personal home folders and the data of selected apps. Every backup is verified with checksums.",
     create: "Create backup",
     createIntro:
-      "A consistent snapshot of the Otuken database (without sessions), the configuration file and wallpapers are always included.",
+      "A consistent snapshot of the Otuken database (without sessions), the configuration file, wallpapers and existing personal home folders (including trash) are backed up.",
     start: "Start backup",
     note: "Note",
     notePlaceholder: "Optional, e.g. before an upgrade",
@@ -2110,6 +2131,8 @@ export const en: Messages = {
       actions: "Actions",
     },
     contents: {
+      homes: "{{count}} personal home folders",
+      homesSkipped: "{{count}} home entries excluded from the backup",
       database: "Database",
       config: "Configuration",
       wallpapers: "Wallpapers",
@@ -2127,6 +2150,7 @@ export const en: Messages = {
     ok: "Verified",
     verify: "Verify",
     verifyErrors: {
+      homes: "The home archive failed its safety and integrity checks: {{file}}",
       missing: "Missing file: {{file}}",
       size: "Size mismatch: {{file}}",
       checksum: "Checksum mismatch: {{file}}",
@@ -2147,7 +2171,7 @@ export const en: Messages = {
     restoreSettings: "Otuken data",
     scope: {
       none: "Leave Otuken's data unchanged",
-      noneHint: "Only the app data selected below is restored.",
+      noneHint: "Only the selected home folders and app data are restored.",
       desktop: "Desktop and preferences",
       desktopHint:
         "Layout, widgets, preferences and wallpapers are restored right away for: {{users}}. Accounts are not changed.",
@@ -2208,6 +2232,9 @@ export const en: Messages = {
       "transfer-checksum": "The transferred data could not be verified",
       "snapshot-integrity": "The database snapshot failed its integrity check",
       "no-desktop-users": "The backup has no desktop settings to restore",
+      "no-home-users": "The backup has no home folders that can be restored to existing accounts",
+      "home-unsupported":
+        "A current home contains special files or mounted data that cannot be backed up; the restore was stopped to prevent data loss",
       "app-not-restorable": "The selected app's data cannot be restored",
       cancelled: "The operation was cancelled",
       BACKUP_INSUFFICIENT_SPACE: "There is not enough free disk space for the backup",

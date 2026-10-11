@@ -173,14 +173,15 @@ Implemented:
 
 - **Notification center:** conditions and events with per-user state, the host monitor, live
   delivery, a menu bar bell with toasts, settings and providers ([notifications.md](notifications.md)).
-- **File manager and text editor** over configured roots ([files.md](files.md)).
+- **File manager and text editor** over configured roots and private homes, with desktop
+  multi-selection, marquee selection and recoverable per-user trash ([files.md](files.md)).
 - **Terminal (7.3):** agent PTY relay, API WebSocket gateway and the lazy browser client, with
   permission checks, idle timeout, limits, audit, theme support, resize, reconnect/reload replay
   and confirmed cleanup of detached sessions ([terminal.md](terminal.md)).
 - **Update manager** with package details, background jobs and history ([updates.md](updates.md)).
 - **Scheduler** with predefined actions, cron schedules, catch-up, cancellation and history
   ([tasks.md](tasks.md)).
-- **Backup and restore:** verified backups of the database, configuration, wallpapers and app
+- **Backup and restore:** verified backups of the database, configuration, wallpapers, personal homes and app
   data (with the app stopped), retention, download/upload, restore preview, safety backups,
   live desktop restore and staged database restore ([backups.md](backups.md)).
 - **Tailscale:** node details, Serve/Funnel remote-access analysis, warnings and notifications,

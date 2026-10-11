@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { constants, createWriteStream, type Stats } from "node:fs";
 import {
   cp,
+  copyFile,
   link,
   lstat,
   mkdir,
@@ -13,8 +14,10 @@ import {
   realpath,
   rename,
   rm,
+  rmdir,
   stat,
   statfs,
+  symlink,
   unlink,
   type FileHandle,
 } from "node:fs/promises";
@@ -35,8 +38,18 @@ import {
   type FileSearchResult,
   type StandardFolder,
   type TextFile,
+  type TrashListing,
 } from "@otuken/shared";
 import { ApiError, notFound } from "../../http/errors.ts";
+import {
+  discardTrashItem,
+  listTrash,
+  putInTrash,
+  readTrashItem,
+  trashDirectory,
+  trashPayload,
+  TRASH_DIRECTORY,
+} from "./trash.ts";
 
 export interface FileRootConfig {
   id: string;
@@ -93,6 +106,8 @@ const MAX_CHILD_COUNT = 10_000;
 const SEARCH_LIMITS = { results: 300, visited: 50_000, depth: 16, ms: 8_000 };
 const COPY_SCAN_LIMIT = 200_000;
 const STAT_CONCURRENCY = 32;
+type AccessState = { count: number; idle: Set<() => void> };
+type FileAccess = Map<string, AccessState>;
 
 /** Thrown for paths that do not exist or resolve outside their root (indistinguishable on purpose). */
 const missing = () => notFound("File");
@@ -114,10 +129,20 @@ function checkName(name: string): string {
     name.includes("\0") ||
     name === "." ||
     name === ".." ||
+    name === TRASH_DIRECTORY ||
     Buffer.byteLength(name) > 255
   )
     throw invalid("Invalid name");
   return name;
+}
+
+function validFolderName(name: string): boolean {
+  try {
+    checkName(name);
+    return name !== FOLDERS_MANIFEST;
+  } catch {
+    return false;
+  }
 }
 
 function inside(root: string, path: string): boolean {
@@ -216,6 +241,9 @@ export class FileService {
   readonly #logger: Logger;
   readonly #ids: IdNames;
   readonly #homesDir: string | null;
+  readonly #trashOwner: string | null;
+  readonly #homeLocks: Set<string>;
+  readonly #access: FileAccess;
 
   constructor(options: {
     roots: readonly FileRootConfig[];
@@ -224,6 +252,9 @@ export class FileService {
     logger: Logger;
     homesDir?: string | null;
     ids?: IdNames;
+    trashOwner?: string | null;
+    homeLocks?: Set<string>;
+    access?: FileAccess;
   }) {
     this.#roots = new Map(options.roots.map((root) => [root.id, root]));
     this.#maxUploadBytes = options.maxUploadBytes;
@@ -231,6 +262,9 @@ export class FileService {
     this.#logger = options.logger.child({ component: "files" });
     this.#ids = options.ids ?? new IdNames();
     this.#homesDir = options.homesDir ?? null;
+    this.#trashOwner = options.trashOwner ?? null;
+    this.#homeLocks = options.homeLocks ?? new Set();
+    this.#access = options.access ?? new Map<string, AccessState>();
   }
 
   /**
@@ -265,6 +299,9 @@ export class FileService {
       minFreeBytes: this.#minFreeBytes,
       logger: this.#logger,
       ids: this.#ids,
+      trashOwner: user.id,
+      homeLocks: this.#homeLocks,
+      access: this.#access,
     });
   }
 
@@ -274,6 +311,47 @@ export class FileService {
 
   get maxUploadBytes(): number {
     return this.#maxUploadBytes;
+  }
+
+  get homesDir(): string | null {
+    return this.#homesDir;
+  }
+
+  /** Home replacement excludes file requests until the new directory is in place. */
+  async withHomesLocked<T>(users: readonly string[], run: () => Promise<T>): Promise<T> {
+    if (users.some((id) => this.#homeLocks.has(id)))
+      throw new ApiError(409, "CONFLICT", "A home restore is already running");
+    users.forEach((id) => this.#homeLocks.add(id));
+    try {
+      await Promise.all(
+        users.map((id) => {
+          const access = this.#access.get(id);
+          return access?.count
+            ? new Promise<void>((resolve) => access.idle.add(resolve))
+            : Promise.resolve();
+        }),
+      );
+      return await run();
+    } finally {
+      users.forEach((id) => this.#homeLocks.delete(id));
+    }
+  }
+
+  async withAccess<T>(userId: string, run: () => Promise<T>): Promise<T> {
+    if (this.#homeLocks.has(userId))
+      throw new ApiError(409, "CONFLICT", "The home is being backed up or restored");
+    const access = this.#access.get(userId) ?? { count: 0, idle: new Set<() => void>() };
+    this.#access.set(userId, access);
+    access.count++;
+    try {
+      return await run();
+    } finally {
+      access.count--;
+      if (!access.count) {
+        access.idle.forEach((resolve) => resolve());
+        this.#access.delete(userId);
+      }
+    }
   }
 
   /** Creates missing development roots (production roots must already exist). */
@@ -286,6 +364,7 @@ export class FileService {
     const views = await Promise.all(
       [...this.#roots.values()].map(async (root): Promise<FileRootView> => {
         const kind = root.kind ?? "location";
+        this.#root(root.id);
         const folders = kind === "home" ? await this.#ensureHome(root) : null;
         return {
           id: root.id,
@@ -319,22 +398,44 @@ export class FileService {
     const manifest = join(root.path, FOLDERS_MANIFEST);
     let saved: Partial<Record<StandardFolder, unknown>> = {};
     try {
-      saved = JSON.parse(await readFile(manifest, "utf8")) as typeof saved;
-      if (STANDARD_FOLDERS.every((kind) => typeof saved[kind] === "string"))
+      const handle = await open(manifest, constants.O_RDONLY | constants.O_NOFOLLOW);
+      try {
+        if ((await handle.stat()).size <= 16_384) {
+          const value: unknown = JSON.parse(await handle.readFile("utf8"));
+          if (value !== null && typeof value === "object" && !Array.isArray(value)) saved = value;
+        }
+      } finally {
+        await handle.close();
+      }
+      if (
+        STANDARD_FOLDERS.every(
+          (kind) => typeof saved[kind] === "string" && validFolderName(saved[kind]),
+        ) &&
+        new Set(Object.values(saved)).size === STANDARD_FOLDERS.length
+      )
         return saved as Record<StandardFolder, string>;
     } catch {
       // First use (or a damaged manifest): name the folders in the owner's language.
     }
     // Names already given stay; folders added in a later version get the owner's language.
     const fresh = FOLDER_NAMES[root.locale === "en" ? "en" : "tr"];
+    const used = new Set<string>();
     const names = Object.fromEntries(
       STANDARD_FOLDERS.map((kind) => {
         const name = saved[kind];
-        return [kind, typeof name === "string" ? name : fresh[kind]];
+        let candidate =
+          typeof name === "string" && validFolderName(name) && !used.has(name) ? name : fresh[kind];
+        while (used.has(candidate)) candidate += " 2";
+        used.add(candidate);
+        return [kind, candidate];
       }),
     ) as Record<StandardFolder, string>;
     await mkdir(root.path, { recursive: true, mode: 0o700 });
-    const handle = await open(manifest, "w", 0o600);
+    const handle = await open(
+      manifest,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW,
+      0o600,
+    ).catch(fsError);
     try {
       await handle.writeFile(JSON.stringify(names));
     } finally {
@@ -351,7 +452,11 @@ export class FileService {
     names.add(FOLDERS_MANIFEST);
     for (const path of paths) {
       const segments = segmentsOf(path);
-      if (segments.length === 1 && names.has(segments[0]!))
+      const source = await this.#entryPath(rootId, path, { notRoot: true });
+      if (
+        (segments.length === 1 && names.has(segments[0]!)) ||
+        (source.parent === source.rootReal && names.has(basename(source.entry)))
+      )
         throw new ApiError(403, "FILES_PROTECTED", "Standard folders cannot be changed", {
           details: { name: segments[0] },
         });
@@ -367,7 +472,10 @@ export class FileService {
     const dirents = await readdir(real, { withFileTypes: true }).catch(fsError);
     const top = rootId === "sys-root" && segmentsOf(path).length === 0;
     const visible = dirents.filter(
-      (d) => (hidden || !d.name.startsWith(".")) && !(top && PSEUDO.has(d.name)),
+      (d) =>
+        d.name !== TRASH_DIRECTORY &&
+        (hidden || !d.name.startsWith(".")) &&
+        !(top && PSEUDO.has(d.name)),
     );
     const slice = visible.slice(0, MAX_LIST_ENTRIES);
     const entries: FileEntry[] = [];
@@ -470,6 +578,7 @@ export class FileService {
         continue; // Unreadable folders are skipped, not errors.
       }
       for (const dirent of dirents) {
+        if (dirent.name === TRASH_DIRECTORY) continue;
         if (
           ++visited > SEARCH_LIMITS.visited ||
           Date.now() > deadline ||
@@ -507,6 +616,7 @@ export class FileService {
     content: string,
     etag: string | null,
   ): Promise<TextFile> {
+    await this.#protect(rootId, [path]);
     this.#writable(rootId);
     const { entry, parent } = await this.#entryPath(rootId, path, { notRoot: true });
     const data = Buffer.from(content, "utf8");
@@ -603,6 +713,7 @@ export class FileService {
     this.#writable(rootId);
     if (length > this.#maxUploadBytes)
       throw new ApiError(413, "FILES_TOO_LARGE", "The file is larger than the upload limit");
+    await this.#protect(rootId, [[path, name].filter(Boolean).join("/")]);
     const { real } = await this.#follow(rootId, path);
     const target = join(real, checkName(name));
     if (!overwrite && (await exists(target)))
@@ -723,10 +834,95 @@ export class FileService {
   async remove(rootId: string, paths: readonly string[]): Promise<void> {
     this.#writable(rootId);
     await this.#protect(rootId, paths);
-    for (const source of await this.#sources(rootId, paths)) {
-      // rm never follows symlinks: removing a link removes only the link.
-      await rm(source.entry, { recursive: true, force: false }).catch(fsError);
+    const sources = await this.#sources(rootId, paths);
+    const base = await this.#trash(rootId, true);
+    for (const source of sources.filter(
+      (candidate, index) =>
+        !sources.some(
+          (other, otherIndex) =>
+            otherIndex !== index &&
+            inside(other.entry, candidate.entry) &&
+            (other.entry !== candidate.entry || otherIndex < index),
+        ),
+    )) {
+      const info = await lstat(source.entry).catch(fsError);
+      await putInTrash(base, source.entry, {
+        root: rootId,
+        path: source.segments.join("/"),
+        name: basename(source.entry),
+        type: typeOf(info),
+        size: info.size,
+      }).catch(fsError);
     }
+  }
+
+  async trash(): Promise<TrashListing> {
+    const entries: TrashListing["entries"] = [];
+    let truncated = false;
+    for (const root of this.#roots.values()) {
+      if (root.kind === "system") continue;
+      try {
+        const listing = await listTrash(await this.#trash(root.id), root.id);
+        entries.push(...listing.entries);
+        truncated ||= listing.truncated;
+      } catch (error) {
+        if (errno(error) !== "ENOENT" && !(error instanceof ApiError && error.code === "NOT_FOUND"))
+          throw error;
+      }
+    }
+    entries.sort((a, b) => b.deletedAt - a.deletedAt);
+    return { entries, truncated };
+  }
+
+  async restoreTrash(rootId: string, ids: readonly string[]): Promise<void> {
+    this.#writable(rootId);
+    const base = await this.#trash(rootId);
+    for (const id of new Set(ids)) {
+      const item = await readTrashItem(base, rootId, id).catch(fsError);
+      await this.#protect(rootId, [item.path]);
+      const { entry, parent } = await this.#entryPath(rootId, item.path, { notRoot: true });
+      if (await exists(entry))
+        throw new ApiError(409, "CONFLICT", "The original name is already in use");
+      const payload = await trashPayload(base, id);
+      const info = await lstat(payload).catch(fsError);
+      if (info.isDirectory()) {
+        // Reserve the original name; rename only replaces our empty reservation.
+        await mkdir(entry, { mode: 0o700 }).catch(fsError);
+        try {
+          await rename(payload, entry).catch(fsError);
+        } catch (error) {
+          await rmdir(entry).catch(() => undefined);
+          throw error;
+        }
+      } else {
+        try {
+          await link(payload, entry);
+        } catch (error) {
+          if (!["EPERM", "ENOTSUP", "EXDEV"].includes(errno(error) ?? "")) fsError(error);
+          if (info.isSymbolicLink()) await symlink(await readlink(payload), entry).catch(fsError);
+          else if (info.isFile()) {
+            await this.#ensureSpace(parent, info.size);
+            await copyFile(payload, entry, constants.COPYFILE_EXCL).catch(fsError);
+          } else fsError(error);
+        }
+        await unlink(payload).catch(fsError);
+      }
+      await discardTrashItem(base, id).catch(fsError);
+    }
+  }
+
+  async deleteTrash(rootId: string, ids: readonly string[]): Promise<void> {
+    this.#writable(rootId);
+    const base = await this.#trash(rootId);
+    for (const id of new Set(ids)) {
+      await readTrashItem(base, rootId, id).catch(fsError);
+      await discardTrashItem(base, id).catch(fsError);
+    }
+  }
+
+  async #trash(rootId: string, create = false): Promise<string> {
+    if (!this.#trashOwner) throw new ApiError(403, "FORBIDDEN", "No trash owner");
+    return trashDirectory(await this.#rootReal(rootId), this.#trashOwner, create).catch(fsError);
   }
 
   /* -------------------------------- helpers -------------------------------- */
@@ -734,6 +930,8 @@ export class FileService {
   #root(rootId: string): FileRootConfig {
     const root = this.#roots.get(rootId);
     if (!root) throw missing();
+    if (root.kind === "home" && this.#trashOwner && this.#homeLocks.has(this.#trashOwner))
+      throw new ApiError(409, "CONFLICT", "The home is being restored");
     return root;
   }
 
@@ -754,6 +952,7 @@ export class FileService {
   /** Segments of a path, refusing kernel pseudo file systems under "/". */
   #segments(rootId: string, path: string): string[] {
     const segments = segmentsOf(path);
+    if (segments.includes(TRASH_DIRECTORY)) throw missing();
     if (rootId === "sys-root" && PSEUDO.has(segments[0] ?? "")) throw missing();
     return segments;
   }
@@ -765,7 +964,7 @@ export class FileService {
     const real = await realpath(join(rootReal, ...segments)).catch(() => {
       throw missing();
     });
-    if (!inside(rootReal, real)) throw missing();
+    if (!inside(rootReal, real) || real.split(sep).includes(TRASH_DIRECTORY)) throw missing();
     return { real, rootReal };
   }
 
@@ -785,7 +984,7 @@ export class FileService {
     const parent = await realpath(join(rootReal, ...segments.slice(0, -1))).catch(() => {
       throw missing();
     });
-    if (!inside(rootReal, parent)) throw missing();
+    if (!inside(rootReal, parent) || parent.split(sep).includes(TRASH_DIRECTORY)) throw missing();
     return { entry: join(parent, segments.at(-1)!), parent, rootReal, segments };
   }
 
@@ -821,7 +1020,8 @@ export class FileService {
     try {
       await readlink(path);
       const target = await realpath(path);
-      if (!inside(rootReal, target)) return { inside: false };
+      if (!inside(rootReal, target) || target.split(sep).includes(TRASH_DIRECTORY))
+        return { inside: false };
       const stats = await stat(target);
       return {
         type: stats.isDirectory() ? "directory" : stats.isFile() ? "file" : "other",

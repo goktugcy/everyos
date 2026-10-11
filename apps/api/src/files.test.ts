@@ -1,9 +1,11 @@
 import {
   mkdirSync,
+  existsSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -15,6 +17,7 @@ import type {
   FileRootsResponse,
   FileSearchResult,
   TextFile,
+  TrashListing,
 } from "@otuken/shared";
 import { describe, expect, it } from "vitest";
 import type { ApiConfig } from "./config.ts";
@@ -49,6 +52,251 @@ async function setup(configure?: (config: ApiConfig) => void) {
 }
 
 const q = (params: Record<string, string>) => new URLSearchParams(params).toString();
+
+describe("private recoverable trash", () => {
+  it("keeps whole folders and escaping links recoverable, without exposing trash through listing or search", async () => {
+    const { admin, root } = await setup();
+    mkdirSync(join(root, "report"));
+    writeFileSync(join(root, "report", "notes.txt"), "recover me");
+    const outside = mkdtempSync(join(tmpdir(), "otuken-trash-outside-"));
+    writeFileSync(join(outside, "secret.txt"), "unchanged");
+    symlinkSync(outside, join(root, "escape"));
+    expect(
+      (
+        await admin.post("/api/files/delete", {
+          root: "dev",
+          paths: ["report/notes.txt", "report", "report", "escape"],
+          confirm: true,
+        })
+      ).status,
+    ).toBe(204);
+    expect(existsSync(join(root, "report"))).toBe(false);
+    const trash = await json<TrashListing>(await admin.get("/api/files/trash"));
+    expect(trash.entries.map((entry) => entry.name).sort()).toEqual(["escape", "report"]);
+    const hidden = await json<FileListing>(
+      await admin.get("/api/files/list?root=dev&path=&hidden=true"),
+    );
+    expect(hidden.entries.map((entry) => entry.name)).not.toContain(".otuken-trash");
+    const search = await json<FileSearchResult>(
+      await admin.get("/api/files/search?root=dev&path=&q=notes"),
+    );
+    expect(search.results).toEqual([]);
+    expect(
+      (
+        await admin.post("/api/files/trash/restore", {
+          root: "dev",
+          ids: trash.entries.map((entry) => entry.id),
+        })
+      ).status,
+    ).toBe(204);
+    expect(readFileSync(join(root, "report", "notes.txt"), "utf8")).toBe("recover me");
+    expect(readFileSync(join(outside, "secret.txt"), "utf8")).toBe("unchanged");
+    expect((await json<TrashListing>(await admin.get("/api/files/trash"))).entries).toEqual([]);
+  });
+
+  it("isolates users on shared roots and requires permission and explicit confirmation for permanent deletion", async () => {
+    const { admin, operator, viewer, root, ctx } = await setup();
+    writeFileSync(join(root, "private.txt"), "private trash");
+    await admin.post("/api/files/delete", { root: "dev", paths: ["private.txt"], confirm: true });
+    const item = (await json<TrashListing>(await admin.get("/api/files/trash"))).entries[0]!;
+    expect((await json<TrashListing>(await operator.get("/api/files/trash"))).entries).toEqual([]);
+    for (const endpoint of ["restore", "delete"]) {
+      expect(
+        (
+          await operator.post(`/api/files/trash/${endpoint}`, {
+            root: "dev",
+            ids: [item.id],
+            ...(endpoint === "delete" ? { confirm: true } : {}),
+          })
+        ).status,
+      ).toBe(404);
+      expect(
+        (
+          await viewer.post(`/api/files/trash/${endpoint}`, {
+            root: "dev",
+            ids: [item.id],
+            confirm: true,
+          })
+        ).status,
+      ).toBe(403);
+    }
+    expect((await viewer.get("/api/files/trash")).status).toBe(403);
+    expect(
+      (await admin.post("/api/files/trash/delete", { root: "dev", ids: [item.id] })).status,
+    ).toBe(400);
+    expect(
+      (
+        await admin.post("/api/files/trash/delete", {
+          root: "dev",
+          ids: ["../outside"],
+          confirm: true,
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (await admin.post("/api/files/trash/delete", { root: "dev", ids: [item.id], confirm: true }))
+        .status,
+    ).toBe(204);
+    expect((await json<TrashListing>(await admin.get("/api/files/trash"))).entries).toEqual([]);
+    expect(
+      ctx.db
+        .all<{ action: string }>("SELECT action FROM audit_events WHERE action LIKE 'files.%'")
+        .map((row) => row.action),
+    ).toContain("files.trash.delete");
+  });
+
+  it("preserves both versions when the original name is occupied", async () => {
+    const { admin, root } = await setup();
+    writeFileSync(join(root, "same.txt"), "old");
+    await admin.post("/api/files/delete", { root: "dev", paths: ["same.txt"], confirm: true });
+    const item = (await json<TrashListing>(await admin.get("/api/files/trash"))).entries[0]!;
+    writeFileSync(join(root, "same.txt"), "new");
+    expect(
+      (await admin.post("/api/files/trash/restore", { root: "dev", ids: [item.id] })).status,
+    ).toBe(409);
+    expect(readFileSync(join(root, "same.txt"), "utf8")).toBe("new");
+    expect((await json<TrashListing>(await admin.get("/api/files/trash"))).entries).toHaveLength(1);
+    unlinkSync(join(root, "same.txt"));
+    expect(
+      (await admin.post("/api/files/trash/restore", { root: "dev", ids: [item.id] })).status,
+    ).toBe(204);
+    expect(readFileSync(join(root, "same.txt"), "utf8")).toBe("old");
+  });
+
+  it("audits a restore that stops after a partial change", async () => {
+    const { admin, root, ctx } = await setup();
+    for (const name of ["first.txt", "second.txt"]) writeFileSync(join(root, name), name);
+    await admin.post("/api/files/delete", {
+      root: "dev",
+      paths: ["first.txt", "second.txt"],
+      confirm: true,
+    });
+    const items = (await json<TrashListing>(await admin.get("/api/files/trash"))).entries;
+    const ids = ["first.txt", "second.txt"].map(
+      (name) => items.find((item) => item.name === name)!.id,
+    );
+    writeFileSync(join(root, "second.txt"), "keep current version");
+    expect((await admin.post("/api/files/trash/restore", { root: "dev", ids })).status).toBe(409);
+    expect(readFileSync(join(root, "first.txt"), "utf8")).toBe("first.txt");
+    expect(readFileSync(join(root, "second.txt"), "utf8")).toBe("keep current version");
+    expect((await json<TrashListing>(await admin.get("/api/files/trash"))).entries).toHaveLength(1);
+    const events = ctx.db.all<{ details: string; outcome: string }>(
+      "SELECT details, outcome FROM audit_events WHERE action = 'files.trash.restore'",
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]!.outcome).toBe("failure");
+    expect(JSON.parse(events[0]!.details)).toEqual({ ids, count: 2, succeeded: false });
+  });
+
+  it("never overwrites another version when two restores race for the same original name", async () => {
+    const { admin, root } = await setup();
+    for (const content of ["first", "second"]) {
+      writeFileSync(join(root, "versions.txt"), content);
+      expect(
+        (
+          await admin.post("/api/files/delete", {
+            root: "dev",
+            paths: ["versions.txt"],
+            confirm: true,
+          })
+        ).status,
+      ).toBe(204);
+    }
+    const entries = (await json<TrashListing>(await admin.get("/api/files/trash"))).entries;
+    const results = await Promise.all(
+      entries.map((entry) =>
+        admin.post("/api/files/trash/restore", { root: "dev", ids: [entry.id] }),
+      ),
+    );
+    expect(results.map((result) => result.status).sort()).toEqual([204, 409]);
+    expect(["first", "second"]).toContain(readFileSync(join(root, "versions.txt"), "utf8"));
+    expect((await json<TrashListing>(await admin.get("/api/files/trash"))).entries).toHaveLength(1);
+  });
+
+  it("refuses direct trash access, symlink aliases and a symlinked trash directory", async () => {
+    const { admin, root } = await setup();
+    writeFileSync(join(root, "a.txt"), "a");
+    await admin.post("/api/files/delete", { root: "dev", paths: ["a.txt"], confirm: true });
+    symlinkSync(join(root, ".otuken-trash"), join(root, "alias"));
+    for (const path of [".otuken-trash", "alias"])
+      expect((await admin.get(`/api/files/list?${q({ root: "dev", path })}`)).status).toBe(404);
+    expect(
+      (await admin.post("/api/files/mkdir", { root: "dev", path: "", name: ".otuken-trash" }))
+        .status,
+    ).toBe(400);
+    const second = await setup();
+    const outside = mkdtempSync(join(tmpdir(), "otuken-trash-link-"));
+    symlinkSync(outside, join(second.root, ".otuken-trash"));
+    writeFileSync(join(second.root, "keep.txt"), "keep");
+    expect(
+      (
+        await second.admin.post("/api/files/delete", {
+          root: "dev",
+          paths: ["keep.txt"],
+          confirm: true,
+        })
+      ).status,
+    ).toBe(403);
+    expect(readFileSync(join(second.root, "keep.txt"), "utf8")).toBe("keep");
+    expect(readdirSync(outside)).toEqual([]);
+  });
+
+  it("drains pending file work and rejects new requests while homes are replaced", async () => {
+    const { ctx, admin } = await setup();
+    const id = ctx.db.get<{ id: string }>("SELECT id FROM users WHERE username = 'admin'")!.id;
+    let finish: () => void = () => undefined;
+    const pending = ctx.services.files.withAccess(
+      id,
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    let replaced = false;
+    const restore = ctx.services.files.withHomesLocked([id], () => {
+      replaced = true;
+      return Promise.resolve();
+    });
+    expect(replaced).toBe(false);
+    expect((await admin.get("/api/files/roots")).status).toBe(409);
+    finish();
+    await Promise.all([pending, restore]);
+    expect(replaced).toBe(true);
+    expect((await admin.get("/api/files/roots")).status).toBe(200);
+  });
+
+  it("protects standard home folders through aliases and repairs unsafe folder names without escaping", async () => {
+    const { ctx, admin } = await setup();
+    const roots = await json<FileRootsResponse>(await admin.get("/api/files/roots"));
+    const homeView = roots.roots.find((root) => root.kind === "home")!;
+    const id = ctx.db.get<{ id: string }>("SELECT id FROM users WHERE username = 'admin'")!.id;
+    const home = join(ctx.config.files.homesDir!, id);
+    symlinkSync(home, join(home, "alias"));
+    expect(
+      (
+        await admin.post("/api/files/delete", {
+          root: "home",
+          paths: [`alias/${homeView.folders!.desktop}`],
+          confirm: true,
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await admin.request("PUT", "/api/files/text", {
+          body: { root: "home", path: ".otuken-folders.json", content: "{}", etag: null },
+        })
+      ).status,
+    ).toBe(403);
+    writeFileSync(
+      join(home, ".otuken-folders.json"),
+      JSON.stringify({ desktop: "../../escaped-directory", documents: "/tmp/escaped-directory" }),
+    );
+    const repaired = await json<FileRootsResponse>(await admin.get("/api/files/roots"));
+    expect(repaired.roots[0]!.folders?.desktop).toBe("Masaüstü");
+    expect(existsSync(join(ctx.config.files.homesDir!, "escaped-directory"))).toBe(false);
+  });
+});
 
 describe("file manager", () => {
   it("lists only inside the root and never follows links out of it", async () => {
@@ -331,11 +579,11 @@ describe("file manager", () => {
         })
       ).status,
     ).toBe(204);
-    expect(readdirSync(root).sort()).toEqual(["Projeler (kopya)"]);
+    expect(readdirSync(root).sort()).toEqual([".otuken-trash", "Projeler (kopya)"]);
 
     const actions = ctx.db
       .all<{ action: string }>(
-        "SELECT action FROM audit_events WHERE action LIKE 'files.%' ORDER BY id",
+        "SELECT action FROM audit_events WHERE action LIKE 'files.%' AND outcome = 'success' ORDER BY id",
       )
       .map((row) => row.action);
     expect(actions).toEqual([

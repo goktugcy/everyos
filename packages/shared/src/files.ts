@@ -93,4 +93,20 @@ export interface FileSearchResult {
   truncated: boolean;
 }
 
+/** One item in the caller's private trash, retaining its original relative path. */
+export interface TrashEntry {
+  id: string;
+  root: string;
+  path: string;
+  name: string;
+  type: FileEntryType;
+  size: number;
+  deletedAt: number;
+}
+
+export interface TrashListing {
+  entries: TrashEntry[];
+  truncated: boolean;
+}
+
 export const MAX_TEXT_FILE_BYTES = 1024 * 1024;

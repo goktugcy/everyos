@@ -1,5 +1,5 @@
 import type { DesktopItem, FileEntry } from "@otuken/shared";
-import { workArea, type Point } from "@otuken/window-manager";
+import { workArea, type Point, type Rect } from "@otuken/window-manager";
 import {
   AppWindow,
   ArrowDownAZ,
@@ -98,6 +98,14 @@ import {
   type GridMetrics,
 } from "./icon-grid.ts";
 import { ICON_PIXELS } from "@otuken/theme";
+import { isDesktopShortcut } from "../shortcut-keys.ts";
+import {
+  iconsInRect,
+  moveSelection,
+  selectIcon,
+  selectionRect,
+  type SelectionModifiers,
+} from "./icon-selection.ts";
 
 type AppItem = Extract<DesktopItem, { kind: "app" }>;
 
@@ -141,7 +149,7 @@ interface IconProps {
   dropTarget: boolean;
   /** Set for Desktop-folder entries; shortcuts move with the pointer instead. */
   native: NativeDrag | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, modifiers: SelectionModifiers) => void;
   onOpen: (id: string) => void;
   onMove: (id: string, cell: Cell) => void;
   onRename: (id: string, name: string | null) => void;
@@ -152,10 +160,16 @@ function DesktopIcon(props: IconProps) {
   const { t } = useTranslation();
   const { id, cell, metrics, label, selected, renaming, native } = props;
   const ref = useRef<HTMLButtonElement>(null);
+  const suppressClick = useRef(false);
+  const cancelDrag = useRef<(() => void) | null>(null);
+  useEffect(() => () => cancelDrag.current?.(), []);
   const rect = cellRect(cell, metrics);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0 || renaming) return;
+    cancelDrag.current?.();
+    if (!selected || event.ctrlKey || event.metaKey || event.shiftKey) props.onSelect(id, event);
+    suppressClick.current = true;
     const element = ref.current!;
     const startX = event.clientX;
     const startY = event.clientY;
@@ -170,16 +184,26 @@ function DesktopIcon(props: IconProps) {
       element.style.zIndex = "5";
       element.style.opacity = "0.85";
     };
-    const up = (pointer: PointerEvent) => {
+    const cleanup = () => {
       element.removeEventListener("pointermove", move);
       element.removeEventListener("pointerup", up);
       element.removeEventListener("pointercancel", up);
       element.style.zIndex = "";
       element.style.opacity = "";
       element.style.transform = `translate3d(${rect.x}px, ${rect.y}px, 0)`;
+      if (element.hasPointerCapture(event.pointerId))
+        element.releasePointerCapture(event.pointerId);
+      cancelDrag.current = null;
+    };
+    const up = (pointer: PointerEvent) => {
+      cleanup();
+      if (pointer.type === "pointercancel") return;
       if (dragging) props.onMove(id, cellAt({ x: pointer.clientX, y: pointer.clientY }, metrics));
       else if (pointer.pointerType === "touch") props.onOpen(id);
+      else if (!pointer.ctrlKey && !pointer.metaKey && !pointer.shiftKey)
+        props.onSelect(id, pointer);
     };
+    cancelDrag.current = cleanup;
     element.addEventListener("pointermove", move);
     element.addEventListener("pointerup", up);
     element.addEventListener("pointercancel", up);
@@ -208,7 +232,13 @@ function DesktopIcon(props: IconProps) {
       onDragOver={native?.onDragOver}
       onDragLeave={native?.onDragLeave}
       onDrop={native?.onDrop}
-      onClick={() => props.onSelect(id)}
+      onClick={(event) => {
+        if (suppressClick.current) {
+          suppressClick.current = false;
+          return;
+        }
+        props.onSelect(id, event);
+      }}
       onDoubleClick={() => props.onOpen(id)}
       onKeyDown={(event) => props.onKey(event, id)}
     >
@@ -302,7 +332,23 @@ export function DesktopSurface() {
   const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
   const folder = useDesktopFolder();
   const clipboard = useFileClipboard();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selection, setSelection] = useState<{ desktopId: string; ids: ReadonlySet<string> }>({
+    desktopId: activeDesktopId,
+    ids: new Set(),
+  });
+  const selected = selection.desktopId === activeDesktopId ? selection.ids : new Set<string>();
+  const setSelected = (ids: ReadonlySet<string>) =>
+    setSelection({ desktopId: activeDesktopId, ids });
+  const anchor = useRef<string | null>(null);
+  const [marquee, setMarquee] = useState<Rect | null>(null);
+  const selecting = useRef<{
+    pointerId: number;
+    start: Point;
+    bounds: Map<string, Rect>;
+    initial: ReadonlySet<string>;
+    additive: boolean;
+    toggle: boolean;
+  } | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
@@ -346,6 +392,7 @@ export function DesktopSurface() {
     () => placeItems(icons, metrics, (icon) => icon.kind === "file"),
     [icons, metrics],
   );
+  const selectedCount = icons.filter((icon) => selected.has(icon.id)).length;
   const names = useMemo(() => new Set(folder.entries.map((entry) => entry.name)), [folder.entries]);
 
   // New entries keep the place they first appeared in; places of removed ones are forgotten.
@@ -467,7 +514,7 @@ export function DesktopSurface() {
     );
     if (!done) return;
     updatePreference("desktop", (doc) => setIconCell(doc, { kind: "file", name }, cell));
-    setSelected(fileId(name));
+    setSelected(new Set([fileId(name)]));
     setRenaming(fileId(name));
   };
 
@@ -480,26 +527,66 @@ export function DesktopSurface() {
     if (!name || name === from) return;
     if (await act(() => filesApi.rename(entryLocation(from), name))) {
       updatePreference("desktop", (doc) => renameFilePosition(doc, from, name));
-      setSelected(fileId(name));
+      setSelected(new Set([fileId(name)]));
     }
   };
 
-  const remove = async (entry: FileEntry) => {
+  const selectedFor = (id: string) =>
+    selected.has(id)
+      ? icons.filter((icon) => selected.has(icon.id))
+      : icons.filter((icon) => icon.id === id);
+
+  const removeIcons = async (targets: Icon[]) => {
+    const entries = targets
+      .filter((icon): icon is Extract<Icon, { kind: "file" }> => icon.kind === "file")
+      .map((icon) => icon.entry);
+    if (entries.length === 0) {
+      updatePreference("desktop", (doc) =>
+        targets.reduce((next, icon) => removeItem(next, icon.id), doc),
+      );
+      setSelected(new Set());
+      return;
+    }
     if (!location) return;
     const ok = await requestConfirm({
-      title: t("files.deleteConfirm.title", { count: 1 }),
-      body: t("files.deleteConfirm.one", { name: entry.name }),
+      title: t("files.deleteConfirm.title", { count: entries.length }),
+      body:
+        entries.length === 1
+          ? t("files.deleteConfirm.one", { name: entries[0]!.name })
+          : t("files.deleteConfirm.many", { count: entries.length }),
       confirmLabel: t("files.deleteConfirm.confirm"),
       danger: true,
     });
-    if (ok && (await act(() => filesApi.remove(location.root, [entryLocation(entry.name).path]))))
-      setSelected(null);
+    if (
+      ok &&
+      (await act(() =>
+        filesApi.remove(
+          location.root,
+          entries.map((entry) => entryLocation(entry.name).path),
+        ),
+      ))
+    ) {
+      updatePreference("desktop", (doc) =>
+        targets
+          .filter((icon) => icon.kind === "app")
+          .reduce((next, icon) => removeItem(next, icon.id), doc),
+      );
+      setSelected(new Set());
+    }
   };
+
+  const remove = (entry: FileEntry) => removeIcons(selectedFor(fileId(entry.name)));
 
   const toClipboard = (entry: FileEntry, mode: "copy" | "cut") => {
     if (!location) return;
     useFileClipboard.setState(
-      { mode, root: location.root, paths: [entryLocation(entry.name).path] },
+      {
+        mode,
+        root: location.root,
+        paths: selectedFor(fileId(entry.name))
+          .filter((icon): icon is Extract<Icon, { kind: "file" }> => icon.kind === "file")
+          .map((icon) => entryLocation(icon.entry.name).path),
+      },
       true,
     );
   };
@@ -602,6 +689,10 @@ export function DesktopSurface() {
         const id = fileId(nameOf(data.paths[0]!));
         const moving = icons.find((icon) => icon.id === id);
         if (!moving) return;
+        if (data.paths.length > 1) {
+          moveGroup(new Set(data.paths.map((path) => fileId(nameOf(path)))), id, cell);
+          return;
+        }
         const occupant = icons.find(
           (icon) => icon.id !== id && sameCell(placed.get(icon.id), cell),
         );
@@ -633,10 +724,16 @@ export function DesktopSurface() {
     const target = entryLocation(icon.entry.name);
     return {
       onDragStart: (event) => {
-        setSelected(icon.id);
+        const targets = selectedFor(icon.id).filter(
+          (target): target is Extract<Icon, { kind: "file" }> => target.kind === "file",
+        );
+        if (!selected.has(icon.id)) setSelected(new Set([icon.id]));
         event.dataTransfer.setData(
           FILES_DRAG_TYPE,
-          JSON.stringify({ root: target.root, paths: [target.path] }),
+          JSON.stringify({
+            root: target.root,
+            paths: targets.map((entry) => entryLocation(entry.entry.name).path),
+          }),
         );
         event.dataTransfer.effectAllowed = "copyMove";
       },
@@ -654,9 +751,32 @@ export function DesktopSurface() {
 
   /* --------------------------------- icons --------------------------------- */
 
+  const moveGroup = (ids: ReadonlySet<string>, id: string, cell: Cell) => {
+    const positions = moveSelection(ids, id, cell, placed, metrics);
+    if (!positions) return;
+    updatePreference("desktop", (doc) =>
+      icons.reduce((next, icon) => {
+        const position = positions.get(icon.id);
+        return position ? setIconCell(next, refOf(icon), position) : next;
+      }, doc),
+    );
+  };
+
+  const onSelect = (id: string, modifiers: SelectionModifiers) => {
+    const order = [...placed]
+      .sort(([, a], [, b]) => a.col - b.col || a.row - b.row)
+      .map(([key]) => key);
+    setSelected(selectIcon(selected, id, order, anchor.current, modifiers));
+    if (!modifiers.shiftKey) anchor.current = id;
+  };
+
   const onMove = (id: string, cell: Cell) => {
     const moving = icons.find((icon) => icon.id === id);
     if (!moving) return;
+    if (selected.has(id) && selected.size > 1) {
+      moveGroup(selected, id, cell);
+      return;
+    }
     const occupant = icons.find((icon) => icon.id !== id && sameCell(placed.get(icon.id), cell));
     updatePreference("desktop", (doc) =>
       moveIcon(doc, refOf(moving), cell, placed.get(id) ?? null, occupant ? refOf(occupant) : null),
@@ -664,17 +784,31 @@ export function DesktopSurface() {
   };
 
   const onKey = (event: KeyboardEvent, id: string) => {
+    if (isDesktopShortcut(event)) return;
     const icon = icons.find((candidate) => candidate.id === id);
     if (!icon) return;
     const mod = event.metaKey || event.ctrlKey;
     const file = icon.kind === "file" ? icon.entry : null;
-    if (event.key === "Enter") openIcon(icon);
-    else if (event.key === "F2" && file && writable) setRenaming(id);
-    else if (file && writable && (event.key === "Delete" || (event.key === "Backspace" && mod)))
+    if (mod && event.key.toLowerCase() === "a") {
+      event.preventDefault();
+      setSelected(new Set(icons.map((item) => item.id)));
+    } else if (event.key === "Escape") {
+      setSelected(new Set());
+      setRenaming(null);
+    } else if (event.key === "Enter") selectedFor(id).forEach(openIcon);
+    else if (event.key === "F2" && file && writable && selected.size <= 1) setRenaming(id);
+    else if (file && writable && (event.key === "Delete" || (event.key === "Backspace" && mod))) {
+      event.preventDefault();
       void remove(file);
-    else if (file && mod && event.key.toLowerCase() === "c") toClipboard(file, "copy");
+    } else if (!file && (event.key === "Delete" || (event.key === "Backspace" && mod))) {
+      event.preventDefault();
+      void removeIcons(selectedFor(id));
+    } else if (file && mod && event.key.toLowerCase() === "c") toClipboard(file, "copy");
     else if (file && writable && mod && event.key.toLowerCase() === "x") toClipboard(file, "cut");
-    else navigate(event, id);
+    else if (mod && writable && event.key.toLowerCase() === "v") {
+      event.preventDefault();
+      void paste();
+    } else navigate(event, id);
   };
 
   const navigate = (event: KeyboardEvent, id: string) => {
@@ -704,7 +838,7 @@ export function DesktopSurface() {
       if (!best || distance < best.distance) best = { id: otherId, distance };
     }
     if (best) {
-      setSelected(best.id);
+      onSelect(best.id, event);
       document.querySelector<HTMLElement>(`[data-desktop-item="${CSS.escape(best.id)}"]`)?.focus();
     }
   };
@@ -758,6 +892,14 @@ export function DesktopSurface() {
       : [];
     return [
       ...fileEntries,
+      {
+        kind: "item",
+        id: "trash",
+        label: t("apps.trash"),
+        icon: <Trash2 />,
+        disabled: !permissions.includes("files:read"),
+        onSelect: () => desktop.openApp("otuken.trash"),
+      },
       {
         kind: "submenu",
         id: "add-shortcut",
@@ -1010,6 +1152,102 @@ export function DesktopSurface() {
     return <FileGlyph entry={icon.entry} size={iconSize} thumbnail={thumbnail} />;
   };
 
+  const groupMenu = (icon: Icon): MenuEntry[] => {
+    const targets = selectedFor(icon.id);
+    if (targets.length < 2) return icon.kind === "app" ? appMenu(icon.item) : fileMenu(icon.entry);
+    const files = targets.filter(
+      (item): item is Extract<Icon, { kind: "file" }> => item.kind === "file",
+    );
+    return [
+      {
+        kind: "item",
+        id: "open",
+        label: t("desktop.menu.open"),
+        icon: <FolderOpen />,
+        onSelect: () => targets.forEach(openIcon),
+      },
+      {
+        kind: "item",
+        id: "copy",
+        label: t("files.menu.copy"),
+        icon: <Copy />,
+        disabled: files.length !== targets.length,
+        onSelect: () => files[0] && toClipboard(files[0].entry, "copy"),
+      },
+      {
+        kind: "item",
+        id: "cut",
+        label: t("files.menu.cut"),
+        icon: <Scissors />,
+        disabled: !writable || files.length !== targets.length,
+        onSelect: () => files[0] && toClipboard(files[0].entry, "cut"),
+      },
+      { kind: "separator", id: "s1" },
+      {
+        kind: "item",
+        id: "remove",
+        label: files.length ? t("files.menu.delete") : t("desktop.menu.removeShortcut"),
+        icon: <Trash2 />,
+        disabled: files.length > 0 && !writable,
+        onSelect: () => void removeIcons(targets),
+      },
+    ];
+  };
+
+  const beginSelection = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || event.target !== event.currentTarget || event.pointerType === "touch")
+      return;
+    event.preventDefault();
+    event.currentTarget.focus();
+    const bounds = new Map<string, Rect>();
+    event.currentTarget.querySelectorAll<HTMLElement>("[data-desktop-item]").forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      bounds.set(element.dataset.desktopItem!, {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      });
+    });
+    const additive = event.shiftKey || event.ctrlKey || event.metaKey;
+    selecting.current = {
+      pointerId: event.pointerId,
+      start: { x: event.clientX, y: event.clientY },
+      initial: selected,
+      bounds,
+      additive,
+      toggle: event.ctrlKey || event.metaKey,
+    };
+    if (!additive) setSelected(new Set());
+    setRenaming(null);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const extendSelection = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = selecting.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const rect = selectionRect(drag.start, { x: event.clientX, y: event.clientY });
+    const hit = iconsInRect(rect, drag.bounds);
+    const next = new Set(drag.additive ? drag.initial : []);
+    for (const id of hit) {
+      if (drag.toggle && next.has(id)) next.delete(id);
+      else next.add(id);
+    }
+    setSelected(next);
+    const surface = event.currentTarget.getBoundingClientRect();
+    setMarquee({ ...rect, x: rect.x - surface.x, y: rect.y - surface.y });
+  };
+
+  const endSelection = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = selecting.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.type === "pointercancel") setSelected(drag.initial);
+    selecting.current = null;
+    setMarquee(null);
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+      event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
   return (
     <>
       <ContextMenuArea entries={desktopMenu}>
@@ -1021,8 +1259,20 @@ export function DesktopSurface() {
           role="group"
           aria-label={t("desktop.workspace")}
           data-testid="desktop-surface"
-          onPointerDown={(event) => {
-            if (event.target === event.currentTarget) setSelected(null);
+          tabIndex={0}
+          onPointerDown={beginSelection}
+          onPointerMove={extendSelection}
+          onPointerUp={endSelection}
+          onPointerCancel={endSelection}
+          onKeyDown={(event) => {
+            if (event.target !== event.currentTarget) return;
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v" && writable) {
+              event.preventDefault();
+              void paste();
+              return;
+            }
+            const id = [...selected][0] ?? icons[0]?.id;
+            if (id) onKey(event, id);
           }}
           onContextMenu={(event) => {
             menuPoint.current = { x: event.clientX, y: event.clientY };
@@ -1038,23 +1288,25 @@ export function DesktopSurface() {
             const glyph = glyphOf(icon);
             if (!cell || !glyph) return null;
             return (
-              <ContextMenuArea
-                key={icon.id}
-                entries={() => (icon.kind === "app" ? appMenu(icon.item) : fileMenu(icon.entry))}
-              >
-                <div className="contents" onContextMenu={() => setSelected(icon.id)}>
+              <ContextMenuArea key={icon.id} entries={() => groupMenu(icon)}>
+                <div
+                  className="contents"
+                  onContextMenu={() => {
+                    if (!selected.has(icon.id)) setSelected(new Set([icon.id]));
+                  }}
+                >
                   <DesktopIcon
                     id={icon.id}
                     cell={cell}
                     metrics={metrics}
                     label={labelOf(icon)}
                     glyph={glyph}
-                    selected={selected === icon.id}
+                    selected={selected.has(icon.id)}
                     renaming={renaming === icon.id}
                     renameLimit={icon.kind === "file" ? 255 : 40}
                     dropTarget={dropTarget === icon.id}
                     native={icon.kind === "file" ? nativeFor(icon) : null}
-                    onSelect={setSelected}
+                    onSelect={onSelect}
                     onOpen={(id) => {
                       const target = icons.find((candidate) => candidate.id === id);
                       if (target) openIcon(target);
@@ -1067,6 +1319,27 @@ export function DesktopSurface() {
               </ContextMenuArea>
             );
           })}
+          {marquee ? (
+            <div
+              aria-hidden
+              data-testid="desktop-selection-area"
+              className="pointer-events-none absolute z-20 rounded-sm border border-accent bg-accent/15"
+              style={{
+                left: marquee.x,
+                top: marquee.y,
+                width: marquee.width,
+                height: marquee.height,
+              }}
+            />
+          ) : null}
+          {selectedCount > 1 ? (
+            <span
+              role="status"
+              className="pointer-events-none absolute bottom-24 left-4 rounded-otk-md bg-surface/80 px-3 py-2 text-xs text-fg"
+            >
+              {t("desktop.selectedCount", { count: selectedCount })}
+            </span>
+          ) : null}
           {notice ? (
             <div
               role={notice.error ? "alert" : "status"}

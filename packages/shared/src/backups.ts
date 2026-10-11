@@ -40,6 +40,14 @@ export interface BackupManifestFile {
   sha256: string;
 }
 
+export interface BackupHomeContent {
+  userId: string;
+  username: string;
+  dataBytes: number;
+  dataEntries: number;
+  skipped: number;
+}
+
 export interface BackupManifest {
   format: typeof BACKUP_FORMAT;
   version: typeof BACKUP_FORMAT_VERSION;
@@ -59,6 +67,8 @@ export interface BackupManifest {
     config: boolean;
     wallpapers: boolean;
     apps: BackupAppContent[];
+    /** Otuken-managed homes, including Desktop files and their private trash. Absent in older backups. */
+    homes?: BackupHomeContent[];
   };
   files: BackupManifestFile[];
 }
@@ -179,6 +189,7 @@ export interface RestorePreview {
   };
   /** Users whose desktop (layout, widgets, preferences, wallpapers) can be restored. */
   desktopUsers: string[];
+  homes: Array<BackupHomeContent & { restorable: "ok" | "not-found" | "disabled" }>;
   config: "same" | "different" | "absent";
   apps: Array<{
     id: string;

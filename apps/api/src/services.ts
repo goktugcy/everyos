@@ -196,6 +196,7 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
     onChanged: () => widgetData.refresh("data.apt"),
   });
+  const files = new FileService({ ...deps.config.files, logger: deps.logger });
   const backups = new BackupService({
     db: deps.db,
     agent: deps.agent,
@@ -205,6 +206,7 @@ export function createServices(deps: ServiceDependencies): Services {
     logger: deps.logger,
     now,
     dir: deps.config.backups.dir,
+    files,
     dataDir: deps.config.paths.dataDir,
     configFile: deps.config.configFile,
     reserveBytes: deps.config.backups.minFreeBytes,
@@ -258,7 +260,7 @@ export function createServices(deps: ServiceDependencies): Services {
     integrations,
     widgetData,
     notifications,
-    files: new FileService({ ...deps.config.files, logger: deps.logger }),
+    files,
     terminals: new TerminalService({ agent: deps.agent, logger: deps.logger, audit, now }),
     updates,
     tasks: new TaskService({

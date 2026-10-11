@@ -96,5 +96,22 @@ export const DeleteRequestSchema = z.strictObject({
   confirm: z.literal(true),
 });
 
+export const TrashEntrySchema = z.strictObject({
+  id: z.string().uuid(),
+  root: FileRootIdSchema,
+  path: RelativePathSchema.min(1),
+  name: FileNameSchema,
+  type: z.enum(["directory", "file", "symlink", "other"]),
+  size: z.number().int().nonnegative(),
+  deletedAt: z.number().nonnegative(),
+});
+
+export const TrashItemRequestSchema = z.strictObject({
+  root: FileRootIdSchema,
+  ids: z.array(z.string().uuid()).min(1).max(500),
+});
+
+export const TrashDeleteRequestSchema = TrashItemRequestSchema.extend({ confirm: z.literal(true) });
+
 /** `PUT /api/files/settings` (administrators). */
 export const FileSettingsSchema = z.strictObject({ systemRoots: z.boolean() });

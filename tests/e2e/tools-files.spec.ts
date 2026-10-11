@@ -84,12 +84,12 @@ test("files can be created, uploaded, edited, moved, duplicated, downloaded and 
   await expect(files.getByTestId("file-search-results")).toContainText("2 sonuç");
   await files.getByRole("button", { name: "Aramayı temizle" }).click();
 
-  // Deleting asks for confirmation and removes the whole folder.
+  // Deleting asks for confirmation and moves the whole folder to recoverable trash.
   await row("Arşiv").click();
   await files.getByTestId("file-list").press("Delete");
   const confirm = page.getByRole("alertdialog");
   await expect(confirm).toContainText("Arşiv");
-  await confirm.getByRole("button", { name: "Kalıcı olarak sil" }).click();
+  await confirm.getByRole("button", { name: "Çöp kutusuna taşı" }).click();
   await expect(row("Arşiv")).toHaveCount(0);
   await expect(files).toContainText("Bu klasör boş.");
 });

@@ -7,6 +7,10 @@ export function contentLabels(t: TFunction, backup: BackupView): string[] {
   const labels = [t("backups.contents.database")];
   if (backup.contents.config) labels.push(t("backups.contents.config"));
   if (backup.contents.wallpapers) labels.push(t("backups.contents.wallpapers"));
+  if (backup.contents.homes?.length)
+    labels.push(t("backups.contents.homes", { count: backup.contents.homes.length }));
+  const skipped = backup.contents.homes?.reduce((sum, home) => sum + home.skipped, 0) ?? 0;
+  if (skipped) labels.push(t("backups.contents.homesSkipped", { count: skipped }));
   const apps = backup.contents.apps.filter((app) => app.data).length;
   if (apps) labels.push(t("backups.contents.apps", { count: apps }));
   return labels;

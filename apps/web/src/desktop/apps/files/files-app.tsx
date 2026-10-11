@@ -6,6 +6,7 @@ import type {
   FileSearchResult,
   StandardFolder,
 } from "@otuken/shared";
+import type { Point, Rect } from "@otuken/window-manager";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,6 +40,7 @@ import {
   useState,
   type DragEvent,
   type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -52,6 +54,7 @@ import { ContextMenuArea } from "../../menus/menus.tsx";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { openTerminalEntries } from "../../menus/terminal-entry.tsx";
 import { desktop } from "../../state/controller.ts";
+import { iconsInRect, selectionRect } from "../../surface/icon-selection.ts";
 import { useAppHost } from "../app-context.ts";
 import {
   copyName,
@@ -115,6 +118,15 @@ export default function FilesApp() {
   const [revision, setRevision] = useState(0);
   const [hidden, setHidden] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [marquee, setMarquee] = useState<Rect | null>(null);
+  const selecting = useRef<{
+    pointerId: number;
+    start: Point;
+    bounds: Map<string, Rect>;
+    initial: ReadonlySet<string>;
+    additive: boolean;
+    toggle: boolean;
+  } | null>(null);
   const anchor = useRef<string | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; descending: boolean }>({
     key: "name",
@@ -151,8 +163,10 @@ export default function FilesApp() {
   // Finder's default is the icon view; each window remembers its own choice.
   const view: ViewMode =
     (host.appState as { view?: unknown } | undefined)?.view === "list" ? "list" : "icons";
-  const setView = (next: ViewMode) =>
+  const setView = (next: ViewMode) => {
+    endMarquee();
     host.setAppState({ ...(host.appState as object | undefined), view: next });
+  };
 
   const toggleSystem = async (enabled: boolean) => {
     if (
@@ -199,6 +213,7 @@ export default function FilesApp() {
   const refresh = useCallback(() => setRevision((n) => n + 1), []);
 
   const go = (next: FileLocation, record = true) => {
+    endMarquee();
     if (location && record) {
       setBack((stack) => [...stack.slice(-49), location]);
       setForward([]);
@@ -414,6 +429,84 @@ export default function FilesApp() {
 
   /* ----------------------------- selection ----------------------------- */
 
+  const endMarquee = () => {
+    const id = selecting.current?.pointerId;
+    selecting.current = null;
+    setMarquee(null);
+    if (id !== undefined && listRef.current?.hasPointerCapture(id))
+      listRef.current.releasePointerCapture(id);
+  };
+
+  const beginMarquee = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (
+      event.button !== 0 ||
+      event.pointerType === "touch" ||
+      renaming ||
+      !(event.target instanceof Element) ||
+      event.target.closest("[data-name], button, input, select, textarea, a, thead")
+    )
+      return;
+    const element = event.currentTarget;
+    const box = element.getBoundingClientRect();
+    if (
+      event.clientX >= box.left + element.clientWidth ||
+      event.clientY >= box.top + element.clientHeight
+    )
+      return;
+    event.preventDefault();
+    element.focus();
+    const bounds = new Map<string, Rect>();
+    element.querySelectorAll<HTMLElement>("[data-name]").forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      bounds.set(item.dataset.name!, {
+        x: rect.x - box.x + element.scrollLeft,
+        y: rect.y - box.y + element.scrollTop,
+        width: rect.width,
+        height: rect.height,
+      });
+    });
+    const additive = event.shiftKey || event.ctrlKey || event.metaKey;
+    selecting.current = {
+      pointerId: event.pointerId,
+      start: {
+        x: event.clientX - box.x + element.scrollLeft,
+        y: event.clientY - box.y + element.scrollTop,
+      },
+      bounds,
+      initial: selected,
+      additive,
+      toggle: event.ctrlKey || event.metaKey,
+    };
+    if (!additive) setSelected(new Set());
+    element.setPointerCapture(event.pointerId);
+  };
+
+  const extendMarquee = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = selecting.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const element = event.currentTarget;
+    const box = element.getBoundingClientRect();
+    const rect = selectionRect(drag.start, {
+      x: Math.max(0, Math.min(element.clientWidth, event.clientX - box.x)) + element.scrollLeft,
+      y: Math.max(0, Math.min(element.clientHeight, event.clientY - box.y)) + element.scrollTop,
+    });
+    const next = new Set(drag.additive ? drag.initial : []);
+    for (const name of iconsInRect(rect, drag.bounds)) {
+      if (drag.toggle && next.has(name)) next.delete(name);
+      else next.add(name);
+    }
+    setSelected(next);
+    setMarquee(rect);
+  };
+
+  const finishMarquee = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = selecting.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.type === "pointercancel" || event.type === "lostpointercapture")
+      setSelected(new Set(drag.initial));
+    endMarquee();
+  };
+
   const select = (
     name: string,
     event: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean },
@@ -438,6 +531,11 @@ export default function FilesApp() {
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (renaming || !location) return;
+    if (event.key === "Escape") {
+      endMarquee();
+      setSelected(new Set());
+      return;
+    }
     const mod = event.metaKey || event.ctrlKey;
     const index = entries.findIndex((e) => e.name === anchor.current);
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -1036,13 +1134,15 @@ export default function FilesApp() {
               })}
               aria-multiselectable
               className={cn(
-                "min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
+                "relative min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
                 dropTarget === "list" && "bg-[rgb(var(--otk-accent)/0.06)]",
               )}
               onKeyDown={onKeyDown}
-              onClick={(event) => {
-                if (event.target === event.currentTarget) setSelected(new Set());
-              }}
+              onPointerDown={beginMarquee}
+              onPointerMove={extendMarquee}
+              onPointerUp={finishMarquee}
+              onPointerCancel={finishMarquee}
+              onLostPointerCapture={finishMarquee}
               onDragOver={(event) => allowDrop(event, "list")}
               onDragLeave={(event) => {
                 if (event.currentTarget === event.target) setDropTarget(null);
@@ -1154,6 +1254,19 @@ export default function FilesApp() {
                 <p className="p-8 text-center text-sm text-fg-muted">
                   {writable ? t("files.emptyWritable") : t("files.empty")}
                 </p>
+              ) : null}
+              {marquee ? (
+                <div
+                  aria-hidden
+                  data-testid="files-selection-area"
+                  className="pointer-events-none absolute z-20 rounded-sm border border-accent bg-accent/15"
+                  style={{
+                    left: marquee.x,
+                    top: marquee.y,
+                    width: marquee.width,
+                    height: marquee.height,
+                  }}
+                />
               ) : null}
             </div>
           </ContextMenuArea>

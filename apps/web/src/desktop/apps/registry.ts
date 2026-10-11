@@ -13,6 +13,7 @@ import {
   Settings,
   Store,
   SquareTerminal,
+  Trash2,
   Users,
   Waypoints,
 } from "lucide-react";
@@ -20,6 +21,21 @@ import type { AppId, DesktopAppManifest } from "./types.ts";
 
 /** Built-in apps, imported only when their windows open. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
+  {
+    id: "otuken.trash",
+    titleKey: "apps.trash",
+    icon: Trash2,
+    tint: "from-slate-300 to-slate-500",
+    category: "tools",
+    requiredPermission: "files:read",
+    window: {
+      defaultSize: { width: 840, height: 560 },
+      minSize: { width: 380, height: 300 },
+      instancing: "single",
+    },
+    keywords: ["çöp", "kutusu", "trash", "bin", "geri yükle", "restore"],
+    load: () => import("./files/trash-app.tsx"),
+  },
   {
     id: "otuken.store",
     titleKey: "apps.store",

@@ -5,6 +5,7 @@ import type {
   FileRootsResponse,
   FileSearchResult,
   TextFile,
+  TrashListing,
 } from "@otuken/shared";
 import { create } from "zustand";
 import { api, ApiRequestError, uploadWithProgress } from "../../../lib/api.ts";
@@ -54,6 +55,11 @@ export const filesApi = {
     api<void>("/files/move", { method: "POST", body: { root, paths, destination } }),
   remove: (root: string, paths: string[]) =>
     api<void>("/files/delete", { method: "POST", body: { root, paths, confirm: true } }),
+  trash: () => api<TrashListing>("/files/trash"),
+  restoreTrash: (root: string, ids: string[]) =>
+    api<void>("/files/trash/restore", { method: "POST", body: { root, ids } }),
+  deleteTrash: (root: string, ids: string[]) =>
+    api<void>("/files/trash/delete", { method: "POST", body: { root, ids, confirm: true } }),
   uploadPath: (location: FileLocation, name: string, overwrite: boolean) =>
     `/files/upload?${query({ ...location, name, overwrite: overwrite ? "true" : undefined })}`,
   downloadUrl: (location: FileLocation, inline = false) =>

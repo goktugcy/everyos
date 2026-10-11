@@ -18,12 +18,14 @@ import {
   Server,
   Usb,
   Users,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import type { DragEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../../lib/cn.ts";
 import type { FileLocation } from "./lib.ts";
+import { desktop } from "../../state/controller.ts";
 
 export const FILES_FOLDER_ICONS: Record<StandardFolder, LucideIcon> = {
   desktop: Monitor,
@@ -257,6 +259,14 @@ export function FilesSidebar({
           )}
         </Section>
       ) : null}
+      <button
+        type="button"
+        className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] text-fg outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+        onClick={() => desktop.openApp("otuken.trash")}
+      >
+        <Trash2 className="size-4 text-fg-muted" aria-hidden />
+        {t("apps.trash")}
+      </button>
     </nav>
   );
 }

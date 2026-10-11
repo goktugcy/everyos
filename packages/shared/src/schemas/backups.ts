@@ -13,51 +13,74 @@ const AppIdsSchema = z
 
 /** Names a backup may contain (anything else in an archive is rejected). */
 export const BACKUP_FILE_NAME =
-  /^(?:manifest\.json|otuken\.db\.gz|config\.yaml|wallpapers\.tar\.gz|apps\/[0-9a-f-]{36}\.data\.tar\.gz)$/;
+  /^(?:manifest\.json|otuken\.db\.gz|config\.yaml|wallpapers\.tar\.gz|homes\.tar\.gz|apps\/[0-9a-f-]{36}\.data\.tar\.gz)$/;
 
-export const BackupManifestSchema = z.strictObject({
-  format: z.literal(BACKUP_FORMAT),
-  version: z.literal(BACKUP_FORMAT_VERSION),
-  id: BackupIdSchema,
-  createdAt: z.number().int().nonnegative(),
-  trigger: z.enum(["manual", "schedule", "pre-restore"]),
-  createdBy: z.string().max(64).nullable(),
-  note: z.string().max(200).nullable(),
-  otukenVersion: z.string().max(32),
-  schemaVersion: z.number().int().positive(),
-  hostname: z.string().max(255),
-  keyId: z.string().regex(/^[a-f0-9]{32}$/),
-  contents: z.strictObject({
-    database: z.literal(true),
-    config: z.boolean(),
-    wallpapers: z.boolean(),
-    apps: z
+export const BackupManifestSchema = z
+  .strictObject({
+    format: z.literal(BACKUP_FORMAT),
+    version: z.literal(BACKUP_FORMAT_VERSION),
+    id: BackupIdSchema,
+    createdAt: z.number().int().nonnegative(),
+    trigger: z.enum(["manual", "schedule", "pre-restore"]),
+    createdBy: z.string().max(64).nullable(),
+    note: z.string().max(200).nullable(),
+    otukenVersion: z.string().max(32),
+    schemaVersion: z.number().int().positive(),
+    hostname: z.string().max(255),
+    keyId: z.string().regex(/^[a-f0-9]{32}$/),
+    contents: z.strictObject({
+      database: z.literal(true),
+      config: z.boolean(),
+      wallpapers: z.boolean(),
+      homes: z
+        .array(
+          z.strictObject({
+            userId: z.string().uuid(),
+            username: z.string().max(64),
+            dataBytes: z.number().int().nonnegative(),
+            dataEntries: z.number().int().nonnegative(),
+            skipped: z.number().int().nonnegative(),
+          }),
+        )
+        .max(1000)
+        .default([])
+        .refine(
+          (homes) => new Set(homes.map((home) => home.userId)).size === homes.length,
+          "duplicate home",
+        ),
+      apps: z
+        .array(
+          z.strictObject({
+            id: z.string().uuid(),
+            name: LocalizedTextSchema,
+            data: z.boolean(),
+            dataBytes: z.number().int().nonnegative(),
+            dataEntries: z.number().int().nonnegative(),
+            skipped: z.number().int().nonnegative(),
+          }),
+        )
+        .max(100),
+    }),
+    files: z
       .array(
         z.strictObject({
-          id: z.string().uuid(),
-          name: LocalizedTextSchema,
-          data: z.boolean(),
-          dataBytes: z.number().int().nonnegative(),
-          dataEntries: z.number().int().nonnegative(),
-          skipped: z.number().int().nonnegative(),
+          name: z
+            .string()
+            .regex(BACKUP_FILE_NAME)
+            .refine((name) => name !== "manifest.json"),
+          size: z.number().int().nonnegative(),
+          sha256: Sha256Schema,
         }),
       )
-      .max(100),
-  }),
-  files: z
-    .array(
-      z.strictObject({
-        name: z
-          .string()
-          .regex(BACKUP_FILE_NAME)
-          .refine((name) => name !== "manifest.json"),
-        size: z.number().int().nonnegative(),
-        sha256: Sha256Schema,
-      }),
-    )
-    .min(1)
-    .max(110),
-});
+      .min(1)
+      .max(111),
+  })
+  .refine(
+    (manifest) =>
+      manifest.contents.homes.length > 0 ===
+      manifest.files.some((file) => file.name === "homes.tar.gz"),
+    "home archive mismatch",
+  );
 
 export const BackupCreateRequestSchema = z.strictObject({
   /** Apps whose data to include (each is stopped while its data is copied). */
@@ -86,10 +109,15 @@ export const RestoreRequestSchema = z
     settings: z.enum(["none", "desktop", "database"]),
     /** Apps whose data to restore (each is stopped while its data is replaced). */
     apps: AppIdsSchema,
+    /** Restore homes of accounts that still exist, with a safety backup first. */
+    homes: z.boolean().default(false),
     password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
     confirm: z.literal(true),
   })
-  .refine((value) => value.settings !== "none" || value.apps.length > 0, "nothing-selected");
+  .refine(
+    (value) => value.settings !== "none" || value.apps.length > 0 || value.homes,
+    "nothing-selected",
+  );
 
 /* Agent operations: app data archives travel through the agent in chunks. */
 

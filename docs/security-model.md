@@ -268,7 +268,9 @@ unprivileged and exposes a small attack surface.
   turns them on; `/proc`, `/sys` and `/dev` are never reachable. Paths are resolved with `realpath` and must
   stay inside the root; final components are opened with `O_NOFOLLOW`; uploads stream to a
   temporary file and are linked into place without overwriting; a free-space reserve is kept;
-  downloads are forced to `attachment` with a sandboxing CSP.
+  downloads are forced to `attachment` with a sandboxing CSP. Normal deletion moves entries
+  into private per-user trash on the same root; internal trash paths are blocked even through
+  aliases, restoration refuses occupied names, and permanent removal needs explicit confirmation.
 - **Updates** ([updates.md](updates.md)): only `system:manage`, never automatic, `apt-get` with
   `--no-remove` and kept configuration files; a development agent refuses host package changes.
 - **Scheduler** ([tasks.md](tasks.md)): predefined task types with closed parameters, no commands;
@@ -281,7 +283,10 @@ unprivileged and exposes a small attack surface.
   checksums. Restores verify first, take a safety backup, refuse database restores from another
   installation's secret, and stage database replacement for the next start. App data is only read
   or replaced while the app is stopped; the agent validates archives completely before extracting
-  them into a fresh directory without following links and strips setuid/setgid bits.
+  them into a fresh directory without following links and strips setuid/setgid bits. Otuken
+  account homes and trash are also backed up, with bounded no-follow archives, drained file
+  requests, fully validated extraction, account-id matching, safety backups and rollback on failed
+  directory swaps. Restoring homes never creates accounts or changes arbitrary file roots.
 - **Tailscale** ([tailscale.md](tailscale.md)): read-only LocalAPI `GET` requests; only displayed
   fields leave the agent; the device list is administrator-only; exposure of Otuken through Funnel
   raises a security notification. Otuken never changes the Tailscale configuration.

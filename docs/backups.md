@@ -12,6 +12,7 @@ as background jobs, one at a time, independent of the HTTP request that started 
 | `config.yaml`              | The configuration file, when it exists and is readable. For reference only; it is never restored automatically.                                                   |
 | `wallpapers.tar.gz`        | Uploaded wallpapers (`<dataDir>/wallpapers/<userId>/<file>`).                                                                                                     |
 | `apps/<appId>.data.tar.gz` | The app data directory of each selected app (see below).                                                                                                          |
+| `homes.tar.gz`             | Existing Otuken account homes, including standard folders, Desktop files, folder-name metadata and private trash.                                                 |
 | `manifest.json`            | Format version, creation time and trigger, Otuken and schema versions, contents, and the size and SHA-256 of every file. Written last.                            |
 
 The database holds accounts, desktop layouts, widgets, preferences, catalogs, managed app
@@ -33,6 +34,39 @@ backups:
 
 The location must be a directory owned by the API user and not world-writable; otherwise backups
 are disabled with a reason instead of failing startup. `OTUKEN_BACKUP_DIR` overrides `dir`.
+
+## Personal homes
+
+Every manual, scheduled and pre-restore safety backup includes existing homes for accounts in
+the database snapshot. These are Otuken's `<homesDir>/<userId>` directories, not host OS `/home`
+folders or arbitrary configured file locations. Capture runs as the unprivileged API; no agent
+operation or extra permission is introduced. A bounded tar.gz stream records directories, regular
+files and symlinks without following links; special files and other file systems are skipped and
+counted in `contents.homes` and shown as excluded entries in the backup list. Limits are
+1,000,000 entries and 1 TiB uncompressed across all homes.
+
+File requests for affected accounts are blocked temporarily and pending file operations drain
+before capture/replacement. External host changes can still happen: changed files fail capture
+rather than producing a falsely verified backup. This is not a snapshot of applications writing
+the same files outside Otuken. Free-space reserves and cancellation apply to the stream.
+
+Restore preview lists homes matched to current account **ids**. The explicit **Restore personal
+home folders** checkbox replaces only those homes; newer or removed accounts are not overwritten
+or recreated. It needs the normal administrator restore permission, password and confirmation,
+and takes a safety backup of current homes first. Current homes with skipped special files or
+mounted descendants are refused to prevent removing uncaptured host data. On Linux, mountinfo
+also detects bind mounts on the same device ([kernel mountinfo contract](https://www.kernel.org/doc/html/latest/filesystems/proc.html)).
+
+The archive is fully validated before extraction and again while extracting: only declared home
+ids, safe relative paths, known parents, unique entries, files, directories and leaf symlinks are
+accepted, with counts and sizes matching the manifest. Extraction uses a fresh private directory,
+exclusive/no-follow writes and strips special permission bits. Home root directories remain 0700. Directory swaps are rolled back if a later swap fails; old copies are removed only after
+all swaps succeed. The API user owns restored files; host uid/gid ownership is not recreated.
+
+Format version 1 remains readable: missing `contents.homes` means an older backup without homes;
+new archives explicitly declare `homes.tar.gz` and its checksum. Download/upload, verification,
+retention and pinning include it like other backup files. Desktop-only restore does not change
+files unless the homes checkbox is also selected.
 
 ## App data
 
@@ -89,6 +123,7 @@ current data of the apps being restored). The scopes are:
   (sessions are never backed up). When the API runs as a systemd service in production
   (`INVOCATION_ID` is set), it exits with status 75 after staging so the service manager starts it
   again (the Phase 8 unit must restart on failure); otherwise the UI asks for a manual restart.
+- **Personal homes** (live, opt-in): as described above, for current account ids only.
 - **App data**: per app, as described above. The app must still be installed with the same id.
 
 Database restores are refused for backups made with another installation's secret key
@@ -113,29 +148,29 @@ every task.
 
 ## API
 
-| Method   | Path                        | Permission        | Notes                                                |
-| -------- | --------------------------- | ----------------- | ---------------------------------------------------- |
-| `GET`    | `/api/backups`              | `backups:manage`  | Backups, running and last job, settings, apps, space |
-| `POST`   | `/api/backups`              | `backups:manage`  | `{ apps, note? }` → `202` job                        |
-| `POST`   | `/api/backups/cancel`       | `backups:manage`  | Cancels the running job                              |
-| `PUT`    | `/api/backups/settings`     | `backups:manage`  | `{ keep, appData }`                                  |
-| `GET`    | `/api/backups/:id`          | `backups:manage`  |                                                      |
-| `POST`   | `/api/backups/:id/verify`   | `backups:manage`  |                                                      |
-| `PUT`    | `/api/backups/:id/pin`      | `backups:manage`  | `{ pinned }`                                         |
-| `DELETE` | `/api/backups/:id`          | `backups:manage`  |                                                      |
-| `GET`    | `/api/backups/:id/preview`  | `backups:restore` | Verifies, then describes the restore                 |
-| `POST`   | `/api/backups/:id/restore`  | `backups:restore` | `{ settings, apps, password, confirm: true }` → job  |
-| `POST`   | `/api/backups/:id/download` | `backups:restore` | `{ password }` → `{ url }` (single use, 60 s)        |
-| `GET`    | `/api/backups/:id/download` | `backups:restore` | `?ticket=` → `application/x-tar`                     |
-| `POST`   | `/api/backups/upload`       | `backups:restore` | Raw tar body, `Content-Length` required              |
+| Method   | Path                        | Permission        | Notes                                                       |
+| -------- | --------------------------- | ----------------- | ----------------------------------------------------------- |
+| `GET`    | `/api/backups`              | `backups:manage`  | Backups, running and last job, settings, apps, space        |
+| `POST`   | `/api/backups`              | `backups:manage`  | `{ apps, note? }` → `202` job                               |
+| `POST`   | `/api/backups/cancel`       | `backups:manage`  | Cancels the running job                                     |
+| `PUT`    | `/api/backups/settings`     | `backups:manage`  | `{ keep, appData }`                                         |
+| `GET`    | `/api/backups/:id`          | `backups:manage`  |                                                             |
+| `POST`   | `/api/backups/:id/verify`   | `backups:manage`  |                                                             |
+| `PUT`    | `/api/backups/:id/pin`      | `backups:manage`  | `{ pinned }`                                                |
+| `DELETE` | `/api/backups/:id`          | `backups:manage`  |                                                             |
+| `GET`    | `/api/backups/:id/preview`  | `backups:restore` | Verifies, then describes the restore                        |
+| `POST`   | `/api/backups/:id/restore`  | `backups:restore` | `{ settings, apps, homes?, password, confirm: true }` → job |
+| `POST`   | `/api/backups/:id/download` | `backups:restore` | `{ password }` → `{ url }` (single use, 60 s)               |
+| `GET`    | `/api/backups/:id/download` | `backups:restore` | `?ticket=` → `application/x-tar`                            |
+| `POST`   | `/api/backups/upload`       | `backups:restore` | Raw tar body, `Content-Length` required                     |
 
 The downloaded archive is a plain tar with one top-level directory `otuken-backup-<id>/`; it can
 be inspected with standard tools (`tar -tf`).
 
 ## Limitations
 
-- Volume-based app data is not backed up (no volume-aware strategy yet), and neither are users'
-  home folders in the file manager.
+- Volume-based app data is not backed up (no volume-aware strategy yet). Arbitrary file roots and
+  host OS homes are not captured; only Otuken-managed personal homes are included.
 - Restoring onto a different host requires copying `secret.key` first; restoring app data
   needs the app to be installed with the same id. A full disaster-recovery flow (re-deploying
   apps from restored records) is not implemented.
