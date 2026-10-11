@@ -1,7 +1,9 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
+import { userInfo } from "node:os";
 import { isLogLevel, LOG_LEVELS, type LogLevel } from "@otuken/logger";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
+import type { TerminalConfig } from "./terminal.ts";
 
 /**
  * Agent configuration. In production it is read from a root-owned file
@@ -35,11 +37,37 @@ const AgentConfigFileSchema = z.strictObject({
     .array(z.string().regex(/^[A-Za-z0-9_.*-]{1,256}$/))
     .max(200)
     .optional(),
+  /** tailscaled LocalAPI socket (default: /var/run/tailscale/tailscaled.sock, then /run/…). */
+  tailscaleSocket: z
+    .string()
+    .regex(/^\/[^\0]+$/)
+    .max(1024)
+    .optional(),
   /** Docker Engine socket (default: /var/run/docker.sock, then /run/docker.sock). */
   dockerSocket: z
     .string()
     .regex(/^\/[^\0]+$/)
     .max(1024)
+    .optional(),
+  /**
+   * Browser terminal. Disabled unless an account is named; shells run as that
+   * account, never as root unless `allowRoot` is set.
+   */
+  terminal: z
+    .strictObject({
+      user: z.string().regex(/^[a-z_][a-z0-9_-]{0,31}\$?$/),
+      shell: z
+        .string()
+        .regex(/^\/[^\0]+$/)
+        .max(256)
+        .optional(),
+      allowRoot: z.boolean().optional(),
+      python: z
+        .string()
+        .regex(/^\/[^\0]+$/)
+        .max(256)
+        .optional(),
+    })
     .optional(),
 });
 
@@ -57,6 +85,9 @@ export interface AgentConfig {
   internetCheckTargets: string[];
   protectedContainers: string[];
   dockerSocket: string | null;
+  /** Overrides the tailscaled socket search (development also reads OTUKEN_TAILSCALE_SOCKET). */
+  tailscaleSocket: string | null;
+  terminal: TerminalConfig | null;
   /**
    * Development only: answer service and log operations from the in-memory
    * simulator even when systemd is present (deterministic e2e tests).
@@ -141,8 +172,44 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     internetCheckTargets: file.internetCheckTargets ?? DEFAULT_INTERNET_CHECK_TARGETS,
     protectedContainers: file.protectedContainers ?? [],
     dockerSocket: file.dockerSocket ?? null,
+    tailscaleSocket:
+      (mode === "development" ? env.OTUKEN_TAILSCALE_SOCKET : undefined) ??
+      file.tailscaleSocket ??
+      null,
+    terminal: terminalConfig(mode, env, file.terminal),
     simulate,
   };
+}
+
+/** Development: OTUKEN_DEV_TERMINAL=1 opens shells as the developer (the agent's own account). */
+function terminalConfig(
+  mode: AgentMode,
+  env: NodeJS.ProcessEnv,
+  file: z.infer<typeof AgentConfigFileSchema>["terminal"],
+): TerminalConfig | null {
+  if (file)
+    return {
+      user: file.user,
+      shell: file.shell,
+      allowRoot: file.allowRoot ?? false,
+      python: file.python ?? "/usr/bin/python3",
+    };
+  if (mode !== "development" || env.OTUKEN_DEV_TERMINAL !== "1") return null;
+  const python = findOnPath("python3", env.PATH ?? "");
+  return python
+    ? { user: userInfo().username, shell: env.OTUKEN_DEV_TERMINAL_SHELL, allowRoot: false, python }
+    : null;
+}
+
+function findOnPath(name: string, path: string): string | null {
+  for (const dir of path.split(":").filter((d) => d.startsWith("/"))) {
+    try {
+      if (statSync(`${dir}/${name}`).isFile()) return `${dir}/${name}`;
+    } catch {
+      // Not in this directory.
+    }
+  }
+  return null;
 }
 
 /** Resolves a group name to its gid using /etc/group (Node has no getgrnam). */

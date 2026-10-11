@@ -15,6 +15,7 @@ export type StreamStatus = "connecting" | "live" | "retrying";
 const TOPIC_EVENTS: Record<EventTopic, readonly string[]> = {
   metrics: ["metrics"],
   docker: ["docker.stats", "docker.change"],
+  notifications: ["notifications"],
 };
 
 export interface TopicHandlers {

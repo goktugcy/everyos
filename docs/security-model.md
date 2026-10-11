@@ -65,8 +65,9 @@ flowchart LR
 
 - Roles are bundles of fine-grained permissions (`packages/shared/src/permissions.ts`) **[P1]**:
   - **admin**: all permissions.
-  - **operator**: day-to-day operations (services, Docker, apps, files, backups, tasks, logs). No user
-    management, settings, catalog trust, terminal or audit log.
+  - **operator**: day-to-day operations (services, Docker, apps, files, creating and managing
+    backups, tasks, logs). No user management, settings, catalog trust, terminal, audit log,
+    package upgrades, or restoring and downloading backups (`backups:restore`) **[P7]**.
   - **viewer**: read-only system, services, Docker, apps and notifications.
 - Every route declares the permission it needs (`requirePermission`). Permissions are recomputed
   from the user's current role on each request, so role changes and disabling take effect
@@ -258,6 +259,39 @@ unprivileged and exposes a small attack surface.
 - **Bounded cost.** One collector runs per topic regardless of viewers, and only while
   subscribed, with failure backoff. At most 256 active topics, 64 topics per stream and 64
   widgets per user.
+
+## Advanced tools **[P7]**
+
+- **Files** ([files.md](files.md)): operations run in the API's unprivileged identity, only inside
+  the caller's private home and configured roots (none by default in production). Read-only
+  system locations (`/`, `/etc`, `/var/log`…) appear only for administrators after one of them
+  turns them on; `/proc`, `/sys` and `/dev` are never reachable. Paths are resolved with `realpath` and must
+  stay inside the root; final components are opened with `O_NOFOLLOW`; uploads stream to a
+  temporary file and are linked into place without overwriting; a free-space reserve is kept;
+  downloads are forced to `attachment` with a sandboxing CSP.
+- **Updates** ([updates.md](updates.md)): only `system:manage`, never automatic, `apt-get` with
+  `--no-remove` and kept configuration files; a development agent refuses host package changes.
+- **Scheduler** ([tasks.md](tasks.md)): predefined task types with closed parameters, no commands;
+  every run re-checks the owner's current permissions; at most every five minutes.
+- **Backups** ([backups.md](backups.md)): database snapshots through SQLite's backup API without
+  sessions; the server secret and the agent key are never included; private files and
+  directories; free-space checks while writing. Restoring, downloading and uploading need
+  `backups:restore` (administrators) and the current password; downloads use a single-use,
+  one-minute link and are audited; uploads accept only the expected files with matching
+  checksums. Restores verify first, take a safety backup, refuse database restores from another
+  installation's secret, and stage database replacement for the next start. App data is only read
+  or replaced while the app is stopped; the agent validates archives completely before extracting
+  them into a fresh directory without following links and strips setuid/setgid bits.
+- **Tailscale** ([tailscale.md](tailscale.md)): read-only LocalAPI `GET` requests; only displayed
+  fields leave the agent; the device list is administrator-only; exposure of Otuken through Funnel
+  raises a security notification. Otuken never changes the Tailscale configuration.
+- **Terminal** ([terminal.md](terminal.md)): the agent, API gateway and browser client use the
+  administrator-only `terminal:access` permission. Disabled until an account is configured;
+  root requires explicit agent configuration. Cookie-authenticated upgrades check Origin and
+  lock state, and access is revalidated every 15 s. Sessions have idle/reconnect deadlines,
+  per-user/global limits and open/close audits without command or output logging. The shell
+  has the configured account's OS privileges; it is not a sandbox. Closing a window sends an
+  authenticated DELETE; reload can reattach within the bounded grace period.
 
 ## Audit log **[P1, P4]**
 

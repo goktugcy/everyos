@@ -13,7 +13,13 @@ export type AppId =
   | "otuken.settings"
   | "otuken.users"
   | "otuken.audit"
-  | "otuken.folder";
+  | "otuken.files"
+  | "otuken.editor"
+  | "otuken.updates"
+  | "otuken.tasks"
+  | "otuken.terminal"
+  | "otuken.backups"
+  | "otuken.tailscale";
 
 /**
  * Contract every built-in Otuken app fulfils (docs/contracts.md §1). The

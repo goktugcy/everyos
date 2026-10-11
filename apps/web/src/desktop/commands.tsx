@@ -30,6 +30,7 @@ export const SETTINGS_SECTIONS = [
   "appearance",
   "desktop",
   "widgets",
+  "notifications",
   "account",
   "security",
   "about",

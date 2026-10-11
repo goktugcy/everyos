@@ -18,6 +18,7 @@ import { Hono, type Context } from "hono";
 import type { AppEnv, AuthState } from "../../context.ts";
 import { ApiError, rateLimited } from "../../http/errors.ts";
 import { parseJsonBody } from "../../http/validation.ts";
+import { confirmPassword as confirmPasswordFor } from "../../http/reauth.ts";
 import { authenticated, requireAuth } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { assertPasswordPolicy, pendingTotpContext, totpContext } from "../auth/password-policy.ts";
@@ -30,29 +31,8 @@ export function accountRoutes(services: Services): Hono<AppEnv> {
 
   const actor = (auth: AuthState) => ({ userId: auth.user.id, username: auth.user.username });
 
-  /** Re-authentication for sensitive changes, with its own brute-force limit. */
-  async function confirmPassword(
-    c: Context<AppEnv>,
-    auth: AuthState,
-    password: string,
-    action: string,
-  ): Promise<void> {
-    const key = `user:${auth.user.id}`;
-    const decision = limiters.sensitiveUser.check(key);
-    if (!decision.allowed) throw rateLimited(decision.retryAfterMs);
-    const { valid } = await services.passwords.verify(password, auth.user.passwordHash);
-    if (!valid) {
-      limiters.sensitiveUser.recordFailure(key);
-      audit.record({
-        action,
-        outcome: "failure",
-        actor: actor(auth),
-        ip: c.get("client").ip,
-        details: { reason: "bad-password" },
-      });
-      throw new ApiError(400, "AUTH_CURRENT_PASSWORD_INVALID", "Current password is incorrect");
-    }
-  }
+  const confirmPassword = (c: Context<AppEnv>, auth: AuthState, password: string, action: string) =>
+    confirmPasswordFor(services, c, auth, password, action);
 
   function confirmTotp(c: Context<AppEnv>, auth: AuthState, code: string, action: string): void {
     const key = `user:${auth.user.id}`;

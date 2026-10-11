@@ -20,6 +20,8 @@ export function useDesktopShortcuts(): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (useSessionStore.getState().locked) return;
+      const terminal =
+        event.target instanceof Element && event.target.closest("[data-terminal-input]");
       const mod = event.ctrlKey || event.metaKey;
       if (
         (mod && !event.altKey && event.code === "KeyK") ||
@@ -35,8 +37,8 @@ export function useDesktopShortcuts(): void {
         return;
       }
       if (!(event.ctrlKey && event.altKey)) return;
-      // Letter combinations may be AltGr characters while typing (Ctrl+Alt on Windows).
-      if (isEditable(event.target) && event.code.startsWith("Key")) return;
+      // Editable fields keep AltGr characters; terminals delegate reserved desktop keys.
+      if (!terminal && isEditable(event.target) && event.code.startsWith("Key")) return;
 
       const state = wm();
       const focused = state.focusedId;

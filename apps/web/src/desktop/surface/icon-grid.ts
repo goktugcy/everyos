@@ -1,4 +1,4 @@
-import type { DesktopItem, IconSize } from "@otuken/shared";
+import type { IconSize } from "@otuken/shared";
 import type { Point, Rect } from "@otuken/window-manager";
 
 export interface Cell {
@@ -59,15 +59,29 @@ export function cellAt(point: Point, metrics: GridMetrics): Cell {
   };
 }
 
-/** First free cell in column-major order (top-left first). */
-export function firstFreeCell(occupied: ReadonlySet<string>, metrics: GridMetrics): Cell {
-  for (let col = 0; col < metrics.columns; col++) {
+/**
+ * First free cell in column-major order: top-left first, or top-right first
+ * (where macOS puts the Desktop folder's items) when `fromRight` is set.
+ */
+export function firstFreeCell(
+  occupied: ReadonlySet<string>,
+  metrics: GridMetrics,
+  fromRight = false,
+): Cell {
+  for (let index = 0; index < metrics.columns; index++) {
+    const col = fromRight ? metrics.columns - 1 - index : index;
     for (let row = 0; row < metrics.rows; row++) {
       if (!occupied.has(cellKey({ col, row }))) return { col, row };
     }
   }
   // Grid is full: stack on the last cell rather than losing the icon.
-  return { col: metrics.columns - 1, row: metrics.rows - 1 };
+  return { col: fromRight ? 0 : metrics.columns - 1, row: metrics.rows - 1 };
+}
+
+/** Anything with a stored cell: shortcuts, and entries of the Desktop folder. */
+export interface Placeable {
+  id: string;
+  cell: Cell | null;
 }
 
 /**
@@ -77,10 +91,14 @@ export function firstFreeCell(occupied: ReadonlySet<string>, metrics: GridMetric
  * cell. Stored preferences are not modified, so a larger display later shows
  * the user's original arrangement again.
  */
-export function placeItems(items: readonly DesktopItem[], metrics: GridMetrics): Map<string, Cell> {
+export function placeItems<T extends Placeable>(
+  items: readonly T[],
+  metrics: GridMetrics,
+  fromRight: (item: T) => boolean = () => false,
+): Map<string, Cell> {
   const placed = new Map<string, Cell>();
   const occupied = new Set<string>();
-  const unplaced: DesktopItem[] = [];
+  const unplaced: T[] = [];
   for (const item of items) {
     const cell = item.cell;
     if (
@@ -96,7 +114,7 @@ export function placeItems(items: readonly DesktopItem[], metrics: GridMetrics):
     }
   }
   for (const item of unplaced) {
-    const cell = firstFreeCell(occupied, metrics);
+    const cell = firstFreeCell(occupied, metrics, fromRight(item));
     placed.set(item.id, cell);
     occupied.add(cellKey(cell));
   }

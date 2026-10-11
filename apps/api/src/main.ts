@@ -9,8 +9,13 @@ import { LazyAgentGateway } from "./agent-gateway.ts";
 import { createApp } from "./app.ts";
 import { isExposedBinding, loadApiConfig } from "./config.ts";
 import { createServices } from "./services.ts";
+import { attachTerminalGateway } from "./modules/terminal/gateway.ts";
+import { applyPendingRestore } from "./modules/backups/snapshot.ts";
+import type { Server } from "node:http";
 
 const MAINTENANCE_INTERVAL_MS = 60 * 60_000;
+/** Exit status asking the service manager to start Otuken again (EX_TEMPFAIL). */
+const RESTART_EXIT_CODE = 75;
 
 async function main(): Promise<void> {
   const config = loadApiConfig();
@@ -47,6 +52,13 @@ async function main(): Promise<void> {
     enforcePermissions: true,
   });
 
+  // A database restore staged from a backup is applied before the database is opened.
+  const restored = await applyPendingRestore({
+    dataDir: config.paths.dataDir,
+    databaseFile: config.paths.databaseFile,
+    backupDir: config.paths.backupDir,
+    logger,
+  });
   const db = openDatabase(config.paths.databaseFile);
   const migration = await migrate(db, OTUKEN_MIGRATIONS, {
     backupDir: config.paths.backupDir,
@@ -62,17 +74,42 @@ async function main(): Promise<void> {
   });
   agent.start();
 
-  const services = createServices({ config, logger, db, masterKey, agent });
+  let shutdown: (signal: string, code?: number) => void = () => undefined;
+  const services = createServices({
+    config,
+    logger,
+    db,
+    masterKey,
+    agent,
+    requestRestart: () => shutdown("restore", RESTART_EXIT_CODE),
+  });
   services.setup.initialize();
+  if (restored)
+    services.audit.record({
+      action: "backups.restore.applied",
+      outcome: "success",
+      actor: null,
+      target: restored.backupId,
+      details: { requestedBy: restored.requestedBy, previous: restored.previous },
+    });
+  await services.backups.start();
+  if (config.mode === "development") await services.files.ensureRoots();
   const app = createApp(services);
   services.metrics.start();
+  services.hostMonitor.start();
+  services.tasks.start();
 
   const runMaintenance = () => {
     try {
       const sessions = services.sessions.purgeExpired();
       const audit = services.audit.prune();
-      if (sessions + audit > 0)
-        logger.debug("Maintenance completed", { purgedSessions: sessions, prunedAudit: audit });
+      const notifications = services.notifications.prune();
+      if (sessions + audit + notifications > 0)
+        logger.debug("Maintenance completed", {
+          purgedSessions: sessions,
+          prunedAudit: audit,
+          prunedNotifications: notifications,
+        });
     } catch (error) {
       logger.error("Maintenance failed", { error });
     }
@@ -100,13 +137,14 @@ async function main(): Promise<void> {
       });
     },
   );
+  const detachTerminals = attachTerminalGateway(server as Server, services);
   server.on("error", (error) => {
     logger.fatal("HTTP server error", { error });
     process.exit(1);
   });
 
   let shuttingDown = false;
-  const shutdown = (signal: string) => {
+  shutdown = (signal: string, code = 0) => {
     if (shuttingDown) return;
     shuttingDown = true;
     logger.info("Shutting down", { signal });
@@ -114,6 +152,12 @@ async function main(): Promise<void> {
     services.metrics.stop();
     services.docker.stop();
     services.widgetData.stop();
+    services.hostMonitor.stop();
+    services.terminals.stop();
+    services.updates.stop();
+    services.tasks.stop();
+    services.backups.stop();
+    detachTerminals();
     services.catalogs.stop();
     services.apps.stop();
     const forceExit = setTimeout(() => process.exit(1), 10_000);
@@ -121,7 +165,7 @@ async function main(): Promise<void> {
     server.close(() => {
       agent.stop();
       db.close();
-      process.exit(0);
+      process.exit(code);
     });
     // Event streams never finish on their own; give normal requests a moment first.
     const closeStreams = setTimeout(() => {

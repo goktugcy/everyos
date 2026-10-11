@@ -50,7 +50,7 @@ export interface AppHost {
 - Apps receive host data only through the API client. They never talk to the agent.
 - Apps access their host through `AppHostContext` / `useAppHost`. Persisted state goes through
   `setAppState` in the per-user `windows` preference document, debounced to at most one write per
-  second. Settings stores its current section; Folder stores its desktop folder id.
+  second. Settings stores its current section; Files stores its location and view.
 - Every action that is reachable by right-click must also be reachable by keyboard and touch (the
   app menu and the command palette).
 
@@ -298,7 +298,7 @@ export type RiskFlag =
 - Fetching uses an SSRF-safe client: http(s) only, public addresses only unless allowed
   explicitly, redirects re-validated, plus size and time limits.
 
-## 5. Implemented contracts (Phases 1–6)
+## 5. Implemented contracts (Phases 1–7)
 
 - **HTTP API:** [api.md](api.md).
 - **Agent operations:** `packages/agent-protocol/src/operations.ts`. Each operation declares a
@@ -320,3 +320,10 @@ export type RiskFlag =
   `packages/shared/src/schemas/widgets.ts`, manifests/layout/compatibility helpers in
   `@otuken/widget-sdk`, providers in `apps/api/src/modules/widgets`, integrations in
   `apps/api/src/modules/integrations`. See [widgets.md](widgets.md).
+- **Phase 7 tools:** zod-free types in `packages/shared/src/{notifications,files,updates,tasks,
+backups,tailscale}.ts` and `cron.ts`; strict request and agent schemas in the matching
+  `packages/shared/src/schemas/*.ts` (Tailscale details and peers in `schemas/host.ts`). Backup
+  archives are versioned by `manifest.json` (`format: "otuken-backup"`, `version: 1`); the tar
+  reader and writer are `@otuken/system/archive`. See [notifications.md](notifications.md),
+  [files.md](files.md), [updates.md](updates.md), [tasks.md](tasks.md), [backups.md](backups.md)
+  and [tailscale.md](tailscale.md).

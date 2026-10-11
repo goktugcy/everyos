@@ -2,6 +2,8 @@ import type {
   DesktopPreferences,
   DockPreferences,
   MenubarPreferences,
+  PulsePreferences,
+  NotificationPreferences,
   Permission,
   SecurityPreferences,
 } from "@otuken/shared";
@@ -25,6 +27,7 @@ export function defaultDesktop(
       cell: { col: 0, row: index },
       folderId: null,
     })),
+    files: [],
   };
 }
 
@@ -44,3 +47,20 @@ export function defaultDock(permissions: readonly Permission[]): DockPreferences
 export const DEFAULT_MENUBAR: MenubarPreferences = { version: 1, hidden: [], clockSeconds: false };
 
 export const DEFAULT_SECURITY: SecurityPreferences = { version: 1, autoLockMinutes: 0 };
+
+/** The pulse is shown and opens on hover; the shelf starts empty. */
+export const DEFAULT_PULSE: PulsePreferences = {
+  version: 1,
+  enabled: true,
+  openOnHover: true,
+  destination: null,
+  shelf: [],
+};
+
+/** Pop-ups for warnings and worse; nothing muted. */
+export const DEFAULT_NOTIFICATIONS: NotificationPreferences = {
+  version: 1,
+  toasts: true,
+  toastMinSeverity: "warning",
+  mutedCategories: [],
+};

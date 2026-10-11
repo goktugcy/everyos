@@ -1,49 +1,80 @@
-import type { DesktopItem } from "@otuken/shared";
-import { workArea } from "@otuken/window-manager";
+import type { DesktopItem, FileEntry } from "@otuken/shared";
+import { workArea, type Point } from "@otuken/window-manager";
 import {
   AppWindow,
   ArrowDownAZ,
+  ClipboardPaste,
+  Copy,
+  Download,
+  FilePlus2,
   FolderOpen,
   FolderPlus,
   ImageIcon,
+  Info,
   LayoutGrid,
   Palette,
+  PanelsTopLeft,
+  Pencil,
   Pin,
   PinOff,
   Plus,
   RefreshCw,
+  Scissors,
   Settings2,
   Trash2,
-  Pencil,
-  FolderInput,
-  PanelsTopLeft,
+  X,
 } from "lucide-react";
 import {
-  memo,
+  createElement,
+  useEffect,
   useMemo,
   useRef,
   useState,
+  type DragEvent,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { errorMessage } from "../../lib/errors.ts";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { AppIcon } from "../apps/app-icon.tsx";
+import { fileGlyph } from "../apps/files/icon-view.tsx";
+import {
+  FILES_DRAG_TYPE,
+  filesApi,
+  filesChanged,
+  freeName,
+  isFolder,
+  joinPath,
+  kindOf,
+  nameOf,
+  parentOf,
+  uploadUnique,
+  useFileClipboard,
+  type FileLocation,
+} from "../apps/files/lib.ts";
+import { ImagePreview, PropertiesDialog } from "../apps/files/parts.tsx";
 import { allowedApps, getApp } from "../apps/registry.ts";
 import type { AppId } from "../apps/types.ts";
 import type { MenuEntry } from "../menus/menu-model.ts";
+import { requestConfirm } from "../menus/confirm.tsx";
+import { openTerminalEntries } from "../menus/terminal-entry.tsx";
 import { ContextMenuArea } from "../menus/menus.tsx";
+import { readFilesDrag } from "../pulse/pulse-lib.ts";
 import { desktop } from "../state/controller.ts";
 import {
   addShortcut,
   arrangeIcons,
-  createFolder,
-  deleteFolder,
-  moveIntoFolder,
-  moveItem,
+  dissolveAppGroups,
+  fileCell,
+  moveIcon,
+  reconcileFiles,
   removeItem,
-  renameFolder,
+  renameFilePosition,
+  setIconCell,
+  type IconRef,
 } from "../state/desktop-ops.ts";
 import {
   flushPending,
@@ -55,9 +86,12 @@ import { useWindowManager } from "../state/window-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { widgetActions } from "../widgets/actions.ts";
 import { widgetUi } from "../widgets/ui-store.ts";
+import { useDesktopFolder } from "./desktop-folder.ts";
 import {
   cellAt,
+  cellKey,
   cellRect,
+  firstFreeCell,
   gridMetrics,
   placeItems,
   type Cell,
@@ -65,30 +99,59 @@ import {
 } from "./icon-grid.ts";
 import { ICON_PIXELS } from "@otuken/theme";
 
-const FOLDER_MANIFEST = getApp("otuken.folder")!;
+type AppItem = Extract<DesktopItem, { kind: "app" }>;
+
+/** A shortcut, or an entry of the home's Desktop folder. */
+type Icon =
+  | { id: string; kind: "app"; item: AppItem; cell: Cell | null }
+  | { id: string; kind: "file"; entry: FileEntry; cell: Cell | null };
+
+const fileId = (name: string) => `file:${name}`;
+const refOf = (icon: Icon): IconRef =>
+  icon.kind === "app" ? { kind: "app", id: icon.item.id } : { kind: "file", name: icon.entry.name };
+const sameCell = (a: Cell | undefined, b: Cell) => a?.col === b.col && a.row === b.row;
+
+/** Images up to this size get a thumbnail instead of a glyph. */
+const THUMBNAIL_BYTES = 8 * 1024 * 1024;
+
+/** File names wrap after dots, dashes and underscores ("yedek.tar." / "gz"), like Finder. */
+function breakable(name: string): ReactNode[] {
+  return name
+    .split(/(?<=[._-])/)
+    .flatMap((part, index) => (index === 0 ? [part] : [<wbr key={index} />, part]));
+}
+
+/** HTML drag and drop of Desktop-folder entries (into folders, Files windows, the shelf). */
+interface NativeDrag {
+  onDragStart: (event: DragEvent) => void;
+  onDragOver?: (event: DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: (event: DragEvent) => void;
+}
 
 interface IconProps {
-  item: DesktopItem;
+  id: string;
   cell: Cell;
   metrics: GridMetrics;
   label: string;
+  glyph: ReactNode;
   selected: boolean;
   renaming: boolean;
-  iconSize: number;
-  pinned: boolean;
+  renameLimit: number;
+  dropTarget: boolean;
+  /** Set for Desktop-folder entries; shortcuts move with the pointer instead. */
+  native: NativeDrag | null;
   onSelect: (id: string) => void;
-  onOpen: (item: DesktopItem) => void;
-  onDrop: (item: DesktopItem, cell: Cell) => void;
+  onOpen: (id: string) => void;
+  onMove: (id: string, cell: Cell) => void;
   onRename: (id: string, name: string | null) => void;
-  onStartRename: (id: string) => void;
-  onKeyNavigate: (event: KeyboardEvent, id: string) => void;
+  onKey: (event: KeyboardEvent, id: string) => void;
 }
 
-const DesktopIcon = memo(function DesktopIcon(props: IconProps) {
+function DesktopIcon(props: IconProps) {
   const { t } = useTranslation();
-  const { item, cell, metrics, label, selected, renaming, iconSize } = props;
+  const { id, cell, metrics, label, selected, renaming, native } = props;
   const ref = useRef<HTMLButtonElement>(null);
-  const manifest = item.kind === "app" ? getApp(item.appId) : FOLDER_MANIFEST;
   const rect = cellRect(cell, metrics);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -114,70 +177,120 @@ const DesktopIcon = memo(function DesktopIcon(props: IconProps) {
       element.style.zIndex = "";
       element.style.opacity = "";
       element.style.transform = `translate3d(${rect.x}px, ${rect.y}px, 0)`;
-      if (dragging) props.onDrop(item, cellAt({ x: pointer.clientX, y: pointer.clientY }, metrics));
-      else if (pointer.pointerType === "touch") props.onOpen(item);
+      if (dragging) props.onMove(id, cellAt({ x: pointer.clientX, y: pointer.clientY }, metrics));
+      else if (pointer.pointerType === "touch") props.onOpen(id);
     };
     element.addEventListener("pointermove", move);
     element.addEventListener("pointerup", up);
     element.addEventListener("pointercancel", up);
   };
 
-  if (!manifest) return null;
   return (
     <button
       ref={ref}
       type="button"
-      data-desktop-item={item.id}
+      data-desktop-item={id}
       aria-label={label}
       aria-pressed={selected}
+      draggable={native !== null && !renaming}
       className={cn(
-        "group absolute left-0 top-0 flex touch-none flex-col items-center gap-1.5 rounded-otk-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
-        selected && "bg-hover/12",
+        "group absolute left-0 top-0 flex flex-col items-center gap-1.5 rounded-otk-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        native ? "touch-manipulation" : "touch-none",
+        selected && "bg-hover/10",
+        props.dropTarget && "bg-[rgb(var(--otk-accent)/0.18)] ring-2 ring-accent",
       )}
       style={{
         transform: `translate3d(${rect.x}px, ${rect.y}px, 0)`,
         width: metrics.cellWidth - 6,
       }}
-      onPointerDown={onPointerDown}
-      onClick={() => props.onSelect(item.id)}
-      onDoubleClick={() => props.onOpen(item)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") props.onOpen(item);
-        else if (event.key === "F2" && item.kind === "folder") props.onStartRename(item.id);
-        else props.onKeyNavigate(event, item.id);
-      }}
+      onPointerDown={native ? undefined : onPointerDown}
+      onDragStart={native?.onDragStart}
+      onDragOver={native?.onDragOver}
+      onDragLeave={native?.onDragLeave}
+      onDrop={native?.onDrop}
+      onClick={() => props.onSelect(id)}
+      onDoubleClick={() => props.onOpen(id)}
+      onKeyDown={(event) => props.onKey(event, id)}
     >
-      <AppIcon manifest={manifest} size={iconSize} />
+      {props.glyph}
       {renaming ? (
         <input
           autoFocus
           defaultValue={label}
-          maxLength={40}
+          maxLength={props.renameLimit}
           aria-label={t("common.rename")}
           className="glass-inset w-full rounded px-1 text-center text-xs text-fg outline-none"
+          onFocus={(event) => {
+            // Like Finder: the name is selected without its extension.
+            const dot = label.lastIndexOf(".");
+            event.currentTarget.setSelectionRange(0, native && dot > 0 ? dot : label.length);
+          }}
           onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
           onKeyDown={(event) => {
             event.stopPropagation();
-            if (event.key === "Enter") props.onRename(item.id, event.currentTarget.value);
-            if (event.key === "Escape") props.onRename(item.id, null);
+            if (event.key === "Enter") props.onRename(id, event.currentTarget.value);
+            if (event.key === "Escape") props.onRename(id, null);
           }}
-          onBlur={(event) => props.onRename(item.id, event.currentTarget.value)}
+          onBlur={(event) => props.onRename(id, event.currentTarget.value)}
         />
       ) : (
         <span
-          className="line-clamp-2 max-w-full rounded-md px-1.5 py-0.5 text-center text-[0.72rem] font-medium leading-tight text-fg"
-          style={{ background: "rgb(var(--otk-surface) / var(--otk-surface-opacity))" }}
+          className={cn(
+            "otk-icon-label line-clamp-2 max-w-full rounded-[5px] px-1.5 py-0.5 text-center text-[0.72rem] font-medium leading-tight text-fg",
+            native && "wrap-break-word",
+          )}
+          data-selected={selected}
+          title={native ? label : undefined}
         >
-          {label}
+          {native ? breakable(label) : label}
         </span>
       )}
     </button>
   );
-});
+}
+
+/** A Desktop-folder entry at desktop icon size: a folder, a document sheet or a thumbnail. */
+function FileGlyph({
+  entry,
+  size,
+  thumbnail,
+}: {
+  entry: FileEntry;
+  size: number;
+  thumbnail: string | null;
+}) {
+  if (thumbnail)
+    return (
+      <span className="grid place-items-center" style={{ width: size, height: size }}>
+        <img
+          src={thumbnail}
+          alt=""
+          loading="lazy"
+          draggable={false}
+          className="max-h-full min-h-6 max-w-full min-w-6 rounded-sm object-contain shadow-md ring-1 ring-black/15"
+        />
+      </span>
+    );
+  return createElement(fileGlyph(entry), {
+    "aria-hidden": true,
+    strokeWidth: 1.1,
+    style: {
+      width: size,
+      height: size,
+      filter: "drop-shadow(0 1px 2px rgb(0 0 0 / 0.35))",
+      ...(isFolder(entry)
+        ? { color: "rgb(var(--otk-accent))", fill: "rgb(var(--otk-accent) / 0.45)" }
+        : { color: "rgb(71 85 105)", fill: "rgb(255 255 255 / 0.92)" }),
+    },
+  });
+}
 
 /**
- * The desktop: icons and folders of the active virtual desktop on a grid,
- * plus the desktop context menu.
+ * The desktop: shortcuts of the active virtual desktop and, like macOS, the
+ * contents of the home's Desktop folder (on every virtual desktop), plus the
+ * desktop context menu.
  */
 export function DesktopSurface() {
   const { t } = useTranslation();
@@ -187,58 +300,384 @@ export function DesktopSurface() {
   const iconSizeName = useThemeStore((state) => state.theme.iconSize);
   const viewport = useWindowManager((state) => state.viewport);
   const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
+  const folder = useDesktopFolder();
+  const clipboard = useFileClipboard();
   const [selected, setSelected] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const [preview, setPreview] = useState<FileLocation | null>(null);
+  const [properties, setProperties] = useState<FileLocation | null>(null);
+  const menuPoint = useRef<Point | null>(null);
+  const location = folder.location;
+  const writable = folder.writable && location !== null;
+  const iconSize = ICON_PIXELS[iconSizeName];
 
   const metrics = useMemo(
     () => gridMetrics(iconSizeName, workArea(viewport)),
     [iconSizeName, viewport],
   );
-  const items = useMemo(
-    () =>
-      desktopDoc.items.filter(
-        (item) =>
-          item.desktopId === activeDesktopId &&
-          (item.kind === "folder" ||
-            (item.folderId === null &&
-              getApp(item.appId) &&
-              allowedApps(permissions, { includeHidden: true }).some((a) => a.id === item.appId))),
-      ),
-    [desktopDoc.items, activeDesktopId, permissions],
+  const allowed = useMemo(
+    () => new Set<string>(allowedApps(permissions, { includeHidden: true }).map((app) => app.id)),
+    [permissions],
   );
-  const placed = useMemo(() => placeItems(items, metrics), [items, metrics]);
+  const icons = useMemo<Icon[]>(
+    () => [
+      ...desktopDoc.items
+        .filter(
+          (item): item is AppItem =>
+            item.kind === "app" &&
+            item.desktopId === activeDesktopId &&
+            item.folderId === null &&
+            getApp(item.appId) !== undefined &&
+            allowed.has(item.appId),
+        )
+        .map((item) => ({ id: item.id, kind: "app" as const, item, cell: item.cell })),
+      ...folder.entries.map((entry) => ({
+        id: fileId(entry.name),
+        kind: "file" as const,
+        entry,
+        cell: fileCell(desktopDoc, entry.name),
+      })),
+    ],
+    [desktopDoc, activeDesktopId, allowed, folder.entries],
+  );
+  const placed = useMemo(
+    () => placeItems(icons, metrics, (icon) => icon.kind === "file"),
+    [icons, metrics],
+  );
+  const names = useMemo(() => new Set(folder.entries.map((entry) => entry.name)), [folder.entries]);
 
-  const nameOf = (item: DesktopItem): string => {
-    if (item.kind === "folder") return item.name;
-    const manifest = getApp(item.appId);
-    return manifest ? t(manifest.titleKey) : item.appId;
+  // New entries keep the place they first appeared in; places of removed ones are forgotten.
+  useEffect(() => {
+    if (folder.status !== "ready") return;
+    const shown = new Map<string, Cell>();
+    for (const entry of folder.entries) {
+      const cell = placed.get(fileId(entry.name));
+      if (cell) shown.set(entry.name, cell);
+    }
+    const current = usePreferences.getState().desktop;
+    if (reconcileFiles(current, names, shown) !== current)
+      updatePreference("desktop", (doc) => reconcileFiles(doc, names, shown));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when a new listing arrives
+  }, [folder.entries, folder.status]);
+
+  // App groups from earlier versions become real folders in the Desktop folder.
+  const legacy = desktopDoc.items.some(
+    (item) => item.kind === "folder" || (item.kind === "app" && item.folderId !== null),
+  );
+  const migrating = useRef(false);
+  useEffect(() => {
+    if (!legacy || folder.status === "loading" || migrating.current) return;
+    migrating.current = true;
+    const into = folder.writable ? folder.location : null;
+    const groups = usePreferences
+      .getState()
+      .desktop.items.filter((item) => item.kind === "folder")
+      .map((item) => (item as { name: string }).name);
+    void (async () => {
+      if (into) await Promise.allSettled(groups.map((name) => filesApi.mkdir(into, name)));
+      updatePreference("desktop", (doc) => dissolveAppGroups(doc, into !== null));
+      if (into) filesChanged();
+      migrating.current = false;
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once the folder is known
+  }, [legacy, folder.status]);
+
+  useEffect(() => {
+    if (!notice?.error) return;
+    const timer = window.setTimeout(() => setNotice(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const labelOf = (icon: Icon): string => {
+    if (icon.kind === "file") return icon.entry.name;
+    const manifest = getApp(icon.item.appId);
+    return manifest ? t(manifest.titleKey) : icon.item.appId;
   };
 
-  const open = (item: DesktopItem) => {
-    if (item.kind === "folder") desktop.openWindow("otuken.folder", { folderId: item.id });
-    else desktop.openApp(item.appId as AppId);
-  };
+  /* ------------------------------ file actions ------------------------------ */
 
-  const onDrop = (item: DesktopItem, cell: Cell) => {
-    const target = items.find(
-      (other) =>
-        other.id !== item.id &&
-        placed.get(other.id)?.col === cell.col &&
-        placed.get(other.id)?.row === cell.row,
-    );
-    if (target?.kind === "folder" && item.kind === "app") {
-      updatePreference("desktop", (doc) => moveIntoFolder(doc, item.id, target.id));
-    } else {
-      updatePreference("desktop", (doc) => moveItem(doc, item.id, cell));
+  const entryLocation = (name: string, base = location): FileLocation => ({
+    root: base!.root,
+    path: joinPath(base!.path, name),
+  });
+
+  /** Runs a file operation; every change is announced so Files windows list again too. */
+  const act = async (action: () => Promise<unknown>) => {
+    try {
+      await action();
+      return true;
+    } catch (caught) {
+      setNotice({ text: errorMessage(t, caught), error: true });
+      return false;
+    } finally {
+      filesChanged();
     }
   };
 
-  const onRename = (id: string, name: string | null) => {
-    setRenaming(null);
-    if (name !== null) updatePreference("desktop", (doc) => renameFolder(doc, id, name));
+  /** The cell under the pointer when it is free, else the next free one from the right. */
+  const freeCellNear = (point: Point | null): Cell => {
+    const occupied = new Set([...placed.values()].map(cellKey));
+    const cell = point ? cellAt(point, metrics) : null;
+    return cell && !occupied.has(cellKey(cell)) ? cell : firstFreeCell(occupied, metrics, true);
   };
 
-  const onKeyNavigate = (event: KeyboardEvent, id: string) => {
+  const download = (target: FileLocation) => {
+    const link = document.createElement("a");
+    link.href = filesApi.downloadUrl(target);
+    link.download = nameOf(target.path);
+    link.rel = "noopener";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  };
+
+  const openEntry = (entry: FileEntry) => {
+    if (!location) return;
+    const target = entryLocation(entry.name);
+    const kind = kindOf(entry);
+    // Folders open in a Files window, with the sidebar, like every other folder.
+    if (kind === "folder") desktop.openApp("otuken.files", { newInstance: true, appState: target });
+    else if (kind === "image") setPreview(target);
+    else if (kind === "text") desktop.openWindow("otuken.editor", target);
+    else download(target);
+  };
+
+  const openIcon = (icon: Icon) => {
+    if (icon.kind === "app") desktop.openApp(icon.item.appId as AppId);
+    else openEntry(icon.entry);
+  };
+
+  const openDesktopFolder = () => {
+    if (location) desktop.openApp("otuken.files", { newInstance: true, appState: location });
+  };
+
+  const create = async (kind: "folder" | "file") => {
+    if (!location) return;
+    const name = freeName(
+      t(kind === "folder" ? "files.newFolderName" : "files.newFileName"),
+      names,
+    );
+    const cell = freeCellNear(menuPoint.current);
+    const done = await act(() =>
+      kind === "folder"
+        ? filesApi.mkdir(location, name)
+        : filesApi.writeText(entryLocation(name), "", null),
+    );
+    if (!done) return;
+    updatePreference("desktop", (doc) => setIconCell(doc, { kind: "file", name }, cell));
+    setSelected(fileId(name));
+    setRenaming(fileId(name));
+  };
+
+  const commitRename = async (id: string, value: string | null) => {
+    setRenaming(null);
+    const icon = icons.find((candidate) => candidate.id === id);
+    if (value === null || icon?.kind !== "file" || !location) return;
+    const from = icon.entry.name;
+    const name = value.trim();
+    if (!name || name === from) return;
+    if (await act(() => filesApi.rename(entryLocation(from), name))) {
+      updatePreference("desktop", (doc) => renameFilePosition(doc, from, name));
+      setSelected(fileId(name));
+    }
+  };
+
+  const remove = async (entry: FileEntry) => {
+    if (!location) return;
+    const ok = await requestConfirm({
+      title: t("files.deleteConfirm.title", { count: 1 }),
+      body: t("files.deleteConfirm.one", { name: entry.name }),
+      confirmLabel: t("files.deleteConfirm.confirm"),
+      danger: true,
+    });
+    if (ok && (await act(() => filesApi.remove(location.root, [entryLocation(entry.name).path]))))
+      setSelected(null);
+  };
+
+  const toClipboard = (entry: FileEntry, mode: "copy" | "cut") => {
+    if (!location) return;
+    useFileClipboard.setState(
+      { mode, root: location.root, paths: [entryLocation(entry.name).path] },
+      true,
+    );
+  };
+
+  const paste = async (into: FileLocation | null = location) => {
+    if (!into || !clipboard) return;
+    const done = await act(() =>
+      clipboard.mode === "cut"
+        ? filesApi.move(clipboard.root, clipboard.paths, into)
+        : filesApi.copy(clipboard.root, clipboard.paths, into),
+    );
+    if (done && clipboard.mode === "cut") useFileClipboard.setState(null, true);
+  };
+
+  /** Keeps the first dropped entry where it was dropped (when that cell is free). */
+  const placeDropped = (name: string | undefined, cell: Cell) => {
+    if (!name || icons.some((icon) => sameCell(placed.get(icon.id), cell))) return;
+    updatePreference("desktop", (doc) => setIconCell(doc, { kind: "file", name }, cell));
+  };
+
+  const upload = async (files: File[], into: FileLocation, cell: Cell | null) => {
+    let first: string | undefined;
+    try {
+      for (const file of files) {
+        const progress = (loaded: number, total: number) =>
+          setNotice({
+            text: t("desktop.uploading", {
+              name: file.name,
+              percent: total ? Math.round((loaded / total) * 100) : 0,
+            }),
+            error: false,
+          });
+        progress(0, file.size);
+        const name = await uploadUnique(into, file, progress);
+        first ??= name;
+      }
+      setNotice(null);
+    } catch (caught) {
+      setNotice({ text: errorMessage(t, caught), error: true });
+    } finally {
+      if (cell) placeDropped(first, cell);
+      filesChanged();
+    }
+  };
+
+  /* ------------------------------ drag and drop ------------------------------ */
+
+  const accept = (event: DragEvent, target: string) => {
+    if (!writable) return false;
+    const types = [...event.dataTransfer.types];
+    if (!types.includes(FILES_DRAG_TYPE) && !types.includes("Files")) return false;
+    event.preventDefault();
+    event.dataTransfer.dropEffect =
+      types.includes("Files") || event.altKey || event.ctrlKey ? "copy" : "move";
+    setDropTarget(target);
+    return true;
+  };
+
+  /** Files from the computer (folders cannot be uploaded from a browser). */
+  const computerFiles = (event: DragEvent) =>
+    [...event.dataTransfer.items]
+      .filter((item) => item.kind === "file" && !item.webkitGetAsEntry?.()?.isDirectory)
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => file !== null);
+
+  /** A drop onto a folder icon: into that folder. */
+  const dropInto = (event: DragEvent, into: FileLocation) => {
+    event.preventDefault();
+    setDropTarget(null);
+    const data = readFilesDrag(event.dataTransfer.getData(FILES_DRAG_TYPE));
+    if (data) {
+      const inside = data.paths.some(
+        (path) =>
+          data.root === into.root && (into.path === path || into.path.startsWith(`${path}/`)),
+      );
+      const moving = data.paths.filter((path) => parentOf(path) !== into.path);
+      if (inside || moving.length === 0) return;
+      const copy = event.altKey || event.ctrlKey;
+      void act(() =>
+        copy ? filesApi.copy(data.root, moving, into) : filesApi.move(data.root, moving, into),
+      );
+    } else {
+      const files = computerFiles(event);
+      if (files.length) void upload(files, into, null);
+    }
+  };
+
+  /** A drop onto the desktop: rearranges its own entries, moves or uploads others into it. */
+  const dropOnDesktop = (event: DragEvent) => {
+    setDropTarget(null);
+    // Handled by a folder icon underneath.
+    if (event.nativeEvent.defaultPrevented || !writable || !location) return;
+    event.preventDefault();
+    const cell = cellAt({ x: event.clientX, y: event.clientY }, metrics);
+    const data = readFilesDrag(event.dataTransfer.getData(FILES_DRAG_TYPE));
+    if (data) {
+      const own =
+        data.root === location.root && data.paths.every((path) => parentOf(path) === location.path);
+      if (own) {
+        const id = fileId(nameOf(data.paths[0]!));
+        const moving = icons.find((icon) => icon.id === id);
+        if (!moving) return;
+        const occupant = icons.find(
+          (icon) => icon.id !== id && sameCell(placed.get(icon.id), cell),
+        );
+        updatePreference("desktop", (doc) =>
+          moveIcon(
+            doc,
+            refOf(moving),
+            cell,
+            placed.get(id) ?? null,
+            occupant ? refOf(occupant) : null,
+          ),
+        );
+        return;
+      }
+      const copy = event.altKey || event.ctrlKey;
+      void act(async () => {
+        await (copy
+          ? filesApi.copy(data.root, data.paths, location)
+          : filesApi.move(data.root, data.paths, location));
+        placeDropped(nameOf(data.paths[0]!), cell);
+      });
+      return;
+    }
+    const files = computerFiles(event);
+    if (files.length) void upload(files, location, cell);
+  };
+
+  const nativeFor = (icon: Extract<Icon, { kind: "file" }>): NativeDrag => {
+    const target = entryLocation(icon.entry.name);
+    return {
+      onDragStart: (event) => {
+        setSelected(icon.id);
+        event.dataTransfer.setData(
+          FILES_DRAG_TYPE,
+          JSON.stringify({ root: target.root, paths: [target.path] }),
+        );
+        event.dataTransfer.effectAllowed = "copyMove";
+      },
+      ...(isFolder(icon.entry) && writable
+        ? {
+            onDragOver: (event: DragEvent) => {
+              if (accept(event, icon.id)) event.stopPropagation();
+            },
+            onDragLeave: () => setDropTarget(null),
+            onDrop: (event: DragEvent) => dropInto(event, target),
+          }
+        : {}),
+    };
+  };
+
+  /* --------------------------------- icons --------------------------------- */
+
+  const onMove = (id: string, cell: Cell) => {
+    const moving = icons.find((icon) => icon.id === id);
+    if (!moving) return;
+    const occupant = icons.find((icon) => icon.id !== id && sameCell(placed.get(icon.id), cell));
+    updatePreference("desktop", (doc) =>
+      moveIcon(doc, refOf(moving), cell, placed.get(id) ?? null, occupant ? refOf(occupant) : null),
+    );
+  };
+
+  const onKey = (event: KeyboardEvent, id: string) => {
+    const icon = icons.find((candidate) => candidate.id === id);
+    if (!icon) return;
+    const mod = event.metaKey || event.ctrlKey;
+    const file = icon.kind === "file" ? icon.entry : null;
+    if (event.key === "Enter") openIcon(icon);
+    else if (event.key === "F2" && file && writable) setRenaming(id);
+    else if (file && writable && (event.key === "Delete" || (event.key === "Backspace" && mod)))
+      void remove(file);
+    else if (file && mod && event.key.toLowerCase() === "c") toClipboard(file, "copy");
+    else if (file && writable && mod && event.key.toLowerCase() === "x") toClipboard(file, "cut");
+    else navigate(event, id);
+  };
+
+  const navigate = (event: KeyboardEvent, id: string) => {
     const deltas: Record<string, [number, number]> = {
       ArrowUp: [0, -1],
       ArrowDown: [0, 1],
@@ -266,31 +705,59 @@ export function DesktopSurface() {
     }
     if (best) {
       setSelected(best.id);
-      document.querySelector<HTMLElement>(`[data-desktop-item="${best.id}"]`)?.focus();
+      document.querySelector<HTMLElement>(`[data-desktop-item="${CSS.escape(best.id)}"]`)?.focus();
     }
   };
 
+  const arrange = (by: "name" | "kind") =>
+    updatePreference("desktop", (doc) =>
+      arrangeIcons(
+        doc,
+        icons.map((icon) => ({
+          ref: refOf(icon),
+          name: labelOf(icon),
+          group: icon.kind === "app" ? 1 : isFolder(icon.entry) ? 0 : 2,
+        })),
+        by,
+        metrics,
+      ),
+    );
+
+  /* --------------------------------- menus --------------------------------- */
+
   const desktopMenu = (): MenuEntry[] => {
     const onThisDesktop = new Set(
-      items.filter((item) => item.kind === "app").map((item) => (item as { appId: string }).appId),
+      icons.flatMap((icon) => (icon.kind === "app" ? [icon.item.appId] : [])),
     );
     const addable = allowedApps(permissions).filter((app) => !onThisDesktop.has(app.id));
+    const fileEntries: MenuEntry[] = writable
+      ? [
+          {
+            kind: "item",
+            id: "new-folder",
+            label: t("desktop.menu.newFolder"),
+            icon: <FolderPlus />,
+            onSelect: () => void create("folder"),
+          },
+          {
+            kind: "item",
+            id: "new-file",
+            label: t("files.menu.newFile"),
+            icon: <FilePlus2 />,
+            onSelect: () => void create("file"),
+          },
+          {
+            kind: "item",
+            id: "paste",
+            label: t("files.menu.paste"),
+            icon: <ClipboardPaste />,
+            disabled: !clipboard,
+            onSelect: () => void paste(),
+          },
+        ]
+      : [];
     return [
-      {
-        kind: "item",
-        id: "new-folder",
-        label: t("desktop.menu.newFolder"),
-        icon: <FolderPlus />,
-        onSelect: () => {
-          let created = "";
-          updatePreference("desktop", (doc) => {
-            const result = createFolder(doc, activeDesktopId, t("desktop.newFolderName"), metrics);
-            created = result.id;
-            return result.doc;
-          });
-          setRenaming(created);
-        },
-      },
+      ...fileEntries,
       {
         kind: "submenu",
         id: "add-shortcut",
@@ -309,6 +776,18 @@ export function DesktopSurface() {
               }))
             : [{ kind: "label" as const, id: "none", label: t("desktop.menu.noShortcutsLeft") }],
       },
+      ...(location
+        ? [
+            {
+              kind: "item" as const,
+              id: "open-folder",
+              label: t("desktop.menu.openDesktopFolder"),
+              icon: <FolderOpen />,
+              onSelect: openDesktopFolder,
+            },
+          ]
+        : []),
+      ...openTerminalEntries(t("desktop.menu.openTerminal"), permissions),
       { kind: "separator", id: "s0" },
       {
         kind: "item",
@@ -350,20 +829,14 @@ export function DesktopSurface() {
             id: "name",
             label: t("desktop.menu.arrangeByName"),
             icon: <ArrowDownAZ />,
-            onSelect: () =>
-              updatePreference("desktop", (doc) =>
-                arrangeIcons(doc, activeDesktopId, "name", nameOf, metrics),
-              ),
+            onSelect: () => arrange("name"),
           },
           {
             kind: "item",
             id: "kind",
             label: t("desktop.menu.arrangeByKind"),
             icon: <LayoutGrid />,
-            onSelect: () =>
-              updatePreference("desktop", (doc) =>
-                arrangeIcons(doc, activeDesktopId, "kind", nameOf, metrics),
-              ),
+            onSelect: () => arrange("kind"),
           },
         ],
       },
@@ -372,10 +845,12 @@ export function DesktopSurface() {
         id: "refresh",
         label: t("desktop.menu.refresh"),
         icon: <RefreshCw />,
-        onSelect: () =>
+        onSelect: () => {
+          filesChanged();
           void flushPending()
             .then(() => loadPreferences({ t, permissions }))
-            .catch(() => usePreferences.setState({ saveError: true })),
+            .catch(() => usePreferences.setState({ saveError: true }));
+        },
       },
       { kind: "separator", id: "s2" },
       {
@@ -388,52 +863,105 @@ export function DesktopSurface() {
     ];
   };
 
-  const itemMenu = (item: DesktopItem): MenuEntry[] => {
-    if (item.kind === "folder") {
-      return [
-        {
-          kind: "item",
-          id: "open",
-          label: t("desktop.menu.open"),
-          icon: <FolderOpen />,
-          onSelect: () => open(item),
-        },
-        {
-          kind: "item",
-          id: "rename",
-          label: t("desktop.menu.rename"),
-          icon: <Pencil />,
-          shortcut: "F2",
-          onSelect: () => setRenaming(item.id),
-        },
-        { kind: "separator", id: "s" },
-        {
-          kind: "item",
-          id: "delete",
-          label: t("desktop.menu.deleteFolder"),
-          icon: <Trash2 />,
-          danger: true,
-          confirm: {
-            title: t("desktop.deleteFolder.title"),
-            body: t("desktop.deleteFolder.body", { name: item.name }),
-            confirmLabel: t("desktop.deleteFolder.confirm"),
-          },
-          onSelect: () => updatePreference("desktop", (doc) => deleteFolder(doc, item.id, metrics)),
-        },
-      ];
-    }
+  const fileMenu = (entry: FileEntry): MenuEntry[] => {
+    const target = entryLocation(entry.name);
+    const folderEntry = isFolder(entry);
+    return [
+      {
+        kind: "item",
+        id: "open",
+        label: t("files.menu.open"),
+        icon: <FolderOpen />,
+        onSelect: () => openEntry(entry),
+      },
+      ...(!folderEntry && kindOf(entry) !== "link"
+        ? [
+            {
+              kind: "item" as const,
+              id: "download",
+              label: t("files.menu.download"),
+              icon: <Download />,
+              onSelect: () => download(target),
+            },
+          ]
+        : []),
+      {
+        kind: "item",
+        id: "show",
+        label: t("desktop.menu.showInFiles"),
+        icon: <AppWindow />,
+        onSelect: openDesktopFolder,
+      },
+      { kind: "separator", id: "s1" },
+      {
+        kind: "item",
+        id: "cut",
+        label: t("files.menu.cut"),
+        icon: <Scissors />,
+        shortcut: "Ctrl+X",
+        disabled: !writable,
+        onSelect: () => toClipboard(entry, "cut"),
+      },
+      {
+        kind: "item",
+        id: "copy",
+        label: t("files.menu.copy"),
+        icon: <Copy />,
+        shortcut: "Ctrl+C",
+        onSelect: () => toClipboard(entry, "copy"),
+      },
+      ...(folderEntry
+        ? [
+            {
+              kind: "item" as const,
+              id: "paste",
+              label: t("files.menu.pasteInto"),
+              icon: <ClipboardPaste />,
+              disabled: !writable || !clipboard,
+              onSelect: () => void paste(target),
+            },
+          ]
+        : []),
+      { kind: "separator", id: "s2" },
+      {
+        kind: "item",
+        id: "rename",
+        label: t("files.menu.rename"),
+        icon: <Pencil />,
+        shortcut: "F2",
+        disabled: !writable,
+        onSelect: () => setRenaming(fileId(entry.name)),
+      },
+      {
+        kind: "item",
+        id: "properties",
+        label: t("files.menu.properties"),
+        icon: <Info />,
+        onSelect: () => setProperties(target),
+      },
+      { kind: "separator", id: "s3" },
+      {
+        kind: "item",
+        id: "delete",
+        label: t("files.menu.delete"),
+        icon: <Trash2 />,
+        danger: true,
+        disabled: !writable,
+        onSelect: () => void remove(entry),
+      },
+    ];
+  };
+
+  const appMenu = (item: AppItem): MenuEntry[] => {
     const manifest = getApp(item.appId);
     const isPinned = pinned.includes(item.appId);
-    const folders = items.filter(
-      (other): other is Extract<DesktopItem, { kind: "folder" }> => other.kind === "folder",
-    );
     return [
       {
         kind: "item",
         id: "open",
         label: t("desktop.menu.open"),
         icon: <AppWindow />,
-        onSelect: () => open(item),
+        onSelect: () => desktop.openApp(item.appId as AppId),
       },
       ...(manifest?.window.instancing === "multiple"
         ? [
@@ -459,20 +987,6 @@ export function DesktopSurface() {
               : [...dock.pinned, item.appId],
           })),
       },
-      {
-        kind: "submenu",
-        id: "folder",
-        label: t("desktop.menu.moveIntoFolder"),
-        icon: <FolderInput />,
-        disabled: folders.length === 0,
-        entries: folders.map((folder) => ({
-          kind: "item" as const,
-          id: folder.id,
-          label: folder.name,
-          onSelect: () =>
-            updatePreference("desktop", (doc) => moveIntoFolder(doc, item.id, folder.id)),
-        })),
-      },
       { kind: "separator", id: "s2" },
       {
         kind: "item",
@@ -484,44 +998,97 @@ export function DesktopSurface() {
     ];
   };
 
+  const glyphOf = (icon: Icon): ReactNode => {
+    if (icon.kind === "app") {
+      const manifest = getApp(icon.item.appId);
+      return manifest ? <AppIcon manifest={manifest} size={iconSize} /> : null;
+    }
+    const thumbnail =
+      location && kindOf(icon.entry) === "image" && icon.entry.size <= THUMBNAIL_BYTES
+        ? filesApi.downloadUrl(entryLocation(icon.entry.name), true)
+        : null;
+    return <FileGlyph entry={icon.entry} size={iconSize} thumbnail={thumbnail} />;
+  };
+
   return (
-    <ContextMenuArea entries={desktopMenu}>
-      <div
-        className="absolute inset-0 z-10"
-        role="group"
-        aria-label={t("desktop.workspace")}
-        data-testid="desktop-surface"
-        onPointerDown={(event) => {
-          if (event.target === event.currentTarget) setSelected(null);
-        }}
-      >
-        {items.map((item) => {
-          const cell = placed.get(item.id);
-          if (!cell) return null;
-          return (
-            <ContextMenuArea key={item.id} entries={() => itemMenu(item)}>
-              <div className="contents">
-                <DesktopIcon
-                  item={item}
-                  cell={cell}
-                  metrics={metrics}
-                  label={nameOf(item)}
-                  selected={selected === item.id}
-                  renaming={renaming === item.id}
-                  iconSize={ICON_PIXELS[iconSizeName]}
-                  pinned={item.kind === "app" && pinned.includes(item.appId)}
-                  onSelect={setSelected}
-                  onOpen={open}
-                  onDrop={onDrop}
-                  onRename={onRename}
-                  onStartRename={setRenaming}
-                  onKeyNavigate={onKeyNavigate}
-                />
-              </div>
-            </ContextMenuArea>
-          );
-        })}
-      </div>
-    </ContextMenuArea>
+    <>
+      <ContextMenuArea entries={desktopMenu}>
+        <div
+          className={cn(
+            "absolute inset-0 z-10",
+            dropTarget === "desktop" && "bg-[rgb(var(--otk-accent)/0.05)]",
+          )}
+          role="group"
+          aria-label={t("desktop.workspace")}
+          data-testid="desktop-surface"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) setSelected(null);
+          }}
+          onContextMenu={(event) => {
+            menuPoint.current = { x: event.clientX, y: event.clientY };
+          }}
+          onDragOver={(event) => accept(event, "desktop")}
+          onDragLeave={(event) => {
+            if (event.target === event.currentTarget) setDropTarget(null);
+          }}
+          onDrop={dropOnDesktop}
+        >
+          {icons.map((icon) => {
+            const cell = placed.get(icon.id);
+            const glyph = glyphOf(icon);
+            if (!cell || !glyph) return null;
+            return (
+              <ContextMenuArea
+                key={icon.id}
+                entries={() => (icon.kind === "app" ? appMenu(icon.item) : fileMenu(icon.entry))}
+              >
+                <div className="contents" onContextMenu={() => setSelected(icon.id)}>
+                  <DesktopIcon
+                    id={icon.id}
+                    cell={cell}
+                    metrics={metrics}
+                    label={labelOf(icon)}
+                    glyph={glyph}
+                    selected={selected === icon.id}
+                    renaming={renaming === icon.id}
+                    renameLimit={icon.kind === "file" ? 255 : 40}
+                    dropTarget={dropTarget === icon.id}
+                    native={icon.kind === "file" ? nativeFor(icon) : null}
+                    onSelect={setSelected}
+                    onOpen={(id) => {
+                      const target = icons.find((candidate) => candidate.id === id);
+                      if (target) openIcon(target);
+                    }}
+                    onMove={onMove}
+                    onRename={(id, name) => void commitRename(id, name)}
+                    onKey={onKey}
+                  />
+                </div>
+              </ContextMenuArea>
+            );
+          })}
+          {notice ? (
+            <div
+              role={notice.error ? "alert" : "status"}
+              className="glass-strong absolute bottom-24 left-4 flex max-w-sm items-start gap-2 rounded-otk-md px-3 py-2 text-xs text-fg shadow-lg"
+            >
+              <span className={cn("min-w-0 flex-1", notice.error && "text-danger")}>
+                {notice.text}
+              </span>
+              <button
+                type="button"
+                aria-label={t("common.close")}
+                className="grid size-4 shrink-0 place-items-center rounded text-fg-muted hover:text-fg"
+                onClick={() => setNotice(null)}
+              >
+                <X className="size-3" aria-hidden />
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </ContextMenuArea>
+      <ImagePreview location={preview} onClose={() => setPreview(null)} />
+      <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
+    </>
   );
 }

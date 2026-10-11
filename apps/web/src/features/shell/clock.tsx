@@ -1,6 +1,20 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatDateTime } from "../../lib/format.ts";
+import { localeTag } from "../../lib/format.ts";
+
+/** macOS order: "Paz 11 Eki 14:33" (weekday, day, month, then the time). */
+export function menubarTime(now: number, language: string, seconds: boolean): string {
+  const tag = localeTag(language);
+  const date = new Date(now);
+  const part = (options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(tag, options).format(date);
+  const time = part({
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(seconds ? { second: "2-digit" } : {}),
+  });
+  return `${part({ weekday: "short" })} ${part({ day: "numeric" })} ${part({ month: "short" })} ${time}`;
+}
 
 /**
  * Menu bar clock. Without seconds it re-renders once per minute, aligned to
@@ -23,14 +37,7 @@ export function Clock({ seconds = false }: { seconds?: boolean }) {
 
   return (
     <time dateTime={new Date(now).toISOString()} className="tabular-nums">
-      {formatDateTime(now, i18n.language, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        ...(seconds ? { second: "2-digit" } : {}),
-      })}
+      {menubarTime(now, i18n.language, seconds)}
     </time>
   );
 }

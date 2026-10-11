@@ -6,14 +6,13 @@ import {
   addDesktop,
   addShortcut,
   arrangeIcons,
-  createFolder,
-  deleteFolder,
-  moveIntoFolder,
-  moveItem,
-  moveOutOfFolder,
+  dissolveAppGroups,
+  fileCell,
+  moveIcon,
   pruneUnavailable,
+  reconcileFiles,
   removeDesktop,
-  renameFolder,
+  renameFilePosition,
 } from "./desktop-ops.ts";
 
 const metrics = gridMetrics("medium", { x: 0, y: 36, width: 1440, height: 780 });
@@ -40,6 +39,7 @@ function base(): DesktopPreferences {
         folderId: null,
       },
     ],
+    files: [],
   };
 }
 
@@ -95,48 +95,112 @@ describe("icon grid", () => {
       expect(cell.row).toBeLessThan(small.rows);
     }
   });
+
+  it("fills Desktop-folder entries from the top right, like macOS", () => {
+    const placed = placeItems(
+      [
+        { id: "app", cell: null, file: false },
+        { id: "file:a", cell: null, file: true },
+        { id: "file:b", cell: null, file: true },
+      ],
+      metrics,
+      (item) => item.file,
+    );
+    expect(placed.get("app")).toEqual({ col: 0, row: 0 });
+    expect(placed.get("file:a")).toEqual({ col: metrics.columns - 1, row: 0 });
+    expect(placed.get("file:b")).toEqual({ col: metrics.columns - 1, row: 1 });
+  });
 });
 
 describe("desktop operations", () => {
-  it("adds shortcuts to the first free cell", () => {
-    const doc = addShortcut(base(), "otuken.users", "d1", metrics);
-    expect(doc.items.at(-1)).toMatchObject({ appId: "otuken.users", cell: { col: 0, row: 2 } });
+  it("adds shortcuts to the first free cell, around the Desktop folder's entries", () => {
+    const doc = addShortcut(
+      { ...base(), files: [{ name: "Notlar", cell: { col: 0, row: 2 } }] },
+      "otuken.users",
+      "d1",
+      metrics,
+    );
+    expect(doc.items.at(-1)).toMatchObject({ appId: "otuken.users", cell: { col: 0, row: 3 } });
     valid(doc);
   });
 
-  it("swaps icons when dropping onto an occupied cell", () => {
-    const doc = moveItem(base(), "a", { col: 0, row: 1 });
+  it("swaps a moved icon with the one shown in the target cell", () => {
+    const doc = moveIcon(
+      base(),
+      { kind: "app", id: "a" },
+      { col: 0, row: 1 },
+      { col: 0, row: 0 },
+      { kind: "app", id: "b" },
+    );
     expect(doc.items.find((i) => i.id === "a")!.cell).toEqual({ col: 0, row: 1 });
     expect(doc.items.find((i) => i.id === "b")!.cell).toEqual({ col: 0, row: 0 });
+    // Files and shortcuts swap the same way.
+    const mixed = moveIcon(
+      doc,
+      { kind: "file", name: "rapor.pdf" },
+      { col: 0, row: 0 },
+      { col: 13, row: 0 },
+      { kind: "app", id: "b" },
+    );
+    expect(fileCell(mixed, "rapor.pdf")).toEqual({ col: 0, row: 0 });
+    expect(mixed.items.find((i) => i.id === "b")!.cell).toEqual({ col: 13, row: 0 });
+    valid(mixed);
   });
 
-  it("manages folders and their contents", () => {
-    const { doc: withFolder, id: folderId } = createFolder(base(), "d1", "Araçlar", metrics);
-    let doc = moveIntoFolder(withFolder, "a", folderId);
-    expect(doc.items.find((i) => i.id === "a")).toMatchObject({ folderId, cell: null });
-    doc = renameFolder(doc, folderId, "  Yönetim  ");
-    expect(doc.items.find((i) => i.id === folderId)).toMatchObject({ name: "Yönetim" });
-    expect(renameFolder(doc, folderId, "   ")).toBe(doc);
+  it("keeps Desktop-folder entries in place across renames and new listings", () => {
+    let doc: DesktopPreferences = {
+      ...base(),
+      files: [{ name: "a.txt", cell: { col: 13, row: 0 } }],
+    };
+    doc = renameFilePosition(doc, "a.txt", "b.txt");
+    expect(doc.files).toEqual([{ name: "b.txt", cell: { col: 13, row: 0 } }]);
+    // New entries keep where they were first shown; vanished ones are forgotten.
+    const shown = new Map([
+      ["b.txt", { col: 5, row: 5 }],
+      ["Yeni klasör", { col: 13, row: 1 }],
+    ]);
+    const next = reconcileFiles(doc, new Set(["b.txt", "Yeni klasör"]), shown);
+    expect(next.files).toEqual([
+      { name: "b.txt", cell: { col: 13, row: 0 } },
+      { name: "Yeni klasör", cell: { col: 13, row: 1 } },
+    ]);
+    expect(reconcileFiles(next, new Set(["b.txt", "Yeni klasör"]), shown)).toBe(next);
+    expect(reconcileFiles(next, new Set(["b.txt"]), shown).files).toHaveLength(1);
+    valid(next);
+  });
+
+  it("turns legacy app groups into Desktop-folder entries and frees their shortcuts", () => {
+    const legacy: DesktopPreferences = {
+      ...base(),
+      items: [
+        ...base().items.map((item) =>
+          item.id === "a" ? { ...item, folderId: "g", cell: null } : item,
+        ),
+        { kind: "folder", id: "g", name: "Araçlar", desktopId: "d1", cell: { col: 3, row: 2 } },
+      ],
+    };
+    const doc = dissolveAppGroups(legacy, true);
+    expect(doc.items.map((i) => i.kind)).toEqual(["app", "app"]);
+    expect(doc.items.find((i) => i.id === "a")).toMatchObject({ folderId: null, cell: null });
+    expect(fileCell(doc, "Araçlar")).toEqual({ col: 3, row: 2 });
+    expect(dissolveAppGroups(legacy, false).files).toEqual([]);
+    expect(dissolveAppGroups(doc, true)).toBe(doc);
     valid(doc);
-
-    const out = moveOutOfFolder(doc, "a", metrics);
-    expect(out.items.find((i) => i.id === "a")).toMatchObject({ folderId: null });
-    const deleted = deleteFolder(doc, folderId, metrics);
-    expect(deleted.items.some((i) => i.id === folderId)).toBe(false);
-    expect(deleted.items.find((i) => i.id === "a")).toMatchObject({ folderId: null });
-    expect(deleted.items.find((i) => i.id === "a")!.cell).not.toBeNull();
-    valid(deleted);
   });
 
-  it("arranges icons by name with folders first when sorting by kind", () => {
-    const { doc } = createFolder(base(), "d1", "Zeta", metrics);
-    const names: Record<string, string> = { a: "Sistem", b: "Ayarlar" };
-    const nameOf = (item: { id: string; kind: string; name?: string }) =>
-      item.kind === "folder" ? item.name! : names[item.id]!;
-    const byName = arrangeIcons(doc, "d1", "name", nameOf, metrics);
+  it("arranges shortcuts and files by name, or folders first by kind", () => {
+    const icons = [
+      { ref: { kind: "app" as const, id: "a" }, name: "Sistem", group: 1 },
+      { ref: { kind: "app" as const, id: "b" }, name: "Ayarlar", group: 1 },
+      { ref: { kind: "file" as const, name: "Zeta" }, name: "Zeta", group: 0 },
+      { ref: { kind: "file" as const, name: "Bütçe.ods" }, name: "Bütçe.ods", group: 2 },
+    ];
+    const byName = arrangeIcons(base(), icons, "name", metrics);
     expect(byName.items.find((i) => i.id === "b")!.cell).toEqual({ col: 0, row: 0 });
-    const byKind = arrangeIcons(doc, "d1", "kind", nameOf, metrics);
-    expect(byKind.items.find((i) => i.kind === "folder")!.cell).toEqual({ col: 0, row: 0 });
+    expect(fileCell(byName, "Bütçe.ods")).toEqual({ col: 0, row: 1 });
+    const byKind = arrangeIcons(base(), icons, "kind", metrics);
+    expect(fileCell(byKind, "Zeta")).toEqual({ col: 0, row: 0 });
+    expect(fileCell(byKind, "Bütçe.ods")).toEqual({ col: 0, row: 3 });
   });
 
   it("adds and removes virtual desktops without losing icons", () => {

@@ -58,6 +58,44 @@ const ConfigFileSchema = z.strictObject({
       format: z.enum(["json", "pretty"]).optional(),
     })
     .optional(),
+  /** File manager: nothing is exposed until roots are configured. */
+  files: z
+    .strictObject({
+      roots: z
+        .array(
+          z.strictObject({
+            id: z.string().regex(/^[a-z0-9][a-z0-9-]{0,31}$/),
+            name: z.string().min(1).max(64),
+            path: z.string().regex(/^\//, "must be an absolute path"),
+            readOnly: z.boolean().optional(),
+          }),
+        )
+        .max(32)
+        .refine(
+          (roots) => new Set(roots.map((r) => r.id)).size === roots.length,
+          "duplicate root id",
+        )
+        .refine(
+          (roots) => roots.every((r) => r.id !== "home" && !r.id.startsWith("sys-")),
+          'root ids "home" and "sys-*" are reserved',
+        )
+        .optional(),
+      maxUploadMiB: z.number().int().min(1).max(1_048_576).optional(),
+      minFreeMiB: z.number().int().min(0).max(1_048_576).optional(),
+      /** Private home folders for every user (default true), under <dataDir>/homes. */
+      homes: z.boolean().optional(),
+    })
+    .optional(),
+  /** Backup archives (docs/backups.md). */
+  backups: z
+    .strictObject({
+      /** Where backups are stored, e.g. a separate disk. Default: <dataDir>/backups/archives. */
+      dir: z.string().regex(/^\//, "must be an absolute path").optional(),
+      /** Backups never leave less than this much free space on that disk. */
+      minFreeMiB: z.number().int().min(0).max(1_048_576).optional(),
+      maxUploadMiB: z.number().int().min(1).max(4_194_304).optional(),
+    })
+    .optional(),
 });
 
 export type RuntimeMode = "production" | "development";
@@ -92,6 +130,24 @@ export interface ApiConfig {
     level: LogLevel;
     format: "json" | "pretty";
   };
+  files: {
+    roots: Array<{ id: string; name: string; path: string; readOnly: boolean }>;
+    maxUploadBytes: number;
+    /** Uploads and copies leave at least this much free space. */
+    minFreeBytes: number;
+    /** Where users' private home folders live; null when disabled. */
+    homesDir: string | null;
+  };
+  backups: {
+    dir: string;
+    minFreeBytes: number;
+    maxUploadBytes: number;
+  };
+  /**
+   * Running as a systemd service in production: the API may exit after
+   * staging a database restore and rely on the service manager to start it again.
+   */
+  supervised: boolean;
 }
 
 export class ConfigError extends Error {
@@ -190,6 +246,24 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       level: envLevel ?? file.logging?.level ?? (mode === "development" ? "debug" : "info"),
       format: file.logging?.format ?? (mode === "development" ? "pretty" : "json"),
     },
+    files: {
+      // Production exposes nothing by default; development gets a sandbox directory.
+      roots: (
+        file.files?.roots ??
+        (mode === "development"
+          ? [{ id: "dev", name: "Development files", path: join(devRoot!, "files") }]
+          : [])
+      ).map((root) => ({ ...root, readOnly: root.readOnly ?? false })),
+      maxUploadBytes: (file.files?.maxUploadMiB ?? 16 * 1024) * 1024 * 1024,
+      minFreeBytes: (file.files?.minFreeMiB ?? 1024) * 1024 * 1024,
+      homesDir: file.files?.homes === false ? null : join(dataDir, "homes"),
+    },
+    backups: {
+      dir: env.OTUKEN_BACKUP_DIR ?? file.backups?.dir ?? join(dataDir, "backups", "archives"),
+      minFreeBytes: (file.backups?.minFreeMiB ?? 1024) * 1024 * 1024,
+      maxUploadBytes: (file.backups?.maxUploadMiB ?? 64 * 1024) * 1024 * 1024,
+    },
+    supervised: mode === "production" && Boolean(env.INVOCATION_ID),
   };
   if (config.security.sessionIdleMs > config.security.sessionMaxAgeMs) {
     throw new ConfigError(

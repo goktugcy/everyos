@@ -13,9 +13,14 @@ export const PREFERENCE_KEYS = [
   "windows",
   "security",
   "widgets",
+  "notifications",
+  "pulse",
 ] as const;
 
 export type PreferenceKey = (typeof PREFERENCE_KEYS)[number];
+
+/** Most items the pulse shelf keeps (references to files; nothing is copied). */
+export const MAX_SHELF_ITEMS = 48;
 
 export const THEME_PRESET_IDS = [
   "liquid-dark",
@@ -68,6 +73,7 @@ export type DockPosition = (typeof DOCK_POSITIONS)[number];
 
 /** Menu bar modules that can be shown or hidden individually. */
 export const MENUBAR_MODULE_IDS = [
+  "notifications",
   "widgets",
   "resources",
   "network",

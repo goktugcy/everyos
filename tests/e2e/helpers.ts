@@ -7,10 +7,22 @@ import {
   type SessionInfo,
 } from "../../packages/shared/src/index.ts";
 
-export const stateDir = join(dirname(fileURLToPath(import.meta.url)), ".state");
+/** Throwaway stack state; `OTUKEN_E2E_STATE_DIR` lets two runs use separate directories. */
+export const stateDir =
+  process.env.OTUKEN_E2E_STATE_DIR ?? join(dirname(fileURLToPath(import.meta.url)), ".state");
 export const PASSWORD = "mavi-gokyuzu-ve-daglar-42";
 
-export async function signIn(page: Page, reset = true): Promise<SessionInfo> {
+/**
+ * Signs in as the e2e administrator. With `reset`, preferences return to their
+ * defaults, except that notification pop-ups stay off unless `toasts` is set:
+ * the host monitor raises the simulator's critical conditions at a random
+ * moment, and a persistent pop-up would cover whatever a test clicks next.
+ */
+export async function signIn(
+  page: Page,
+  reset = true,
+  { toasts = false }: { toasts?: boolean } = {},
+): Promise<SessionInfo> {
   await page.goto("/");
   await page.getByLabel(/Kullanıcı adı|Username/).fill("goktug");
   await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
@@ -30,11 +42,22 @@ export async function signIn(page: Page, reset = true): Promise<SessionInfo> {
       "security",
       "menubar",
       "widgets",
+      "notifications",
+      "pulse",
     ]) {
       expect((await page.request.delete(`/api/preferences/${key}`, { headers })).status()).toBe(
         204,
       );
     }
+    if (!toasts)
+      expect(
+        (
+          await page.request.put("/api/preferences/notifications", {
+            headers,
+            data: { version: 1, toasts: false, toastMinSeverity: "warning", mutedCategories: [] },
+          })
+        ).status(),
+      ).toBe(204);
   }
   await page.reload();
   await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();

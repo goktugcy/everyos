@@ -7,6 +7,8 @@ import { OTUKEN_VERSION } from "@otuken/shared";
 import {
   createDockerClient,
   createDockerSimulator,
+  createAptManager,
+  createAptSimulator,
   createInternetProbe,
   createJournalSource,
   createSimulator,
@@ -20,7 +22,9 @@ import {
 } from "@otuken/system";
 import { ConfigError, loadAgentConfig, resolveGroupId, type AgentConfig } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
+import { TerminalManager } from "./terminal.ts";
 import { ManagedAppManager } from "./managed-apps.ts";
+import { AppDataBackups } from "./app-data-backup.ts";
 import { createPolicy } from "./policy.ts";
 import { createContainerProtection, createUnitProtection } from "./protection.ts";
 
@@ -116,7 +120,27 @@ async function main(): Promise<void> {
     });
   }
 
+  // e2e runs use the labelled apt simulator; development never changes host packages.
+  const apt =
+    config.mode === "development" && config.simulate ? createAptSimulator() : createAptManager();
+  const terminal = new TerminalManager({
+    config: config.terminal,
+    logger,
+    lang: process.env.LANG?.includes("UTF-8") ? process.env.LANG : "C.UTF-8",
+  });
+  const apps = new ManagedAppManager({
+    docker,
+    secrets: new SecretBox(deriveKey(agentKey, "otuken/agent-apps/v1")),
+    root:
+      config.mode === "production"
+        ? "/var/lib/otuken/apps"
+        : `${process.env.OTUKEN_DEV_ROOT ?? dirname(config.socketPath)}/agent-apps`,
+    isProtected: isProtectedContainer,
+  });
+  const appData = new AppDataBackups({ apps, logger });
   const server = new AgentServer({
+    // Terminals and log tails hold streams open; the API uses one connection.
+    maxStreamsPerConnection: 32,
     socketPath: config.socketPath,
     agentKey,
     agentVersion: OTUKEN_VERSION,
@@ -130,21 +154,18 @@ async function main(): Promise<void> {
       internet: createInternetProbe(config.internetCheckTargets),
       docker,
       isProtectedContainer,
-      apps: new ManagedAppManager({
-        docker,
-        secrets: new SecretBox(deriveKey(agentKey, "otuken/agent-apps/v1")),
-        root:
-          config.mode === "production"
-            ? "/var/lib/otuken/apps"
-            : `${process.env.OTUKEN_DEV_ROOT ?? dirname(config.socketPath)}/agent-apps`,
-        isProtected: isProtectedContainer,
-      }),
+      terminal,
+      apt,
+      ...(config.tailscaleSocket ? { tailscaleSockets: [config.tailscaleSocket] } : {}),
+      apps,
+      appData,
     }),
     policy: createPolicy({
       mode: config.mode,
       isProtected,
       servicesSource: services.source,
       dockerSource: docker.source,
+      aptSource: apt.source,
     }),
     logger,
     socketMode: socketGroupId === null ? 0o600 : 0o660,
@@ -164,6 +185,8 @@ async function main(): Promise<void> {
     logger.info("Shutting down", { signal });
     const forceExit = setTimeout(() => process.exit(1), 5_000);
     forceExit.unref();
+    terminal.closeAll();
+    void appData.closeAll();
     server
       .close()
       .then(() => process.exit(0))

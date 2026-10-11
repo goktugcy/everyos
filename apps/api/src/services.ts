@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { AgentClient } from "@otuken/agent-protocol";
 import {
   createDummyVerifier,
@@ -26,7 +27,15 @@ import { SetupService } from "./modules/setup/setup-service.ts";
 import { UserRepository } from "./modules/users/user-repository.ts";
 import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
 import { CatalogService } from "./modules/catalogs/catalog-service.ts";
-import { AppService } from "./modules/apps/app-service.ts";
+import { AppService, type FinishedJob } from "./modules/apps/app-service.ts";
+import { HostMonitor } from "./modules/notifications/host-monitor.ts";
+import { FileService } from "./modules/files/file-service.ts";
+import { TerminalService } from "./modules/terminal/terminal-service.ts";
+import { UpdateService } from "./modules/updates/update-service.ts";
+import { TaskService } from "./modules/tasks/task-service.ts";
+import { taskExecutors } from "./modules/tasks/executors.ts";
+import { BackupService } from "./modules/backups/backup-service.ts";
+import { logProvider, NotificationService } from "./modules/notifications/notification-service.ts";
 
 /** The subset of the agent client the HTTP layer depends on. */
 export type AgentGateway = Pick<AgentClient, "state" | "call" | "stream">;
@@ -65,6 +74,14 @@ export interface Services {
   integrations: IntegrationService;
   /** Shared, reference-counted widget data topics. */
   widgetData: DataHub;
+  notifications: NotificationService;
+  files: FileService;
+  terminals: TerminalService;
+  updates: UpdateService;
+  tasks: TaskService;
+  backups: BackupService;
+  /** Background host checks that raise and resolve notification conditions. */
+  hostMonitor: HostMonitor;
   /** How often open event streams re-check access and send a keep-alive. */
   eventStreamHeartbeatMs: number;
   limiters: Limiters;
@@ -82,6 +99,8 @@ export interface ServiceDependencies {
   agent: AgentGateway;
   scryptParams?: ScryptParams;
   now?: () => number;
+  /** Restarts the API after a staged database restore (only when supervised). */
+  requestRestart?: () => void;
   /** Test hook: DNS resolution for integration requests. */
   resolveHost?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
 }
@@ -138,7 +157,21 @@ export function createServices(deps: ServiceDependencies): Services {
   const secrets = new SecretBox(deriveKey(deps.masterKey, "otuken/secret-box/v1"));
   const catalogs = new CatalogService(deps.db, now);
   const audit = new AuditLog(deps.db, deps.logger, now);
-  const apps = new AppService({ db: deps.db, agent: deps.agent, secrets, catalogs, audit, now });
+  const notifications = new NotificationService({
+    db: deps.db,
+    logger: deps.logger,
+    now,
+    providers: [logProvider(deps.logger)],
+  });
+  const apps = new AppService({
+    db: deps.db,
+    agent: deps.agent,
+    secrets,
+    catalogs,
+    audit,
+    now,
+    onJobFinished: (job) => notifyAppJob(notifications, job),
+  });
   const integrations = new IntegrationService({
     db: deps.db,
     secrets,
@@ -153,6 +186,35 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
     providers: systemProviders(deps.agent, () => apps.managedProjects()),
     resolve: (topic) => integrations.provider(topic),
+  });
+  const updates = new UpdateService({
+    db: deps.db,
+    agent: deps.agent,
+    audit,
+    notifications,
+    logger: deps.logger,
+    now,
+    onChanged: () => widgetData.refresh("data.apt"),
+  });
+  const backups = new BackupService({
+    db: deps.db,
+    agent: deps.agent,
+    apps,
+    audit,
+    notifications,
+    logger: deps.logger,
+    now,
+    dir: deps.config.backups.dir,
+    dataDir: deps.config.paths.dataDir,
+    configFile: deps.config.configFile,
+    reserveBytes: deps.config.backups.minFreeBytes,
+    maxUploadBytes: deps.config.backups.maxUploadBytes,
+    keyId: createHash("sha256")
+      .update(deriveKey(deps.masterKey, "otuken/backup-key-id/v1"))
+      .digest("hex")
+      .slice(0, 32),
+    supervised: deps.config.supervised,
+    ...(deps.requestRestart ? { requestRestart: deps.requestRestart } : {}),
   });
   // Container widgets follow Docker changes while live views keep the event stream open.
   let dockerRefresh: NodeJS.Timeout | null = null;
@@ -195,6 +257,30 @@ export function createServices(deps: ServiceDependencies): Services {
     apps,
     integrations,
     widgetData,
+    notifications,
+    files: new FileService({ ...deps.config.files, logger: deps.logger }),
+    terminals: new TerminalService({ agent: deps.agent, logger: deps.logger, audit, now }),
+    updates,
+    tasks: new TaskService({
+      db: deps.db,
+      users,
+      audit,
+      notifications,
+      logger: deps.logger,
+      now,
+      executors: taskExecutors({ agent: deps.agent, updates, apps, backups }),
+    }),
+    backups,
+    hostMonitor: new HostMonitor({
+      agent: deps.agent,
+      notifications,
+      logger: deps.logger,
+      tailscale: {
+        server: deps.config.server,
+        isTrustedProxy: createProxyMatcher(deps.config.server.trustedProxies),
+        now,
+      },
+    }),
     eventStreamHeartbeatMs: 15_000,
     limiters: createLimiters(now),
     challenges: new LoginChallengeStore(now),
@@ -202,4 +288,21 @@ export function createServices(deps: ServiceDependencies): Services {
     isTrustedProxy: createProxyMatcher(deps.config.server.trustedProxies),
     now,
   };
+}
+
+/** App installs, updates and other lifecycle results for people who can see apps. */
+export function notifyAppJob(notifications: NotificationService, job: FinishedJob): void {
+  const app = job.name.en ?? job.name.en_US ?? Object.values(job.name)[0] ?? job.appId;
+  notifications.publish({
+    kind: job.ok ? "app-succeeded" : "app-failed",
+    severity: job.ok ? "success" : "critical",
+    key: `${job.appId}:${job.action}`,
+    params: {
+      app,
+      appId: job.appId,
+      action: job.action,
+      ...(job.error ? { reason: job.error } : {}),
+      ...(job.ok ? {} : { rollback: job.rollback }),
+    },
+  });
 }

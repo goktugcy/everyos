@@ -1,10 +1,11 @@
 import { rmSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import type { AppJobView, CatalogView, InstalledAppView } from "@otuken/shared";
+import type { AppJobView, CatalogView, InstalledAppView, NotificationList } from "@otuken/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 import { AppService } from "./modules/apps/app-service.ts";
 import { CatalogService } from "./modules/catalogs/catalog-service.ts";
+import { notifyAppJob } from "./services.ts";
 import { json, withRoles, type TestContext } from "./test-support.ts";
 
 const contexts: TestContext[] = [];
@@ -37,6 +38,7 @@ async function fixture(compose = source) {
     secrets: ctx.services.secrets,
     audit: ctx.services.audit,
     now: () => ctx.clock.now,
+    onJobFinished: (job) => notifyAppJob(ctx.services.notifications, job),
   });
   ctx.app = createApp(ctx.services);
   const catalog = await json<CatalogView>(
@@ -139,6 +141,13 @@ describe("App Store installations", () => {
     expect(response.status).toBe(202);
     const job = await json<AppJobView>(response);
     expect((await finished(ctx, job.id)).stage).toBe("succeeded");
+    // The result reaches the notification center for everyone who can see apps.
+    const notes = await json<NotificationList>(await viewer.get("/api/notifications"));
+    expect(notes.notifications[0]).toMatchObject({
+      kind: "app-succeeded",
+      category: "apps",
+      params: { appId: job.appId, action: "install" },
+    });
     const row = ctx.db.get<{ sealed_compose: string }>(
       "SELECT sealed_compose FROM installed_apps WHERE id = ?",
       job.appId,

@@ -26,6 +26,8 @@ export interface PolicyOptions {
   servicesSource: "host" | "simulated";
   /** Same for Docker operations. */
   dockerSource: "host" | "simulated";
+  /** Same for package updates. */
+  aptSource?: "host" | "simulated";
 }
 
 /**
@@ -40,6 +42,14 @@ export function createPolicy(options: PolicyOptions): OperationPolicy {
         ? {
             allowed: false,
             reason: `${POLICY_REASONS.developmentMode}: changing Docker on the host is disabled in development mode`,
+          }
+        : { allowed: true };
+    }
+    if (op === "apt.refresh" || op === "apt.upgrade") {
+      return options.mode === "development" && options.aptSource !== "simulated"
+        ? {
+            allowed: false,
+            reason: `${POLICY_REASONS.developmentMode}: changing host packages is disabled in development mode`,
           }
         : { allowed: true };
     }

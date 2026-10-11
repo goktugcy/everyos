@@ -196,6 +196,87 @@ export const TailscaleStatusSchema = z.object({
 
 export type TailscaleStatus = z.infer<typeof TailscaleStatusSchema>;
 
+const tsText = (max = 256) => z.string().max(max).nullable();
+
+/** This node in more detail: key expiry, relay, routes, preferences and Serve/Funnel handlers. */
+export const TailscaleDetailsSchema = z.object({
+  status: availability,
+  self: z.object({
+    os: tsText(64),
+    /** Home DERP relay region (e.g. "fra"). */
+    relay: tsText(64),
+    /** Node key expiry (ms); null when expiry is disabled for this node or unknown. */
+    keyExpiry: n.nullable(),
+    keyExpired: z.boolean(),
+    /** Offered and approved as an exit node for other devices. */
+    exitNodeOption: z.boolean(),
+    /** Subnet routes this node serves for the tailnet. */
+    routes: z.array(z.string().max(64)).max(64),
+    tags: z.array(z.string().max(128)).max(32),
+    magicDNS: z.boolean().nullable(),
+    magicDNSSuffix: tsText(),
+  }),
+  prefs: z.object({
+    available: z.boolean(),
+    ssh: z.boolean().nullable(),
+    shieldsUp: z.boolean().nullable(),
+    acceptRoutes: z.boolean().nullable(),
+    acceptDNS: z.boolean().nullable(),
+    advertisedRoutes: z.array(z.string().max(64)).max(64),
+    advertisesExitNode: z.boolean().nullable(),
+    exitNodeAllowLAN: z.boolean().nullable(),
+  }),
+  serve: z.object({
+    available: z.boolean(),
+    handlers: z
+      .array(
+        z.object({
+          /** MagicDNS name the handler answers on ("" for raw TCP forwarding). */
+          host: z.string().max(256),
+          port: z.number().int().min(1).max(65535),
+          path: z.string().max(256),
+          kind: z.enum(["proxy", "files", "text", "tcp"]),
+          /** Proxy or TCP target; files and text handlers have none. */
+          target: tsText(512),
+          /** Reachable from the public internet through Tailscale Funnel. */
+          funnel: z.boolean(),
+        }),
+      )
+      .max(64),
+  }),
+});
+
+export type TailscaleDetails = z.infer<typeof TailscaleDetailsSchema>;
+
+export const TailscalePeerSchema = z.object({
+  hostName: tsText(),
+  dnsName: tsText(),
+  os: tsText(64),
+  ips: z.array(z.string().max(64)).max(4),
+  online: z.boolean().nullable(),
+  /** Traffic flowed recently. */
+  active: z.boolean(),
+  lastSeen: n.nullable(),
+  /** This node currently uses the peer as its exit node. */
+  exitNode: z.boolean(),
+  exitNodeOption: z.boolean(),
+  /** How traffic currently flows: a direct path, a DERP relay, or no recent traffic. */
+  connection: z.enum(["direct", "relay", "idle"]),
+  relay: tsText(64),
+  rxBytes: n,
+  txBytes: n,
+  keyExpiry: n.nullable(),
+  tags: z.array(z.string().max(128)).max(32),
+});
+
+export const TailscalePeersSchema = z.object({
+  status: availability,
+  peers: z.array(TailscalePeerSchema).max(500),
+});
+
+export type TailscalePeer = z.infer<typeof TailscalePeerSchema>;
+export type TailscalePeers = z.infer<typeof TailscalePeersSchema>;
+
 /* ----------------------------- processes ----------------------------- */
 
 export const ProcessListSchema = z.object({

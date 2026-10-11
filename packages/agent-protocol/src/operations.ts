@@ -35,6 +35,8 @@ import {
   StorageUsageSchema,
   SystemInfoSchema,
   TailscaleStatusSchema,
+  TailscaleDetailsSchema,
+  TailscalePeersSchema,
   UnitNameSchema,
   AptUpdatesSchema,
   PostgresStatsSchema,
@@ -44,6 +46,26 @@ import {
   ManagedAppResultSchema,
   ManagedAppInspectSchema,
   ManagedAppInspectionSchema,
+  TerminalCloseSchema,
+  TerminalEventSchema,
+  TerminalInputSchema,
+  TerminalOpenSchema,
+  TerminalResizeSchema,
+  TerminalStatusSchema,
+  AptRefreshResultSchema,
+  AptUpgradeEventSchema,
+  AptUpgradeParamsSchema,
+  PackageInfoSchema,
+  PackageNameSchema,
+  AppDataExportBeginResultSchema,
+  AppDataExportBeginSchema,
+  AppDataExportReadResultSchema,
+  AppDataExportReadSchema,
+  AppDataTransferAbortSchema,
+  AppDataImportBeginSchema,
+  AppDataImportChunkSchema,
+  AppDataImportCommitSchema,
+  AppDataImportResultSchema,
 } from "@otuken/shared/schemas";
 import { z } from "zod";
 
@@ -78,7 +100,8 @@ export interface StreamContract<
 > extends ContractBase<P> {
   kind: "stream";
   event: E;
-  mutating: false;
+  /** Mutating streams (e.g. a terminal session) are written to the agent audit log. */
+  mutating: boolean;
   /** The agent ends the stream with a `timeout` error after this long; clients reconnect. */
   maxDurationMs: number;
 }
@@ -179,6 +202,24 @@ export const AGENT_OPERATIONS = {
     result: TailscaleStatusSchema,
     permission: "system:read",
     allowSystemActor: true,
+    mutating: false,
+    timeoutMs: 8_000,
+  }),
+  /** This node's key expiry, relay, routes, preferences and Serve/Funnel handlers. */
+  "tailscale.details": unary({
+    params: NoParams,
+    result: TailscaleDetailsSchema,
+    permission: "system:read",
+    allowSystemActor: true,
+    mutating: false,
+    timeoutMs: 12_000,
+  }),
+  /** The tailnet's other devices: names, addresses and connection paths. */
+  "tailscale.peers": unary({
+    params: NoParams,
+    result: TailscalePeersSchema,
+    permission: "system:manage",
+    allowSystemActor: false,
     mutating: false,
     timeoutMs: 8_000,
   }),
@@ -405,6 +446,132 @@ export const AGENT_OPERATIONS = {
     timeoutMs: 11 * 60_000,
   }),
   /** Lifecycle events (healthcheck exec events excluded). */
+  "apt.package": unary({
+    params: z.strictObject({ name: PackageNameSchema }),
+    result: PackageInfoSchema,
+    permission: "system:read",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 45_000,
+  }),
+  /** `apt-get update`; only an administrator's explicit action, never automatic. */
+  "apt.refresh": unary({
+    params: NoParams,
+    result: AptRefreshResultSchema,
+    permission: "system:manage",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 11 * 60_000,
+  }),
+  /** Upgrades installed packages; never installs new ones or removes any. */
+  "apt.upgrade": stream({
+    params: AptUpgradeParamsSchema,
+    event: AptUpgradeEventSchema,
+    permission: "system:manage",
+    allowSystemActor: false,
+    mutating: true,
+    maxDurationMs: 2 * 60 * 60_000,
+  }),
+  "terminal.status": unary({
+    params: NoParams,
+    result: TerminalStatusSchema,
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 5_000,
+  }),
+  /** A shell in a pseudo-terminal, as the configured account; output arrives as events. */
+  "terminal.open": stream({
+    params: TerminalOpenSchema,
+    event: TerminalEventSchema,
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: true,
+    maxDurationMs: 12 * 60 * 60_000,
+  }),
+  /** Keystrokes for the caller's own session (the session itself is audited). */
+  "terminal.input": unary({
+    params: TerminalInputSchema,
+    result: z.object({ accepted: z.literal(true) }),
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 5_000,
+  }),
+  "terminal.resize": unary({
+    params: TerminalResizeSchema,
+    result: z.object({ accepted: z.literal(true) }),
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 5_000,
+  }),
+  "terminal.close": unary({
+    params: TerminalCloseSchema,
+    result: z.object({ closed: z.boolean() }),
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 10_000,
+  }),
+  /** Archives a stopped managed app's data directory (tar.gz, read in chunks). */
+  "backups.appdata.export.begin": unary({
+    params: AppDataExportBeginSchema,
+    result: AppDataExportBeginResultSchema,
+    permission: "backups:manage",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 5 * 60_000,
+  }),
+  "backups.appdata.export.read": unary({
+    params: AppDataExportReadSchema,
+    result: AppDataExportReadResultSchema,
+    permission: "backups:manage",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 10 * 60_000,
+  }),
+  "backups.appdata.export.abort": unary({
+    params: AppDataTransferAbortSchema,
+    result: z.strictObject({ aborted: z.boolean() }),
+    permission: "backups:manage",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 30_000,
+  }),
+  /** Restoring app data: the archive is sent in chunks, then validated and swapped in. */
+  "backups.appdata.import.begin": unary({
+    params: AppDataImportBeginSchema,
+    result: z.strictObject({ token: z.string() }),
+    permission: "backups:restore",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 10_000,
+  }),
+  "backups.appdata.import.chunk": unary({
+    params: AppDataImportChunkSchema,
+    result: z.strictObject({ received: z.number().int().nonnegative() }),
+    permission: "backups:restore",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 30_000,
+  }),
+  "backups.appdata.import.commit": unary({
+    params: AppDataImportCommitSchema,
+    result: AppDataImportResultSchema,
+    permission: "backups:restore",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 6 * 60 * 60_000,
+  }),
+  "backups.appdata.import.abort": unary({
+    params: AppDataTransferAbortSchema,
+    result: z.strictObject({ aborted: z.boolean() }),
+    permission: "backups:restore",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 30_000,
+  }),
   "docker.events": stream({
     params: NoParams,
     event: DockerEventSchema,

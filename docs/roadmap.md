@@ -10,9 +10,9 @@ that looks finished is not enough.
 | 2     | Desktop shell           | **Completed** |
 | 3     | Linux integration       | Implemented   |
 | 4     | Docker management       | Implemented   |
-| 5     | Multi-catalog App Store | Planned       |
-| 6     | Widget platform         | Planned       |
-| 7     | Advanced tools          | Planned       |
+| 5     | Multi-catalog App Store | Implemented   |
+| 6     | Widget platform         | Implemented   |
+| 7     | Advanced tools          | Implemented   |
 | 8     | Packaging and hardening | Planned       |
 
 ## Phase 1 — Foundation ✅
@@ -163,11 +163,33 @@ run on the Raspberry Pi 5. See [widgets.md](widgets.md). Not yet verified:
   (Phase 8);
 - widgets on the mobile launcher.
 
-## Phase 7 — Advanced tools
+## Phase 7 — Advanced tools (implemented)
 
-File manager (allowed roots, streaming transfers), terminal (xterm.js, PTY via the agent with a
-dedicated permission, idle timeout), update manager, backup and restore, scheduler, notification
-center with providers, and advanced Tailscale integration.
+File manager (allowed roots, streaming transfers), terminal (PTY via the agent with a dedicated
+permission, idle timeout), update manager, backup and restore, scheduler, notification center with
+providers, and advanced Tailscale integration.
+
+Implemented:
+
+- **Notification center:** conditions and events with per-user state, the host monitor, live
+  delivery, a menu bar bell with toasts, settings and providers ([notifications.md](notifications.md)).
+- **File manager and text editor** over configured roots ([files.md](files.md)).
+- **Terminal (7.3):** agent PTY relay, API WebSocket gateway and the lazy browser client, with
+  permission checks, idle timeout, limits, audit, theme support, resize, reconnect/reload replay
+  and confirmed cleanup of detached sessions ([terminal.md](terminal.md)).
+- **Update manager** with package details, background jobs and history ([updates.md](updates.md)).
+- **Scheduler** with predefined actions, cron schedules, catch-up, cancellation and history
+  ([tasks.md](tasks.md)).
+- **Backup and restore:** verified backups of the database, configuration, wallpapers and app
+  data (with the app stopped), retention, download/upload, restore preview, safety backups,
+  live desktop restore and staged database restore ([backups.md](backups.md)).
+- **Tailscale:** node details, Serve/Funnel remote-access analysis, warnings and notifications,
+  and the device list for administrators ([tailscale.md](tailscale.md)).
+
+Verified with unit/API tests and browser tests (a stand-in tailscaled LocalAPI for Tailscale,
+the labelled apt simulator for updates). Not yet verified: apt upgrades and app-data backups with a
+root agent on real hardware, and the restart after a staged database restore under systemd
+(Phase 8 units).
 
 ## Phase 8 — Packaging and hardening
 

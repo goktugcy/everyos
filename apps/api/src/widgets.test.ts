@@ -472,7 +472,7 @@ describe("system widget topics", () => {
       expect.arrayContaining([
         expect.objectContaining({ kind: "service-failed", subject: "backup.service" }),
         expect.objectContaining({ kind: "container-unhealthy", subject: "pihole" }),
-        expect.objectContaining({ kind: "security-updates", subject: "1" }),
+        expect.objectContaining({ kind: "security-updates", subject: "2" }),
       ]),
     );
     expect(adminTopics.get("data.sockets")?.data).toMatchObject({

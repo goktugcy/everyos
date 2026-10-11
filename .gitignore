@@ -10,7 +10,7 @@ coverage/
 # Playwright
 test-results/
 playwright-report/
-tests/e2e/.state/
+tests/e2e/.state*/
 
 # Packaging output
 packaging/out/

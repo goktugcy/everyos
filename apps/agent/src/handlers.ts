@@ -1,7 +1,8 @@
 import { OperationError, type OperationHandlers } from "@otuken/agent-protocol";
 import { roleHasPermission, type ProcessList, type SystemInfo } from "@otuken/shared";
 import {
-  collectAptUpdates,
+  createAptManager,
+  type AptManager,
   collectHardware,
   collectMetrics,
   collectNetwork,
@@ -9,6 +10,8 @@ import {
   collectSockets,
   collectStorage,
   collectSystemInfo,
+  getTailscaleDetails,
+  getTailscalePeers,
   getTailscaleStatus,
   UnavailableError,
   LogSourceUnavailableError,
@@ -24,6 +27,8 @@ import {
 import type { AgentMode } from "./config.ts";
 import { POLICY_REASONS } from "./policy.ts";
 import type { ManagedAppManager } from "./managed-apps.ts";
+import type { AppDataBackups } from "./app-data-backup.ts";
+import type { TerminalManager } from "./terminal.ts";
 
 export interface HandlerDependencies {
   mode: AgentMode;
@@ -43,6 +48,12 @@ export interface HandlerDependencies {
   /** Concurrent `journalctl --follow` processes across all connections. */
   maxLogFollows?: number;
   apps?: ManagedAppManager;
+  /** App data backups (needs managed applications). */
+  appData?: AppDataBackups;
+  /** Package updates (the development simulator in e2e runs). */
+  apt?: AptManager;
+  /** Browser terminals; disabled when absent. */
+  terminal?: TerminalManager;
 }
 
 /** Host information changes rarely; cache it briefly to bound filesystem reads. */
@@ -56,10 +67,14 @@ const PROCESSES_TTL_MS = 2_000;
  * Caches an expensive collection for `ttlMs` and coalesces concurrent callers
  * into a single run. Failures are not cached.
  */
-function cached<T>(ttlMs: number, now: () => number, load: () => Promise<T>): () => Promise<T> {
+function cached<T>(
+  ttlMs: number,
+  now: () => number,
+  load: () => Promise<T>,
+): (() => Promise<T>) & { invalidate(): void } {
   let value: { data: T; at: number } | null = null;
   let inflight: Promise<T> | null = null;
-  return async () => {
+  const get = async () => {
     if (value && now() - value.at < ttlMs) return value.data;
     inflight ??= load()
       .then((data) => {
@@ -71,6 +86,11 @@ function cached<T>(ttlMs: number, now: () => number, load: () => Promise<T>): ()
       });
     return inflight;
   };
+  return Object.assign(get, {
+    invalidate: () => {
+      value = null;
+    },
+  });
 }
 
 /** Translates collector errors into protocol errors with safe messages. */
@@ -138,12 +158,19 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
   /** Listening sockets change rarely and scanning /proc/<pid>/fd costs a little. */
   const sockets = cached(30_000, now, () => collectSockets({ paths }));
   /** apt reads large package lists; its data only changes when the lists are refreshed. */
-  const aptUpdates = cached(30 * 60_000, now, () => collectAptUpdates());
+  const apt = deps.apt ?? createAptManager();
+  const aptUpdates = cached(30 * 60_000, now, () => apt.updates());
   const processesBy = {
     cpu: cached(PROCESSES_TTL_MS, now, () => collectProcesses({ paths, sort: "cpu", limit: 500 })),
     memory: cached(PROCESSES_TTL_MS, now, () =>
       collectProcesses({ paths, sort: "memory", limit: 500 }),
     ),
+  };
+
+  const appData = () => {
+    if (!deps.appData)
+      throw new OperationError("unsupported", "Managed applications are not configured");
+    return deps.appData;
   };
 
   return {
@@ -188,6 +215,8 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     "network.status": () => collectNetwork({ paths, internet: deps.internet }),
 
     "tailscale.status": () => getTailscaleStatus(deps.tailscaleSockets),
+    "tailscale.details": () => getTailscaleDetails(deps.tailscaleSockets),
+    "tailscale.peers": () => getTailscalePeers(deps.tailscaleSockets),
 
     "processes.list": async ({ sort, limit }, { actor }) => {
       const list = await processesBy[sort]();
@@ -368,6 +397,55 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
 
     "apps.postgres.stats": ({ container, user, database }, { signal }) =>
       docker.postgresStats(container, user, database, signal).catch(toOperationError),
+
+    "apt.package": ({ name }) => apt.package(name).catch(toOperationError),
+
+    "apt.refresh": async (_params, { signal }) => {
+      const result = await apt.refresh(signal).catch(toOperationError);
+      aptUpdates.invalidate();
+      return { source: apt.source, ...result, output: result.output.slice(-64 * 1024) };
+    },
+
+    "apt.upgrade": async function* ({ packages }, { signal }) {
+      try {
+        for await (const event of apt.upgrade(packages, signal)) yield event;
+      } catch (error) {
+        if (!signal.aborted) toOperationError(error);
+      } finally {
+        aptUpdates.invalidate();
+      }
+    },
+
+    "terminal.status": () =>
+      deps.terminal?.status() ?? { enabled: false, reason: "not-configured" },
+
+    "terminal.open": (params, { actor, signal }) => {
+      if (!deps.terminal)
+        throw new OperationError("unsupported", "not-configured: terminal is disabled");
+      return deps.terminal.open(params, actor, signal);
+    },
+
+    "terminal.input": ({ sessionId, data }, { actor }) => {
+      if (!deps.terminal) throw new OperationError("not_found", "No such terminal session");
+      deps.terminal.input(sessionId, data, actor);
+      return { accepted: true as const };
+    },
+
+    "terminal.resize": ({ sessionId, cols, rows }, { actor }) => {
+      if (!deps.terminal) throw new OperationError("not_found", "No such terminal session");
+      deps.terminal.resize(sessionId, cols, rows, actor);
+      return { accepted: true as const };
+    },
+
+    "terminal.close": ({ sessionId }) => ({ closed: deps.terminal?.close(sessionId) ?? false }),
+
+    "backups.appdata.export.begin": (params, context) => appData().beginExport(params, context),
+    "backups.appdata.export.read": (params, context) => appData().readExport(params, context),
+    "backups.appdata.export.abort": (params, context) => appData().abortExport(params, context),
+    "backups.appdata.import.begin": (params, context) => appData().begin(params, context),
+    "backups.appdata.import.chunk": (params, context) => appData().chunk(params, context),
+    "backups.appdata.import.commit": (params, context) => appData().commit(params, context),
+    "backups.appdata.import.abort": (params, context) => appData().abort(params, context),
 
     "docker.events": async function* (_params, { signal }) {
       try {

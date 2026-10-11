@@ -157,6 +157,17 @@ export function NetworkModule() {
                 {t("monitor.tailscale.title")}
               </h4>
               <TailscaleCard status={tailscale.data} />
+              {tailscale.data.status.available ? (
+                <Popover.Close asChild>
+                  <button
+                    type="button"
+                    className="self-start text-sm font-medium text-accent outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
+                    onClick={() => desktop.openApp("otuken.tailscale")}
+                  >
+                    {t("menubar.openTailscale")}
+                  </button>
+                </Popover.Close>
+              ) : null}
             </section>
           ) : null}
           <Popover.Close asChild>

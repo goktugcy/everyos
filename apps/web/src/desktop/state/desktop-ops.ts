@@ -13,13 +13,18 @@ const onDesktop = (doc: DesktopPreferences, desktopId: string) =>
     (item) => item.desktopId === desktopId && (item.kind === "folder" || item.folderId === null),
   );
 
-function occupiedCells(doc: DesktopPreferences, desktopId: string, except?: string): Set<string> {
-  return new Set(
-    onDesktop(doc, desktopId)
-      .filter((item) => item.id !== except && item.cell)
+/** Cells taken on a desktop: its shortcuts, and the Desktop folder's entries (on every desktop). */
+function occupiedCells(doc: DesktopPreferences, desktopId: string): Set<string> {
+  return new Set([
+    ...onDesktop(doc, desktopId)
+      .filter((item) => item.cell)
       .map((item) => cellKey(item.cell!)),
-  );
+    ...doc.files.map((file) => cellKey(file.cell)),
+  ]);
 }
+
+/** An icon on the desktop: a shortcut (by item id) or a Desktop-folder entry (by name). */
+export type IconRef = { kind: "app"; id: string } | { kind: "file"; name: string };
 
 export function addShortcut(
   doc: DesktopPreferences,
@@ -38,135 +43,121 @@ export function removeItem(doc: DesktopPreferences, id: string): DesktopPreferen
   return { ...doc, items: doc.items.filter((item) => item.id !== id) };
 }
 
-/** Moves an icon to a cell; an icon already there swaps into the vacated cell. */
-export function moveItem(doc: DesktopPreferences, id: string, cell: Cell): DesktopPreferences {
-  const moving = doc.items.find((item) => item.id === id);
-  if (!moving) return doc;
-  const from = moving.cell;
-  const target = onDesktop(doc, moving.desktopId).find(
-    (item) =>
-      item.id !== id && item.cell && item.cell.col === cell.col && item.cell.row === cell.row,
+export const fileCell = (doc: DesktopPreferences, name: string): Cell | null =>
+  doc.files.find((file) => file.name === name)?.cell ?? null;
+
+export function setIconCell(doc: DesktopPreferences, ref: IconRef, cell: Cell): DesktopPreferences {
+  if (ref.kind === "app")
+    return {
+      ...doc,
+      items: doc.items.map((item) => (item.id === ref.id ? { ...item, cell } : item)),
+    };
+  const known = doc.files.some((file) => file.name === ref.name);
+  return {
+    ...doc,
+    files: known
+      ? doc.files.map((file) => (file.name === ref.name ? { ...file, cell } : file))
+      : [...doc.files, { name: ref.name, cell }],
+  };
+}
+
+/**
+ * Moves an icon to `to`. The icon shown there (`occupant`) swaps into the
+ * cell the moved icon was shown in (`from`).
+ */
+export function moveIcon(
+  doc: DesktopPreferences,
+  ref: IconRef,
+  to: Cell,
+  from: Cell | null,
+  occupant: IconRef | null,
+): DesktopPreferences {
+  const next = setIconCell(doc, ref, to);
+  return occupant && from ? setIconCell(next, occupant, from) : next;
+}
+
+/** Keeps a Desktop-folder entry where it was when it is renamed. */
+export function renameFilePosition(
+  doc: DesktopPreferences,
+  from: string,
+  to: string,
+): DesktopPreferences {
+  if (!doc.files.some((file) => file.name === from)) return doc;
+  return {
+    ...doc,
+    files: doc.files
+      .filter((file) => file.name !== to)
+      .map((file) => (file.name === from ? { ...file, name: to } : file)),
+  };
+}
+
+/**
+ * Matches the stored positions to a fresh listing of the Desktop folder:
+ * positions of entries that are gone are dropped, new entries keep the cell
+ * they were first shown in (so icons do not shuffle when others appear).
+ * Returns the same document when nothing changed.
+ */
+export function reconcileFiles(
+  doc: DesktopPreferences,
+  present: ReadonlySet<string>,
+  shown: ReadonlyMap<string, Cell>,
+): DesktopPreferences {
+  const kept = doc.files.filter((file) => present.has(file.name));
+  const known = new Set(kept.map((file) => file.name));
+  const added = [...shown]
+    .filter(([name]) => present.has(name) && !known.has(name))
+    .map(([name, cell]) => ({ name, cell }));
+  if (added.length === 0 && kept.length === doc.files.length) return doc;
+  return { ...doc, files: [...kept, ...added] };
+}
+
+/**
+ * Legacy app groups: their shortcuts go back onto the desktop and the group
+ * itself is dropped. With `keepAsFiles` (the caller created a real folder of
+ * the same name in the Desktop folder), that folder takes the group's cell.
+ */
+export function dissolveAppGroups(
+  doc: DesktopPreferences,
+  keepAsFiles: boolean,
+): DesktopPreferences {
+  const groups = doc.items.filter(
+    (item): item is Extract<DesktopItem, { kind: "folder" }> => item.kind === "folder",
   );
-  return {
-    ...doc,
-    items: doc.items.map((item) => {
-      if (item.id === id) return { ...item, cell };
-      if (target && item.id === target.id) return { ...item, cell: from };
-      return item;
-    }),
-  };
-}
-
-export function createFolder(
-  doc: DesktopPreferences,
-  desktopId: string,
-  name: string,
-  metrics: GridMetrics,
-): { doc: DesktopPreferences; id: string } {
-  const id = newId("f");
-  const cell = firstFreeCell(occupiedCells(doc, desktopId), metrics);
-  return {
-    id,
-    doc: { ...doc, items: [...doc.items, { kind: "folder", id, name, desktopId, cell }] },
-  };
-}
-
-export function renameFolder(
-  doc: DesktopPreferences,
-  id: string,
-  name: string,
-): DesktopPreferences {
-  const trimmed = name.trim().slice(0, 40);
-  if (!trimmed) return doc;
-  return {
-    ...doc,
-    items: doc.items.map((item) =>
-      item.id === id && item.kind === "folder" ? { ...item, name: trimmed } : item,
-    ),
-  };
-}
-
-export function moveIntoFolder(
-  doc: DesktopPreferences,
-  itemId: string,
-  folderId: string,
-): DesktopPreferences {
-  const folder = doc.items.find((item) => item.id === folderId && item.kind === "folder");
-  if (!folder) return doc;
-  return {
-    ...doc,
-    items: doc.items.map((item) =>
-      item.id === itemId && item.kind === "app"
-        ? { ...item, folderId, desktopId: folder.desktopId, cell: null }
-        : item,
-    ),
-  };
-}
-
-export function moveOutOfFolder(
-  doc: DesktopPreferences,
-  itemId: string,
-  metrics: GridMetrics,
-): DesktopPreferences {
-  const item = doc.items.find((entry) => entry.id === itemId);
-  if (!item || item.kind !== "app" || item.folderId === null) return doc;
-  const cell = firstFreeCell(occupiedCells(doc, item.desktopId), metrics);
-  return {
-    ...doc,
-    items: doc.items.map((entry) =>
-      entry.id === itemId ? { ...item, folderId: null, cell } : entry,
-    ),
-  };
-}
-
-/** Deletes a folder; its shortcuts move back onto the desktop. */
-export function deleteFolder(
-  doc: DesktopPreferences,
-  folderId: string,
-  metrics: GridMetrics,
-): DesktopPreferences {
-  const folder = doc.items.find((item) => item.id === folderId);
-  if (!folder || folder.kind !== "folder") return doc;
+  if (groups.length === 0 && doc.items.every((item) => item.kind !== "app" || !item.folderId))
+    return doc;
   let next: DesktopPreferences = {
     ...doc,
-    items: doc.items.filter((item) => item.id !== folderId),
+    items: doc.items.flatMap((item) => {
+      if (item.kind === "folder") return [];
+      return item.folderId ? [{ ...item, folderId: null, cell: null }] : [item];
+    }),
   };
-  for (const child of doc.items) {
-    if (child.kind === "app" && child.folderId === folderId)
-      next = moveOutOfFolder(next, child.id, metrics);
-  }
+  if (keepAsFiles)
+    for (const group of groups)
+      if (group.cell && !next.files.some((file) => file.name === group.name))
+        next = setIconCell(next, { kind: "file", name: group.name }, group.cell);
   return next;
 }
 
-/** Reassigns cells in reading order, sorted by name or by kind. */
+/** Reassigns cells in reading order, sorted by name or by kind (folders, apps, files). */
 export function arrangeIcons(
   doc: DesktopPreferences,
-  desktopId: string,
+  icons: readonly { ref: IconRef; name: string; group: number }[],
   by: "name" | "kind",
-  nameOf: (item: DesktopItem) => string,
   metrics: GridMetrics,
 ): DesktopPreferences {
   const collator = new Intl.Collator(undefined, { sensitivity: "base", numeric: true });
-  const sorted = [...onDesktop(doc, desktopId)].sort((a, b) =>
-    by === "kind" && a.kind !== b.kind
-      ? a.kind === "folder"
-        ? -1
-        : 1
-      : collator.compare(nameOf(a), nameOf(b)),
+  const sorted = [...icons].sort((a, b) =>
+    by === "kind" && a.group !== b.group ? a.group - b.group : collator.compare(a.name, b.name),
   );
-  const cells = new Map<string, Cell>();
   const occupied = new Set<string>();
-  for (const item of sorted) {
+  let next = doc;
+  for (const icon of sorted) {
     const cell = firstFreeCell(occupied, metrics);
-    cells.set(item.id, cell);
     occupied.add(cellKey(cell));
+    next = setIconCell(next, icon.ref, cell);
   }
-  return {
-    ...doc,
-    items: doc.items.map((item) =>
-      cells.has(item.id) ? { ...item, cell: cells.get(item.id)! } : item,
-    ),
-  };
+  return next;
 }
 
 export function addDesktop(

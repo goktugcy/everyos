@@ -43,15 +43,29 @@ export class ManagedAppManager {
   }
   async withProjectLock<T>(project: string | null, run: () => Promise<T>): Promise<T> {
     if (!project || !/^otk-[a-f0-9]{32}$/.test(project)) return run();
+    const release = this.lockProject(project);
+    try {
+      return await run();
+    } finally {
+      release();
+    }
+  }
+  /** Marks a managed project busy until the returned function is called. */
+  lockProject(project: string): () => void {
     const id = project.slice(4).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
     if (this.#busy.has(id))
       throw new OperationError("busy", "Managed application operation in progress");
     this.#busy.add(id);
-    try {
-      return await run();
-    } finally {
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
       this.#busy.delete(id);
-    }
+    };
+  }
+  /** Directory holding every managed app (private to the agent). */
+  get root(): string {
+    return this.#root;
   }
   async inspect(id: string): Promise<OperationResult<"apps.inspect">> {
     let ownership: OperationResult<"apps.inspect">["ownership"] = "missing";
@@ -83,6 +97,34 @@ export class ManagedAppManager {
       if ((error as NodeJS.ErrnoException).code !== "ENOENT") ownership = "conflict";
     }
     return { source: this.#docker.source, busy: this.#busy.has(id), ownership, lastRun };
+  }
+  /**
+   * The verified directories of an owned, not removed app (for backups). The
+   * caller holds `withProjectLock` while it reads or replaces the data.
+   */
+  async ownedApp(id: string): Promise<{ project: string; appDir: string; dataDir: string }> {
+    const project = `otk-${id.replaceAll("-", "")}`;
+    const appDir = join(this.#root, id);
+    try {
+      await this.#directory(this.#root, false);
+      await this.#directory(appDir, false);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT")
+        throw new OperationError("not_found", "Managed application not found");
+      throw error;
+    }
+    const marker = object(
+      JSON.parse(await readFile(join(appDir, "ownership.json"), "utf8").catch(() => "{}")),
+    );
+    if (marker.id !== id || marker.project !== project || marker.removed === true)
+      throw new OperationError("not_found", "Managed application not found");
+    return { project, appDir, dataDir: join(appDir, "data") };
+  }
+  /** True while any container of the project runs. */
+  async projectRunning(project: string): Promise<boolean> {
+    return (await this.#docker.listContainers()).some(
+      (entry) => entry.project === project && entry.state === "running",
+    );
   }
   async #directory(path: string, create = true): Promise<void> {
     if (!isAbsolute(path) || normalize(path) !== path)

@@ -193,7 +193,13 @@ export interface AptUpdates {
   listsUpdatedAt: number | null;
   total: number;
   security: number;
-  packages: Array<{ name: string; version: string; security: boolean }>;
+  packages: Array<{
+    name: string;
+    version: string;
+    currentVersion: string | null;
+    suites: string;
+    security: boolean;
+  }>;
 }
 
 export interface TimerSummary {

@@ -1,6 +1,6 @@
-# HTTP API (Phases 1–6)
+# HTTP API (Phases 1–7)
 
-Base path: `/api`. Bodies are JSON except raw wallpaper uploads. JSON responses are never cached
+Base path: `/api`. Bodies are JSON except raw wallpaper, file and backup uploads. JSON responses are never cached
 (`Cache-Control: no-store`); owned wallpaper images use private immutable caching.
 
 **Errors** always have this shape:
@@ -114,16 +114,18 @@ reason, prefixed `PROTECTED_UNIT:`, `PROTECTED_CONTAINER:` or `DEVELOPMENT_MODE:
 no systemd/journald), `NOT_FOUND` (404), `RATE_LIMITED` (429, too many concurrent agent streams) and
 `AGENT_OPERATION_FAILED` (502).
 
-| Method & path                 | Description                                                                                                                                                                                         |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /system/info`            | Host information (`SystemInfo`: hostname, OS, kernel, architecture, CPU, memory, uptime, hardware model, capability map with reasons).                                                              |
-| `GET /system/metrics`         | Latest `MetricsSnapshot` (derived rates: CPU %, memory, swap, load, network/disk bytes per second, temperatures, per-core usage, fans). Sampled on demand when the last snapshot is older than 5 s. |
-| `GET /system/metrics/history` | Query `range` = `15m` (live resolution) \| `1h` (1-minute averages) \| `24h` (5-minute averages). Returns `{ range, resolutionMs, points }`. In-memory only: history restarts with the API.         |
-| `GET /system/storage`         | Mounted data file systems with size, usage and inodes (`statfs`, 2 s timeout per mount).                                                                                                            |
-| `GET /system/hardware`        | Raspberry Pi throttling flags (firmware `get_throttled`) and NVMe SMART health (`smartctl`), each with an availability reason.                                                                      |
-| `GET /system/network`         | Interfaces (kind, state, MAC, MTU, speed, addresses), default gateways, DNS servers and internet reachability (TCP probe, cached for 60 s, configurable in `agent.yaml`).                           |
-| `GET /system/tailscale`       | Tailscale state through the local LocalAPI socket (never the network).                                                                                                                              |
-| `GET /system/processes`       | Query `sort` = `cpu` \| `memory`, `limit` 1–500 (default 50). CPU % is measured over 500 ms. Full command lines are only returned to roles with `system:manage`; others see the process name.       |
+| Method & path                    | Description                                                                                                                                                                                         |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /system/info`               | Host information (`SystemInfo`: hostname, OS, kernel, architecture, CPU, memory, uptime, hardware model, capability map with reasons).                                                              |
+| `GET /system/metrics`            | Latest `MetricsSnapshot` (derived rates: CPU %, memory, swap, load, network/disk bytes per second, temperatures, per-core usage, fans). Sampled on demand when the last snapshot is older than 5 s. |
+| `GET /system/metrics/history`    | Query `range` = `15m` (live resolution) \| `1h` (1-minute averages) \| `24h` (5-minute averages). Returns `{ range, resolutionMs, points }`. In-memory only: history restarts with the API.         |
+| `GET /system/storage`            | Mounted data file systems with size, usage and inodes (`statfs`, 2 s timeout per mount).                                                                                                            |
+| `GET /system/hardware`           | Raspberry Pi throttling flags (firmware `get_throttled`) and NVMe SMART health (`smartctl`), each with an availability reason.                                                                      |
+| `GET /system/network`            | Interfaces (kind, state, MAC, MTU, speed, addresses), default gateways, DNS servers and internet reachability (TCP probe, cached for 60 s, configurable in `agent.yaml`).                           |
+| `GET /system/tailscale`          | Tailscale state through the local LocalAPI socket (never the network).                                                                                                                              |
+| `GET /system/tailscale/overview` | Status, this node in detail, Serve/Funnel handlers, remote-access analysis and warnings ([tailscale.md](tailscale.md)).                                                                             |
+| `GET /system/tailscale/peers`    | `system:manage`: the tailnet's other devices.                                                                                                                                                       |
+| `GET /system/processes`          | Query `sort` = `cpu` \| `memory`, `limit` 1–500 (default 50). CPU % is measured over 500 ms. Full command lines are only returned to roles with `system:manage`; others see the process name.       |
 
 ## Services
 
@@ -232,3 +234,18 @@ map to `CONFLICT` (409). Mutations and import changes are audited.
 | `POST /docker/projects/:name/import`   | `docker:manage`             | `{ acknowledgeManager?: boolean }` → 201. Validates discovered Compose files and records import. Another manager hint requires true. Changes no Docker resources.                                                                                                                                                               |
 | `DELETE /docker/projects/:name/import` | `docker:manage`             | Forgets import; changes no containers/files/volumes.                                                                                                                                                                                                                                                                            |
 | `POST /docker/projects/:name/actions`  | `docker:manage`             | `{ action: "up" \| "start" \| "stop" \| "restart" \| "update" \| "down" }` → `{ ok, output }`. Imported projects only; agent revalidates files/protection. A project containing a protected container accepts only start. Update pulls then recreates; down keeps volumes/images. `ok: false` reports a failed Compose command. |
+
+## Phase 7 tools
+
+Each module has its own document with the full contract; all routes are strict about unknown
+fields, require CSRF for changes, and audit every change.
+
+| Area          | Routes                                                                                                                                             | Permission                                                                                 | Details                              |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------ |
+| Notifications | `GET /notifications`, `POST /notifications/{read,unread,dismiss}`                                                                                  | `notifications:read` (per-kind permission filters the list)                                | [notifications.md](notifications.md) |
+| Files         | `GET /files/{roots,list,properties,search,text,download}`, `PUT /files/text`, `POST /files/{upload,mkdir,rename,copy,move,delete}`                 | `files:read`, changes `files:write`                                                        | [files.md](files.md)                 |
+| Updates       | `GET /updates`, `GET /updates/packages/:name`, `GET /updates/jobs[/:id[/events]]`, `POST /updates/{refresh,upgrade}`                               | `system:read`, changes `system:manage`                                                     | [updates.md](updates.md)             |
+| Tasks         | `GET/POST /tasks`, `PATCH/DELETE /tasks/:id`, `GET /tasks/:id/runs`, `POST /tasks/:id/{run,cancel}`                                                | `tasks:manage` plus the task type's permission                                             | [tasks.md](tasks.md)                 |
+| Backups       | `GET/POST /backups`, `POST /backups/cancel`, `PUT /backups/settings`, `/backups/:id/{verify,pin,preview,restore,download}`, `POST /backups/upload` | `backups:manage`; restore, download and upload `backups:restore` with the current password | [backups.md](backups.md)             |
+| Tailscale     | `GET /system/tailscale/overview`, `GET /system/tailscale/peers`                                                                                    | `system:read`; devices `system:manage`                                                     | [tailscale.md](tailscale.md)         |
+| Terminal      | `GET /terminal/status`, `GET /terminal/sessions`, `DELETE /terminal/sessions/:id`, WebSocket `GET /terminal/ws`                                    | `terminal:access` (administrators); deletion also checks ownership or `users:manage`       | [terminal.md](terminal.md)           |

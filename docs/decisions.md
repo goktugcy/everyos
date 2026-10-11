@@ -212,3 +212,45 @@ Layouts are a per-user preference document. Desktop widgets use a coarse 80 px g
 overlaps. When the work area shrinks, an effective layout moves widgets to free cells, and the
 saved layout adopts it on the next change. Widgets on missing virtual desktops move to the first
 one, like windows.
+
+## D20 — Notifications as conditions and events in SQLite (2026-10)
+
+Problems that last (a failed service, a full disk) are conditions that are raised and resolved,
+while results (an install, a backup) are deduplicated events. Both live in SQLite with per-user
+read and dismiss state, and visibility follows each kind's permission. Delivery reuses the
+per-tab SSE stream (D15). External channels plug in through a provider interface. A message
+queue or a separate notification service was not justified for one host.
+
+## D21 — Files in the API's identity, update and scheduler jobs in the background (2026-10)
+
+The file manager runs in the unprivileged API, so the operating system stays the final boundary
+and the root agent never touches user files. Package jobs and scheduled tasks run as background
+jobs independent of HTTP requests, one update job at a time. Scheduled tasks are a closed set of
+predefined actions, and every run re-checks the owner's current permissions instead of storing
+a capability at creation time.
+
+## D22 — Backups as checksummed directories, restores staged for the next start (2026-10)
+
+A backup is a private directory of files described by a manifest written last, not one big
+archive: app data written by the agent does not have to be copied twice, verification can name
+the broken file, and a download is a plain tar generated on the fly (its size is known up front).
+Database snapshots use SQLite's online backup API and leave out sessions. A full database
+restore is staged and applied before the database is opened at the next start, because replacing
+an open database under a running server would leave every in-memory service stale. Desktop
+settings and app data are restored live. Database restores across installations with a different
+server secret are refused, because encrypted secrets (including 2FA) could not be read.
+
+App data is captured only while the app is stopped: copying a running database file by file is
+not a consistent backup. The agent's stream protocol has no flow control, so archives are pulled
+in 512 KiB chunks by the API and pushed back in chunks for a restore; the agent never reads or
+writes files at paths chosen by the API. Archives are produced and validated by Otuken's own
+tar code (regular files, directories and symlinks only) instead of the system `tar`, so
+validation and extraction rules are explicit and identical on every host.
+
+## D23 — Tailscale is read and explained, never configured (2026-10)
+
+Otuken reads tailscaled's LocalAPI and compares Serve/Funnel handlers with its own configuration
+(published URL, `publicOrigins`, trusted proxy) instead of offering buttons that change Tailscale.
+Changing network exposure from the web UI would be an administrative action with a large blast
+radius, and the CLI remains the single place where it happens. Public exposure through Funnel
+raises a security notification.

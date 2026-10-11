@@ -26,7 +26,9 @@ export function securityHeaders(services: Services): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     await next();
     const headers = c.res.headers;
-    headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
+    // Handlers may set a stricter policy (e.g. sandboxed file downloads).
+    if (!headers.has("Content-Security-Policy"))
+      headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
     headers.set("X-Content-Type-Options", "nosniff");
     headers.set("X-Frame-Options", "DENY");
     headers.set("Referrer-Policy", "no-referrer");

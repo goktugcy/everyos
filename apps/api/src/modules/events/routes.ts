@@ -1,4 +1,10 @@
-import { EVENT_TOPICS, type EventTopic, type Permission, type TopicMessage } from "@otuken/shared";
+import {
+  EVENT_TOPICS,
+  type EventTopic,
+  type NotificationEvent,
+  type Permission,
+  type TopicMessage,
+} from "@otuken/shared";
 import { EventStreamQuerySchema } from "@otuken/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
@@ -11,6 +17,7 @@ import type { Services } from "../../services.ts";
 const TOPIC_PERMISSIONS: Record<EventTopic, Permission> = {
   metrics: "system:read",
   docker: "docker:read",
+  notifications: "notifications:read",
 };
 
 /**
@@ -38,6 +45,24 @@ function latestWins<T>(channel: EventChannel, event: string): (data: T) => void 
     if (channel.signal.aborted) return;
     if (sending) pending = { data };
     else flush(data);
+  };
+}
+
+/** Sends every event in order, keeping at most `limit` pending (oldest dropped). */
+function orderedSender<T>(channel: EventChannel, event: string, limit: number): (data: T) => void {
+  const queue: T[] = [];
+  let sending = false;
+  const drain = async () => {
+    sending = true;
+    while (queue.length > 0 && !channel.signal.aborted)
+      await channel.send(event, queue.shift()).catch(() => undefined);
+    sending = false;
+  };
+  return (data) => {
+    if (channel.signal.aborted) return;
+    queue.push(data);
+    if (queue.length > limit) queue.splice(0, queue.length - limit);
+    if (!sending) void drain();
   };
 }
 
@@ -83,6 +108,28 @@ export function eventRoutes(services: Services): Hono<AppEnv> {
             services.docker.subscribe((message) =>
               message.kind === "stats" ? stats(message.snapshot) : change(message.event),
             ),
+          );
+        }
+        if (streams.includes("notifications")) {
+          const me = { id: auth.user.id, permissions: auth.permissions };
+          // Rare events, sent in order (a pop-up must not be replaced by a count update).
+          const send = orderedSender<NotificationEvent>(channel, "notifications", 20);
+          // Counts first, so the badge is right as soon as the stream opens.
+          send({ unread: services.notifications.counts(me), latest: null });
+          unsubscribers.push(
+            services.notifications.subscribe((change) => {
+              if (change.type === "state") {
+                if (change.userId === me.id)
+                  send({ unread: services.notifications.counts(me), latest: null });
+                return;
+              }
+              const view = services.notifications.viewFor(me, change.notification);
+              if (!view) return;
+              send({
+                unread: services.notifications.counts(me),
+                latest: change.toast ? view : null,
+              });
+            }),
           );
         }
         for (const topic of dataTopics) {

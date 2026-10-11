@@ -41,14 +41,17 @@ export class FailureLimiter {
     return { allowed: true };
   }
 
-  recordFailure(key: string): void {
+  /** Records a failure; true when this failure started a lockout. */
+  recordFailure(key: string): boolean {
     const now = this.#options.now();
     let entry = this.#entries.get(key);
     if (!entry || (now - entry.windowStart > this.#options.windowMs && entry.lockedUntil <= now)) {
       entry = { failures: 0, windowStart: now, lockedUntil: 0, lockCount: entry?.lockCount ?? 0 };
     }
     entry.failures++;
+    let locked = false;
     if (entry.failures >= this.#options.maxFailures) {
+      locked = true;
       const duration = Math.min(
         this.#options.baseLockMs * 2 ** entry.lockCount,
         this.#options.maxLockMs,
@@ -61,6 +64,7 @@ export class FailureLimiter {
     this.#entries.delete(key);
     this.#entries.set(key, entry);
     this.#evict(now);
+    return locked;
   }
 
   reset(key: string): void {

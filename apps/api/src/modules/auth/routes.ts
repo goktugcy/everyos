@@ -47,8 +47,20 @@ export function authRoutes(services: Services): Hono<AppEnv> {
     }
 
     const fail = (reason: string): never => {
-      limiters.loginIp.recordFailure(ipKey);
-      limiters.loginUser.recordFailure(userKey);
+      const ipLocked = limiters.loginIp.recordFailure(ipKey);
+      const userLocked = limiters.loginUser.recordFailure(userKey);
+      // Lockouts can mean password guessing: tell the people who read the audit log.
+      if (ipLocked || userLocked)
+        services.notifications.publish({
+          kind: "login-locked",
+          severity: "warning",
+          key: userLocked ? `user:${body.username}` : `ip:${client.ip}`,
+          params: {
+            username: body.username.slice(0, 64),
+            ip: client.ip,
+            scope: userLocked ? "user" : "ip",
+          },
+        });
       audit.record({
         action: "auth.login",
         outcome: "failure",

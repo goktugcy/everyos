@@ -1,10 +1,12 @@
 import { MetricsHistoryQuerySchema, ProcessQuerySchema } from "@otuken/shared/schemas";
+import type { TailscaleOverview } from "@otuken/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
 import { callAgent } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import { parseQuery } from "../../http/validation.ts";
-import { requirePermission } from "../../middleware/auth.ts";
+import { requireAuth, requirePermission } from "../../middleware/auth.ts";
+import { analyzeTailscale } from "./tailscale.ts";
 import type { Services } from "../../services.ts";
 
 export { agentActor, toApiError } from "../../http/agent.ts";
@@ -37,6 +39,32 @@ export function systemRoutes(services: Services): Hono<AppEnv> {
   app.get("/hardware", async (c) => c.json(await callAgent(c, services, "hardware.status", {})));
   app.get("/network", async (c) => c.json(await callAgent(c, services, "network.status", {})));
   app.get("/tailscale", async (c) => c.json(await callAgent(c, services, "tailscale.status", {})));
+
+  /** Tailscale in detail, with remote-access analysis and warnings (docs/tailscale.md). */
+  app.get("/tailscale/overview", async (c) => {
+    const [status, details] = await Promise.all([
+      callAgent(c, services, "tailscale.status", {}),
+      callAgent(c, services, "tailscale.details", {}),
+    ]);
+    const overview: TailscaleOverview = {
+      status,
+      details,
+      ...analyzeTailscale({
+        status,
+        details,
+        server: services.config.server,
+        isTrustedProxy: services.isTrustedProxy,
+        now: services.now(),
+      }),
+      canSeePeers: requireAuth(c).permissions.has("system:manage"),
+    };
+    return c.json(overview);
+  });
+
+  /** The tailnet's other devices; administrators only. */
+  app.get("/tailscale/peers", requirePermission("system:manage"), async (c) =>
+    c.json(await callAgent(c, services, "tailscale.peers", {})),
+  );
 
   app.get("/processes", async (c) => {
     const query = parseQuery(c, ProcessQuerySchema);

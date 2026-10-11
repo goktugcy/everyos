@@ -19,11 +19,17 @@ import { eventRoutes } from "./modules/events/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
 import { integrationRoutes } from "./modules/integrations/routes.ts";
 import { logRoutes } from "./modules/logs/routes.ts";
+import { notificationRoutes } from "./modules/notifications/routes.ts";
+import { fileRoutes } from "./modules/files/routes.ts";
+import { terminalRoutes } from "./modules/terminal/routes.ts";
+import { updateRoutes } from "./modules/updates/routes.ts";
+import { taskRoutes } from "./modules/tasks/routes.ts";
 import { preferenceRoutes } from "./modules/preferences/routes.ts";
 import { serviceRoutes } from "./modules/services/routes.ts";
 import { setupRoutes } from "./modules/setup/routes.ts";
 import { systemRoutes } from "./modules/system/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
+import { backupRoutes } from "./modules/backups/routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
 import type { Services } from "./services.ts";
 
@@ -40,9 +46,25 @@ export function createApp(services: Services): Hono<AppEnv> {
       throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Request body too large");
     },
   });
-  // Wallpaper uploads stream to disk with their own (larger) limit.
-  const enforceBodyLimit: MiddlewareHandler<AppEnv> = (c, next) =>
-    c.req.method === "POST" && c.req.path === "/api/wallpapers" ? next() : jsonBodyLimit(c, next);
+  // The text editor saves up to 1 MiB of text (JSON-escaped).
+  const textBodyLimit = bodyLimit({
+    maxSize: 4 * 1024 * 1024,
+    onError: () => {
+      throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Request body too large");
+    },
+  });
+  // Wallpaper, file and backup uploads stream to disk with their own (larger) limits.
+  const enforceBodyLimit: MiddlewareHandler<AppEnv> = (c, next) => {
+    if (
+      c.req.method === "POST" &&
+      (c.req.path === "/api/wallpapers" ||
+        c.req.path === "/api/files/upload" ||
+        c.req.path === "/api/backups/upload")
+    )
+      return next();
+    if (c.req.method === "PUT" && c.req.path === "/api/files/text") return textBodyLimit(c, next);
+    return jsonBodyLimit(c, next);
+  };
   app.use("/api/*", enforceBodyLimit);
   app.use("/api/*", loadSession(services));
   app.use("/api/*", csrfProtection(services));
@@ -60,6 +82,12 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/logs", logRoutes(services));
   api.route("/docker", dockerRoutes(services));
   api.route("/integrations", integrationRoutes(services));
+  api.route("/notifications", notificationRoutes(services));
+  api.route("/files", fileRoutes(services));
+  api.route("/terminal", terminalRoutes(services));
+  api.route("/updates", updateRoutes(services));
+  api.route("/tasks", taskRoutes(services));
+  api.route("/backups", backupRoutes(services));
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
   api.route("/events", eventRoutes(services));

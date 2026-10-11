@@ -7,11 +7,19 @@ export * from "./api-types.ts";
 export * from "./catalogs.ts";
 export * from "./docker.ts";
 export * from "./errors.ts";
+export * from "./files.ts";
 export * from "./host.ts";
 export * from "./locale.ts";
+export * from "./notifications.ts";
 export * from "./permissions.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
+export * from "./terminal.ts";
+export * from "./updates.ts";
+export * from "./cron.ts";
+export * from "./tasks.ts";
+export * from "./backups.ts";
+export * from "./tailscale.ts";
 export * from "./widgets.ts";
 export type { CapabilityStatus, SystemInfo } from "./schemas/system.ts";
 export type {
@@ -37,6 +45,8 @@ export type {
   VolumeSummary,
 } from "./schemas/docker.ts";
 export type { PostgresStats } from "./schemas/widgets.ts";
+export type { NotificationPreferences } from "./schemas/notifications.ts";
+export type { PulsePreferences, ShelfItem } from "./schemas/pulse.ts";
 export type {
   CpuTimes,
   HardwareStatus,
@@ -50,11 +60,15 @@ export type {
   ServiceList,
   ServiceUnit,
   StorageUsage,
+  TailscaleDetails,
+  TailscalePeer,
+  TailscalePeers,
   TailscaleStatus,
 } from "./schemas/host.ts";
 export type {
   AppearancePreferences,
   CustomTheme,
+  DesktopFilePosition,
   DesktopItem,
   DesktopPreferences,
   DockPreferences,

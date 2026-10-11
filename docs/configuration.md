@@ -39,6 +39,17 @@ security:
 logging:
   level: info # trace | debug | info | warn | error | fatal | silent
   format: json # json (journald) | pretty
+# File manager locations; nothing is exposed until roots are listed (docs/files.md).
+files:
+  roots: []
+  maxUploadMiB: 16384
+  minFreeMiB: 1024
+  homes: true # private home folders with standard folders (docs/files.md)
+# Backups (docs/backups.md). The directory must belong to the otuken user.
+backups:
+  dir: /var/lib/otuken/backups/archives # e.g. a separate disk
+  minFreeMiB: 1024 # never leave less free space than this
+  maxUploadMiB: 65536 # largest archive accepted by "Upload backup"
 ```
 
 ### Environment variables
@@ -54,6 +65,7 @@ logging:
 | `OTUKEN_SECRET_KEY_FILE`                       | Overrides `paths.secretKeyFile`                                      |
 | `OTUKEN_AGENT_SOCKET`, `OTUKEN_AGENT_KEY_FILE` | Agent connection                                                     |
 | `OTUKEN_LOG_LEVEL`                             | Log level                                                            |
+| `OTUKEN_BACKUP_DIR`                            | Overrides `backups.dir`                                              |
 
 ## Agent: `/etc/otuken/agent.yaml` (root-owned)
 
@@ -78,12 +90,16 @@ protectedContainers:
   - "traefik*"
 # Optional: discovery and Compose actions both use this Unix socket.
 dockerSocket: /var/run/docker.sock
+# Optional: tailscaled's LocalAPI socket when it is not in a standard place.
+tailscaleSocket: /var/run/tailscale/tailscaled.sock
 ```
 
 The agent honours `OTUKEN_ENV`, `OTUKEN_AGENT_CONFIG`, `OTUKEN_AGENT_SOCKET`,
 `OTUKEN_AGENT_KEY_FILE` and `OTUKEN_LOG_LEVEL`. In development only, `OTUKEN_AGENT_SIMULATE=1`
 answers service, log and Docker operations from in-memory simulators even when host tools exist (the e2e
-suite uses it). The agent refuses to start with this variable in production.
+suite uses it). The agent refuses to start with this variable in production. Also in development
+only, `OTUKEN_TAILSCALE_SOCKET` points the agent at another tailscaled socket (the e2e suite runs
+a stand-in LocalAPI there).
 
 Development discovers real Docker through the configured Unix socket when present but refuses
 every real Docker mutation. Without a socket it uses clearly labeled simulated data. Production

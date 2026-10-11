@@ -36,6 +36,7 @@ import { menubarButton } from "./menubar-button.ts";
 import { QuickSettings } from "./quick-settings.tsx";
 import { NetworkModule, ResourcesModule } from "./system-modules.tsx";
 import { MenubarWidgets } from "../widgets/menubar-widgets.tsx";
+import { NotificationBell } from "../notifications/center.tsx";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -43,19 +44,24 @@ function AgentIndicator() {
   const agent = useAgentStatus((state) => state.agent);
   if (agent === null) return null;
   const connected = agent === "connected";
+  const label = connected ? t("agent.connected") : t("agent.unavailable");
+  // A status dot like macOS menu extras; the problem state also gets a word.
   return (
     <span
-      className="flex items-center gap-1.5 px-1.5 text-[0.75rem] text-fg-muted"
-      title={connected ? t("agent.connected") : t("agent.unavailable")}
+      role="status"
+      className="flex h-[26px] items-center gap-1.5 px-1.5 text-[0.75rem]"
+      title={label}
+      aria-label={label}
       data-testid="agent-status"
     >
       <span
-        className={cn("size-2 rounded-full", connected ? "bg-success" : "bg-danger")}
+        className={cn(
+          "size-[7px] rounded-full",
+          connected ? "bg-success shadow-[0_0_6px_rgb(var(--otk-success)/0.8)]" : "bg-danger",
+        )}
         aria-hidden
       />
-      <span className="hidden lg:inline">
-        {connected ? t("agent.connected") : t("agent.unavailable")}
-      </span>
+      {connected ? null : <span className="text-danger">{label}</span>}
     </span>
   );
 }
@@ -75,10 +81,8 @@ function DesktopSwitcher() {
           title={entry.name}
           onClick={() => wm().switchDesktop(entry.id)}
           className={cn(
-            "grid h-6 min-w-6 place-items-center rounded-md px-1 text-[0.7rem] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent",
-            entry.id === active
-              ? "bg-[rgb(var(--otk-accent)/0.28)] text-fg"
-              : "text-fg-muted hover:bg-hover/10",
+            "grid h-[22px] min-w-[22px] place-items-center rounded-[5px] px-1 text-[0.7rem] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            entry.id === active ? "bg-hover/25 text-fg" : "text-fg-muted hover:bg-hover/15",
           )}
         >
           {index + 1}
@@ -101,7 +105,7 @@ function DesktopSwitcher() {
             });
             if (created) wm().switchDesktop(created);
           }}
-          className="grid size-6 place-items-center rounded-md text-fg-subtle outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
+          className="grid size-[22px] place-items-center rounded-[5px] text-fg-muted outline-none hover:bg-hover/15 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
         >
           <Plus className="size-3.5" aria-hidden />
         </button>
@@ -284,15 +288,14 @@ export function Menubar({ insecure }: { insecure: boolean }) {
   return (
     <header
       data-testid="menubar"
-      className="glass-strong fixed inset-x-0 top-0 z-[70] flex h-[var(--otk-menubar-height)] items-center gap-1 rounded-none border-x-0 border-t-0 px-2 pt-[env(safe-area-inset-top)]"
+      className="menubar-glass fixed inset-x-0 top-0 z-[70] flex h-[var(--otk-menubar-height)] items-center gap-0.5 px-2.5 pt-[env(safe-area-inset-top)]"
     >
       <MenuDropdown
         label={t("shell.menu.label")}
         entries={otukenMenu}
         trigger={
-          <button type="button" className={cn(menubarButton, "font-semibold")}>
-            <LogoMark className="size-[18px]" />
-            <span className="hidden sm:inline">{t("brand.name")}</span>
+          <button type="button" className={cn(menubarButton, "px-2.5")}>
+            <LogoMark className="!size-[17px]" />
           </button>
         }
       />
@@ -310,7 +313,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
         }
       />
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-0.5">
         {insecure ? (
           <span
             className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[0.75rem] text-warning"
@@ -321,6 +324,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
           </span>
         ) : null}
         {show("widgets") ? <MenubarWidgets /> : null}
+        {show("notifications") ? <NotificationBell /> : null}
         {show("resources") && canReadSystem ? <ResourcesModule /> : null}
         {show("network") && canReadSystem ? <NetworkModule /> : null}
         {show("agent") ? <AgentIndicator /> : null}
@@ -338,7 +342,10 @@ export function Menubar({ insecure }: { insecure: boolean }) {
         ) : null}
         {show("quickSettings") ? <QuickSettings /> : null}
         {show("clock") ? (
-          <span className="px-1.5 text-[0.8rem] text-fg-muted" data-testid="menubar-clock">
+          <span
+            className="whitespace-nowrap px-2 text-[0.82rem] font-medium"
+            data-testid="menubar-clock"
+          >
             <Clock seconds={clockSeconds} />
           </span>
         ) : null}
@@ -350,7 +357,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
             trigger={
               <button
                 type="button"
-                className="ml-0.5 grid size-7 place-items-center rounded-full button-accent text-[0.68rem] font-bold outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="ml-1 grid size-[22px] place-items-center rounded-full button-accent text-[0.6rem] font-bold [text-shadow:none] outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 {initials(user.displayName)}
               </button>

@@ -4,7 +4,12 @@ import { join } from "node:path";
 import { AgentClientError, type Actor, type AgentConnectionState } from "@otuken/agent-protocol";
 import { migrate, openDatabase, OTUKEN_MIGRATIONS, type Database } from "@otuken/database";
 import { silentLogger } from "@otuken/logger";
-import { createDockerSimulator, DockerError, type DockerApi } from "@otuken/system";
+import {
+  createAptSimulator,
+  createDockerSimulator,
+  DockerError,
+  type DockerApi,
+} from "@otuken/system";
 import {
   CSRF_HEADER,
   type LogEntry,
@@ -186,9 +191,16 @@ export class FakeAgent implements AgentGateway {
   state: AgentConnectionState = "connected";
   readonly calls: Array<{ op: string; params: unknown; actor: Actor }> = [];
   readonly handlers = new Map<string, FakeHandler>();
+  /** Overrides for stream operations (e.g. a fake terminal). */
+  readonly streamHandlers = new Map<
+    string,
+    (params: unknown, signal: AbortSignal) => AsyncIterable<unknown>
+  >();
   logEntries: LogEntry[] = [sampleLogEntry(1), sampleLogEntry(2)];
   #metricsIndex = 0;
   now: () => number = Date.now;
+  /** Package updates, answered by the development simulator. */
+  readonly apt = createAptSimulator(() => this.now());
 
   #defaults(op: string, params: unknown): unknown {
     switch (op) {
@@ -291,16 +303,13 @@ export class FakeAgent implements AgentGateway {
           connections: { established: 3, timeWait: 1, other: 0 },
         };
       case "apt.updates":
-        return {
-          source: "host",
-          listsUpdatedAt: 1_760_000_000_000,
-          total: 2,
-          security: 1,
-          packages: [
-            { name: "openssl", version: "3.0.13-0ubuntu3.6", security: true },
-            { name: "curl", version: "8.5.0-2ubuntu10.7", security: false },
-          ],
-        };
+        return this.apt.updates();
+      case "apt.package":
+        return this.apt.package((params as { name: string }).name);
+      case "apt.refresh":
+        return this.apt
+          .refresh(new AbortController().signal)
+          .then((result) => ({ source: this.apt.source, ...result }));
       case "services.timers":
         return {
           source: "host",
@@ -405,6 +414,11 @@ export class FakeAgent implements AgentGateway {
     if (this.state !== "connected")
       throw new AgentClientError("AGENT_UNAVAILABLE", "not connected");
     const signal = options.signal ?? new AbortController().signal;
+    const custom = this.streamHandlers.get(op);
+    if (custom) {
+      yield* custom(params, signal);
+      return;
+    }
     if (op === "docker.containers.logs") {
       const { id, tail, follow } = params as { id: string; tail: number; follow: boolean };
       yield* this.docker.logs(id, { tail, follow }, signal);
@@ -412,6 +426,10 @@ export class FakeAgent implements AgentGateway {
     }
     if (op === "docker.events") {
       yield* this.docker.events(signal);
+      return;
+    }
+    if (op === "apt.upgrade") {
+      yield* this.apt.upgrade((params as { packages: string[] | null }).packages, signal);
       return;
     }
     for (const entry of this.logEntries) yield entry;
@@ -454,6 +472,7 @@ export async function createTestContext(
     now: () => clock.now,
   });
   services.setup.initialize();
+  await services.backups.start();
   return {
     app: createApp(services),
     services,

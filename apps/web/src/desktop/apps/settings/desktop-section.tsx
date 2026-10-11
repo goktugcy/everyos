@@ -36,6 +36,7 @@ export default function DesktopSection() {
   const desktops = usePreferences((state) => state.desktop.desktops);
   const dock = usePreferences((state) => state.dock);
   const menubar = usePreferences((state) => state.menubar);
+  const pulse = usePreferences((state) => state.pulse);
   const permissions = usePermissions();
   const iconSize = useThemeStore((state) => state.theme.iconSize);
   const viewport = useWindowManager((state) => state.viewport);
@@ -183,6 +184,26 @@ export default function DesktopSection() {
             checked={menubar.clockSeconds}
             onCheckedChange={(clockSeconds) =>
               updatePreference("menubar", (m) => ({ ...m, clockSeconds }))
+            }
+          />
+        </SettingRow>
+      </SettingsGroup>
+
+      <SettingsGroup title={t("settings.desktop.pulse")}>
+        <p className="text-xs text-fg-muted">{t("settings.desktop.pulseHint")}</p>
+        <SettingRow label={t("settings.desktop.pulseEnabled")}>
+          <Toggle
+            label={t("settings.desktop.pulseEnabled")}
+            checked={pulse.enabled}
+            onCheckedChange={(enabled) => updatePreference("pulse", (n) => ({ ...n, enabled }))}
+          />
+        </SettingRow>
+        <SettingRow label={t("settings.desktop.pulseHover")}>
+          <Toggle
+            label={t("settings.desktop.pulseHover")}
+            checked={pulse.openOnHover}
+            onCheckedChange={(openOnHover) =>
+              updatePreference("pulse", (n) => ({ ...n, openOnHover }))
             }
           />
         </SettingRow>

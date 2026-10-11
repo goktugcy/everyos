@@ -428,6 +428,7 @@ export class AgentServer {
           connection.streams -= 1;
         }
         reply({ result: null });
+        if (contract.mutating) log.info("Operation finished", auditFields);
       }
     } catch (error) {
       if (error instanceof OperationError) {

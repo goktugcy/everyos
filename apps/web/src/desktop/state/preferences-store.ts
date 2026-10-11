@@ -3,6 +3,8 @@ import type {
   DesktopPreferences,
   DockPreferences,
   MenubarPreferences,
+  PulsePreferences,
+  NotificationPreferences,
   Permission,
   PreferenceDocuments,
   PreferenceKey,
@@ -16,7 +18,14 @@ import type { TFunction } from "i18next";
 import { create } from "zustand";
 import { api, ApiRequestError } from "../../lib/api.ts";
 import { applyAppearance } from "../theme/theme-store.ts";
-import { DEFAULT_MENUBAR, DEFAULT_SECURITY, defaultDesktop, defaultDock } from "./defaults.ts";
+import {
+  DEFAULT_MENUBAR,
+  DEFAULT_PULSE,
+  DEFAULT_NOTIFICATIONS,
+  DEFAULT_SECURITY,
+  defaultDesktop,
+  defaultDock,
+} from "./defaults.ts";
 
 type EditableKey = Exclude<PreferenceKey, "windows">;
 
@@ -28,6 +37,8 @@ export interface PreferencesState {
   menubar: MenubarPreferences;
   security: SecurityPreferences;
   widgets: WidgetPreferences;
+  notifications: NotificationPreferences;
+  pulse: PulsePreferences;
   /** Window session loaded at sign-in; consumed once by the shell. */
   initialWindows: WindowSession | null;
   saveError: boolean;
@@ -36,11 +47,18 @@ export interface PreferencesState {
 export const usePreferences = create<PreferencesState>()(() => ({
   ready: false,
   appearance: DEFAULT_APPEARANCE,
-  desktop: { version: 1, desktops: [{ id: "d1", name: "", wallpaper: null }], items: [] },
+  desktop: {
+    version: 1,
+    desktops: [{ id: "d1", name: "", wallpaper: null }],
+    items: [],
+    files: [],
+  },
   dock: defaultDock([]),
   menubar: DEFAULT_MENUBAR,
   security: DEFAULT_SECURITY,
   widgets: { version: 1, instances: [], sidebar: { open: false } },
+  notifications: DEFAULT_NOTIFICATIONS,
+  pulse: DEFAULT_PULSE,
   initialWindows: null,
   saveError: false,
 }));
@@ -166,6 +184,8 @@ export async function loadPreferences(context: LoadContext, signal?: AbortSignal
     widgets:
       (stored.widgets ? migrateWidgets(stored.widgets) : null) ??
       defaultWidgetPreferences(context.permissions, () => crypto.randomUUID()),
+    notifications: stored.notifications ?? DEFAULT_NOTIFICATIONS,
+    pulse: stored.pulse ?? DEFAULT_PULSE,
     initialWindows: usePreferences.getState().ready
       ? usePreferences.getState().initialWindows
       : (stored.windows ?? null),

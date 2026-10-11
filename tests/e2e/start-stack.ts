@@ -10,7 +10,8 @@ import { createServer, type ServerResponse } from "node:http";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
-export const E2E_STATE_DIR = join(here, ".state");
+// Keep it short: Unix socket paths inside it are limited to about 100 bytes.
+export const E2E_STATE_DIR = process.env.OTUKEN_E2E_STATE_DIR ?? join(here, ".state");
 export const E2E_PORT = Number(process.env.OTUKEN_E2E_PORT ?? 7480);
 
 if (!existsSync(join(root, "dist/api/server.mjs"))) {
@@ -30,7 +31,81 @@ const env = {
   OTUKEN_LOG_LEVEL: "warn",
   // Deterministic systemd/journald data on every OS (CI runners have real systemd).
   OTUKEN_AGENT_SIMULATE: "1",
+  // A real PTY, running only as the unprivileged test runner's account.
+  OTUKEN_DEV_TERMINAL: "1",
+  // The stand-in tailscaled below (the real LocalAPI client and parsers run against it).
+  OTUKEN_TAILSCALE_SOCKET: join(E2E_STATE_DIR, "tailscaled.sock"),
 };
+
+/**
+ * Minimal stand-in for tailscaled's LocalAPI on a Unix socket (test fixture
+ * only; invented names and documentation addresses). Otuken is published with
+ * Serve but its origin is not configured, so the app shows that warning.
+ */
+const day = 24 * 60 * 60_000;
+const tailscaled = createServer((request, response) => {
+  const routes: Record<string, unknown> = {
+    "/localapi/v0/status?peers=true": tailscaleStatus(true),
+    "/localapi/v0/status?peers=false": tailscaleStatus(false),
+    "/localapi/v0/prefs": { RunSSH: false, ShieldsUp: false, RouteAll: false, CorpDNS: true },
+    "/localapi/v0/serve-config": {
+      TCP: { "443": { HTTPS: true } },
+      Web: {
+        "otuken-e2e.example-tailnet.ts.net:443": {
+          Handlers: { "/": { Proxy: `http://127.0.0.1:${E2E_PORT}` } },
+        },
+      },
+    },
+  };
+  const body = request.headers.host === "local-tailscaled.sock" ? routes[request.url ?? ""] : null;
+  response.writeHead(body ? 200 : 404, { "Content-Type": "application/json" });
+  response.end(JSON.stringify(body ?? {}));
+});
+tailscaled.listen(env.OTUKEN_TAILSCALE_SOCKET);
+
+function tailscaleStatus(peers: boolean) {
+  return {
+    Version: "1.104.0",
+    BackendState: "Running",
+    TailscaleIPs: ["100.100.100.10"],
+    Self: {
+      HostName: "otuken-e2e",
+      DNSName: "otuken-e2e.example-tailnet.ts.net.",
+      OS: "linux",
+      Online: true,
+      Relay: "fra",
+      KeyExpiry: new Date(Date.now() + 60 * day).toISOString(),
+    },
+    CurrentTailnet: {
+      Name: "example-tailnet",
+      MagicDNSSuffix: "example-tailnet.ts.net",
+      MagicDNSEnabled: true,
+    },
+    Health: [],
+    Peer: peers
+      ? {
+          a: {
+            HostName: "laptop",
+            OS: "macOS",
+            TailscaleIPs: ["100.100.100.11"],
+            Online: true,
+            Active: true,
+            CurAddr: "192.0.2.30:41641",
+            RxBytes: 2048,
+            TxBytes: 4096,
+          },
+          b: {
+            HostName: "phone",
+            OS: "iOS",
+            TailscaleIPs: ["100.100.100.12"],
+            Online: true,
+            Active: true,
+            Relay: "ams",
+          },
+        }
+      : {},
+  };
+}
 
 const children: ChildProcess[] = [
   spawn(process.execPath, [join(root, "dist/agent/agent.mjs")], { env, stdio: "inherit" }),
@@ -98,6 +173,7 @@ function fakeJellyfin(
 
 const stop = () => {
   catalog.close();
+  tailscaled.close();
   for (const child of children) child.kill("SIGTERM");
   process.exit(0);
 };

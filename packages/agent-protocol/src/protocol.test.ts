@@ -79,6 +79,8 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "hardware.status": notUsed,
     "network.status": notUsed,
     "tailscale.status": notUsed,
+    "tailscale.details": notUsed,
+    "tailscale.peers": notUsed,
     "processes.list": notUsed,
     "services.list": notUsed,
     "services.get": notUsed,
@@ -107,6 +109,29 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
       await Promise.resolve();
       notUsed();
     },
+    "apt.package": notUsed,
+    "apt.refresh": notUsed,
+    // eslint-disable-next-line require-yield -- not used in these tests
+    async *"apt.upgrade"() {
+      await Promise.resolve();
+      notUsed();
+    },
+    "terminal.status": () => ({ enabled: false, reason: "not-configured" }),
+    // eslint-disable-next-line require-yield -- not used in these tests
+    async *"terminal.open"() {
+      await Promise.resolve();
+      notUsed();
+    },
+    "terminal.input": notUsed,
+    "terminal.resize": notUsed,
+    "terminal.close": () => ({ closed: false }),
+    "backups.appdata.export.begin": notUsed,
+    "backups.appdata.export.read": notUsed,
+    "backups.appdata.export.abort": notUsed,
+    "backups.appdata.import.begin": notUsed,
+    "backups.appdata.import.chunk": notUsed,
+    "backups.appdata.import.commit": notUsed,
+    "backups.appdata.import.abort": notUsed,
     // eslint-disable-next-line require-yield -- not used in these tests
     async *"docker.events"() {
       await Promise.resolve();

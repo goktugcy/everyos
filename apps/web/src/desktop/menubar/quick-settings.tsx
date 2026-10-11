@@ -34,6 +34,7 @@ export function ThemeSwatch({
 }
 
 export function QuickSettings() {
+  const pulseEnabled = usePreferences((state) => state.pulse.enabled);
   const { t } = useTranslation();
   const appearance = usePreferences((state) => state.appearance);
   const lock = useSessionStore((state) => state.lock);
@@ -125,6 +126,16 @@ export function QuickSettings() {
                   ...current,
                   wallpaperAnimated: checked,
                 }))
+              }
+            />
+          </label>
+
+          <label className="flex items-center justify-between gap-3">
+            <span>{t("quickSettings.pulse")}</span>
+            <Toggle
+              checked={pulseEnabled}
+              onCheckedChange={(enabled) =>
+                updatePreference("pulse", (current) => ({ ...current, enabled }))
               }
             />
           </label>

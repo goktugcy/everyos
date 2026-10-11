@@ -39,6 +39,8 @@ import { useThemeStore } from "../theme/theme-store.ts";
 import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
 import { WidgetDesktopLayer } from "../widgets/desktop-layer.tsx";
 import { WidgetHost } from "../widgets/host.tsx";
+import { NotificationToasts } from "../notifications/toasts.tsx";
+import { Pulse } from "../pulse/pulse.tsx";
 import { WindowLayer } from "../windows/window-layer.tsx";
 import { MobileShell } from "./mobile-shell.tsx";
 
@@ -108,6 +110,7 @@ function DesktopWorkspace() {
   useAutoLock();
 
   const insecure = bootstrap ? !bootstrap.transport.secure && !bootstrap.transport.loopback : false;
+  const pulse = usePreferences((state) => state.pulse.enabled);
   return (
     <>
       <div className="fixed inset-0 overflow-hidden" inert={locked} data-testid="desktop">
@@ -120,6 +123,13 @@ function DesktopWorkspace() {
         <WindowLayer />
         <WidgetHost />
         <Menubar insecure={insecure} />
+        {/* Hidden on narrow screens, where it would cover menu bar items. */}
+        {pulse ? (
+          <div className="hidden min-[1100px]:contents">
+            <Pulse />
+          </div>
+        ) : null}
+        <NotificationToasts />
         <Dock />
         <Launcher />
         <ConfirmHost />

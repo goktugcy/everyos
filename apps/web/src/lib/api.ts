@@ -95,3 +95,46 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     error?.details,
   );
 }
+
+/**
+ * Uploads a file as the raw request body with progress reports (fetch cannot
+ * report upload progress). Errors map to `ApiRequestError` like `api()`.
+ */
+export function uploadWithProgress(
+  path: string,
+  file: Blob,
+  onProgress: (loaded: number, total: number) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `/api${path}`);
+    xhr.withCredentials = true;
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    if (csrfToken) xhr.setRequestHeader(CSRF_HEADER, csrfToken);
+    xhr.upload.onprogress = (event) => onProgress(event.loaded, event.total || file.size);
+    xhr.onerror = () => reject(new ApiRequestError(0, "NETWORK", "Network request failed"));
+    xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+        return;
+      }
+      let error: ApiErrorBody["error"] | undefined;
+      try {
+        error = (JSON.parse(xhr.responseText) as Partial<ApiErrorBody>).error;
+      } catch {
+        error = undefined;
+      }
+      const code: ClientErrorCode = isErrorCode(error?.code) ? error.code : "UNKNOWN";
+      if (xhr.status === 401 && code === "UNAUTHENTICATED") unauthenticatedHandler?.();
+      if (xhr.status === 423 && code === "SESSION_LOCKED") lockedHandler?.();
+      reject(
+        new ApiRequestError(xhr.status, code, error?.message ?? xhr.statusText, error?.details),
+      );
+    };
+    signal?.addEventListener("abort", () => xhr.abort(), { once: true });
+    xhr.send(file);
+  });
+}

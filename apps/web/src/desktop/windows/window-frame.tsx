@@ -24,15 +24,16 @@ const EDGES: Array<{ edge: ResizeEdge; className: string }> = [
   { edge: "sw", className: "-bottom-1 -left-1 size-4 cursor-nesw-resize" },
 ];
 
-function ControlButton({
+/** One macOS-style window button (close, minimize, zoom); its glyph shows on hover. */
+function TrafficLight({
+  kind,
   label,
   onClick,
-  danger,
   children,
 }: {
+  kind: "close" | "minimize" | "zoom";
   label: string;
   onClick: () => void;
-  danger?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -40,13 +41,11 @@ function ControlButton({
       type="button"
       aria-label={label}
       title={label}
+      data-kind={kind}
       onClick={onClick}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
-      className={cn(
-        "grid size-7 place-items-center rounded-otk-sm text-fg-muted transition-colors hover:bg-hover/10 hover:text-fg [&>svg]:size-3.5",
-        danger && "hover:bg-danger hover:text-white",
-      )}
+      className="otk-traffic"
     >
       {children}
     </button>
@@ -197,7 +196,7 @@ export const WindowFrame = memo(function WindowFrame({
       <ContextMenuArea entries={menu}>
         <header
           className={cn(
-            "flex h-10 shrink-0 touch-none select-none items-center gap-2.5 border-b border-line pl-3 pr-1.5",
+            "relative flex h-10 shrink-0 touch-none select-none items-center border-b border-line px-3",
             focused ? "text-fg" : "text-fg-muted",
           )}
           onPointerDown={(event) =>
@@ -205,21 +204,32 @@ export const WindowFrame = memo(function WindowFrame({
           }
           onDoubleClick={() => wm().toggleMaximize(id)}
         >
-          <AppIcon manifest={manifest} size={18} />
-          <h2 className="min-w-0 flex-1 truncate text-[0.8rem] font-semibold">{title}</h2>
-          <div className="flex items-center gap-0.5">
-            <ControlButton label={t("window.minimize")} onClick={() => wm().minimize(id)}>
+          <div
+            className="otk-traffic-group relative z-10 flex items-center gap-2"
+            data-active={focused}
+          >
+            <TrafficLight kind="close" label={t("window.close")} onClick={() => wm().close(id)}>
+              <X />
+            </TrafficLight>
+            <TrafficLight
+              kind="minimize"
+              label={t("window.minimize")}
+              onClick={() => wm().minimize(id)}
+            >
               <Minus />
-            </ControlButton>
-            <ControlButton
+            </TrafficLight>
+            <TrafficLight
+              kind="zoom"
               label={maximized ? t("window.restore") : t("window.maximize")}
               onClick={() => wm().toggleMaximize(id)}
             >
-              {maximized ? <Copy /> : <Square />}
-            </ControlButton>
-            <ControlButton label={t("window.close")} onClick={() => wm().close(id)} danger>
-              <X />
-            </ControlButton>
+              {maximized ? <Minimize2 /> : <Maximize2 />}
+            </TrafficLight>
+          </div>
+          {/* Centered like macOS; clicks fall through so the bar still drags. */}
+          <div className="pointer-events-none absolute inset-x-24 flex items-center justify-center gap-2">
+            <AppIcon manifest={manifest} size={16} />
+            <h2 className="min-w-0 truncate text-[0.8rem] font-semibold">{title}</h2>
           </div>
         </header>
       </ContextMenuArea>

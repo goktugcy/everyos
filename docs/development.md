@@ -36,8 +36,9 @@ the developer's containers. Socket-level Docker tests use temporary fake Unix-so
 Compose tests mock execution and inspect the exact arguments and environment.
 
 After signing in, open System from the dock for real host information, or Settings for appearance,
-desktop/dock, account and security preferences. Folder icons organize application shortcuts;
-they do not operate on host files. Keyboard shortcuts are listed in Settings → Desktop and Dock.
+desktop/dock, account and security preferences. Files and folders on the desktop live in the
+home's Desktop folder (inside Otuken's data directory, not the host's home directories). Keyboard
+shortcuts are listed in Settings → Desktop and Dock.
 
 ## Development mode
 

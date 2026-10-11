@@ -53,13 +53,28 @@ function provider(
   };
 }
 
-type TaggedAlert = SystemAlert & { permission: Permission };
+/** An alert with the permission needed to see it and structured details for notifications. */
+export type TaggedAlert = SystemAlert & {
+  permission: Permission;
+  /** Identifies the same problem across checks (e.g. the unit or mount). */
+  key: string;
+  params: Record<string, string | number>;
+};
+
+/** Which sources answered; a failed check must not clear an earlier problem. */
+export interface AlertSources {
+  services: boolean;
+  storage: boolean;
+  docker: boolean;
+  hardware: boolean;
+  apt: boolean;
+}
 
 /** Current problems from real data, each tagged with the permission needed to see it. */
-async function collectAlerts(
+export async function collectAlerts(
   agent: Agent,
   signal: AbortSignal,
-): Promise<{ source: "host" | "simulated"; alerts: TaggedAlert[] }> {
+): Promise<{ source: "host" | "simulated"; alerts: TaggedAlert[]; sources: AlertSources }> {
   const call = <T>(promise: Promise<T>) => promise.catch(() => null);
   const [services, storage, containers, hardware, apt] = await Promise.all([
     call(agent.call("services.list", {}, SYSTEM_ACTOR, { signal })),
@@ -75,6 +90,8 @@ async function collectAlerts(
       severity: "critical",
       subject: unit.name,
       permission: "services:read",
+      key: unit.name,
+      params: { unit: unit.name },
     });
   }
   for (const mount of storage?.mounts ?? []) {
@@ -86,6 +103,8 @@ async function collectAlerts(
         severity: used >= 0.95 ? "critical" : "warning",
         subject: `${mount.mountpoint} ${Math.round(used * 100)}%`,
         permission: "system:read",
+        key: mount.mountpoint,
+        params: { mount: mount.mountpoint, percent: Math.round(used * 100) },
       });
     }
   }
@@ -100,6 +119,8 @@ async function collectAlerts(
         severity: "warning",
         subject: container.name,
         permission: "docker:read",
+        key: container.name,
+        params: { container: container.name, state: container.state, health: container.health },
       });
     }
   }
@@ -110,6 +131,8 @@ async function collectAlerts(
       severity: "critical",
       subject: "now",
       permission: "system:read",
+      key: "",
+      params: { when: "now" },
     });
   else if (flags?.underVoltageOccurred)
     alerts.push({
@@ -117,6 +140,8 @@ async function collectAlerts(
       severity: "warning",
       subject: "since-boot",
       permission: "system:read",
+      key: "",
+      params: { when: "since-boot" },
     });
   if (flags && (flags.throttled || flags.frequencyCapped || flags.softTempLimit))
     alerts.push({
@@ -124,6 +149,8 @@ async function collectAlerts(
       severity: "warning",
       subject: "now",
       permission: "system:read",
+      key: "",
+      params: {},
     });
   for (const device of hardware?.nvme.devices ?? []) {
     if (device.healthy === false)
@@ -132,6 +159,8 @@ async function collectAlerts(
         severity: "critical",
         subject: device.device,
         permission: "system:read",
+        key: device.device,
+        params: { device: device.device },
       });
   }
   if (apt && apt.security > 0)
@@ -140,9 +169,21 @@ async function collectAlerts(
       severity: "warning",
       subject: String(apt.security),
       permission: "system:read",
+      key: "",
+      params: { count: apt.security },
     });
   const simulated = [services, containers, apt].some((result) => result?.source === "simulated");
-  return { source: simulated ? "simulated" : "host", alerts: alerts.slice(0, 50) };
+  return {
+    source: simulated ? "simulated" : "host",
+    alerts: alerts.slice(0, 50),
+    sources: {
+      services: services !== null,
+      storage: storage !== null,
+      docker: containers !== null,
+      hardware: hardware !== null,
+      apt: apt !== null,
+    },
+  };
 }
 
 /** Shared system data topics for widgets. */
@@ -322,7 +363,7 @@ export function systemProviders(
           source,
           alerts: alerts
             .filter((alert) => permissions.has(alert.permission))
-            .map(({ permission: _permission, ...alert }) => alert),
+            .map(({ kind, severity, subject }) => ({ kind, severity, subject })),
         };
       },
     ),

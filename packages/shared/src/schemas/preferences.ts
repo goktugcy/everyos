@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { WidgetPreferences } from "../widgets.ts";
 import { WidgetPreferencesSchema } from "./widgets.ts";
+import { NotificationPreferencesSchema, type NotificationPreferences } from "./notifications.ts";
+import { PulsePreferencesSchema, type PulsePreferences } from "./pulse.ts";
 import {
   AUTO_LOCK_MINUTES,
   DOCK_POSITIONS,
@@ -107,8 +109,14 @@ export const DesktopItemSchema = z.discriminatedUnion("kind", [
     appId: AppIdSchema,
     desktopId: IdSchema,
     cell: CellSchema.nullable(),
+    /** Legacy app group the shortcut was in (always null for new items). */
     folderId: IdSchema.nullable(),
   }),
+  /*
+   * Legacy app groups from before the desktop became a real folder. They are
+   * still accepted so older documents load; the desktop turns each into a real
+   * folder in the home's Desktop folder and moves its shortcuts back out.
+   */
   z.strictObject({
     kind: z.literal("folder"),
     id: IdSchema,
@@ -119,6 +127,14 @@ export const DesktopItemSchema = z.discriminatedUnion("kind", [
 ]);
 
 export type DesktopItem = z.infer<typeof DesktopItemSchema>;
+
+/** Where an entry of the home's Desktop folder sits on the grid (by name, on every desktop). */
+export const DesktopFilePositionSchema = z.strictObject({
+  name: z.string().min(1).max(255),
+  cell: CellSchema,
+});
+
+export type DesktopFilePosition = z.infer<typeof DesktopFilePositionSchema>;
 
 export const VirtualDesktopSchema = z.strictObject({
   id: IdSchema,
@@ -132,6 +148,7 @@ export const DesktopPreferencesSchema = z.strictObject({
   version: z.literal(1),
   desktops: z.array(VirtualDesktopSchema).min(1).max(MAX_DESKTOPS),
   items: z.array(DesktopItemSchema).max(300),
+  files: z.array(DesktopFilePositionSchema).max(500).default([]),
 });
 
 export type DesktopPreferences = z.infer<typeof DesktopPreferencesSchema>;
@@ -214,6 +231,8 @@ export const PREFERENCE_SCHEMAS: Record<PreferenceKey, z.ZodType> = {
   windows: WindowSessionSchema,
   security: SecurityPreferencesSchema,
   widgets: WidgetPreferencesSchema,
+  notifications: NotificationPreferencesSchema,
+  pulse: PulsePreferencesSchema,
 };
 
 export interface PreferenceDocuments {
@@ -224,6 +243,8 @@ export interface PreferenceDocuments {
   windows: WindowSession;
   security: SecurityPreferences;
   widgets: WidgetPreferences;
+  notifications: NotificationPreferences;
+  pulse: PulsePreferences;
 }
 
 export const UnlockRequestSchema = z.strictObject({

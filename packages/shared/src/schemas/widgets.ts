@@ -225,7 +225,15 @@ export const AptUpdatesSchema = z.object({
   security: n,
   packages: z
     .array(
-      z.object({ name: z.string().max(128), version: z.string().max(128), security: z.boolean() }),
+      z.object({
+        name: z.string().max(128),
+        version: z.string().max(128),
+        /** Installed version, when apt reports it. */
+        currentVersion: z.string().max(128).nullable(),
+        /** Suites offering the update, e.g. "noble-updates,noble-security". */
+        suites: z.string().max(256),
+        security: z.boolean(),
+      }),
     )
     .max(500),
 });

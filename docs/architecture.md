@@ -126,6 +126,25 @@ Topics travel on the existing per-tab SSE stream as `event: data`. The desktop r
 an 80 px grid layer between the icons and the windows, in a 320 px sidebar that shrinks the window
 work area, and in the menu bar. See [widgets.md](widgets.md).
 
+## Advanced tools (Phase 7)
+
+Each tool is an API module with its own service, routes and document, built on the existing
+pieces (agent operations, SSE stream, audit log) rather than new infrastructure:
+
+- **Notifications** (`modules/notifications`): `NotificationService` (conditions and events in
+  SQLite), `HostMonitor` (background checks every two minutes), live delivery on the SSE stream.
+- **Files** (`modules/files`): `FileService` in the API's own identity over configured roots.
+- **Updates** (`modules/updates`): background apt jobs through the agent's `AptManager`, one at a
+  time, with streamed output and history.
+- **Scheduler** (`modules/tasks`): a 30-second clock, cron parsing in `@otuken/shared`, and
+  executors that call the same services as the interactive features.
+- **Backups** (`modules/backups`): `BackupStore` (directories, manifests, verification, transfer),
+  database snapshots and staged restores (`snapshot.ts`, applied by `main.ts` before the database
+  opens), and `BackupService` jobs. App data goes through the agent's `AppDataBackups` in chunks;
+  `@otuken/system/archive` is the shared tar implementation.
+- **Tailscale** (`modules/system/tailscale.ts`): read-only LocalAPI details from the agent and an
+  analysis of remote access and warnings, used by the API route and the host monitor.
+
 ## Request lifecycle (API)
 
 1. `requestContext` assigns a request id and resolves the client (IP, HTTPS, host). Forwarded
@@ -163,13 +182,17 @@ Phase 2 adds `sessions.locked_at` and `wallpapers`; `user_preferences` stores ve
 desktop, dock, menu-bar, window-session and security documents. Wallpaper files are owned by the API
 user and are served only after session ownership checks.
 
+Phase 7 adds `notifications` and `notification_states` (0008), `update_jobs` (0009), and
+`scheduled_tasks` and `task_runs` (0010). Backup settings are an `instance_settings` row; backups
+themselves are files (their history must survive a database restore).
+
 ## Desktop client (Phase 2)
 
 `apps/web/src/desktop` contains the static application registry, desktop/mobile shells, menus,
 launcher, dock, icon/folder operations and the thin React binding to `@otuken/window-manager`.
-System, Settings, Users, Audit and Folder apps load lazily and each window has an error boundary.
-System data comes from the existing real agent operation; desktop folders organize application
-shortcuts and are not host filesystem folders.
+System, Settings, Users, Audit and Files apps load lazily and each window has an error boundary.
+System data comes from the existing real agent operation. The desktop shows the app shortcuts and,
+like macOS, the contents of the user's home Desktop folder (docs/files.md).
 
 Drag/resize previews update frame DOM styles once per animation frame; committed geometry updates
 the store after release. App content is memoized and keeps a stable component identity. Snap zones,
@@ -181,6 +204,11 @@ The theme package resolves seven presets plus validated custom themes into CSS v
 clamps surface opacity for text contrast, applies Performance/Balanced/Premium effect limits and
 exports data-only JSON. Preference writes are ordered per key, coalesced and scoped to the signed-in
 session. A failed load remains visible with a retry action.
+
+The menu bar, window chrome and icon labels follow macOS (a menu bar without background, traffic
+lights, plate-less labels). The pulse (`apps/web/src/desktop/pulse`) is a dot matrix in the menu bar
+that shows the server's CPU history and running jobs; it opens a dashboard (calendar of scheduled
+task runs, live system values, jobs) and a file shelf; see [pulse.md](pulse.md).
 
 ## Host integration (Phase 3)
 
@@ -209,15 +237,15 @@ session. A failed load remains visible with a retry action.
 
 ## Host filesystem layout (production)
 
-| Path                      | Owner / mode      | Contents                                                                     |
-| ------------------------- | ----------------- | ---------------------------------------------------------------------------- |
-| `/usr/lib/otuken/`        | root, 0755        | program files: Node runtime, `api/`, `agent/`, `web/`                        |
-| `/etc/otuken/config.yaml` | root:otuken, 0640 | API configuration (optional; secure defaults apply without it)               |
-| `/etc/otuken/agent.yaml`  | root, 0600        | agent configuration and policy (never writable by `otuken`)                  |
-| `/etc/otuken/agent.key`   | root:otuken, 0640 | shared key for the API⇄agent handshake (created by the agent)                |
-| `/var/lib/otuken/`        | otuken, 0750      | `otuken.db`, `backups/`, `secret.key` (0600), `setup-token` (first run only) |
-| `/run/otuken/`            | root:otuken, 0750 | `agent.sock` (0660)                                                          |
-| `/var/log/otuken/`        | –                 | reserved; logs go to journald                                                |
+| Path                      | Owner / mode      | Contents                                                                                                                                                           |
+| ------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/usr/lib/otuken/`        | root, 0755        | program files: Node runtime, `api/`, `agent/`, `web/`                                                                                                              |
+| `/etc/otuken/config.yaml` | root:otuken, 0640 | API configuration (optional; secure defaults apply without it)                                                                                                     |
+| `/etc/otuken/agent.yaml`  | root, 0600        | agent configuration and policy (never writable by `otuken`)                                                                                                        |
+| `/etc/otuken/agent.key`   | root:otuken, 0640 | shared key for the API⇄agent handshake (created by the agent)                                                                                                      |
+| `/var/lib/otuken/`        | otuken, 0750      | `otuken.db`, `backups/` (pre-migration and pre-restore databases, `archives/`), `restore/` (a staged restore), `secret.key` (0600), `setup-token` (first run only) |
+| `/run/otuken/`            | root:otuken, 0750 | `agent.sock` (0660)                                                                                                                                                |
+| `/var/log/otuken/`        | –                 | reserved; logs go to journald                                                                                                                                      |
 
 App Store data and root-owned deployment records live under `/var/lib/otuken/apps/<instance>`
 (private root and instance directories). Application removal preserves its data. Decrypted embedded

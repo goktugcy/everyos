@@ -90,8 +90,20 @@ describe("apt and timers", () => {
       total: 2,
       security: 1,
       packages: [
-        { name: "openssl", version: "3.0.13-0ubuntu3.6", security: true },
-        { name: "curl", version: "8.5.0-2ubuntu10.7", security: false },
+        {
+          name: "openssl",
+          version: "3.0.13-0ubuntu3.6",
+          currentVersion: "3.0.13-0ubuntu3.5",
+          suites: "noble-updates,noble-security",
+          security: true,
+        },
+        {
+          name: "curl",
+          version: "8.5.0-2ubuntu10.7",
+          currentVersion: "8.5.0-2ubuntu10.6",
+          suites: "noble-updates",
+          security: false,
+        },
       ],
     });
     expect(

@@ -11,8 +11,10 @@ import { requireAuth } from "../middleware/auth.ts";
 import type { Services } from "../services.ts";
 import { ApiError, notFound } from "./errors.ts";
 
+export type UserActor = Extract<Actor, { kind: "user" }>;
+
 /** Identity forwarded to the agent so it can re-check permissions and audit. */
-export function agentActor(auth: AuthState, ip: string): Actor {
+export function agentActor(auth: AuthState, ip: string): UserActor {
   return {
     kind: "user",
     userId: auth.user.id,

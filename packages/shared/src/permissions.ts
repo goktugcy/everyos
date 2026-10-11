@@ -21,6 +21,8 @@ export const PERMISSIONS = [
   "terminal:access",
   "notifications:read",
   "backups:manage",
+  /** Restoring and downloading backups (they hold every account's data). Administrators only. */
+  "backups:restore",
   "tasks:manage",
   "users:manage",
   "settings:manage",

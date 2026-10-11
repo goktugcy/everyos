@@ -19,10 +19,12 @@
     "@otuken/shared": "workspace:*",
     "hono": "catalog:",
     "yaml": "catalog:",
+    "ws": "catalog:",
     "zod": "catalog:",
-    "@otuken/widget-sdk": "workspace:*"
+    "@otuken/widget-sdk": "workspace:*",
+    "@otuken/system": "workspace:*"
   },
   "devDependencies": {
-    "@otuken/system": "workspace:*"
+    "@types/ws": "catalog:"
   }
 }

@@ -164,6 +164,32 @@
   backdrop-filter: blur(calc(var(--otk-blur) * 1.25)) saturate(var(--otk-saturate));
 }
 
+/*
+ * The menu bar has no background at all: items sit directly on the
+ * wallpaper. A soft shadow keeps light text legible on bright wallpapers
+ * (dark themes); light themes use a light halo behind dark text instead.
+ */
+@utility menubar-glass {
+  background: transparent;
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.55),
+    0 0 6px rgb(0 0 0 / 0.3);
+}
+
+[data-scheme="light"] .menubar-glass {
+  text-shadow:
+    0 0 3px rgb(255 255 255 / 0.95),
+    0 0 8px rgb(255 255 255 / 0.7);
+}
+
+.menubar-glass svg {
+  filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.5));
+}
+
+[data-scheme="light"] .menubar-glass svg {
+  filter: drop-shadow(0 0 2px rgb(255 255 255 / 0.9));
+}
+
 /* Inset field surface used by inputs and wells. */
 @utility glass-inset {
   background: rgb(var(--otk-inset) / var(--otk-inset-opacity));
@@ -256,4 +282,112 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/*
+ * Desktop icon labels: no plate, like macOS. A halo keeps them legible on any
+ * wallpaper; a selected label gets an accent plate.
+ */
+.otk-icon-label {
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.75),
+    0 0 7px rgb(0 0 0 / 0.45);
+}
+
+[data-scheme="light"] .otk-icon-label {
+  text-shadow:
+    0 0 3px rgb(255 255 255 / 0.95),
+    0 0 9px rgb(255 255 255 / 0.75);
+}
+
+.otk-icon-label[data-selected="true"] {
+  background: rgb(var(--otk-accent-strong) / 0.85);
+  color: rgb(255 255 255);
+  text-shadow: none;
+}
+
+/* Window "traffic lights": close, minimize and zoom, with glyphs on hover. */
+.otk-traffic {
+  display: grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 9999px;
+  border: 0.5px solid rgb(0 0 0 / 0.22);
+  color: rgb(0 0 0 / 0.6);
+  outline-offset: 2px;
+}
+
+.otk-traffic > svg {
+  width: 9px;
+  height: 9px;
+  stroke-width: 3;
+  opacity: 0;
+}
+
+.otk-traffic-group:hover .otk-traffic > svg,
+.otk-traffic:focus-visible > svg {
+  opacity: 1;
+}
+
+.otk-traffic[data-kind="close"] {
+  background: #ff5f57;
+}
+
+.otk-traffic[data-kind="minimize"] {
+  background: #febc2e;
+}
+
+.otk-traffic[data-kind="zoom"] {
+  background: #28c840;
+}
+
+/* Unfocused windows show neutral lights, like macOS. */
+.otk-traffic-group[data-active="false"]:not(:hover) .otk-traffic {
+  background: rgb(var(--otk-hover) / 0.22);
+  border-color: rgb(var(--otk-hover) / 0.12);
+}
+
+/*
+ * The pulse: a dot-matrix strip in the middle of the menu bar. Idle dots
+ * shimmer; a running job sends a band of light across them; dragged files
+ * make an arrow blink. Reduced motion and Performance mode stop all of it.
+ */
+@keyframes otk-pulse-shimmer {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* Percentages are of the matrix width (SVG view box); the band is 35% wide. */
+@keyframes otk-pulse-sweep {
+  from {
+    transform: translateX(-35%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes otk-pulse-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.otk-pulse-shimmer {
+  animation: otk-pulse-shimmer 2.8s ease-in-out infinite;
+}
+
+.otk-pulse-sweep {
+  transform-box: view-box;
+  animation: otk-pulse-sweep 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.otk-pulse-blink {
+  animation: otk-pulse-blink 1s ease-in-out infinite;
 }

@@ -76,3 +76,15 @@ export function formatClock(timestamp: number, language: string, seconds = false
     ...(seconds ? { second: "2-digit" } : {}),
   }).format(timestamp);
 }
+
+/** "5 dakika önce" / "5 minutes ago"; dates for anything older than a week. */
+export function formatRelative(timestamp: number, language: string, now = Date.now()): string {
+  const seconds = Math.round((timestamp - now) / 1000);
+  const abs = Math.abs(seconds);
+  const format = new Intl.RelativeTimeFormat(localeTag(language), { numeric: "auto" });
+  if (abs < 45) return format.format(0, "second");
+  if (abs < 3_600) return format.format(Math.round(seconds / 60), "minute");
+  if (abs < 86_400) return format.format(Math.round(seconds / 3_600), "hour");
+  if (abs < 7 * 86_400) return format.format(Math.round(seconds / 86_400), "day");
+  return formatDateTime(timestamp, language, { dateStyle: "medium" });
+}

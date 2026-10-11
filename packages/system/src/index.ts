@@ -28,3 +28,5 @@ export * from "./services/systemd-client.ts";
 export * from "./simulated/docker-simulator.ts";
 export * from "./simulated/simulator.ts";
 export * from "./unavailable.ts";
+export * from "./apt/manager.ts";
+export * from "./simulated/apt-simulator.ts";

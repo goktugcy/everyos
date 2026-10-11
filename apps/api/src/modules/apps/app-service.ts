@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Actor } from "@otuken/agent-protocol";
 import {
   CatalogError,
+  inspectCompose,
   managedProject,
   parseCompose,
   prepareInstall,
@@ -12,6 +13,7 @@ import { detectAdapters } from "@otuken/widget-sdk";
 import type { SecretBox } from "@otuken/security";
 import type {
   AppAction,
+  AppDataSupport,
   AppJobView,
   CatalogApp,
   InstalledAppView,
@@ -43,6 +45,15 @@ interface AppMetadata {
   dataFrom?: string;
   services?: string[];
 }
+/** A finished app job, as reported to the notification center. */
+export interface FinishedJob {
+  appId: string;
+  name: LocalizedText;
+  action: AppAction;
+  ok: boolean;
+  error: string | null;
+  rollback: AppJobView["rollback"];
+}
 interface JobRow {
   id: string;
   app_id: string;
@@ -62,6 +73,7 @@ export class AppService {
   readonly #now: () => number;
   readonly #running = new Map<string, AbortController>();
   readonly #listeners = new Set<() => void>();
+  readonly #onJobFinished: ((job: FinishedJob) => void) | undefined;
   #stopped = false;
 
   constructor(deps: {
@@ -71,7 +83,10 @@ export class AppService {
     catalogs: CatalogService;
     audit: AuditLog;
     now: () => number;
+    /** Called once per finished job (notifications). */
+    onJobFinished?: (job: FinishedJob) => void;
   }) {
+    this.#onJobFinished = deps.onJobFinished;
     this.#db = deps.db;
     this.#agent = deps.agent;
     this.#secrets = deps.secrets;
@@ -124,6 +139,22 @@ export class AppService {
         id,
       ) !== undefined
     );
+  }
+
+  /**
+   * Whether an installed app's data can be backed up from its Otuken app data
+   * directory (every mount is a bind under it), or null when it is not installed.
+   */
+  dataSupport(id: string): AppDataSupport | null {
+    const row = this.#row(id);
+    if (!row) return null;
+    if ((JSON.parse(row.metadata) as AppMetadata).dataCopyEligible === true) return "supported";
+    try {
+      const compose = this.#secrets.open(row.sealed_compose, `app:${id}:compose:v1`);
+      return inspectCompose(compose).mounts.length === 0 ? "none" : "unsupported";
+    } catch {
+      return "unsupported";
+    }
   }
 
   #row(id: string): AppRow | null {
@@ -473,6 +504,18 @@ export class AppService {
         details: { jobId: job.id, rollback, ...(error ? { reason: error } : {}) },
       });
     });
+    // Removed apps keep their row (marked removed), so the name is still known.
+    const row = this.#db.get<{ name: string }>(
+      "SELECT name FROM installed_apps WHERE id = ?",
+      job.appId,
+    );
+    let name: LocalizedText = {};
+    try {
+      name = JSON.parse(row?.name ?? "{}") as LocalizedText;
+    } catch {
+      // The notification falls back to the app id.
+    }
+    this.#onJobFinished?.({ appId: job.appId, name, action: job.action, ok, error, rollback });
   }
   async *events(id: string, signal: AbortSignal): AsyncGenerator<AppJobView> {
     let wake: (() => void) | null = null;
