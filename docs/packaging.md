@@ -5,6 +5,11 @@ runtime, API, privileged agent, update worker, CLI and pre-compressed web client
 use systemd 248+, glibc 2.34+ and kernel 5.14+: Debian 12+, Ubuntu 22.04+ and compatible modern
 64-bit Raspberry Pi distributions. This is not a macOS installer.
 
+The bootstrap checks the systemd version with `systemctl --version`. The manager executable
+itself is not necessarily on Ubuntu's command search path, even when systemd is running.
+If an older bootstrap stops at `systemd: command not found`, download and run the current
+installation command again. That check happens before APT changes or EveryOS installation.
+
 ## Build and release
 
 ```sh

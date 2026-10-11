@@ -16,7 +16,9 @@ command -v apt-get >/dev/null && command -v dpkg >/dev/null || fail 'An APT-base
 
 architecture=$(dpkg --print-architecture)
 [[ $architecture == arm64 || $architecture == amd64 ]] || fail 'Only arm64 and amd64 are supported.'
-read -r _ systemd_version _ < <(systemd --version)
+command -v systemctl >/dev/null || fail 'systemctl is required to check the systemd version.'
+systemd_info=$(systemctl --version) || fail 'Unable to read the systemd version.'
+read -r _ systemd_version _ <<< "$systemd_info"
 [[ $systemd_version =~ ^[0-9]+$ ]] && (( systemd_version >= 248 )) || fail 'systemd 248 or newer is required.'
 glibc_version=$(getconf GNU_LIBC_VERSION)
 dpkg --compare-versions "${glibc_version#glibc }" ge 2.34 || fail 'glibc 2.34 or newer is required.'
