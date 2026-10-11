@@ -14,7 +14,10 @@ host packages. See [packaging.md](packaging.md) for installation, release signin
 
 The default release source is `https://github.com/goktugcy/everyos/releases`. The verified
 installer records this source and the independently supplied publisher public key in root-owned
-`/etc/everyos/release.json`. Checks read `latest/download/release.json`; installation downloads
+`/etc/everyos/release.json`. The one-command `install.sh` bootstrap embeds the same public key;
+its initial trust comes from HTTPS to the official GitHub release, with an independently verified
+manual alternative documented in [packaging.md](packaging.md). Checks read
+`latest/download/release.json`; installation downloads
 `download/v<VERSION>/everyos_<VERSION>_<ARCH>.deb` and verifies its signed identity and hash.
 The browser cannot change the source or trust key. A production signing secret and a published
 signed release are required before this default source can supply a live update.

@@ -324,3 +324,18 @@ database together after installation failure, failed migration or interruption. 
 are database-only until an external-data recovery contract exists. Root journal and fsynced audit
 records survive database restoration. Purge keeps data, keys, backups and cached recovery packages;
 deleting retained data is a separate owner action. See [packaging.md](packaging.md).
+
+## D28 — Self-contained release bootstrap (2026-10)
+
+The one-command installer is a generated GitHub release asset. The release signer embeds the
+reviewed Python verifier and its derived Ed25519 public key into a Bash template, then signs the
+exact resulting bytes with the existing publisher key. It does not fetch unsigned executable
+code at runtime. HTTPS to the official release establishes trust for the pipe-to-Bash path;
+independent key verification, script inspection and detached-signature verification remain a
+manual alternative. A custom installation domain has not been configured.
+
+Platform checks and an existing-database refusal precede prerequisite installation. Temporary
+code and key files live under a root-private `/var/lib` directory because the verifier rejects
+keys under writable ancestors such as `/tmp`; an exit trap removes only that generated directory.
+The underlying Python installer persists the verified recovery package and root-owned trust
+configuration. Existing installations continue through the authenticated update workflow.

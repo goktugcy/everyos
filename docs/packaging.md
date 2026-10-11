@@ -28,7 +28,8 @@ packages, then signs in the protected GitHub `release` environment using
 `EVERYOS_RELEASE_PRIVATE_KEY` (Ed25519 PEM). Maintain release notes and minimum upgrade version
 when preparing a release. The signer derives the schema version from the ordered migration list;
 `--schema-version` is an explicit override for controlled fixtures. The release job publishes `.deb` assets,
-`release.json` and `install.py` to the public `goktugcy/everyos` repository, explicitly selecting
+`release.json`, `install.py`, `install.sh` and `install.sh.sig` to the public `goktugcy/everyos`
+repository, explicitly selecting
 the workflow's `GITHUB_REPOSITORY`. An owner must configure
 the signing secret and environment protection before publishing; no production private key or
 invented trust anchor is committed.
@@ -52,6 +53,38 @@ metadata expiry; their signature, hash and architecture remain mandatory.
 
 ## First installation
 
+For a fresh supported Linux host, install without cloning the repository:
+
+```sh
+curl -fsSL https://github.com/goktugcy/everyos/releases/latest/download/install.sh | sudo bash
+```
+
+This command trusts the bootstrap script delivered over HTTPS by the official GitHub release.
+The generated script embeds the reviewed Python installer and the publisher's Ed25519 public key;
+it does not fetch an additional installer script. It checks the platform before changing the host,
+refreshes the host's existing APT package lists, installs missing `python3`, `openssl` and
+`ca-certificates` through those sources, then verifies the signed metadata and exact
+architecture-specific package. No Node.js, pnpm or
+Git checkout is required. `curl` and a working HTTPS certificate store are needed to fetch the
+script. Only arm64 and amd64 APT/systemd hosts meeting the minimum versions above are supported.
+
+The signer also publishes a detached Ed25519 `install.sh.sig` over the exact script bytes. To
+inspect and verify before execution, download the script and its signature, independently obtain
+and verify the publisher public key, then run:
+
+```sh
+openssl pkeyutl -verify -pubin -inkey everyos-release-public.pem -rawin \
+  -in install.sh -sigfile install.sh.sig
+sudo bash install.sh
+```
+
+The production public-key fingerprint (SHA-256 of DER SubjectPublicKeyInfo) is
+`a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce`.
+Compare it against an independently trusted copy before using the manual verification path.
+The one-command path does not independently verify the script before executing it.
+
+For a manually supplied trust anchor, the standalone Python installer remains available:
+
 Obtain `install.py` and the publisher's **public** Ed25519 PEM from a trusted distribution channel.
 Verify the public-key fingerprint independently, then place the key in a root-owned file with
 no symlink or writable ancestor. Do not trust a key supplied by the same unverified download.
@@ -64,7 +97,7 @@ sudo everyos doctor
 
 The installer verifies the signed release and package identity before invoking APT for the
 verified local package and its declared dependencies. It does not add repositories, install
-Docker/Tailscale, execute remote scripts or change existing containers. Dependencies include
+Docker/Tailscale or change existing containers. Dependencies include
 `libatomic1`, which the bundled ARM64 runtime requires. Installation succeeds only after the
 real API and agent report ready. The first-run token is stored in `/var/lib/everyos/setup-token`;
 read it locally for the setup wizard, rather than placing it in logs or commands.
@@ -93,6 +126,9 @@ compatible. Move persistent data while both old services are stopped, configure 
 starting the new services. Existing EveryOS development installations also require an explicit
 backup and migration into production paths. The bootstrap installer refuses an existing EveryOS
 database; regular upgrades use the authenticated update workflow.
+The shell bootstrap checks this before installing prerequisites, and removes its root-private
+temporary installer/key directory on success or failure. Persistent release trust and the
+verified recovery package remain available for future authenticated updates.
 
 ## CLI
 

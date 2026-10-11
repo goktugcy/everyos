@@ -11,11 +11,11 @@ interface inspired by "Liquid Glass" design. You install it on an existing Debia
 server (it is not a Linux distribution) and use it alongside your existing services and containers,
 without taking them over.
 
-> **Status: early development (v0.1.0, Phases 1–7 implemented).** Authentication,
+> **Status: initial public release (v0.1.0, Phases 1–8 implemented).** Authentication,
 > the desktop/mobile shell, Linux integration, Docker management and the multi-catalog
-> [App Store](docs/app-store.md) work end to end. Deployment, image rollback and recovery passed
-> disposable Linux-host acceptance. Production packaging remains open (see the
-> [roadmap](docs/roadmap.md)). Do not expose it to untrusted networks yet.
+> [App Store](docs/app-store.md) work end to end. Signed Linux packages, supervised version updates,
+> rollback and recovery passed disposable Linux-host acceptance. See the [roadmap](docs/roadmap.md)
+> and [packaging guide](docs/packaging.md) for supported hosts and operations.
 
 ## What works today
 
@@ -40,6 +40,25 @@ without taking them over.
   policy, encryption, immutable images, health-aware rollback, progress streams, durable recovery,
   lifecycle and owned-data transfer. Scope and verification are in [app-store.md](docs/app-store.md).
 
+## Install on Linux
+
+On a fresh Debian 12+, Ubuntu 22.04+ or compatible APT/systemd host (arm64 or amd64):
+
+```bash
+curl -fsSL https://github.com/goktugcy/everyos/releases/latest/download/install.sh | sudo bash
+```
+
+No repository clone, Node.js or pnpm installation is needed. The installer selects the host
+architecture, installs missing verification prerequisites and verifies the signed release and
+package before installation. The script is trusted through HTTPS from the official release;
+its embedded publisher key verifies subsequent downloads. For independent trust-key verification,
+script inspection and the manual installation alternative, see [docs/packaging.md](docs/packaging.md).
+
+After installation, read `/var/lib/everyos/setup-token` locally with administrator privileges and
+open the web setup through your reverse proxy or an SSH tunnel to port 7470. The API binds to
+loopback by default; see [remote-access.md](docs/remote-access.md). Existing installations update
+through Settings → About, Updates → EveryOS or the authenticated CLI.
+
 ## Quick start (development)
 
 Requirements: Node.js 26 and pnpm 12.
@@ -51,9 +70,6 @@ pnpm dev            # http://127.0.0.1:5173 — the setup token is printed in th
 
 Other commands: `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test:e2e`. See
 [docs/development.md](docs/development.md).
-
-Production installation (a Debian package for arm64 and amd64 with systemd units) arrives in
-Phase 8. Until then, EveryOS is meant for development and evaluation.
 
 ## Architecture in one paragraph
 

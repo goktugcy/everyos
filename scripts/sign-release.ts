@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { ReleaseManifestSchema, packageDigest } from "../packages/release/src/manifest.ts";
 import { EVERYOS_MIGRATIONS } from "../packages/database/src/migrations/index.ts";
+import { renderBootstrapInstaller } from "./bootstrap-installer.ts";
 
 const { values } = parseArgs({
   options: {
@@ -46,10 +47,15 @@ writeFileSync(
   }) + "\n",
 );
 const publicKey = createPublicKey(key);
-writeFileSync(
-  join(values.directory, "everyos-release-public.pem"),
-  publicKey.export({ format: "pem", type: "spki" }),
+const publicPem = publicKey.export({ format: "pem", type: "spki" }).toString();
+writeFileSync(join(values.directory, "everyos-release-public.pem"), publicPem);
+const bootstrap = renderBootstrapInstaller(
+  readFileSync(new URL("../packaging/bootstrap.sh", import.meta.url), "utf8"),
+  readFileSync(new URL("../packaging/install.py", import.meta.url), "utf8"),
+  publicPem,
 );
+writeFileSync(join(values.directory, "install.sh"), bootstrap, { mode: 0o755 });
+writeFileSync(join(values.directory, "install.sh.sig"), sign(null, Buffer.from(bootstrap), key));
 const fingerprint = createHash("sha256")
   .update(publicKey.export({ format: "der", type: "spki" }))
   .digest("hex");
