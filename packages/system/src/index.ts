@@ -30,3 +30,5 @@ export * from "./simulated/simulator.ts";
 export * from "./unavailable.ts";
 export * from "./apt/manager.ts";
 export * from "./simulated/apt-simulator.ts";
+
+export * from "./collect/power.ts";

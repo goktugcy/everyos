@@ -4,6 +4,7 @@ import {
   createAptManager,
   type AptManager,
   collectHardware,
+  collectPower,
   collectMetrics,
   collectNetwork,
   collectProcesses,
@@ -211,6 +212,7 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     "storage.usage": () => storage(),
 
     "hardware.status": () => hardware(),
+    "power.status": cached(10_000, now, () => collectPower({ paths, now })),
 
     "network.status": () => collectNetwork({ paths, internet: deps.internet }),
 

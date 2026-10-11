@@ -125,10 +125,11 @@ describe("metrics hub", () => {
 describe("system endpoints", () => {
   it("serves host data to every role with system:read", async () => {
     const { viewer } = await withRoles();
-    for (const path of ["storage", "hardware", "network", "tailscale", "processes"]) {
+    for (const path of ["storage", "hardware", "power", "network", "tailscale", "processes"]) {
       const response = await viewer.get(`/api/system/${path}`);
       expect(response.status, path).toBe(200);
     }
+    expect((await viewer.get("/api/system/power?command=anything")).status).toBe(400);
     expect((await viewer.get("/api/system/processes?limit=9999")).status).toBe(400);
     expect((await viewer.get("/api/system/processes?sort=name")).status).toBe(400);
   });

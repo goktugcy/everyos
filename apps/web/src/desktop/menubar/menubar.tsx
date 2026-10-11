@@ -34,7 +34,7 @@ import { useWindowManager, wm } from "../state/window-store.ts";
 import { useAgentStatus, useAgentStatusPolling } from "./agent-status.ts";
 import { menubarButton } from "./menubar-button.ts";
 import { QuickSettings } from "./quick-settings.tsx";
-import { NetworkModule, ResourcesModule } from "./system-modules.tsx";
+import { NetworkModule, PowerModule, ResourcesModule } from "./system-modules.tsx";
 import { MenubarWidgets } from "../widgets/menubar-widgets.tsx";
 import { NotificationBell } from "../notifications/center.tsx";
 
@@ -326,6 +326,7 @@ export function Menubar({ insecure }: { insecure: boolean }) {
         {show("widgets") ? <MenubarWidgets /> : null}
         {show("notifications") ? <NotificationBell /> : null}
         {show("resources") && canReadSystem ? <ResourcesModule /> : null}
+        {show("power") && canReadSystem ? <PowerModule /> : null}
         {show("network") && canReadSystem ? <NetworkModule /> : null}
         {show("agent") ? <AgentIndicator /> : null}
         {show("desktops") ? <DesktopSwitcher /> : null}

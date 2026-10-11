@@ -24,6 +24,7 @@ import {
   LayoutGrid,
   Link,
   List,
+  Palette,
   Pencil,
   RefreshCw,
   Scissors,
@@ -79,6 +80,7 @@ import {
   type UploadItem,
 } from "./parts.tsx";
 import { FILES_FOLDER_ICONS as FOLDER_ICONS, FilesSidebar } from "./sidebar.tsx";
+import { FolderIconDialog } from "../settings/folder-icon-picker.tsx";
 import { FileIconView } from "./icon-view.tsx";
 
 type ViewMode = "icons" | "list";
@@ -137,6 +139,7 @@ export default function FilesApp() {
   const [results, setResults] = useState<FileSearchResult | null>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [properties, setProperties] = useState<FileLocation | null>(null);
+  const [iconLocation, setIconLocation] = useState<FileLocation | null>(null);
   const [preview, setPreview] = useState<FileLocation | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const clipboard = useFileClipboard();
@@ -438,11 +441,13 @@ export default function FilesApp() {
   };
 
   const beginMarquee = (event: ReactPointerEvent<HTMLDivElement>) => {
+    // Portal events bubble through React, but menus are outside the selection surface.
     if (
       event.button !== 0 ||
       event.pointerType === "touch" ||
       renaming ||
       !(event.target instanceof Element) ||
+      !event.currentTarget.contains(event.target) ||
       event.target.closest("[data-name], button, input, select, textarea, a, thead")
     )
       return;
@@ -760,6 +765,17 @@ export default function FilesApp() {
               icon: <ClipboardPaste />,
               disabled: !writable || !clipboard || !single,
               onSelect: () => void paste({ root: location.root, path: paths[0]! }),
+            },
+          ]
+        : []),
+      ...(folder && single && permissions.includes("preferences:manage")
+        ? [
+            {
+              kind: "item" as const,
+              id: "folder-icon",
+              label: t("folderIcons.change"),
+              icon: <Palette />,
+              onSelect: () => setIconLocation({ root: location.root, path: paths[0]! }),
             },
           ]
         : []),
@@ -1112,6 +1128,7 @@ export default function FilesApp() {
                   >
                     <EntryIcon
                       entry={{ name: result.name, type: result.type, link: null }}
+                      location={location ? { root: location.root, path: result.path } : null}
                       className="size-4 shrink-0"
                     />
                     <span className="truncate font-medium">{result.name}</span>
@@ -1156,6 +1173,7 @@ export default function FilesApp() {
                 </div>
               ) : view === "icons" ? (
                 <FileIconView
+                  location={location}
                   entries={entries}
                   selected={selected}
                   renaming={renaming}
@@ -1209,10 +1227,21 @@ export default function FilesApp() {
                           >
                             <td className="max-w-0 px-2 py-1">
                               <div className="flex min-w-0 items-center gap-2">
-                                {Standard ? (
+                                {Standard && !isFolder(entry) ? (
                                   <Standard className="size-4 shrink-0 text-accent" aria-hidden />
                                 ) : (
-                                  <EntryIcon entry={entry} className="size-4 shrink-0" />
+                                  <EntryIcon
+                                    entry={entry}
+                                    location={
+                                      location
+                                        ? {
+                                            root: location.root,
+                                            path: joinPath(location.path, entry.name),
+                                          }
+                                        : null
+                                    }
+                                    className="size-4 shrink-0"
+                                  />
                                 )}
                                 {renaming === entry.name ? (
                                   renameField(entry, "min-w-0 flex-1")
@@ -1317,6 +1346,7 @@ export default function FilesApp() {
         </div>
       </div>
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
+      <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />
       <ImagePreview location={preview} onClose={() => setPreview(null)} />
     </div>
   );

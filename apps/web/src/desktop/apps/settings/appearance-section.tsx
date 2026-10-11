@@ -33,6 +33,7 @@ import {
 import { useThemeStore } from "../../theme/theme-store.ts";
 import { WallpaperView } from "../../wallpaper/wallpaper-view.tsx";
 import { SettingRow, SettingsGroup } from "./group.tsx";
+import { FolderIconPicker } from "./folder-icon-picker.tsx";
 import { WallpaperPicker } from "./wallpaper-picker.tsx";
 
 function ThemeCard({
@@ -181,6 +182,15 @@ export default function AppearanceSection() {
             />
           ))}
         </ul>
+      </SettingsGroup>
+
+      <SettingsGroup title={t("folderIcons.title")} description={t("folderIcons.defaultHint")}>
+        <FolderIconPicker
+          value={appearance.folderIcon ?? { kind: "preset", id: "classic" }}
+          onChange={(folderIcon) =>
+            updatePreference("appearance", (current) => ({ ...current, folderIcon }))
+          }
+        />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.appearance.customThemes")}>

@@ -270,6 +270,97 @@ describe("session locking", () => {
   });
 });
 
+describe("folder icons API", () => {
+  const upload = (client: TestClient, data: Uint8Array, type = "image/png") =>
+    client.request("POST", "/api/folder-icons", {
+      rawBody: data,
+      headers: { "content-type": type },
+    });
+
+  it("isolates owned icons, validates references and protects icons still used by folders", async () => {
+    const { ctx, client } = await admin();
+    const image = png(32, 32);
+    const uploaded = await upload(client, image);
+    expect(uploaded.status).toBe(201);
+    const info = await json<WallpaperInfo>(uploaded);
+    expect(await json(await client.get("/api/folder-icons"))).toEqual({ icons: [info] });
+    expect(await json(await client.get("/api/wallpapers"))).toEqual({ wallpapers: [] });
+    expect((await client.get(`/api/wallpapers/${info.id}/image`)).status).toBe(404);
+    const served = await client.get(`/api/folder-icons/${info.id}/image`);
+    expect(served.headers.get("content-type")).toBe("image/png");
+    expect(served.headers.get("cache-control")).toContain("private");
+    expect(Buffer.from(await served.arrayBuffer())).toEqual(image);
+    const configured = {
+      ...appearance,
+      folderIcon: { kind: "preset", id: "green" },
+      folderIcons: [
+        { root: "home", path: "Desktop/Work", icon: { kind: "uploaded", iconId: info.id } },
+      ],
+    };
+    expect(
+      (await client.request("PUT", "/api/preferences/appearance", { body: configured })).status,
+    ).toBe(204);
+    expect((await client.delete(`/api/folder-icons/${info.id}`)).status).toBe(409);
+    expect((await client.delete(`/api/wallpapers/${info.id}`)).status).toBe(404);
+    await client.post("/api/users", {
+      username: "iconviewer",
+      displayName: "Icon viewer",
+      password: STRONG_PASSWORD,
+      role: "viewer",
+    });
+    const other = new TestClient(ctx, "192.0.2.19");
+    await other.login("iconviewer", STRONG_PASSWORD);
+    expect((await other.get(`/api/folder-icons/${info.id}/image`)).status).toBe(404);
+    expect(
+      (await other.request("PUT", "/api/preferences/appearance", { body: configured })).status,
+    ).toBe(400);
+    expect((await other.delete(`/api/folder-icons/${info.id}`)).status).toBe(404);
+    expect(
+      (
+        await client.request("PUT", "/api/preferences/appearance", {
+          body: {
+            ...configured,
+            folderIcons: [...configured.folderIcons, ...configured.folderIcons],
+          },
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await client.request("PUT", "/api/preferences/appearance", {
+          body: {
+            ...configured,
+            folderIcons: [{ ...configured.folderIcons[0], path: "../outside" }],
+          },
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (await client.request("PUT", "/api/preferences/appearance", { body: appearance })).status,
+    ).toBe(204);
+    expect((await client.delete(`/api/folder-icons/${info.id}`)).status).toBe(204);
+    expect(
+      ctx.db
+        .all<{ action: string }>("SELECT action FROM audit_events")
+        .map((event) => event.action),
+    ).toEqual(expect.arrayContaining(["folder-icons.upload", "folder-icons.delete"]));
+  });
+
+  it("bounds streamed size and dimensions and rejects active image formats and unexpected queries", async () => {
+    const { ctx, client } = await admin();
+    const svg = Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+    );
+    expect((await upload(client, svg, "image/svg+xml")).status).toBe(415);
+    expect((await upload(client, svg)).status).toBe(400);
+    expect((await upload(client, pngHeader(1025, 32))).status).toBe(400);
+    expect((await upload(client, Buffer.alloc(2 * 1024 * 1024 + 1))).status).toBe(413);
+    expect((await client.get("/api/folder-icons?userId=other")).status).toBe(400);
+    expect((await new TestClient(ctx).get("/api/folder-icons")).status).toBe(401);
+    expect(await json(await client.get("/api/folder-icons"))).toEqual({ icons: [] });
+  });
+});
+
 describe("wallpapers API", () => {
   const upload = (client: TestClient, data: Uint8Array, type = "image/png") =>
     client.request("POST", "/api/wallpapers", { rawBody: data, headers: { "content-type": type } });

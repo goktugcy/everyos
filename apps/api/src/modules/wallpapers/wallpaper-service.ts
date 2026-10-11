@@ -7,6 +7,8 @@ import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import type { Database } from "@otuken/database";
 import { randomToken } from "@otuken/security";
 import {
+  MAX_FOLDER_ICON_BYTES,
+  MAX_FOLDER_ICON_EDGE,
   MAX_WALLPAPER_BYTES,
   MAX_WALLPAPERS_PER_USER,
   type WallpaperInfo,
@@ -25,6 +27,10 @@ const EXTENSIONS: Record<WallpaperMimeType, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
+
+export type ImagePurpose = "wallpaper" | "folder-icon";
+const hasPurpose = (row: WallpaperRow, purpose: ImagePurpose) =>
+  row.file_name.startsWith("folder-icon-") === (purpose === "folder-icon");
 
 interface WallpaperRow {
   id: string;
@@ -48,7 +54,7 @@ const toInfo = (row: WallpaperRow): WallpaperInfo => ({
 
 const invalid = () => new ApiError(400, "WALLPAPER_INVALID", "Unsupported or corrupt image");
 
-/** Stores user-uploaded wallpapers under <dataDir>/wallpapers/<userId>/. */
+/** Private raster assets share the wallpaper snapshot and account-deletion lifecycle. */
 export class WallpaperService {
   readonly #db: Database;
   readonly #root: string;
@@ -60,23 +66,28 @@ export class WallpaperService {
     this.#now = now;
   }
 
-  list(userId: string): WallpaperInfo[] {
+  list(userId: string, purpose: ImagePurpose = "wallpaper"): WallpaperInfo[] {
     return this.#db
       .all<WallpaperRow>(
         "SELECT * FROM wallpapers WHERE user_id = ? ORDER BY created_at DESC",
         userId,
       )
+      .filter((row) => hasPurpose(row, purpose))
       .map(toInfo);
   }
 
   /** Returns the file of a wallpaper owned by `userId`, or null. */
-  file(userId: string, id: string): { path: string; mime: WallpaperMimeType; size: number } | null {
+  file(
+    userId: string,
+    id: string,
+    purpose: ImagePurpose = "wallpaper",
+  ): { path: string; mime: WallpaperMimeType; size: number } | null {
     const row = this.#db.get<WallpaperRow>(
       "SELECT * FROM wallpapers WHERE id = ? AND user_id = ?",
       id,
       userId,
     );
-    return row
+    return row && hasPurpose(row, purpose)
       ? { path: join(this.#root, userId, row.file_name), mime: row.mime, size: row.size }
       : null;
   }
@@ -89,21 +100,22 @@ export class WallpaperService {
     userId: string,
     declaredLength: number | null,
     body: WebReadableStream<Uint8Array>,
+    purpose: ImagePurpose = "wallpaper",
   ): Promise<WallpaperInfo> {
-    if (declaredLength !== null && declaredLength > MAX_WALLPAPER_BYTES) {
+    const maxBytes = purpose === "folder-icon" ? MAX_FOLDER_ICON_BYTES : MAX_WALLPAPER_BYTES;
+    const maxEdge = purpose === "folder-icon" ? MAX_FOLDER_ICON_EDGE : MAX_WALLPAPER_EDGE;
+    if (declaredLength !== null && declaredLength > maxBytes) {
       throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Image too large");
     }
-    const count =
-      this.#db.get<{ n: number }>("SELECT COUNT(*) AS n FROM wallpapers WHERE user_id = ?", userId)
-        ?.n ?? 0;
+    const count = this.list(userId, purpose).length;
     if (count >= MAX_WALLPAPERS_PER_USER) {
-      throw new ApiError(409, "WALLPAPER_QUOTA_EXCEEDED", "Wallpaper quota exceeded");
+      throw new ApiError(409, "WALLPAPER_QUOTA_EXCEEDED", "Image quota exceeded");
     }
 
     const dir = join(this.#root, userId);
     await mkdir(dir, { recursive: true, mode: 0o750 });
     const space = await statfs(dir);
-    if (space.bavail * space.bsize < MIN_FREE_BYTES + MAX_WALLPAPER_BYTES) {
+    if (space.bavail * space.bsize < MIN_FREE_BYTES + maxBytes) {
       throw new ApiError(507, "WALLPAPER_QUOTA_EXCEEDED", "Not enough free disk space");
     }
 
@@ -113,8 +125,7 @@ export class WallpaperService {
     const limiter = new Transform({
       transform(chunk: Buffer, _encoding, callback) {
         size += chunk.length;
-        if (size > MAX_WALLPAPER_BYTES)
-          callback(new ApiError(413, "PAYLOAD_TOO_LARGE", "Image too large"));
+        if (size > maxBytes) callback(new ApiError(413, "PAYLOAD_TOO_LARGE", "Image too large"));
         else callback(null, chunk);
       },
     });
@@ -136,9 +147,9 @@ export class WallpaperService {
         await handle.close();
       }
       if (!info || info.width < 1 || info.height < 1) throw invalid();
-      if (info.width > MAX_WALLPAPER_EDGE || info.height > MAX_WALLPAPER_EDGE) throw invalid();
+      if (info.width > maxEdge || info.height > maxEdge) throw invalid();
 
-      const fileName = `${id}.${EXTENSIONS[info.mime]}`;
+      const fileName = `${purpose === "folder-icon" ? "folder-icon-" : ""}${id}.${EXTENSIONS[info.mime]}`;
       await rename(temp, join(dir, fileName));
       const createdAt = this.#now();
       this.#db.run(
@@ -161,13 +172,13 @@ export class WallpaperService {
     }
   }
 
-  async delete(userId: string, id: string): Promise<boolean> {
+  async delete(userId: string, id: string, purpose: ImagePurpose = "wallpaper"): Promise<boolean> {
     const row = this.#db.get<WallpaperRow>(
       "SELECT * FROM wallpapers WHERE id = ? AND user_id = ?",
       id,
       userId,
     );
-    if (!row) return false;
+    if (!row || !hasPurpose(row, purpose)) return false;
     this.#db.run("DELETE FROM wallpapers WHERE id = ?", id);
     await rm(join(this.#root, userId, row.file_name), { force: true });
     return true;

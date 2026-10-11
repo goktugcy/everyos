@@ -77,6 +77,7 @@ export const MENUBAR_MODULE_IDS = [
   "widgets",
   "resources",
   "network",
+  "power",
   "agent",
   "desktops",
   "search",
@@ -124,3 +125,16 @@ export interface WallpaperInfo {
 export function isPreferenceKey(value: unknown): value is PreferenceKey {
   return typeof value === "string" && (PREFERENCE_KEYS as readonly string[]).includes(value);
 }
+
+/** Safe folder glyph presets and bounded user image uploads. */
+export const FOLDER_ICON_PRESET_IDS = [
+  "classic",
+  "soft",
+  "outline",
+  "amber",
+  "green",
+  "violet",
+] as const;
+export type FolderIconPresetId = (typeof FOLDER_ICON_PRESET_IDS)[number];
+export const MAX_FOLDER_ICON_BYTES = 2 * 1024 * 1024;
+export const MAX_FOLDER_ICON_EDGE = 1024;

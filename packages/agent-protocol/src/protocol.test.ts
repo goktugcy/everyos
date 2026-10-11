@@ -77,6 +77,7 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "metrics.sample": notUsed,
     "storage.usage": notUsed,
     "hardware.status": notUsed,
+    "power.status": notUsed,
     "network.status": notUsed,
     "tailscale.status": notUsed,
     "tailscale.details": notUsed,

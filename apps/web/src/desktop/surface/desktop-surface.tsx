@@ -40,6 +40,8 @@ import { errorMessage } from "../../lib/errors.ts";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { AppIcon } from "../apps/app-icon.tsx";
+import { FolderIcon } from "../apps/files/folder-icon.tsx";
+import { FolderIconDialog } from "../apps/settings/folder-icon-picker.tsx";
 import { fileGlyph } from "../apps/files/icon-view.tsx";
 import {
   FILES_DRAG_TYPE,
@@ -144,6 +146,7 @@ interface IconProps {
   label: string;
   glyph: ReactNode;
   selected: boolean;
+  folder: boolean;
   renaming: boolean;
   renameLimit: number;
   dropTarget: boolean;
@@ -220,7 +223,7 @@ function DesktopIcon(props: IconProps) {
       className={cn(
         "group absolute left-0 top-0 flex flex-col items-center gap-1.5 rounded-otk-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
         native ? "touch-manipulation" : "touch-none",
-        selected && "bg-hover/10",
+        selected && !props.folder && "bg-hover/10",
         props.dropTarget && "bg-[rgb(var(--otk-accent)/0.18)] ring-2 ring-accent",
       )}
       style={{
@@ -242,7 +245,14 @@ function DesktopIcon(props: IconProps) {
       onDoubleClick={() => props.onOpen(id)}
       onKeyDown={(event) => props.onKey(event, id)}
     >
-      {props.glyph}
+      <span
+        className={cn(
+          "grid place-items-center rounded-otk-md",
+          selected && props.folder && "bg-hover/20 ring-1 ring-accent/40",
+        )}
+      >
+        {props.glyph}
+      </span>
       {renaming ? (
         <input
           autoFocus
@@ -271,7 +281,7 @@ function DesktopIcon(props: IconProps) {
             "otk-icon-label line-clamp-2 max-w-full rounded-[5px] px-1.5 py-0.5 text-center text-[0.72rem] font-medium leading-tight text-fg",
             native && "wrap-break-word",
           )}
-          data-selected={selected}
+          data-selected={selected && !props.folder}
           title={native ? label : undefined}
         >
           {native ? breakable(label) : label}
@@ -286,11 +296,14 @@ function FileGlyph({
   entry,
   size,
   thumbnail,
+  location,
 }: {
   entry: FileEntry;
   size: number;
   thumbnail: string | null;
+  location: FileLocation;
 }) {
+  if (isFolder(entry)) return <FolderIcon location={location} size={size} />;
   if (thumbnail)
     return (
       <span className="grid place-items-center" style={{ width: size, height: size }}>
@@ -354,6 +367,7 @@ export function DesktopSurface() {
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [preview, setPreview] = useState<FileLocation | null>(null);
   const [properties, setProperties] = useState<FileLocation | null>(null);
+  const [iconLocation, setIconLocation] = useState<FileLocation | null>(null);
   const menuPoint = useRef<Point | null>(null);
   const location = folder.location;
   const writable = folder.writable && location !== null;
@@ -1074,6 +1088,17 @@ export function DesktopSurface() {
         disabled: !writable,
         onSelect: () => setRenaming(fileId(entry.name)),
       },
+      ...(folderEntry && permissions.includes("preferences:manage")
+        ? [
+            {
+              kind: "item" as const,
+              id: "folder-icon",
+              label: t("folderIcons.change"),
+              icon: <Palette />,
+              onSelect: () => setIconLocation(target),
+            },
+          ]
+        : []),
       {
         kind: "item",
         id: "properties",
@@ -1149,7 +1174,14 @@ export function DesktopSurface() {
       location && kindOf(icon.entry) === "image" && icon.entry.size <= THUMBNAIL_BYTES
         ? filesApi.downloadUrl(entryLocation(icon.entry.name), true)
         : null;
-    return <FileGlyph entry={icon.entry} size={iconSize} thumbnail={thumbnail} />;
+    return (
+      <FileGlyph
+        entry={icon.entry}
+        size={iconSize}
+        thumbnail={thumbnail}
+        location={entryLocation(icon.entry.name)}
+      />
+    );
   };
 
   const groupMenu = (icon: Icon): MenuEntry[] => {
@@ -1302,6 +1334,7 @@ export function DesktopSurface() {
                     label={labelOf(icon)}
                     glyph={glyph}
                     selected={selected.has(icon.id)}
+                    folder={icon.kind === "file" && isFolder(icon.entry)}
                     renaming={renaming === icon.id}
                     renameLimit={icon.kind === "file" ? 255 : 40}
                     dropTarget={dropTarget === icon.id}
@@ -1362,6 +1395,7 @@ export function DesktopSurface() {
       </ContextMenuArea>
       <ImagePreview location={preview} onClose={() => setPreview(null)} />
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
+      <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />
     </>
   );
 }

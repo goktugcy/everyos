@@ -9,6 +9,7 @@ import { InternetBadge, TailscaleCard } from "../apps/system/network-tab.tsx";
 import { DefinitionRows } from "../apps/system/parts.tsx";
 import { desktop } from "../state/controller.ts";
 import { menubarButton } from "./menubar-button.ts";
+export { PowerModule } from "./power-module.tsx";
 
 const popoverClass =
   "glass-strong otk-enter z-[8000] flex w-80 flex-col gap-3 rounded-otk-lg p-4 text-sm text-fg";

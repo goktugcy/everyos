@@ -1,7 +1,7 @@
 # HTTP API (Phases 1–7)
 
-Base path: `/api`. Bodies are JSON except raw wallpaper, file and backup uploads. JSON responses are never cached
-(`Cache-Control: no-store`); owned wallpaper images use private immutable caching.
+Base path: `/api`. Bodies are JSON except raw wallpaper, folder-icon, file and backup uploads. JSON responses are never cached
+(`Cache-Control: no-store`); owned raster images use private immutable caching.
 
 **Errors** always have this shape:
 
@@ -75,8 +75,17 @@ replacing saved preferences. Resetting in the UI saves defaults through the same
 | `DELETE /wallpapers/:id`    | Deletes the owned image and metadata → `204`; records an audit event.                                                                                                                                                           |
 
 SVG and HTML uploads are rejected. Stored files live under `<dataDir>/wallpapers/<userId>/`;
-deleting an account removes its wallpapers. Wallpaper uploads are the only exception to the
-64 KiB JSON body cap and still require the session CSRF token.
+deleting an account removes its uploaded assets. Raw image, file and backup uploads use their
+own streaming limits instead of the 64 KiB JSON cap and still require the session CSRF token.
+
+## Folder icons (`preferences:manage`, owner only)
+
+`/folder-icons` supports list, raw upload, owned `/:id/image` reads and unused `/:id` deletion,
+with the same ownership rules as wallpapers. Uploads accept PNG/WebP/JPEG, at most 2 MiB and
+1024 pixels per edge, with a separate 20-icon quota. List returns `{ icons: WallpaperInfo[] }`.
+Appearance documents can set a default `folderIcon` and up to 500 unique `folderIcons` by
+`{ root, path, icon }`. Uploaded references must belong to the user; deleting a used icon returns
+`409`. See [power and folder icons](power-and-folder-icons.md).
 
 ## Account (authenticated, self-service)
 
@@ -107,6 +116,10 @@ deleting an account removes its wallpapers. Wallpaper uploads are the only excep
 | `GET /audit`  | Query `limit` (1–200, default 50), `before` (cursor id), `action`. Returns `{ events, nextCursor }`. |
 
 ## System (`system:read`)
+
+`GET /system/power` returns real Linux battery and power supply readings (`PowerStatus`). No
+query parameters are accepted. Missing sensors/readings stay unavailable/null; measured watts
+and reported input limits are separate. See [power and folder icons](power-and-folder-icons.md).
 
 Agent errors map to stable codes on every host endpoint: `AGENT_UNAVAILABLE` (503),
 `AGENT_TIMEOUT` (504), `AGENT_OPERATION_DENIED` (403, `details.reason` carries the agent's policy

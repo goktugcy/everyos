@@ -269,3 +269,18 @@ operation. Archive contents are declared by account id in the manifest; restore 
 existing ids and is separately selected. Safety backup, draining active file operations, private
 validated staging and rollback protect a replacement. Host mounts and unsupported current data
 are refused for replacement. Older version-1 manifests without homes remain readable.
+
+## D25 — Linux power telemetry and private folder image assets (2026-10)
+
+Power is read only by the agent, from Linux power_supply sysfs. Missing sensors stay unknown;
+reported charger limits never become consumption estimates. Other platforms expose unavailable
+instead of adding a second collector. The menu bar reflects the managed host, not the viewing
+browser's battery.
+
+Folder icon choices belong to the user's appearance document, including per-location overrides.
+Owned raster uploads share the existing wallpaper table and snapshot storage, distinguished by
+safe `folder-icon-` filenames. Purpose checks isolate both endpoint families. This keeps backup,
+restore and account deletion complete without a new image store or database migration. Uploaded
+references are validated against ownership, and used assets cannot be deleted.
+
+See [power and folder icons](power-and-folder-icons.md) for formats, limits and behaviour.

@@ -44,15 +44,36 @@ export const filesApi = {
     api<TextFile>("/files/text", { method: "PUT", body: { ...location, content, etag } }),
   mkdir: (location: FileLocation, name: string) =>
     api<void>("/files/mkdir", { method: "POST", body: { ...location, name } }),
-  rename: (location: FileLocation, name: string) =>
-    api<void>("/files/rename", { method: "POST", body: { ...location, name } }),
-  copy: (root: string, paths: string[], destination: FileLocation, name?: string) =>
-    api<void>("/files/copy", {
+  rename: async (location: FileLocation, name: string) => {
+    await api<void>("/files/rename", { method: "POST", body: { ...location, name } });
+    const { followFolderIcons } = await import("../../state/folder-icon-ops.ts");
+    followFolderIcons(location, {
+      root: location.root,
+      path: joinPath(parentOf(location.path), name),
+    });
+  },
+  copy: async (root: string, paths: string[], destination: FileLocation, name?: string) => {
+    await api<void>("/files/copy", {
       method: "POST",
       body: { root, paths, destination, ...(name ? { name } : {}) },
-    }),
-  move: (root: string, paths: string[], destination: FileLocation) =>
-    api<void>("/files/move", { method: "POST", body: { root, paths, destination } }),
+    });
+    const { followFolderIcons } = await import("../../state/folder-icon-ops.ts");
+    for (const path of paths)
+      followFolderIcons(
+        { root, path },
+        { root: destination.root, path: joinPath(destination.path, name ?? nameOf(path)) },
+        true,
+      );
+  },
+  move: async (root: string, paths: string[], destination: FileLocation) => {
+    await api<void>("/files/move", { method: "POST", body: { root, paths, destination } });
+    const { followFolderIcons } = await import("../../state/folder-icon-ops.ts");
+    for (const path of paths)
+      followFolderIcons(
+        { root, path },
+        { root: destination.root, path: joinPath(destination.path, nameOf(path)) },
+      );
+  },
   remove: (root: string, paths: string[]) =>
     api<void>("/files/delete", { method: "POST", body: { root, paths, confirm: true } }),
   trash: () => api<TrashListing>("/files/trash"),

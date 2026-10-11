@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FileRootIdSchema, RelativePathSchema } from "./files.ts";
 import type { WidgetPreferences } from "../widgets.ts";
 import { WidgetPreferencesSchema } from "./widgets.ts";
 import { NotificationPreferencesSchema, type NotificationPreferences } from "./notifications.ts";
@@ -7,6 +8,7 @@ import {
   AUTO_LOCK_MINUTES,
   DOCK_POSITIONS,
   DOCK_STYLES,
+  FOLDER_ICON_PRESET_IDS,
   ICON_SIZES,
   MAX_DESKTOPS,
   MENUBAR_MODULE_IDS,
@@ -57,6 +59,21 @@ export const WallpaperSpecSchema = z.discriminatedUnion("kind", [
 
 export type WallpaperSpec = z.infer<typeof WallpaperSpecSchema>;
 
+export const FolderIconSpecSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("preset"), id: z.enum(FOLDER_ICON_PRESET_IDS) }),
+  z.strictObject({ kind: z.literal("uploaded"), iconId: IdSchema }),
+]);
+export type FolderIconSpec = z.infer<typeof FolderIconSpecSchema>;
+
+const FolderIconOverrideSchema = z.strictObject({
+  root: FileRootIdSchema,
+  path: RelativePathSchema.refine(
+    (path) => path.length > 0 && path.split("/").every(Boolean),
+    "invalid-path",
+  ),
+  icon: FolderIconSpecSchema,
+});
+
 export const ThemeEffectsSchema = z.strictObject({
   surfaceOpacity: z.number().min(0.3).max(1),
   blur: z.number().min(0).max(40),
@@ -91,6 +108,16 @@ export const AppearancePreferencesSchema = z.strictObject({
   wallpaper: WallpaperSpecSchema.nullable(),
   wallpaperAnimated: z.boolean(),
   customThemes: z.array(CustomThemeSchema).max(20),
+  /** Optional so existing documents keep their original folder appearance. */
+  folderIcon: FolderIconSpecSchema.optional(),
+  folderIcons: z
+    .array(FolderIconOverrideSchema)
+    .max(500)
+    .refine(
+      (icons) => new Set(icons.map((icon) => `${icon.root}/${icon.path}`)).size === icons.length,
+      "duplicate-folder",
+    )
+    .optional(),
 });
 
 export type AppearancePreferences = z.infer<typeof AppearancePreferencesSchema>;

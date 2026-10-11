@@ -17,3 +17,5 @@ export * from "./updates.ts";
 export * from "./tasks.ts";
 export * from "./backups.ts";
 export * from "./pulse.ts";
+
+export * from "./power.ts";

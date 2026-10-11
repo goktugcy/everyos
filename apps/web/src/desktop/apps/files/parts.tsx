@@ -16,6 +16,7 @@ import { Alert } from "../../../components/ui/alert.tsx";
 import { Dialog } from "../../../components/ui/dialog.tsx";
 import { errorMessage } from "../../../lib/errors.ts";
 import { formatBytes, formatDateTime, formatNumber } from "../../../lib/format.ts";
+import { FolderIcon } from "./folder-icon.tsx";
 import { filesApi, kindOf, nameOf, type FileKind, type FileLocation } from "./lib.ts";
 
 const ICONS: Record<FileKind, LucideIcon> = {
@@ -31,19 +32,23 @@ const ICONS: Record<FileKind, LucideIcon> = {
 export function EntryIcon({
   entry,
   className,
+  location,
 }: {
   entry: Pick<FileEntry, "name" | "type" | "link">;
   className?: string;
+  location?: FileLocation | null;
 }) {
   const kind = kindOf(entry);
+  if (kind === "folder")
+    return (
+      <FolderIcon
+        {...(location ? { location } : {})}
+        size={16}
+        {...(className ? { className } : {})}
+      />
+    );
   const Icon = ICONS[kind];
-  return (
-    <Icon
-      aria-hidden
-      className={className}
-      style={{ color: kind === "folder" ? "rgb(var(--otk-accent))" : undefined }}
-    />
-  );
+  return <Icon aria-hidden className={className} />;
 }
 
 export interface UploadItem {

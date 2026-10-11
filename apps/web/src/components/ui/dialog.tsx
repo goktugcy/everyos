@@ -11,6 +11,7 @@ export function Dialog({
   description,
   children,
   className,
+  overlayClassName,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -18,12 +19,15 @@ export function Dialog({
   description?: ReactNode;
   children: ReactNode;
   className?: string;
+  overlayClassName?: string;
 }) {
   const { t } = useTranslation();
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]" />
+        <DialogPrimitive.Overlay
+          className={cn("fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]", overlayClassName)}
+        />
         <DialogPrimitive.Content
           className={cn(
             "glass-strong otk-enter fixed left-1/2 top-1/2 z-50 flex max-h-[min(88dvh,760px)] w-[min(94vw,560px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-otk-lg",

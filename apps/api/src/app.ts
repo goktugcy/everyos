@@ -58,6 +58,7 @@ export function createApp(services: Services): Hono<AppEnv> {
     if (
       c.req.method === "POST" &&
       (c.req.path === "/api/wallpapers" ||
+        c.req.path === "/api/folder-icons" ||
         c.req.path === "/api/files/upload" ||
         c.req.path === "/api/backups/upload")
     )
@@ -93,6 +94,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
   api.route("/wallpapers", wallpaperRoutes(services));
+  api.route("/folder-icons", wallpaperRoutes(services, "folder-icon"));
   api.all("*", () => {
     throw notFound("Endpoint");
   });

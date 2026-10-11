@@ -16,7 +16,8 @@ import type { DragEvent, MouseEvent, ReactNode } from "react";
 import { cn } from "../../../lib/cn.ts";
 import type { MenuEntry } from "../../menus/menu-model.ts";
 import { ContextMenuArea } from "../../menus/menus.tsx";
-import { kindOf } from "./lib.ts";
+import { joinPath, kindOf, type FileLocation } from "./lib.ts";
+import { FolderIcon } from "./folder-icon.tsx";
 
 const ARCHIVE = /\.(zip|tar|gz|tgz|xz|bz2|7z|rar|zst)$/i;
 const AUDIO = /\.(mp3|flac|ogg|opus|wav|m4a|aac)$/i;
@@ -67,7 +68,9 @@ export function FileIconView({
   menuFor,
   thumbnail,
   badge,
+  location,
 }: {
+  location: FileLocation | null;
   entries: FileEntry[];
   selected: ReadonlySet<string>;
   renaming: string | null;
@@ -107,15 +110,16 @@ export function FileIconView({
                   isSelected && "bg-hover/15",
                 )}
               >
-                {Badge ? (
-                  <Badge
-                    aria-hidden
-                    strokeWidth={1.8}
-                    className="absolute left-1/2 top-[54%] size-5 -translate-x-1/2 -translate-y-1/2"
-                    style={{ color: "rgb(var(--otk-accent-strong))" }}
+                {folder ? (
+                  <FolderIcon
+                    location={
+                      location
+                        ? { root: location.root, path: joinPath(location.path, entry.name) }
+                        : null
+                    }
+                    badge={Badge}
                   />
-                ) : null}
-                {thumb ? (
+                ) : thumb ? (
                   <img
                     src={thumb}
                     alt=""

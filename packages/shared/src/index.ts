@@ -72,6 +72,7 @@ export type {
   DesktopItem,
   DesktopPreferences,
   DockPreferences,
+  FolderIconSpec,
   MenubarPreferences,
   PersistedWindow,
   PreferenceDocuments,
@@ -94,3 +95,5 @@ export const OTUKEN_VERSION = "0.1.0";
 
 /** HTTP header carrying the per-session CSRF token on state-changing requests. */
 export const CSRF_HEADER = "x-otuken-csrf";
+
+export * from "./power.ts";

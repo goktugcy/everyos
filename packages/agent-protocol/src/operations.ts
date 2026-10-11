@@ -15,6 +15,7 @@ import {
   DockerEventSchema,
   DockerStatusSchema,
   HardwareStatusSchema,
+  PowerStatusSchema,
   ImageIdSchema,
   ImageListSchema,
   NetworkIdSchema,
@@ -180,6 +181,14 @@ export const AGENT_OPERATIONS = {
     allowSystemActor: true,
     mutating: false,
     timeoutMs: 20_000,
+  }),
+  "power.status": unary({
+    params: NoParams,
+    result: PowerStatusSchema,
+    permission: "system:read",
+    allowSystemActor: true,
+    mutating: false,
+    timeoutMs: 5_000,
   }),
   "hardware.status": unary({
     params: NoParams,

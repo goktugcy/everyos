@@ -229,6 +229,15 @@ export class FakeAgent implements AgentGateway {
             },
           ],
         };
+      case "power.status":
+        return {
+          source: "host",
+          at: this.now(),
+          available: false,
+          acConnected: null,
+          batteries: [],
+          supplies: [],
+        };
       case "hardware.status":
         return {
           source: "host",

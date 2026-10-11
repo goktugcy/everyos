@@ -18,9 +18,25 @@ function keyParam(value: string): PreferenceKey {
 }
 
 /** Cross-field rules that a per-field schema cannot express. */
-function checkConsistency(key: PreferenceKey, value: unknown): void {
+function checkConsistency(
+  services: Services,
+  userId: string,
+  key: PreferenceKey,
+  value: unknown,
+): void {
   if (key !== "appearance") return;
   const appearance = value as AppearancePreferences;
+  const icons = [appearance.folderIcon, ...(appearance.folderIcons ?? []).map((item) => item.icon)];
+  if (
+    icons.some(
+      (icon) =>
+        icon?.kind === "uploaded" && !services.wallpapers.file(userId, icon.iconId, "folder-icon"),
+    )
+  ) {
+    throw new ApiError(400, "VALIDATION_FAILED", "Unknown folder icon", {
+      details: [{ path: "folderIcon", message: "unknown-folder-icon" }],
+    });
+  }
   const custom = appearance.themeId.startsWith("custom:") ? appearance.themeId.slice(7) : null;
   const known = custom
     ? appearance.customThemes.some((theme) => theme.id === custom)
@@ -47,7 +63,7 @@ export function preferenceRoutes(services: Services): Hono<AppEnv> {
     const key = keyParam(c.req.param("key"));
     parseParams(c, PreferenceParamsSchema);
     const value: unknown = await parseJsonBody(c, PREFERENCE_SCHEMAS[key]);
-    checkConsistency(key, value);
+    checkConsistency(services, auth.user.id, key, value);
     services.preferences.set(auth.user.id, key, value);
     if (key === "security")
       services.audit.record({

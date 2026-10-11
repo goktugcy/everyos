@@ -1,4 +1,8 @@
-import { MetricsHistoryQuerySchema, ProcessQuerySchema } from "@otuken/shared/schemas";
+import {
+  EmptyDesktopQuerySchema,
+  MetricsHistoryQuerySchema,
+  ProcessQuerySchema,
+} from "@otuken/shared/schemas";
 import type { TailscaleOverview } from "@otuken/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
@@ -36,6 +40,10 @@ export function systemRoutes(services: Services): Hono<AppEnv> {
   });
 
   app.get("/storage", async (c) => c.json(await callAgent(c, services, "storage.usage", {})));
+  app.get("/power", async (c) => {
+    parseQuery(c, EmptyDesktopQuerySchema);
+    return c.json(await callAgent(c, services, "power.status", {}));
+  });
   app.get("/hardware", async (c) => c.json(await callAgent(c, services, "hardware.status", {})));
   app.get("/network", async (c) => c.json(await callAgent(c, services, "network.status", {})));
   app.get("/tailscale", async (c) => c.json(await callAgent(c, services, "tailscale.status", {})));
