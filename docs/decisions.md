@@ -355,12 +355,16 @@ and fall back to CSS if the packaged image cannot load. See [branding.md](brandi
 
 ## D30 — Automatic network access for fresh installations (2026-10)
 
-At the owner's request, fresh production packages from 0.1.1 use an IPv4 wildcard binding.
+At the owner's request, the verified installer from 0.1.2 enables an IPv4 wildcard binding only when
+no API conffile exists before package installation.
 Choosing one detected interface address would remove loopback connectivity required by the
 verified installer, CLI and independent update worker, and would fail after address changes.
 The wildcard binding accepts the host's current LAN and Tailscale addresses while keeping those
-local control paths. Generic API/development defaults remain loopback-only; upgrades preserve
-existing conffiles and require an owner action to change their network exposure.
+local control paths. The packaged conffile remains loopback-only: changing its default would also replace an
+unchanged older conffile on upgrade, even with `--force-confold`. The initial installer writes
+the wildcard binding atomically with the original owner/group/mode and restarts only EveryOS's API.
+Generic API/development defaults remain loopback-only; upgrades preserve existing conffiles
+and require an owner action to change their network exposure.
 
 The installer enumerates actual active IPv4 interfaces with the packaged `iproute2` dependency
 and advertises only addresses whose health endpoint responds. It does not infer a public WAN

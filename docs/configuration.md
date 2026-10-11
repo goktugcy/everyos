@@ -113,9 +113,9 @@ never substitutes simulated Docker. The API needs no Docker socket access.
 
 ## Remote access recipes
 
-Fresh 0.1.1 production packages provide `host: 0.0.0.0` in their packaged configuration and
-report responding LAN/Tailscale IPv4 URLs after installation. The generic configuration fallback
-remains `127.0.0.1`, and upgrades preserve existing conffiles. These recipes remain available
+The verified 0.1.2 installer enables `host: 0.0.0.0` only when no API configuration exists
+before package installation, and reports responding LAN/Tailscale IPv4 URLs. The packaged and
+generic defaults remain `127.0.0.1`, so upgrades preserve even an unchanged loopback conffile. These recipes remain available
 when the owner chooses proxy-only or customized access.
 
 - **Tailscale (recommended):** keep `host: 127.0.0.1` and run

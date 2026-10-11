@@ -1,9 +1,9 @@
-EveryOS 0.1.1 improves first installation and the personal desktop experience.
+EveryOS 0.1.2 improves first installation and the personal desktop experience.
 
-- Fresh installations automatically listen on IPv4 host interfaces at port 7470. The installer
+- The verified installer automatically enables IPv4 host interfaces at port 7470 for a new API configuration. The installer
   detects real LAN/Tailscale addresses and prints URLs that respond to the health check.
 - Localhost access remains available for CLI commands and the independent signed-update worker.
-  Existing installations keep their network configuration; no firewall, router or Tailscale
+  Existing installations keep both unchanged loopback defaults and custom network configurations; no firewall, router or Tailscale
   settings are changed by the installer.
 - Ubuntu systemd checks use `systemctl --version`, including systems without a `systemd` command
   on the command search path.

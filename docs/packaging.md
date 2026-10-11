@@ -114,7 +114,7 @@ Docker/Tailscale or change existing containers. Dependencies include
 real API and agent report ready. The first-run token is stored in `/var/lib/everyos/setup-token`;
 read it locally for the setup wizard, rather than placing it in logs or commands.
 
-Fresh packages from 0.1.1 listen on `0.0.0.0:7470`, making the application available on the host's
+The verified installer from 0.1.2 enables `0.0.0.0:7470` for a new installation, making the application available on the host's
 LAN and Tailscale IPv4 addresses while retaining loopback health checks and CLI/update access.
 The installer reads active IPv4 interfaces through `iproute2`, excludes loopback and common
 container/VM interfaces, and prints only network addresses whose EveryOS health endpoint
@@ -123,12 +123,15 @@ modify firewalls, open router ports or reconfigure Tailscale. Existing network p
 
 Use `server.host: 127.0.0.1` for a proxy-only installation and configure HTTPS using
 [tailscale.md](tailscale.md). The generic API configuration fallback remains loopback-only.
-Configuration files are dpkg conffiles: upgrades keep owner changes, including an older
-loopback-only binding, and maintainer scripts do not rewrite their contents.
+The installer atomically adjusts the binding only if no API conffile existed before APT installation,
+preserving root ownership, group and mode. Preconfigured installations keep their binding.
+The packaged default stays loopback-only: changing that default would broaden an unchanged
+0.1.0 conffile during a dpkg upgrade. Upgrades retain both unchanged loopback defaults and
+modified network bindings; maintainer scripts do not rewrite them.
 
 An owner who wants an existing 0.1.0 installation to accept network connections can change only
 `server.host` in `/etc/everyos/config.yaml` to `0.0.0.0` and restart `everyos-api.service`.
-Use the authenticated CLI to upgrade to 0.1.1 for the HTTP browser compatibility fix.
+Use the authenticated CLI to upgrade to 0.1.2 for the HTTP browser compatibility fix.
 
 | Path                        | Owner / purpose                                               |
 | --------------------------- | ------------------------------------------------------------- |

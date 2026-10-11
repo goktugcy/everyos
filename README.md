@@ -130,7 +130,7 @@ For script inspection and independent publisher-key and signature verification, 
    ```
 
 2. Open one of the network addresses printed by the installer, such as `http://192.168.1.20:7470`
-   or your host's Tailscale IPv4 address. Fresh packages from 0.1.1 listen on all IPv4 interfaces,
+   or your host's Tailscale IPv4 address. The verified installer from 0.1.2 enables all IPv4 interfaces for a new installation,
    including loopback. A client using the Tailscale address must be connected to the same tailnet.
    Use an HTTPS reverse proxy or [Tailscale Serve](docs/tailscale.md) for browser HTTPS access.
 3. Complete the setup wizard, create your administrator account and make the desktop your own.
@@ -155,7 +155,7 @@ Read the [security model](docs/security-model.md) or use [SECURITY.md](SECURITY.
 ## Project status
 
 EveryOS is in its first public release cycle. This README describes the current source tree;
-installed packages contain the code and assets from their release tag. The 0.1.1 packages include
+installed packages contain the code and assets from their release tag. The 0.1.2 release includes
 automatic network access for new installations and the default mountain wallpaper.
 
 Linux installation, updates and recovery have recorded disposable-host acceptance results.

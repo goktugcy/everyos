@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import socket
 import ssl
+import stat
 import subprocess
 import tempfile
 import time
@@ -20,6 +21,29 @@ REDIRECTS = {"release-assets.githubusercontent.com", "objects.githubusercontent.
 DEFAULT_RELEASE_SOURCE = "https://github.com/goktugcy/everyos/releases"
 VERSION = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\Z")
 LIMIT = 512 * 1024 * 1024
+
+def enable_network_access(config):
+    trusted(config)
+    info = config.stat()
+    content = config.read_bytes()
+    original = b"server:\n  host: 127.0.0.1\n  port: 7470\n"
+    if not content.startswith(original):
+        raise ValueError("Unexpected fresh installation network configuration")
+    content = content.replace(original, b"server:\n  host: 0.0.0.0\n  port: 7470\n", 1)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=config.parent, prefix=".network-config-", delete=False) as handle:
+            temporary = Path(handle.name)
+            os.fchown(handle.fileno(), info.st_uid, info.st_gid)
+            os.fchmod(handle.fileno(), stat.S_IMODE(info.st_mode))
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, config)
+        sync_directory(config.parent)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 def interface_addresses(interfaces):
     addresses = {}
@@ -218,6 +242,8 @@ def main():
         config_dir = Path("/etc/everyos")
         config_dir.mkdir(mode=0o750, exist_ok=True)
         trusted(config_dir, True)
+        api_config = config_dir / "config.yaml"
+        new_api_config = not (api_config.exists() or api_config.is_symlink())
         config = config_dir / "release.json"
         settings = {"source": args.source.rstrip("/"), "publicKey": key.decode(), "redirectHosts": sorted(REDIRECTS)}
         if config.exists():
@@ -234,6 +260,10 @@ def main():
             config.chmod(0o600)
             sync_directory(config_dir)
         subprocess.run(["apt-get", "install", "--yes", "--no-remove", "--no-install-recommends", "--", str(candidate)], check=True, env={**os.environ, "DEBIAN_FRONTEND": "noninteractive", "NEEDRESTART_MODE": "l"})
+        # Only the initial installer opts into network access; package upgrades keep their binding.
+        if new_api_config:
+            enable_network_access(api_config)
+            subprocess.run(["systemctl", "restart", "everyos-api.service"], check=True)
     for attempt in range(90):
         try:
             connection = http.client.HTTPConnection("127.0.0.1", 7470, timeout=2)
