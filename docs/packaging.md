@@ -33,6 +33,18 @@ the workflow's `GITHUB_REPOSITORY`. An owner must configure
 the signing secret and environment protection before publishing; no production private key or
 invented trust anchor is committed.
 
+The signer also writes `everyos-release-public.pem` and prints the SHA-256 fingerprint of its
+DER-encoded SubjectPublicKeyInfo. The workflow publishes this public key with the release;
+independently distribute the fingerprint before first installation. The private Ed25519 key
+must remain outside source control, with restricted permissions and a secure backup, and must
+stay the same for subsequent releases. Configure it as `EVERYOS_RELEASE_PRIVATE_KEY` in the
+GitHub `release` environment. Replacing it requires a separately authorized trust migration;
+do not generate a new key for every release.
+
+After publishing a version tag, confirm that the protected workflow succeeded, the release is
+public, and its signed `release.json` binds both downloadable package hashes. A tag or unsigned
+package alone is not a completed release. The initial release is `v0.1.0`.
+
 The signed manifest binds the exact bytes, size, SHA-256, version, architecture, minimum source
 version, database schema version, publication time, expiry and plain-text notes. Normal updates
 reject expired metadata and downgrades. Previously verified recovery packages may outlive the

@@ -1,4 +1,4 @@
-import { createPrivateKey, sign } from "node:crypto";
+import { createPrivateKey, createPublicKey, createHash, sign } from "node:crypto";
 import { readFileSync, writeFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
@@ -45,4 +45,13 @@ writeFileSync(
     signature: sign(null, payload, key).toString("base64"),
   }) + "\n",
 );
+const publicKey = createPublicKey(key);
+writeFileSync(
+  join(values.directory, "everyos-release-public.pem"),
+  publicKey.export({ format: "pem", type: "spki" }),
+);
+const fingerprint = createHash("sha256")
+  .update(publicKey.export({ format: "der", type: "spki" }))
+  .digest("hex");
 console.log(`Signed EveryOS ${manifest.version}`);
+console.log(`Publisher public key: SHA256:${fingerprint}`);
