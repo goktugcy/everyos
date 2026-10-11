@@ -19,6 +19,12 @@ installer records this source and the independently supplied publisher public ke
 The browser cannot change the source or trust key. A production signing secret and a published
 signed release are required before this default source can supply a live update.
 
+The first signed public release is
+[v0.1.0](https://github.com/goktugcy/everyos/releases/tag/v0.1.0). The published metadata, both Linux
+packages, public key and installer were downloaded without GitHub authentication and verified
+using the actual update transport. See [the publication record](phase8-acceptance.json) for the
+publisher fingerprint, source commit and package hashes.
+
 After the owner's repository rename, the updater and bootstrap installer recognize the old
 `https://github.com/goktugcy/otuken/releases` root as the new EveryOS source. Existing installations
 use the new URL on configuration reads, without rewriting their root-owned file or replacing the

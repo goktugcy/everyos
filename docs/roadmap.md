@@ -195,8 +195,10 @@ root agent on the owner's physical hardware remain separate hardware acceptance.
 ## Phase 8 — Packaging and hardening
 
 Implemented. See [packaging.md](packaging.md), [security review](phase8-security-review.md)
-and the measured [acceptance record](phase8-acceptance.json). Publishing a live release still
-requires the owner's protected signing secret and independently distributed public key.
+and the measured [acceptance record](phase8-acceptance.json). The first signed public release,
+[v0.1.0](https://github.com/goktugcy/everyos/releases/tag/v0.1.0), is published. The signing secret is
+configured in the `release` environment, restricted to version tags. First installations still
+require independent verification of the publisher public-key fingerprint.
 
 Debian packages for arm64 and amd64 with a bundled Node runtime, systemd units with sandboxing, an
 `everyos` CLI (`status`, `doctor`, `version`, `backup`, `restore`, `update`), a verified installer,

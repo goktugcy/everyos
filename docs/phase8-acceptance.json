@@ -136,9 +136,9 @@
       "passed": true,
       "exitCode": 0,
       "testFiles": 61,
-      "tests": 607,
+      "tests": 609,
       "includes": ["format", "lint", "typecheck", "unit and integration tests"],
-      "notes": "Baseline before Settings About integration and repository-source correction; subsequent focused checks are recorded below."
+      "notes": "Executed again before the first public release, including the Settings About and repository-source follow-ups."
     },
     "build": {
       "command": "pnpm build",
@@ -220,10 +220,88 @@
       "packageArchitectures": ["arm64", "amd64"],
       "packagedBundleVerification": true,
       "notes": "Both packages contain the current compiled bundles and corrected source. Linux VM acceptance was not repeated for this repository URL normalization; prior host acceptance used the earlier builds in artifactHistory. No release, signing key or repository content was published by this change."
+    },
+    "firstPublication": {
+      "passed": true,
+      "verifiedAt": "2026-10-11T19:06:46.882Z",
+      "repository": "goktugcy/everyos",
+      "version": "0.1.0",
+      "source": "https://github.com/goktugcy/everyos/releases",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.0",
+      "workflowUrl": "https://github.com/goktugcy/everyos/actions/runs/38166321182",
+      "publisherFingerprint": "SHA256:a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+      "signatureVerified": true,
+      "installerMatchesTaggedSource": true,
+      "latestMetadataSha256": "3541d96ef03257d6c6f64541e85edee6f1cd7c47252e16efab590688abc3368e",
+      "schemaVersion": 10,
+      "publishedAt": 1791745546147,
+      "expiresAt": 1799521546147,
+      "artifacts": [
+        {
+          "file": "everyos_0.1.0_arm64.deb",
+          "architecture": "arm64",
+          "bytes": 53652156,
+          "sha256": "aa41b6b3b1a4a66ba60dd095f989e1ed7bb07d2ae56a82f84d924c7b386f7714"
+        },
+        {
+          "file": "everyos_0.1.0_amd64.deb",
+          "architecture": "amd64",
+          "bytes": 53899362,
+          "sha256": "6984e681e6f45f1a8880ad82cbe186ae33468436789a5a794cded4d4bd3ef9f5"
+        }
+      ],
+      "sourceCommit": "5a0e53d0fcde9afc7c61582577800e6545623635",
+      "workflowConclusion": "success",
+      "releaseId": 409863190,
+      "latestRelease": true,
+      "assets": [
+        {
+          "name": "everyos-release-public.pem",
+          "size": 113,
+          "digest": "sha256:050a3af48f1770ec0b1febffef5c5ab6ebf214b3867b7861e04e2ebbec656be4",
+          "browser_download_url": "https://github.com/goktugcy/everyos/releases/download/v0.1.0/everyos-release-public.pem"
+        },
+        {
+          "name": "everyos_0.1.0_amd64.deb",
+          "size": 53899362,
+          "digest": "sha256:6984e681e6f45f1a8880ad82cbe186ae33468436789a5a794cded4d4bd3ef9f5",
+          "browser_download_url": "https://github.com/goktugcy/everyos/releases/download/v0.1.0/everyos_0.1.0_amd64.deb"
+        },
+        {
+          "name": "everyos_0.1.0_arm64.deb",
+          "size": 53652156,
+          "digest": "sha256:aa41b6b3b1a4a66ba60dd095f989e1ed7bb07d2ae56a82f84d924c7b386f7714",
+          "browser_download_url": "https://github.com/goktugcy/everyos/releases/download/v0.1.0/everyos_0.1.0_arm64.deb"
+        },
+        {
+          "name": "install.py",
+          "size": 11530,
+          "digest": "sha256:66274eb414dc80ccef0145a977437062297e2bcba4b578b866cf4b07f40ef31b",
+          "browser_download_url": "https://github.com/goktugcy/everyos/releases/download/v0.1.0/install.py"
+        },
+        {
+          "name": "release.json",
+          "size": 2838,
+          "digest": "sha256:3541d96ef03257d6c6f64541e85edee6f1cd7c47252e16efab590688abc3368e",
+          "browser_download_url": "https://github.com/goktugcy/everyos/releases/download/v0.1.0/release.json"
+        }
+      ],
+      "publisherTrust": {
+        "algorithm": "Ed25519",
+        "fingerprintEncoding": "SHA-256 of DER SubjectPublicKeyInfo",
+        "privateKeyLocation": "Outside the repository; owner-only 0600 file in a 0700 publisher directory",
+        "secretName": "EVERYOS_RELEASE_PRIVATE_KEY",
+        "environment": "release",
+        "allowedDeployments": {
+          "type": "tag",
+          "name": "v*"
+        }
+      },
+      "notes": "The tagged GitHub workflow built and signed the published packages. Both package bodies and the latest signed metadata were downloaded without authentication using the actual updater HTTPS transport and checked against the independently held publisher public key. The installer matches the tagged source. Publication checks do not rerun the earlier Linux VM install/recovery acceptance; those builds and scenarios remain recorded separately. Subsequent documentation commits do not move the immutable release tag."
     }
   },
   "operationalRequirements": [
-    "Production publisher signing secret and independently distributed public key must be configured before a live release. No release was published.",
+    "The first public signed release v0.1.0 is published and the release-environment signing secret is configured. Independently verify the public-key fingerprint before first installation, retain the private publisher key for subsequent releases, and use a separately authorized process for any future trust-key migration.",
     "Release migrations are database-only; external data formats need a separately designed recovery contract.",
     "Acceptance used only newly created disposable VMs; existing owner services, containers and data were not used for destructive tests."
   ],
