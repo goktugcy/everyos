@@ -1,5 +1,10 @@
-import type { WallpaperSpec } from "@everyos/shared";
-import { toTriplet, WALLPAPER_PRESETS, type WallpaperPreset } from "@everyos/theme";
+import type { WallpaperPresetId, WallpaperSpec } from "@everyos/shared";
+import {
+  DEFAULT_WALLPAPER_PRESET_ID,
+  toTriplet,
+  WALLPAPER_PRESETS,
+  type WallpaperPreset,
+} from "@everyos/theme";
 import { memo, useState, type CSSProperties } from "react";
 import { cn } from "../../lib/cn.ts";
 
@@ -104,9 +109,8 @@ function PresetLayers({ preset }: { preset: WallpaperPreset }) {
 }
 
 /**
- * Renders any wallpaper specification. Built-in wallpapers are pure CSS;
- * uploaded images load from the authenticated wallpaper endpoint and fall
- * back to `fallback` if they cannot be shown.
+ * Bundled presets need no authenticated request. Uploaded images remain
+ * private and fall back to `fallback`; missing bundled assets fall back to CSS.
  */
 export const WallpaperView = memo(function WallpaperView({
   spec,
@@ -118,9 +122,10 @@ export const WallpaperView = memo(function WallpaperView({
   className?: string;
 }) {
   const [failed, setFailed] = useState<string | null>(null);
+  const [failedPreset, setFailedPreset] = useState<WallpaperPresetId | null>(null);
   const effective =
     spec.kind === "image" && failed === spec.wallpaperId
-      ? (fallback ?? { kind: "preset", id: "everyos-dusk" })
+      ? (fallback ?? { kind: "preset", id: DEFAULT_WALLPAPER_PRESET_ID })
       : spec;
 
   let content;
@@ -129,7 +134,18 @@ export const WallpaperView = memo(function WallpaperView({
     case "preset": {
       const preset = WALLPAPER_PRESETS[effective.id];
       base = preset.colors.base;
-      content = <PresetLayers preset={preset} />;
+      content =
+        preset.image && failedPreset !== preset.id ? (
+          <img
+            src={preset.image}
+            alt=""
+            draggable={false}
+            onError={() => setFailedPreset(preset.id)}
+            className="absolute inset-0 size-full select-none object-cover"
+          />
+        ) : (
+          <PresetLayers preset={preset} />
+        );
       break;
     }
     case "gradient":

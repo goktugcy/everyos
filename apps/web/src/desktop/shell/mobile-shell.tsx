@@ -1,3 +1,4 @@
+import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
 import { ChevronLeft, Lock, LogOut, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -71,7 +72,10 @@ export function MobileShell() {
         inert={locked}
         data-testid="mobile-shell"
       >
-        <WallpaperView spec={theme.wallpaper} fallback={{ kind: "preset", id: "everyos-dusk" }} />
+        <WallpaperView
+          spec={theme.wallpaper}
+          fallback={{ kind: "preset", id: DEFAULT_WALLPAPER_PRESET_ID }}
+        />
         <header className="glass-strong relative z-10 flex h-12 shrink-0 items-center gap-2 rounded-none border-x-0 border-t-0 px-3 pt-[env(safe-area-inset-top)]">
           {open && manifest ? (
             <>

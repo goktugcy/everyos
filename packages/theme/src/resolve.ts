@@ -52,13 +52,14 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 
 /**
  * The colors a glass surface may end up on top of. Built-in wallpapers have
- * known colors; for gradients the endpoints matter; for uploaded images the
- * worst case (pure white and pure black) is assumed.
+ * known colors; for gradients the endpoints matter; for bundled and uploaded
+ * images the worst case (pure white and pure black) is assumed.
  */
 export function wallpaperBackdrops(wallpaper: WallpaperSpec): Rgb[] {
   switch (wallpaper.kind) {
     case "preset": {
       const preset = WALLPAPER_PRESETS[wallpaper.id];
+      if (preset.image) return [WHITE, BLACK];
       const base = parseHex(preset.colors.base);
       return [
         base,

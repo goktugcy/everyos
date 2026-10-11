@@ -1,14 +1,15 @@
 import type { WallpaperPresetId } from "@everyos/shared";
 
 /**
- * Built-in wallpapers are generated with CSS gradients (no image assets), so
- * they cost nothing to download and scale to any resolution. `colors` drive
- * both the rendering and the contrast guarantees of the theme engine.
+ * Built-in wallpapers use CSS gradients or a bundled image. `colors` describe
+ * the CSS rendering/fallback; image presets use worst-case contrast bounds.
  */
 export interface WallpaperPreset {
   id: WallpaperPresetId;
   scheme: "dark" | "light";
   style: "dusk" | "aurora" | "mesh" | "flat";
+  /** Local public asset; the CSS style remains a fallback if it cannot load. */
+  image?: string;
   colors: { base: string; a: string; b: string; c: string };
   /** Peak opacity of the glow layers over the base color. */
   glow: number;
@@ -16,7 +17,19 @@ export interface WallpaperPreset {
   animatable: boolean;
 }
 
+export const DEFAULT_WALLPAPER_PRESET_ID: WallpaperPresetId = "everyos-mountains";
+
 export const WALLPAPER_PRESETS: Record<WallpaperPresetId, WallpaperPreset> = {
+  "everyos-mountains": {
+    id: "everyos-mountains",
+    scheme: "dark",
+    style: "flat",
+    image: "/wallpapers/everyos-mountains.png",
+    colors: { base: "#06171b", a: "#153b44", b: "#356873", c: "#82a6a9" },
+    glow: 0.4,
+    ridges: null,
+    animatable: false,
+  },
   "everyos-dusk": {
     id: "everyos-dusk",
     scheme: "dark",

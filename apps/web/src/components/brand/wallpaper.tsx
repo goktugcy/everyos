@@ -1,3 +1,4 @@
+import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
 import { useThemeStore } from "../../desktop/theme/theme-store.ts";
 import { WallpaperView } from "../../desktop/wallpaper/wallpaper-view.tsx";
 
@@ -6,7 +7,7 @@ export function Wallpaper() {
   const theme = useThemeStore((state) => state.theme);
   const spec =
     theme.wallpaper.kind === "image"
-      ? { kind: "preset" as const, id: "everyos-dusk" as const }
+      ? { kind: "preset" as const, id: DEFAULT_WALLPAPER_PRESET_ID }
       : theme.wallpaper;
   return (
     <div className="fixed inset-0 -z-10">

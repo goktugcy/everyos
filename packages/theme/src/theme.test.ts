@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   contrastRatio,
   DEFAULT_APPEARANCE,
+  DEFAULT_WALLPAPER_PRESET_ID,
   exportTheme,
   importTheme,
   MIN_TEXT_CONTRAST,
@@ -15,6 +16,7 @@ import {
   surfaceContrast,
   themeCssVariables,
   THEME_PRESETS,
+  WALLPAPER_PRESETS,
   wallpaperBackdrops,
 } from "./index.ts";
 
@@ -149,6 +151,13 @@ describe("render modes", () => {
   });
 
   it("only animates animatable preset wallpapers", () => {
+    const theme = resolveTheme(DEFAULT_APPEARANCE);
+    expect(theme.wallpaper).toEqual({ kind: "preset", id: DEFAULT_WALLPAPER_PRESET_ID });
+    expect(theme.wallpaperAnimated).toBe(false);
+    expect(WALLPAPER_PRESETS[DEFAULT_WALLPAPER_PRESET_ID].image).toBe(
+      "/wallpapers/everyos-mountains.png",
+    );
+    expect(wallpaperBackdrops(theme.wallpaper)).toEqual([parseHex("#ffffff"), parseHex("#000000")]);
     expect(
       resolveTheme(settings({ wallpaper: { kind: "preset", id: "graphite" } })).wallpaperAnimated,
     ).toBe(false);

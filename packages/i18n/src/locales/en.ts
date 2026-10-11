@@ -43,7 +43,7 @@ export const en: Messages = {
   },
   brand: {
     name: "EveryOS",
-    tagline: "A modern, customizable desktop experience for your self-hosted infrastructure.",
+    tagline: "Your personal OS. Your files, apps and desktop, together.",
   },
   roles: {
     admin: "Administrator",
@@ -111,7 +111,7 @@ export const en: Messages = {
     foundationNotice:
       "The foundation layer is running: authentication, the privileged agent connection and real system information. The desktop shell arrives in the next phase.",
     aboutBody:
-      "EveryOS is an open-source web desktop for managing your existing Linux server without disrupting it.",
+      "EveryOS is a personal OS experience that brings your files, apps and workspace together on your own Linux system, accessible from a browser.",
   },
   system: {
     title: "System",
@@ -553,6 +553,7 @@ export const en: Messages = {
     "liquid-light": "Liquid Light",
   },
   wallpapers: {
+    "everyos-mountains": "EveryOS Mountains",
     "everyos-dusk": "EveryOS Dusk",
     aurora: "Northern Lights",
     frost: "Frost",
@@ -740,7 +741,7 @@ export const en: Messages = {
     },
     about: {
       description:
-        "EveryOS is an open-source web desktop for managing your existing Linux server without disrupting it.",
+        "EveryOS is a personal OS experience that brings your files, apps and workspace together on your own Linux system, accessible from a browser.",
       version: "Version",
       mode: "Mode",
       modes: {

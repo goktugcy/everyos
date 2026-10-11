@@ -104,7 +104,7 @@ real API and agent report ready. The first-run token is stored in `/var/lib/ever
 read it locally for the setup wizard, rather than placing it in logs or commands.
 
 The API listens on loopback port 7470. Configure an existing reverse proxy or Tailscale Serve
-using [remote-access.md](remote-access.md). Configuration files are dpkg conffiles: upgrades keep
+using [tailscale.md](tailscale.md). Configuration files are dpkg conffiles: upgrades keep
 owner changes, and maintainer scripts do not rewrite their contents.
 
 | Path                        | Owner / purpose                                               |

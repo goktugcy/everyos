@@ -339,3 +339,16 @@ code and key files live under a root-private `/var/lib` directory because the ve
 keys under writable ancestors such as `/tmp`; an exit trap removes only that generated directory.
 The underlying Python installer persists the verified recovery package and root-owned trust
 configuration. Existing installations continue through the authenticated update workflow.
+
+## D29 — Personal OS identity and a bundled default wallpaper (2026-10)
+
+The owner positions EveryOS as a personal OS experience on an existing Linux installation.
+The README, product tagline and About descriptions lead with files, apps and a personal browser
+workspace. The owner-provided logos, desktop screenshot and mountain artwork are stored locally;
+the README selects a readable wordmark for each color scheme.
+
+The mountain image gets a new built-in preset instead of replacing the existing Dusk preset.
+The default Liquid Dark theme resolves to that preset; explicit user wallpaper choices continue
+to take precedence. Built-in assets are public, while uploaded images keep their authenticated
+ownership boundary. Photographic presets use worst-case black/white contrast bounds, are static,
+and fall back to CSS if the packaged image cannot load. See [branding.md](branding.md).

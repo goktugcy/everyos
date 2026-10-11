@@ -1,3 +1,4 @@
+import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
 import { reassignDesktops } from "@everyos/widget-sdk";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -116,7 +117,7 @@ function DesktopWorkspace() {
       <div className="fixed inset-0 overflow-hidden" inert={locked} data-testid="desktop">
         <WallpaperView
           spec={desktopWallpaper ?? theme.wallpaper}
-          fallback={{ kind: "preset", id: "everyos-dusk" }}
+          fallback={{ kind: "preset", id: DEFAULT_WALLPAPER_PRESET_ID }}
         />
         <DesktopSurface />
         <WidgetDesktopLayer />

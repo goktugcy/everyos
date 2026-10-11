@@ -35,6 +35,7 @@ export const THEME_PRESET_IDS = [
 export type ThemePresetId = (typeof THEME_PRESET_IDS)[number];
 
 export const WALLPAPER_PRESET_IDS = [
+  "everyos-mountains",
   "everyos-dusk",
   "aurora",
   "frost",

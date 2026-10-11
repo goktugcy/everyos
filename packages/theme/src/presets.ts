@@ -1,4 +1,5 @@
 import type { ThemeEffects, ThemePresetId, WallpaperPresetId } from "@everyos/shared";
+import { DEFAULT_WALLPAPER_PRESET_ID } from "./wallpapers.ts";
 
 export interface ThemePalette {
   scheme: "dark" | "light";
@@ -45,7 +46,7 @@ export const THEME_PRESETS: Record<ThemePresetId, ThemePreset> = {
       shadowIntensity: 0.55,
       radius: 22,
     },
-    wallpaper: "everyos-dusk",
+    wallpaper: DEFAULT_WALLPAPER_PRESET_ID,
   },
   "frost-blue": {
     id: "frost-blue",

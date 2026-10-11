@@ -1,7 +1,7 @@
 import type { IconSize } from "@everyos/shared";
 import { toTriplet } from "./color.ts";
 import type { ResolvedTheme } from "./resolve.ts";
-import { WALLPAPER_PRESETS } from "./wallpapers.ts";
+import { DEFAULT_WALLPAPER_PRESET_ID, WALLPAPER_PRESETS } from "./wallpapers.ts";
 
 export const ICON_PIXELS: Record<IconSize, number> = { small: 40, medium: 52, large: 64 };
 
@@ -15,7 +15,7 @@ export function themeCssVariables(theme: ResolvedTheme): Record<string, string> 
   const wallpaperColors =
     theme.wallpaper.kind === "preset"
       ? WALLPAPER_PRESETS[theme.wallpaper.id].colors
-      : WALLPAPER_PRESETS["everyos-dusk"].colors;
+      : WALLPAPER_PRESETS[DEFAULT_WALLPAPER_PRESET_ID].colors;
   const radius = Math.round(effects.radius);
 
   return {

@@ -2,7 +2,7 @@
   "name": "everyos-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "EveryOS — a modern, customizable desktop experience for your self-hosted infrastructure.",
+  "description": "EveryOS — a self-hosted personal OS for your files, apps and Linux workspace.",
   "type": "module",
   "packageManager": "pnpm@12.6.0",
   "engines": {

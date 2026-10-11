@@ -1,100 +1,203 @@
 <p align="center">
-  <img src="apps/web/public/everyos.png" width="72" height="72" alt="EveryOS logo" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/everyos-white.png" />
+    <img src="apps/web/public/everyos.png" width="420" alt="EveryOS" />
+  </picture>
 </p>
 
-<h1 align="center">EveryOS</h1>
+<h1 align="center">Your personal OS, in your browser.</h1>
 
-<p align="center"><em>A modern, customizable desktop experience for your self-hosted infrastructure.</em></p>
+<p align="center">
+  Your files. Your apps. Your own space.<br />
+  A personal desktop, powered by the Linux machine you control.
+</p>
 
-EveryOS is an open-source, self-hosted Linux server management platform with a web desktop
-interface inspired by "Liquid Glass" design. You install it on an existing Debian- or Ubuntu-based
-server (it is not a Linux distribution) and use it alongside your existing services and containers,
-without taking them over.
+<p align="center">
+  <a href="#get-started">Get started</a> ·
+  <a href="https://github.com/goktugcy/everyos/releases">Releases</a> ·
+  <a href="#explore-everyos">Features</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
 
-> **Status: initial public release (v0.1.0, Phases 1–8 implemented).** Authentication,
-> the desktop/mobile shell, Linux integration, Docker management and the multi-catalog
-> [App Store](docs/app-store.md) work end to end. Signed Linux packages, supervised version updates,
-> rollback and recovery passed disposable Linux-host acceptance. See the [roadmap](docs/roadmap.md)
-> and [packaging guide](docs/packaging.md) for supported hosts and operations.
+<p align="center">
+  <img src="docs/images/everyos-desktop.png" width="1280" alt="EveryOS desktop with glass panels, app shortcuts, a dock and the mountain wallpaper" />
+</p>
 
-## What works today
+<p align="center"><em>A workspace that feels like yours, wherever you open it.</em></p>
 
-- **Secure first-run setup.** The first administrator can only be created with a one-time token
-  stored on the server, so nobody else on the network can claim the instance.
-- **Authentication.** Password hashing with scrypt, server-side sessions (only hashes are stored),
-  optional TOTP two-factor authentication with replay protection and recovery codes, brute-force
-  lockouts, and session management.
-- **Authorization.** Administrator, Operator and Viewer roles built on fine-grained permissions
-  that the API and the agent enforce independently. Includes user administration and a structured
-  audit log.
-- **Privileged agent.** A separate root process that executes only a fixed registry of validated
-  operations over an authenticated Unix socket. There is no generic shell endpoint.
-- **Real host data.** OS, kernel, CPU, memory, uptime, hardware model (including Raspberry Pi
-  detection) and capability detection for systemd, journald, Docker, Tailscale and sensors. Missing
-  data is explained, never invented.
-- **Web client.** React, glass UI, Turkish by default with English available, accessible forms,
-  and a mobile-friendly layout.
-- **Desktop and host management.** Persistent windows, themes, virtual desktops, live Linux metrics,
-  systemd/journald tools and Docker discovery/lifecycle with explicit ownership and protection rules.
-- **App Store.** Runtime catalog readers, safe synchronization, architecture variants, rich forms,
-  policy, encryption, immutable images, health-aware rollback, progress streams, durable recovery,
-  lifecycle and owned-data transfer. Scope and verification are in [app-store.md](docs/app-store.md).
+## Meet EveryOS
 
-## Install on Linux
+EveryOS is a self-hosted **personal OS experience** that brings your files, applications and
+workspace together in a browser. It runs on your existing Linux installation and gives you a
+familiar desktop: windows, folders, a dock, search, settings and a space to make your own.
 
-On a fresh Debian 12+, Ubuntu 22.04+ or compatible APT/systemd host (arm64 or amd64):
+Keep documents in your personal home, organize your desktop, install self-hosted apps and see
+what your machine is doing. Open the same workspace from a laptop or use the mobile interface
+from your phone. Your data lives on the machine you choose to host it on.
+
+The interface is available in **Turkish and English**, with Turkish as the default.
+
+## Explore EveryOS
+
+### A desktop that remembers you
+
+Move and resize windows, snap them into place and return to your saved layout. Switch between
+virtual desktops, pin apps to the dock and find them through the launcher. Widgets, notifications
+and the Pulse shelf keep useful information close to your work.
+
+### Your files, at home
+
+Each account has a private home with Desktop, Documents, Downloads, Pictures, Music and Videos.
+The desktop shows the contents of your Desktop folder, so folders and files behave consistently
+across views. Select several items, draw a selection rectangle, drag between folders, preview
+images and edit text. Deleted files go to a private trash where they can be restored.
+
+Administrators can also make selected host locations available with explicit access rules.
+Learn more in the [file manager guide](docs/files.md).
+
+### Apps on your own machine
+
+Browse supported catalogs in the App Store, install self-hosted applications and follow their
+deployment progress. Open the Docker app to inspect containers and manage supported lifecycle
+actions. EveryOS distinguishes its own deployments from external and protected resources.
+
+App updates, deployment rollback and selected app-data backups are part of the same workspace.
+Docker must be installed on the host to use these features; the EveryOS installer does not install
+it automatically. See the [App Store](docs/app-store.md) and [Docker](docs/docker-management.md) guides.
+
+### Make it look like you
+
+Start with the EveryOS mountain wallpaper, then choose a different background, upload your own
+image or give each virtual desktop its own look. Seven themes, accent colors, glass effects,
+icon sizes and rendering modes let you adjust the interface to your device and taste.
+
+Choose a folder-icon preset or use your own image, globally or for an individual folder.
+Your appearance settings stay with your account.
+
+<details>
+<summary>View the default EveryOS wallpaper</summary>
+
+![EveryOS mountain wallpaper](apps/web/public/wallpapers/everyos-mountains.png)
+
+[Download the original wallpaper](apps/web/public/wallpapers/everyos-mountains.png) ·
+[Visual identity and assets](docs/branding.md)
+
+</details>
+
+### Linux, within reach
+
+See real CPU, memory, storage and network readings in System Monitor. Inspect services and logs,
+manage host packages and schedule supported tasks. The menu bar shows battery and power details
+when the Linux host exposes those sensors, including charging state and watts where available.
+
+The browser terminal connects to a real shell with independent windows and themes. An administrator
+must first configure a regular Linux account for terminal access; see [terminal.md](docs/terminal.md).
+Unavailable host capabilities are explained in the interface.
+
+### Your workspace, backed up
+
+Backups include the database, configuration, wallpapers and personal home folders, including
+desktop files and trash. Choose app data separately, verify archives and restore through the
+authenticated workflow. EveryOS version updates are available from **Settings → About**,
+**Updates → EveryOS** and the CLI, with signed packages and supervised recovery.
+
+See [backups](docs/backups.md) and [updates](docs/updates.md) for the operating details.
+
+## Get started
+
+Install on a fresh **Debian 12+, Ubuntu 22.04+ or compatible APT/systemd host**, using
+**ARM64 or AMD64**. The detailed kernel, glibc and systemd requirements are in the
+[installation guide](docs/packaging.md).
 
 ```bash
 curl -fsSL https://github.com/goktugcy/everyos/releases/latest/download/install.sh | sudo bash
 ```
 
-No repository clone, Node.js or pnpm installation is needed. The installer selects the host
-architecture, installs missing verification prerequisites and verifies the signed release and
-package before installation. The script is trusted through HTTPS from the official release;
-its embedded publisher key verifies subsequent downloads. For independent trust-key verification,
-script inspection and the manual installation alternative, see [docs/packaging.md](docs/packaging.md).
+The installer selects your architecture, installs missing prerequisites and verifies the signed
+release and package. The application includes its Node.js runtime; no repository clone, Node.js
+setup or pnpm installation is required.
 
-After installation, read `/var/lib/everyos/setup-token` locally with administrator privileges and
-open the web setup through your reverse proxy or an SSH tunnel to port 7470. The API binds to
-loopback by default; see [remote-access.md](docs/remote-access.md). Existing installations update
-through Settings → About, Updates → EveryOS or the authenticated CLI.
+The one-command path trusts the bootstrap delivered over HTTPS by the official GitHub release.
+For script inspection and independent publisher-key and signature verification, use the
+[manual installation instructions](docs/packaging.md#first-installation).
 
-## Quick start (development)
+### Open your workspace
 
-Requirements: Node.js 26 and pnpm 12.
+1. On the Linux host, read the one-time setup token:
+
+   ```bash
+   sudo cat /var/lib/everyos/setup-token
+   ```
+
+2. Open `http://127.0.0.1:7470` from that host, or connect through an SSH tunnel, an HTTPS reverse
+   proxy or [Tailscale](docs/tailscale.md) from another device. The API binds to loopback by default.
+3. Complete the setup wizard, create your administrator account and make the desktop your own.
+
+For an existing EveryOS installation, use **Settings → About** to check for and install a version
+update. The initial-installation command refuses an existing database.
+
+## Built around your control
+
+- **Private accounts.** Personal home folders, server-side sessions, optional two-factor
+  authentication and recovery codes.
+- **Explicit permissions.** Administrator, Operator and Viewer roles, with permissions enforced
+  by the API and agent and security-relevant actions recorded in the audit log.
+- **A separate privilege boundary.** The API runs unprivileged; host-management operations pass
+  through a validated agent registry. The configured interactive terminal uses its Linux account's
+  ordinary permissions.
+- **Verified updates.** Publisher signatures, package identity and hashes are checked before
+  installation. A supervised worker handles version updates and package/database recovery.
+
+Read the [security model](docs/security-model.md) or use [SECURITY.md](SECURITY.md) to report a vulnerability.
+
+## Project status
+
+EveryOS is in its first public release cycle. This README describes the current source tree;
+installed packages contain the code and assets from their release tag. The new default mountain
+wallpaper is in the current source and will be included in the next package release.
+
+Linux installation, updates and recovery have recorded disposable-host acceptance results.
+The recorded CI run also has three outstanding browser-test failures covering folder icons,
+file dragging and terminal themes. Validation and its limits are documented in
+[phase8-acceptance.json](docs/phase8-acceptance.json); planned work is in the [roadmap](docs/roadmap.md).
+
+## Development
+
+Use **Node.js 26** and **pnpm 12**:
 
 ```bash
 pnpm install
-pnpm dev            # http://127.0.0.1:5173 — the setup token is printed in the console
+pnpm dev
 ```
 
-Other commands: `pnpm test`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `pnpm test:e2e`. See
-[docs/development.md](docs/development.md).
+Open `http://127.0.0.1:5173`. The development stack prints its temporary setup token in the console.
 
-## Architecture in one paragraph
+```bash
+pnpm check
+pnpm build
+pnpm test:e2e
+```
 
-A **Hono** API runs as the unprivileged `everyos` user, serves the **React** client, stores state in
-**SQLite** (`node:sqlite`, WAL, versioned migrations with automatic backups) and talks to a small
-**privileged agent** over a Unix socket using a typed, mutually authenticated protocol. There are no
-native addons: the build produces two bundled server files plus static assets that run unchanged on
-ARM64 and AMD64. Details: [docs/architecture.md](docs/architecture.md) ·
-[docs/security-model.md](docs/security-model.md) · [docs/contracts.md](docs/contracts.md) ·
-[docs/decisions.md](docs/decisions.md).
+The React client, Hono API, SQLite database, privileged agent and update worker are described in
+the [architecture guide](docs/architecture.md). See [development.md](docs/development.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md) to work on the project.
 
 ## Documentation
 
-| Topic                               | Document                                                             |
-| ----------------------------------- | -------------------------------------------------------------------- |
-| Architecture                        | [docs/architecture.md](docs/architecture.md)                         |
-| Security model                      | [docs/security-model.md](docs/security-model.md)                     |
-| Configuration                       | [docs/configuration.md](docs/configuration.md)                       |
-| HTTP API                            | [docs/api.md](docs/api.md)                                           |
-| Contracts (apps, widgets, catalogs) | [docs/contracts.md](docs/contracts.md)                               |
-| Catalog format research             | [docs/research/catalog-formats.md](docs/research/catalog-formats.md) |
-| Development                         | [docs/development.md](docs/development.md)                           |
-| Roadmap                             | [docs/roadmap.md](docs/roadmap.md)                                   |
-| Contributing                        | [CONTRIBUTING.md](CONTRIBUTING.md)                                   |
-| Reporting vulnerabilities           | [SECURITY.md](SECURITY.md)                                           |
+| Start here                          | Guide                                                                                   |
+| ----------------------------------- | --------------------------------------------------------------------------------------- |
+| Installation, CLI and recovery      | [Packaging](docs/packaging.md)                                                          |
+| Host configuration                  | [Configuration](docs/configuration.md)                                                  |
+| Files, homes and trash              | [Files](docs/files.md)                                                                  |
+| Self-hosted applications            | [App Store](docs/app-store.md)                                                          |
+| Docker resources                    | [Docker management](docs/docker-management.md)                                          |
+| Browser shell access                | [Terminal](docs/terminal.md)                                                            |
+| Personalization and visual assets   | [Branding](docs/branding.md) · [Folder icons and power](docs/power-and-folder-icons.md) |
+| Widgets and integrations            | [Widgets](docs/widgets.md)                                                              |
+| Scheduled operations                | [Tasks](docs/tasks.md)                                                                  |
+| Data protection and version updates | [Backups](docs/backups.md) · [Updates](docs/updates.md)                                 |
+| Remote access                       | [Tailscale](docs/tailscale.md)                                                          |
+| APIs and extensions                 | [API](docs/api.md) · [Contracts](docs/contracts.md)                                     |
 
 ## License
 

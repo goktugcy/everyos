@@ -67,7 +67,7 @@ export const tr = {
   },
   brand: {
     name: "EveryOS",
-    tagline: "Kendi altyapınız için modern ve özelleştirilebilir bir masaüstü deneyimi.",
+    tagline: "Kişisel OS deneyimin. Dosyaların, uygulamaların ve masaüstün bir arada.",
   },
   roles: {
     admin: "Yönetici",
@@ -136,7 +136,7 @@ export const tr = {
     foundationNotice:
       "Temel katman çalışıyor: kimlik doğrulama, ayrıcalıklı ajan bağlantısı ve gerçek sistem bilgisi. Masaüstü kabuğu bir sonraki aşamada eklenecek.",
     aboutBody:
-      "EveryOS, mevcut Linux sunucunuzu bozmadan yönetmeniz için tasarlanmış açık kaynaklı bir web masaüstüdür.",
+      "EveryOS, dosyalarını, uygulamalarını ve çalışma alanını kendi Linux sisteminde bir araya getiren, tarayıcıdan erişilen kişisel OS deneyimidir.",
   },
   system: {
     title: "Sistem",
@@ -582,6 +582,7 @@ export const tr = {
     "liquid-light": "Liquid Light",
   } satisfies Record<ThemePresetId, string>,
   wallpapers: {
+    "everyos-mountains": "EveryOS Dağları",
     "everyos-dusk": "EveryOS Alacakaranlığı",
     aurora: "Kuzey Işıkları",
     frost: "Ayaz",
@@ -770,7 +771,7 @@ export const tr = {
     },
     about: {
       description:
-        "EveryOS, mevcut Linux sunucunuzu bozmadan yönetmeniz için tasarlanmış açık kaynaklı bir web masaüstüdür.",
+        "EveryOS, dosyalarını, uygulamalarını ve çalışma alanını kendi Linux sisteminde bir araya getiren, tarayıcıdan erişilen kişisel OS deneyimidir.",
       version: "Sürüm",
       mode: "Çalışma modu",
       modes: {

@@ -10,6 +10,11 @@ test("first-run setup creates the administrator and opens the shell", async ({ p
   await page.goto("/");
   await expect(page).toHaveTitle("EveryOS");
   await expect(page.getByRole("heading", { name: "EveryOS'e hoş geldiniz" })).toBeVisible();
+  const wallpaper = page.locator('img[src="/wallpapers/everyos-mountains.png"]');
+  await expect(wallpaper).toBeVisible();
+  await expect
+    .poll(() => wallpaper.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBe(4717);
 
   // Turkish is preselected; continue to token verification.
   await expect(page.getByRole("radio", { name: "Türkçe" })).toHaveAttribute("aria-checked", "true");
@@ -154,6 +159,51 @@ test("windows drag, resize, snap, minimize and restore their layout after reload
 
 test("all seven themes and render modes apply and persist", async ({ page }) => {
   await signIn(page);
+  const wallpaper = page
+    .getByTestId("desktop")
+    .locator(':scope > div[aria-hidden="true"] > img[src="/wallpapers/everyos-mountains.png"]');
+  await expect(wallpaper).toBeVisible();
+  await expect
+    .poll(() => wallpaper.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBe(4717);
+  await page.reload();
+  await expect(wallpaper).toBeVisible();
+  // The preset retains a CSS fallback when its bundled image cannot load.
+  await page.route("**/wallpapers/everyos-mountains.png", (route) => route.abort());
+  await page.reload();
+  await expect(wallpaper).toHaveCount(0);
+  await expect(page.getByTestId("desktop")).toBeVisible();
+  await expect(page.getByTestId("desktop").locator(':scope > div[aria-hidden="true"]')).toHaveCSS(
+    "background-color",
+    "rgb(6, 23, 27)",
+  );
+  await page.unroute("**/wallpapers/everyos-mountains.png");
+  await page.reload();
+  await expect(wallpaper).toBeVisible();
+  await page.getByTestId("dock").getByRole("button", { name: "Ayarlar", exact: true }).click();
+  const settings = page.locator('[data-app-id="everyos.settings"]');
+  await settings.getByRole("radio", { name: "EveryOS Dağları", exact: true }).click();
+  await expect
+    .poll(async () => (await preferences(page)).appearance?.wallpaper)
+    .toEqual({
+      kind: "preset",
+      id: "everyos-mountains",
+    });
+  await page.reload();
+  await expect(
+    settings.getByRole("radio", { name: "EveryOS Dağları", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await settings.getByRole("radio", { name: "EveryOS Alacakaranlığı", exact: true }).click();
+  await expect(wallpaper).toHaveCount(0);
+  await expect
+    .poll(async () => (await preferences(page)).appearance?.wallpaper)
+    .toEqual({
+      kind: "preset",
+      id: "everyos-dusk",
+    });
+  await settings.getByRole("radio", { name: "Tema varsayılanı", exact: true }).click();
+  await expect(wallpaper).toBeVisible();
+  await settings.locator('button[data-kind="close"]').click();
   await page.getByRole("button", { name: "Hızlı ayarlar", exact: true }).click();
   const themes = [
     ["Liquid Dark", "liquid-dark"],
