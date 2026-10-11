@@ -10,6 +10,12 @@ itself is not necessarily on Ubuntu's command search path, even when systemd is 
 If an older bootstrap stops at `systemd: command not found`, download and run the current
 installation command again. That check happens before APT changes or EveryOS installation.
 
+The corrected signed bootstrap is published with `v0.1.0`; the packages and signed package
+manifest retain their original bytes. Verification covered the missing-command case, the
+version check on Ubuntu 22.04 ARM64 and a complete signed-package installation on a fresh
+Ubuntu 24.04 ARM64 guest with healthy API/agent services. See `verification.ubuntuBootstrapHotfix`
+in [phase8-acceptance.json](phase8-acceptance.json) for the evidence and published script hashes.
+
 ## Build and release
 
 ```sh
