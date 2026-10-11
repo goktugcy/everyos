@@ -8,6 +8,10 @@ test.describe.configure({ mode: "serial" });
 
 test("first-run setup creates the administrator and opens the shell", async ({ page }) => {
   await page.goto("/");
+  if (process.env.EVERYOS_E2E_HTTP_HOST) {
+    expect(await page.evaluate(() => window.isSecureContext)).toBe(false);
+    expect(await page.evaluate(() => typeof crypto.randomUUID)).toBe("undefined");
+  }
   await expect(page).toHaveTitle("EveryOS");
   await expect(page.getByRole("heading", { name: "EveryOS'e hoş geldiniz" })).toBeVisible();
   const wallpaper = page.locator('img[src="/wallpapers/everyos-mountains.png"]');

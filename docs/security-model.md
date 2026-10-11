@@ -38,8 +38,9 @@ flowchart LR
 
 ## Network exposure
 
-- The API binds to `127.0.0.1:7470` by default **[P1]**. Exposing it on the LAN or a Tailscale
-  address is an explicit configuration change (`server.host`), and the API logs a warning when it
+- Fresh production packages from 0.1.1 bind to `0.0.0.0:7470` for automatic host-network access.
+  The generic API configuration fallback and development remain loopback-only **[P1]**.
+  Administrators can set `server.host: 127.0.0.1` for proxy-only access. The API logs a warning when it
   listens on a non-loopback address without TLS **[P1]**.
 - Recommended remote access is through Tailscale (`tailscale serve`) or a TLS reverse proxy. Direct
   TLS is supported with `server.tls` **[P1]**.

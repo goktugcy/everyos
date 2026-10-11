@@ -1,4 +1,18 @@
-EveryOS 0.1.0 is the first packaged Linux release.
+EveryOS 0.1.1 improves first installation and the personal desktop experience.
+
+- Fresh installations automatically listen on IPv4 host interfaces at port 7470. The installer
+  detects real LAN/Tailscale addresses and prints URLs that respond to the health check.
+- Localhost access remains available for CLI commands and the independent signed-update worker.
+  Existing installations keep their network configuration; no firewall, router or Tailscale
+  settings are changed by the installer.
+- Ubuntu systemd checks use `systemctl --version`, including systems without a `systemd` command
+  on the command search path.
+- The desktop works over a plain HTTP host-IP URL, including initial widget IDs and upload IDs.
+- The bundled EveryOS mountain wallpaper is the default Liquid Dark background. Explicit saved
+  wallpaper selections remain in effect. The README introduces EveryOS as a personal OS with
+  owner-provided logos, desktop screenshot and wallpaper.
+
+The initial 0.1.0 release introduced:
 
 - Debian packages for arm64 and amd64 include a verified, pinned Node runtime and systemd services.
 - Settings → About and Updates → EveryOS provide authenticated, signed version checks and installation.

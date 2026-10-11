@@ -352,3 +352,21 @@ The default Liquid Dark theme resolves to that preset; explicit user wallpaper c
 to take precedence. Built-in assets are public, while uploaded images keep their authenticated
 ownership boundary. Photographic presets use worst-case black/white contrast bounds, are static,
 and fall back to CSS if the packaged image cannot load. See [branding.md](branding.md).
+
+## D30 — Automatic network access for fresh installations (2026-10)
+
+At the owner's request, fresh production packages from 0.1.1 use an IPv4 wildcard binding.
+Choosing one detected interface address would remove loopback connectivity required by the
+verified installer, CLI and independent update worker, and would fail after address changes.
+The wildcard binding accepts the host's current LAN and Tailscale addresses while keeping those
+local control paths. Generic API/development defaults remain loopback-only; upgrades preserve
+existing conffiles and require an owner action to change their network exposure.
+
+The installer enumerates actual active IPv4 interfaces with the packaged `iproute2` dependency
+and advertises only addresses whose health endpoint responds. It does not infer a public WAN
+address or modify firewalls, router mappings or Tailscale. Existing HTTP transport warnings,
+authentication, permissions, CSRF checks and the unprivileged API remain in effect.
+
+Browser UUID generation uses `crypto.randomUUID` when available, with a UUIDv4 fallback backed
+by `crypto.getRandomValues`. The latter is available over ordinary HTTP; opening a host-IP URL
+must not break initial widget preferences, file uploads or Pulse uploads.

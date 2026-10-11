@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = Number(process.env.EVERYOS_E2E_PORT ?? 7480);
+const httpHost = process.env.EVERYOS_E2E_HTTP_HOST;
 
 export default defineConfig({
   testDir: ".",
@@ -11,7 +12,12 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["list"]] : "list",
   use: {
-    baseURL: `http://127.0.0.1:${port}`,
+    baseURL: `http://${httpHost ?? "127.0.0.1"}:${port}`,
+    launchOptions: {
+      args: httpHost
+        ? [`--host-resolver-rules=MAP ${httpHost} 127.0.0.1`, "--no-proxy-server"]
+        : [],
+    },
     trace: "retain-on-failure",
     locale: "tr-TR",
   },

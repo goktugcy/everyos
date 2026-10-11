@@ -42,8 +42,8 @@ The theme engine treats bundled images like uploaded photographs when computing 
 surfaces: pure white and pure black bound the possible backdrop. Sampling a few mountain colors
 would miss the white wordmark and could make overlapping text unreadable.
 
-These assets and defaults apply to builds from the current source tree. Already published
-packages remain tied to their original tag; the next package release includes the new wallpaper.
+These assets and defaults apply to builds from 0.1.1 onward. The earlier 0.1.0 packages remain
+tied to their original tag and do not include the new wallpaper.
 
 ## Verification (2026-10-11)
 

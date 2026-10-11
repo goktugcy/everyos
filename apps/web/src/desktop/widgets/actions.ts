@@ -20,6 +20,7 @@ import {
   updateWidget,
 } from "@everyos/widget-sdk";
 import { workArea, type Viewport } from "@everyos/window-manager";
+import { randomId } from "../../lib/random-id.ts";
 import { resetPreference, updatePreference, usePreferences } from "../state/preferences-store.ts";
 import { wm } from "../state/window-store.ts";
 import { effectiveCells, type ScreenGrid } from "./geometry.ts";
@@ -58,7 +59,7 @@ function apply(change: (doc: WidgetPreferences) => WidgetPreferences): WidgetAct
   }
 }
 
-const newId = () => crypto.randomUUID();
+const newId = randomId;
 
 /**
  * Adopts what the user sees: widgets that were shifted to fit a narrower

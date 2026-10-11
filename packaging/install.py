@@ -21,6 +21,50 @@ DEFAULT_RELEASE_SOURCE = "https://github.com/goktugcy/everyos/releases"
 VERSION = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\Z")
 LIMIT = 512 * 1024 * 1024
 
+def interface_addresses(interfaces):
+    addresses = {}
+    for interface in interfaces:
+        name = interface.get("ifname", "")
+        if "UP" not in interface.get("flags", []) or name == "lo" or name.startswith(("docker", "br-", "veth", "cni", "flannel", "virbr", "vnet", "podman")):
+            continue
+        for info in interface.get("addr_info", []):
+            if info.get("family") != "inet" or info.get("scope") != "global":
+                continue
+            try:
+                address = ipaddress.ip_address(info.get("local", ""))
+            except ValueError:
+                continue
+            if address.version != 4 or address.is_loopback or address.is_link_local or address.is_multicast or address.is_unspecified:
+                continue
+            addresses.setdefault(address, name)
+    return [str(address) for address in sorted(addresses, key=lambda address: (not addresses[address].startswith("tailscale"), int(address)))]
+
+def print_access_urls():
+    print("Open EveryOS:")
+    print("  On this host: http://127.0.0.1:7470")
+    try:
+        interfaces = json.loads(subprocess.check_output(["ip", "-j", "-4", "address", "show", "up"], text=True, timeout=5))
+        addresses = interface_addresses(interfaces)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        print("  Network address detection is unavailable; inspect the host's IPv4 addresses.")
+        return
+    reachable = []
+    for address in addresses:
+        connection = http.client.HTTPConnection(address, 7470, timeout=2)
+        try:
+            connection.request("GET", "/api/health")
+            response = connection.getresponse()
+            if response.status == 200 and json.loads(response.read(4096)).get("status") == "ok":
+                reachable.append(address)
+        except (OSError, ValueError):
+            pass
+        finally:
+            connection.close()
+    for address in reachable:
+        print(f"  From another device: http://{address}:7470")
+    if not reachable:
+        print("  No active IPv4 network address responds on port 7470. Existing configuration is preserved.")
+
 def canonical_release_source(source):
     parsed = urlparse(source)
     if parsed.scheme == "https" and parsed.hostname == "github.com" and parsed.port in [None, 443] and not (parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.params) and parsed.path.rstrip("/").lower() == "/goktugcy/otuken/releases":
@@ -205,6 +249,7 @@ def main():
     else:
         raise ValueError("Services did not become ready; inspect journalctl -u everyos-api -u everyos-agent")
     print(f"Installed verified EveryOS {manifest['version']}. Setup token: /var/lib/everyos/setup-token")
+    print_access_urls()
 
 def sync_directory(path):
     fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)

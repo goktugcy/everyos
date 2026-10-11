@@ -129,8 +129,10 @@ For script inspection and independent publisher-key and signature verification, 
    sudo cat /var/lib/everyos/setup-token
    ```
 
-2. Open `http://127.0.0.1:7470` from that host, or connect through an SSH tunnel, an HTTPS reverse
-   proxy or [Tailscale](docs/tailscale.md) from another device. The API binds to loopback by default.
+2. Open one of the network addresses printed by the installer, such as `http://192.168.1.20:7470`
+   or your host's Tailscale IPv4 address. Fresh packages from 0.1.1 listen on all IPv4 interfaces,
+   including loopback. A client using the Tailscale address must be connected to the same tailnet.
+   Use an HTTPS reverse proxy or [Tailscale Serve](docs/tailscale.md) for browser HTTPS access.
 3. Complete the setup wizard, create your administrator account and make the desktop your own.
 
 For an existing EveryOS installation, use **Settings → About** to check for and install a version
@@ -153,12 +155,12 @@ Read the [security model](docs/security-model.md) or use [SECURITY.md](SECURITY.
 ## Project status
 
 EveryOS is in its first public release cycle. This README describes the current source tree;
-installed packages contain the code and assets from their release tag. The new default mountain
-wallpaper is in the current source and will be included in the next package release.
+installed packages contain the code and assets from their release tag. The 0.1.1 packages include
+automatic network access for new installations and the default mountain wallpaper.
 
 Linux installation, updates and recovery have recorded disposable-host acceptance results.
-The recorded CI run also has three outstanding browser-test failures covering folder icons,
-file dragging and terminal themes. Validation and its limits are documented in
+Recorded CI runs contain outstanding browser-test failures covering folder icons,
+file-manager interactions and terminal themes. Validation and its limits are documented in
 [phase8-acceptance.json](docs/phase8-acceptance.json); planned work is in the [roadmap](docs/roadmap.md).
 
 ## Development

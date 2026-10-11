@@ -82,9 +82,9 @@ Architecture: {args.arch}
 Maintainer: EveryOS contributors <noreply@everyos.invalid>
 Section: admin
 Priority: optional
-Depends: libc6 (>= 2.34), libstdc++6, libatomic1, ca-certificates, systemd (>= 248), adduser, openssl, python3
+Depends: libc6 (>= 2.34), libstdc++6, libatomic1, ca-certificates, systemd (>= 248), adduser, openssl, python3, iproute2
 Installed-Size: {sum(len(data) for _, data, _ in entries) // 1024}
-Description: Self-hosted EveryOS desktop and Linux management service
+Description: Self-hosted EveryOS personal OS and Linux management service
  Unprivileged API, typed local agent, web desktop and verified update worker.
 """
 controls = [("control", control.encode(), 0o644), ("conffiles", b"/etc/everyos/config.yaml\n/etc/everyos/agent.yaml\n", 0o644)]

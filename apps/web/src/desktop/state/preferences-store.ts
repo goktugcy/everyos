@@ -17,6 +17,7 @@ import { DEFAULT_APPEARANCE } from "@everyos/theme";
 import type { TFunction } from "i18next";
 import { create } from "zustand";
 import { api, ApiRequestError } from "../../lib/api.ts";
+import { randomId } from "../../lib/random-id.ts";
 import { applyAppearance } from "../theme/theme-store.ts";
 import {
   DEFAULT_MENUBAR,
@@ -183,7 +184,7 @@ export async function loadPreferences(context: LoadContext, signal?: AbortSignal
     security: stored.security ?? DEFAULT_SECURITY,
     widgets:
       (stored.widgets ? migrateWidgets(stored.widgets) : null) ??
-      defaultWidgetPreferences(context.permissions, () => crypto.randomUUID()),
+      defaultWidgetPreferences(context.permissions, randomId),
     notifications: stored.notifications ?? DEFAULT_NOTIFICATIONS,
     pulse: stored.pulse ?? DEFAULT_PULSE,
     initialWindows: usePreferences.getState().ready

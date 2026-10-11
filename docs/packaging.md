@@ -114,9 +114,21 @@ Docker/Tailscale or change existing containers. Dependencies include
 real API and agent report ready. The first-run token is stored in `/var/lib/everyos/setup-token`;
 read it locally for the setup wizard, rather than placing it in logs or commands.
 
-The API listens on loopback port 7470. Configure an existing reverse proxy or Tailscale Serve
-using [tailscale.md](tailscale.md). Configuration files are dpkg conffiles: upgrades keep
-owner changes, and maintainer scripts do not rewrite their contents.
+Fresh packages from 0.1.1 listen on `0.0.0.0:7470`, making the application available on the host's
+LAN and Tailscale IPv4 addresses while retaining loopback health checks and CLI/update access.
+The installer reads active IPv4 interfaces through `iproute2`, excludes loopback and common
+container/VM interfaces, and prints only network addresses whose EveryOS health endpoint
+responds. It discovers addresses assigned to this host; it does not query a WAN-IP service,
+modify firewalls, open router ports or reconfigure Tailscale. Existing network policies still apply.
+
+Use `server.host: 127.0.0.1` for a proxy-only installation and configure HTTPS using
+[tailscale.md](tailscale.md). The generic API configuration fallback remains loopback-only.
+Configuration files are dpkg conffiles: upgrades keep owner changes, including an older
+loopback-only binding, and maintainer scripts do not rewrite their contents.
+
+An owner who wants an existing 0.1.0 installation to accept network connections can change only
+`server.host` in `/etc/everyos/config.yaml` to `0.0.0.0` and restart `everyos-api.service`.
+Use the authenticated CLI to upgrade to 0.1.1 for the HTTP browser compatibility fix.
 
 | Path                        | Owner / purpose                                               |
 | --------------------------- | ------------------------------------------------------------- |

@@ -16,6 +16,7 @@ import { useApiResource } from "../../features/system/use-api-resource.ts";
 import { cn } from "../../lib/cn.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { formatBytes } from "../../lib/format.ts";
+import { randomId } from "../../lib/random-id.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import {
   FILES_DRAG_TYPE,
@@ -96,7 +97,7 @@ export function PulseShelf() {
     if (!target) return;
     const added: ShelfItem[] = [];
     for (const file of files) {
-      const id = crypto.randomUUID();
+      const id = randomId();
       setUploads((list) => [
         ...list,
         { id, name: file.name, loaded: 0, total: file.size, error: null },

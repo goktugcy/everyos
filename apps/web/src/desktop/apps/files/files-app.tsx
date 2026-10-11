@@ -49,6 +49,7 @@ import { ApiRequestError, uploadWithProgress } from "../../../lib/api.ts";
 import { cn } from "../../../lib/cn.ts";
 import { errorMessage } from "../../../lib/errors.ts";
 import { formatBytes, formatDateTime } from "../../../lib/format.ts";
+import { randomId } from "../../../lib/random-id.ts";
 import { usePermissions } from "../../../stores/session-store.ts";
 import type { MenuEntry } from "../../menus/menu-model.ts";
 import { ContextMenuArea } from "../../menus/menus.tsx";
@@ -386,7 +387,7 @@ export default function FilesApp() {
   const upload = async (files: File[], into: FileLocation | null = location) => {
     if (!into || files.length === 0) return;
     const items: UploadItem[] = files.map((file) => ({
-      id: crypto.randomUUID(),
+      id: randomId(),
       name: file.name,
       loaded: 0,
       total: file.size,

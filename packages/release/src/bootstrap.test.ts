@@ -54,3 +54,28 @@ it("publishes a self-contained, syntax-valid bootstrap signed with the manifest 
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+it("discovers LAN and Tailscale addresses without advertising inactive or container interfaces", () => {
+  const installer = fileURLToPath(new URL("../../../packaging/install.py", import.meta.url));
+  const output = execFileSync(
+    "python3",
+    [
+      "-B",
+      "-c",
+      `import importlib.util, json, sys
+spec = importlib.util.spec_from_file_location("everyos_installer", sys.argv[1])
+installer = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(installer)
+def nic(name, address, up=True):
+    return {"ifname": name, "flags": ["UP"] if up else [], "addr_info": [{"family": "inet", "scope": "global", "local": address}]}
+interfaces = [nic("eth0", "192.168.1.17"), nic("tailscale0", "100.102.81.59"), nic("eth1", "192.168.1.17"), nic("wlan0", "192.168.1.20", False), nic("docker0", "172.17.0.1"), nic("br-abc", "172.18.0.1"), nic("veth123", "172.18.0.2"), nic("lo", "127.0.0.1"), nic("eth2", "169.254.1.1"), nic("eth3", "not-an-address"), nic("eth4", "0.0.0.0"), nic("eth5", "224.0.0.1")]
+print(json.dumps(installer.interface_addresses(interfaces)))
+print(json.dumps(installer.interface_addresses([])))`,
+      installer,
+    ],
+    { encoding: "utf8" },
+  );
+  const lines = output.trim().split("\n");
+  expect(JSON.parse(lines[0]!)).toEqual(["100.102.81.59", "192.168.1.17"]);
+  expect(JSON.parse(lines[1]!)).toEqual([]);
+});
