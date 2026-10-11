@@ -113,21 +113,21 @@
       ],
       "environment": "Lima QEMU; x86_64 Linux CPU emulation",
       "passed": true,
-      "notes": "Final production bundles and systemd units tested, including the durable private root audit."
+      "notes": "Phase 8 production bundles and systemd units tested, including the durable private root audit, before the Settings About and repository-source follow-ups recorded below."
     }
   ],
   "artifacts": [
     {
-      "file": "everyos_0.1.0_arm64.deb",
-      "architecture": "arm64",
-      "bytes": 53650624,
-      "sha256": "225b62e59b6c92a4a996a9d5c4770d85b939f39ebd37bb5803013742b5494e0b"
-    },
-    {
       "file": "everyos_0.1.0_amd64.deb",
       "architecture": "amd64",
-      "bytes": 53897738,
-      "sha256": "8a5644fad5ac1d556f56afcc6f14e94d8d6268a7e9f4bf4d0e997927c14672e1"
+      "bytes": 53899068,
+      "sha256": "05b86550bf75488f97d85d485feaf9077c58049d21c70045acddcca32f7096c1"
+    },
+    {
+      "file": "everyos_0.1.0_arm64.deb",
+      "architecture": "arm64",
+      "bytes": 53651776,
+      "sha256": "dc59b4ba7264bb58fbab97a4ace844dbb457d3bd571ffb2d691dc6c124cb3362"
     }
   ],
   "verification": {
@@ -137,7 +137,8 @@
       "exitCode": 0,
       "testFiles": 61,
       "tests": 607,
-      "includes": ["format", "lint", "typecheck", "unit and integration tests"]
+      "includes": ["format", "lint", "typecheck", "unit and integration tests"],
+      "notes": "Baseline before Settings About integration and repository-source correction; subsequent focused checks are recorded below."
     },
     "build": {
       "command": "pnpm build",
@@ -177,6 +178,48 @@
       "browserTests": 2,
       "packageArchitectures": ["arm64", "amd64"],
       "notes": "Settings About and Updates EveryOS share one panel. The extended existing browser case verifies About against the real self-update API. API, agent, updater and CLI bundles remain byte-for-byte identical to the Linux-validated build; Linux VM acceptance was not repeated for this UI-only integration."
+    },
+    "repositoryRename": {
+      "passed": true,
+      "source": "https://github.com/goktugcy/everyos/releases",
+      "remoteOrigin": "https://github.com/goktugcy/everyos.git",
+      "legacySourceNormalization": true,
+      "publisherKeyPreserved": true,
+      "customSourcesPreserved": true,
+      "workflowRepository": "GITHUB_REPOSITORY",
+      "publicGitHub": {
+        "checkedAt": "2026-10-11T18:49:30.925315+00:00",
+        "repository": {
+          "httpStatus": 200,
+          "full_name": "goktugcy/everyos",
+          "private": false,
+          "html_url": "https://github.com/goktugcy/everyos"
+        },
+        "latestRelease": {
+          "httpStatus": 404
+        }
+      },
+      "liveTransport": {
+        "connected": true,
+        "latestMetadataHttpStatus": 404,
+        "notes": "Actual updater transport used a legacy source and connected to the effective EveryOS source over verified public HTTPS. No signed release is published yet."
+      },
+      "targetedTests": {
+        "command": "pnpm exec vitest run packages/release/src/release.test.ts packages/release/src/transport.test.ts apps/api/src/self-update.test.ts",
+        "files": 3,
+        "tests": 12,
+        "passed": true
+      },
+      "typecheck": {
+        "command": "pnpm typecheck",
+        "passed": true
+      },
+      "affectedFileLint": true,
+      "installerPythonSyntax": true,
+      "build": true,
+      "packageArchitectures": ["arm64", "amd64"],
+      "packagedBundleVerification": true,
+      "notes": "Both packages contain the current compiled bundles and corrected source. Linux VM acceptance was not repeated for this repository URL normalization; prior host acceptance used the earlier builds in artifactHistory. No release, signing key or repository content was published by this change."
     }
   },
   "operationalRequirements": [
@@ -199,6 +242,23 @@
           "architecture": "amd64",
           "bytes": 53898862,
           "sha256": "cf7ff5d24a4151c2fb6baac374e69c20a39c37dc29aa47c6c932cfe4d9c8205c"
+        }
+      ]
+    },
+    {
+      "description": "Packages with Settings About integration, before repository-source correction.",
+      "artifacts": [
+        {
+          "file": "everyos_0.1.0_arm64.deb",
+          "architecture": "arm64",
+          "bytes": 53650624,
+          "sha256": "225b62e59b6c92a4a996a9d5c4770d85b939f39ebd37bb5803013742b5494e0b"
+        },
+        {
+          "file": "everyos_0.1.0_amd64.deb",
+          "architecture": "amd64",
+          "bytes": 53897738,
+          "sha256": "8a5644fad5ac1d556f56afcc6f14e94d8d6268a7e9f4bf4d0e997927c14672e1"
         }
       ]
     }

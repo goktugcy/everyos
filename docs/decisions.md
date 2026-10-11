@@ -303,8 +303,12 @@ Version-1 cryptographic salts, derivation purposes, recovery-code hashes and age
 domains retain their original bytes. Managed Compose project ids (`otk-*`), Compose placeholders
 and inline-file extension names, private trash directories and home folder metadata keep their
 persisted identifiers; changing these without a migration could lose access to owned data or
-weaken protection. Both the old and new systemd service names are protected. The repository URL
-continues to point at the actual GitHub repository until the owner renames it separately.
+weaken protection. Both the old and new systemd service names are protected. The owner renamed
+the public GitHub repository to `goktugcy/everyos`. Repository metadata, installation defaults and
+security-report links use that name; release publication explicitly targets `GITHUB_REPOSITORY`.
+The updater and bootstrap installer map only the old owner's GitHub Releases root to the new
+root, preserving the configured public key and all custom sources. Configuration reads expose
+the effective new source without silently rewriting root-owned files.
 
 ## D27 — Signed releases and independent database-aware recovery (2026-10)
 

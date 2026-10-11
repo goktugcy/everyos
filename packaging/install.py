@@ -17,8 +17,15 @@ import time
 from urllib.parse import urljoin, urlparse, unquote
 
 REDIRECTS = {"release-assets.githubusercontent.com", "objects.githubusercontent.com"}
+DEFAULT_RELEASE_SOURCE = "https://github.com/goktugcy/everyos/releases"
 VERSION = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\Z")
 LIMIT = 512 * 1024 * 1024
+
+def canonical_release_source(source):
+    parsed = urlparse(source)
+    if parsed.scheme == "https" and parsed.hostname == "github.com" and parsed.port in [None, 443] and not (parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.params) and parsed.path.rstrip("/").lower() == "/goktugcy/otuken/releases":
+        return DEFAULT_RELEASE_SOURCE
+    return source
 
 def trusted(path, directory=False):
     info = path.lstat()
@@ -112,8 +119,9 @@ def verify(envelope, public_key):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--public-key", type=Path, required=True)
-    parser.add_argument("--source", default="https://github.com/goktugcy/otuken/releases")
+    parser.add_argument("--source", default=DEFAULT_RELEASE_SOURCE)
     args = parser.parse_args()
+    args.source = canonical_release_source(args.source)
     if os.geteuid() != 0 or not Path("/run/systemd/system").is_dir():
         parser.error("Run on a Linux systemd host as root")
     if Path("/var/lib/everyos/everyos.db").exists():
@@ -170,7 +178,9 @@ def main():
         settings = {"source": args.source.rstrip("/"), "publicKey": key.decode(), "redirectHosts": sorted(REDIRECTS)}
         if config.exists():
             trusted(config)
-            if json.loads(config.read_text()) != settings:
+            existing = json.loads(config.read_text())
+            existing["source"] = canonical_release_source(existing["source"])
+            if existing != settings:
                 raise ValueError("Release trust configuration already exists and differs")
         else:
             with config.open("x") as handle:

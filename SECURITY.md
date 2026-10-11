@@ -5,7 +5,7 @@ EveryOS is pre-release software (0.x). Only the latest commit on `main` receives
 ## Reporting a vulnerability
 
 Please report vulnerabilities privately through GitHub's
-[private vulnerability reporting](https://github.com/goktugcy/otuken/security/advisories/new) for this
+[private vulnerability reporting](https://github.com/goktugcy/everyos/security/advisories/new) for this
 repository. Do not open public issues, pull requests or discussions about unfixed vulnerabilities.
 
 Include the affected version or commit, the impact, and reproduction steps. We aim to acknowledge

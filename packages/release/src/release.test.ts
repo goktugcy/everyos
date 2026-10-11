@@ -1,9 +1,12 @@
 import { generateKeyPairSync, sign } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { compareVersions, verifyRelease, ReleaseManifestSchema } from "./manifest.ts";
 import { download, isPublicReleaseAddress } from "./transport.ts";
 import { SelfUpdateManager } from "./manager.ts";
 import { ReleaseInstallSchema } from "@everyos/shared/schemas";
+import { canonicalReleaseSource, DEFAULT_RELEASE_SOURCE } from "./source.ts";
 
 const keys = generateKeyPairSync("ed25519");
 const publicKey = keys.publicKey.export({ format: "pem", type: "spki" }).toString();
@@ -29,6 +32,34 @@ function signed(changes: Record<string, unknown> = {}) {
   });
 }
 describe("verified releases", () => {
+  it("keeps bootstrap and updater sources aligned and leaves custom or unrelated URLs unchanged", () => {
+    const sources = [
+      "https://github.com/goktugcy/otuken/releases",
+      "https://github.com/goktugcy/otuken/releases/",
+      "https://GITHUB.COM:443/Goktugcy/Otuken/releases",
+      "https://github.com/another-owner/otuken/releases",
+      "https://github.com/goktugcy/otuken/releases;custom",
+      "https://github.com.example.org/goktugcy/otuken/releases",
+      "https://user@github.com/goktugcy/otuken/releases",
+      "https://github.com/goktugcy/otuken/releases?custom=1",
+      "https://updates.example.org/everyos/releases",
+      "file:///root/everyos-fixtures/releases",
+    ];
+    const expected = sources.map((source, index) => (index < 3 ? DEFAULT_RELEASE_SOURCE : source));
+    expect(sources.map(canonicalReleaseSource)).toEqual(expected);
+    const installer = JSON.parse(
+      execFileSync(
+        "python3",
+        [
+          "-c",
+          "import json, runpy, sys; installer = runpy.run_path(sys.argv[1]); print(json.dumps({'default': installer['DEFAULT_RELEASE_SOURCE'], 'sources': [installer['canonical_release_source'](source) for source in json.load(sys.stdin)]}))",
+          fileURLToPath(new URL("../../../packaging/install.py", import.meta.url)),
+        ],
+        { input: JSON.stringify(sources), encoding: "utf8" },
+      ),
+    ) as { default: string; sources: string[] };
+    expect(installer).toEqual({ default: DEFAULT_RELEASE_SOURCE, sources: expected });
+  });
   it("verifies exact payload bytes, identity and validity window", () => {
     expect(verifyRelease(signed(), publicKey, 5000).version).toBe("0.2.0");
     expect(() => verifyRelease(signed(), publicKey, 11000)).toThrow(/expired/);

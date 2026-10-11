@@ -28,7 +28,8 @@ packages, then signs in the protected GitHub `release` environment using
 `EVERYOS_RELEASE_PRIVATE_KEY` (Ed25519 PEM). Maintain release notes and minimum upgrade version
 when preparing a release. The signer derives the schema version from the ordered migration list;
 `--schema-version` is an explicit override for controlled fixtures. The release job publishes `.deb` assets,
-`release.json` and `install.py` to the existing `goktugcy/otuken` repository. An owner must configure
+`release.json` and `install.py` to the public `goktugcy/everyos` repository, explicitly selecting
+the workflow's `GITHUB_REPOSITORY`. An owner must configure
 the signing secret and environment protection before publishing; no production private key or
 invented trust anchor is committed.
 

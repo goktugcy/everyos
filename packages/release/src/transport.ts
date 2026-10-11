@@ -5,6 +5,7 @@ import { realpath } from "node:fs/promises";
 import { readBounded } from "./config.ts";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { canonicalReleaseSource } from "./source.ts";
 
 const blocked = new BlockList();
 for (const [network, prefix] of [
@@ -160,7 +161,7 @@ export async function readReleaseFile(
     )
   )
     throw new Error("Invalid release path");
-  const base = new URL(`${config.source.replace(/\/$/, "")}/`);
+  const base = new URL(`${canonicalReleaseSource(config.source).replace(/\/$/, "")}/`);
   if (base.protocol === "file:") {
     const root = fileURLToPath(base),
       file = join(root, path);

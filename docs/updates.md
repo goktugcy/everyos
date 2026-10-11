@@ -12,12 +12,20 @@ restarts and recovers the prior package **and database** after a failed upgrade.
 trust configuration and a verified previous package are required; development mode cannot install
 host packages. See [packaging.md](packaging.md) for installation, release signing and recovery.
 
-The default release source is `https://github.com/goktugcy/otuken/releases`. The verified
+The default release source is `https://github.com/goktugcy/everyos/releases`. The verified
 installer records this source and the independently supplied publisher public key in root-owned
 `/etc/everyos/release.json`. Checks read `latest/download/release.json`; installation downloads
 `download/v<VERSION>/everyos_<VERSION>_<ARCH>.deb` and verifies its signed identity and hash.
 The browser cannot change the source or trust key. A production signing secret and a published
 signed release are required before this default source can supply a live update.
+
+After the owner's repository rename, the updater and bootstrap installer recognize the old
+`https://github.com/goktugcy/otuken/releases` root as the new EveryOS source. Existing installations
+use the new URL on configuration reads, without rewriting their root-owned file or replacing the
+publisher public key. Other explicitly configured sources remain unchanged. The release workflow
+publishes to its own `GITHUB_REPOSITORY`, rather than inferring an old Git remote. The repository
+is public, so clients do not require a GitHub token; public visibility alone does not publish a
+signed release.
 
 ## Operating-system package updates
 

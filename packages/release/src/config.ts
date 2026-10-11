@@ -16,6 +16,7 @@ import { dirname } from "node:path";
 import { z } from "zod";
 import { ReleaseVersionSchema } from "@everyos/shared/schemas";
 import { EVERYOS_VERSION } from "@everyos/shared";
+import { canonicalReleaseSource } from "./source.ts";
 
 export const UPDATE_ROOT = "/var/lib/everyos-updates";
 export const CONFIG_PATH = "/etc/everyos/release.json";
@@ -33,7 +34,8 @@ export const ReleaseConfigSchema = z.strictObject({
         ((url.protocol === "https:" && (!url.port || url.port === "443")) ||
           url.protocol === "file:")
       );
-    }),
+    })
+    .transform(canonicalReleaseSource),
   publicKey: z.string().min(1).max(4096),
   redirectHosts: z
     .array(z.string().regex(/^[a-z0-9.-]+$/))

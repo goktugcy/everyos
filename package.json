@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/goktugcy/otuken.git"
+    "url": "https://github.com/goktugcy/everyos.git"
   },
   "scripts": {
     "dev": "node scripts/dev.ts",
