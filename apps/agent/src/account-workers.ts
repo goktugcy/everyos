@@ -119,7 +119,7 @@ export class AccountWorkers {
           privileged ||
           (!op.startsWith("files.") &&
             (!contract.mutating || op.startsWith("docker.")) &&
-            this.#identities.status(context.actor).privilegedUntil !== null)
+            this.#identities.status(context.actor).privileged)
         ) {
           await this.#identities.requirePrivilege(context.actor);
           return original(params, context);

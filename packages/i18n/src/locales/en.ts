@@ -2614,6 +2614,21 @@ export const en: Messages = {
     },
   },
   linux: {
+    duration: "Sudo authorization duration",
+    changeDuration: "Change duration",
+    unlockedPermanent: "System privileges are authorized indefinitely.",
+    permanentHelp:
+      "Sudo authorization for this account stays active until you revoke it or its Linux permissions change.",
+    durations: {
+      "15m": "15 minutes",
+      "30m": "30 minutes",
+      "1h": "1 hour",
+      "5h": "5 hours",
+      "1d": "1 day",
+      "1w": "1 week",
+      "1mo": "1 month (30 days)",
+      permanent: "Indefinite",
+    },
     identity: "{{name}} · UID {{uid}}",
     title: "Linux account and permissions",
     link: "Link a Linux account",
@@ -2627,7 +2642,7 @@ export const en: Messages = {
       "No eligible local user accounts were found. Root and service accounts cannot be linked.",
     required: "First link your EveryOS user to your existing Linux account in the Users app.",
     privilegeHelp:
-      "Verify your existing sudo authorization for system management. Verification lasts 5 minutes in this EveryOS session; your password is not stored. EveryOS role permissions still apply.",
+      "Verify your Linux account’s sudo privileges and choose a duration. Authorization is saved for this EveryOS account across sessions and service restarts. Your password is never stored; Linux and EveryOS permissions still apply to every operation.",
     unlock: "Verify system authorization",
     lock: "Lock system authorization",
     unlocked: "System authorization is verified until {{time}}.",

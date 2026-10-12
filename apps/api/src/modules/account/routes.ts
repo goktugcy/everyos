@@ -17,9 +17,10 @@ import {
 import { LinuxUnlockSchema } from "@everyos/shared/schemas";
 import { callAgent } from "../../http/agent.ts";
 import { Hono, type Context } from "hono";
+import { z } from "zod";
 import type { AppEnv, AuthState } from "../../context.ts";
 import { ApiError, rateLimited } from "../../http/errors.ts";
-import { parseJsonBody } from "../../http/validation.ts";
+import { parseJsonBody, parseQuery } from "../../http/validation.ts";
 import { confirmPassword as confirmPasswordFor } from "../../http/reauth.ts";
 import { authenticated, requireAuth } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
@@ -31,7 +32,11 @@ export function accountRoutes(services: Services): Hono<AppEnv> {
   const { users, audit, secrets, limiters } = services;
   app.use("*", authenticated);
 
-  app.get("/linux", async (c) => c.json(await callAgent(c, services, "identity.status", {})));
+  const emptyLinuxInput = z.strictObject({});
+  app.get("/linux", async (c) => {
+    parseQuery(c, emptyLinuxInput);
+    return c.json(await callAgent(c, services, "identity.status", {}));
+  });
   app.post("/linux/unlock", async (c) => {
     const body = await parseJsonBody(c, LinuxUnlockSchema);
     const status = await callAgent(c, services, "identity.unlock", body);
@@ -41,12 +46,27 @@ export function accountRoutes(services: Services): Hono<AppEnv> {
       outcome: "success",
       actor: { userId: auth.user.id, username: auth.user.username },
       ip: c.get("client").ip,
-      details: { account: status.account?.name, expiresAt: status.privilegedUntil },
+      details: {
+        account: status.account?.name,
+        duration: body.duration ?? "legacy-session",
+        expiresAt: status.privilegedUntil,
+        scope: status.privilegeScope,
+      },
     });
     return c.json(status);
   });
   app.post("/linux/lock", async (c) => {
-    await callAgent(c, services, "identity.lock", {});
+    parseQuery(c, emptyLinuxInput);
+    // Older clients send a bodyless POST; supplied bodies must still be strict empty objects.
+    if ((await c.req.raw.clone().text()).length > 0) await parseJsonBody(c, emptyLinuxInput);
+    await callAgent(c, services, "identity.lock", { scope: "account" });
+    const auth = requireAuth(c);
+    audit.record({
+      action: "account.linux.lock",
+      outcome: "success",
+      actor: { userId: auth.user.id, username: auth.user.username },
+      ip: c.get("client").ip,
+    });
     return c.body(null, 204);
   });
 

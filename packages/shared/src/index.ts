@@ -94,11 +94,11 @@ export type {
 } from "./schemas/api.ts";
 
 /** Single coordinated product version (see docs/decisions.md). */
-export const EVERYOS_VERSION = "0.1.6";
+export const EVERYOS_VERSION = "0.1.7";
 
 /** HTTP header carrying the per-session CSRF token on state-changing requests. */
 export const CSRF_HEADER = "x-everyos-csrf";
 
 export * from "./power.ts";
 
-export type { LinuxAccount, LinuxBinding, LinuxAccountStatus } from "./linux-accounts.ts";
+export * from "./linux-accounts.ts";

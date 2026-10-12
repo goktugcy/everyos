@@ -219,9 +219,10 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
       return null;
     },
     "identity.status": (_params, { actor }) => identities().status(actor),
-    "identity.unlock": ({ linuxPassword }, { actor }) => identities().unlock(actor, linuxPassword),
-    "identity.lock": (_params, { actor }) => {
-      identities().lock(actor);
+    "identity.unlock": ({ linuxPassword, duration }, { actor }) =>
+      identities().unlock(actor, linuxPassword, duration),
+    "identity.lock": ({ scope }, { actor }) => {
+      identities().lock(actor, scope);
       return null;
     },
     "release.status": () => new SelfUpdateManager(deps.mode).status(),

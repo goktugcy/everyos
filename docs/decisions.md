@@ -387,8 +387,9 @@ File/system workers receive fixed typed operations and no privilege keys. Host f
 the account's unprivileged UID and supplementary groups, including while sudo is verified.
 
 Root-only typed operations require sudo to execute a fixed root-owned authorization witness.
-Password verification grants the authenticated EveryOS session five minutes of access; the
-password is discarded immediately. Actual sudoers authorization is checked instead of inferring
+Password verification originally granted the authenticated EveryOS session five minutes of access;
+D35 adds explicit durable durations. The password is discarded immediately. Actual sudoers
+authorization is checked instead of inferring
 rights from group names. Restricted sudoers rules for unrelated commands do not authorize EveryOS;
 those commands remain available normally in the terminal. Existing unit/container protection
 still applies. Existing personal storage stays API-owned, preserving desktop data and backup
@@ -428,3 +429,22 @@ monitor performs system-actor status/check reads in production, with hourly remo
 per-user read/dismiss state across checks and restarts. Manual About requests observe that same
 condition. Allowing system actors for the two non-installing operations enables unattended
 notification discovery; installation remains an explicit user action under existing controls.
+
+### D35 — Explicit durable Linux privilege durations
+
+The owner needs one-time Linux privilege verification with selectable finite or indefinite
+lifetimes. Explicit duration requests create an account-wide grant; legacy requests without a
+duration retain five-minute session grants. Logout and desktop lock revoke only session grants.
+Manual privilege lock revokes both scopes. Increasing or changing duration requires PAM and
+actual sudo witness authentication again; no password is persisted or replayed.
+
+Store grants in a root-owned private atomic sidecar, pinning the EveryOS UUID and Linux name/UID.
+Keep the existing binding-file shape compatible with older agents. Bind the sidecar to the
+binding file's content and filesystem stamp so an older agent's unlink/relink cannot reactivate
+an indefinite grant. Unrelated users' binding changes preserve their grants. Link changes,
+account replacement and EveryOS disable/delete revoke the affected user's grant.
+
+Every privileged call rechecks PAM account policy and root's fixed sudoers command-list query.
+Policy denial removes the grant and fails closed. Current EveryOS roles and protected-resource
+checks remain independent. One month is exactly 30 days; finite expiry uses wall-clock timestamps
+across restarts. No option elevates file-manager workers above the mapped Linux identity.

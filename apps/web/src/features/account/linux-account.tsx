@@ -1,5 +1,11 @@
-import type { LinuxAccount, LinuxAccountStatus, LinuxBinding } from "@everyos/shared";
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  LINUX_PRIVILEGE_DURATIONS,
+  type LinuxPrivilegeDuration,
+  type LinuxAccount,
+  type LinuxAccountStatus,
+  type LinuxBinding,
+} from "@everyos/shared";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../components/ui/alert.tsx";
 import { Button } from "../../components/ui/button.tsx";
@@ -130,13 +136,27 @@ export function LinuxAccountSection() {
   const { t, i18n } = useTranslation();
   const [status, setStatus] = useState<LinuxAccountStatus | null>(null);
   const [password, setPassword] = useState("");
+  const [duration, setDuration] = useState<LinuxPrivilegeDuration>("15m");
+  const [editing, setEditing] = useState(false);
+  const pending = useRef(false);
+  const revision = useRef(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   useEffect(() => {
     const abort = new AbortController();
+    let initial = true;
     const load = () => {
+      if (pending.current) return;
+      const atRevision = revision.current;
       void api<LinuxAccountStatus>("/account/linux", { signal: abort.signal }).then(
-        setStatus,
+        (value) => {
+          if (abort.signal.aborted || atRevision !== revision.current) return;
+          setStatus(value);
+          if (initial) {
+            setDuration(value.privilegeDuration ?? "15m");
+            initial = false;
+          }
+        },
         (caught: unknown) => {
           if (!abort.signal.aborted) setError(caught);
         },
@@ -150,6 +170,9 @@ export function LinuxAccountSection() {
     };
   }, []);
   const run = async (unlock: boolean) => {
+    if (pending.current) return;
+    pending.current = true;
+    revision.current++;
     setBusy(true);
     setError(null);
     try {
@@ -157,16 +180,28 @@ export function LinuxAccountSection() {
         setStatus(
           await api<LinuxAccountStatus>("/account/linux/unlock", {
             method: "POST",
-            body: { linuxPassword: password },
+            body: { linuxPassword: password, duration },
           }),
         );
       else {
         await api("/account/linux/lock", { method: "POST" });
-        setStatus((s) => s && { ...s, privilegedUntil: null });
+        setStatus(
+          (s) =>
+            s && {
+              ...s,
+              privileged: false,
+              privilegedUntil: null,
+              privilegeDuration: null,
+              privilegeScope: null,
+            },
+        );
       }
+      setEditing(false);
     } catch (caught) {
       setError(caught);
     } finally {
+      pending.current = false;
+      revision.current++;
       setPassword("");
       setBusy(false);
     }
@@ -181,18 +216,26 @@ export function LinuxAccountSection() {
           </p>
           <p className="break-all font-mono text-xs text-fg-muted">{status.account.home}</p>
           <p className="text-sm text-fg-muted">{t("linux.privilegeHelp")}</p>
-          {status.privilegedUntil ? (
+          {status.privileged ? (
             <>
               <Alert tone="success">
-                {t("linux.unlocked", {
-                  time: formatDateTime(status.privilegedUntil, i18n.language),
-                })}
+                {status.privilegedUntil === null
+                  ? t("linux.unlockedPermanent")
+                  : t("linux.unlocked", {
+                      time: formatDateTime(status.privilegedUntil, i18n.language),
+                    })}
               </Alert>
-              <Button variant="secondary" loading={busy} onClick={() => void run(false)}>
-                {t("linux.lock")}
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="secondary" loading={busy} onClick={() => void run(false)}>
+                  {t("linux.lock")}
+                </Button>
+                <Button variant="ghost" disabled={busy} onClick={() => setEditing((e) => !e)}>
+                  {t("linux.changeDuration")}
+                </Button>
+              </div>
             </>
-          ) : (
+          ) : null}
+          {!status.privileged || editing ? (
             <form
               className="flex flex-col gap-3"
               onSubmit={(event) => {
@@ -200,6 +243,19 @@ export function LinuxAccountSection() {
                 void run(true);
               }}
             >
+              <Select
+                label={t("linux.duration")}
+                value={duration}
+                options={LINUX_PRIVILEGE_DURATIONS.map((value) => ({
+                  value,
+                  label: t(`linux.durations.${value}`),
+                }))}
+                onChange={setDuration}
+                disabled={busy}
+              />
+              {duration === "permanent" ? (
+                <p className="text-sm text-fg-muted">{t("linux.permanentHelp")}</p>
+              ) : null}
               <PasswordField
                 label={t("linux.password")}
                 value={password}
@@ -211,7 +267,7 @@ export function LinuxAccountSection() {
                 {t("linux.unlock")}
               </Button>
             </form>
-          )}
+          ) : null}
         </>
       ) : status ? (
         <Alert tone="warning">{t("linux.required")}</Alert>

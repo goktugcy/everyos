@@ -322,6 +322,14 @@ authentication and real sudo verification. Host file workers and PTYs use the li
 UID and groups; a sudo grant never upgrades file-manager access. EveryOS roles, registry policy,
 CSRF and protected services/containers remain independent requirements.
 
+Linux sudo verification can explicitly last 15/30 minutes, 1/5 hours, 1 day/week, 30 days or
+indefinitely. Account-wide grants survive session and service restarts; only identity/duration
+metadata is persisted, privately and atomically by root. PAM account restrictions and current
+sudoers authorization for the fixed witness are checked on each privileged call. Policy denial,
+identity changes and manual revocation invalidate grants. Legacy duration-less requests retain
+five-minute session-only behavior. Desktop locking continues to block the HTTP session even
+when an account-wide Linux grant remains active.
+
 Home Assistant registry discovery is a read-only, pinned-DNS WebSocket session with fixed
 commands and bounded payload/time/cache sizes. Device details contain only scoped entities;
 serials and arbitrary registry fields are dropped. Brand images come through an authenticated,

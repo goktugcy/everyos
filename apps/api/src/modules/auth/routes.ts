@@ -187,7 +187,7 @@ export function authRoutes(services: Services): Hono<AppEnv> {
       services.sessions.revoke(auth.session.id);
       if (services.config.mode === "production")
         await services.agent
-          .call("identity.lock", {}, agentActor(auth, c.get("client").ip))
+          .call("identity.lock", { scope: "session" }, agentActor(auth, c.get("client").ip))
           .catch(() => undefined);
       audit.record({
         action: "auth.logout",
@@ -209,7 +209,7 @@ export function authRoutes(services: Services): Hono<AppEnv> {
     services.sessions.lock(auth.session.id);
     if (services.config.mode === "production")
       await services.agent
-        .call("identity.lock", {}, agentActor(auth, c.get("client").ip))
+        .call("identity.lock", { scope: "session" }, agentActor(auth, c.get("client").ip))
         .catch(() => undefined);
     audit.record({
       action: "auth.session.lock",

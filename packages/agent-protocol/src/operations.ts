@@ -7,6 +7,7 @@ import {
   LinuxBindSchema,
   LinuxUnbindSchema,
   LinuxUnlockSchema,
+  LinuxLockSchema,
   ReleaseInstallSchema,
   ReleaseJobSchema,
   SelfUpdateStatusSchema,
@@ -189,7 +190,7 @@ export const AGENT_OPERATIONS = {
     timeoutMs: 20_000,
   }),
   "identity.lock": unary({
-    params: NoParams,
+    params: LinuxLockSchema,
     result: z.null(),
     permission: null,
     allowSystemActor: false,

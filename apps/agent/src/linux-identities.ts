@@ -13,9 +13,16 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { OperationError, type Actor } from "@everyos/agent-protocol";
-import type { LinuxAccount, LinuxAccountStatus, LinuxBinding } from "@everyos/shared";
+import {
+  LINUX_PRIVILEGE_DURATION_MS,
+  LINUX_PRIVILEGE_DURATIONS,
+  type LinuxPrivilegeDuration,
+  type LinuxAccount,
+  type LinuxAccountStatus,
+  type LinuxBinding,
+} from "@everyos/shared";
 import { LinuxBindingSchema } from "@everyos/shared/schemas";
 import { z } from "zod";
 
@@ -43,6 +50,8 @@ def converse(n, messages, result, _):
         return 5
     for i in range(n):
         style = messages[i].contents.style
+        if style == 1 and not cfg.get("authenticate", True):
+            return 19
         if style in (1, 2):
             value = cfg["password"] if style == 1 else cfg["user"]
             responses[i].resp = libc.strdup(value.encode())
@@ -58,7 +67,7 @@ pam.pam_authenticate.argtypes = [c.c_void_p, c.c_int]
 pam.pam_acct_mgmt.argtypes = [c.c_void_p, c.c_int]
 pam.pam_end.argtypes = [c.c_void_p, c.c_int]
 status = pam.pam_start(b"everyos", cfg["user"].encode(), c.byref(conv), c.byref(handle))
-if status == 0:
+if status == 0 and cfg.get("authenticate", True):
     status = pam.pam_authenticate(handle, 0x8000)
 if status == 0:
     status = pam.pam_acct_mgmt(handle, 0)
@@ -80,6 +89,18 @@ args = ["/usr/bin/sudo", "-k", "-p", "", "-S" if password else "-n", "--", cfg["
 r = subprocess.run(args, input=(password + "\n").encode() if password else b"", stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env=env, timeout=10)
 sys.exit(0 if r.returncode == 0 and r.stdout == b"EVERYOS_AUTHORIZED\n" else 1)
 `;
+
+/** Recheck account restrictions and sudoers without retaining or reusing a password. */
+const CHECK_POLICY = AUTHENTICATE.replace(
+  "sys.exit(0 if status == 0 else 1)",
+  String.raw`
+if status != 0:
+    sys.exit(1)
+import subprocess
+r = subprocess.run(["/usr/bin/sudo", "-n", "-l", "-U", cfg["name"], "-u", "root", "--", cfg["node"], cfg["witness"]], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+sys.exit(0 if r.returncode == 0 else 1)
+`,
+);
 
 export function localAccounts(): LinuxAccount[] {
   const minimum = Number(
@@ -131,14 +152,32 @@ function helper(script: string, input: unknown): Promise<boolean> {
 
 const StoreSchema = z.array(LinuxBindingSchema).max(10_000);
 const GRANT_MS = 5 * 60_000;
+const AccountGrantSchema = LinuxBindingSchema.extend({
+  duration: z.enum(LINUX_PRIVILEGE_DURATIONS),
+  createdAt: z.number().int().nonnegative(),
+  until: z.number().int().nonnegative().nullable(),
+}).refine((g) => {
+  const duration = LINUX_PRIVILEGE_DURATION_MS[g.duration];
+  return duration === null ? g.until === null : g.until === g.createdAt + duration;
+}, "Invalid grant lifetime");
+type AccountGrant = z.infer<typeof AccountGrantSchema>;
+const GrantStoreSchema = z.strictObject({
+  version: z.literal(1),
+  bindingsStamp: z.string().max(256).nullable(),
+  grants: z.array(AccountGrantSchema).max(10_000),
+});
 
 export class LinuxIdentities {
   readonly #path: string;
+  readonly #grantPath: string;
+  #bindingsStamp: string | null = null;
+  #accountGrants = new Map<string, AccountGrant>();
   readonly #grants = new Map<string, { userId: string; uid: number; until: number }>();
   readonly #onChange: (userId: string) => void;
   readonly #readAccounts: () => LinuxAccount[];
   readonly #authenticate: (account: LinuxAccount, password: string) => Promise<boolean>;
   readonly #authorize: (account: LinuxAccount, password?: string) => Promise<boolean>;
+  readonly #policyAllows: (account: LinuxAccount) => Promise<boolean>;
   #bindings: LinuxBinding[];
   readonly #revisions = new Map<string, number>();
   #pending = Promise.resolve();
@@ -150,8 +189,10 @@ export class LinuxIdentities {
     accounts?: () => LinuxAccount[];
     authenticate?: (account: LinuxAccount, password: string) => Promise<boolean>;
     authorize?: (account: LinuxAccount, password?: string) => Promise<boolean>;
+    policyAllows?: (account: LinuxAccount) => Promise<boolean>;
   }) {
     this.#path = options.path;
+    this.#grantPath = join(dirname(options.path), "grants.json");
     this.#onChange = options.onChange;
     this.#readAccounts = options.accounts ?? localAccounts;
     this.#authenticate =
@@ -163,6 +204,16 @@ export class LinuxIdentities {
         helper(AUTHORIZE, {
           ...account,
           password,
+          node: process.execPath,
+          witness: join(dirname(process.argv[1]!), "sudo-witness.mjs"),
+        }));
+    this.#policyAllows =
+      options.policyAllows ??
+      ((account) =>
+        helper(CHECK_POLICY, {
+          ...account,
+          user: account.name,
+          authenticate: false,
           node: process.execPath,
           witness: join(dirname(process.argv[1]!), "sudo-witness.mjs"),
         }));
@@ -181,6 +232,14 @@ export class LinuxIdentities {
       this.#trusted(this.#path, false);
       this.#bindings = StoreSchema.parse(JSON.parse(readFileSync(this.#path, "utf8")));
     } else this.#bindings = [];
+    this.#bindingsStamp = this.#stamp();
+    if (existsSync(this.#grantPath)) {
+      this.#trusted(this.#grantPath, false);
+      const store = GrantStoreSchema.parse(JSON.parse(readFileSync(this.#grantPath, "utf8")));
+      // Older agents cannot revoke this sidecar: a changed binding file invalidates its grants.
+      if (store.bindingsStamp === this.#bindingsStamp)
+        this.#accountGrants = new Map(store.grants.map((g) => [g.userId, g]));
+    }
   }
 
   accounts(): LinuxAccount[] {
@@ -191,11 +250,16 @@ export class LinuxIdentities {
   }
 
   resolve(actor: Actor): LinuxAccount {
+    if (this.#stamp() !== this.#bindingsStamp)
+      throw new OperationError("policy_denied", "LINUX_ACCOUNT_REQUIRED");
     if (actor.kind !== "user") throw new OperationError("forbidden", "LINUX_ACCOUNT_REQUIRED");
     const binding = this.#bindings.find((b) => b.userId === actor.userId);
     const account =
       binding && this.accounts().find((a) => a.name === binding.account && a.uid === binding.uid);
-    if (!account) throw new OperationError("policy_denied", "LINUX_ACCOUNT_REQUIRED");
+    if (!account) {
+      if (this.#accountGrants.has(actor.userId)) this.#invalidate(actor.userId);
+      throw new OperationError("policy_denied", "LINUX_ACCOUNT_REQUIRED");
+    }
     return account;
   }
 
@@ -206,9 +270,22 @@ export class LinuxIdentities {
     } catch {
       /* Missing or replaced accounts remain unlinked. */
     }
+    const durable = actor.kind === "user" ? this.#accountGrants.get(actor.userId) : undefined;
+    const linked =
+      account && durable && durable.uid === account.uid && durable.account === account.name
+        ? durable
+        : null;
+    if (linked && (linked.until === null || linked.until > Date.now()))
+      return {
+        account,
+        privileged: true,
+        privilegedUntil: linked.until,
+        privilegeDuration: linked.duration,
+        privilegeScope: "account",
+      };
     const grant =
       actor.kind === "user" && actor.sessionId ? this.#grants.get(actor.sessionId) : undefined;
-    const privilegedUntil =
+    const until =
       account &&
       grant &&
       grant.userId === (actor.kind === "user" ? actor.userId : "") &&
@@ -216,7 +293,13 @@ export class LinuxIdentities {
       grant.until > Date.now()
         ? grant.until
         : null;
-    return { account, privilegedUntil };
+    return {
+      account,
+      privileged: until !== null,
+      privilegedUntil: until,
+      privilegeDuration: linked?.duration ?? null,
+      privilegeScope: until !== null ? "session" : null,
+    };
   }
 
   async bind(userId: string, name: string, password: string): Promise<LinuxBinding> {
@@ -230,8 +313,8 @@ export class LinuxIdentities {
         throw new OperationError("policy_denied", "LINUX_AUTH_FAILED");
       const binding = { userId, account: name, uid: account.uid };
       const bindings = this.#bindings.filter((b) => b.userId !== userId).concat(binding);
-      this.#save(bindings);
       this.#invalidate(userId);
+      this.#save(bindings);
       return binding;
     });
     this.#pending = run.then(
@@ -243,14 +326,18 @@ export class LinuxIdentities {
 
   unbind(userId: string): Promise<void> {
     const run = this.#pending.then(() => {
-      this.#save(this.#bindings.filter((b) => b.userId !== userId));
       this.#invalidate(userId);
+      this.#save(this.#bindings.filter((b) => b.userId !== userId));
     });
     this.#pending = run.catch(() => undefined);
     return run;
   }
 
-  async unlock(actor: Actor, password: string): Promise<LinuxAccountStatus> {
+  async unlock(
+    actor: Actor,
+    password: string,
+    duration?: LinuxPrivilegeDuration,
+  ): Promise<LinuxAccountStatus> {
     const account = this.resolve(actor);
     const revision = actor.kind === "user" ? this.#revisions.get(actor.userId) : undefined;
     this.#attempt(account.name);
@@ -268,21 +355,67 @@ export class LinuxIdentities {
     )
       throw new OperationError("policy_denied", "LINUX_ACCOUNT_REQUIRED");
     for (const [id, grant] of this.#grants) if (grant.until <= Date.now()) this.#grants.delete(id);
-    this.#grants.set(actor.sessionId, {
-      userId: actor.userId,
-      uid: account.uid,
-      until: Date.now() + GRANT_MS,
-    });
+    if (duration !== undefined) {
+      const lifetime = LINUX_PRIVILEGE_DURATION_MS[duration];
+      const createdAt = Date.now();
+      const next = new Map(this.#accountGrants);
+      next.set(actor.userId, {
+        userId: actor.userId,
+        account: account.name,
+        uid: account.uid,
+        duration,
+        createdAt,
+        until: lifetime === null ? null : createdAt + lifetime,
+      });
+      this.#persistGrants(next);
+      for (const [id, grant] of this.#grants)
+        if (grant.userId === actor.userId) this.#grants.delete(id);
+    } else {
+      this.#grants.set(actor.sessionId, {
+        userId: actor.userId,
+        uid: account.uid,
+        until: Date.now() + GRANT_MS,
+      });
+    }
     return this.status(actor);
   }
 
-  lock(actor: Actor): void {
-    if (actor.kind === "user" && actor.sessionId) this.#grants.delete(actor.sessionId);
+  lock(actor: Actor, scope: "session" | "account" = "account"): void {
+    if (actor.kind !== "user") return;
+    this.#revisions.set(actor.userId, (this.#revisions.get(actor.userId) ?? 0) + 1);
+    if (scope === "session") {
+      if (actor.sessionId) this.#grants.delete(actor.sessionId);
+      return;
+    }
+    const next = new Map(this.#accountGrants);
+    next.delete(actor.userId);
+    this.#persistGrants(next);
+    for (const [id, grant] of this.#grants)
+      if (grant.userId === actor.userId) this.#grants.delete(id);
   }
 
   async requirePrivilege(actor: Actor): Promise<void> {
     const account = this.resolve(actor);
-    if (this.status(actor).privilegedUntil !== null) return;
+    if (this.status(actor).privileged) {
+      const revision = actor.kind === "user" ? this.#revisions.get(actor.userId) : undefined;
+      if (!(await this.#policyAllows(account))) {
+        try {
+          this.lock(actor);
+        } catch {
+          /* Policy denial still fails closed if persistence is unavailable. */
+        }
+        throw new OperationError("policy_denied", "LINUX_SUDO_REQUIRED");
+      }
+      if (
+        actor.kind !== "user" ||
+        this.resolve(actor).uid !== account.uid ||
+        this.resolve(actor).name !== account.name ||
+        this.#revisions.get(actor.userId) !== revision ||
+        !this.status(actor).privileged
+      )
+        throw new OperationError("policy_denied", "LINUX_SUDO_REQUIRED");
+      return;
+    }
     const revision = actor.kind === "user" ? this.#revisions.get(actor.userId) : undefined;
     // Passwordless sudo is also evaluated by sudo itself, never inferred from group names.
     if (!(await this.#authorize(account)))
@@ -307,6 +440,9 @@ export class LinuxIdentities {
 
   #invalidate(userId: string): void {
     this.#revisions.set(userId, (this.#revisions.get(userId) ?? 0) + 1);
+    const next = new Map(this.#accountGrants);
+    next.delete(userId);
+    this.#persistGrants(next);
     for (const [id, grant] of this.#grants) if (grant.userId === userId) this.#grants.delete(id);
     this.#onChange(userId);
   }
@@ -322,8 +458,36 @@ export class LinuxIdentities {
       throw new Error("Unsafe Linux identity store");
   }
 
+  #stamp(): string | null {
+    if (!existsSync(this.#path)) return null;
+    this.#trusted(this.#path, false);
+    const info = lstatSync(this.#path);
+    return `${info.dev}:${info.ino}:${info.mtimeMs}:${createHash("sha256").update(readFileSync(this.#path)).digest("hex")}`;
+  }
+
+  #persistGrants(next = this.#accountGrants): void {
+    if (next.size || existsSync(this.#grantPath))
+      this.#write(
+        this.#grantPath,
+        GrantStoreSchema.parse({
+          version: 1,
+          bindingsStamp: this.#bindingsStamp,
+          grants: [...next.values()],
+        }),
+      );
+    this.#accountGrants = new Map(next);
+  }
+
   #save(bindings: LinuxBinding[]): void {
-    const temp = `${this.#path}.${randomUUID()}.tmp`;
+    this.#write(this.#path, StoreSchema.parse(bindings));
+    this.#bindings = bindings;
+    this.#bindingsStamp = this.#stamp();
+    this.#persistGrants();
+  }
+
+  #write(path: string, data: unknown): void {
+    if (existsSync(path)) this.#trusted(path, false);
+    const temp = `${path}.${randomUUID()}.tmp`;
     try {
       const fd = openSync(
         temp,
@@ -331,19 +495,18 @@ export class LinuxIdentities {
         0o600,
       );
       try {
-        writeFileSync(fd, JSON.stringify(StoreSchema.parse(bindings)));
+        writeFileSync(fd, JSON.stringify(data));
         fsyncSync(fd);
       } finally {
         closeSync(fd);
       }
-      renameSync(temp, this.#path);
-      const dir = openSync(dirname(this.#path), constants.O_RDONLY);
+      renameSync(temp, path);
+      const dir = openSync(dirname(path), constants.O_RDONLY);
       try {
         fsyncSync(dir);
       } finally {
         closeSync(dir);
       }
-      this.#bindings = bindings;
     } finally {
       try {
         unlinkSync(temp);

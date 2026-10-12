@@ -1017,6 +1017,62 @@
         ],
         "notificationAndAboutUpdateScenariosPassedOnBothArchitectures": true
       }
+    },
+    "linuxPrivilegeDurations017": {
+      "version": "0.1.7",
+      "date": "2026-10-12",
+      "ownerHostModified": false,
+      "publisherKeyChanged": false,
+      "productionLinux": {
+        "passed": true,
+        "installedVersion": "0.1.7",
+        "platform": "Ubuntu 26.04.1 ARM64",
+        "ownerHostModified": false,
+        "allEightDurationOptions": true,
+        "finiteDurationConfirmed": true,
+        "wrongPasswordCannotExtendGrant": true,
+        "indefiniteAuthorizationUI": true,
+        "realServiceControl": true,
+        "logoutAndNewSessionPreserveGrant": true,
+        "apiAndAgentRestartPreserveGrant": true,
+        "fileManagerStaysUnprivileged": true,
+        "sudoersRevocationRemovesGrant": true,
+        "restoringPolicyDoesNotRestoreRevokedGrant": true,
+        "passwordAbsentFromGrantStore": true,
+        "explicitRevocationSurvivesRestart": true,
+        "pageErrors": [],
+        "desktopLockPreservesGrantAndBlocksSession": true
+      },
+      "candidateArtifact": {
+        "file": "everyos_0.1.7_arm64.deb",
+        "bytes": 56808940,
+        "installed": true,
+        "signed": false
+      },
+      "limits": [
+        "Production Linux acceptance used a locally built ARM64 candidate before the final empty-body/query validation patch. Those HTTP validation changes are covered by source integration tests.",
+        "No AMD64 Linux installation was run for this change.",
+        "Finite expiry, per-user isolation, UID replacement, legacy behavior and in-flight revocation are covered by deterministic unit tests.",
+        "An initial final source test run failed storage checks because the disposable VM reduced free disk below the one-GiB reserve. The owned VM is removed before repeating the checks."
+      ],
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 65,
+        "tests": 633,
+        "log": ".dev/privilege-duration/check-after-cleanup.log"
+      },
+      "cleanup": {
+        "disposableVMDeleted": true,
+        "ownedImageCacheRemoved": true,
+        "ephemeralPasswordsAndSetupTokenRemoved": true,
+        "publisherKeyUntouched": true
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build",
+        "log": ".dev/privilege-duration/build-final.log"
+      }
     }
   },
   "operationalRequirements": [

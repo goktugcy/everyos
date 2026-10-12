@@ -89,14 +89,17 @@ Appearance documents can set a default `folderIcon` and up to 500 unique `folder
 
 ## Account (authenticated, self-service)
 
-| Method & path                  | Description                                                             |
-| ------------------------------ | ----------------------------------------------------------------------- |
-| `PATCH /account`               | `{ displayName?, locale? }` → `PublicUser`.                             |
-| `POST /account/password`       | `{ currentPassword, newPassword }` → `204`. Revokes all other sessions. |
-| `POST /account/totp/enroll`    | → `{ secret, otpauthUri }` (pending until confirmed).                   |
-| `POST /account/totp/enable`    | `{ code }` → `{ recoveryCodes: string[] }` (shown once).                |
-| `POST /account/totp/disable`   | `{ password, code }` → `204`.                                           |
-| `POST /account/recovery-codes` | `{ password }` → `{ recoveryCodes }`. Invalidates all previous codes.   |
+| Method & path                  | Description                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `PATCH /account`               | `{ displayName?, locale? }` → `PublicUser`.                                                             |
+| `POST /account/password`       | `{ currentPassword, newPassword }` → `204`. Revokes all other sessions.                                 |
+| `POST /account/totp/enroll`    | → `{ secret, otpauthUri }` (pending until confirmed).                                                   |
+| `POST /account/totp/enable`    | `{ code }` → `{ recoveryCodes: string[] }` (shown once).                                                |
+| `POST /account/totp/disable`   | `{ password, code }` → `204`.                                                                           |
+| `POST /account/recovery-codes` | `{ password }` → `{ recoveryCodes }`. Invalidates all previous codes.                                   |
+| `GET /account/linux`           | Caller-linked Linux identity and explicit privilege state; see [Linux accounts](linux-accounts.md#api). |
+| `POST /account/linux/unlock`   | `{ linuxPassword, duration? }` → `LinuxAccountStatus`. Explicit durations are account-wide.             |
+| `POST /account/linux/lock`     | Empty/bodyless → `204`. Revokes caller's Linux verification across sessions.                            |
 
 ## Users (`users:manage`)
 

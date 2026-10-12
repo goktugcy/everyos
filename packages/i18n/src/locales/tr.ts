@@ -2654,6 +2654,21 @@ export const tr = {
     },
   },
   linux: {
+    duration: "Sudo doğrulamasının süresi",
+    changeDuration: "Süreyi değiştir",
+    unlockedPermanent: "Sistem yetkisi süresiz doğrulandı.",
+    permanentHelp:
+      "Bu hesabın sudo doğrulaması sen kaldırana veya Linux yetkileri değişene kadar korunur.",
+    durations: {
+      "15m": "15 dakika",
+      "30m": "30 dakika",
+      "1h": "1 saat",
+      "5h": "5 saat",
+      "1d": "1 gün",
+      "1w": "1 hafta",
+      "1mo": "1 ay (30 gün)",
+      permanent: "Süresiz",
+    },
     identity: "{{name}} · UID {{uid}}",
     title: "Linux hesabı ve yetkileri",
     link: "Linux hesabını ilişkilendir",
@@ -2668,7 +2683,7 @@ export const tr = {
     required:
       "Önce Kullanıcılar uygulamasından EveryOS kullanıcını mevcut Linux hesabınla ilişkilendir.",
     privilegeHelp:
-      "Sistem yönetimi için mevcut sudo yetkini doğrula. Doğrulama bu EveryOS oturumunda 5 dakika geçerlidir; parolan saklanmaz. EveryOS rol izinleri de geçerli olmaya devam eder.",
+      "Sistem yönetimi için Linux hesabının sudo yetkisini doğrula ve süresini seç. Seçilen doğrulama bu EveryOS hesabı için saklanır; oturum ve servis yeniden başlatıldığında korunur. Parolan saklanmaz; Linux ve EveryOS izinleri her işlemde geçerlidir.",
     unlock: "Sistem yetkisini doğrula",
     lock: "Sistem yetkisini kilitle",
     unlocked: "Sistem yetkisi {{time}} tarihine kadar doğrulandı.",

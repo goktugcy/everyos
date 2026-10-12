@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LINUX_PRIVILEGE_DURATIONS } from "../linux-accounts.ts";
 
 export const LinuxAccountNameSchema = z.string().regex(/^[a-z_][a-z0-9_-]{0,31}\$?$/);
 export const LinuxAccountSchema = z.strictObject({
@@ -27,8 +28,17 @@ export const LinuxBindRequestSchema = LinuxBindSchema.omit({ userId: true }).ext
   currentPassword: z.string().min(1).max(1024),
 });
 export const LinuxUnbindSchema = z.strictObject({ userId: z.string().uuid() });
-export const LinuxUnlockSchema = z.strictObject({ linuxPassword: LinuxPasswordSchema });
+export const LinuxUnlockSchema = z.strictObject({
+  linuxPassword: LinuxPasswordSchema,
+  duration: z.enum(LINUX_PRIVILEGE_DURATIONS).optional(),
+});
+export const LinuxLockSchema = z.strictObject({
+  scope: z.enum(["session", "account"]).default("account"),
+});
 export const LinuxAccountStatusSchema = z.strictObject({
   account: LinuxAccountSchema.nullable(),
+  privileged: z.boolean(),
   privilegedUntil: z.number().nullable(),
+  privilegeDuration: z.enum(LINUX_PRIVILEGE_DURATIONS).nullable(),
+  privilegeScope: z.enum(["session", "account"]).nullable(),
 });
