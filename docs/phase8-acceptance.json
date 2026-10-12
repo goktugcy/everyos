@@ -963,8 +963,60 @@
       },
       "limits": [
         "New release notifications are tested with agent-protocol fixtures and real API/database processing. The hourly production loop was not exercised on a separate Linux host in this change.",
-        "No owner host installation or services were modified."
-      ]
+        "No owner host installation or services were modified.",
+        "The complete browser suite still reports the three previously recorded folder-icon, file-drag and terminal failures. Notification and About/package-update scenarios pass on both architectures."
+      ],
+      "sourceCommit": "48dfedaef63af1d760b6110ffe4786d24ae44494",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.6",
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38291273421"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.6",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.6_arm64.deb",
+            "size": 56799506,
+            "sha256": "e5239fe7b6b195191af994e8923db947f14b8b28692dfaea12b6b094ee4bfc8c",
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.6_amd64.deb",
+            "size": 57047236,
+            "sha256": "d5d00280e4ec018c7cb0895887d243e3a80021515e20690a9c6502b87601a0ab",
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true
+          }
+        ]
+      },
+      "fullSourceBrowserCi": {
+        "passed": false,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38291243536",
+        "eachArchitecture": {
+          "passedTests": 43,
+          "failedTests": 3
+        },
+        "existingFailures": [
+          "power-folder-icons.spec.ts:9",
+          "tools-finder.spec.ts:88",
+          "tools-terminal.spec.ts:120"
+        ],
+        "notificationAndAboutUpdateScenariosPassedOnBothArchitectures": true
+      }
     }
   },
   "operationalRequirements": [
