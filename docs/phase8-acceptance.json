@@ -1485,6 +1485,132 @@
         "publisherKeyUntouched": true,
         "downloadedPackagesRemoved": true
       }
+    },
+    "applicationsNavigation0111": {
+      "version": "0.1.11",
+      "date": "2026-10-13",
+      "ownerHostModified": false,
+      "publisherKeyChanged": false,
+      "sourceCommit": "c7384ff45cebc11b8ca1cf7928cda8a81e341ce8",
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 65,
+        "tests": 639,
+        "log": ".dev/applications-navigation/check-final.log"
+      },
+      "finalTargetedLint": {
+        "passed": true,
+        "logs": [
+          ".dev/applications-navigation/lint-final.log",
+          ".dev/applications-navigation/lint-final-test.log"
+        ]
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build",
+        "log": ".dev/applications-navigation/build-release.log"
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 4,
+        "logs": [
+          ".dev/applications-navigation/browser.log",
+          ".dev/applications-navigation/browser-verified.log"
+        ],
+        "coverage": [
+          "EveryOS About shows the automatic cadence and actual last-check field while retaining passwordless installation and development policy denial.",
+          "Applications is renamed across desktop, launcher and Files.",
+          "Files Favorites and home icon/list views open the same API-backed collection inside the Files window.",
+          "Window location is restored after reload; Back returns home.",
+          "An identically named real home folder remains independently visible and accessible.",
+          "Existing Store lifecycle, dismissible notices and live removal continue to work."
+        ],
+        "visualInspection": true,
+        "notes": "The initial broader run passed setup and both update scenarios. The final targeted run passed setup and the expanded Store/Files scenario after the fixture isolation and polling-bound fixes."
+      },
+      "scheduledNotifications": {
+        "passed": true,
+        "test": "apps/api/src/notifications.test.ts",
+        "hourlyBackgroundCheck": true,
+        "newVersionEmitsOneToast": true,
+        "noAutomaticInstallation": true,
+        "clock": "controlled timers; existing production monitor logic unchanged"
+      },
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38318697544"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.11",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.11_arm64.deb",
+            "size": 56833762,
+            "sha256": "5228a28e11fe4b46179a61416ff44ac201e9c786a5710cf92b10549012ad993d",
+            "filesFavoritesAndHomeApplicationsPresent": true,
+            "automaticVersionChecksVisible": true,
+            "liveApplicationFolderPresent": true,
+            "dismissibleStoreNoticesPresent": true,
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.11_amd64.deb",
+            "size": 57080762,
+            "sha256": "4012f0c17e895546a63443f0d6d13a025a35cc40479fb62140fa516d41ea7dda",
+            "filesFavoritesAndHomeApplicationsPresent": true,
+            "automaticVersionChecksVisible": true,
+            "liveApplicationFolderPresent": true,
+            "dismissibleStoreNoticesPresent": true,
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          }
+        ]
+      },
+      "fullSourceBrowserCi": {
+        "status": "in_progress",
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38318656850",
+        "sourceChecksPassedOnBothArchitectures": true,
+        "notes": "The full browser run was ongoing at publication acceptance. The prior 0.1.10 full-run failures are recorded separately; this entry does not claim the new full run passed."
+      },
+      "limits": [
+        "Browser acceptance uses explicitly labeled development Docker data and real filesystem/API calls; no new production Linux container lifecycle or upgrade run was performed for this UI integration.",
+        "Applications is a native launcher collection in the home view; no physical application directory or executable shortcut is created.",
+        "Notification popup preferences remain respected. Remote signature/network failures use the existing retry backoff and cannot create an unverified candidate notification.",
+        "A legacy-desktop fixture initially raced with queued saves from the active browser; setup now leaves the desktop before injecting it. The asynchronous second app removal is allowed two five-second polling cycles."
+      ],
+      "cleanup": {
+        "ownedLocalBrowserStateRemoved": true,
+        "publisherKeyUntouched": true,
+        "downloadedPackagesRemoved": true
+      }
     }
   },
   "operationalRequirements": [
