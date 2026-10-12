@@ -1169,14 +1169,17 @@
         "disposableVMDeleted": true,
         "ownedImageCacheRemoved": true,
         "ephemeralPasswordsAndSetupTokenRemoved": true,
-        "publisherKeyUntouched": true
+        "publisherKeyUntouched": true,
+        "downloadedPackagesAndUnsignedCandidateRemoved": true,
+        "ownedLocalBrowserStateRemoved": true
       },
       "limits": [
         "Real Linux acceptance installed a local ARM64 candidate and then replaced its agent bundle with the final built port-pinning implementation. Later edits change caption fitting only; the tested agent SHA-256 is recorded.",
         "No AMD64 Linux installation was run for this change.",
         "Host-network applications cannot use published-port remapping. Explicit fixed ports retain ordinary occupied-port failure.",
         "Required nongenerated secrets and external endpoints remain explicit installation inputs. Optional app-native setup is performed in the application panel after launch.",
-        "An initial browser run used a noncanonical /tmp state path and failed the private agent directory check; storage-backed UI tests also hit the one-GiB free-space reserve while the owned VM existed. The VM was removed and a canonical path used before repeating these cases."
+        "An initial browser run used a noncanonical /tmp state path and failed the private agent directory check; storage-backed UI tests also hit the one-GiB free-space reserve while the owned VM existed. The VM was removed and a canonical path used before repeating these cases.",
+        "Full source browser CI still fails the two previously recorded file-drag and terminal scenarios on both architectures. Caption, folder-icon and App Store scenarios pass; full CI is not green."
       ],
       "targetedBrowser": {
         "passed": true,
@@ -1199,6 +1202,69 @@
           "pnpm --filter @everyos/web typecheck",
           "pnpm exec eslint apps/web/src/components/ui/icon-label.tsx apps/web/src/desktop/apps/files/icon-view.tsx"
         ]
+      },
+      "sourceCommit": "14200e2efb92e9b134047c4955549a97a197c6eb",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.8",
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38310081416"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.8",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.8_arm64.deb",
+            "size": 56815056,
+            "sha256": "efec5274cc12bafbb4d40303fa8cb2caabcb148387a517a48febb8696048da8f",
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true,
+            "agentBundleSha256": "316f7e97929d270afcafeffceccd161f02b6c99cc7c265aad81fe3f848997b7a",
+            "matchesLinuxTestedAgent": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.8_amd64.deb",
+            "size": 57064730,
+            "sha256": "55d79741cf0ce82e8f792fc70eee30beea9bfa729a927a78adc1ee87e65de170",
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true,
+            "agentBundleSha256": "316f7e97929d270afcafeffceccd161f02b6c99cc7c265aad81fe3f848997b7a",
+            "matchesLinuxTestedAgent": true
+          }
+        ]
+      },
+      "fullSourceBrowserCi": {
+        "passed": false,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38309842817",
+        "sourceChecksPassedOnBothArchitectures": true,
+        "eachArchitecture": {
+          "passedTests": 45,
+          "failedTests": 2
+        },
+        "existingFailures": ["tools-finder.spec.ts:88", "tools-terminal.spec.ts:120"],
+        "newCaptionAndAppStoreScenariosPassedOnBothArchitectures": true,
+        "obsoleteFolderCaptionSelectorCorrected": true
       }
     }
   },
