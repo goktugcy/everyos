@@ -1,5 +1,11 @@
 import type { TFunction } from "i18next";
-import { PASSWORD_MIN_LENGTH, ROLES, type AdminUserView, type Role } from "@everyos/shared";
+import {
+  PASSWORD_MIN_LENGTH,
+  ROLES,
+  type AdminUserView,
+  type LinuxBinding,
+  type Role,
+} from "@everyos/shared";
 import {
   KeyRound,
   MoreHorizontal,
@@ -11,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { LinuxBindingDialog } from "../../../features/account/linux-account.tsx";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
 import { Dialog } from "../../../components/ui/dialog.tsx";
@@ -204,6 +211,8 @@ export default function UsersApp() {
   const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [linking, setLinking] = useState<AdminUserView | null>(null);
+  const [bindings, setBindings] = useState<LinuxBinding[]>([]);
   const [resetting, setResetting] = useState<AdminUserView | null>(null);
   const [revision, setRevision] = useState(0);
   const reload = () => setRevision((value) => value + 1);
@@ -213,6 +222,12 @@ export default function UsersApp() {
     api<{ users: AdminUserView[] }>("/users", { signal: controller.signal }).then(
       (result) => setUsers(result.users),
       (caught: unknown) => !controller.signal.aborted && setError(caught),
+    );
+    void api<{ bindings: LinuxBinding[] }>("/users/linux-accounts", {
+      signal: controller.signal,
+    }).then(
+      (result) => setBindings(result.bindings),
+      () => undefined,
     );
     return () => controller.abort();
   }, [revision]);
@@ -233,6 +248,13 @@ export default function UsersApp() {
     const self = user.id === me;
     const path = `/users/${encodeURIComponent(user.id)}`;
     return [
+      {
+        kind: "item",
+        id: "linux-account",
+        label: t("linux.link"),
+        icon: <UserCheck />,
+        onSelect: () => setLinking(user),
+      },
       {
         kind: "item",
         id: "password",
@@ -316,6 +338,9 @@ export default function UsersApp() {
                   {t("users.status")}
                 </th>
                 <th scope="col" className="px-4 py-2 font-semibold">
+                  {t("linux.account")}
+                </th>
+                <th scope="col" className="px-4 py-2 font-semibold">
                   {t("users.twoFactor")}
                 </th>
                 <th scope="col" className="px-4 py-2 font-semibold">
@@ -385,6 +410,15 @@ export default function UsersApp() {
                         {user.disabled ? t("users.disabled") : t("users.active")}
                       </span>
                     </td>
+                    <td className="px-4 py-2.5">
+                      <button
+                        type="button"
+                        className="text-fg-muted underline-offset-4 hover:underline"
+                        onClick={() => setLinking(user)}
+                      >
+                        {bindings.find((b) => b.userId === user.id)?.account ?? t("linux.unlinked")}
+                      </button>
+                    </td>
                     <td className="px-4 py-2.5 text-fg-muted">
                       {user.totpEnabled ? t("account.totp.enabled") : t("account.totp.disabled")}
                     </td>
@@ -415,6 +449,14 @@ export default function UsersApp() {
           </table>
         ) : null}
       </div>
+      {linking ? (
+        <LinuxBindingDialog
+          key={linking.id}
+          user={linking}
+          onClose={() => setLinking(null)}
+          onDone={reload}
+        />
+      ) : null}
       <CreateUserDialog
         open={creating}
         onOpenChange={setCreating}

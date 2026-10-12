@@ -311,3 +311,10 @@ The agent logs every mutating and every denied operation with the actor identity
 ## Reporting vulnerabilities
 
 See [SECURITY.md](../SECURITY.md).
+
+## Linked Linux identities
+
+[Linux account linking](linux-accounts.md) adds a root-owned UID-pinned association, PAM
+authentication and real sudo verification. Host file workers and PTYs use the linked unprivileged
+UID and groups; a sudo grant never upgrades file-manager access. EveryOS roles, registry policy,
+CSRF and protected services/containers remain independent requirements.

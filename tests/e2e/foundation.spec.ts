@@ -24,6 +24,14 @@ test("first-run setup creates the administrator and opens the shell", async ({ p
   await expect(page.getByRole("radio", { name: "Türkçe" })).toHaveAttribute("aria-checked", "true");
   await page.getByRole("button", { name: "Devam et" }).click();
 
+  await page.getByRole("button", { name: "Kopyala", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Kopyalandı", exact: true })).toBeVisible();
+  await page.getByLabel("Kurulum anahtarı").click();
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+V" : "Control+V");
+  await expect(page.getByLabel("Kurulum anahtarı")).toHaveValue(
+    "sudo cat /var/lib/everyos/setup-token",
+  );
+
   const token = readFileSync(join(stateDir, "data/setup-token"), "utf8").trim();
   await page.getByLabel("Kurulum anahtarı").fill("yanlis-anahtar");
   await page.getByRole("button", { name: "Devam et" }).click();

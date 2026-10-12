@@ -272,7 +272,13 @@ export class FileService {
    * configured locations, and, for administrators who turned them on, the
    * read-only system paths. Every route works on such a view.
    */
-  view(user: { id: string; username: string; locale: string; systemRoots: boolean }): FileService {
+  view(user: {
+    id: string;
+    username: string;
+    locale: string;
+    systemRoots: boolean;
+    personalOnly?: boolean;
+  }): FileService {
     const roots: FileRootConfig[] = [];
     if (this.#homesDir)
       roots.push({
@@ -283,8 +289,8 @@ export class FileService {
         kind: "home",
         locale: user.locale,
       });
-    roots.push(...this.#roots.values());
-    if (user.systemRoots)
+    if (!user.personalOnly) roots.push(...this.#roots.values());
+    if (user.systemRoots && !user.personalOnly)
       for (const root of SYSTEM_ROOTS)
         roots.push({
           id: root.id,
@@ -866,7 +872,10 @@ export class FileService {
         entries.push(...listing.entries);
         truncated ||= listing.truncated;
       } catch (error) {
-        if (errno(error) !== "ENOENT" && !(error instanceof ApiError && error.code === "NOT_FOUND"))
+        if (
+          !["ENOENT", "EACCES", "EPERM"].includes(errno(error) ?? "") &&
+          !(error instanceof ApiError && ["NOT_FOUND", "FORBIDDEN"].includes(error.code))
+        )
           throw error;
       }
     }

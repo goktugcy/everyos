@@ -14,6 +14,8 @@ import {
   TotpEnableRequestSchema,
   UpdateAccountRequestSchema,
 } from "@everyos/shared/schemas";
+import { LinuxUnlockSchema } from "@everyos/shared/schemas";
+import { callAgent } from "../../http/agent.ts";
 import { Hono, type Context } from "hono";
 import type { AppEnv, AuthState } from "../../context.ts";
 import { ApiError, rateLimited } from "../../http/errors.ts";
@@ -28,6 +30,25 @@ export function accountRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   const { users, audit, secrets, limiters } = services;
   app.use("*", authenticated);
+
+  app.get("/linux", async (c) => c.json(await callAgent(c, services, "identity.status", {})));
+  app.post("/linux/unlock", async (c) => {
+    const body = await parseJsonBody(c, LinuxUnlockSchema);
+    const status = await callAgent(c, services, "identity.unlock", body);
+    const auth = requireAuth(c);
+    audit.record({
+      action: "account.linux.unlock",
+      outcome: "success",
+      actor: { userId: auth.user.id, username: auth.user.username },
+      ip: c.get("client").ip,
+      details: { account: status.account?.name, expiresAt: status.privilegedUntil },
+    });
+    return c.json(status);
+  });
+  app.post("/linux/lock", async (c) => {
+    await callAgent(c, services, "identity.lock", {});
+    return c.body(null, 204);
+  });
 
   const actor = (auth: AuthState) => ({ userId: auth.user.id, username: auth.user.username });
 

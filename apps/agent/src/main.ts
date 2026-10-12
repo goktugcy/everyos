@@ -1,28 +1,17 @@
 import { installedVersion } from "@everyos/release";
-import { chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
+import { lstatSync, chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import { AgentServer } from "@everyos/agent-protocol";
 import { createLogger, serializeError } from "@everyos/logger";
 import { deriveKey, loadKeyFile, SecretBox } from "@everyos/security";
 
-import {
-  createDockerClient,
-  createDockerSimulator,
-  createAptManager,
-  createAptSimulator,
-  createInternetProbe,
-  createJournalSource,
-  createSimulator,
-  createSystemdManager,
-  detectCapabilities,
-  pathKind,
-  REAL_HOST,
-  type DockerApi,
-  type LogSource,
-  type ServiceManager,
-} from "@everyos/system";
-import { ConfigError, loadAgentConfig, resolveGroupId, type AgentConfig } from "./config.ts";
+import { createAptManager, createAptSimulator, createInternetProbe } from "@everyos/system";
+import { selectBackends } from "./backends.ts";
+import { ConfigError, loadAgentConfig, resolveGroupId } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
+import { LinuxIdentities } from "./linux-identities.ts";
+import { AccountWorkers } from "./account-workers.ts";
+import { loadApiConfig } from "../../api/src/config.ts";
 import { TerminalManager } from "./terminal.ts";
 import { ManagedAppManager } from "./managed-apps.ts";
 import { AppDataBackups } from "./app-data-backup.ts";
@@ -41,38 +30,6 @@ function prepareGroupDirectory(path: string, groupId: number | null): void {
   if (info.uid !== 0 || (info.mode & 0o002) !== 0) return;
   if (info.gid !== groupId) chownSync(path, 0, groupId);
   if ((info.mode & 0o777) !== 0o750) chmodSync(path, 0o750);
-}
-
-/**
- * Picks the real systemd/journald backends, or the simulator in development
- * when they are missing (macOS) or explicitly requested. Production never
- * uses simulated data: missing tools surface as "unsupported" errors.
- */
-async function selectBackends(
-  config: AgentConfig,
-  isProtectedContainer: (name: string) => boolean,
-): Promise<{ services: ServiceManager; logs: LogSource; docker: DockerApi }> {
-  const capabilities = await detectCapabilities(REAL_HOST, null);
-  const simulator = config.mode === "development" ? createSimulator() : null;
-  const services =
-    simulator && (config.simulate || !capabilities.systemd.available)
-      ? simulator.services
-      : createSystemdManager();
-  const logs =
-    simulator && (config.simulate || !capabilities.journald.available)
-      ? simulator.logs
-      : createJournalSource();
-  const dockerSocketPresent = config.dockerSocket
-    ? (await pathKind(config.dockerSocket)) !== "missing"
-    : capabilities.docker.available || capabilities.docker.reason === "permission-denied";
-  const docker =
-    config.mode === "development" && (config.simulate || !dockerSocketPresent)
-      ? createDockerSimulator({ isProtected: isProtectedContainer })
-      : createDockerClient({
-          ...(config.dockerSocket ? { socketPaths: [config.dockerSocket] } : {}),
-          isProtected: isProtectedContainer,
-        });
-  return { services, logs, docker };
 }
 
 async function main(): Promise<void> {
@@ -124,8 +81,33 @@ async function main(): Promise<void> {
   // e2e runs use the labelled apt simulator; development never changes host packages.
   const apt =
     config.mode === "development" && config.simulate ? createAptSimulator() : createAptManager();
+  let workers: AccountWorkers | undefined;
+  const identities =
+    config.mode === "production"
+      ? new LinuxIdentities({
+          path: "/var/lib/everyos-agent/identities/bindings.json",
+          onChange: (userId) => {
+            terminal?.closeForUser(userId);
+            workers?.closeUser(userId);
+          },
+        })
+      : undefined;
+  if (identities) {
+    const apiFile = "/etc/everyos/config.yaml";
+    const info = lstatSync(apiFile);
+    if (!info.isFile() || info.uid !== 0 || (info.mode & 0o022) !== 0)
+      throw new ConfigError("Unsafe API file roots configuration");
+    const apiConfig = loadApiConfig({ EVERYOS_ENV: "production", EVERYOS_CONFIG: apiFile });
+    workers = new AccountWorkers({
+      config,
+      identities,
+      files: apiConfig.files,
+      version: installedVersion(),
+    });
+  }
   const terminal = new TerminalManager({
     config: config.terminal,
+    ...(identities ? { identities } : {}),
     logger,
     lang: process.env.LANG?.includes("UTF-8") ? process.env.LANG : "C.UTF-8",
   });
@@ -136,28 +118,30 @@ async function main(): Promise<void> {
     isProtected: isProtectedContainer,
   });
   const appData = new AppDataBackups({ apps, logger });
+  const handlers = createHandlers({
+    mode: config.mode,
+    version: installedVersion(),
+    startedAt: Date.now(),
+    services,
+    logs,
+    isProtected,
+    internet: createInternetProbe(config.internetCheckTargets),
+    docker,
+    isProtectedContainer,
+    terminal,
+    apt,
+    ...(identities ? { identities } : {}),
+    ...(config.tailscaleSocket ? { tailscaleSockets: [config.tailscaleSocket] } : {}),
+    apps,
+    appData,
+  });
   const server = new AgentServer({
     // Terminals and log tails hold streams open; the API uses one connection.
     maxStreamsPerConnection: 32,
     socketPath: config.socketPath,
     agentKey,
     agentVersion: installedVersion(),
-    handlers: createHandlers({
-      mode: config.mode,
-      version: installedVersion(),
-      startedAt: Date.now(),
-      services,
-      logs,
-      isProtected,
-      internet: createInternetProbe(config.internetCheckTargets),
-      docker,
-      isProtectedContainer,
-      terminal,
-      apt,
-      ...(config.tailscaleSocket ? { tailscaleSockets: [config.tailscaleSocket] } : {}),
-      apps,
-      appData,
-    }),
+    handlers: workers ? workers.wrap(handlers) : handlers,
     policy: createPolicy({
       mode: config.mode,
       isProtected,
@@ -184,6 +168,7 @@ async function main(): Promise<void> {
     const forceExit = setTimeout(() => process.exit(1), 5_000);
     forceExit.unref();
     terminal.closeAll();
+    workers?.closeAll();
     void appData.closeAll();
     server
       .close()

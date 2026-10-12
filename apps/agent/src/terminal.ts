@@ -1,6 +1,8 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import type { Writable } from "node:stream";
+import type { LinuxIdentities } from "./linux-identities.ts";
+import { spawnAccount } from "./account-process.ts";
 import { OperationError, type Actor } from "@everyos/agent-protocol";
 import type { Logger } from "@everyos/logger";
 import type { TerminalStatus } from "@everyos/shared";
@@ -32,10 +34,10 @@ const HIGH_WATER_BYTES = 256 * 1024;
 /**
  * Pseudo-terminal relay. Started as root it drops to the account (with its
  * supplementary groups) before anything else; it relays stdin → pty and
- * pty → stdout, and takes JSON resize lines on fd 3. Exit code: the shell's.
+ * pty → stdout, and takes bounded JSON input/resize frames on stdin. Exit code: the shell's.
  */
 const RELAY = String.raw`
-import fcntl, json, os, pty, select, signal, struct, sys, termios
+import base64, fcntl, json, os, pty, select, signal, struct, sys, termios
 cfg = json.loads(sys.argv[1])
 if os.getuid() == 0:
     os.initgroups(cfg["user"], cfg["gid"])
@@ -68,7 +70,7 @@ signal.signal(signal.SIGTERM, stop)
 def write_all(target, data):
     while data:
         data = data[os.write(target, data):]
-watch, pending = [fd, 0, 3], b""
+watch, pending = [fd, 0], b""
 while True:
     try:
         ready = select.select(watch, [], [])[0]
@@ -83,24 +85,22 @@ while True:
             break
         write_all(1, data)
     if 0 in ready:
-        data = os.read(0, 65536)
-        if data:
-            write_all(fd, data)
-        else:
-            watch.remove(0)
-            stop()
-    if 3 in ready:
-        chunk = os.read(3, 4096)
+        chunk = os.read(0, 65536)
         if not chunk:
-            watch.remove(3)
+            stop()
         pending += chunk
+        if len(pending) > 262144:
+            stop()
         while b"\n" in pending:
             line, pending = pending.split(b"\n", 1)
             try:
-                size = json.loads(line)
-                winsize(max(2, min(300, int(size["rows"]))), max(2, min(500, int(size["cols"]))))
+                frame = json.loads(line)
+                if "data" in frame:
+                    write_all(fd, base64.b64decode(frame["data"], validate=True))
+                else:
+                    winsize(max(2, min(300, int(frame["rows"]))), max(2, min(500, int(frame["cols"]))))
             except (ValueError, KeyError, TypeError, OSError):
-                pass
+                stop()
 status = os.waitpid(pid, 0)[1]
 code = os.waitstatus_to_exitcode(status)
 os._exit(code if code >= 0 else 128 - code)
@@ -138,15 +138,22 @@ export class TerminalManager {
   readonly #logger: Logger;
   readonly #sessions = new Map<string, Session>();
   readonly #lang: string;
+  readonly #identities: LinuxIdentities | undefined;
 
-  constructor(options: { config: TerminalConfig | null; logger: Logger; lang?: string }) {
+  constructor(options: {
+    config: TerminalConfig | null;
+    logger: Logger;
+    lang?: string;
+    identities?: LinuxIdentities;
+  }) {
     this.#config = options.config;
+    this.#identities = options.identities;
     this.#logger = options.logger.child({ component: "terminal" });
     this.#lang = options.lang ?? "C.UTF-8";
   }
 
-  status(): TerminalStatus {
-    const resolved = this.#resolve();
+  status(actor?: Actor): TerminalStatus {
+    const resolved = this.#resolve(actor);
     return "reason" in resolved
       ? { enabled: false, reason: resolved.reason }
       : { enabled: true, user: resolved.account.name, shell: resolved.account.shell };
@@ -163,7 +170,7 @@ export class TerminalManager {
   > {
     if (actor.kind !== "user")
       throw new OperationError("forbidden", "Terminals are opened by users");
-    const resolved = this.#resolve();
+    const resolved = this.#resolve(actor);
     if ("reason" in resolved)
       throw new OperationError("unsupported", `${resolved.reason}: terminal is disabled`);
     if (this.#sessions.size >= MAX_SESSIONS)
@@ -172,26 +179,26 @@ export class TerminalManager {
       throw new OperationError("conflict", "Session id in use");
     const { account, python } = resolved;
 
-    const child = spawn(
-      python,
-      [
-        "-I",
-        "-c",
-        RELAY,
-        JSON.stringify({
-          user: account.name,
-          uid: account.uid,
-          gid: account.gid,
-          home: account.home,
-          shell: account.shell,
-          lang: this.#lang,
-          cols: params.cols,
-          rows: params.rows,
-        }),
-      ],
-      { stdio: ["pipe", "pipe", "pipe", "pipe"], env: { PATH: "/usr/bin:/bin" } },
-    );
-    const control = child.stdio[3] as Writable;
+    const args = [
+      "-I",
+      "-c",
+      RELAY,
+      JSON.stringify({
+        user: account.name,
+        uid: account.uid,
+        gid: account.gid,
+        home: account.home,
+        shell: account.shell,
+        lang: this.#lang,
+        cols: params.cols,
+        rows: params.rows,
+      }),
+    ];
+    const child = this.#identities
+      ? spawnAccount(account, python, args, "12h")
+      : spawn(python, args, { stdio: ["pipe", "pipe", "pipe"], env: { PATH: "/usr/bin:/bin" } });
+    child.stdin.on("error", () => undefined);
+    const control = child.stdin;
     const session: Session = { id: params.sessionId, ownerId: actor.userId, child, control };
     this.#sessions.set(session.id, session);
     this.#logger.info("Terminal opened", {
@@ -231,6 +238,23 @@ export class TerminalManager {
     signal.addEventListener("abort", onAbort, { once: true });
 
     try {
+      // Login shells initialize readline after allocating the PTY. Do not invite input
+      // before the shell has produced output; startup can otherwise discard keystrokes.
+      const startup = setTimeout(() => {
+        exited ??= null;
+        this.#kill(child);
+        notify();
+      }, 10_000);
+      try {
+        if (queue.length === 0 && exited === undefined)
+          await new Promise<void>((resolve) => {
+            wake = resolve;
+          });
+      } finally {
+        clearTimeout(startup);
+      }
+      if (exited !== undefined && queue.length === 0)
+        throw new OperationError("failed", "Terminal account could not start");
       yield { type: "started", user: account.name, shell: account.shell };
       while (true) {
         while (queue.length > 0) {
@@ -266,7 +290,7 @@ export class TerminalManager {
 
   input(sessionId: string, data: string, actor: Actor): void {
     const session = this.#owned(sessionId, actor);
-    session.child.stdin?.write(Buffer.from(data, "base64"));
+    session.child.stdin?.write(`${JSON.stringify({ data })}\n`);
   }
 
   resize(sessionId: string, cols: number, rows: number, actor: Actor): void {
@@ -282,6 +306,11 @@ export class TerminalManager {
     return true;
   }
 
+  closeForUser(userId: string): void {
+    for (const session of this.#sessions.values())
+      if (session.ownerId === userId) this.#kill(session.child);
+  }
+
   closeAll(): void {
     for (const session of this.#sessions.values()) this.#kill(session.child);
   }
@@ -291,6 +320,7 @@ export class TerminalManager {
     if (!session) throw new OperationError("not_found", "No such terminal session");
     if (actor.kind !== "user" || actor.userId !== session.ownerId)
       throw new OperationError("forbidden", "This terminal belongs to another user");
+    if (this.#identities) this.#identities.resolve(actor);
     return session;
   }
 
@@ -303,9 +333,19 @@ export class TerminalManager {
     timer.unref();
   }
 
-  #resolve():
+  #resolve(
+    actor?: Actor,
+  ):
     | { account: Account; python: string }
     | { reason: "not-configured" | "user-missing" | "root-refused" | "python-missing" } {
+    if (this.#identities) {
+      if (!actor) return { reason: "not-configured" };
+      try {
+        return { account: this.#identities.resolve(actor), python: "/usr/bin/python3" };
+      } catch {
+        return { reason: "not-configured" };
+      }
+    }
     const config = this.#config;
     if (!config) return { reason: "not-configured" };
     let account = readAccounts().get(config.user);

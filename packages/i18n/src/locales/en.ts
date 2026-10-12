@@ -13,6 +13,7 @@ export const en: Messages = {
     done: "Done",
     copy: "Copy",
     copied: "Copied",
+    copyFailed: "Copy failed. Select the text and copy it with your keyboard shortcut.",
     showPassword: "Show password",
     hidePassword: "Hide password",
     language: "Language",
@@ -231,12 +232,12 @@ export const en: Messages = {
     },
     disabled: {
       title: "Terminal unavailable",
-      "not-configured": "No system account is configured for the terminal.",
+      "not-configured": "Link this EveryOS user to your existing Linux account in the Users app.",
       "user-missing": "The configured system account was not found.",
       "root-refused": "The configured root account is not allowed. Use a separate regular account.",
       "python-missing": "The Python 3 interpreter needed for the PTY was not found.",
       configure:
-        "On the server, set terminal.user in /etc/everyos/agent.yaml to a regular system account, then restart the EveryOS agent service.",
+        "Select the user in the Users app and link a Linux account. Verification requires the existing Linux account’s password.",
     },
     reasons: {
       exited: "The shell exited.",
@@ -2471,6 +2472,31 @@ export const en: Messages = {
       "too-common": "This password is too common; choose another one.",
       repetitive: "The password is too repetitive; use more varied characters.",
     },
+  },
+  linux: {
+    identity: "{{name}} · UID {{uid}}",
+    title: "Linux account and permissions",
+    link: "Link a Linux account",
+    unlink: "Remove link",
+    account: "Linux user account",
+    password: "Linux account password",
+    everyosPassword: "Your EveryOS password",
+    linkHelp:
+      "Link this EveryOS user to an existing Linux account. The terminal and Linux files use that account’s permissions. Existing EveryOS personal folders are preserved. Changing the link closes active Linux sessions; the Linux account and permissions are not changed.",
+    noAccounts:
+      "No eligible local user accounts were found. Root and service accounts cannot be linked.",
+    required: "First link your EveryOS user to your existing Linux account in the Users app.",
+    privilegeHelp:
+      "Verify your existing sudo authorization for system management. Verification lasts 5 minutes in this EveryOS session; your password is not stored. EveryOS role permissions still apply.",
+    unlock: "Verify system authorization",
+    lock: "Lock system authorization",
+    unlocked: "System authorization is verified until {{time}}.",
+    authFailed: "Linux authentication failed. Check the account name, password and account status.",
+    sudoRequired:
+      "This operation requires Linux administrator authorization. Verify sudo access in Settings → Account → Linux account and permissions.",
+    fileDenied: "The Linux account has no access to this file, or the location is read-only.",
+    rateLimited: "Too many Linux authentication attempts. Try again in a minute.",
+    unlinked: "Not linked",
   },
   errors: {
     BAD_REQUEST: "The request could not be understood.",

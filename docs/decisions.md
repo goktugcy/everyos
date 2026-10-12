@@ -374,3 +374,23 @@ authentication, permissions, CSRF checks and the unprivileged API remain in effe
 Browser UUID generation uses `crypto.randomUUID` when available, with a UUIDv4 fallback backed
 by `crypto.getRandomValues`. The latter is available over ordinary HTTP; opening a host-IP URL
 must not break initial widget preferences, file uploads or Pulse uploads.
+
+## D31 — Per-user Linux identities and verified system authorization
+
+Production binds each EveryOS UUID to an existing local Linux account after EveryOS
+re-authentication and PAM proof. Root-owned records pin name and UID. Credentials are never
+persisted or included in process arguments. EveryOS roles remain an independent restriction.
+
+The root agent retains `ProtectHome=read-only`. PID 1 starts bounded account units outside that
+mount namespace, so a normal login can write its home without weakening the agent's protection.
+File/system workers receive fixed typed operations and no privilege keys. Host files always use
+the account's unprivileged UID and supplementary groups, including while sudo is verified.
+
+Root-only typed operations require sudo to execute a fixed root-owned authorization witness.
+Password verification grants the authenticated EveryOS session five minutes of access; the
+password is discarded immediately. Actual sudoers authorization is checked instead of inferring
+rights from group names. Restricted sudoers rules for unrelated commands do not authorize EveryOS;
+those commands remain available normally in the terminal. Existing unit/container protection
+still applies. Existing personal storage stays API-owned, preserving desktop data and backup
+access; Linux homes are additional host locations. Private host widget sources use the
+subscriber's account. See [Linux account linking](linux-accounts.md) for details.

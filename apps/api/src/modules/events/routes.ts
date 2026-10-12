@@ -8,6 +8,11 @@ import {
 import { EventStreamQuerySchema } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
+import { agentActor } from "../../http/agent.ts";
+import { DataHub } from "../widgets/data-hub.ts";
+import { systemProviders } from "../widgets/providers.ts";
+import { DockerHub } from "../docker/docker-hub.ts";
+import type { AgentGateway } from "../../services.ts";
 import { forbidden } from "../../http/errors.ts";
 import { openEventStream, untilAborted, type EventChannel } from "../../http/event-stream.ts";
 import { parseQuery } from "../../http/validation.ts";
@@ -98,6 +103,23 @@ export function eventRoutes(services: Services): Hono<AppEnv> {
       permissions: [...new Set([...streamPermissions, ...dataPermissions])],
       async run(channel) {
         const unsubscribers: Array<() => void> = [];
+        const actor = agentActor(auth, c.get("client").ip);
+        const accountAgent: AgentGateway = {
+          get state() {
+            return services.agent.state;
+          },
+          call: (op, params, _actor, options) => services.agent.call(op, params, actor, options),
+          stream: (op, params, _actor, options) =>
+            services.agent.stream(op, params, actor, options),
+        };
+        const scoped = services.config.mode === "production";
+        const providers = scoped
+          ? systemProviders(accountAgent, () => services.apps.managedProjects())
+          : [];
+        const hostData = new DataHub({ logger: services.logger, now: services.now, providers });
+        const dockerHub = scoped
+          ? new DockerHub({ agent: accountAgent, logger: services.logger, now: services.now })
+          : services.docker;
         if (streams.includes("metrics")) {
           unsubscribers.push(services.metrics.subscribe(latestWins(channel, "metrics")));
         }
@@ -105,7 +127,7 @@ export function eventRoutes(services: Services): Hono<AppEnv> {
           const stats = latestWins(channel, "docker.stats");
           const change = latestWins(channel, "docker.change");
           unsubscribers.push(
-            services.docker.subscribe((message) =>
+            dockerHub.subscribe((message) =>
               message.kind === "stats" ? stats(message.snapshot) : change(message.event),
             ),
           );
@@ -135,7 +157,13 @@ export function eventRoutes(services: Services): Hono<AppEnv> {
         for (const topic of dataTopics) {
           // "Latest wins" per topic: a slow client gets the newest value of each, not a backlog.
           const send = latestWins<TopicMessage>(channel, "data");
-          unsubscribers.push(services.widgetData.subscribe(topic, auth.permissions, send));
+          unsubscribers.push(
+            (hostData.provider(topic) ? hostData : services.widgetData).subscribe(
+              topic,
+              auth.permissions,
+              send,
+            ),
+          );
         }
         try {
           await untilAborted(channel.signal);

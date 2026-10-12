@@ -6,34 +6,24 @@ choose a shell, or run a command through an HTTP execution endpoint.
 
 ## Configuration and identity
 
-Production is disabled until the owner configures an existing, regular system account in
-`/etc/everyos/agent.yaml` and restarts the agent:
+Production terminals use the EveryOS user's own association with an existing local Linux
+account. An administrator creates it in the Users app, confirming an EveryOS password and that
+Linux account's password. See [Linux account linking](linux-accounts.md) for authentication,
+identity storage, host file access and sudo authorization. Production no longer shares one
+`terminal.user` identity across all EveryOS users; existing installations must link each user.
 
-```yaml
-terminal:
-  user: server-operator
-  # shell: /bin/bash       # optional; defaults to the account's login shell
-  # python: /usr/bin/python3
-```
-
-Python 3 provides the PTY; the interpreter and shell must exist at absolute paths. The agent
-resolves the account, drops UID/GID and supplementary groups before starting the shell, and uses
-its home directory and a fixed environment. The UI shows the actual account and shell from the
-server's `ready` frame. All EveryOS administrators use the configured system identity, rather than
-an operating-system account derived from their EveryOS username.
-
-Root is refused by default. `allowRoot: true` is an explicit owner-only configuration escape
-hatch; the client never offers it. Prefer a dedicated account with only the host access it needs.
-The shell has that account's ordinary OS permissions: it is not a sandbox, and interactive
-commands do not go through EveryOS's service/container operation safeguards. Its ability to use
-`sudo` or other installed tools is determined by the host's account policy.
+Python 3 provides the PTY. PID 1 starts a bounded account unit outside the root agent's read-only
+home namespace, with the account's real UID/GID and supplementary groups. Its home, login shell
+and fixed environment are used, and the UI shows the real account/shell from the ready frame.
+Root and service accounts cannot be linked. The interactive shell has ordinary Linux permissions;
+its ability to use sudo and installed tools is determined by the host's policy.
 
 In development, `EVERYOS_DEV_TERMINAL=1 pnpm dev` enables a real PTY as the developer's own
 unprivileged account. The e2e stack enables this flag in its disposable state directory. This is
 not a terminal simulator and does not grant root access.
 
 Disabled status reasons are `not-configured`, `user-missing`, `root-refused`, and
-`python-missing`. The app localizes each reason and shows how to configure `terminal.user`.
+`python-missing`. The app localizes each reason and directs the administrator to user account linking.
 
 ## Authorization and bounds
 

@@ -1,40 +1,32 @@
-EveryOS 0.1.2 improves first installation and the personal desktop experience.
+EveryOS 0.1.3 fixes HTTP setup copying and adds per-user Linux account linking.
 
-- The verified installer automatically enables IPv4 host interfaces at port 7470 for a new API configuration. The installer
-  detects real LAN/Tailscale addresses and prints URLs that respond to the health check.
-- Localhost access remains available for CLI commands and the independent signed-update worker.
-  Existing installations keep both unchanged loopback defaults and custom network configurations; no firewall, router or Tailscale
-  settings are changed by the installer.
-- Ubuntu systemd checks use `systemctl --version`, including systems without a `systemd` command
-  on the command search path.
-- The desktop works over a plain HTTP host-IP URL, including initial widget IDs and upload IDs.
-- The bundled EveryOS mountain wallpaper is the default Liquid Dark background. Explicit saved
-  wallpaper selections remain in effect. The README introduces EveryOS as a personal OS with
-  owner-provided logos, desktop screenshot and wallpaper.
+- The setup command copy button works on ordinary HTTP host-IP connections, with real success
+  feedback and a manual-copy message if browser policy refuses copying.
+- Users → Link a Linux account associates an EveryOS user with an existing local Linux login.
+  Linking requires EveryOS re-authentication and the Linux account's PAM-verified password.
+  Root and service accounts are excluded; account names and numeric UIDs are pinned in root-owned
+  records. No Linux password is saved and no Linux permissions, groups or sudoers rules are changed.
+- Terminal sessions use the linked account's actual UID, supplementary groups, home and login
+  shell. Startup waits for the real PTY before inviting input. Different users no longer share
+  one production terminal identity. Existing installations must link each user in the Users app.
+- Files adds the linked Linux home. Host file access, uploads, ranged downloads, text editing and
+  recoverable trash run with that account's real filesystem permissions. Existing EveryOS personal
+  homes, desktop files and backup coverage are preserved; Linux homes are additional locations.
+- Settings → Account → Linux account and permissions verifies existing sudo authorization for
+  five minutes in the current EveryOS session. Privileged system operations still require their
+  EveryOS permission and protected-service/container policy. Restricted sudoers rules are not
+  broadened. Linux file-manager access remains unprivileged while sudo is verified.
+- Changing/removing the association closes its PTYs and file workers and clears sudo grants.
+  Disabling/deleting an EveryOS account removes its Linux association. Host widget streams use
+  the subscriber's identity, and cached Docker reads retain Linux authorization checks.
 
-The initial 0.1.0 release introduced:
+The signed installer and update source remains `goktugcy/everyos`. Fresh one-command installs
+still detect usable host interfaces at port 7470; upgrades preserve existing network settings,
+wallpapers, configuration, credentials and personal files.
 
-- Debian packages for arm64 and amd64 include a verified, pinned Node runtime and systemd services.
-- Settings → About and Updates → EveryOS provide authenticated, signed version checks and installation.
-- An independent update worker verifies package identity and integrity, requires a fresh safety
-  backup, and restores both the prior package and database after a failed upgrade.
-- The authenticated CLI supports status, doctor, backup, restore and version updates.
-- Backups include all account home folders. Desktop and folder views support multiple selection,
-  selection rectangles, recoverable trash and customizable folder icons.
-- Linux battery and power details are available in the navigation bar.
-- The renamed public release source is `goktugcy/everyos`; existing legacy source settings retain
-  publisher trust while resolving to the new repository.
+Supported targets: Debian 12+, Ubuntu 22.04+ and compatible 64-bit Raspberry Pi distributions
+with systemd 248+, glibc 2.34+ and kernel 5.14+. The package includes the verified Node runtime,
+Python PTY relay, PAM configuration and the existing independent signed-update worker.
 
-The supported installation targets are Debian 12+, Ubuntu 22.04+ and compatible modern 64-bit
-Raspberry Pi distributions with systemd 248+, glibc 2.34+ and kernel 5.14+.
-
-For a first installation, independently verify the publisher's public-key fingerprint, place
-`everyos-release-public.pem` in a root-owned file, and run:
-
-```sh
-sudo python3 install.py --public-key /root/everyos-release.pem
-```
-
-The published public key is a distribution convenience, not an independent trust proof. Obtain
-its fingerprint through a trusted channel before using the installer. Protect the publisher's
-private key and keep it out of source control and application hosts.
+See [Linux account linking](https://github.com/goktugcy/everyos/blob/main/docs/linux-accounts.md)
+for use, authorization limits and command-specific sudoers compatibility.

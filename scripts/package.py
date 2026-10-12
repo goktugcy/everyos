@@ -71,7 +71,7 @@ entries = [entry for entry in entries if entry[0] != "usr/lib/everyos/VERSION"]
 entries.append(("usr/lib/everyos/VERSION", (args.version + "\n").encode(), 0o644))
 for path in sorted((ROOT / "packaging/systemd").iterdir()):
     entries.append((f"usr/lib/systemd/system/{path.name}", path.read_bytes(), 0o644))
-for name, target, mode in [("config.yaml", "etc/everyos/config.yaml", 0o640), ("agent.yaml", "etc/everyos/agent.yaml", 0o600), ("everyos", "usr/bin/everyos", 0o755)]:
+for name, target, mode in [("config.yaml", "etc/everyos/config.yaml", 0o640), ("agent.yaml", "etc/everyos/agent.yaml", 0o600), ("everyos", "usr/bin/everyos", 0o755), ("pam-everyos", "etc/pam.d/everyos", 0o644)]:
     entries.append((target, (ROOT / "packaging" / name).read_bytes(), mode))
 for name in ["README.md", "LICENSE"]:
     if (ROOT / name).exists():
@@ -82,12 +82,12 @@ Architecture: {args.arch}
 Maintainer: EveryOS contributors <noreply@everyos.invalid>
 Section: admin
 Priority: optional
-Depends: libc6 (>= 2.34), libstdc++6, libatomic1, ca-certificates, systemd (>= 248), adduser, openssl, python3, iproute2
+Depends: libc6 (>= 2.34), libstdc++6, libatomic1, ca-certificates, systemd (>= 248), adduser, openssl, python3, iproute2, libpam0g, libpam-modules, libpam-runtime, sudo
 Installed-Size: {sum(len(data) for _, data, _ in entries) // 1024}
 Description: Self-hosted EveryOS personal OS and Linux management service
  Unprivileged API, typed local agent, web desktop and verified update worker.
 """
-controls = [("control", control.encode(), 0o644), ("conffiles", b"/etc/everyos/config.yaml\n/etc/everyos/agent.yaml\n", 0o644)]
+controls = [("control", control.encode(), 0o644), ("conffiles", b"/etc/everyos/config.yaml\n/etc/everyos/agent.yaml\n/etc/pam.d/everyos\n", 0o644)]
 controls += [(name, (ROOT / "packaging/debian" / name).read_bytes(), 0o755) for name in ["preinst", "postinst", "prerm", "postrm"]]
 args.output.mkdir(parents=True, exist_ok=True)
 output = args.output / f"everyos_{args.version}_{args.arch}.deb"

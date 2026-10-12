@@ -30,6 +30,7 @@ import type { AgentMode } from "./config.ts";
 import { POLICY_REASONS } from "./policy.ts";
 import type { ManagedAppManager } from "./managed-apps.ts";
 import type { AppDataBackups } from "./app-data-backup.ts";
+import type { LinuxIdentities } from "./linux-identities.ts";
 import type { TerminalManager } from "./terminal.ts";
 
 export interface HandlerDependencies {
@@ -56,6 +57,7 @@ export interface HandlerDependencies {
   apt?: AptManager;
   /** Browser terminals; disabled when absent. */
   terminal?: TerminalManager;
+  identities?: LinuxIdentities;
 }
 
 /** Host information changes rarely; cache it briefly to bound filesystem reads. */
@@ -175,7 +177,52 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     return deps.appData;
   };
 
+  const identities = () => {
+    if (!deps.identities)
+      throw new OperationError(
+        "unsupported",
+        "Linux account linking requires a production Linux installation",
+      );
+    return deps.identities;
+  };
+  const filesDisabled = () => {
+    throw new OperationError("unsupported", "Account files require a linked Linux account");
+  };
   return {
+    "files.roots": filesDisabled,
+    "files.list": filesDisabled,
+    "files.properties": filesDisabled,
+    "files.search": filesDisabled,
+    "files.text": filesDisabled,
+    "files.text.write": filesDisabled,
+    "files.mkdir": filesDisabled,
+    "files.rename": filesDisabled,
+    "files.copy": filesDisabled,
+    "files.move": filesDisabled,
+    "files.delete": filesDisabled,
+    "files.trash": filesDisabled,
+    "files.trash.restore": filesDisabled,
+    "files.trash.delete": filesDisabled,
+    "files.download.open": filesDisabled,
+    "files.download.read": filesDisabled,
+    "files.download.close": filesDisabled,
+    "files.upload.open": filesDisabled,
+    "files.upload.write": filesDisabled,
+    "files.upload.close": filesDisabled,
+    "identity.accounts": () => identities().accounts(),
+    "identity.bindings": () => identities().bindings(),
+    "identity.bind": ({ userId, account, linuxPassword }) =>
+      identities().bind(userId, account, linuxPassword),
+    "identity.unbind": async ({ userId }) => {
+      await identities().unbind(userId);
+      return null;
+    },
+    "identity.status": (_params, { actor }) => identities().status(actor),
+    "identity.unlock": ({ linuxPassword }, { actor }) => identities().unlock(actor, linuxPassword),
+    "identity.lock": (_params, { actor }) => {
+      identities().lock(actor);
+      return null;
+    },
     "release.status": () => new SelfUpdateManager(deps.mode).status(),
     "release.check": () => new SelfUpdateManager(deps.mode).status(true),
     "release.install": (params, context) => {
@@ -429,8 +476,8 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
       }
     },
 
-    "terminal.status": () =>
-      deps.terminal?.status() ?? { enabled: false, reason: "not-configured" },
+    "terminal.status": (_params, { actor }) =>
+      deps.terminal?.status(actor) ?? { enabled: false, reason: "not-configured" },
 
     "terminal.open": (params, { actor, signal }) => {
       if (!deps.terminal)

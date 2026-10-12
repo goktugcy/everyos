@@ -3,4 +3,4 @@ agentKeyFile: /etc/everyos/agent.key
 socketGroup: everyos
 logLevel: info
 appsRoot: /var/lib/everyos-agent/apps
-# Browser terminals remain disabled until an administrator selects an account.
+# Link each EveryOS user to an existing Linux account through the Users app.

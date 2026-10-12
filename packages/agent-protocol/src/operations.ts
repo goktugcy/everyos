@@ -1,5 +1,12 @@
+import { AGENT_FILE_OPERATIONS } from "./file-operations.ts";
 import type { Permission } from "@everyos/shared";
 import {
+  LinuxAccountSchema,
+  LinuxAccountStatusSchema,
+  LinuxBindingSchema,
+  LinuxBindSchema,
+  LinuxUnbindSchema,
+  LinuxUnlockSchema,
   ReleaseInstallSchema,
   ReleaseJobSchema,
   SelfUpdateStatusSchema,
@@ -132,6 +139,64 @@ function stream<P extends z.ZodType, E extends z.ZodType>(
 const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
+  ...AGENT_FILE_OPERATIONS,
+  "identity.accounts": unary({
+    params: NoParams,
+    result: z.array(LinuxAccountSchema),
+    permission: "users:manage",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 20_000,
+  }),
+  "identity.bindings": unary({
+    params: NoParams,
+    result: z.array(LinuxBindingSchema),
+    permission: "users:manage",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 20_000,
+  }),
+  "identity.bind": unary({
+    params: LinuxBindSchema,
+    result: LinuxBindingSchema,
+    permission: "users:manage",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 20_000,
+  }),
+  "identity.unbind": unary({
+    params: LinuxUnbindSchema,
+    result: z.null(),
+    permission: "users:manage",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 20_000,
+  }),
+  "identity.status": unary({
+    params: NoParams,
+    result: LinuxAccountStatusSchema,
+    permission: null,
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 20_000,
+  }),
+  "identity.unlock": unary({
+    params: LinuxUnlockSchema,
+    result: LinuxAccountStatusSchema,
+    permission: null,
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 20_000,
+  }),
+  "identity.lock": unary({
+    params: NoParams,
+    result: z.null(),
+    permission: null,
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 20_000,
+  }),
+
   "release.status": unary({
     params: NoParams,
     result: SelfUpdateStatusSchema,

@@ -8,6 +8,7 @@ import {
 } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import type { AppEnv } from "../../context.ts";
+import { agentActor } from "../../http/agent.ts";
 import { ApiError, notFound, rateLimited } from "../../http/errors.ts";
 import { parseJsonBody, parseQuery } from "../../http/validation.ts";
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
@@ -180,10 +181,14 @@ export function authRoutes(services: Services): Hono<AppEnv> {
     return c.json(response);
   });
 
-  app.post("/logout", (c) => {
+  app.post("/logout", async (c) => {
     const auth = c.get("auth");
     if (auth) {
       services.sessions.revoke(auth.session.id);
+      if (services.config.mode === "production")
+        await services.agent
+          .call("identity.lock", {}, agentActor(auth, c.get("client").ip))
+          .catch(() => undefined);
       audit.record({
         action: "auth.logout",
         outcome: "success",
@@ -202,6 +207,10 @@ export function authRoutes(services: Services): Hono<AppEnv> {
     if ((await c.req.text()).length > 0)
       throw new ApiError(400, "VALIDATION_FAILED", "Lock request does not accept a body");
     services.sessions.lock(auth.session.id);
+    if (services.config.mode === "production")
+      await services.agent
+        .call("identity.lock", {}, agentActor(auth, c.get("client").ip))
+        .catch(() => undefined);
     audit.record({
       action: "auth.session.lock",
       outcome: "success",

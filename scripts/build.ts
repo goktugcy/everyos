@@ -67,6 +67,8 @@ async function bundle(entry: string, outfile: string): Promise<void> {
 console.log("Bundling server components…");
 await bundle("apps/api/src/main.ts", "api/server.mjs");
 await bundle("apps/agent/src/main.ts", "agent/agent.mjs");
+await bundle("apps/agent/src/account-worker.ts", "agent/account-worker.mjs");
+await bundle("apps/agent/src/sudo-witness.ts", "agent/sudo-witness.mjs");
 await bundle("packages/release/src/worker.ts", "update/worker.mjs");
 await bundle("packages/release/src/cli.ts", "cli/cli.mjs");
 

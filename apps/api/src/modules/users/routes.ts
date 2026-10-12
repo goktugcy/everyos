@@ -4,6 +4,9 @@ import {
   ResetPasswordRequestSchema,
   UpdateUserRequestSchema,
 } from "@everyos/shared/schemas";
+import { LinuxBindRequestSchema, PasswordConfirmationSchema } from "@everyos/shared/schemas";
+import { callAgent } from "../../http/agent.ts";
+import { confirmPassword } from "../../http/reauth.ts";
 import { Hono } from "hono";
 import type { AppEnv, AuthState } from "../../context.ts";
 import { ApiError, notFound } from "../../http/errors.ts";
@@ -57,6 +60,47 @@ export function userRoutes(services: Services): Hono<AppEnv> {
     return c.json(toAdminUserView(created), 201);
   });
 
+  app.get("/linux-accounts", async (c) => {
+    const accounts = await callAgent(c, services, "identity.accounts", {});
+    const bindings = await callAgent(c, services, "identity.bindings", {});
+    return c.json({ accounts, bindings });
+  });
+  app.put("/:id/linux-account", async (c) => {
+    const auth = requireAuth(c);
+    const user = target(c.req.param("id"));
+    const body = await parseJsonBody(c, LinuxBindRequestSchema);
+    await confirmPassword(services, c, auth, body.currentPassword, "users.linux.bind");
+    const binding = await callAgent(c, services, "identity.bind", {
+      userId: user.id,
+      account: body.account,
+      linuxPassword: body.linuxPassword,
+    });
+    audit.record({
+      action: "users.linux.bind",
+      outcome: "success",
+      actor: actor(auth),
+      ip: c.get("client").ip,
+      target: user.username,
+      details: { account: binding.account, uid: binding.uid },
+    });
+    return c.json(binding);
+  });
+  app.delete("/:id/linux-account", async (c) => {
+    const auth = requireAuth(c);
+    const user = target(c.req.param("id"));
+    const body = await parseJsonBody(c, PasswordConfirmationSchema);
+    await confirmPassword(services, c, auth, body.password, "users.linux.unbind");
+    await callAgent(c, services, "identity.unbind", { userId: user.id });
+    audit.record({
+      action: "users.linux.unbind",
+      outcome: "success",
+      actor: actor(auth),
+      ip: c.get("client").ip,
+      target: user.username,
+    });
+    return c.body(null, 204);
+  });
+
   app.patch("/:id", async (c) => {
     const auth = requireAuth(c);
     const user = target(c.req.param("id"));
@@ -78,6 +122,8 @@ export function userRoutes(services: Services): Hono<AppEnv> {
         "The last active administrator cannot be demoted or disabled",
       );
     }
+    if (body.disabled === true && services.config.mode === "production")
+      await callAgent(c, services, "identity.unbind", { userId: user.id });
     services.db.transaction(() => {
       users.update(user.id, {
         ...(body.displayName !== undefined ? { displayName: body.displayName } : {}),
@@ -146,6 +192,8 @@ export function userRoutes(services: Services): Hono<AppEnv> {
       throw new ApiError(400, "USER_CANNOT_MODIFY_SELF", "Cannot delete your own account");
     if (isLastActiveAdmin(user))
       throw new ApiError(409, "USER_LAST_ADMIN", "The last active administrator cannot be deleted");
+    if (services.config.mode === "production")
+      await callAgent(c, services, "identity.unbind", { userId: user.id });
     users.delete(user.id);
     await services.wallpapers.deleteAllForUser(user.id);
     audit.record({

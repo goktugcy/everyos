@@ -1,0 +1,3 @@
+# Verify an existing local account without changing its credentials or permissions.
+@include common-auth
+@include common-account

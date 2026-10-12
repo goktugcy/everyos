@@ -13,6 +13,7 @@ import { Alert } from "../../components/ui/alert.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import { Field, PasswordField } from "../../components/ui/field.tsx";
 import { api, ApiRequestError } from "../../lib/api.ts";
+import { copyText } from "../../lib/clipboard.ts";
 import { cn } from "../../lib/cn.ts";
 import { errorMessage, passwordViolations } from "../../lib/errors.ts";
 import { useSessionStore } from "../../stores/session-store.ts";
@@ -50,31 +51,44 @@ function Stepper({ current }: { current: Step }) {
 function CopyableCommand({ command }: { command: string }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(command);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setCopied(false);
-    }
+    if (timer.current) clearTimeout(timer.current);
+    const success = await copyText(command);
+    setCopied(success);
+    setCopyFailed(!success);
+    if (success) timer.current = setTimeout(() => setCopied(false), 1500);
   };
   return (
-    <div className="glass-inset flex items-center justify-between gap-2 rounded-everyos-md py-1.5 pl-3.5 pr-1.5">
-      <code className="truncate font-mono text-[0.8rem] text-accent">{command}</code>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => void copy()}
-        aria-label={copied ? t("common.copied") : t("common.copy")}
-      >
-        {copied ? (
-          <Check className="size-4 text-success" aria-hidden />
-        ) : (
-          <Copy className="size-4" aria-hidden />
-        )}
-      </Button>
-    </div>
+    <>
+      <div className="glass-inset flex items-center justify-between gap-2 rounded-everyos-md py-1.5 pl-3.5 pr-1.5">
+        <code className="truncate font-mono text-[0.8rem] text-accent">{command}</code>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => void copy()}
+          aria-label={copied ? t("common.copied") : t("common.copy")}
+        >
+          {copied ? (
+            <Check className="size-4 text-success" aria-hidden />
+          ) : (
+            <Copy className="size-4" aria-hidden />
+          )}
+        </Button>
+      </div>
+      {copyFailed ? (
+        <p role="alert" className="text-sm text-danger">
+          {t("common.copyFailed")}
+        </p>
+      ) : null}
+    </>
   );
 }
 

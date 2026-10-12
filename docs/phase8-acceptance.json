@@ -481,6 +481,163 @@
       },
       "disposableGuestsAndDownloadedImageCachesRemoved": true,
       "notes": "The missing-command layout was modeled by temporarily hiding only the systemd compatibility symlink inside a dedicated Ubuntu guest; the running manager binary and services were untouched. The old preflight failed with the reported line-19 error and the fixed preflight passed before any APT action. The symlink was restored before the complete real installation of the signed public ARM64 package. The exact corrected bootstrap bytes were then published and anonymously downloaded with independent signature verification. Only install.sh and its signature were replaced; the original packages, package manifest, standalone Python installer, public key and immutable tag remain unchanged. This does not include the newer source-tree wallpaper in the existing packages. No full browser suite or AMD64 installation rerun is claimed."
+    },
+    "networkInstallation": {
+      "version": "0.1.2",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.2",
+      "sourceCommit": "4ddd551c93547094159686a6a556e33ecd35591e",
+      "signedWorkflow": "https://github.com/goktugcy/everyos/actions/runs/38180094381",
+      "projectCheck": {
+        "passed": true,
+        "tests": 611,
+        "files": 62
+      },
+      "buildPassed": true,
+      "publishedFreshInstall": {
+        "passed": true,
+        "verifiedAt": "2026-10-11T22:30:10.833108+00:00",
+        "platform": "Ubuntu 26.04.1 LTS",
+        "architecture": "arm64",
+        "kernel": "7.0.0-38-generic",
+        "version": "0.1.2",
+        "automaticNetworkBinding": "0.0.0.0:7470",
+        "reportedNetworkUrl": "http://192.168.5.15:7470",
+        "configMode": "0640",
+        "configRootOwned": true,
+        "health": {
+          "127.0.0.1": {
+            "status": "ok",
+            "checks": {
+              "database": "ok",
+              "agent": "connected"
+            }
+          },
+          "192.168.5.15": {
+            "status": "ok",
+            "checks": {
+              "database": "ok",
+              "agent": "connected"
+            }
+          }
+        },
+        "source": "https://github.com/goktugcy/everyos/releases",
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "cachedPackageSha256": "ad9b883978129c8041797234f6e2085c3e5650bd9d5c64020e563ba5b5cb2787",
+        "temporaryBootstrapAndConfigFilesRemoved": true
+      },
+      "publishedBrowser": {
+        "passed": true,
+        "version": "0.1.2",
+        "environment": "Real signed production ARM64 package on disposable Ubuntu 26.04; SSH forward targets the guest's actual IPv4 interface",
+        "httpOrigin": "http://everyos.test:7491",
+        "secureContext": false,
+        "nativeRandomUUIDAvailable": false,
+        "transport": {
+          "secure": false,
+          "loopback": false
+        },
+        "firstRunSetup": true,
+        "defaultWallpaperDecodedWidth": 4717,
+        "realAgentConnected": true,
+        "authenticatedReload": true,
+        "pageErrors": []
+      },
+      "publishedArtifactVerification": {
+        "passed": true,
+        "version": "0.1.2",
+        "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.2",
+        "manifestAndBootstrapSignaturesValid": true,
+        "bootstrapMatchesCandidate": true,
+        "packages": [
+          {
+            "arch": "arm64",
+            "size": 55956594,
+            "sha256": "ad9b883978129c8041797234f6e2085c3e5650bd9d5c64020e563ba5b5cb2787",
+            "matchesLocalCandidate": false,
+            "wallpaperPresent": true,
+            "packagedDefaultLoopback": true
+          },
+          {
+            "arch": "amd64",
+            "size": 56202612,
+            "sha256": "25c6213aa790fd7673856a5e2602508355d69a24afb7033ff04d54c63c5ead58",
+            "matchesLocalCandidate": false,
+            "wallpaperPresent": true,
+            "packagedDefaultLoopback": true
+          }
+        ]
+      },
+      "authenticatedUpgradeFrom010": {
+        "passed": true,
+        "preservedExistingConfigBytes": true,
+        "preservedLoopbackBinding": true,
+        "target": "0.1.2"
+      },
+      "scope": {
+        "arm64Ubuntu2604FreshPublicInstall": true,
+        "amd64PublishedSignaturesAndContent": true,
+        "amd64NewInstallRerun": false,
+        "actualTailscaleDaemonDiscovery": false
+      },
+      "sourceBrowserCi": {
+        "allPassed": false,
+        "existingFailures": [
+          "power-folder-icons.spec.ts:9",
+          "tools-finder.spec.ts:88",
+          "tools-terminal.spec.ts:120"
+        ]
+      }
+    },
+    "linuxAccountLinking": {
+      "version": "0.1.3",
+      "platform": "Disposable Ubuntu 26.04.1 ARM64 with real production services",
+      "projectCheck": {
+        "passed": true,
+        "tests": 615,
+        "files": 63
+      },
+      "buildPassed": true,
+      "httpClipboardBrowser": {
+        "passed": true,
+        "secureContext": false,
+        "verifiedByActualPaste": true
+      },
+      "linuxAccountBrowser": {
+        "passed": true,
+        "platform": "Ubuntu 26.04.1 ARM64",
+        "httpClipboardRealPaste": true,
+        "linuxMappingUI": true,
+        "pamWrongPasswordDenied": true,
+        "terminalUID": 1000,
+        "terminalWritableHome": true,
+        "filesNativeUID": true,
+        "supplementaryGroupAccess": true,
+        "rootFileDenied": true,
+        "uploadAndRangeDownload": true,
+        "crossStorageCopy": true,
+        "trashRestore": true,
+        "sudoScoped": true,
+        "protectedServiceDenied": true,
+        "unlinkClosesTerminal": true,
+        "pageErrors": []
+      },
+      "nonSudoAndRoleDenials": {
+        "passed": true,
+        "regularLinuxAccountCannotAuthorizeSudo": true,
+        "everyosAdminCannotBypassLinuxRights": true,
+        "groupFileDenied": true,
+        "regularAccountOwnHomeWritable": true,
+        "inaccessibleRootDoesNotBreakTrash": true,
+        "viewerCannotLinkAccountsOrOpenTerminal": true
+      },
+      "publisherKeyChanged": false,
+      "ownerHostModified": false,
+      "limits": [
+        "No new AMD64 Linux installation was run for this change.",
+        "The complete unrelated browser suite was not rerun; targeted HTTP and production Linux acceptance scenarios were run.",
+        "Command-specific sudo rules for unrelated commands do not authorize EveryOS root management.",
+        "Existing EveryOS personal homes remain in backups; additional Linux homes are not silently added to those archives."
+      ]
     }
   },
   "operationalRequirements": [

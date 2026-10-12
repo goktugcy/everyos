@@ -36,6 +36,7 @@ interface Session {
   graceTimer: NodeJS.Timeout | null;
   idleTimer: NodeJS.Timeout | null;
   ended: boolean;
+  ready: boolean;
 }
 
 export interface TerminalLimits {
@@ -169,6 +170,7 @@ export class TerminalService {
       graceTimer: null,
       idleTimer: null,
       ended: false,
+      ready: false,
     };
     this.#sessions.set(session.id, session);
     this.#audit.record({
@@ -214,7 +216,13 @@ export class TerminalService {
         this.#actor(session.owner),
         { signal: session.controller.signal },
       )) {
-        if (event.type === "output") this.#output(session, Buffer.from(event.data, "base64"));
+        if (event.type === "started") {
+          session.account = event.user;
+          session.shell = event.shell;
+          session.ready = true;
+          this.#ready(session, false);
+        } else if (event.type === "output")
+          this.#output(session, Buffer.from(event.data, "base64"));
         else if (event.type === "exit") code = event.code;
       }
       this.#end(session, "exited", code);
@@ -233,18 +241,12 @@ export class TerminalService {
     if (session.socket && session.socket !== socket)
       session.socket.close(TERMINAL_CLOSE.replaced, "opened elsewhere");
     session.socket = socket;
-    this.#send(session, {
-      type: "ready",
-      sessionId: session.id,
-      account: session.account,
-      shell: session.shell,
-      resumed,
-    });
+    if (session.ready) this.#ready(session, resumed);
     for (const chunk of session.scrollback) socket.send(chunk, { binary: true });
     this.#touch(session);
 
     socket.on("message", (data, binary) => {
-      if (session.ended || session.socket !== socket) return;
+      if (session.ended || !session.ready || session.socket !== socket) return;
       const buffer = Array.isArray(data) ? Buffer.concat(data) : Buffer.from(data as ArrayBuffer);
       if (binary) {
         this.#touch(session);
@@ -279,6 +281,16 @@ export class TerminalService {
         this.#limits.graceMs,
       );
       session.graceTimer.unref();
+    });
+  }
+
+  #ready(session: Session, resumed: boolean): void {
+    this.#send(session, {
+      type: "ready",
+      sessionId: session.id,
+      account: session.account,
+      shell: session.shell,
+      resumed,
     });
   }
 

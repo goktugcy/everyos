@@ -91,7 +91,9 @@ manage host packages and schedule supported tasks. The menu bar shows battery an
 when the Linux host exposes those sensors, including charging state and watts where available.
 
 The browser terminal connects to a real shell with independent windows and themes. An administrator
-must first configure a regular Linux account for terminal access; see [terminal.md](docs/terminal.md).
+links each EveryOS user to an existing Linux account in the Users app. Terminal and host file
+access use that account’s permissions; system management verifies its existing sudo rights. See
+[Linux accounts](docs/linux-accounts.md) and [terminal.md](docs/terminal.md).
 Unavailable host capabilities are explained in the interface.
 
 ### Your workspace, backed up

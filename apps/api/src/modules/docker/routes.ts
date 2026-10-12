@@ -162,14 +162,18 @@ export function dockerRoutes(services: Services): Hono<AppEnv> {
     },
   );
 
-  app.get("/containers/:id/stats", requirePermission("docker:read"), (c) => {
+  app.get("/containers/:id/stats", requirePermission("docker:read"), async (c) => {
     parseQuery(c, EmptyQuery);
     const { id } = parseParams(c, IdParams);
+    if (services.config.mode === "production")
+      await callAgent(c, services, "docker.containers.list", {});
     return c.json(services.docker.history(id));
   });
 
   app.get("/stats", requirePermission("docker:read"), async (c) => {
     parseQuery(c, EmptyQuery);
+    if (services.config.mode === "production")
+      await callAgent(c, services, "docker.containers.list", {});
     const latest = services.docker.latest;
     if (!latest || services.now() - latest.at > STATS_MAX_AGE_MS) await services.docker.sample();
     const snapshot = services.docker.latest;

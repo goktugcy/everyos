@@ -284,6 +284,7 @@ describe("terminal sessions", () => {
     const { ctx, terminals, admin } = await service({ graceMs: 2_000 });
     const first = new FakeSocket();
     await terminals.connect(first as never, admin, { cols: 80, rows: 24 });
+    await settle(); // Input is accepted only after the account PTY is ready.
     first.type("echo merhaba\n");
     await settle();
     const id = terminals.sessions()[0]!.id;

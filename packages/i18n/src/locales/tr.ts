@@ -38,6 +38,7 @@ export const tr = {
     done: "Tamam",
     copy: "Kopyala",
     copied: "Kopyalandı",
+    copyFailed: "Kopyalanamadı. Metni seçip klavye kısayoluyla kopyalayabilirsin.",
     showPassword: "Parolayı göster",
     hidePassword: "Parolayı gizle",
     language: "Dil",
@@ -256,13 +257,14 @@ export const tr = {
     },
     disabled: {
       title: "Terminal kullanılamıyor",
-      "not-configured": "Terminal için bir sistem hesabı yapılandırılmamış.",
+      "not-configured":
+        "Kullanıcılar uygulamasından bu EveryOS kullanıcısını mevcut Linux hesabınla ilişkilendir.",
       "user-missing": "Yapılandırılan sistem hesabı bulunamadı.",
       "root-refused":
         "Yapılandırılan root hesabına izin verilmiyor. Ayrı bir normal hesap kullanın.",
       "python-missing": "PTY için gereken Python 3 yorumlayıcısı bulunamadı.",
       configure:
-        "Sunucuda /etc/everyos/agent.yaml dosyasındaki terminal.user alanına bir normal sistem hesabı yazın ve EveryOS agent hizmetini yeniden başlatın.",
+        "Kullanıcılar uygulamasında kullanıcıyı seçip Linux hesabını ilişkilendir. Mevcut Linux hesabının parolasıyla doğrulama gerekir.",
     },
     reasons: {
       exited: "Kabuk sona erdi.",
@@ -2510,6 +2512,33 @@ export const tr = {
       "too-common": "Bu parola çok yaygın; başka bir parola seçin.",
       repetitive: "Parola çok tekrarlı; daha çeşitli karakterler kullanın.",
     },
+  },
+  linux: {
+    identity: "{{name}} · UID {{uid}}",
+    title: "Linux hesabı ve yetkileri",
+    link: "Linux hesabını ilişkilendir",
+    unlink: "Eşlemeyi kaldır",
+    account: "Linux kullanıcı hesabı",
+    password: "Linux hesabının parolası",
+    everyosPassword: "Kendi EveryOS parolan",
+    linkHelp:
+      "Bu EveryOS kullanıcısını mevcut bir Linux hesabına bağla. Terminal ve Linux dosyaları o hesabın izinleriyle çalışır. Mevcut EveryOS kişisel klasörleri korunur. Eşleme değişince açık Linux oturumları kapanır; Linux hesabı ve yetkileri değiştirilmez.",
+    noAccounts:
+      "Eşlenebilecek yerel kullanıcı hesabı bulunamadı. Root ve servis hesapları eşlenemez.",
+    required:
+      "Önce Kullanıcılar uygulamasından EveryOS kullanıcını mevcut Linux hesabınla ilişkilendir.",
+    privilegeHelp:
+      "Sistem yönetimi için mevcut sudo yetkini doğrula. Doğrulama bu EveryOS oturumunda 5 dakika geçerlidir; parolan saklanmaz. EveryOS rol izinleri de geçerli olmaya devam eder.",
+    unlock: "Sistem yetkisini doğrula",
+    lock: "Sistem yetkisini kilitle",
+    unlocked: "Sistem yetkisi {{time}} tarihine kadar doğrulandı.",
+    authFailed:
+      "Linux hesabı doğrulanamadı. Hesap adını, parolayı ve hesabın etkin olduğunu kontrol et.",
+    sudoRequired:
+      "İşlem için Linux yönetici yetkisi gerekiyor. Ayarlar → Hesap → Linux hesabı ve yetkileri bölümünde sudo yetkini doğrula.",
+    fileDenied: "Linux hesabının bu dosyaya erişim izni yok veya konum salt okunur.",
+    rateLimited: "Çok fazla Linux hesabı doğrulaması yapıldı. Bir dakika sonra tekrar dene.",
+    unlinked: "İlişkilendirilmemiş",
   },
   errors: {
     BAD_REQUEST: "İstek anlaşılamadı.",

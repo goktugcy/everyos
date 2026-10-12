@@ -175,3 +175,9 @@ EveryOS, not an implementation of the host OS's Trash or the freedesktop Trash s
 Audit actions are `files.delete` with `mode: "trash"`, `files.trash.restore` and
 `files.trash.delete`; contents are never written into audit details. Validated requests are
 also audited when a batch stops after a partial change, with `succeeded: false`.
+
+## Linked Linux identities
+
+See [Linux account linking](linux-accounts.md). EveryOS personal storage keeps its existing
+API-owned homes and backup coverage; host locations and Linux homes use the linked account’s
+actual UID, groups and ACLs. Privileged system actions require verified existing sudo rights.

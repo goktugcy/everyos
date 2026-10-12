@@ -22,6 +22,7 @@ import { ApiError } from "../../http/errors.ts";
 import { parseJsonBody, parseQuery } from "../../http/validation.ts";
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
+import { AccountFileView } from "./account-file-view.ts";
 import { readFileSettings, writeFileSettings } from "./file-settings.ts";
 
 /** Raster formats that are safe to show in place; everything else downloads. */
@@ -69,16 +70,20 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
   // locations and, for administrators who enabled them, system paths.
   const files = (c: Context<AppEnv>) => {
     const auth = requireAuth(c);
-    return services.files.view({
+    const personal = services.files.view({
       id: auth.user.id,
       username: auth.user.username,
       locale: auth.user.locale,
+      personalOnly: services.config.mode === "production",
       systemRoots:
         auth.permissions.has("system:manage") && readFileSettings(services.db).systemRoots,
     });
+    return services.config.mode === "production"
+      ? new AccountFileView(c, services, personal)
+      : personal;
   };
   const enabled: MiddlewareHandler<AppEnv> = async (c, next) => {
-    if (!services.files.enabled)
+    if (!services.files.enabled && services.config.mode !== "production")
       throw new ApiError(404, "FILES_DISABLED", "No file locations are configured on this server");
     await services.files.withAccess(requireAuth(c).user.id, next);
   };

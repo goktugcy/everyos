@@ -8,6 +8,7 @@ import { Select } from "../../../components/ui/select.tsx";
 import { api } from "../../../lib/api.ts";
 import { errorMessage } from "../../../lib/errors.ts";
 import { useSessionStore } from "../../../stores/session-store.ts";
+import { LinuxAccountSection } from "../../../features/account/linux-account.tsx";
 import { SettingsGroup } from "./group.tsx";
 
 export default function AccountSection() {
@@ -69,6 +70,9 @@ export default function AccountSection() {
             </Button>
           </div>
         </form>
+      </SettingsGroup>
+      <SettingsGroup title={t("linux.title")}>
+        <LinuxAccountSection />
       </SettingsGroup>
       <SettingsGroup title={t("settings.account.language")}>
         <Select
