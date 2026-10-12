@@ -57,6 +57,7 @@ const ACTIONS: Partial<
   "app-failed": { appId: "everyos.store", appState: { tab: "installed" } },
   "login-locked": { appId: "everyos.audit" },
   "security-updates": { appId: "everyos.updates" },
+  "everyos-update-available": { appId: "everyos.settings", appState: { section: "about" } },
   "backup-succeeded": { appId: "everyos.backups" },
   "backup-failed": { appId: "everyos.backups" },
   "task-succeeded": { appId: "everyos.tasks" },

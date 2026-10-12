@@ -2,7 +2,7 @@ import { mkdtempSync, statSync, writeFileSync } from "node:fs";
 import { connect } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LogEntry, SystemInfo } from "@everyos/shared";
+import type { LogEntry, SystemInfo, SelfUpdateStatus } from "@everyos/shared";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
@@ -238,6 +238,34 @@ describe("agent protocol", () => {
     const pong = await client.call("agent.ping", {}, viewer);
     expect(pong.pong).toBe(true);
     if (process.platform !== "win32") expect(statSync(socketPath).mode & 0o777).toBe(0o660);
+  });
+
+  it("allows background release reads but never background installation", async () => {
+    const status: SelfUpdateStatus = {
+      source: "host",
+      installedVersion: "0.1.6",
+      architecture: "arm64",
+      configured: false,
+      reason: "not-configured",
+      checkedAt: null,
+      available: null,
+      job: null,
+    };
+    const { client } = await setup({
+      handlers: { "release.status": () => status, "release.check": () => status },
+    });
+    client.start();
+    await client.waitUntilConnected();
+    const actor: Actor = { kind: "system", component: "release-monitor" };
+    expect(await client.call("release.status", {}, actor)).toEqual(status);
+    expect(await client.call("release.check", {}, actor)).toEqual(status);
+    await expect(
+      client.call(
+        "release.install",
+        { version: "0.1.7", backupId: "11111111-1111-4111-8111-111111111111", confirm: true },
+        actor,
+      ),
+    ).rejects.toMatchObject({ code: "AGENT_OPERATION_DENIED" });
   });
 
   it("refuses clients that do not hold the agent key", async () => {

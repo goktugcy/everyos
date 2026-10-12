@@ -4,8 +4,10 @@ import type {
   NotificationList,
   NotificationView,
   ServiceList,
+  SelfUpdateStatus,
 } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
+import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import type { NotificationChange } from "./modules/notifications/notification-service.ts";
 import { json, readEvents, sampleServices, withRoles, type TestClient } from "./test-support.ts";
@@ -306,5 +308,117 @@ describe("notification sources", () => {
     await monitor.check();
     expect(await kinds()).not.toContain("agent-unavailable");
     monitor.stop();
+  });
+});
+
+describe("EveryOS release notifications", () => {
+  const status = (now: number, version: string | null = "0.1.7"): SelfUpdateStatus => ({
+    source: "host",
+    installedVersion: "0.1.6",
+    architecture: "arm64",
+    configured: true,
+    reason: null,
+    checkedAt: now,
+    available: version
+      ? {
+          version,
+          minVersion: "0.1.0",
+          schemaVersion: 1,
+          notes: "Fixture release",
+          publishedAt: now,
+        }
+      : null,
+    job: null,
+  });
+
+  it("manual checks publish a visible update once and preserve read state across checks and monitor restarts", async () => {
+    const { ctx, admin, viewer } = await withRoles();
+    const current = status(ctx.clock.now);
+    ctx.agent.handlers.set("release.check", () => current);
+    expect((await admin.post("/api/self-update/check", {})).status).toBe(200);
+    let page = await list(viewer, "?category=updates");
+    expect(page.notifications).toHaveLength(1);
+    expect(page.notifications[0]).toMatchObject({
+      kind: "everyos-update-available",
+      severity: "warning",
+      params: { version: "0.1.7", installedVersion: "0.1.6" },
+    });
+    await viewer.post("/api/notifications/read", { all: true });
+    await admin.post("/api/self-update/check", {});
+    const restarted = new ReleaseMonitor({
+      agent: ctx.agent,
+      notifications: ctx.services.notifications,
+      logger: ctx.services.logger,
+      now: () => ctx.clock.now,
+    });
+    restarted.observe(current);
+    page = await list(viewer, "?category=updates");
+    expect(page.notifications).toHaveLength(1);
+    expect(page.notifications[0]?.read).toBe(true);
+    restarted.observe({ ...current, installedVersion: "0.1.7", available: null });
+    expect((await list(viewer, "?category=updates")).notifications[0]?.resolvedAt).toBe(
+      ctx.clock.now,
+    );
+    restarted.observe(status(ctx.clock.now, "0.1.8"));
+    expect((await list(viewer, "?category=updates")).unread).toEqual({ updates: 1 });
+  });
+
+  it("checks in the background without a browser, coalesces checks and respects hourly refresh and retry backoff", async () => {
+    const { ctx, admin } = await withRoles();
+    let cached: SelfUpdateStatus = { ...status(ctx.clock.now, null), checkedAt: null };
+    let fail = false;
+    ctx.agent.handlers.set("release.status", () => cached);
+    ctx.agent.handlers.set("release.check", () => {
+      if (fail) throw new Error("Fixture signature rejection");
+      cached = status(ctx.clock.now);
+      return cached;
+    });
+    const monitor = ctx.services.releaseMonitor;
+    await Promise.all([monitor.check(), monitor.check()]);
+    expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(1);
+    expect(ctx.agent.calls.find((c) => c.op === "release.check")?.actor).toEqual({
+      kind: "system",
+      component: "release-monitor",
+    });
+    expect((await list(admin, "?category=updates")).notifications).toHaveLength(1);
+    ctx.clock.now += minutes(59);
+    await monitor.check();
+    expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(1);
+    ctx.clock.now += minutes(2);
+    fail = true;
+    await monitor.check();
+    expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(2);
+    ctx.clock.now += minutes(1);
+    await monitor.check();
+    expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(2);
+    expect((await list(admin, "?category=updates")).notifications[0]?.resolvedAt).toBeNull();
+    ctx.clock.now += minutes(15);
+    fail = false;
+    await monitor.check();
+    expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(3);
+    expect(ctx.agent.calls.some((c) => c.op === "release.install")).toBe(false);
+    monitor.stop();
+    await monitor.check();
+    expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(3);
+  });
+
+  it("does not invent releases from failed, unconfigured or non-newer checks", async () => {
+    const { ctx, admin } = await withRoles();
+    ctx.agent.handlers.set("release.status", () => ({
+      ...status(ctx.clock.now, null),
+      checkedAt: null,
+    }));
+    ctx.agent.handlers.set("release.check", () => {
+      throw new Error("Fixture signature rejection");
+    });
+    await ctx.services.releaseMonitor.check();
+    expect((await list(admin)).notifications).toHaveLength(0);
+    ctx.services.releaseMonitor.observe(status(ctx.clock.now, "0.1.5"));
+    ctx.services.releaseMonitor.observe({
+      ...status(ctx.clock.now),
+      configured: false,
+      reason: "not-configured",
+    });
+    expect((await list(admin)).notifications).toHaveLength(0);
   });
 });

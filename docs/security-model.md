@@ -327,3 +327,8 @@ commands and bounded payload/time/cache sizes. Device details contain only scope
 serials and arbitrary registry fields are dropped. Brand images come through an authenticated,
 audience-checked fixed PNG proxy; remote URLs from device data are never fetched or rendered,
 and Home Assistant credentials are never sent to the brand host.
+
+EveryOS release notifications reuse the agent's signed release manager. Background system actors
+may call only `release.status` and `release.check`; `release.install` remains user-only and its
+reauthentication, linked Linux privilege and safety-backup checks are unchanged. Notifications
+carry only installed/candidate versions and honor system-read visibility and notification preferences.

@@ -29,6 +29,7 @@ import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
 import { CatalogService } from "./modules/catalogs/catalog-service.ts";
 import { AppService, type FinishedJob } from "./modules/apps/app-service.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
+import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { FileService } from "./modules/files/file-service.ts";
 import { TerminalService } from "./modules/terminal/terminal-service.ts";
 import { UpdateService } from "./modules/updates/update-service.ts";
@@ -82,6 +83,7 @@ export interface Services {
   backups: BackupService;
   /** Background host checks that raise and resolve notification conditions. */
   hostMonitor: HostMonitor;
+  releaseMonitor: ReleaseMonitor;
   /** How often open event streams re-check access and send a keep-alive. */
   eventStreamHeartbeatMs: number;
   limiters: Limiters;
@@ -273,6 +275,12 @@ export function createServices(deps: ServiceDependencies): Services {
       executors: taskExecutors({ agent: deps.agent, updates, apps, backups }),
     }),
     backups,
+    releaseMonitor: new ReleaseMonitor({
+      agent: deps.agent,
+      notifications,
+      logger: deps.logger,
+      now,
+    }),
     hostMonitor: new HostMonitor({
       agent: deps.agent,
       notifications,

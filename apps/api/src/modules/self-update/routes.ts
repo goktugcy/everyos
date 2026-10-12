@@ -15,11 +15,15 @@ export function selfUpdateRoutes(services: Services): Hono<AppEnv> {
   app.use("*", requirePermission("system:read"));
   app.get("/", async (c) => {
     parseQuery(c, empty);
-    return c.json(await callAgent(c, services, "release.status", {}));
+    const status = await callAgent(c, services, "release.status", {});
+    services.releaseMonitor.observe(status);
+    return c.json(status);
   });
   app.post("/check", async (c) => {
     await parseJsonBody(c, empty);
-    return c.json(await callAgent(c, services, "release.check", {}));
+    const status = await callAgent(c, services, "release.check", {});
+    services.releaseMonitor.observe(status);
+    return c.json(status);
   });
   app.post("/prepare", requirePermission("system:manage"), async (c) => {
     await parseJsonBody(c, empty);

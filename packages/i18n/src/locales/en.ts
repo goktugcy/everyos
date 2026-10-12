@@ -1899,6 +1899,10 @@ export const en: Messages = {
       interrupted: "the operation was interrupted",
     },
     kinds: {
+      "everyos-update-available": {
+        title: "A new EveryOS version is available",
+        body: "EveryOS {{version}} is available. Installed version: {{installedVersion}}. Open Settings → About for details and updating.",
+      },
       "service-failed": { title: "Service failed", body: "{{unit}} stopped unexpectedly." },
       "storage-low": {
         title: "Disk almost full",

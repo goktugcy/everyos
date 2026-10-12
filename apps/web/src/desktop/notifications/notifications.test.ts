@@ -1,5 +1,6 @@
 import type { NotificationView } from "@everyos/shared";
 import { describe, expect, it, vi } from "vitest";
+import { notificationAction } from "./content.ts";
 import { shouldToast, unreadTotal } from "./store.ts";
 
 vi.mock("../../lib/event-stream.ts", () => ({ subscribeTopic: vi.fn() }));
@@ -40,4 +41,19 @@ describe("notification preferences", () => {
       shouldToast({ ...base, severity: "info" }, { ...preferences, toastMinSeverity: "info" }),
     ).toBe(true);
   });
+});
+
+it("opens EveryOS version notifications in Settings About and respects update-category toast preferences", () => {
+  expect(
+    notificationAction("everyos-update-available", ["system:read", "notifications:read"]),
+  ).toEqual({ appId: "everyos.settings", appState: { section: "about" } });
+  const update: NotificationView = {
+    ...base,
+    kind: "everyos-update-available",
+    category: "updates",
+    severity: "warning",
+    params: { version: "0.1.7", installedVersion: "0.1.6" },
+  };
+  expect(shouldToast(update, preferences)).toBe(true);
+  expect(shouldToast(update, { ...preferences, mutedCategories: ["updates"] })).toBe(false);
 });

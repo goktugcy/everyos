@@ -98,6 +98,7 @@ async function main(): Promise<void> {
   const app = createApp(services);
   services.metrics.start();
   services.hostMonitor.start();
+  if (config.mode === "production") services.releaseMonitor.start();
   const startTasks = () => {
     if (config.mode === "production" && existsSync("/run/everyos-update-maintenance")) return;
     clearInterval(taskStartTimer);
@@ -162,6 +163,7 @@ async function main(): Promise<void> {
     services.docker.stop();
     services.widgetData.stop();
     services.hostMonitor.stop();
+    services.releaseMonitor.stop();
     services.terminals.stop();
     services.updates.stop();
     services.tasks.stop();

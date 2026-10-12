@@ -920,6 +920,51 @@
         ],
         "homeAssistantScenarioPassedOnBothArchitectures": true
       }
+    },
+    "releaseNotifications016": {
+      "version": "0.1.6",
+      "date": "2026-10-12",
+      "ownerHostModified": false,
+      "publisherKeyChanged": false,
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 64,
+        "tests": 625
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build"
+      },
+      "releaseNotificationTests": {
+        "passed": true,
+        "manualAboutApiPublishesNotification": true,
+        "viewerSystemReadVisibility": true,
+        "durableVersionDedupeAndReadState": true,
+        "installedVersionResolvesCondition": true,
+        "backgroundChecksWithoutBrowser": true,
+        "coalescedChecks": true,
+        "hourlyRefreshAndFailureBackoff": true,
+        "failedChecksDoNotInventRelease": true,
+        "settingsAboutDeepLink": true,
+        "toastPreferencesRespected": true,
+        "authenticatedAgentProtocolAllowsOnlyBackgroundReads": true,
+        "backgroundInstallationDenied": true
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 3,
+        "log": ".dev/release-notifications/browser-final.log",
+        "cases": [
+          "first-run setup",
+          "notification toast, count, read, mute and clear behavior",
+          "Settings About development-mode status and package-manager controls"
+        ]
+      },
+      "limits": [
+        "New release notifications are tested with agent-protocol fixtures and real API/database processing. The hourly production loop was not exercised on a separate Linux host in this change.",
+        "No owner host installation or services were modified."
+      ]
     }
   },
   "operationalRequirements": [

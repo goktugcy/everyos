@@ -71,3 +71,26 @@ center offers:
 Pop-ups appear at the top right. Critical ones stay until closed; others disappear after 8 s. The
 preference document `notifications` holds `toasts`, `toastMinSeverity` (default: warning) and
 `mutedCategories`. Muted categories stay listed, but are not counted and never pop up.
+
+## EveryOS version updates
+
+`ReleaseMonitor` starts in production 20 seconds after the API starts. Every minute it reads
+`release.status` from the agent. When the persisted successful check is at least one hour old,
+it requests `release.check`; failed remote checks back off for 15 minutes. Concurrent monitor
+checks share one request, and shutdown cancels pending work. Cached metadata is already verified
+by the existing release manager; invalid signatures and unavailable sources never create an
+invented update. Background calls allow the system actor only for these two read operations;
+`release.install` still requires the authorized user, password, Linux privilege and verified backup.
+
+A newer available version raises `everyos-update-available` in the **updates** category, visible
+to users with `system:read` (plus notification access). Warning severity makes it eligible for
+the existing default toast threshold; muted categories and toast preferences remain respected.
+The version is the durable condition key, so polling, reading/dismissing and API restarts do not
+repeatedly alert for the same pending version. A newer release resolves the previous condition,
+and installing/upgrading to the candidate resolves it. Clicking the notification opens Settings
+→ About. It never begins a download or installation.
+
+The About status/check endpoints observe the same condition immediately, so a manual successful
+check updates the center too. Development/non-Linux/unconfigured status does not produce release
+notifications. This reuses the configured signed release source and publisher key; it does not
+fetch an independent or untrusted version feed.

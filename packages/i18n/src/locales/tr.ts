@@ -1939,6 +1939,10 @@ export const tr = {
       interrupted: "İşlem yarıda kesildi",
     },
     kinds: {
+      "everyos-update-available": {
+        title: "Yeni EveryOS sürümü hazır",
+        body: "EveryOS {{version}} yayınlandı. Kurulu sürüm: {{installedVersion}}. Ayrıntılar ve güncelleme için Ayarlar → Hakkında ekranını aç.",
+      },
       "service-failed": { title: "Servis hatalı", body: "{{unit}} beklenmedik şekilde durdu." },
       "storage-low": {
         title: "Disk dolmak üzere",

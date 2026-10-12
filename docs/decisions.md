@@ -419,3 +419,12 @@ secondary controls in details; an entity view keeps virtual items accessible. Re
 leave state/control functionality intact and are visible in the UI. Brand logos use a fixed,
 bounded same-origin PNG proxy to Home Assistant Brands, with local device symbols as fallbacks;
 the CSP and credential isolation stay unchanged.
+
+### D34 — Signed EveryOS release notifications
+
+Poll the existing agent release manager rather than introducing a second version feed. The API
+monitor performs system-actor status/check reads in production, with hourly remote checks and
+15-minute error backoff. A durable notification condition keyed by candidate version preserves
+per-user read/dismiss state across checks and restarts. Manual About requests observe that same
+condition. Allowing system actors for the two non-installing operations enables unattended
+notification discovery; installation remains an explicit user action under existing controls.

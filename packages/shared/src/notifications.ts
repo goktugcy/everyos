@@ -38,6 +38,7 @@ export const NOTIFICATION_KINDS = {
   throttling: { category: "system", permission: "system:read", condition: true },
   "nvme-unhealthy": { category: "storage", permission: "system:read", condition: true },
   "security-updates": { category: "updates", permission: "system:read", condition: true },
+  "everyos-update-available": { category: "updates", permission: "system:read", condition: true },
   "internet-offline": { category: "network", permission: "system:read", condition: true },
   "tailscale-offline": { category: "network", permission: "system:read", condition: true },
   "tailscale-key-expiry": { category: "network", permission: "system:read", condition: true },
