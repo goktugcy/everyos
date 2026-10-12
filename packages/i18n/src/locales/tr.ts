@@ -2175,7 +2175,6 @@ export const tr = {
     available: "Yeni sürüm",
     check: "Güncellemeleri denetle",
     install: "Güncellemeyi yükle",
-    password: "Yönetici parolası",
     confirmTitle: "EveryOS güncellensin mi?",
     confirmBody:
       "{{version}} kurulmadan önce doğrulanmış yedek alınacak. Masaüstü kısa süreliğine bağlantısını kaybedebilir.",

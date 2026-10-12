@@ -467,3 +467,15 @@ remains an explicit port, including normal failure when another host service own
 Share measured icon-caption fitting across desktop, Files and the mobile launcher. Keep a readable
 9px floor; exceptionally long names expand on interaction rather than becoming unreadable. Text
 selection plates are removed while glyph highlighting and keyboard focus remain visible.
+
+### D37 — EveryOS updates without redundant password confirmation
+
+Use the authenticated, unlocked administrator session to authorize explicit EveryOS version
+installation. Remove the additional EveryOS password field and reauthentication from the web
+panel, CLI installation payload and API. Keep current server permissions, CSRF, user-only agent
+policy, actual Linux privilege checks, signed release validation and verified fresh local safety
+backups. This does not grant unattended installation or alter Linux sudo verification lifetimes.
+
+Accept an optional bounded legacy password field without using it, so a cached older client can
+complete an upgrade. New clients do not send it. Authentication, session unlocking and backup
+restoration retain their existing password requirements.

@@ -5,7 +5,6 @@ import type { AppEnv } from "../../context.ts";
 import type { Services } from "../../services.ts";
 import { agentActor, callAgent } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
-import { confirmPassword } from "../../http/reauth.ts";
 import { parseJsonBody, parseQuery } from "../../http/validation.ts";
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 
@@ -39,7 +38,6 @@ export function selfUpdateRoutes(services: Services): Hono<AppEnv> {
   app.post("/install", requirePermission("system:manage"), async (c) => {
     const input = await parseJsonBody(c, SelfUpdateInstallRequestSchema);
     const auth = requireAuth(c);
-    await confirmPassword(services, c, auth, input.password, "release.install");
     const backup = await services.backups.get(input.backupId);
     if (
       backup.uploaded ||

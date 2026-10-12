@@ -173,8 +173,10 @@ Authenticated commands prompt for username, hidden password and optional TOTP/re
 For automation, `--credentials-stdin` accepts a JSON object containing `username`, `password`
 and optional `otp`. Keep credentials out of command arguments and shell history. `--url` accepts
 an HTTPS origin or local loopback HTTP origin; certificate verification stays enabled. All backup,
-restore and update commands use the same API authorization, password checks, CSRF and audit as
-the web client. The CLI has no privileged bypass or generic shell operation.
+restore and update commands use the same API authorization, CSRF and audit as the web client.
+Login and backup restoration still verify the password; version installation does not request
+additional EveryOS password confirmation. Linux privilege checks remain independent. The CLI
+has no privileged bypass or generic shell operation.
 
 Backups include the database, configuration, wallpapers and all account homes. App-data backup
 remains an explicit app selection in the Backups UI. A database restore requires administrator

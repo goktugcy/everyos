@@ -2,6 +2,54 @@ import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers.ts";
 import type { SelfUpdateStatus } from "../../packages/shared/src/index.ts";
 
+test("EveryOS installation confirms and prepares a backup without requesting a password", async ({
+  page,
+}) => {
+  await signIn(page);
+  const status = (await (await page.request.get("/api/self-update")).json()) as SelfUpdateStatus;
+  // Only discovery is a fixture: backup and install requests reach the real development API.
+  await page.route("**/api/self-update", (route) =>
+    route.fulfill({
+      json: {
+        ...status,
+        configured: true,
+        reason: null,
+        job: null,
+        available: {
+          version: "0.2.0",
+          minVersion: status.installedVersion,
+          schemaVersion: 1,
+          notes: "Browser test release discovery fixture",
+          publishedAt: Date.now(),
+        },
+      } satisfies SelfUpdateStatus,
+    }),
+  );
+  await page.getByTestId("dock").getByRole("button", { name: "Ayarlar", exact: true }).click();
+  const settings = page.locator('[data-app-id="everyos.settings"]');
+  await settings.getByRole("button", { name: "Hakkında", exact: true }).click();
+  const panel = settings.getByTestId("self-update-panel");
+  await expect(panel.locator('input[type="password"]')).toHaveCount(0);
+  const install = panel.getByRole("button", { name: "Güncellemeyi yükle", exact: true });
+  await expect(install).toBeEnabled();
+  const request = page.waitForRequest((value) => value.url().endsWith("/api/self-update/install"));
+  const response = page.waitForResponse((value) =>
+    value.url().endsWith("/api/self-update/install"),
+  );
+  await install.click();
+  const confirm = page.getByRole("alertdialog");
+  await expect(confirm).toContainText("0.2.0");
+  await confirm.getByRole("button", { name: "Güncellemeyi yükle", exact: true }).click();
+  expect((await request).postDataJSON()).toEqual({
+    version: "0.2.0",
+    backupId: expect.stringMatching(/^\d{8}-\d{6}-[a-f0-9]{6}$/),
+    confirm: true,
+  });
+  // The production-only agent policy must still deny actual package installation here.
+  expect((await response).status()).toBe(403);
+  await expect(install).toBeEnabled();
+});
+
 test("pending updates are listed, inspected and upgraded only after confirmation", async ({
   page,
 }) => {

@@ -10,7 +10,8 @@ export const ReleaseInstallSchema = z.strictObject({
 export const SelfUpdateInstallRequestSchema = z.strictObject({
   version: ReleaseVersionSchema,
   backupId: BackupIdSchema,
-  password: z.string().min(1).max(1024),
+  // Accept older clients during upgrades without requiring or using their password.
+  password: z.string().min(1).max(1024).optional(),
   confirm: z.literal(true),
 });
 export const ReleaseJobSchema = z.strictObject({

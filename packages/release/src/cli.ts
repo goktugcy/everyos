@@ -212,7 +212,6 @@ async function main(): Promise<void> {
   await request("/self-update/install", {
     version: status.available.version,
     backupId: backup.backupId,
-    password: account.password,
     confirm: true,
   });
   const deadline = Date.now() + 45 * 60_000;

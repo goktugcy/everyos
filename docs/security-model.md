@@ -338,5 +338,7 @@ and Home Assistant credentials are never sent to the brand host.
 
 EveryOS release notifications reuse the agent's signed release manager. Background system actors
 may call only `release.status` and `release.check`; `release.install` remains user-only and its
-reauthentication, linked Linux privilege and safety-backup checks are unchanged. Notifications
+unlocked administrator session, CSRF, linked Linux privilege and safety-backup checks remain
+mandatory. Version installation requires explicit confirmation without additional EveryOS
+password reauthentication. Notifications
 carry only installed/candidate versions and honor system-read visibility and notification preferences.

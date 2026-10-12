@@ -2132,7 +2132,6 @@ export const en: Messages = {
     available: "Available version",
     check: "Check for updates",
     install: "Install update",
-    password: "Administrator password",
     confirmTitle: "Update EveryOS?",
     confirmBody:
       "A verified backup will be created before installing {{version}}. The desktop may briefly disconnect.",

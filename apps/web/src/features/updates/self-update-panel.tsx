@@ -2,7 +2,6 @@ import type { BackupJobView, ReleaseJob, SelfUpdateStatus } from "@everyos/share
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui/button.tsx";
-import { Field } from "../../components/ui/field.tsx";
 import { Alert } from "../../components/ui/alert.tsx";
 import { api } from "../../lib/api.ts";
 import { errorMessage } from "../../lib/errors.ts";
@@ -27,7 +26,6 @@ export function SelfUpdatePanel() {
   const [status, setStatus] = useState<SelfUpdateStatus | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [connectionError, setConnectionError] = useState<unknown>(null);
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
@@ -105,9 +103,8 @@ export function SelfUpdatePanel() {
       setPreparing(false);
       const queued = await api<ReleaseJob>("/self-update/install", {
         method: "POST",
-        body: { version, backupId: job.backupId, password, confirm: true },
+        body: { version, backupId: job.backupId, confirm: true },
       });
-      setPassword("");
       setStatus((previous) => (previous ? { ...previous, job: queued } : previous));
     } catch (caught) {
       setError(caught);
@@ -183,14 +180,7 @@ export function SelfUpdatePanel() {
             void install();
           }}
         >
-          <Field
-            label={t("selfUpdate.password")}
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
-          <Button type="submit" loading={preparing} disabled={busy || !!running || !password}>
+          <Button type="submit" loading={preparing} disabled={busy || !!running}>
             {t("selfUpdate.install")}
           </Button>
         </form>

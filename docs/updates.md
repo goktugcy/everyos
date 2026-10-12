@@ -4,7 +4,11 @@
 
 Settings → About and Updates → EveryOS share the same version-update panel, showing the real
 installed/available version, signed release notes and supervised job progress. Administrators
-can check and install directly from either screen. The same administrator-approved workflow
+can check and install directly from either screen without entering the EveryOS password again.
+An authenticated, unlocked administrator session and explicit update confirmation are required;
+linked Linux privileges are checked independently. Older clients may send an optional legacy
+`password` field, but installation neither requires nor verifies it.
+The same administrator-approved workflow
 is available through `everyos update`.
 It verifies the publisher signature, package hash/architecture/upgrade path and a fresh safety
 backup of the database and all account homes. A separate systemd worker survives API/agent
@@ -97,8 +101,9 @@ or sudo authorization is distinguished from an APT error or agent connection fai
 
 - Viewing needs `system:read`; refreshing and upgrading need `system:manage` (administrators). The
   agent re-checks the permission.
-- Production mutations also require a linked Linux account with actual sudo rights. Password
-  authorization is session-scoped and expires after five minutes; linking alone does not grant
+- Production mutations also require a linked Linux account with actual sudo rights. Linux sudo
+  verification uses the selected duration, including indefinite account-wide grants; legacy
+  requests without a duration retain five-minute session grants. Linking alone does not grant
   sudo. A failed job offers **Verify sudo access** in the Updates app, using the same credential
   flow as Settings → Account. After authorization, the administrator explicitly retries the
   refresh or upgrade. Passwords are never stored or included in update logs.
