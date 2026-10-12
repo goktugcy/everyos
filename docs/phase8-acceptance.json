@@ -753,8 +753,67 @@
       },
       "limits": [
         "No new AMD64 Linux installation was run for this change.",
-        "The complete browser suite was not rerun locally; the previously recorded unrelated failures remain outside this fix."
-      ]
+        "The complete browser suite still reports the three previously recorded unrelated failures; targeted package-manager and published ARM64 Linux acceptance passed."
+      ],
+      "sourceCommit": "f9fb37f231b7072bb864945c92b2ae977dc86ab3",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.4",
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38228982735"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.4",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.4_arm64.deb",
+            "size": 56743448,
+            "sha256": "a7abc112dc16e10f027cc3c171cf17851d212de0685f1d1431cfbe1ac89562a0",
+            "identityAndContentsVerified": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.4_amd64.deb",
+            "size": 56992076,
+            "sha256": "ba3f2c510af970c0cce64885f34c17a0c131faa898b169532a2b5ad378880a61",
+            "identityAndContentsVerified": true
+          }
+        ]
+      },
+      "publishedArm64PackageBrowser": {
+        "passed": true,
+        "installedVersion": "0.1.4",
+        "platform": "Ubuntu 26.04.1 ARM64",
+        "preflightSudoReasonRetained": true,
+        "historyLocalizedReason": true,
+        "inlineSudoVerification": true,
+        "realPackageUpgrade": "1.0 -> 2.0",
+        "buttonsEnabledAfterFailureAndSuccess": true,
+        "repeatedRefresh": true,
+        "tabSwitchDuringJob": true,
+        "sseUnavailableRecovered": true,
+        "signedEveryosPreflightDiagnostic": true,
+        "passwordsAbsentFromJobOutput": true,
+        "pageErrors": [],
+        "log": ".dev/apt-fix/public-production-browser.log"
+      },
+      "fullSourceBrowserCi": {
+        "passed": false,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38228956781",
+        "existingFailures": [
+          "power-folder-icons.spec.ts:9",
+          "tools-finder.spec.ts:88",
+          "tools-terminal.spec.ts:120"
+        ],
+        "updatedPackageManagerScenarioPassed": true,
+        "updatedDisabledTerminalScenarioPassed": true
+      }
     }
   },
   "operationalRequirements": [
