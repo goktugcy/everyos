@@ -120,9 +120,14 @@ The **Files** app (`everyos.files`) looks like the macOS Finder and provides:
 
 ## The desktop is the Desktop folder
 
-The **My Applications** system folder opens a live icon view of Store-managed installations.
-It is a launcher collection, separate from ordinary home files; container data remains in its
-managed project. See [app-store.md](app-store.md#my-applications-folder) for launch and selection.
+The **Applications** system folder opens a live icon view of Store-managed installations.
+It appears in Favorites and beside the ordinary files in the user's home in both icon and list
+views. It opens inside Files with its own application search and lifecycle controls, preserving
+the window location across reloads. Back and the home breadcrumb return to the home view.
+It is a launcher collection, separate from ordinary home files; an identically named physical
+folder remains independent and container data remains in its managed project. File deletion,
+rename, clipboard and drops never operate on the collection. See
+[app-store.md](app-store.md#applications-folder) for launch and selection.
 
 Like macOS, the desktop shows the contents of the home's **Desktop** folder (on every virtual
 desktop) next to the app shortcuts. Its items are ordinary files and folders:

@@ -338,7 +338,7 @@ export const en: Messages = {
     trash: "Trash",
     terminal: "Terminal",
     store: "App Store",
-    applications: "My Applications",
+    applications: "Applications",
     system: "System Monitor",
     settings: "Settings",
     users: "Users",
@@ -401,6 +401,7 @@ export const en: Messages = {
     },
   },
   applications: {
+    folder: "Installed applications",
     details: "Application details",
     empty: "Applications installed from the store appear in this folder.",
     count: "{{count}} applications",
@@ -2134,6 +2135,9 @@ export const en: Messages = {
     title: "EveryOS version update",
     description:
       "Signed releases are verified before installation. The backup includes all account homes.",
+    automaticChecks:
+      "New versions are checked automatically every hour and added to notifications.",
+    checkedAt: "Last check",
     installed: "Installed version",
     available: "Available version",
     check: "Check for updates",

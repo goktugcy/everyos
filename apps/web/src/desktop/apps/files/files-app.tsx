@@ -83,6 +83,8 @@ import {
 import { FILES_FOLDER_ICONS as FOLDER_ICONS, FilesSidebar } from "./sidebar.tsx";
 import { FolderIconDialog } from "../settings/folder-icon-picker.tsx";
 import { FileIconView } from "./icon-view.tsx";
+import { ApplicationsEntry } from "./applications-entry.tsx";
+import ApplicationsApp from "../store/applications-app.tsx";
 
 type ViewMode = "icons" | "list";
 
@@ -109,10 +111,13 @@ export default function FilesApp() {
   const { t, i18n } = useTranslation();
   const permissions = usePermissions();
   const canWrite = permissions.includes("files:write");
+  const canReadApps = permissions.includes("apps:read");
   const [roots, setRoots] = useState<FileRootView[] | null>(null);
   const [system, setSystem] = useState<FileRootsResponse["system"] | null>(null);
   const [rootsError, setRootsError] = useState<unknown>(null);
   const { location, host } = useLocationState(roots);
+  const applicationsOpen =
+    canReadApps && (host.appState as { place?: unknown } | undefined)?.place === "applications";
   const [back, setBack] = useState<FileLocation[]>([]);
   const [forward, setForward] = useState<FileLocation[]>([]);
   const [listing, setListing] = useState<FileListing | null>(null);
@@ -147,8 +152,17 @@ export default function FilesApp() {
   const changes = useFilesRevision();
   const listRef = useRef<HTMLDivElement>(null);
   const uploadInput = useRef<HTMLInputElement>(null);
+  const endMarquee = () => {
+    const id = selecting.current?.pointerId;
+    selecting.current = null;
+    setMarquee(null);
+    if (id !== undefined && listRef.current?.hasPointerCapture(id))
+      listRef.current.releasePointerCapture(id);
+  };
 
   const root = roots?.find((r) => r.id === location?.root) ?? null;
+  const home = roots?.find((r) => r.kind === "home") ?? null;
+  const showHomeApplications = canReadApps && root?.kind === "home" && location?.path === "";
   const writable = Boolean(canWrite && root && !root.readOnly);
 
   const loadRoots = useCallback(
@@ -210,9 +224,15 @@ export default function FilesApp() {
   }, [location?.root, location?.path, hidden, revision, changes]);
 
   useEffect(() => {
-    host.setTitle(location?.path ? nameOf(location.path) : (root?.name ?? ""));
+    host.setTitle(
+      applicationsOpen
+        ? t("apps.applications")
+        : location?.path
+          ? nameOf(location.path)
+          : (root?.name ?? ""),
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- title follows the location
-  }, [location?.path, root?.name]);
+  }, [location?.path, root?.name, applicationsOpen, t]);
 
   const refresh = useCallback(() => setRevision((n) => n + 1), []);
 
@@ -230,8 +250,28 @@ export default function FilesApp() {
       ...(host.appState as object | undefined),
       root: next.root,
       path: next.path,
+      place: "files",
     });
   };
+  const openApplications = () => {
+    endMarquee();
+    setSelected(new Set());
+    setRenaming(null);
+    setResults(null);
+    setSearchText("");
+    host.setAppState({
+      ...(host.appState as object | undefined),
+      ...(home ? { root: home.id, path: "" } : {}),
+      place: "applications",
+    });
+  };
+  const homeApplicationsEntry = showHomeApplications ? (
+    <ApplicationsEntry
+      view={view}
+      onOpen={openApplications}
+      onSelect={() => setSelected(new Set())}
+    />
+  ) : null;
 
   const entries = useMemo(() => {
     const list = [...(listing?.entries ?? [])];
@@ -432,14 +472,6 @@ export default function FilesApp() {
   };
 
   /* ----------------------------- selection ----------------------------- */
-
-  const endMarquee = () => {
-    const id = selecting.current?.pointerId;
-    selecting.current = null;
-    setMarquee(null);
-    if (id !== undefined && listRef.current?.hasPointerCapture(id))
-      listRef.current.releasePointerCapture(id);
-  };
 
   const beginMarquee = (event: ReactPointerEvent<HTMLDivElement>) => {
     // Portal events bubble through React, but menus are outside the selection surface.
@@ -934,419 +966,474 @@ export default function FilesApp() {
         location={location}
         onGo={(next) => go(next)}
         onSystem={(enabled) => void toggleSystem(enabled)}
+        applicationsOpen={applicationsOpen}
+        onApplications={canReadApps ? openApplications : undefined}
         drops={{ allowDrop, drop, dropTarget, clearDrop: () => setDropTarget(null) }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-line px-2 py-1.5">
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-label={t("files.back")}
-            title={t("files.back")}
-            disabled={back.length === 0}
-            onClick={() => {
-              const previous = back.at(-1)!;
-              setBack((s) => s.slice(0, -1));
-              if (location) setForward((s) => [...s, location]);
-              go(previous, false);
-            }}
-          >
-            <ArrowLeft className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-label={t("files.forward")}
-            title={t("files.forward")}
-            disabled={forward.length === 0}
-            onClick={() => {
-              const next = forward.at(-1)!;
-              setForward((s) => s.slice(0, -1));
-              if (location) setBack((s) => [...s, location]);
-              go(next, false);
-            }}
-          >
-            <ArrowRight className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-label={t("files.up")}
-            title={t("files.up")}
-            disabled={!location?.path}
-            onClick={() => location && go({ root: location.root, path: parentOf(location.path) })}
-          >
-            <ArrowUp className="size-4" aria-hidden />
-          </button>
-
-          <h2
-            className="min-w-0 flex-1 truncate px-1 text-[0.9rem] font-semibold"
-            data-testid="files-title"
-          >
-            {location?.path ? nameOf(location.path) : (root?.name ?? "")}
-          </h2>
-
-          <div
-            role="group"
-            aria-label={t("files.view.label")}
-            className="glass-inset flex h-8 shrink-0 items-center rounded-everyos-sm p-0.5"
-          >
-            {(["icons", "list"] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                aria-pressed={view === mode}
-                aria-label={t(`files.view.${mode}`)}
-                title={t(`files.view.${mode}`)}
-                onClick={() => setView(mode)}
-                className={cn(
-                  "grid h-7 w-8 place-items-center rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                  view === mode ? "bg-hover/15 text-fg" : "text-fg-muted hover:text-fg",
-                )}
-              >
-                {mode === "icons" ? (
-                  <LayoutGrid className="size-4" aria-hidden />
-                ) : (
-                  <List className="size-4" aria-hidden />
-                )}
-              </button>
-            ))}
-          </div>
-
-          <form
-            role="search"
-            className="glass-inset flex h-8 items-center gap-1.5 rounded-everyos-sm px-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!location || !searchText.trim()) return;
-              filesApi.search(location, searchText.trim()).then(setResults, setActionError);
-            }}
-          >
-            <Search className="size-3.5 text-fg-subtle" aria-hidden />
-            <input
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder={t("files.search")}
-              aria-label={t("files.search")}
-              className="w-32 bg-transparent text-sm outline-none placeholder:text-fg-subtle"
-            />
-            {results ? (
+        {applicationsOpen ? (
+          <>
+            <div className="flex shrink-0 items-center gap-2 border-b border-line px-2 py-1.5">
               <button
                 type="button"
-                aria-label={t("files.clearSearch")}
+                className={toolbarButton}
+                aria-label={t("files.back")}
                 onClick={() => {
-                  setResults(null);
-                  setSearchText("");
+                  const target = home ? { root: home.id, path: "" } : location;
+                  if (target) go(target, false);
+                  else
+                    host.setAppState({ ...(host.appState as object | undefined), place: "files" });
                 }}
               >
-                <X className="size-3.5" aria-hidden />
+                <ArrowLeft className="size-4" aria-hidden />
               </button>
-            ) : null}
-          </form>
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-label={t("files.menu.newFolder")}
-            title={t("files.menu.newFolder")}
-            disabled={!writable}
-            onClick={() => void createFolder()}
-          >
-            <FolderPlus className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-label={t("files.menu.upload")}
-            title={t("files.menu.upload")}
-            disabled={!writable}
-            onClick={() => uploadInput.current?.click()}
-          >
-            <Upload className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-pressed={hidden}
-            aria-label={t("files.showHidden")}
-            title={t("files.showHidden")}
-            onClick={() => setHidden((h) => !h)}
-          >
-            {hidden ? (
-              <Eye className="size-4" aria-hidden />
-            ) : (
-              <EyeOff className="size-4" aria-hidden />
-            )}
-          </button>
-          <button
-            type="button"
-            className={toolbarButton}
-            aria-label={t("files.menu.refresh")}
-            title={t("files.menu.refresh")}
-            onClick={refresh}
-          >
-            <RefreshCw className="size-4" aria-hidden />
-          </button>
-          <input
-            ref={uploadInput}
-            type="file"
-            multiple
-            hidden
-            onChange={(event) => {
-              void upload([...(event.target.files ?? [])]);
-              event.target.value = "";
-            }}
-          />
-        </div>
-
-        {actionError ? (
-          <div className="px-3 pt-2">
-            <Alert tone="danger">{errorMessage(t, actionError)}</Alert>
-          </div>
-        ) : null}
-
-        {results ? (
-          <div className="min-h-0 flex-1 overflow-auto p-2" data-testid="file-search-results">
-            <p className="px-2 pb-2 text-xs text-fg-muted">
-              {t("files.results", { count: results.results.length })}
-              {results.truncated ? ` · ${t("files.resultsTruncated")}` : ""}
-            </p>
-            <ul className="flex flex-col">
-              {results.results.map((result) => (
-                <li key={result.path}>
+              <h2 className="text-[0.9rem] font-semibold" data-testid="files-title">
+                {t("apps.applications")}
+              </h2>
+            </div>
+            <ApplicationsApp />
+            <div
+              className="flex shrink-0 items-center gap-1 border-t border-line px-3 py-1 text-xs text-fg-muted"
+              aria-label={t("files.breadcrumb")}
+            >
+              {home ? (
+                <>
                   <button
                     type="button"
-                    className="flex w-full items-center gap-2 rounded-everyos-sm px-2 py-1.5 text-left text-sm hover:bg-hover/8"
+                    className="rounded px-1 py-0.5 hover:bg-hover/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    onClick={() => go({ root: home.id, path: "" }, false)}
+                  >
+                    {home.name}
+                  </button>
+                  <ChevronRight className="size-3.5" aria-hidden />
+                </>
+              ) : null}
+              <span aria-current="page">{t("apps.applications")}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-line px-2 py-1.5">
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("files.back")}
+                title={t("files.back")}
+                disabled={back.length === 0}
+                onClick={() => {
+                  const previous = back.at(-1)!;
+                  setBack((s) => s.slice(0, -1));
+                  if (location) setForward((s) => [...s, location]);
+                  go(previous, false);
+                }}
+              >
+                <ArrowLeft className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("files.forward")}
+                title={t("files.forward")}
+                disabled={forward.length === 0}
+                onClick={() => {
+                  const next = forward.at(-1)!;
+                  setForward((s) => s.slice(0, -1));
+                  if (location) setBack((s) => [...s, location]);
+                  go(next, false);
+                }}
+              >
+                <ArrowRight className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("files.up")}
+                title={t("files.up")}
+                disabled={!location?.path}
+                onClick={() =>
+                  location && go({ root: location.root, path: parentOf(location.path) })
+                }
+              >
+                <ArrowUp className="size-4" aria-hidden />
+              </button>
+
+              <h2
+                className="min-w-0 flex-1 truncate px-1 text-[0.9rem] font-semibold"
+                data-testid="files-title"
+              >
+                {location?.path ? nameOf(location.path) : (root?.name ?? "")}
+              </h2>
+
+              <div
+                role="group"
+                aria-label={t("files.view.label")}
+                className="glass-inset flex h-8 shrink-0 items-center rounded-everyos-sm p-0.5"
+              >
+                {(["icons", "list"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    aria-pressed={view === mode}
+                    aria-label={t(`files.view.${mode}`)}
+                    title={t(`files.view.${mode}`)}
+                    onClick={() => setView(mode)}
+                    className={cn(
+                      "grid h-7 w-8 place-items-center rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                      view === mode ? "bg-hover/15 text-fg" : "text-fg-muted hover:text-fg",
+                    )}
+                  >
+                    {mode === "icons" ? (
+                      <LayoutGrid className="size-4" aria-hidden />
+                    ) : (
+                      <List className="size-4" aria-hidden />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <form
+                role="search"
+                className="glass-inset flex h-8 items-center gap-1.5 rounded-everyos-sm px-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!location || !searchText.trim()) return;
+                  filesApi.search(location, searchText.trim()).then(setResults, setActionError);
+                }}
+              >
+                <Search className="size-3.5 text-fg-subtle" aria-hidden />
+                <input
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder={t("files.search")}
+                  aria-label={t("files.search")}
+                  className="w-32 bg-transparent text-sm outline-none placeholder:text-fg-subtle"
+                />
+                {results ? (
+                  <button
+                    type="button"
+                    aria-label={t("files.clearSearch")}
                     onClick={() => {
-                      if (!location) return;
-                      const folder = result.type === "directory";
-                      go({
-                        root: location.root,
-                        path: folder ? result.path : parentOf(result.path),
-                      });
-                      if (!folder) setSelected(new Set([result.name]));
+                      setResults(null);
+                      setSearchText("");
                     }}
                   >
-                    <EntryIcon
-                      entry={{ name: result.name, type: result.type, link: null }}
-                      location={location ? { root: location.root, path: result.path } : null}
-                      className="size-4 shrink-0"
-                    />
-                    <span className="truncate font-medium">{result.name}</span>
-                    <span className="truncate text-xs text-fg-subtle">
-                      /{parentOf(result.path)}
-                    </span>
+                    <X className="size-3.5" aria-hidden />
                   </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <ContextMenuArea entries={backgroundMenu}>
-            <div
-              ref={listRef}
-              tabIndex={0}
-              role="grid"
-              aria-label={t("files.listLabel", {
-                name: location?.path ? nameOf(location.path) : (root?.name ?? ""),
-              })}
-              aria-multiselectable
-              className={cn(
-                "relative min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
-                dropTarget === "list" && "bg-[rgb(var(--everyos-accent)/0.06)]",
-              )}
-              onKeyDown={onKeyDown}
-              onPointerDown={beginMarquee}
-              onPointerMove={extendMarquee}
-              onPointerUp={finishMarquee}
-              onPointerCancel={finishMarquee}
-              onLostPointerCapture={finishMarquee}
-              onDragOver={(event) => allowDrop(event, "list")}
-              onDragLeave={(event) => {
-                if (event.currentTarget === event.target) setDropTarget(null);
-              }}
-              onDrop={(event) => location && drop(event, location)}
-              data-testid="file-list"
-            >
-              {error ? (
-                <div className="p-4">
-                  <Alert tone="danger">{errorMessage(t, error)}</Alert>
-                </div>
-              ) : view === "icons" ? (
-                <FileIconView
-                  location={location}
-                  entries={entries}
-                  selected={selected}
-                  renaming={renaming}
-                  dropTarget={dropTarget}
-                  itemProps={itemProps}
-                  isCut={isCut}
-                  renameField={renameField}
-                  menuFor={itemMenu}
-                  badge={standardIcon}
-                  thumbnail={(entry) =>
-                    location && kindOf(entry) === "image" && entry.size <= 8 * 1024 * 1024
-                      ? filesApi.downloadUrl(
-                          { root: location.root, path: joinPath(location.path, entry.name) },
-                          true,
-                        )
-                      : null
-                  }
-                />
-              ) : (
-                <table className="w-full min-w-[520px] table-fixed text-left text-sm">
-                  <colgroup>
-                    <col />
-                    <col className="w-24" />
-                    <col className="w-36" />
-                    <col className="w-28" />
-                  </colgroup>
-                  <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
-                    <tr>
-                      {sortHeader("name", t("files.columns.name"))}
-                      {sortHeader("size", t("files.columns.size"), "text-right")}
-                      {sortHeader("modifiedAt", t("files.columns.modified"))}
-                      {sortHeader("kind", t("files.columns.kind"))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.map((entry) => {
-                      const isSelected = selected.has(entry.name);
-                      const folder = isFolder(entry);
-                      const Standard = standardIcon(entry);
-                      return (
-                        <ContextMenuArea key={entry.name} entries={() => itemMenu(entry)}>
-                          <tr
-                            {...itemProps(entry)}
-                            className={cn(
-                              "cursor-default select-none border-t border-line",
-                              isSelected
-                                ? "bg-[rgb(var(--everyos-accent)/0.2)]"
-                                : "hover:bg-hover/5",
-                              isCut(entry) && "opacity-50",
-                              dropTarget === `row:${entry.name}` &&
-                                "outline outline-2 -outline-offset-2 outline-accent",
-                            )}
-                          >
-                            <td className="max-w-0 px-2 py-1">
-                              <div className="flex min-w-0 items-center gap-2">
-                                {Standard && !isFolder(entry) ? (
-                                  <Standard className="size-4 shrink-0 text-accent" aria-hidden />
-                                ) : (
-                                  <EntryIcon
-                                    entry={entry}
-                                    location={
-                                      location
-                                        ? {
-                                            root: location.root,
-                                            path: joinPath(location.path, entry.name),
-                                          }
-                                        : null
-                                    }
-                                    className="size-4 shrink-0"
-                                  />
-                                )}
-                                {renaming === entry.name ? (
-                                  renameField(entry, "min-w-0 flex-1")
-                                ) : (
-                                  <span className="truncate" title={entry.name}>
-                                    {entry.name}
-                                  </span>
-                                )}
-                                {entry.link && !entry.link.inside ? (
-                                  <span
-                                    className="shrink-0 text-[0.65rem] text-warning"
-                                    title={t("files.outsideLink")}
-                                  >
-                                    ↗
-                                  </span>
-                                ) : null}
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1 text-right tabular-nums text-fg-muted">
-                              {folder ? "—" : formatBytes(entry.size, i18n.language)}
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1 text-fg-muted">
-                              {formatDateTime(entry.modifiedAt, i18n.language, {
-                                dateStyle: "short",
-                                timeStyle: "short",
-                              })}
-                            </td>
-                            <td className="whitespace-nowrap px-2 py-1 text-fg-muted">
-                              {t(`files.kinds.${kindOf(entry)}`)}
-                            </td>
-                          </tr>
-                        </ContextMenuArea>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-              {listing && entries.length === 0 && !error ? (
-                <p className="p-8 text-center text-sm text-fg-muted">
-                  {writable ? t("files.emptyWritable") : t("files.empty")}
-                </p>
-              ) : null}
-              {marquee ? (
-                <div
-                  aria-hidden
-                  data-testid="files-selection-area"
-                  className="pointer-events-none absolute z-20 rounded-sm border border-accent bg-accent/15"
-                  style={{
-                    left: marquee.x,
-                    top: marquee.y,
-                    width: marquee.width,
-                    height: marquee.height,
-                  }}
-                />
-              ) : null}
+                ) : null}
+              </form>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("files.menu.newFolder")}
+                title={t("files.menu.newFolder")}
+                disabled={!writable}
+                onClick={() => void createFolder()}
+              >
+                <FolderPlus className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("files.menu.upload")}
+                title={t("files.menu.upload")}
+                disabled={!writable}
+                onClick={() => uploadInput.current?.click()}
+              >
+                <Upload className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-pressed={hidden}
+                aria-label={t("files.showHidden")}
+                title={t("files.showHidden")}
+                onClick={() => setHidden((h) => !h)}
+              >
+                {hidden ? (
+                  <Eye className="size-4" aria-hidden />
+                ) : (
+                  <EyeOff className="size-4" aria-hidden />
+                )}
+              </button>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("files.menu.refresh")}
+                title={t("files.menu.refresh")}
+                onClick={refresh}
+              >
+                <RefreshCw className="size-4" aria-hidden />
+              </button>
+              <input
+                ref={uploadInput}
+                type="file"
+                multiple
+                hidden
+                onChange={(event) => {
+                  void upload([...(event.target.files ?? [])]);
+                  event.target.value = "";
+                }}
+              />
             </div>
-          </ContextMenuArea>
-        )}
 
-        {/* Finder's path bar: every folder on the way is a button and a drop target. */}
-        <div className="flex shrink-0 items-center border-t border-line px-2 py-1">
-          <ol
-            aria-label={t("files.breadcrumb")}
-            className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto text-xs"
-          >
-            {[root?.name ?? "", ...segments].map((label, index) => {
-              const path = segments.slice(0, index).join("/");
-              const current = index === segments.length;
-              return (
-                <li key={`${index}-${label}`} className="flex shrink-0 items-center gap-0.5">
-                  {index > 0 ? (
-                    <ChevronRight className="size-3.5 text-fg-subtle" aria-hidden />
+            {actionError ? (
+              <div className="px-3 pt-2">
+                <Alert tone="danger">{errorMessage(t, actionError)}</Alert>
+              </div>
+            ) : null}
+
+            {results ? (
+              <div className="min-h-0 flex-1 overflow-auto p-2" data-testid="file-search-results">
+                <p className="px-2 pb-2 text-xs text-fg-muted">
+                  {t("files.results", { count: results.results.length })}
+                  {results.truncated ? ` · ${t("files.resultsTruncated")}` : ""}
+                </p>
+                <ul className="flex flex-col">
+                  {results.results.map((result) => (
+                    <li key={result.path}>
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-everyos-sm px-2 py-1.5 text-left text-sm hover:bg-hover/8"
+                        onClick={() => {
+                          if (!location) return;
+                          const folder = result.type === "directory";
+                          go({
+                            root: location.root,
+                            path: folder ? result.path : parentOf(result.path),
+                          });
+                          if (!folder) setSelected(new Set([result.name]));
+                        }}
+                      >
+                        <EntryIcon
+                          entry={{ name: result.name, type: result.type, link: null }}
+                          location={location ? { root: location.root, path: result.path } : null}
+                          className="size-4 shrink-0"
+                        />
+                        <span className="truncate font-medium">{result.name}</span>
+                        <span className="truncate text-xs text-fg-subtle">
+                          /{parentOf(result.path)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <ContextMenuArea entries={backgroundMenu}>
+                <div
+                  ref={listRef}
+                  tabIndex={0}
+                  role="grid"
+                  aria-label={t("files.listLabel", {
+                    name: location?.path ? nameOf(location.path) : (root?.name ?? ""),
+                  })}
+                  aria-multiselectable
+                  className={cn(
+                    "relative min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent",
+                    dropTarget === "list" && "bg-[rgb(var(--everyos-accent)/0.06)]",
+                  )}
+                  onKeyDown={onKeyDown}
+                  onPointerDown={beginMarquee}
+                  onPointerMove={extendMarquee}
+                  onPointerUp={finishMarquee}
+                  onPointerCancel={finishMarquee}
+                  onLostPointerCapture={finishMarquee}
+                  onDragOver={(event) => allowDrop(event, "list")}
+                  onDragLeave={(event) => {
+                    if (event.currentTarget === event.target) setDropTarget(null);
+                  }}
+                  onDrop={(event) => location && drop(event, location)}
+                  data-testid="file-list"
+                >
+                  {error ? (
+                    <div className="p-4">
+                      <Alert tone="danger">{errorMessage(t, error)}</Alert>
+                    </div>
+                  ) : view === "icons" ? (
+                    <FileIconView
+                      pinned={homeApplicationsEntry}
+                      location={location}
+                      entries={entries}
+                      selected={selected}
+                      renaming={renaming}
+                      dropTarget={dropTarget}
+                      itemProps={itemProps}
+                      isCut={isCut}
+                      renameField={renameField}
+                      menuFor={itemMenu}
+                      badge={standardIcon}
+                      thumbnail={(entry) =>
+                        location && kindOf(entry) === "image" && entry.size <= 8 * 1024 * 1024
+                          ? filesApi.downloadUrl(
+                              { root: location.root, path: joinPath(location.path, entry.name) },
+                              true,
+                            )
+                          : null
+                      }
+                    />
+                  ) : (
+                    <table className="w-full min-w-[520px] table-fixed text-left text-sm">
+                      <colgroup>
+                        <col />
+                        <col className="w-24" />
+                        <col className="w-36" />
+                        <col className="w-28" />
+                      </colgroup>
+                      <thead className="sticky top-0 z-10 bg-[rgb(var(--everyos-surface)/0.95)] text-xs text-fg-muted">
+                        <tr>
+                          {sortHeader("name", t("files.columns.name"))}
+                          {sortHeader("size", t("files.columns.size"), "text-right")}
+                          {sortHeader("modifiedAt", t("files.columns.modified"))}
+                          {sortHeader("kind", t("files.columns.kind"))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {homeApplicationsEntry}
+                        {entries.map((entry) => {
+                          const isSelected = selected.has(entry.name);
+                          const folder = isFolder(entry);
+                          const Standard = standardIcon(entry);
+                          return (
+                            <ContextMenuArea key={entry.name} entries={() => itemMenu(entry)}>
+                              <tr
+                                {...itemProps(entry)}
+                                className={cn(
+                                  "cursor-default select-none border-t border-line",
+                                  isSelected
+                                    ? "bg-[rgb(var(--everyos-accent)/0.2)]"
+                                    : "hover:bg-hover/5",
+                                  isCut(entry) && "opacity-50",
+                                  dropTarget === `row:${entry.name}` &&
+                                    "outline outline-2 -outline-offset-2 outline-accent",
+                                )}
+                              >
+                                <td className="max-w-0 px-2 py-1">
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    {Standard && !isFolder(entry) ? (
+                                      <Standard
+                                        className="size-4 shrink-0 text-accent"
+                                        aria-hidden
+                                      />
+                                    ) : (
+                                      <EntryIcon
+                                        entry={entry}
+                                        location={
+                                          location
+                                            ? {
+                                                root: location.root,
+                                                path: joinPath(location.path, entry.name),
+                                              }
+                                            : null
+                                        }
+                                        className="size-4 shrink-0"
+                                      />
+                                    )}
+                                    {renaming === entry.name ? (
+                                      renameField(entry, "min-w-0 flex-1")
+                                    ) : (
+                                      <span className="truncate" title={entry.name}>
+                                        {entry.name}
+                                      </span>
+                                    )}
+                                    {entry.link && !entry.link.inside ? (
+                                      <span
+                                        className="shrink-0 text-[0.65rem] text-warning"
+                                        title={t("files.outsideLink")}
+                                      >
+                                        ↗
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </td>
+                                <td className="whitespace-nowrap px-2 py-1 text-right tabular-nums text-fg-muted">
+                                  {folder ? "—" : formatBytes(entry.size, i18n.language)}
+                                </td>
+                                <td className="whitespace-nowrap px-2 py-1 text-fg-muted">
+                                  {formatDateTime(entry.modifiedAt, i18n.language, {
+                                    dateStyle: "short",
+                                    timeStyle: "short",
+                                  })}
+                                </td>
+                                <td className="whitespace-nowrap px-2 py-1 text-fg-muted">
+                                  {t(`files.kinds.${kindOf(entry)}`)}
+                                </td>
+                              </tr>
+                            </ContextMenuArea>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                  {listing && entries.length === 0 && !showHomeApplications && !error ? (
+                    <p className="p-8 text-center text-sm text-fg-muted">
+                      {writable ? t("files.emptyWritable") : t("files.empty")}
+                    </p>
                   ) : null}
-                  <button
-                    type="button"
-                    aria-current={current ? "page" : undefined}
-                    className={cn(
-                      "max-w-48 truncate rounded px-1.5 py-0.5 outline-none hover:bg-hover/10 focus-visible:ring-2 focus-visible:ring-accent",
-                      current ? "font-semibold text-fg" : "text-fg-muted",
-                      dropTarget === `crumb:${path}` && "ring-2 ring-accent",
-                    )}
-                    onClick={() => location && !current && go({ root: location.root, path })}
-                    onDragOver={(event) => allowDrop(event, `crumb:${path}`)}
-                    onDragLeave={() => setDropTarget(null)}
-                    onDrop={(event) => location && drop(event, { root: location.root, path })}
-                  >
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-line px-3 py-1 text-xs text-fg-muted">
-          <span>
-            {t("files.count", { count: entries.length })}
-            {selected.size > 0 ? ` · ${t("files.selectedCount", { count: selected.size })}` : ""}
-            {listing?.truncated ? ` · ${t("files.truncated")}` : ""}
-            {root?.readOnly ? ` · ${t("files.readOnly")}` : ""}
-          </span>
-          <UploadStatus items={uploads} onClear={() => setUploads([])} />
-        </div>
+                  {marquee ? (
+                    <div
+                      aria-hidden
+                      data-testid="files-selection-area"
+                      className="pointer-events-none absolute z-20 rounded-sm border border-accent bg-accent/15"
+                      style={{
+                        left: marquee.x,
+                        top: marquee.y,
+                        width: marquee.width,
+                        height: marquee.height,
+                      }}
+                    />
+                  ) : null}
+                </div>
+              </ContextMenuArea>
+            )}
+
+            {/* Finder's path bar: every folder on the way is a button and a drop target. */}
+            <div className="flex shrink-0 items-center border-t border-line px-2 py-1">
+              <ol
+                aria-label={t("files.breadcrumb")}
+                className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto text-xs"
+              >
+                {[root?.name ?? "", ...segments].map((label, index) => {
+                  const path = segments.slice(0, index).join("/");
+                  const current = index === segments.length;
+                  return (
+                    <li key={`${index}-${label}`} className="flex shrink-0 items-center gap-0.5">
+                      {index > 0 ? (
+                        <ChevronRight className="size-3.5 text-fg-subtle" aria-hidden />
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-current={current ? "page" : undefined}
+                        className={cn(
+                          "max-w-48 truncate rounded px-1.5 py-0.5 outline-none hover:bg-hover/10 focus-visible:ring-2 focus-visible:ring-accent",
+                          current ? "font-semibold text-fg" : "text-fg-muted",
+                          dropTarget === `crumb:${path}` && "ring-2 ring-accent",
+                        )}
+                        onClick={() => location && !current && go({ root: location.root, path })}
+                        onDragOver={(event) => allowDrop(event, `crumb:${path}`)}
+                        onDragLeave={() => setDropTarget(null)}
+                        onDrop={(event) => location && drop(event, { root: location.root, path })}
+                      >
+                        {label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-line px-3 py-1 text-xs text-fg-muted">
+              <span>
+                {t("files.count", { count: entries.length + (showHomeApplications ? 1 : 0) })}
+                {selected.size > 0
+                  ? ` · ${t("files.selectedCount", { count: selected.size })}`
+                  : ""}
+                {listing?.truncated ? ` · ${t("files.truncated")}` : ""}
+                {root?.readOnly ? ` · ${t("files.readOnly")}` : ""}
+              </span>
+              <UploadStatus items={uploads} onClear={() => setUploads([])} />
+            </div>
+          </>
+        )}
       </div>
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
       <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />

@@ -142,6 +142,8 @@ export function FilesSidebar({
   onGo,
   drops,
   onSystem,
+  applicationsOpen = false,
+  onApplications,
 }: {
   roots: FileRootView[];
   system: FileRootsResponse["system"] | null;
@@ -149,12 +151,15 @@ export function FilesSidebar({
   onGo: (location: FileLocation) => void;
   drops: DropHandlers;
   onSystem: (enabled: boolean) => void;
+  applicationsOpen?: boolean;
+  onApplications?: (() => void) | undefined;
 }) {
   const { t } = useTranslation();
   const home = roots.find((root) => root.kind === "home");
   const locations = roots.filter((root) => root.kind === "location");
   const systemRoots = roots.filter((root) => root.kind === "system");
-  const at = (root: string, path: string) => location?.root === root && location.path === path;
+  const at = (root: string, path: string) =>
+    !applicationsOpen && location?.root === root && location.path === path;
 
   return (
     <nav
@@ -162,36 +167,56 @@ export function FilesSidebar({
       className="w-52 shrink-0 overflow-y-auto border-r border-line bg-hover/[0.035] px-2 py-3 max-sm:hidden"
       data-testid="files-sidebar"
     >
-      {home ? (
+      {home || onApplications ? (
         <Section title={t("files.favorites")}>
-          <Item
-            icon={House}
-            label={home.name}
-            hint={t("files.homeHint")}
-            active={at(home.id, "")}
-            disabled={!home.available}
-            target={`root:${home.id}`}
-            into={{ root: home.id, path: "" }}
-            onGo={onGo}
-            drops={drops}
-          />
-          {STANDARD_FOLDERS.map((kind) => {
-            const path = home.folders?.[kind];
-            if (!path) return null;
-            return (
+          {home ? (
+            <>
               <Item
-                key={kind}
-                icon={FILES_FOLDER_ICONS[kind]}
-                label={path}
-                active={at(home.id, path)}
+                icon={House}
+                label={home.name}
+                hint={t("files.homeHint")}
+                active={at(home.id, "")}
                 disabled={!home.available}
-                target={`fav:${kind}`}
-                into={{ root: home.id, path }}
+                target={`root:${home.id}`}
+                into={{ root: home.id, path: "" }}
                 onGo={onGo}
                 drops={drops}
               />
-            );
-          })}
+              {STANDARD_FOLDERS.map((kind) => {
+                const path = home.folders?.[kind];
+                if (!path) return null;
+                return (
+                  <Item
+                    key={kind}
+                    icon={FILES_FOLDER_ICONS[kind]}
+                    label={path}
+                    active={at(home.id, path)}
+                    disabled={!home.available}
+                    target={`fav:${kind}`}
+                    into={{ root: home.id, path }}
+                    onGo={onGo}
+                    drops={drops}
+                  />
+                );
+              })}
+            </>
+          ) : null}
+          {onApplications ? (
+            <li>
+              <button
+                type="button"
+                onClick={onApplications}
+                aria-current={applicationsOpen ? "location" : undefined}
+                className={cn(
+                  "flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                  applicationsOpen ? "bg-hover/15 font-medium text-fg" : "text-fg hover:bg-hover/8",
+                )}
+              >
+                <Package className="size-4 shrink-0 text-accent" aria-hidden />
+                <span className="truncate">{t("apps.applications")}</span>
+              </button>
+            </li>
+          ) : null}
         </Section>
       ) : null}
 

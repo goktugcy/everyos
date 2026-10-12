@@ -4,10 +4,15 @@ Phase 5 is implemented and verified with real Docker in a disposable ARM64 Linux
 contract is standalone Linux Docker Compose. Parsing a catalog does not mean every upstream
 application was deployed; features outside this contract produce explicit blockers/skipped entries.
 
-## My Applications folder
+## Applications folder
 
-Store-managed installations automatically appear in **My Applications** on the desktop and in
-the launcher. This live folder includes existing installations; removing an application removes
+Store-managed installations automatically appear in **Applications** on the desktop and in
+the launcher, the Files Favorites sidebar and the user's home view. Files opens the same live
+collection inside its own window and remembers it across reloads; Back returns to the home.
+The home entry is available in both icon and list views. An existing physical folder with the
+same localized name remains independent and usable. The collection is excluded from file
+rename, clipboard, trash and drop operations.
+This live folder includes existing installations; removing an application removes
 its entry on refresh. Its icon view supports Ctrl/Command/Shift selection, select-all and marquee
 selection, with adaptive transparent captions. Double-click launches a running application's real
 published web endpoint. A stopped app, an app without a reachable web endpoint or a simulated app

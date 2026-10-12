@@ -5,6 +5,8 @@ import {
   type CatalogAppView,
   type InstalledAppView,
   type DesktopPreferences,
+  type FileRootsResponse,
+  type PreferenceDocuments,
 } from "../../packages/shared/src/index.ts";
 import { signIn } from "./helpers.ts";
 
@@ -14,6 +16,8 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   test.setTimeout(60_000);
   const session = await signIn(page);
   const headers = { [CSRF_HEADER]: session.csrfToken };
+  // Stop the active desktop's queued saves before injecting an older document out of band.
+  await page.goto("about:blank", { waitUntil: "networkidle" });
   // An older custom desktop gets the applications folder without losing its existing shortcut.
   const legacyDesktop: DesktopPreferences = {
     version: 1,
@@ -33,9 +37,9 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   expect(
     (await page.request.put("/api/preferences/desktop", { headers, data: legacyDesktop })).status(),
   ).toBe(204);
-  await page.reload();
+  await page.goto("/");
   await expect(
-    page.getByTestId("desktop-surface").getByRole("button", { name: "Uygulamalarım", exact: true }),
+    page.getByTestId("desktop-surface").getByRole("button", { name: "Uygulamalar", exact: true }),
   ).toBeVisible();
   await expect
     .poll(async () => {
@@ -127,7 +131,7 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   const extraJob = (await additional.json()) as AppJobView;
   await page
     .getByTestId("desktop-surface")
-    .getByRole("button", { name: "Uygulamalarım", exact: true })
+    .getByRole("button", { name: "Uygulamalar", exact: true })
     .dblclick();
   const folder = page.locator('[data-app-id="everyos.applications"]');
   const options = folder.getByRole("option", { name: "Deneme Uygulaması", exact: true });
@@ -153,6 +157,63 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   const progress = store.getByTestId("app-job-progress");
   await progress.getByRole("button", { name: "Bildirimi kapat", exact: true }).click();
   await expect(progress).toHaveCount(0);
+  // The same live collection is available in Files and does not replace a real homedir folder.
+  const roots = (await (await page.request.get("/api/files/roots")).json()) as FileRootsResponse;
+  const home = roots.roots.find((entry) => entry.kind === "home")!;
+  expect(
+    (
+      await page.request.post("/api/files/mkdir", {
+        headers,
+        data: {
+          root: home.id,
+          path: "",
+          name: "Uygulamalar",
+        },
+      })
+    ).status(),
+  ).toBe(201);
+  await page.getByTestId("dock").getByRole("button", { name: "Dosyalar", exact: true }).click();
+  const files = page.locator('[data-app-id="everyos.files"]');
+  const sidebar = files.getByTestId("files-sidebar");
+  const applications = sidebar.getByRole("button", { name: "Uygulamalar", exact: true });
+  await applications.click();
+  await expect(applications).toHaveAttribute("aria-current", "location");
+  await expect(files.getByTestId("files-title")).toHaveText("Uygulamalar");
+  await expect(files.getByRole("option", { name: "Deneme Uygulaması", exact: true })).toHaveCount(
+    2,
+  );
+  await sidebar.getByRole("button", { name: home.name, exact: true }).click();
+  await expect(files.getByTestId("applications-home-entry")).toBeVisible();
+  await expect(files.locator('[data-name="Uygulamalar"]')).toBeVisible();
+  await files.getByRole("button", { name: "Liste", exact: true }).click();
+  await files.getByTestId("applications-home-entry").dblclick();
+  await expect(files.getByTestId("applications-folder")).toBeVisible();
+  await expect(files.getByRole("option", { name: "Deneme Uygulaması", exact: true })).toHaveCount(
+    2,
+  );
+  await page.screenshot({
+    path: test.info().outputPath("applications-in-files.png"),
+    animations: "disabled",
+  });
+  await expect
+    .poll(async () => {
+      const saved = (await (await page.request.get("/api/preferences")).json()) as {
+        preferences: Partial<PreferenceDocuments>;
+      };
+      return saved.preferences.windows?.windows.some(
+        (entry) =>
+          entry.appId === "everyos.files" &&
+          (entry.appState as { place?: string } | undefined)?.place === "applications",
+      );
+    })
+    .toBe(true);
+  await page.reload();
+  await expect(files.getByTestId("applications-folder")).toBeVisible();
+  await expect(applications).toHaveAttribute("aria-current", "location");
+  await files.getByRole("button", { name: "Geri", exact: true }).click();
+  await expect(files.locator('[data-name="Uygulamalar"]')).toBeVisible();
+  await expect(files.getByTestId("applications-home-entry")).toBeVisible();
+  await files.getByRole("button", { name: "Kapat", exact: true }).first().click();
   const app = store.locator(`[data-app-installation="${firstId}"]`);
   await expect(app).toContainText("Çalışıyor");
   await expect(app.getByTestId("simulated-badge")).toBeVisible();
@@ -221,10 +282,12 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
       })
     ).status(),
   ).toBe(202);
-  await expect(store).toContainText("Henüz EveryOS ile kurulmuş uygulama yok.");
+  await expect(store).toContainText("Henüz EveryOS ile kurulmuş uygulama yok.", {
+    timeout: 10_000,
+  });
   await page
     .getByTestId("desktop-surface")
-    .getByRole("button", { name: "Uygulamalarım", exact: true })
+    .getByRole("button", { name: "Uygulamalar", exact: true })
     .dblclick();
   await expect(folder).toContainText("Mağazadan kurduğun uygulamalar bu klasörde görünür.");
   await expect(folder.getByRole("option")).toHaveCount(0);

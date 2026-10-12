@@ -29,6 +29,8 @@ test("EveryOS installation confirms and prepares a backup without requesting a p
   const settings = page.locator('[data-app-id="everyos.settings"]');
   await settings.getByRole("button", { name: "Hakkında", exact: true }).click();
   const panel = settings.getByTestId("self-update-panel");
+  await expect(panel).toContainText("Yeni sürümler her saat otomatik denetlenir");
+  await expect(panel).toContainText("Son denetim");
   await expect(panel.locator('input[type="password"]')).toHaveCount(0);
   const install = panel.getByRole("button", { name: "Güncellemeyi yükle", exact: true });
   await expect(install).toBeEnabled();

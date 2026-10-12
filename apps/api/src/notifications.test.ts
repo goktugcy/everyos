@@ -6,7 +6,7 @@ import type {
   ServiceList,
   SelfUpdateStatus,
 } from "@everyos/shared";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import type { NotificationChange } from "./modules/notifications/notification-service.ts";
@@ -329,6 +329,50 @@ describe("EveryOS release notifications", () => {
         }
       : null,
     job: null,
+  });
+
+  it("the scheduled production monitor discovers a new release after an hour and emits one automatic toast", async () => {
+    const { ctx, admin } = await withRoles();
+    let candidate: string | null = null;
+    let cached: SelfUpdateStatus = { ...status(ctx.clock.now, null), checkedAt: null };
+    const changes: NotificationChange[] = [];
+    const unsubscribe = ctx.services.notifications.subscribe((change) => changes.push(change));
+    ctx.agent.handlers.set("release.status", () => cached);
+    ctx.agent.handlers.set("release.check", () => {
+      cached = status(ctx.clock.now, candidate);
+      return cached;
+    });
+    const monitor = ctx.services.releaseMonitor;
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      monitor.start();
+      await vi.advanceTimersByTimeAsync(20_000);
+      expect(ctx.agent.calls.filter((call) => call.op === "release.check")).toHaveLength(1);
+      expect((await list(admin, "?category=updates")).notifications).toHaveLength(0);
+      candidate = "0.1.8";
+      ctx.clock.now += minutes(59);
+      await vi.advanceTimersByTimeAsync(minutes(59));
+      expect(ctx.agent.calls.filter((call) => call.op === "release.check")).toHaveLength(1);
+      ctx.clock.now += minutes(1);
+      await vi.advanceTimersByTimeAsync(minutes(1));
+      expect(ctx.agent.calls.filter((call) => call.op === "release.check")).toHaveLength(2);
+      expect((await list(admin, "?category=updates")).notifications[0]).toMatchObject({
+        kind: "everyos-update-available",
+        params: { version: "0.1.8" },
+      });
+      ctx.clock.now += minutes(1);
+      await vi.advanceTimersByTimeAsync(minutes(1));
+      expect(changes.filter((change) => change.type === "changed" && change.toast)).toHaveLength(1);
+      expect(ctx.agent.calls.some((call) => call.op === "release.install")).toBe(false);
+      monitor.stop();
+      const calls = ctx.agent.calls.length;
+      await vi.advanceTimersByTimeAsync(minutes(60));
+      expect(ctx.agent.calls).toHaveLength(calls);
+    } finally {
+      monitor.stop();
+      unsubscribe();
+      vi.useRealTimers();
+    }
   });
 
   it("manual checks publish a visible update once and preserve read state across checks and monitor restarts", async () => {

@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button.tsx";
 import { Alert } from "../../components/ui/alert.tsx";
 import { api } from "../../lib/api.ts";
 import { errorMessage } from "../../lib/errors.ts";
+import { formatDateTime } from "../../lib/format.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { requestConfirm } from "../../desktop/menus/confirm.tsx";
 
@@ -21,7 +22,7 @@ const FAILURE_MESSAGES = {
 } as const;
 
 export function SelfUpdatePanel() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const canManage = usePermissions().includes("system:manage");
   const [status, setStatus] = useState<SelfUpdateStatus | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -130,7 +131,16 @@ export function SelfUpdatePanel() {
         <dd className="font-mono">{status?.installedVersion ?? "—"}</dd>
         <dt className="text-fg-muted">{t("selfUpdate.available")}</dt>
         <dd className="font-mono">{status?.available?.version ?? "—"}</dd>
+        <dt className="text-fg-muted">{t("selfUpdate.checkedAt")}</dt>
+        <dd>
+          {status && status.checkedAt !== null
+            ? formatDateTime(status.checkedAt, i18n.language)
+            : "—"}
+        </dd>
       </dl>
+      {status?.configured && !status.reason ? (
+        <p className="text-sm text-fg-muted">{t("selfUpdate.automaticChecks")}</p>
+      ) : null}
       {status?.reason ? <Alert>{t(`selfUpdate.reasons.${status.reason}`)}</Alert> : null}
       {status?.available?.notes ? (
         <p className="whitespace-pre-wrap text-sm">{status.available.notes}</p>

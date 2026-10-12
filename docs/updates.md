@@ -2,6 +2,14 @@
 
 ## EveryOS version updates (Phase 8)
 
+The production API checks the signed release feed automatically once per hour, starting about
+20 seconds after service startup. It inspects cached status each minute and retries a failed
+remote check after 15 minutes, preserving verified cached data. No browser or signed-in user is
+needed for discovery. Each new compatible version creates one durable update notification;
+repeated checks preserve read/dismiss state. Popup preferences are honored. Its action opens
+Settings → About, which also displays the real last-check time and automatic-check cadence.
+Discovery never installs an update.
+
 Settings → About and Updates → EveryOS share the same version-update panel, showing the real
 installed/available version, signed release notes and supervised job progress. Administrators
 can check and install directly from either screen without entering the EveryOS password again.

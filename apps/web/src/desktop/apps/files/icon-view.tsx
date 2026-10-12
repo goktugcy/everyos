@@ -70,8 +70,10 @@ export function FileIconView({
   thumbnail,
   badge,
   location,
+  pinned,
 }: {
   location: FileLocation | null;
+  pinned?: ReactNode;
   entries: FileEntry[];
   selected: ReadonlySet<string>;
   renaming: string | null;
@@ -90,6 +92,7 @@ export function FileIconView({
       data-testid="file-icons"
       data-icon-grid
     >
+      {pinned}
       {entries.map((entry) => {
         const isSelected = selected.has(entry.name);
         const folder = kindOf(entry) === "folder";

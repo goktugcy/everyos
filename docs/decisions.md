@@ -495,3 +495,16 @@ installations rather than persisted per-user copies, so removal cannot leave sta
 Dismiss notices by their job identity, keeping progress watchers mounted. Completion must
 refresh installation state even when SSE is unavailable. Hide only presentation, preserve job
 history/audits and show the next operation's notice independently.
+
+### D39 — Applications in Files without a fabricated filesystem directory
+
+Keep the same live managed-application collection under the localized Applications name across
+the desktop, launcher, Files Favorites and the home view. Embed the existing application panel
+in Files rather than creating executable shortcuts or relocating Docker data. Persist the
+window's place independently from its ordinary root/path; navigation returns to real files.
+
+The home entry is a separate native UI item, not a FileEntry or filesystem path. Exclude it
+from rename, clipboard, trash and drop handlers, and preserve an owner's physical folder with
+the same name. The existing apps permissions and server lifecycle checks remain authoritative.
+Retain the production hourly signed-release monitor and verify its timer-driven notification
+behavior. About displays that cadence and the actual last remote check.

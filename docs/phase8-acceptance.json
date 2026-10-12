@@ -1453,16 +1453,32 @@
         ]
       },
       "fullSourceBrowserCi": {
-        "status": "in_progress",
-        "url": "https://github.com/goktugcy/everyos/actions/runs/38316071558",
+        "passed": false,
+        "status": "completed",
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38316620191",
+        "originalSourceRunCancelled": "https://github.com/goktugcy/everyos/actions/runs/38316071558",
         "sourceChecksPassedOnBothArchitectures": true,
-        "notes": "Full source browser CI was still running when publication acceptance was recorded. The previously completed 0.1.9 CI has two documented Finder-drag and terminal failures; this entry does not claim the new full run passed."
+        "amd64": {
+          "passedTests": 45,
+          "failedTests": 2,
+          "flakyTests": 1
+        },
+        "arm64": {
+          "passedTests": 45,
+          "failedTests": 3
+        },
+        "existingFailures": ["tools-finder.spec.ts:88", "tools-terminal.spec.ts:120"],
+        "additionalFailure": {
+          "scenario": "zz-store.spec.ts:51",
+          "reason": "Out-of-band legacy preferences fixture raced with queued saves from the active desktop. AMD64 passed on retry; ARM64 did not. The 0.1.11 test isolates the fixture by navigating away before injection."
+        }
       },
       "limits": [
         "Browser acceptance uses the explicitly labeled development Docker simulator and real API calls; no new production Linux container lifecycle run was performed for these UI and metadata changes.",
         "The applications folder is a live launcher collection, not a physical folder containing host binaries or moved container data.",
         "A full desktop with the 300-item limit keeps its layout; the folder remains accessible through the launcher. A user-removed shortcut is not automatically reintroduced.",
-        "Closed notices hide presentation only. Persisted jobs and audit history remain; per-window dismissals reset after reopening/reloading."
+        "Closed notices hide presentation only. Persisted jobs and audit history remain; per-window dismissals reset after reopening/reloading.",
+        "Full source browser CI did not pass: two previously documented scenarios and the new legacy-desktop fixture race are recorded above. Local targeted acceptance passed; the fixture setup is corrected for 0.1.11."
       ],
       "cleanup": {
         "ownedLocalBrowserStateRemoved": true,
