@@ -28,7 +28,10 @@ test("folder presets and private uploads persist across views and power details 
   let folder = surface.getByRole("button", { name: "icon-work", exact: true, includeHidden: true });
   await folder.click();
   await expect(folder).toHaveAttribute("aria-pressed", "true");
-  await expect(folder.locator(".otk-icon-label")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(folder.locator("[data-icon-label]")).toHaveCSS(
+    "background-color",
+    "rgba(0, 0, 0, 0)",
+  );
   await folder.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Klasör simgesini değiştir…", exact: true }).click();
   let dialog = page.getByRole("dialog", { name: "icon-work · Klasör simgesi", exact: true });

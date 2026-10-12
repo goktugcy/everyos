@@ -1132,6 +1132,74 @@
         ],
         "newFeatureProductionLinuxPassed": true
       }
+    },
+    "automaticInstalls018": {
+      "version": "0.1.8",
+      "date": "2026-10-13",
+      "ownerHostModified": false,
+      "publisherKeyChanged": false,
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 65,
+        "tests": 637,
+        "log": ".dev/automatic-installs/check-complete.log"
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build",
+        "log": ".dev/automatic-installs/build-edge.log"
+      },
+      "productionLinux": {
+        "passed": true,
+        "version": "0.1.8",
+        "platform": "Ubuntu 26.04.1 ARM64",
+        "ownerHostModified": false,
+        "concurrentAutomaticPorts": [32771, 32772],
+        "linkedUidAndGid": true,
+        "hostTimezone": true,
+        "appsReachable": true,
+        "unrelatedListenerPreserved": true,
+        "restartAndUpdatePreservePort": true,
+        "testedAgentSha256": "316f7e97929d270afcafeffceccd161f02b6c99cc7c265aad81fe3f848997b7a",
+        "candidatePackageBytes": 56813240,
+        "candidateAgentReplacedWithFinalBuiltBundle": true
+      },
+      "cleanup": {
+        "disposableVMDeleted": true,
+        "ownedImageCacheRemoved": true,
+        "ephemeralPasswordsAndSetupTokenRemoved": true,
+        "publisherKeyUntouched": true
+      },
+      "limits": [
+        "Real Linux acceptance installed a local ARM64 candidate and then replaced its agent bundle with the final built port-pinning implementation. Later edits change caption fitting only; the tested agent SHA-256 is recorded.",
+        "No AMD64 Linux installation was run for this change.",
+        "Host-network applications cannot use published-port remapping. Explicit fixed ports retain ordinary occupied-port failure.",
+        "Required nongenerated secrets and external endpoints remain explicit installation inputs. Optional app-native setup is performed in the application panel after launch.",
+        "An initial browser run used a noncanonical /tmp state path and failed the private agent directory check; storage-backed UI tests also hit the one-GiB free-space reserve while the owned VM existed. The VM was removed and a canonical path used before repeating these cases."
+      ],
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 4,
+        "logs": [
+          ".dev/automatic-installs/browser-final.log",
+          ".dev/automatic-installs/browser-captions-final.log"
+        ],
+        "cases": [
+          "first-run setup",
+          "transparent app/file captions, measured long names and complete overflow captions",
+          "folder preset/private upload persistence and power telemetry",
+          "App Store hidden canonical inputs, optional advanced fields, automatic ports and lifecycle"
+        ],
+        "simulatedDockerLabeled": true
+      },
+      "finalUiChecks": {
+        "passed": true,
+        "commands": [
+          "pnpm --filter @everyos/web typecheck",
+          "pnpm exec eslint apps/web/src/components/ui/icon-label.tsx apps/web/src/desktop/apps/files/icon-view.tsx"
+        ]
+      }
     }
   },
   "operationalRequirements": [

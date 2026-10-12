@@ -53,6 +53,56 @@ export function zipFixture(
   return Buffer.concat([...local, directory, end]);
 }
 const compose = "services:\n  test:\n    image: example.invalid/test:1.0\n";
+
+it("resolves linked identity defaults and automatic ports without widening loopback bindings", async () => {
+  const template = `services:
+  app:
+    image: example.invalid/app:1
+    environment:
+      PUID: \${PUID}
+      PGID: \${PGID}
+      TZ: \${TZ}
+    ports: ['127.0.0.1:8080:80', '5353:53/udp']
+  second:
+    image: example.invalid/second:1
+    environment: {PUID: '1000', PGID: '1000', TZ: Etc/UTC}
+`;
+  const app = (
+    await readCatalog({
+      url: "https://fixture.invalid/app.yml",
+      format: "compose-dir",
+      catalogId: "00000000-0000-4000-8000-000000000001",
+      fetcher: { get: () => Promise.resolve(Buffer.from(template)) },
+    })
+  ).apps[0]!;
+  const defaults = { source: "host" as const, uid: 1801, gid: 1902, timezone: "Europe/Istanbul" };
+  const prepared = parseCompose(
+    prepareInstall(app, "instance", { variables: {}, ports: [] }, defaults),
+  );
+  const service = object(object(prepared.services).app);
+  expect(service.environment).toEqual({ PUID: "1801", PGID: "1902", TZ: "Europe/Istanbul" });
+  expect(object(object(prepared.services).second).environment).toEqual(service.environment);
+  expect(service.ports).toEqual([
+    { target: 80, protocol: "tcp", host_ip: "127.0.0.1" },
+    { target: 53, protocol: "udp" },
+  ]);
+  const custom = parseCompose(
+    prepareInstall(
+      app,
+      "instance",
+      {
+        variables: { TZ: "Europe/London" },
+        ports: [{ service: "app", index: 0, host: 9001 }],
+      },
+      defaults,
+    ),
+  );
+  expect(object(object(custom.services).app).ports).toEqual([
+    { target: 80, published: "9001", protocol: "tcp", host_ip: "127.0.0.1" },
+    { target: 53, protocol: "udp" },
+  ]);
+  expect(object(object(object(custom.services).app).environment).TZ).toBe("Europe/London");
+});
 const id = "6c134c11-e11c-46da-b8c3-120010330625";
 function memory(contents: Record<string, string | Buffer>): CatalogFetcher {
   return {

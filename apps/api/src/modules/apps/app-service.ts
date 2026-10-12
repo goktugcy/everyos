@@ -305,8 +305,11 @@ export class AppService {
         throw new ApiError(409, "CONFLICT", "Stop the source application before copying data");
     }
     let compose: string;
+    const defaults = await this.#agent.call("apps.defaults", {}, actor).catch((error: unknown) => {
+      throw toApiError(error);
+    });
     try {
-      compose = prepareInstall(app, id, input);
+      compose = prepareInstall(app, id, input, defaults);
     } catch (error) {
       throw new ApiError(422, "VALIDATION_FAILED", "Invalid installation inputs", {
         details: { reason: error instanceof CatalogError ? error.reason : "invalid-input" },

@@ -59,6 +59,26 @@ manifests/architecture variants; installations retain catalog, format, path and 
 ## Installation and ownership
 
 Requests carry snapshot identity, declared variables, editable host ports and risk acknowledgement.
+New installations automatically obtain PUID/PGID from the caller's linked Linux UID and primary
+GID, and TZ from the agent's host timezone. The typed read-only `apps.defaults` operation requires
+`apps:manage` and a real linked account in production. These fields are absent from the dialog;
+matching literal environment defaults are replaced as well as declared interpolation variables.
+No shell environment is imported. Existing installations retain their saved configuration.
+
+Ports omitted from the request use Docker's native available-port allocation rather than a
+check-then-bind probe. The agent reads the assigned ports from that exact owned project's real
+containers, recreates its deployment with those fixed bindings, and saves them in its encrypted
+deployment. Restart, retry and image update reuse those allocations. Missing binding proof or
+a failed pinning deployment triggers cleanup of only the new owned project. Original loopback
+and explicit host-IP restrictions and TCP/UDP protocols are preserved. See
+[Docker port allocation](https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/#publishing-to-ephemeral-ports).
+
+Optional variables and manual fixed ports live under **Advanced settings**. A blank host-port
+field means automatic allocation; explicitly supplied fixed ports are respected and can fail if
+occupied. Apps requiring external endpoints or nongenerated secrets still ask for those real
+inputs. Host-network applications use their own network settings and cannot have their ports
+remapped this way. After installation, launch the app to finish its own setup in its native panel.
+
 Changed snapshots, unknown/missing inputs, incompatible architectures and unsupported Compose fail.
 No host environment is inherited. Generated values are created on the server or explicitly
 replaced through declared fields. Secret defaults are hidden and require input unless a generator

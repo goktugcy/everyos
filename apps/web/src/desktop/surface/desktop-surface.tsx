@@ -40,6 +40,7 @@ import { errorMessage } from "../../lib/errors.ts";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { AppIcon } from "../apps/app-icon.tsx";
+import { IconLabel } from "../../components/ui/icon-label.tsx";
 import { FolderIcon } from "../apps/files/folder-icon.tsx";
 import { FolderIconDialog } from "../apps/settings/folder-icon-picker.tsx";
 import { fileGlyph } from "../apps/files/icon-view.tsx";
@@ -123,13 +124,6 @@ const sameCell = (a: Cell | undefined, b: Cell) => a?.col === b.col && a.row ===
 
 /** Images up to this size get a thumbnail instead of a glyph. */
 const THUMBNAIL_BYTES = 8 * 1024 * 1024;
-
-/** File names wrap after dots, dashes and underscores ("yedek.tar." / "gz"), like Finder. */
-function breakable(name: string): ReactNode[] {
-  return name
-    .split(/(?<=[._-])/)
-    .flatMap((part, index) => (index === 0 ? [part] : [<wbr key={index} />, part]));
-}
 
 /** HTML drag and drop of Desktop-folder entries (into folders, Files windows, the shelf). */
 interface NativeDrag {
@@ -223,7 +217,8 @@ function DesktopIcon(props: IconProps) {
       className={cn(
         "group absolute left-0 top-0 flex flex-col items-center gap-1.5 rounded-everyos-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
         native ? "touch-manipulation" : "touch-none",
-        selected && !props.folder && "bg-hover/10",
+        selected && "z-10",
+        "hover:z-20 focus-visible:z-20",
         props.dropTarget && "bg-[rgb(var(--everyos-accent)/0.18)] ring-2 ring-accent",
       )}
       style={{
@@ -248,7 +243,7 @@ function DesktopIcon(props: IconProps) {
       <span
         className={cn(
           "grid place-items-center rounded-everyos-md",
-          selected && props.folder && "bg-hover/20 ring-1 ring-accent/40",
+          selected && "bg-hover/20 ring-1 ring-accent/40",
         )}
       >
         {props.glyph}
@@ -276,16 +271,7 @@ function DesktopIcon(props: IconProps) {
           onBlur={(event) => props.onRename(id, event.currentTarget.value)}
         />
       ) : (
-        <span
-          className={cn(
-            "everyos-icon-label line-clamp-2 max-w-full rounded-[5px] px-1.5 py-0.5 text-center text-[0.72rem] font-medium leading-tight text-fg",
-            native && "wrap-break-word",
-          )}
-          data-selected={selected && !props.folder}
-          title={native ? label : undefined}
-        >
-          {native ? breakable(label) : label}
-        </span>
+        <IconLabel text={label} className="everyos-icon-label" />
       )}
     </button>
   );

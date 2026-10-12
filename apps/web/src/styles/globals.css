@@ -290,7 +290,7 @@
 
 /*
  * Desktop icon labels: no plate, like macOS. A halo keeps them legible on any
- * wallpaper; a selected label gets an accent plate.
+ * wallpaper; selection is indicated on the icon rather than the name.
  */
 .everyos-icon-label {
   text-shadow:
@@ -304,10 +304,35 @@
     0 0 9px rgb(255 255 255 / 0.75);
 }
 
-.everyos-icon-label[data-selected="true"] {
-  background: rgb(var(--everyos-accent-strong) / 0.85);
-  color: rgb(255 255 255);
-  text-shadow: none;
+.everyos-caption-expanded {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  width: var(--everyos-caption-width, min(256px, calc(100vw - 24px)));
+  pointer-events: none;
+  overflow-wrap: anywhere;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.everyos-icon-caption[data-align="right"] .everyos-caption-expanded {
+  left: auto;
+  right: 0;
+}
+
+:is(button, li):is(:hover, :focus-visible, [aria-pressed="true"], [aria-selected="true"])
+  > .everyos-icon-caption[data-overflow="true"]
+  > [data-icon-label] {
+  visibility: hidden;
+}
+
+:is(button, li):is(:hover, :focus-visible, [aria-pressed="true"], [aria-selected="true"])
+  > .everyos-icon-caption[data-overflow="true"]
+  > .everyos-caption-expanded {
+  display: block;
 }
 
 /* Window "traffic lights": close, minimize and zoom, with glyphs on hover. */

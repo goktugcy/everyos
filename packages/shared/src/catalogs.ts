@@ -24,6 +24,13 @@ export const INSTALL_RISKS = [
 export type InstallRisk = (typeof INSTALL_RISKS)[number];
 export type CatalogFormat = (typeof CATALOG_FORMATS)[number];
 export type LocalizedText = Record<string, string>;
+export const AUTOMATIC_APP_VARIABLES = ["PUID", "PGID", "TZ"] as const;
+export interface AppInstallDefaults {
+  source: "host" | "simulated";
+  uid: number;
+  gid: number;
+  timezone: string;
+}
 export interface InstallField {
   label: LocalizedText;
   hint: LocalizedText;

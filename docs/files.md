@@ -1,5 +1,12 @@
 # File manager (Phase 7)
 
+Desktop app/file captions and the file manager's icon view show selection on the glyph, with no
+colored plate behind the name. Captions wrap unbroken names and shrink based on measured width
+and loaded fonts, down to 9px within three lines. Names exceeding that readable space expand in
+full when selected, hovered or keyboard-focused; the full title and accessible name remain intact.
+Mobile launcher names use the same fitting component. Icon layout and drag/selection hit areas
+retain their existing geometry.
+
 The file manager never exposes the host file system by default. Every user gets a private
 **home** inside EveryOS's data directory; an administrator configures shared **locations** in
 `/etc/everyos/config.yaml`; and read-only **system** locations exist only after an administrator

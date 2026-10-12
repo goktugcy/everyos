@@ -1,4 +1,9 @@
-import type { AppJobView, CatalogAppView, InstalledAppView } from "@everyos/shared";
+import {
+  AUTOMATIC_APP_VARIABLES,
+  type AppJobView,
+  type CatalogAppView,
+  type InstalledAppView,
+} from "@everyos/shared";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -35,6 +40,14 @@ export function InstallDialog({
   const privileged = app.risks.some(
     (risk) => risk !== "unpinned-image" && risk !== "default-secret",
   );
+  const userVariables = app.variables.filter(
+    (entry) => !AUTOMATIC_APP_VARIABLES.some((key) => key === entry.key),
+  );
+  const requiredVariables = userVariables.filter(
+    (entry) =>
+      entry.required && !entry.generated && (entry.default === null || entry.default === ""),
+  );
+  const optionalVariables = userVariables.filter((entry) => !requiredVariables.includes(entry));
   const submit = async () => {
     if (
       dataFrom &&
@@ -56,14 +69,10 @@ export function InstallDialog({
           variables: Object.fromEntries(
             Object.entries(variables).filter(([, value]) => value !== ""),
           ),
-          ports: app.ports.map((port) => ({
-            service: port.service,
-            index: port.index,
-            host: Number(
-              ports[`${port.service}:${port.index}`] ??
-                (port.host && port.host >= 1024 ? port.host : 8080),
-            ),
-          })),
+          ports: app.ports.flatMap((port) => {
+            const value = ports[`${port.service}:${port.index}`];
+            return value ? [{ service: port.service, index: port.index, host: Number(value) }] : [];
+          }),
           acknowledgeRisks: acknowledged,
           ...(dataFrom ? { dataFrom, confirmDataFrom: dataFrom } : {}),
         },
@@ -76,6 +85,78 @@ export function InstallDialog({
       setPending(false);
     }
   };
+  const variableField = (entry: CatalogAppView["variables"][number]) =>
+    entry.field?.options.length || entry.field?.type === "boolean" ? (
+      <Select
+        key={entry.key}
+        label={localized(entry.field.label, i18n.language) || entry.key}
+        value={variables[entry.key] ?? entry.default ?? ""}
+        onChange={(value) => setVariables((previous) => ({ ...previous, [entry.key]: value }))}
+        options={[
+          { value: "", label: t("appStore.choose") },
+          ...(entry.field.type === "boolean"
+            ? [
+                { value: "true", label: t("common.yes") },
+                { value: "false", label: t("common.no") },
+              ]
+            : entry.field.options),
+        ]}
+      />
+    ) : (
+      <Field
+        key={entry.key}
+        label={
+          entry.field && localized(entry.field.label, i18n.language)
+            ? `${localized(entry.field.label, i18n.language)} (${entry.key})`
+            : entry.key
+        }
+        type={
+          entry.secret
+            ? "password"
+            : entry.field?.type === "number"
+              ? "number"
+              : entry.field?.type === "email"
+                ? "email"
+                : entry.field?.type === "url"
+                  ? "url"
+                  : "text"
+        }
+        autoComplete="off"
+        value={variables[entry.key] ?? (entry.generated ? "" : entry.default) ?? ""}
+        required={
+          !entry.generated &&
+          entry.required &&
+          !(
+            /^SERVICE_(URL|FQDN)_/.test(entry.key) &&
+            app.variables.some(
+              (other) =>
+                other.key ===
+                entry.key.replace(
+                  /^SERVICE_(URL|FQDN)_/,
+                  entry.key.startsWith("SERVICE_URL_") ? "SERVICE_FQDN_" : "SERVICE_URL_",
+                ),
+            )
+          )
+        }
+        hint={
+          entry.generated
+            ? t("appStore.generated")
+            : entry.field
+              ? localized(entry.field.hint, i18n.language)
+              : undefined
+        }
+        {...(entry.field?.type === "number"
+          ? { min: entry.field.min ?? undefined, max: entry.field.max ?? undefined }
+          : {
+              minLength:
+                entry.field?.type === "random" ? undefined : (entry.field?.min ?? undefined),
+              maxLength: entry.field?.type === "random" ? 4096 : (entry.field?.max ?? 4096),
+            })}
+        onChange={(event) =>
+          setVariables((previous) => ({ ...previous, [entry.key]: event.target.value }))
+        }
+      />
+    );
   return (
     <Dialog
       open
@@ -181,87 +262,11 @@ export function InstallDialog({
             </label>
           </Alert>
         ) : null}
-        {app.variables.length ? (
+        <Alert tone="info">{t("appStore.automaticSetup")}</Alert>
+        {requiredVariables.length ? (
           <fieldset className="flex flex-col gap-3">
-            <legend className="mb-2 font-semibold">{t("appStore.variables")}</legend>
-            {app.variables.map((entry) =>
-              entry.field?.options.length || entry.field?.type === "boolean" ? (
-                <Select
-                  key={entry.key}
-                  label={localized(entry.field.label, i18n.language) || entry.key}
-                  value={variables[entry.key] ?? entry.default ?? ""}
-                  onChange={(value) =>
-                    setVariables((previous) => ({ ...previous, [entry.key]: value }))
-                  }
-                  options={[
-                    { value: "", label: t("appStore.choose") },
-                    ...(entry.field.type === "boolean"
-                      ? [
-                          { value: "true", label: t("common.yes") },
-                          { value: "false", label: t("common.no") },
-                        ]
-                      : entry.field.options),
-                  ]}
-                />
-              ) : (
-                <Field
-                  key={entry.key}
-                  label={
-                    entry.field && localized(entry.field.label, i18n.language)
-                      ? `${localized(entry.field.label, i18n.language)} (${entry.key})`
-                      : entry.key
-                  }
-                  type={
-                    entry.secret
-                      ? "password"
-                      : entry.field?.type === "number"
-                        ? "number"
-                        : entry.field?.type === "email"
-                          ? "email"
-                          : entry.field?.type === "url"
-                            ? "url"
-                            : "text"
-                  }
-                  autoComplete="off"
-                  value={variables[entry.key] ?? (entry.generated ? "" : entry.default) ?? ""}
-                  required={
-                    !entry.generated &&
-                    entry.required &&
-                    !(
-                      /^SERVICE_(URL|FQDN)_/.test(entry.key) &&
-                      app.variables.some(
-                        (other) =>
-                          other.key ===
-                          entry.key.replace(
-                            /^SERVICE_(URL|FQDN)_/,
-                            entry.key.startsWith("SERVICE_URL_") ? "SERVICE_FQDN_" : "SERVICE_URL_",
-                          ),
-                      )
-                    )
-                  }
-                  hint={
-                    entry.generated
-                      ? t("appStore.generated")
-                      : entry.field
-                        ? localized(entry.field.hint, i18n.language)
-                        : undefined
-                  }
-                  {...(entry.field?.type === "number"
-                    ? { min: entry.field.min ?? undefined, max: entry.field.max ?? undefined }
-                    : {
-                        minLength:
-                          entry.field?.type === "random"
-                            ? undefined
-                            : (entry.field?.min ?? undefined),
-                        maxLength:
-                          entry.field?.type === "random" ? 4096 : (entry.field?.max ?? 4096),
-                      })}
-                  onChange={(event) =>
-                    setVariables((previous) => ({ ...previous, [entry.key]: event.target.value }))
-                  }
-                />
-              ),
-            )}
+            <legend className="mb-2 font-semibold">{t("appStore.requiredSetup")}</legend>
+            {requiredVariables.map(variableField)}
           </fieldset>
         ) : null}
         {sources.some((source) => source.dataCopyEligible) ? (
@@ -283,30 +288,41 @@ export function InstallDialog({
             <p className="text-xs text-fg-subtle">{t("appStore.dataCopyHint")}</p>
           </div>
         ) : null}
-        {app.ports.length ? (
-          <fieldset className="grid gap-3 sm:grid-cols-2">
-            <legend className="mb-2 font-semibold">{t("appStore.ports")}</legend>
-            {app.ports.map((port) => (
-              <Field
-                key={`${port.service}:${port.index}`}
-                label={t("appStore.port", port)}
-                type="number"
-                min={1024}
-                max={65535}
-                required
-                value={
-                  ports[`${port.service}:${port.index}`] ??
-                  (port.host && port.host >= 1024 ? port.host : 8080)
-                }
-                onChange={(event) =>
-                  setPorts((previous) => ({
-                    ...previous,
-                    [`${port.service}:${port.index}`]: event.target.value,
-                  }))
-                }
-              />
-            ))}
-          </fieldset>
+        {optionalVariables.length || app.ports.length ? (
+          <details className="glass-inset rounded-everyos-md p-3">
+            <summary className="cursor-pointer font-medium">{t("appStore.advanced")}</summary>
+            <div className="mt-4 flex flex-col gap-4">
+              {optionalVariables.length ? (
+                <fieldset className="flex flex-col gap-3">
+                  <legend className="mb-2 font-semibold">{t("appStore.variables")}</legend>
+                  {optionalVariables.map(variableField)}
+                </fieldset>
+              ) : null}
+              {app.ports.length ? (
+                <fieldset className="grid gap-3 sm:grid-cols-2">
+                  <legend className="mb-2 font-semibold">{t("appStore.ports")}</legend>
+                  {app.ports.map((port) => (
+                    <Field
+                      key={`${port.service}:${port.index}`}
+                      label={t("appStore.port", port)}
+                      type="number"
+                      min={1024}
+                      max={65535}
+                      value={ports[`${port.service}:${port.index}`] ?? ""}
+                      placeholder={t("appStore.automaticPort")}
+                      hint={t("appStore.portHint")}
+                      onChange={(event) =>
+                        setPorts((previous) => ({
+                          ...previous,
+                          [`${port.service}:${port.index}`]: event.target.value,
+                        }))
+                      }
+                    />
+                  ))}
+                </fieldset>
+              ) : null}
+            </div>
+          </details>
         ) : null}
         <p className="text-xs text-fg-subtle">{t("appStore.installHint")}</p>
         {error ? (

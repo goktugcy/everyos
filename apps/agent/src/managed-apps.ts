@@ -14,6 +14,7 @@ import type { AppImage } from "@everyos/shared";
 import type { SecretBox } from "@everyos/security";
 import { copyManagedData } from "./managed-data.ts";
 import { materializeConfigs } from "./managed-configs.ts";
+import { pinAssignedPorts, retainAssignedPorts } from "./app-ports.ts";
 
 type RunParams = OperationParams<"apps.run">;
 type RunResult = OperationResult<"apps.run">;
@@ -371,7 +372,7 @@ export class ManagedAppManager {
       }
       if (["install", "retry", "update"].includes(action)) {
         const resolved = await this.#docker.resolveImages(
-          input,
+          previous ? retainAssignedPorts(input, previous) : input,
           `linux/${process.arch === "x64" ? "amd64" : process.arch}`,
           action === "update",
           signal,
@@ -380,7 +381,7 @@ export class ManagedAppManager {
         images = resolved.images;
       }
       attempted = true;
-      const result = await this.#docker.runCompose(
+      let result = await this.#docker.runCompose(
         project,
         appDir,
         [],
@@ -392,6 +393,22 @@ export class ManagedAppManager {
         signal,
         await materializeConfigs(runningInput, id, this.#docker.source === "simulated"),
       );
+      if (
+        result.ok &&
+        ["install", "retry", "update"].includes(action) &&
+        inspectCompose(runningInput).ports.some((port) => port.host === null)
+      ) {
+        runningInput = pinAssignedPorts(runningInput, project, await this.#docker.listContainers());
+        // Docker reassigns ephemeral bindings on restart until HostConfig is recreated.
+        result = await this.#docker.runCompose(
+          project,
+          appDir,
+          [],
+          "up",
+          signal,
+          await materializeConfigs(runningInput, id, this.#docker.source === "simulated"),
+        );
+      }
       ok = result.ok;
     } catch (error) {
       if (error instanceof OperationError) throw error;

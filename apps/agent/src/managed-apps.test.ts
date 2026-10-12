@@ -55,6 +55,44 @@ async function fixture() {
 }
 
 describe("managed application agent", () => {
+  it("allocates distinct automatic ports and retains them across restart and update", async () => {
+    const f = await fixture();
+    const automatic = `${compose}    ports: [{ target: 80, protocol: tcp }]\n`;
+    const second = randomUUID();
+    for (const id of [f.id, second])
+      expect(
+        await f.manager.run(
+          { id, action: "install", compose: automatic, riskOverride: false },
+          context(),
+        ),
+      ).toMatchObject({ ok: true });
+    const ports = (await f.docker.listContainers())
+      .filter((c) => c.project?.startsWith("otk-"))
+      .map((c) => c.ports[0]?.publicPort);
+    expect(ports).toHaveLength(2);
+    expect(new Set(ports).size).toBe(2);
+    f.run.mockClear();
+    for (const action of ["restart", "update"] as const)
+      expect(
+        await f.manager.run(
+          { id: f.id, action, compose: automatic, riskOverride: false },
+          context(),
+        ),
+      ).toMatchObject({ ok: true });
+    for (const call of f.run.mock.calls) expect(call[5]).toContain(`published: "${ports[0]}"`);
+  });
+  it("rolls back an owned install if Docker cannot confirm its automatic binding", async () => {
+    const f = await fixture();
+    const automatic = `${compose}    ports: [{ target: 80, protocol: tcp }]\n`;
+    f.docker.listContainers = () => Promise.resolve([]);
+    expect(
+      await f.manager.run(
+        { id: f.id, action: "install", compose: automatic, riskOverride: false },
+        context(),
+      ),
+    ).toMatchObject({ ok: false, rollback: "succeeded" });
+    expect(f.run.mock.calls.map((call) => call[3])).toEqual(["up", "down"]);
+  });
   it("refuses an old unpinned deployment update before any image or container mutation", async () => {
     const f = await fixture();
     await f.manager.run({ id: f.id, action: "install", compose, riskOverride: false }, context());

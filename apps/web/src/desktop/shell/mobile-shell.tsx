@@ -3,6 +3,7 @@ import { ChevronLeft, Lock, LogOut, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
+import { IconLabel } from "../../components/ui/icon-label.tsx";
 import { Clock } from "../../features/shell/clock.tsx";
 import { usePermissions, useSessionStore } from "../../stores/session-store.ts";
 import { AppHostContext, type AppHost } from "../apps/app-context.ts";
@@ -130,18 +131,12 @@ export function MobileShell() {
                 <li key={app.id}>
                   <button
                     type="button"
+                    aria-label={app.title}
                     onClick={() => setOpen({ appId: app.id, appState: undefined, title: "" })}
                     className="flex w-full flex-col items-center gap-1.5 rounded-everyos-md p-1 outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <AppIcon manifest={app} size={56} />
-                    <span
-                      className="max-w-full truncate rounded-md px-1.5 text-[0.72rem] font-medium text-fg"
-                      style={{
-                        background: "rgb(var(--everyos-surface) / var(--everyos-surface-opacity))",
-                      }}
-                    >
-                      {app.title}
-                    </span>
+                    <IconLabel text={app.title} className="everyos-icon-label" />
                   </button>
                 </li>
               ))}

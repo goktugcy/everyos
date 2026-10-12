@@ -448,3 +448,22 @@ Every privileged call rechecks PAM account policy and root's fixed sudoers comma
 Policy denial removes the grant and fails closed. Current EveryOS roles and protected-resource
 checks remain independent. One month is exactly 30 days; finite expiry uses wall-clock timestamps
 across restarts. No option elevates file-manager workers above the mapped Linux identity.
+
+### D36 — Automatic application defaults and durable available-port allocation
+
+Provide PUID/PGID from the linked Linux account and TZ from the agent, not from browser input
+or process-environment interpolation. A fixed read-only `apps.defaults` operation is permissioned
+and validated. Hide these canonical inputs in the installer and move optional parameters/ports
+under Advanced settings. Genuine required external configuration remains explicit; app-native
+setup happens after launch. Existing deployments are not silently reconfigured.
+
+Let Docker allocate omitted published ports atomically. Then verify the exact owned project's
+bindings, recreate that deployment with fixed ports, and seal the resulting Compose. Merely saving
+the allocation is insufficient: Docker reassigns an ephemeral HostConfig binding on restart.
+The final pinning deployment is part of installation success and failure cleanup. Retry/update
+reuse saved allocations. Keep explicit host-IP and protocol restrictions. An explicit manual port
+remains an explicit port, including normal failure when another host service owns it.
+
+Share measured icon-caption fitting across desktop, Files and the mobile launcher. Keep a readable
+9px floor; exceptionally long names expand on interaction rather than becoming unreadable. Text
+selection plates are removed while glyph highlighting and keyboard focus remain visible.

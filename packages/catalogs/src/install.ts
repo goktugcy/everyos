@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
-import type { CatalogApp } from "@everyos/shared";
+import type { AppInstallDefaults, CatalogApp } from "@everyos/shared";
 import {
   cleanCompose,
   CONFIG_PLACEHOLDER,
@@ -39,6 +39,7 @@ export function prepareInstall(
     variables: Record<string, string>;
     ports: { service: string; index: number; host: number }[];
   },
+  defaults?: AppInstallDefaults,
 ): string {
   if (app.blockers.length) throw new CatalogError("unsupported-compose");
   const allowed = new Set(app.variables.map((entry) => entry.key));
@@ -52,8 +53,11 @@ export function prepareInstall(
   const declarations = [...app.variables].sort(
     (a, b) => Number(/^SERVICE_SUPABASE/.test(a.key)) - Number(/^SERVICE_SUPABASE/.test(b.key)),
   );
+  const automatic = defaults
+    ? { PUID: String(defaults.uid), PGID: String(defaults.gid), TZ: defaults.timezone }
+    : {};
   for (const entry of declarations) {
-    let value = input.variables[entry.key];
+    let value = input.variables[entry.key] ?? (automatic as Record<string, string>)[entry.key];
     if (!value && /^SERVICE_(URL|FQDN)_/.test(entry.key)) {
       const urlKey = entry.key.replace(/^SERVICE_FQDN_/, "SERVICE_URL_");
       const fqdnKey = entry.key.replace(/^SERVICE_URL_/, "SERVICE_FQDN_");
@@ -161,6 +165,12 @@ export function prepareInstall(
     return value;
   };
   const prepared = object(resolve(doc));
+  if (defaults)
+    for (const raw of Object.values(object(prepared.services))) {
+      const environment = object(object(raw).environment);
+      for (const [key, value] of Object.entries(automatic))
+        if (key in environment && input.variables[key] === undefined) environment[key] = value;
+    }
   const seen = new Set<string>();
   for (const port of input.ports) {
     const key = `${port.service}:${port.index}`;
@@ -170,9 +180,15 @@ export function prepareInstall(
       (entry) => entry.service === port.service && entry.index === port.index,
     );
     if (!original) throw new CatalogError("unknown-port");
-    const service = object(object(prepared.services)[port.service]);
+  }
+  // Docker allocates omitted host ports atomically, including concurrent installs.
+  for (const original of app.ports) {
+    const port = input.ports.find(
+      (entry) => entry.service === original.service && entry.index === original.index,
+    );
+    const service = object(object(prepared.services)[original.service]);
     if (!Array.isArray(service.ports)) throw new CatalogError("unknown-port");
-    const existing = service.ports[port.index] as unknown;
+    const existing = service.ports[original.index] as unknown;
     const hostIp =
       typeof existing === "string" && existing.split(":").length > 2
         ? existing
@@ -181,10 +197,12 @@ export function prepareInstall(
             .join(":")
             .replace(/^\[|\]$/g, "")
         : object(existing).host_ip;
-    service.ports[port.index] = {
-      ...object(existing),
+    const mapping = { ...object(existing) };
+    delete mapping.published;
+    service.ports[original.index] = {
+      ...mapping,
       target: original.container,
-      published: String(port.host),
+      ...(port ? { published: String(port.host) } : {}),
       protocol: original.protocol,
       ...(typeof hostIp === "string" ? { host_ip: hostIp } : {}),
     };

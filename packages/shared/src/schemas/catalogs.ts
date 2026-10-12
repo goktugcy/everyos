@@ -12,6 +12,12 @@ export const CatalogRequestSchema = z.strictObject({
   allowPrivate: z.boolean().default(false),
 });
 export const CatalogUpdateSchema = z.strictObject({ enabled: z.boolean() });
+export const AppInstallDefaultsSchema = z.strictObject({
+  source: z.enum(["host", "simulated"]),
+  uid: z.number().int().min(1),
+  gid: z.number().int().nonnegative(),
+  timezone: z.string().min(1).max(128),
+});
 
 export const AppInstallRequestSchema = z.strictObject({
   appId: z

@@ -67,6 +67,40 @@ async function finished(ctx: TestContext, id: string) {
   return ctx.services.apps.job(id)!;
 }
 describe("App Store installations", () => {
+  it("installs with host-supplied identity defaults and no user-selected ports", async () => {
+    const { ctx, admin, input } = await fixture(`services:
+  app:
+    image: example.invalid/app:1
+    environment: {PUID: "\${PUID}", PGID: "\${PGID}", TZ: "\${TZ}"}
+    ports: ['7470:80']
+`);
+    ctx.agent.handlers.set("apps.defaults", () => ({
+      source: "host",
+      uid: 1801,
+      gid: 1902,
+      timezone: "Europe/Istanbul",
+    }));
+    ctx.agent.handlers.set("apps.run", () => ({
+      source: "simulated",
+      ok: true,
+      rollback: "not-needed",
+    }));
+    const response = await admin.post("/api/apps/install", { ...input, variables: {}, ports: [] });
+    expect(response.status).toBe(202);
+    const job = await json<AppJobView>(response);
+    expect((await finished(ctx, job.id)).stage).toBe("succeeded");
+    const run = ctx.agent.calls.find((call) => call.op === "apps.run")!.params as {
+      compose: string;
+    };
+    expect(run.compose).toContain('PUID: "1801"');
+    expect(run.compose).toContain('PGID: "1902"');
+    expect(run.compose).toContain("TZ: Europe/Istanbul");
+    expect(run.compose).not.toContain("published:");
+    expect(ctx.agent.calls.find((call) => call.op === "apps.defaults")?.actor).toMatchObject({
+      kind: "user",
+      username: "admin",
+    });
+  });
   it("reconciles only the exact interrupted job and refuses concurrent agent mutations", async () => {
     const { ctx, admin, viewer, input } = await fixture();
     ctx.agent.handlers.set("apps.run", () => ({

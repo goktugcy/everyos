@@ -206,6 +206,8 @@ export class FakeAgent implements AgentGateway {
     switch (op) {
       case "apps.inspect":
         return { source: "simulated", busy: false, ownership: "prepared", lastRun: null };
+      case "apps.defaults":
+        return { source: "simulated", uid: 1000, gid: 1000, timezone: "Etc/UTC" };
       case "system.info":
         return sampleSystemInfo;
       case "agent.ping":

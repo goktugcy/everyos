@@ -126,7 +126,7 @@ const catalog = createServer((request, response) => {
   }
   response.setHeader("Content-Type", "text/yaml");
   response.end(
-    "services:\n  demo:\n    image: example.invalid/original-e2e:1.0\n    ports: ['8765:80']\n    volumes: ['${APP_DATA_DIR}/data:/data:ro']\n    environment:\n      APP_TOKEN: ${APP_TOKEN}\n      PASSWORD: ${SERVICE_PASSWORD_64_DEMO}\nx-casaos:\n  id: original-e2e\n  title: {tr_TR: Deneme Uygulaması, en_US: Test Application}\n  description: {tr_TR: İzole uçtan uca test kataloğu., en_US: Isolated end-to-end test catalog.}\n  architectures: [amd64, arm64]\n",
+    "services:\n  demo:\n    image: example.invalid/original-e2e:1.0\n    ports: ['8765:80']\n    volumes: ['${APP_DATA_DIR}/data:/data:ro']\n    environment:\n      PUID: ${PUID}\n      PGID: ${PGID}\n      TZ: ${TZ}\n      APP_TOKEN: ${APP_TOKEN}\n      PASSWORD: ${SERVICE_PASSWORD_64_DEMO}\nx-casaos:\n  id: original-e2e\n  title: {tr_TR: Deneme Uygulaması, en_US: Test Application}\n  description: {tr_TR: İzole uçtan uca test kataloğu., en_US: Isolated end-to-end test catalog.}\n  architectures: [amd64, arm64]\n",
   );
 });
 catalog.listen(E2E_PORT + 1, "127.0.0.1");

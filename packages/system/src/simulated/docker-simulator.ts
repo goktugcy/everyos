@@ -601,7 +601,12 @@ export function createDockerSimulator(
             string,
             {
               image: string;
-              ports?: { target: number; published: string; protocol: "tcp" | "udp" }[];
+              ports?: {
+                target: number;
+                published?: string;
+                protocol: "tcp" | "udp";
+                host_ip?: string;
+              }[];
               environment?: Record<string, string>;
             }
           >;
@@ -610,6 +615,17 @@ export function createDockerSimulator(
         projects.set(name, project);
         if (!containers.some((c) => c.project === name)) {
           for (const [service, entry] of Object.entries(doc.services)) {
+            const allocated = new Set(
+              containers.flatMap((c) => c.ports.map((p) => `${p.type}:${p.publicPort}`)),
+            );
+            const mappedPorts = (entry.ports ?? [])
+              .filter((p) => typeof p === "object")
+              .map((p) => {
+                let published = Number(p.published) || 49152;
+                while (!p.published && allocated.has(`${p.protocol}:${published}`)) published++;
+                allocated.add(`${p.protocol}:${published}`);
+                return { ...port(p.target, published, p.protocol), ip: p.host_ip ?? "0.0.0.0" };
+              });
             const container: SimContainer = {
               id: hex(`${name}-${service}`),
               name: `${name}-${service}-1`,
@@ -618,9 +634,7 @@ export function createDockerSimulator(
               health: "none",
               project: name,
               service,
-              ports: (entry.ports ?? [])
-                .filter((p) => typeof p === "object")
-                .map((p) => port(p.target, Number(p.published), p.protocol)),
+              ports: mappedPorts,
               networks: ["bridge"],
               volumes: [],
               risks: [],

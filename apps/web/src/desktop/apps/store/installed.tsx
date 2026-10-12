@@ -120,6 +120,9 @@ export function InstalledCard({
                 {t("appStore.launch", { port: port.port })}
               </a>
             ))}
+          {app.ports.length ? (
+            <p className="w-full text-xs text-fg-muted">{t("appStore.configureAfterInstall")}</p>
+          ) : null}
         </div>
       ) : null}
       {app.lastError ? (

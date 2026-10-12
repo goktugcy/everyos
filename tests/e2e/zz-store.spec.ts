@@ -26,6 +26,12 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await store.getByRole("button", { name: /Deneme Uygulaması/ }).click();
   await expect(page.getByRole("dialog")).toContainText("${APP_DATA_DIR}/data → /data");
   await expect(page.getByRole("dialog")).toContainText("Salt okunur");
+  for (const label of ["PUID", "PGID", "TZ"])
+    await expect(page.getByRole("dialog").getByLabel(label, { exact: true })).toHaveCount(0);
+  await page
+    .getByRole("dialog")
+    .getByText("Gelişmiş ayarlar (isteğe bağlı)", { exact: true })
+    .click();
   await page
     .getByRole("dialog")
     .getByLabel("SERVICE_PASSWORD_64_DEMO", { exact: true })
@@ -51,6 +57,10 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
     has: page.locator('[data-widget="docker.app"]'),
   });
   await expect(appWidget).toContainText("Deneme Uygulaması");
+  const installedPayload = (await (await page.request.get("/api/apps")).json()) as {
+    apps: { ports: { port: number }[] }[];
+  };
+  expect(installedPayload.apps[0]?.ports[0]?.port).toBeGreaterThanOrEqual(1024);
   const app = store.locator("article").filter({ hasText: "Deneme Uygulaması" });
   await expect(app).toContainText("Çalışıyor");
   await expect(app.getByTestId("simulated-badge")).toBeVisible();

@@ -464,6 +464,14 @@ export const en: Messages = {
     acknowledge: "I reviewed the listed risks and accept them for this installation.",
     adminRequired:
       "This template requests host access. Administrator approval is required to install it.",
+    automaticSetup:
+      "Linux user identity and timezone are set automatically. A free port is assigned; after installation, open the app to complete its own setup.",
+    requiredSetup: "Information required by the app",
+    advanced: "Advanced settings (optional)",
+    automaticPort: "Automatic",
+    portHint:
+      "Leave blank to assign an available port automatically. Enter a value to use a fixed port.",
+    configureAfterInstall: "Complete setup and other settings in the application’s own panel.",
     installHint:
       "Each installation creates a separate EveryOS project. Passwords are stored encrypted and are never shown again.",
     installError: "Check installation inputs, architecture compatibility, and catalog version.",

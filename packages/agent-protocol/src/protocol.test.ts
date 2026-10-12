@@ -94,6 +94,7 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "identity.lock": notUsed,
     "apps.run": notUsed,
     "apps.inspect": notUsed,
+    "apps.defaults": notUsed,
     "release.status": notUsed,
     "release.check": notUsed,
     "release.install": notUsed,

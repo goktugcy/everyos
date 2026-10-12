@@ -18,6 +18,7 @@ import type { MenuEntry } from "../../menus/menu-model.ts";
 import { ContextMenuArea } from "../../menus/menus.tsx";
 import { joinPath, kindOf, type FileLocation } from "./lib.ts";
 import { FolderIcon } from "./folder-icon.tsx";
+import { IconLabel } from "../../../components/ui/icon-label.tsx";
 
 const ARCHIVE = /\.(zip|tar|gz|tgz|xz|bz2|7z|rar|zst)$/i;
 const AUDIO = /\.(mp3|flac|ogg|opus|wav|m4a|aac)$/i;
@@ -54,7 +55,7 @@ interface ItemProps {
 
 /**
  * Finder's icon view: large icons (thumbnails for images), names below, the
- * selected name on an accent plate. Behaviour comes from the same handlers as
+ * selection highlighted on the glyph. Behaviour comes from the same handlers as
  * the list view.
  */
 export function FileIconView({
@@ -87,6 +88,7 @@ export function FileIconView({
     <ul
       className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] content-start gap-1 p-3"
       data-testid="file-icons"
+      data-icon-grid
     >
       {entries.map((entry) => {
         const isSelected = selected.has(entry.name);
@@ -98,9 +100,12 @@ export function FileIconView({
           <ContextMenuArea key={entry.name} entries={() => menuFor(entry)}>
             <li
               {...itemProps(entry)}
+              aria-label={entry.name}
               className={cn(
                 "flex cursor-default select-none flex-col items-center gap-1 rounded-lg p-1.5",
                 isCut(entry) && "opacity-50",
+                "relative hover:z-20",
+                isSelected && "z-10",
                 dropTarget === `row:${entry.name}` && "ring-2 ring-accent",
               )}
             >
@@ -149,15 +154,7 @@ export function FileIconView({
               {renaming === entry.name ? (
                 renameField(entry, "w-full text-center text-xs")
               ) : (
-                <span
-                  title={entry.name}
-                  className={cn(
-                    "line-clamp-2 max-w-full break-words rounded px-1.5 py-px text-center text-xs leading-snug",
-                    isSelected ? "bg-[rgb(var(--everyos-accent-strong))] text-white" : "text-fg",
-                  )}
-                >
-                  {entry.name}
-                </span>
+                <IconLabel text={entry.name} />
               )}
             </li>
           </ContextMenuArea>

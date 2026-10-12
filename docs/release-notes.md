@@ -1,16 +1,16 @@
-EveryOS 0.1.7 adds selectable, persistent Linux privilege verification.
+EveryOS 0.1.8 improves icon captions and simplifies application installation.
 
-- Settings → Account offers 15 minutes, 30 minutes, 1 hour, 5 hours, 1 day, 1 week,
-  1 month (30 days), and indefinite authorization. Verify the linked Linux password once.
-- Explicit grants survive signing out, desktop locking, browser closure, and API/agent restarts.
-  Change duration with another verification or revoke the grant manually across all sessions.
-- Passwords are never stored. Every privileged call still checks current Linux account restrictions,
-  sudoers and EveryOS permissions. Linux policy denial and identity changes revoke saved grants.
-  Host files continue to use the linked account's ordinary permissions.
-- Older clients without a duration retain the former five-minute session-only behavior.
-  Existing Linux links are permanent; upgrading never silently grants indefinite privilege.
+- Selected desktop applications and file icons highlight the glyph, without coloring the name.
+  Unbroken long names wrap and shrink; exceptionally long names expand in full on interaction.
+- App Store installs automatically use the linked Linux account's UID/GID and the host timezone.
+  PUID, PGID and TZ no longer require user input.
+- Docker assigns an available host port automatically. EveryOS verifies and pins the real binding
+  so restart and image update retain the port. Existing host services are preserved.
+- Optional variables and manual fixed ports are under Advanced settings. Required external
+  credentials/endpoints remain explicit. Launch the application after installation to complete
+  its own setup in its native panel.
 
-See [Linux account linking](https://github.com/goktugcy/everyos/blob/main/docs/linux-accounts.md)
-for scope, lifecycle and API details. The trusted publisher key and `goktugcy/everyos` release
-source remain unchanged. This release also includes automatic EveryOS release notifications,
-the Home Assistant device panel, brand/model recognition and all-entity widgets.
+The trusted publisher key and release source remain unchanged. This release includes the
+persistent Linux privilege durations, version notifications and Home Assistant integration
+from previous versions. See the [App Store guide](https://github.com/goktugcy/everyos/blob/main/docs/app-store.md)
+for defaults, port allocation and installation boundaries.

@@ -490,6 +490,15 @@ export const tr = {
     riskTitle: "Kurulum izinleri",
     acknowledge: "Gösterilen riskleri inceledim ve bu kurulum için kabul ediyorum.",
     adminRequired: "Bu şablon host erişimi istiyor. Kurulum için yönetici onayı gerekir.",
+    automaticSetup:
+      "Linux kullanıcı kimliği ve saat dilimi otomatik ayarlanır. Boş bir port seçilir; kurulumu tamamladıktan sonra uygulamayı açıp kendi ayarlarını yapabilirsiniz.",
+    requiredSetup: "Uygulamanın istediği bilgiler",
+    advanced: "Gelişmiş ayarlar (isteğe bağlı)",
+    automaticPort: "Otomatik",
+    portHint:
+      "Boş bırakırsanız kullanılabilir bir port otomatik atanır. Sabit bir port kullanmak için değer girin.",
+    configureAfterInstall:
+      "Kurulum ve diğer ayarları uygulamanın kendi panelinden tamamlayabilirsiniz.",
     installHint:
       "Her kurulum ayrı bir EveryOS projesi oluşturur. Şifreler şifreli saklanır ve tekrar gösterilmez.",
     installError: "Kurulum girdilerini, mimari uyumluluğunu ve katalog sürümünü kontrol edin.",

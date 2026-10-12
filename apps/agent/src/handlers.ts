@@ -240,6 +240,17 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
         throw new OperationError("unsupported", "Managed applications are not configured");
       return deps.apps.inspect(id);
     },
+    "apps.defaults": (_params, { actor }) => {
+      if (deps.mode === "development")
+        return { source: "simulated", uid: 1000, gid: 1000, timezone: "Etc/UTC" };
+      const account = identities().resolve(actor);
+      return {
+        source: "host",
+        uid: account.uid,
+        gid: account.gid,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+    },
     "apps.run": (params, context) => {
       if (!deps.apps)
         throw new OperationError("unsupported", "Managed applications are not configured");
