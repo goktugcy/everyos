@@ -235,7 +235,7 @@ function IntegrationItem({
   );
 }
 
-function IntegrationDialog({
+export function IntegrationDialog({
   open,
   onClose,
   existing,
@@ -289,6 +289,12 @@ function IntegrationForm({
   const [controlEntities, setControlEntities] = useState(
     (existing?.options.controlEntities ?? []).join("\n"),
   );
+  const [entityScope, setEntityScope] = useState<"selected" | "all">(
+    existing ? (existing.options.entityScope ?? "selected") : "all",
+  );
+  const [controlScope, setControlScope] = useState<"selected" | "all">(
+    existing ? (existing.options.controlScope ?? "selected") : "all",
+  );
   const [container, setContainer] = useState(existing?.options.container ?? "");
   const [dbUser, setDbUser] = useState(existing?.options.user ?? "postgres");
   const [database, setDatabase] = useState(existing?.options.database ?? "postgres");
@@ -302,6 +308,8 @@ function IntegrationForm({
     const options =
       adapter === "homeassistant"
         ? {
+            entityScope,
+            controlScope,
             entities: parseEntities(entities),
             controlEntities: parseEntities(controlEntities).filter((e) =>
               (HOME_ASSISTANT_CONTROL_DOMAINS as readonly string[]).includes(e.split(".")[0]!),
@@ -422,18 +430,43 @@ function IntegrationForm({
       ) : null}
       {adapter === "homeassistant" ? (
         <>
-          <EntityList
-            label={t("widgets.integrations.entities")}
-            hint={t("widgets.integrations.entitiesHint")}
-            value={entities}
-            onChange={setEntities}
+          <Select
+            label={t("homeAssistant.entityScope")}
+            value={entityScope}
+            onChange={setEntityScope}
+            options={[
+              { value: "all", label: t("homeAssistant.all") },
+              { value: "selected", label: t("homeAssistant.selected") },
+            ]}
           />
-          <EntityList
-            label={t("widgets.integrations.controlEntities")}
-            hint={t("widgets.integrations.controlEntitiesHint")}
-            value={controlEntities}
-            onChange={setControlEntities}
+          {entityScope === "selected" ? (
+            <EntityList
+              label={t("widgets.integrations.entities")}
+              hint={t("widgets.integrations.entitiesHint")}
+              value={entities}
+              onChange={setEntities}
+            />
+          ) : null}
+          <Select
+            label={t("homeAssistant.controlScope")}
+            value={controlScope}
+            onChange={setControlScope}
+            options={[
+              { value: "all", label: t("homeAssistant.all") },
+              { value: "selected", label: t("homeAssistant.selected") },
+            ]}
           />
+          {controlScope === "selected" ? (
+            <EntityList
+              label={t("widgets.integrations.controlEntities")}
+              hint={t("widgets.integrations.controlEntitiesHint")}
+              value={controlEntities}
+              onChange={setControlEntities}
+            />
+          ) : null}
+          {entityScope === "all" || controlScope === "all" ? (
+            <p className="text-xs text-fg-muted">{t("homeAssistant.allHelp")}</p>
+          ) : null}
         </>
       ) : null}
       {adapter === "postgresql" ? (

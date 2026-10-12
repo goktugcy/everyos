@@ -329,6 +329,16 @@ describe("integrations API", () => {
         calls.push({ url: req.url ?? "", body });
         return send(res, 200, []);
       }
+      if (req.url === "/api/services")
+        return send(res, 200, [
+          { domain: "switch", services: { toggle: {}, turn_on: {}, turn_off: {} } },
+        ]);
+      if (req.url === "/api/states/switch.kettle")
+        return send(res, 200, {
+          entity_id: "switch.kettle",
+          state: "off",
+          attributes: { friendly_name: "Kettle" },
+        });
       if (req.url === "/api/states")
         return send(res, 200, [
           {
@@ -379,14 +389,185 @@ describe("integrations API", () => {
       { url: "/api/services/switch/toggle", body: JSON.stringify({ entity_id: "switch.kettle" }) },
     ]);
     expect((await control("switch.garage")).status).toBe(403);
-    // Only switchable domains can be configured as controls.
+    // Read-only domains cannot be configured as controls.
     expect(
       (
         await operator.patch(`/api/integrations/${integration.id}`, {
-          options: { controlEntities: ["lock.front_door"] },
+          options: { controlEntities: ["sensor.living_temp"] },
         })
       ).status,
     ).toBe(400);
+  });
+
+  it("exposes explicit all-entity scopes and validates device actions, audience and ranges", async () => {
+    const { operator, viewer } = await withRoles();
+    const calls: Array<{ url: string; body: unknown }> = [];
+    const states = [
+      { entity_id: "switch.kettle", state: "off", attributes: { friendly_name: "Kettle" } },
+      {
+        entity_id: "sensor.temp",
+        state: "21",
+        attributes: { unit_of_measurement: "°C", access_token: "never-expose" },
+      },
+      { entity_id: "person.ayse", state: "home", attributes: { latitude: 41, longitude: 29 } },
+      { entity_id: "cover.blind", state: "closed", attributes: { supported_features: 3 } },
+      {
+        entity_id: "climate.room",
+        state: "heat",
+        attributes: {
+          supported_features: 1,
+          min_temp: 16,
+          max_temp: 30,
+          temperature: 22,
+          hvac_modes: ["heat", "off"],
+        },
+      },
+      { entity_id: "lock.door", state: "locked", attributes: {} },
+      { entity_id: "light.offline", state: "unavailable", attributes: {} },
+    ];
+    const services = [
+      { domain: "switch", services: { toggle: {}, turn_on: {}, turn_off: {} } },
+      { domain: "cover", services: { open_cover: {}, close_cover: {}, stop_cover: {} } },
+      { domain: "climate", services: { set_temperature: {}, set_hvac_mode: {} } },
+      { domain: "lock", services: { lock: {}, unlock: {} } },
+      { domain: "light", services: { turn_on: {}, toggle: {} } },
+    ];
+    let pauseStates = false;
+    let pauseTarget = false;
+    const releases: Array<() => void> = [];
+    const baseUrl = await fakeApp((req, res, body) => {
+      if (req.headers.authorization !== "Bearer ha-all-token") return send(res, 401, {});
+      if (req.method === "POST") {
+        calls.push({ url: req.url ?? "", body: JSON.parse(body) });
+        return send(res, 200, []);
+      }
+      if (req.url === "/api/states") {
+        if (pauseStates) {
+          releases.push(() => send(res, 200, states));
+          return;
+        }
+        return send(res, 200, states);
+      }
+      if (req.url === "/api/services") return send(res, 200, services);
+      const entity = states.find((state) => req.url === `/api/states/${state.entity_id}`);
+      if (entity && pauseTarget) {
+        releases.push(() => send(res, 200, entity));
+        return;
+      }
+      return entity ? send(res, 200, entity) : send(res, 404, {});
+    });
+    const integration = await createIntegration(operator, {
+      adapter: "homeassistant",
+      name: "All devices",
+      baseUrl,
+      secret: "ha-all-token",
+      options: { entityScope: "all", controlScope: "all" },
+    });
+    expect((await viewer.get(`/api/integrations/${integration.id}/states`)).status).toBe(403);
+    expect((await viewer.get(`/api/integrations/${integration.id}/brand/hue`)).status).toBe(403);
+    expect((await operator.get(`/api/integrations/${integration.id}/brand/unknown`)).status).toBe(
+      400,
+    );
+    expect(
+      (
+        await viewer.post(`/api/integrations/${integration.id}/actions`, {
+          entityId: "switch.kettle",
+          service: "toggle",
+        })
+      ).status,
+    ).toBe(403);
+    const all = await json<{ data: { entities: Array<{ entityId: string; actions: string[] }> } }>(
+      await operator.get(`/api/integrations/${integration.id}/states`),
+    );
+    expect(all.data.entities).toHaveLength(7);
+    expect(all.data.entities.find((entity) => entity.entityId === "cover.blind")?.actions).toEqual([
+      "open_cover",
+      "close_cover",
+    ]);
+    expect(JSON.stringify(all)).not.toMatch(/ha-all-token|never-expose|latitude|longitude/);
+    const action = (body: object) =>
+      operator.post(`/api/integrations/${integration.id}/actions`, body);
+    expect((await action({ entityId: "sensor.temp", service: "turn_on" })).status).toBe(403);
+    expect((await action({ entityId: "cover.blind", service: "stop_cover" })).status).toBe(400);
+    expect(
+      (await action({ entityId: "climate.room", service: "set_temperature", temperature: 99 }))
+        .status,
+    ).toBe(400);
+    expect(
+      (await action({ entityId: "climate.room", service: "set_hvac_mode", hvacMode: "invalid" }))
+        .status,
+    ).toBe(400);
+    expect((await action({ entityId: "switch.kettle", service: "restart" })).status).toBe(400);
+    expect(
+      (
+        await action({
+          entityId: "switch.kettle",
+          service: "turn_on",
+          extra: { entity_id: "lock.door" },
+        })
+      ).status,
+    ).toBe(400);
+    expect((await action({ entityId: "lock.door", service: "unlock" })).status).toBe(400);
+    expect((await action({ entityId: "light.offline", service: "toggle" })).status).toBe(409);
+    expect(calls).toEqual([]);
+    expect((await action({ entityId: "cover.blind", service: "close_cover" })).status).toBe(200);
+    expect(
+      (await action({ entityId: "climate.room", service: "set_temperature", temperature: 23 }))
+        .status,
+    ).toBe(200);
+    expect((await action({ entityId: "lock.door", service: "unlock", confirm: true })).status).toBe(
+      200,
+    );
+    expect(calls).toEqual([
+      { url: "/api/services/cover/close_cover", body: { entity_id: "cover.blind" } },
+      {
+        url: "/api/services/climate/set_temperature",
+        body: { entity_id: "climate.room", temperature: 23 },
+      },
+      { url: "/api/services/lock/unlock", body: { entity_id: "lock.door" } },
+    ]);
+    expect(
+      (await operator.patch(`/api/integrations/${integration.id}`, { audience: "everyone" }))
+        .status,
+    ).toBe(200);
+    expect((await viewer.get(`/api/integrations/${integration.id}/states`)).status).toBe(200);
+    const shared = await json<{ data: { entities: unknown[] } }>(
+      await viewer.get(`/api/integrations/${integration.id}/states`),
+    );
+    expect(shared.data.entities).toHaveLength(7);
+    pauseStates = true;
+    const pending = viewer.get(`/api/integrations/${integration.id}/states`);
+    await expect.poll(() => releases.length > 0).toBe(true);
+    await operator.patch(`/api/integrations/${integration.id}`, { audience: "managers" });
+    releases.pop()!();
+    expect((await pending).status).toBe(403);
+    pauseStates = false;
+    await operator.patch(`/api/integrations/${integration.id}`, { audience: "everyone" });
+    expect(
+      (
+        await operator.patch(`/api/integrations/${integration.id}`, {
+          options: { entities: ["sensor.temp"], controlEntities: ["switch.kettle"] },
+        })
+      ).status,
+    ).toBe(200);
+    const restricted = await json<{ data: { entities: Array<{ entityId: string }> } }>(
+      await viewer.get(`/api/integrations/${integration.id}/states`),
+    );
+    expect(restricted.data.entities.map((entity) => entity.entityId).sort()).toEqual([
+      "sensor.temp",
+      "switch.kettle",
+    ]);
+    expect((await action({ entityId: "cover.blind", service: "close_cover" })).status).toBe(403);
+    pauseTarget = true;
+    const pendingAction = action({ entityId: "switch.kettle", service: "toggle" });
+    await expect.poll(() => releases.length > 0).toBe(true);
+    await operator.patch(`/api/integrations/${integration.id}`, {
+      options: { entities: ["sensor.temp"], controlEntities: [] },
+    });
+    releases.pop()!();
+    expect((await pendingAction).status).toBe(409);
+    expect(calls).toHaveLength(3);
+    pauseTarget = false;
   });
 
   it("serves PostgreSQL statistics through the agent without credentials", async () => {

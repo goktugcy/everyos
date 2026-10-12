@@ -10,6 +10,7 @@ export function Select<T extends string>({
   onChange,
   className,
   hideLabel,
+  disabled,
 }: {
   label: string;
   value: T;
@@ -17,6 +18,7 @@ export function Select<T extends string>({
   onChange: (value: T) => void;
   className?: string;
   hideLabel?: boolean;
+  disabled?: boolean;
 }) {
   const id = useId();
   return (
@@ -31,6 +33,7 @@ export function Select<T extends string>({
         <select
           id={id}
           value={value}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value as T)}
           className="glass-inset h-10 w-full appearance-none rounded-everyos-md pl-3 pr-9 text-sm text-fg outline-none focus-visible:border-accent/70 focus-visible:shadow-[0_0_0_3px_rgb(var(--everyos-accent)/0.25)] [&>option]:bg-[rgb(var(--everyos-surface))] [&>option]:text-fg"
         >

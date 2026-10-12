@@ -1,4 +1,11 @@
-import type { StorageUsage, WidgetConfigValue, WidgetInstance, WidgetSize } from "@everyos/shared";
+import type {
+  HomeAssistantStates,
+  IntegrationView,
+  StorageUsage,
+  WidgetConfigValue,
+  WidgetInstance,
+  WidgetSize,
+} from "@everyos/shared";
 import {
   getWidget,
   normalizeConfig,
@@ -145,6 +152,92 @@ function MountField({
   return <Select label={label} value={value} options={options} onChange={onChange} />;
 }
 
+function EntitiesField({
+  field,
+  integration,
+  value,
+  label,
+  onChange,
+}: {
+  field: Extract<WidgetConfigField, { type: "entities" }>;
+  integration: IntegrationView | undefined;
+  value: WidgetConfigValue | undefined;
+  label: string;
+  onChange: (value: WidgetConfigValue) => void;
+}) {
+  const { t } = useTranslation();
+  const state = useTopic<HomeAssistantStates>(
+    integration ? `data.integration.${integration.id}.states` : null,
+  );
+  const selected = Array.isArray(value) ? value : [];
+  const entries =
+    state.status === "ok"
+      ? state.data.entities.filter(
+          (entity) => !field.control || state.data.controllable.includes(entity.entityId),
+        )
+      : [];
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <Select
+        label={label}
+        value={value === "all" ? "all" : "selected"}
+        options={[
+          { value: "all", label: t("homeAssistant.all") },
+          { value: "selected", label: t("homeAssistant.selected") },
+        ]}
+        onChange={(next) => onChange(next === "all" ? "all" : [])}
+      />
+      {value === "all" ? (
+        <p className="text-xs text-fg-muted">{t("homeAssistant.widgetAllHelp")}</p>
+      ) : !integration ? null : state.status === "loading" ? (
+        <p className="text-xs text-fg-muted">{t("common.loading")}</p>
+      ) : state.status === "unavailable" ? (
+        <p className="text-xs text-warning">{t(`widgets.reasons.${state.reason}`)}</p>
+      ) : entries.length === 0 ? (
+        <>
+          <p className="text-sm text-fg-muted">{t("widgets.configure.noEntities")}</p>
+          <ManageLink />
+        </>
+      ) : (
+        <>
+          <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
+            {entries.map((entity) => (
+              <li key={entity.entityId}>
+                <label className="flex items-center gap-2 rounded-everyos-sm p-1 text-sm hover:bg-hover/6">
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-[rgb(var(--everyos-accent))]"
+                    checked={selected.includes(entity.entityId)}
+                    disabled={
+                      !selected.includes(entity.entityId) && selected.length >= field.maxItems
+                    }
+                    onChange={(event) =>
+                      onChange(
+                        event.target.checked
+                          ? [...selected, entity.entityId]
+                          : selected.filter((id) => id !== entity.entityId),
+                      )
+                    }
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-xs">{entity.name ?? entity.entityId}</span>
+                    <span className="block break-all font-mono text-xs text-fg-subtle">
+                      {entity.entityId}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-fg-subtle">
+            {t("widgets.configure.maxItems", { count: field.maxItems })}
+          </p>
+        </>
+      )}
+    </fieldset>
+  );
+}
+
 function ConfigField({
   field,
   config,
@@ -232,61 +325,21 @@ function ConfigField({
           onChange={(next) => {
             setValue(field.key, next);
             // Entities belong to one connection.
-            if (config.entities !== undefined) setValue("entities", []);
+            if (config.entities !== undefined) setValue("entities", "all");
           }}
         />
       );
     }
-    case "entities": {
-      const integration = integrations.find((i) => i.id === config.integration);
-      const available =
-        (field.control ? integration?.options.controlEntities : integration?.options.entities) ??
-        [];
-      const selected = Array.isArray(value) ? value : [];
+    case "entities":
       return (
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1.5 text-[0.8rem] font-medium text-fg-muted">{label}</legend>
-          {!integration ? null : available.length === 0 ? (
-            <>
-              <p className="text-sm text-fg-muted">{t("widgets.configure.noEntities")}</p>
-              <ManageLink />
-            </>
-          ) : (
-            <>
-              <ul className="flex max-h-56 flex-col gap-1 overflow-y-auto">
-                {available.map((entity) => {
-                  const checked = selected.includes(entity);
-                  return (
-                    <li key={entity}>
-                      <label className="flex items-center gap-2 rounded-everyos-sm px-1 py-1 text-sm hover:bg-hover/6">
-                        <input
-                          type="checkbox"
-                          className="size-4 accent-[rgb(var(--everyos-accent))]"
-                          checked={checked}
-                          disabled={!checked && selected.length >= field.maxItems}
-                          onChange={(event) =>
-                            setValue(
-                              field.key,
-                              event.target.checked
-                                ? [...selected, entity]
-                                : selected.filter((e) => e !== entity),
-                            )
-                          }
-                        />
-                        <span className="font-mono text-xs">{entity}</span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="text-xs text-fg-subtle">
-                {t("widgets.configure.maxItems", { count: field.maxItems })}
-              </p>
-            </>
-          )}
-        </fieldset>
+        <EntitiesField
+          field={field}
+          integration={integrations.find((i) => i.id === config.integration)}
+          value={value}
+          label={label}
+          onChange={(next) => setValue(field.key, next)}
+        />
       );
-    }
   }
 }
 

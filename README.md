@@ -45,6 +45,14 @@ Move and resize windows, snap them into place and return to your saved layout. S
 virtual desktops, pin apps to the dock and find them through the launcher. Widgets, notifications
 and the Pulse shelf keep useful information close to your work.
 
+### Your home, connected
+
+Bring Home Assistant into your workspace with a dedicated panel and desktop widgets. Choose
+all accessible entities without entering their IDs. Devices are recognized with their reported
+brand and model, logos and type symbols. Browse rooms and live states in a calm device overview,
+then open details for sensors and supported controls. Existing connection scopes stay under your control; access tokens
+remain on the server. Learn more in the [Home Assistant guide](docs/home-assistant.md).
+
 ### Your files, at home
 
 Each account has a private home with Desktop, Documents, Downloads, Pictures, Music and Videos.

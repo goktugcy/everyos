@@ -12,16 +12,32 @@ export interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   error?: ReactNode;
   trailing?: ReactNode;
   ref?: Ref<HTMLInputElement>;
+  hideLabel?: boolean;
 }
 
 /** Labelled input with hint and error text wired up for assistive technology. */
-export function Field({ label, hint, error, trailing, className, ref, ...props }: FieldProps) {
+export function Field({
+  label,
+  hint,
+  error,
+  trailing,
+  className,
+  ref,
+  hideLabel,
+  ...props
+}: FieldProps) {
   const id = useId();
   const hintId = hint ? `${id}-hint` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[0.8rem] font-medium tracking-wide text-fg-muted">
+      <label
+        htmlFor={id}
+        className={cn(
+          "text-[0.8rem] font-medium tracking-wide text-fg-muted",
+          hideLabel && "sr-only",
+        )}
+      >
         {label}
       </label>
       <div className="relative">

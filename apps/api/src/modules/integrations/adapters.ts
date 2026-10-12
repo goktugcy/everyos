@@ -1,5 +1,21 @@
-import type { IntegrationAdapter, IntegrationOptions, PostgresStats } from "@everyos/shared";
-import { joinUrl, requestJson, requestText, type HttpOptions } from "./http.ts";
+import {
+  HOME_ASSISTANT_SERVICES,
+  type HomeAssistantAction,
+  type HomeAssistantEntity,
+  type HomeAssistantService,
+  type HomeAssistantStates,
+  type IntegrationAdapter,
+  type IntegrationOptions,
+  type PostgresStats,
+} from "@everyos/shared";
+import {
+  IntegrationHttpError,
+  joinUrl,
+  requestJson,
+  requestText,
+  type HttpOptions,
+} from "./http.ts";
+import { homeAssistantRegistry } from "./home-assistant-registry.ts";
 
 /*
  * Built-in application adapters. Each feed returns only the fields its
@@ -197,25 +213,145 @@ const immich: AdapterDefinition = {
 
 const haAuth = (context: AdapterContext) => ({ Authorization: `Bearer ${secret(context)}` });
 
-export interface HomeAssistantEntity {
-  entityId: string;
-  name: string | null;
-  state: string;
-  unit: string | null;
-  deviceClass: string | null;
-  lastChanged: number | null;
+const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]{1,100}$/;
+const ENTITY_FEATURES: Readonly<Record<string, Partial<Record<HomeAssistantService, number>>>> = {
+  fan: { turn_on: 32, turn_off: 16, toggle: 48 },
+  media_player: { turn_on: 128, turn_off: 256, media_play: 16384, media_pause: 1 },
+  vacuum: { start: 8192, pause: 4, stop: 8, return_to_base: 16 },
+};
+
+function canControl(context: AdapterContext, entityId: string): boolean {
+  return (
+    Object.hasOwn(HOME_ASSISTANT_SERVICES, entityId.split(".")[0]!) &&
+    (context.options.controlScope === "all" ||
+      (context.options.controlEntities ?? []).includes(entityId))
+  );
 }
 
-function toEntity(raw: Json): HomeAssistantEntity {
+function canView(context: AdapterContext, entityId: string): boolean {
+  return (
+    context.options.entityScope === "all" ||
+    (context.options.entities ?? []).includes(entityId) ||
+    canControl(context, entityId)
+  );
+}
+
+function serviceMap(raw: unknown): Map<string, Set<string>> {
+  return new Map(
+    arr(raw)
+      .map(obj)
+      .map((entry) => [
+        str(entry.domain, 64) ?? "",
+        new Set(
+          Array.isArray(entry.services)
+            ? entry.services.filter((v): v is string => typeof v === "string")
+            : Object.keys(obj(entry.services)),
+        ),
+      ]),
+  );
+}
+
+function toEntity(raw: Json, services: Map<string, Set<string>>): HomeAssistantEntity {
   const attributes = obj(raw.attributes);
+  const entityId = str(raw.entity_id, 128) ?? "";
+  const domain = entityId.split(".")[0]!;
   const changed = Date.parse(str(raw.last_changed, 64) ?? "");
+  const features = num(attributes.supported_features) ?? 0;
+  const min = num(domain === "climate" ? attributes.min_temp : attributes.min);
+  const max = num(domain === "climate" ? attributes.max_temp : attributes.max);
+  const options = arr(domain === "climate" ? attributes.hvac_modes : attributes.options)
+    .filter((v): v is string => typeof v === "string" && v.length > 0 && v.length <= 256)
+    .slice(0, 256);
+  const actions = (
+    Object.hasOwn(HOME_ASSISTANT_SERVICES, domain) ? (HOME_ASSISTANT_SERVICES[domain] ?? []) : []
+  ).filter((service) => {
+    if (!services.get(domain)?.has(service)) return false;
+    const flag = Object.hasOwn(ENTITY_FEATURES, domain)
+      ? ENTITY_FEATURES[domain]?.[service]
+      : undefined;
+    if (
+      flag !== undefined &&
+      num(attributes.supported_features) !== null &&
+      (features & flag) !== flag
+    )
+      return false;
+    if (domain === "cover") {
+      const flag = { open_cover: 1, close_cover: 2, stop_cover: 8 }[
+        service as "open_cover" | "close_cover" | "stop_cover"
+      ];
+      return (features & flag) !== 0;
+    }
+    if (service === "set_temperature")
+      return (features & 1) !== 0 && min !== null && max !== null && min <= max;
+    if (service === "set_value") return min !== null && max !== null && min <= max;
+    if (service === "select_option" || service === "set_hvac_mode") return options.length > 0;
+    if (domain === "climate" && service === "turn_on") return (features & 256) !== 0;
+    if (domain === "climate" && service === "turn_off") return (features & 128) !== 0;
+    return true;
+  });
   return {
-    entityId: str(raw.entity_id, 128) ?? "",
+    entityId,
     name: str(attributes.friendly_name, 128),
     state: str(raw.state, 64) ?? "unknown",
-    unit: str(attributes.unit_of_measurement, 16),
+    unit: str(
+      domain === "climate" ? attributes.temperature_unit : attributes.unit_of_measurement,
+      16,
+    ),
     deviceClass: str(attributes.device_class, 32),
+    device: null,
+    area: null,
+    icon: str(attributes.icon, 128),
+    category: null,
     lastChanged: Number.isFinite(changed) ? changed : null,
+    actions: [...actions],
+    currentTemperature: num(attributes.current_temperature),
+    targetTemperature: num(attributes.temperature),
+    min,
+    max,
+    step: num(domain === "climate" ? attributes.target_temp_step : attributes.step),
+    options,
+  };
+}
+
+export async function collectHomeAssistantStates(
+  context: AdapterContext,
+): Promise<HomeAssistantStates> {
+  const client = http(context, haAuth(context));
+  const [raw, services, registry] = await Promise.all([
+    client.json("/api/states", undefined, { maxBytes: 16 * 1024 * 1024, timeoutMs: 20_000 }),
+    client.json("/api/services", undefined, { maxBytes: 4 * 1024 * 1024, timeoutMs: 20_000 }),
+    homeAssistantRegistry(context),
+  ]);
+  if (!Array.isArray(raw) || !Array.isArray(services))
+    throw new IntegrationHttpError("invalid", "Invalid Home Assistant response");
+  if (raw.length > 10_000)
+    throw new IntegrationHttpError("too-large", "Too many Home Assistant entities");
+  const registered = serviceMap(services);
+  const entities = raw
+    .map(obj)
+    .filter(
+      (state) =>
+        ENTITY_ID.test(str(state.entity_id, 128) ?? "") &&
+        canView(context, str(state.entity_id, 128)!),
+    )
+    .map((state) => {
+      const entity = toEntity(state, registered);
+      const metadata = registry.entities.get(entity.entityId);
+      if (metadata) {
+        entity.device = metadata.device;
+        entity.area = metadata.area;
+        entity.icon ??= metadata.icon;
+        entity.category = metadata.category;
+      }
+      if (!canControl(context, entity.entityId)) entity.actions = [];
+      return entity;
+    })
+    .sort((a, b) => (a.name ?? a.entityId).localeCompare(b.name ?? b.entityId));
+  return {
+    source: "host",
+    registry: registry.status,
+    entities,
+    controllable: entities.filter((e) => e.actions.length > 0).map((e) => e.entityId),
   };
 }
 
@@ -228,18 +364,7 @@ const homeassistant: AdapterDefinition = {
     states: {
       intervalMs: 15_000,
       async collect(context) {
-        // Only the entities an administrator exposed are returned.
-        const allowed = new Set([
-          ...(context.options.entities ?? []),
-          ...(context.options.controlEntities ?? []),
-        ]);
-        const states = arr(await http(context, haAuth(context)).json("/api/states")).map(obj);
-        return {
-          entities: states
-            .filter((state) => allowed.has(str(state.entity_id, 128) ?? ""))
-            .map(toEntity),
-          controllable: context.options.controlEntities ?? [],
-        };
+        return collectHomeAssistantStates(context);
       },
     },
     automations: {
@@ -247,9 +372,13 @@ const homeassistant: AdapterDefinition = {
       async collect(context) {
         const automations = arr(await http(context, haAuth(context)).json("/api/states"))
           .map(obj)
-          .filter((state) => (str(state.entity_id, 128) ?? "").startsWith("automation."));
+          .filter(
+            (state) =>
+              (str(state.entity_id, 128) ?? "").startsWith("automation.") &&
+              canView(context, str(state.entity_id, 128)!),
+          );
         const items = automations.map((raw) => {
-          const entity = toEntity(raw);
+          const entity = toEntity(raw, new Map());
           const triggered = Date.parse(str(obj(raw.attributes).last_triggered, 64) ?? "");
           return {
             entityId: entity.entityId,
@@ -270,18 +399,40 @@ const homeassistant: AdapterDefinition = {
   },
 };
 
-/** Calls a Home Assistant service for one allowed entity (quick controls). */
-export async function callHomeAssistant(
+/** Fresh state and service capabilities are rechecked before every fixed device action. */
+export async function homeAssistantTarget(
   context: AdapterContext,
   entityId: string,
-  service: "toggle" | "turn_on" | "turn_off",
+): Promise<HomeAssistantEntity> {
+  const client = http(context, haAuth(context));
+  const [raw, services] = await Promise.all([
+    client.json(`/api/states/${entityId}`, undefined, { maxBytes: 256 * 1024 }),
+    client.json("/api/services", undefined, { maxBytes: 4 * 1024 * 1024 }),
+  ]);
+  if (obj(raw).entity_id !== entityId || !Array.isArray(services))
+    throw new IntegrationHttpError("invalid", "Invalid Home Assistant response");
+  return toEntity(obj(raw), serviceMap(services));
+}
+
+export async function callHomeAssistant(
+  context: AdapterContext,
+  action: HomeAssistantAction,
+  service: HomeAssistantService,
 ): Promise<void> {
-  const domain = entityId.split(".")[0]!;
-  // Scripts only support turn_on/toggle semantics through script.turn_on.
-  const effective = domain === "script" ? "turn_on" : service;
-  await http(context, haAuth(context)).json(`/api/services/${domain}/${effective}`, undefined, {
+  const domain = action.entityId.split(".")[0]!;
+  const params =
+    action.service === "set_temperature"
+      ? { temperature: action.temperature }
+      : action.service === "set_hvac_mode"
+        ? { hvac_mode: action.hvacMode }
+        : action.service === "set_value"
+          ? { value: action.value }
+          : action.service === "select_option"
+            ? { option: action.option }
+            : {};
+  await http(context, haAuth(context)).json(`/api/services/${domain}/${service}`, undefined, {
     method: "POST",
-    body: { entity_id: entityId },
+    body: { entity_id: action.entityId, ...params },
   });
 }
 

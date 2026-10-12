@@ -19,6 +19,7 @@ export const ADAPTER_FORMS: Record<
 export function useIntegrations(): {
   integrations: IntegrationView[];
   loading: boolean;
+  error: unknown;
   reload: () => void;
 } {
   const canRead = usePermissions().includes("apps:read");
@@ -29,6 +30,7 @@ export function useIntegrations(): {
   return {
     integrations: resource.data?.integrations ?? [],
     loading: canRead && resource.loading,
+    error: resource.error,
     reload: resource.reload,
   };
 }

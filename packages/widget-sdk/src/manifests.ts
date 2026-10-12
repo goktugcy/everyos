@@ -264,6 +264,7 @@ export const BUILT_IN_WIDGETS: readonly WidgetManifest[] = [
     supportedSizes: ["small", "medium"],
   }),
   app("homeassistant.entities", "homeassistant", "states", 15_000, {
+    version: 2,
     supportedSizes: ["small", "medium", "large"],
     config: [
       { key: "integration", type: "integration", adapter: "homeassistant" },
@@ -275,7 +276,8 @@ export const BUILT_IN_WIDGETS: readonly WidgetManifest[] = [
   }),
   /** Quick controls change devices, so they need apps:manage as well. */
   app("homeassistant.controls", "homeassistant", "states", 15_000, {
-    supportedSizes: ["small", "medium"],
+    version: 2,
+    supportedSizes: ["small", "medium", "large"],
     permissions: ["apps:read", "apps:manage"],
     config: [
       { key: "integration", type: "integration", adapter: "homeassistant" },

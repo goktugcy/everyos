@@ -814,6 +814,57 @@
         "updatedPackageManagerScenarioPassed": true,
         "updatedDisabledTerminalScenarioPassed": true
       }
+    },
+    "homeAssistant015": {
+      "version": "0.1.5",
+      "date": "2026-10-12",
+      "ownerHostModified": false,
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 64,
+        "tests": 620
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build"
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 2,
+        "firstRunPrerequisiteIncluded": true,
+        "log": ".dev/home-assistant/browser-final-verified.log",
+        "cases": [
+          "all scopes without entity IDs",
+          "31 entities and 18 grouped device cards",
+          "real registry manufacturer/model and rooms",
+          "all-entity pagination and shared widget scopes",
+          "fixed lamp, cover and climate services",
+          "unavailable control disabled",
+          "unlock confirmation cancellation and acceptance",
+          "manual refresh releases its button",
+          "widget opens its configured panel",
+          "900px viewport and device/details screenshots",
+          "no browser page errors"
+        ]
+      },
+      "securityCases": [
+        "viewer cannot control or read manager-only data",
+        "strict services and action parameters",
+        "fresh capability and range checks",
+        "read audience revocation during collection",
+        "control scope revocation during preflight prevents service call",
+        "registry fields sanitized and hidden siblings omitted",
+        "registry permission failure preserves states and controls",
+        "metadata IP rejected before WebSocket connection",
+        "brand proxy requires audience and fixed allowlist"
+      ],
+      "publisherKeyChanged": false,
+      "limits": [
+        "Acceptance uses disposable Home Assistant HTTP/WebSocket protocol fixtures, not the owner's physical devices.",
+        "No new Linux installation was run for this HTTP/WebSocket and browser change.",
+        "An initial local harness run raced agent-key creation; Home Assistant passed, and the final complete targeted rerun passed both scenarios."
+      ]
     }
   },
   "operationalRequirements": [

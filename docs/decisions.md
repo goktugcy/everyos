@@ -394,3 +394,28 @@ those commands remain available normally in the terminal. Existing unit/containe
 still applies. Existing personal storage stays API-owned, preserving desktop data and backup
 access; Linux homes are additional host locations. Private host widget sources use the
 subscriber's account. See [Linux account linking](linux-accounts.md) for details.
+
+## D32 — Explicit all-entity Home Assistant scopes and a native panel
+
+All-entity access is an explicit connection setting, separate from per-widget selection.
+Missing scope fields retain existing selected allowlists, so upgrading never silently exposes
+presence or other previously hidden entities. New UI connections visibly choose All by default;
+changing an existing connection requires an administrator action. The audience remains managers
+unless explicitly shared. PATCH schemas omit creation defaults to preserve untouched settings.
+
+The native panel and widgets share the sanitized states topic. Fixed service contracts cover
+common device domains without exposing an arbitrary Home Assistant service endpoint. Fresh
+state/capability checks, numeric bounds and option membership are enforced on the server.
+Unlocking requires an explicit confirmation. Read-only entities remain useful in the same panel.
+Direct refresh reads recheck audience and settings after collection to avoid returning a result
+from a revoked scope. EveryOS never fabricates a state after accepting a command.
+
+### D33 — Device registry recognition with optional logos
+
+Home Assistant device metadata comes from three fixed WebSocket registry reads rather than
+inferring brands/models from entity names or integration platforms. Sanitize and cache it on
+the API, then join it only to scoped states. The default panel groups physical devices and puts
+secondary controls in details; an entity view keeps virtual items accessible. Registry failures
+leave state/control functionality intact and are visible in the UI. Brand logos use a fixed,
+bounded same-origin PNG proxy to Home Assistant Brands, with local device symbols as fallbacks;
+the CSP and credential isolation stay unchanged.

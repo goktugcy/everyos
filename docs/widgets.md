@@ -171,22 +171,25 @@ an app's API. Integrations are stored in the `integrations` table (migration 000
 | -------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Jellyfin       | API key (`MediaBrowser Token`)                | `status` (public info), `sessions` (user, client, device, title, progress; **no client IPs**), `library` (counts).       |
 | Immich         | API key (`x-api-key`)                         | `status`, `storage` (bytes), `statistics` (photos, videos, usage; needs an admin key).                                   |
-| Home Assistant | Long-lived token (Bearer)                     | `states` (**only entities listed by the administrator**), `automations` (names, state, last triggered).                  |
+| Home Assistant | Long-lived token (Bearer)                     | `states` (selected lists or explicit **All** scopes), `automations` (names, state, last triggered).                      |
 | Uptime Kuma    | API key (basic auth on `/metrics`)            | `monitors` (name, type, status, response time; **monitor URLs/hostnames are never parsed**).                             |
 | Nextcloud      | serverinfo token (`NC-Token`) or app password | `status` (`/status.php`), `serverinfo` (users, files, free space, active users).                                         |
 | PostgreSQL     | none (local socket inside the container)      | `stats` via agent `apps.postgres.stats`: connections, max connections, database sizes. Container state when not running. |
 
 **HTTP client** (`apps/api/src/modules/integrations/http.ts`):
 
-- **Requests:** http(s) only, no credentials in URLs, at most 1 MB and 6 s per request.
+- **Requests:** http(s) only, no credentials in URLs; the default is 1 MB and 6 s. Home Assistant state discovery is bounded to 16 MiB/20 s and service metadata to 4 MiB/20 s.
 - **Address checks:** DNS is resolved once and the connection pinned to the checked addresses.
   LAN and loopback are allowed (self-hosted apps live there). Link-local and cloud metadata
   addresses (e.g. `169.254.169.254`) are always refused with `UNSAFE_ADDRESS`.
 - **Redirects** are not followed.
 
-**Home Assistant quick controls** (`POST /api/integrations/:id/actions`, `apps:manage`) accept only
-`toggle`/`turn_on`/`turn_off`, and only on entities in `controlEntities`, which are limited to the
-`switch`, `light`, `input_boolean`, `fan`, `cover` and `script` domains. Every action is audited.
+**Home Assistant controls** (`POST /api/integrations/:id/actions`, `apps:manage`) use fixed
+per-domain services with fresh state/capability checks and validated parameters. The integration
+can authorize selected entities or explicitly choose All; widget selection never broadens that
+scope. The built-in Home Assistant panel shares the same live data and control contracts, with
+search, filters and pagination. Existing connections keep their previous lists. See
+[Home Assistant](home-assistant.md) for supported actions, consent, limits and API payloads.
 
 **PostgreSQL** statistics run one fixed query with `docker exec … psql -AtqX` inside a
 `BEGIN READ ONLY` transaction. Container, role and database names are validated identifiers, and

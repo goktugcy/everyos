@@ -1,13 +1,10 @@
-import type { PostgresStats } from "@everyos/shared";
-import { Film, Music, Play, Power, Tv } from "lucide-react";
-import { useState } from "react";
+import type { HomeAssistantStates, PostgresStats } from "@everyos/shared";
+import { Film, Music, Tv } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { api } from "../../../lib/api.ts";
-import { errorMessage } from "../../../lib/errors.ts";
-import { cn } from "../../../lib/cn.ts";
 import { formatBytes, formatDateTime, formatNumber, formatPercent } from "../../../lib/format.ts";
 import { Bar, Row, Rows, Status, Value } from "../templates.tsx";
 import { useTopic } from "../topics.ts";
+import { WidgetEntities } from "../../../features/home-assistant/widget-entities.tsx";
 import { Placeholder, TopicGate, type WidgetRenderProps } from "./gate.tsx";
 
 /** The configured integration's feed (the frame renders nothing here until one is chosen). */
@@ -241,59 +238,30 @@ export function ImmichStatisticsWidget(props: WidgetRenderProps) {
 
 /* ------------------------------ Home Assistant ------------------------------ */
 
-interface HomeAssistantStates {
-  entities: Array<{
-    entityId: string;
-    name: string | null;
-    state: string;
-    unit: string | null;
-    deviceClass: string | null;
-    lastChanged: number | null;
-  }>;
-  controllable: string[];
-}
-
-function selectedEntities(props: WidgetRenderProps): string[] {
+function selectedEntities(props: WidgetRenderProps, data: HomeAssistantStates) {
   const value = props.instance.config.entities;
-  return Array.isArray(value) ? value : [];
-}
-
-function entityValue(
-  entity: HomeAssistantStates["entities"][number],
-  t: (key: "widgets.text.haUnavailable") => string,
-): string {
-  if (entity.state === "unavailable" || entity.state === "unknown")
-    return t("widgets.text.haUnavailable");
-  return entity.unit ? `${entity.state} ${entity.unit}` : entity.state;
+  return value === "all"
+    ? data.entities
+    : Array.isArray(value)
+      ? value
+          .map((id) => data.entities.find((entity) => entity.entityId === id))
+          .filter((entity) => entity !== undefined)
+      : [];
 }
 
 export function HomeAssistantEntitiesWidget(props: WidgetRenderProps) {
-  const { t } = useTranslation();
-  const { state } = useFeed<HomeAssistantStates>(props, "states");
-  const wanted = selectedEntities(props);
+  const { id, state } = useFeed<HomeAssistantStates>(props, "states");
   return (
     <TopicGate state={state} compact={props.compact}>
-      {(data) => {
-        const entities = wanted
-          .map((id) => data.entities.find((e) => e.entityId === id))
-          .filter((e) => e !== undefined);
-        if (entities.length === 0)
-          return (
-            <Placeholder compact={props.compact}>{t("widgets.text.entitiesNotShared")}</Placeholder>
-          );
-        return (
-          <Rows>
-            {entities.map((entity) => (
-              <Row
-                key={entity.entityId}
-                label={entity.name ?? entity.entityId}
-                value={entityValue(entity, t)}
-                title={entity.entityId}
-              />
-            ))}
-          </Rows>
-        );
-      }}
+      {(data) => (
+        <WidgetEntities
+          key={`${id}:${String(props.instance.config.entities)}`}
+          entities={selectedEntities(props, data)}
+          integrationId={id}
+          controls={false}
+          size={props.size}
+        />
+      )}
     </TopicGate>
   );
 }
@@ -349,95 +317,21 @@ export function HomeAssistantAutomationsWidget(props: WidgetRenderProps) {
   );
 }
 
-const SWITCHABLE = /^(switch|light|input_boolean|fan)\./;
-
 export function HomeAssistantControlsWidget(props: WidgetRenderProps) {
-  const { t } = useTranslation();
   const { id, state } = useFeed<HomeAssistantStates>(props, "states");
-  const wanted = selectedEntities(props);
-  const [pending, setPending] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const run = async (entityId: string) => {
-    setPending(entityId);
-    setError(null);
-    try {
-      await api(`/integrations/${id}/actions`, {
-        method: "POST",
-        body: { entityId, service: "toggle" },
-      });
-    } catch (cause) {
-      setError(errorMessage(t, cause));
-    } finally {
-      setPending(null);
-    }
-  };
-
   return (
     <TopicGate state={state} compact={props.compact}>
-      {(data) => {
-        const entities = wanted
-          .filter((entityId) => data.controllable.includes(entityId))
-          .map((entityId) => data.entities.find((e) => e.entityId === entityId))
-          .filter((e) => e !== undefined);
-        if (entities.length === 0)
-          return (
-            <Placeholder compact={props.compact}>{t("widgets.text.entitiesNotShared")}</Placeholder>
-          );
-        return (
-          <div className="flex h-full flex-col gap-1.5">
-            <ul
-              className={cn("grid gap-1.5", props.size === "small" ? "grid-cols-1" : "grid-cols-2")}
-            >
-              {entities.map((entity) => {
-                const unavailable = entity.state === "unavailable" || entity.state === "unknown";
-                const on = entity.state === "on" || entity.state === "open";
-                const script = entity.entityId.startsWith("script.");
-                return (
-                  <li key={entity.entityId}>
-                    <button
-                      type="button"
-                      disabled={unavailable || pending !== null}
-                      {...(script ? {} : { "aria-pressed": on })}
-                      title={entity.entityId}
-                      onClick={() => void run(entity.entityId)}
-                      className={cn(
-                        "flex w-full min-w-0 items-center gap-1.5 rounded-everyos-sm px-2 py-1.5 text-left text-xs outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50",
-                        on ? "button-accent" : "bg-hover/8 text-fg hover:bg-hover/14",
-                      )}
-                    >
-                      {script ? (
-                        <Play className="size-3.5 shrink-0" aria-hidden />
-                      ) : (
-                        <Power className="size-3.5 shrink-0" aria-hidden />
-                      )}
-                      <span className="min-w-0 flex-1 truncate font-medium">
-                        {entity.name ?? entity.entityId}
-                      </span>
-                      <span className="shrink-0 text-[0.7rem] opacity-80">
-                        {unavailable
-                          ? t("widgets.text.haUnavailable")
-                          : script
-                            ? t("widgets.text.run")
-                            : SWITCHABLE.test(entity.entityId)
-                              ? on
-                                ? t("common.on")
-                                : t("common.off")
-                              : entity.state}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            {error ? (
-              <p className="text-xs text-danger" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </div>
-        );
-      }}
+      {(data) => (
+        <WidgetEntities
+          key={`${id}:${String(props.instance.config.entities)}`}
+          entities={selectedEntities(props, data).filter((entity) =>
+            data.controllable.includes(entity.entityId),
+          )}
+          integrationId={id}
+          controls
+          size={props.size}
+        />
+      )}
     </TopicGate>
   );
 }

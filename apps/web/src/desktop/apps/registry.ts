@@ -8,6 +8,7 @@ import {
   FileText,
   Gauge,
   HardDrive,
+  Home,
   PackageCheck,
   ScrollText,
   Settings,
@@ -21,6 +22,31 @@ import type { AppId, DesktopAppManifest } from "./types.ts";
 
 /** Built-in apps, imported only when their windows open. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
+  {
+    id: "everyos.homeassistant",
+    titleKey: "apps.homeassistant",
+    icon: Home,
+    tint: "from-sky-400 to-cyan-600",
+    category: "tools",
+    requiredPermission: "apps:read",
+    window: {
+      defaultSize: { width: 1080, height: 740 },
+      minSize: { width: 380, height: 360 },
+      instancing: "single",
+    },
+    keywords: [
+      "home assistant",
+      "akıllı ev",
+      "smart home",
+      "cihaz",
+      "device",
+      "ışık",
+      "light",
+      "sensör",
+      "sensor",
+    ],
+    load: () => import("./home-assistant/home-assistant-app.tsx"),
+  },
   {
     id: "everyos.trash",
     titleKey: "apps.trash",

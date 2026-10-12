@@ -4,6 +4,8 @@ import type { Database } from "@everyos/database";
 import type { SecretBox } from "@everyos/security";
 import {
   INTEGRATION_TOPIC_PATTERN,
+  HOME_ASSISTANT_SERVICES,
+  type HomeAssistantAction,
   type IntegrationAdapter,
   type IntegrationAudience,
   type IntegrationOptions,
@@ -17,6 +19,7 @@ import type { DataProvider, ProviderResult } from "../widgets/data-hub.ts";
 import {
   ADAPTERS,
   callHomeAssistant,
+  homeAssistantTarget,
   NotConfiguredError,
   type AdapterContext,
 } from "./adapters.ts";
@@ -290,21 +293,70 @@ export class IntegrationService {
   }
 
   /** Home Assistant quick control, limited to the entities an administrator allowed. */
-  async control(
-    id: string,
-    entityId: string,
-    service: "toggle" | "turn_on" | "turn_off",
-    signal: AbortSignal,
-  ): Promise<void> {
+  async control(id: string, action: HomeAssistantAction, signal: AbortSignal): Promise<void> {
     const row = this.#row(id);
     if (!row) throw new ApiError(404, "NOT_FOUND", "Integration not found");
     if (row.adapter !== "homeassistant")
       throw new ApiError(400, "VALIDATION_FAILED", "This integration has no controls");
-    if (!(this.#options(row).controlEntities ?? []).includes(entityId))
+    const { entityId } = action;
+    const options = this.#options(row);
+    const domain = entityId.split(".")[0]!;
+    if (
+      !Object.hasOwn(HOME_ASSISTANT_SERVICES, domain) ||
+      (options.controlScope !== "all" && !(options.controlEntities ?? []).includes(entityId))
+    )
       throw new ApiError(403, "FORBIDDEN", "This entity is not allowed for quick controls");
+    if (row.app_id !== null && !this.#appExists(row.app_id))
+      throw new ApiError(409, "CONFLICT", "Linked application was removed");
+    if (action.service === "unlock" && action.confirm !== true)
+      throw new ApiError(400, "VALIDATION_FAILED", "Unlocking requires explicit confirmation");
     try {
-      await callHomeAssistant(this.#context(row, signal), entityId, service);
+      const context = this.#context(row, signal);
+      const entity = await homeAssistantTarget(context, entityId);
+      const service =
+        action.service === "toggle" && domain === "script"
+          ? "turn_on"
+          : action.service === "toggle" && domain === "cover"
+            ? entity.state === "open"
+              ? "close_cover"
+              : "open_cover"
+            : action.service;
+      if (!entity.actions.includes(service))
+        throw new ApiError(400, "VALIDATION_FAILED", "This entity does not support the action");
+      if (entity.state === "unavailable" || entity.state === "unknown")
+        throw new ApiError(409, "CONFLICT", "This entity is unavailable");
+      const value =
+        action.service === "set_temperature"
+          ? action.temperature
+          : action.service === "set_value"
+            ? action.value
+            : null;
+      if (
+        value !== null &&
+        (entity.min === null || entity.max === null || value < entity.min || value > entity.max)
+      )
+        throw new ApiError(400, "VALIDATION_FAILED", "Value outside the entity's supported range");
+      if (
+        (action.service === "select_option" && !entity.options.includes(action.option)) ||
+        (action.service === "set_hvac_mode" && !entity.options.includes(action.hvacMode))
+      )
+        throw new ApiError(400, "VALIDATION_FAILED", "This entity does not support the option");
+      const current = this.#row(id);
+      if (!current) throw new ApiError(404, "NOT_FOUND", "Integration was removed");
+      if (
+        current.updated_at !== row.updated_at ||
+        current.options !== row.options ||
+        current.base_url !== row.base_url ||
+        current.secret !== row.secret ||
+        current.audience !== row.audience ||
+        current.app_id !== row.app_id
+      )
+        throw new ApiError(409, "CONFLICT", "Integration settings changed before execution");
+      if (current.app_id !== null && !this.#appExists(current.app_id))
+        throw new ApiError(409, "CONFLICT", "Linked application was removed");
+      await callHomeAssistant(context, action, service);
     } catch (error) {
+      if (error instanceof ApiError) throw error;
       const result = toProviderResult(error);
       throw new ApiError(502, "AGENT_OPERATION_FAILED", "The app did not accept the action", {
         details: {

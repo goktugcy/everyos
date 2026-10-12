@@ -15,6 +15,7 @@ import {
 import { EVENT_TOPICS } from "../host.ts";
 import { CAPABILITY_IDS } from "../system.ts";
 import { PERMISSIONS } from "../permissions.ts";
+import { HOME_ASSISTANT_SIMPLE_SERVICES } from "../home-assistant.ts";
 
 const source = z.enum(["host", "simulated"]);
 const n = z.number().nonnegative();
@@ -146,6 +147,8 @@ export function isSubscribableTopic(topic: string): boolean {
 const EntityIdSchema = z.string().regex(/^[a-z_]+\.[a-z0-9_]{1,100}$/);
 
 export const IntegrationOptionsSchema = z.strictObject({
+  entityScope: z.enum(["selected", "all"]).optional(),
+  controlScope: z.enum(["selected", "all"]).optional(),
   entities: z.array(EntityIdSchema).max(64).optional(),
   controlEntities: z
     .array(EntityIdSchema)
@@ -194,12 +197,40 @@ export const IntegrationCreateRequestSchema = z.strictObject({
 
 export const IntegrationUpdateRequestSchema = IntegrationCreateRequestSchema.omit({ adapter: true })
   .partial()
-  .extend({ clearSecret: z.boolean().optional() });
+  .extend({
+    clearSecret: z.boolean().optional(),
+    // Creation defaults must not reset an existing connection during a partial edit.
+    audience: z.enum(INTEGRATION_AUDIENCES).optional(),
+    options: IntegrationOptionsSchema.optional(),
+  });
 
-export const IntegrationActionRequestSchema = z.strictObject({
-  entityId: EntityIdSchema,
-  service: z.enum(["toggle", "turn_on", "turn_off"]),
-});
+export const IntegrationActionRequestSchema = z.discriminatedUnion("service", [
+  z.strictObject({
+    entityId: EntityIdSchema,
+    service: z.enum(HOME_ASSISTANT_SIMPLE_SERVICES),
+    confirm: z.literal(true).optional(),
+  }),
+  z.strictObject({
+    entityId: EntityIdSchema,
+    service: z.literal("set_temperature"),
+    temperature: z.number().finite().min(-1000).max(1000),
+  }),
+  z.strictObject({
+    entityId: EntityIdSchema,
+    service: z.literal("set_hvac_mode"),
+    hvacMode: z.string().min(1).max(64),
+  }),
+  z.strictObject({
+    entityId: EntityIdSchema,
+    service: z.literal("set_value"),
+    value: z.number().finite().min(-1e12).max(1e12),
+  }),
+  z.strictObject({
+    entityId: EntityIdSchema,
+    service: z.literal("select_option"),
+    option: z.string().min(1).max(256),
+  }),
+]);
 
 /* ---------------------------- agent results ---------------------------- */
 

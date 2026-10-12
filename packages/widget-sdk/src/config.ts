@@ -18,7 +18,7 @@ function defaultValue(field: WidgetConfigField): WidgetConfigValue {
     case "dockerTarget":
       return "";
     case "entities":
-      return [];
+      return "all";
   }
 }
 
@@ -43,6 +43,7 @@ function normalizeValue(field: WidgetConfigField, value: unknown): WidgetConfigV
     case "dockerTarget":
       return typeof value === "string" && DOCKER_TARGET.test(value) ? value : "";
     case "entities":
+      if (value === "all") return "all";
       return Array.isArray(value)
         ? [
             ...new Set(value.filter((v): v is string => typeof v === "string" && ENTITY.test(v))),
@@ -75,7 +76,8 @@ export function missingConfig(
       const value = config[field.key];
       if (field.type === "integration" || field.type === "dockerTarget")
         return typeof value !== "string" || value === "";
-      if (field.type === "entities") return !Array.isArray(value) || value.length === 0;
+      if (field.type === "entities")
+        return value !== "all" && (!Array.isArray(value) || value.length === 0);
       return false;
     })
     .map((field) => field.key);

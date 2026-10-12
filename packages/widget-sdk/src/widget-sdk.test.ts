@@ -90,7 +90,11 @@ describe("configuration", () => {
         entities: ["switch.kettle", "switch.kettle", "bad id", 4],
       }),
     ).toEqual({ integration: "", entities: ["switch.kettle"] });
-    expect(missingConfig(entities, defaultConfig(entities))).toEqual(["integration", "entities"]);
+    expect(missingConfig(entities, defaultConfig(entities))).toEqual(["integration"]);
+    expect(normalizeConfig(entities, { entities: "all" })).toEqual({
+      integration: "",
+      entities: "all",
+    });
     expect(normalizeConfig(widget("docker.app"), { target: "container:jellyfin" })).toEqual({
       target: "container:jellyfin",
     });

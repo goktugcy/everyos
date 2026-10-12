@@ -110,6 +110,9 @@ export interface IntegrationView {
 
 /** Adapter-specific, non-secret settings. */
 export interface IntegrationOptions {
+  /** Explicit all-entity consent; absent fields preserve existing allowlists. */
+  entityScope?: "selected" | "all" | undefined;
+  controlScope?: "selected" | "all" | undefined;
   /** Home Assistant: entities whose state may be shown. */
   entities?: string[] | undefined;
   /** Home Assistant: entities that may be toggled from quick-control widgets. */
@@ -128,6 +131,19 @@ export const HOME_ASSISTANT_CONTROL_DOMAINS = [
   "fan",
   "cover",
   "script",
+  "humidifier",
+  "automation",
+  "scene",
+  "button",
+  "input_button",
+  "lock",
+  "climate",
+  "vacuum",
+  "media_player",
+  "number",
+  "input_number",
+  "select",
+  "input_select",
 ] as const;
 
 /* -------------------------------- topics -------------------------------- */

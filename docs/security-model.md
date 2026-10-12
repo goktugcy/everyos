@@ -226,7 +226,7 @@ unprivileged and exposes a small attack surface.
   never catalog claims. No remote or third-party JavaScript runs in the desktop.
 - **Data minimization in the API.** Feeds return only what widgets display:
   - Jellyfin sessions without client addresses.
-  - Home Assistant states only for administrator-listed entities.
+  - Home Assistant states within administrator-selected lists or explicit All scopes, with only sanitized display/action metadata.
   - Uptime Kuma monitors without URLs or hostnames.
   - Process summaries without command lines.
 
@@ -244,10 +244,13 @@ unprivileged and exposes a small attack surface.
   - Private and loopback addresses are allowed, because self-hosted apps live there. Link-local
     and cloud metadata addresses are always refused.
   - Redirects are not followed.
-  - Responses are limited to 1 MB and 6 s.
-- **Device control.** Home Assistant quick controls need `apps:manage`. They are limited to
-  `toggle`/`turn_on`/`turn_off` on entities the administrator allowed, in switch-like domains
-  only, and every action is audited.
+  - Responses default to 1 MB and 6 s; bounded Home Assistant discovery uses up to 16 MiB/20 s for states and 4 MiB/20 s for service metadata.
+- **Device control.** Home Assistant actions need `apps:manage` and an explicit integration
+  scope. Only fixed per-domain services are exposed. State availability, feature flags, registered
+  services, numeric ranges and option membership are checked before execution; unlock requires
+  confirmation. Every action is audited without credentials. All-entity read scopes preserve the
+  configured audience, and direct reads recheck access after collection. Existing connections
+  retain selected allowlists until explicitly edited. See [Home Assistant](home-assistant.md).
 - **PostgreSQL** statistics use one fixed, read-only SQL statement through `docker exec` in the
   agent (`apps.postgres.stats`). Container, role and database names are validated identifiers,
   and only PostgreSQL images are accepted. No user-provided SQL exists.
@@ -318,3 +321,9 @@ See [SECURITY.md](../SECURITY.md).
 authentication and real sudo verification. Host file workers and PTYs use the linked unprivileged
 UID and groups; a sudo grant never upgrades file-manager access. EveryOS roles, registry policy,
 CSRF and protected services/containers remain independent requirements.
+
+Home Assistant registry discovery is a read-only, pinned-DNS WebSocket session with fixed
+commands and bounded payload/time/cache sizes. Device details contain only scoped entities;
+serials and arbitrary registry fields are dropped. Brand images come through an authenticated,
+audience-checked fixed PNG proxy; remote URLs from device data are never fetched or rendered,
+and Home Assistant credentials are never sent to the brand host.

@@ -33,27 +33,29 @@ export interface HttpOptions {
  * and cloud metadata addresses never are. DNS is resolved once and pinned,
  * redirects are not followed, and responses are size- and time-limited.
  */
-export async function requestText(
-  url: string,
-  options: HttpOptions = {},
-): Promise<{ status: number; text: string }> {
-  const target = new URL(url);
-  if (!["http:", "https:"].includes(target.protocol) || target.username || target.password)
-    throw new IntegrationHttpError("invalid", "Unsupported URL");
+export async function resolveIntegrationAddress(target: URL, resolve?: HttpOptions["resolve"]) {
   const hostname = target.hostname.replace(/^\[|\]$/g, "");
   let addresses: Array<{ address: string; family: number }>;
   try {
     addresses = isIP(hostname)
       ? [{ address: hostname, family: isIP(hostname) }]
-      : await (options.resolve ?? ((name) => lookup(name, { all: true, verbatim: true })))(
-          hostname,
-        );
+      : await (resolve ?? ((name) => lookup(name, { all: true, verbatim: true })))(hostname);
   } catch {
     throw new IntegrationHttpError("offline", "Host name could not be resolved");
   }
   if (addresses.length === 0 || addresses.some(({ address }) => !addressAllowed(address, true)))
     throw new IntegrationHttpError("unsafe-address", "Address not allowed");
-  const pinned = addresses.find((entry) => entry.family === 4) ?? addresses[0]!;
+  return addresses.find((entry) => entry.family === 4) ?? addresses[0]!;
+}
+
+export async function requestBytes(
+  url: string,
+  options: HttpOptions = {},
+): Promise<{ status: number; bytes: Buffer }> {
+  const target = new URL(url);
+  if (!["http:", "https:"].includes(target.protocol) || target.username || target.password)
+    throw new IntegrationHttpError("invalid", "Unsupported URL");
+  const pinned = await resolveIntegrationAddress(target, options.resolve);
   const timeout = AbortSignal.timeout(options.timeoutMs ?? 6_000);
   const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
   const body = options.body === undefined ? null : Buffer.from(JSON.stringify(options.body));
@@ -101,13 +103,18 @@ export async function requestText(
           }
           chunks.push(chunk);
         });
-        response.on("end", () => resolve({ status, text: Buffer.concat(chunks).toString("utf8") }));
+        response.on("end", () => resolve({ status, bytes: Buffer.concat(chunks) }));
         response.on("error", () => reject(new IntegrationHttpError("offline", "Connection lost")));
       },
     );
     req.on("error", () => reject(new IntegrationHttpError("offline", "The app is not reachable")));
     req.end(body ?? undefined);
   });
+}
+
+export async function requestText(url: string, options: HttpOptions = {}) {
+  const { status, bytes } = await requestBytes(url, options);
+  return { status, text: bytes.toString("utf8") };
 }
 
 export async function requestJson<T = unknown>(url: string, options: HttpOptions = {}): Promise<T> {

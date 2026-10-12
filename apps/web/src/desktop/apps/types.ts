@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
 
 export type AppId =
+  | "everyos.homeassistant"
   | "everyos.system"
   | "everyos.services"
   | "everyos.logs"
