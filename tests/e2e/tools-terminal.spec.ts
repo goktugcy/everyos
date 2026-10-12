@@ -272,7 +272,10 @@ test("disabled status explains every reason and configuration without opening a 
 }) => {
   await signInTerminal(page);
   for (const [reason, text] of [
-    ["not-configured", "Terminal için bir sistem hesabı yapılandırılmamış."],
+    [
+      "not-configured",
+      "Kullanıcılar uygulamasından bu EveryOS kullanıcısını mevcut Linux hesabınla ilişkilendir.",
+    ],
     ["user-missing", "Yapılandırılan sistem hesabı bulunamadı."],
     ["root-refused", "Yapılandırılan root hesabına izin verilmiyor."],
     ["python-missing", "PTY için gereken Python 3 yorumlayıcısı bulunamadı."],
@@ -285,7 +288,9 @@ test("disabled status explains every reason and configuration without opening a 
     await page.getByRole("option", { name: "Terminal", exact: true }).click();
     const app = page.locator('[data-app-id="everyos.terminal"]');
     await expect(app.getByTestId("terminal-disabled")).toContainText(text!);
-    await expect(app).toContainText("terminal.user");
+    await expect(app).toContainText(
+      "Kullanıcılar uygulamasında kullanıcıyı seçip Linux hesabını ilişkilendir.",
+    );
     await expect(app.locator(".xterm")).toHaveCount(0);
     expect(await sessions(page)).toHaveLength(0);
     await app.getByRole("button", { name: "Kapat", exact: true }).click();

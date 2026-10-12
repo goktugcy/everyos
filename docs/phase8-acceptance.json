@@ -634,10 +634,80 @@
       "ownerHostModified": false,
       "limits": [
         "No new AMD64 Linux installation was run for this change.",
-        "The complete unrelated browser suite was not rerun; targeted HTTP and production Linux acceptance scenarios were run.",
+        "The automated complete browser suite reported three pre-existing failures and one obsolete terminal configuration assertion. Targeted HTTP and production Linux acceptance scenarios passed; the obsolete assertion is updated separately.",
         "Command-specific sudo rules for unrelated commands do not authorize EveryOS root management.",
         "Existing EveryOS personal homes remain in backups; additional Linux homes are not silently added to those archives."
-      ]
+      ],
+      "date": "2026-10-12",
+      "sourceCommit": "a5bd25b000a00e44e8328546d3d938bbec895a29",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.3",
+      "signedWorkflow": {
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38222505732",
+        "passed": true
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.3",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.3_arm64.deb",
+            "size": 56741298,
+            "sha256": "832e985c246b4b948d7c132f999b8751c790f84f154b81cd89bb92b8ab9ff9d3",
+            "identityAndContentsVerified": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.3_amd64.deb",
+            "size": 56989470,
+            "sha256": "dd9469092f33e46e24c8e1e6eca7568a268a0bd305a274f0ae063393041f7ed3",
+            "identityAndContentsVerified": true
+          }
+        ]
+      },
+      "publishedArm64PackageBrowser": {
+        "passed": true,
+        "platform": "Ubuntu 26.04.1 ARM64",
+        "httpClipboardRealPaste": true,
+        "linuxMappingUI": true,
+        "pamWrongPasswordDenied": true,
+        "terminalUID": 1000,
+        "terminalWritableHome": true,
+        "filesNativeUID": true,
+        "supplementaryGroupAccess": true,
+        "rootFileDenied": true,
+        "uploadAndRangeDownload": true,
+        "crossStorageCopy": true,
+        "trashRestore": true,
+        "sudoScoped": true,
+        "protectedServiceDenied": true,
+        "unlinkClosesTerminal": true,
+        "pageErrors": []
+      },
+      "fullSourceBrowserCi": {
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38222503230",
+        "passed": false,
+        "eachArchitecture": {
+          "passedTests": 41,
+          "failedTests": 4
+        },
+        "existingFailures": [
+          "power-folder-icons.spec.ts:9",
+          "tools-finder.spec.ts:88",
+          "tools-terminal.spec.ts:120"
+        ],
+        "obsoleteAssertion": "tools-terminal.spec.ts:270 expected the former terminal.user instructions; updated separately to Linux account linking guidance"
+      },
+      "updatedDisabledTerminalAssertion": {
+        "passed": true,
+        "scenarios": 4,
+        "noShellOpened": true
+      }
     }
   },
   "operationalRequirements": [
