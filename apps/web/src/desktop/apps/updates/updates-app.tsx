@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
+import { Dialog } from "../../../components/ui/dialog.tsx";
+import { LinuxAccountSection } from "../../../features/account/linux-account.tsx";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
 import { api, ApiRequestError } from "../../../lib/api.ts";
 import { cn } from "../../../lib/cn.ts";
@@ -15,13 +17,13 @@ import { requestConfirm } from "../../menus/confirm.tsx";
 import { useAppStateField } from "../app-context.ts";
 import { LoadingBlock, ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { SelfUpdatePanel } from "../../../features/updates/self-update-panel.tsx";
+import { updateJobError } from "../../../features/updates/job-error.ts";
 
 const TABS = ["packages", "everyos", "history"] as const;
 
 function JobLog({ job, onDone }: { job: UpdateJobView; onDone: (job: UpdateJobView) => void }) {
   const { t } = useTranslation();
   const [lines, setLines] = useState<string[]>(() => job.output.split("\n").filter(Boolean));
-  const [current, setCurrent] = useState(job);
   const log = useRef<HTMLPreElement>(null);
   useEffect(() => {
     if (job.status !== "running") return;
@@ -32,7 +34,6 @@ function JobLog({ job, onDone }: { job: UpdateJobView; onDone: (job: UpdateJobVi
     });
     source.addEventListener("done", (event) => {
       const done = JSON.parse((event as MessageEvent<string>).data) as UpdateJobView;
-      setCurrent(done);
       setLines(done.output.split("\n").filter(Boolean));
       source.close();
       onDone(done);
@@ -41,7 +42,7 @@ function JobLog({ job, onDone }: { job: UpdateJobView; onDone: (job: UpdateJobVi
   }, [job.id, job.status, onDone]);
   useEffect(() => {
     log.current?.scrollTo({ top: log.current.scrollHeight });
-  }, [lines]);
+  }, [lines, job.status, job.output]);
   return (
     <section
       className="flex min-h-0 flex-col gap-2 border-t border-line p-3"
@@ -49,27 +50,25 @@ function JobLog({ job, onDone }: { job: UpdateJobView; onDone: (job: UpdateJobVi
       data-testid="update-job"
     >
       <div className="flex items-center gap-2 text-sm">
-        {current.status === "running" ? (
+        {job.status === "running" ? (
           <Loader2 className="size-4 animate-spin text-accent" aria-hidden />
-        ) : current.status === "succeeded" ? (
+        ) : job.status === "succeeded" ? (
           <CircleCheck className="size-4 text-success" aria-hidden />
         ) : (
           <AlertTriangle className="size-4 text-danger" aria-hidden />
         )}
         <span className="font-medium" role="status">
-          {t(`updates.job.${current.action}.${current.status}`, { count: current.upgraded ?? 0 })}
+          {t(`updates.job.${job.action}.${job.status}`, { count: job.upgraded ?? 0 })}
         </span>
-        {current.error ? (
-          <span className="text-xs text-danger">
-            {t(`updates.errors.${current.error === "busy" ? "busy" : "failed"}`)}
-          </span>
+        {job.error ? (
+          <span className="text-xs text-danger">{updateJobError(t, job.error)}</span>
         ) : null}
       </div>
       <pre
         ref={log}
         className="max-h-48 min-h-20 overflow-auto rounded-everyos-md bg-black/40 p-2 font-mono text-[0.72rem] leading-relaxed text-slate-200"
       >
-        {lines.join("\n")}
+        {job.status === "running" ? lines.join("\n") : job.output}
       </pre>
     </section>
   );
@@ -164,34 +163,63 @@ export default function UpdatesApp() {
   const [details, setDetails] = useState<string | null>(null);
   const [job, setJob] = useState<UpdateJobView | null>(null);
   const [error, setError] = useState<unknown>(null);
-  const activeJob = job ?? list.data?.running ?? null;
-  const busy = activeJob?.status === "running";
+  const [starting, setStarting] = useState(false);
+  const [authorize, setAuthorize] = useState(false);
+  const startingRef = useRef(false);
+  const completed = useRef<string | null>(null);
+  const reported = list.data?.running;
+  const activeJob =
+    reported && reported.id !== job?.id && reported.startedAt >= (job?.startedAt ?? 0)
+      ? reported
+      : (job ?? reported ?? null);
+  const busy = starting || activeJob?.status === "running";
   const updates = list.data?.updates;
+  // Keep tracking even when another tab is selected or the SSE connection is lost.
+  const progress = useApiResource<UpdateJobView>(
+    activeJob?.status === "running" ? `/updates/jobs/${activeJob.id}` : null,
+    2000,
+  );
 
-  const onDone = useCallback(() => {
+  const onDone = useCallback((done: UpdateJobView) => {
+    if (completed.current === done.id) return;
+    completed.current = done.id;
+    setJob(done);
     setSelected(new Set());
     setRevision((n) => n + 1);
   }, []);
+  useEffect(() => {
+    const done = progress.data;
+    if (done && done.id === activeJob?.id && done.status !== "running") onDone(done);
+  }, [progress.data, activeJob?.id, onDone]);
 
   const start = async (
     path: "refresh" | "upgrade",
     body: object,
     confirm?: { title: string; body: string; label: string },
   ) => {
-    if (confirm) {
-      const ok = await requestConfirm({
-        title: confirm.title,
-        body: confirm.body,
-        confirmLabel: confirm.label,
-        danger: true,
-      });
-      if (!ok) return;
-    }
-    setError(null);
+    if (startingRef.current || activeJob?.status === "running") return;
+    startingRef.current = true;
+    setStarting(true);
     try {
-      setJob(await api<UpdateJobView>(`/updates/${path}`, { method: "POST", body }));
+      if (confirm) {
+        const ok = await requestConfirm({
+          title: confirm.title,
+          body: confirm.body,
+          confirmLabel: confirm.label,
+          danger: true,
+        });
+        if (!ok) return;
+      }
+      setError(null);
+      const started = await api<UpdateJobView>(`/updates/${path}`, { method: "POST", body });
+      setJob(started);
+      if (started.status !== "running") onDone(started);
     } catch (caught) {
       setError(caught);
+      setRevision((n) => n + 1);
+    } finally {
+      startingRef.current = false;
+      setStarting(false);
     }
   };
 
@@ -414,6 +442,13 @@ export default function UpdatesApp() {
           </div>
         )}
         {activeJob ? <JobLog key={activeJob.id} job={activeJob} onDone={onDone} /> : null}
+        {canManage && activeJob?.error === "LINUX_SUDO_REQUIRED" ? (
+          <div className="px-3 pb-3">
+            <Button size="sm" variant="secondary" onClick={() => setAuthorize(true)}>
+              {t("updates.authorize")}
+            </Button>
+          </div>
+        ) : null}
       </Tabs.Content>
 
       <Tabs.Content value="history" className="min-h-0 flex-1 overflow-auto p-4 outline-none">
@@ -440,6 +475,9 @@ export default function UpdatesApp() {
                     </span>
                   ) : null}
                 </summary>
+                {entry.error ? (
+                  <p className="mt-2 text-xs text-danger">{updateJobError(t, entry.error)}</p>
+                ) : null}
                 <pre className="mt-2 max-h-64 overflow-auto rounded-everyos-sm bg-black/40 p-2 font-mono text-[0.72rem] text-slate-200">
                   {entry.output || "—"}
                 </pre>
@@ -448,6 +486,9 @@ export default function UpdatesApp() {
           ))}
         </ul>
       </Tabs.Content>
+      <Dialog open={authorize} onOpenChange={setAuthorize} title={t("linux.unlock")}>
+        {authorize ? <LinuxAccountSection /> : null}
+      </Dialog>
     </Tabs.Root>
   );
 }

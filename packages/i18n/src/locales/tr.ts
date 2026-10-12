@@ -2061,6 +2061,7 @@ export const tr = {
     refresh: "Listeleri yenile",
     upgradeSelected: "Seçilenleri güncelle ({{count}})",
     upgradeAll: "Tümünü güncelle",
+    authorize: "Sudo yetkisini doğrula",
     selectAll: "Tümünü seç",
     select: "{{name}} paketini seç",
     security: "güvenlik",
@@ -2087,6 +2088,7 @@ export const tr = {
     errors: {
       busy: "Başka bir paket işlemi sürüyor (apt kilidi).",
       failed: "apt hata verdi; ayrıntılar çıktıda.",
+      development: "Geliştirme modunda sunucunun paketleri değiştirilemez.",
     },
     job: {
       title: "Güncelleme işlemi",

@@ -47,6 +47,27 @@ test("pending updates are listed, inspected and upgraded only after confirmation
   await expect(app.getByTestId("update-job")).toContainText("Setting up curl");
   await expect(rows.filter({ hasText: "curl" })).toHaveCount(0);
   await expect(app.getByTestId("updates-app")).toContainText("4 güncelleme bekliyor");
+  await expect(app.getByRole("button", { name: "Listeleri yenile", exact: true })).toBeEnabled();
+  await expect(app.getByRole("button", { name: "Tümünü güncelle", exact: true })).toBeEnabled();
+
+  // Completion must reach the parent even while the log is hidden and SSE is unavailable.
+  await page.route("**/api/updates/jobs/*/events", (route) => route.abort());
+  await app.getByRole("button", { name: "Listeleri yenile", exact: true }).click();
+  await app.getByRole("tab", { name: "Geçmiş" }).click();
+  await expect(app).toContainText("Paket listeleri yenilendi");
+  await app.getByRole("tab", { name: "Paketler", exact: true }).click();
+  await expect(app.getByTestId("update-job")).toContainText("Paket listeleri yenilendi");
+  await expect(app.getByRole("button", { name: "Listeleri yenile", exact: true })).toBeEnabled();
+  await expect(app.getByRole("button", { name: "Tümünü güncelle", exact: true })).toBeEnabled();
+  await app.getByRole("checkbox", { name: "tzdata paketini seç" }).check();
+  await app.getByRole("button", { name: "Seçilenleri güncelle (1)" }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Güncelle", exact: true })
+    .click();
+  await expect(app.getByTestId("update-job")).toContainText("1 paket güncellendi");
+  await expect(rows.filter({ hasText: "tzdata" })).toHaveCount(0);
+  await expect(app.getByRole("button", { name: "Listeleri yenile", exact: true })).toBeEnabled();
 
   await app.getByRole("tab", { name: "Geçmiş" }).click();
   await expect(app).toContainText("1 paket güncellendi");

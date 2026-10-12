@@ -1,4 +1,5 @@
 import type { AptUpdates, NotificationList, PackageInfo, UpdateJobView } from "@everyos/shared";
+import { AgentClientError } from "@everyos/agent-protocol";
 import { describe, expect, it, vi } from "vitest";
 import { UpdateService } from "./modules/updates/update-service.ts";
 import { json, readEvents, withRoles, type TestContext } from "./test-support.ts";
@@ -111,5 +112,37 @@ describe("update manager", () => {
       now: () => ctx.clock.now,
     });
     expect(ctx.services.updates.job(job.id)?.status).toBe("interrupted");
+  });
+
+  it("keeps preflight denial reasons and connection failures in history and accepts a retry", async () => {
+    const { ctx, admin } = await withRoles();
+    ctx.agent.streamHandlers.set("apt.upgrade", async function* () {
+      yield await Promise.reject(
+        new AgentClientError("AGENT_OPERATION_DENIED", "LINUX_SUDO_REQUIRED", "policy_denied"),
+      );
+    });
+    const denied = await json<UpdateJobView>(
+      await admin.post("/api/updates/upgrade", { all: true, confirm: true }),
+    );
+    const result = await finished(ctx, denied.id);
+    expect(result).toMatchObject({ status: "failed", error: "LINUX_SUDO_REQUIRED" });
+    expect(result.output).toContain("LINUX_SUDO_REQUIRED");
+    const replay = await readEvents(await admin.get(`/api/updates/jobs/${denied.id}/events`), 2);
+    expect(replay.events.find((event) => event.event === "done")?.data).toMatchObject({
+      status: "failed",
+      error: "LINUX_SUDO_REQUIRED",
+    });
+
+    ctx.agent.streamHandlers.set("apt.upgrade", async function* () {
+      yield await Promise.reject(
+        new AgentClientError("AGENT_UNAVAILABLE", "Agent is not connected"),
+      );
+    });
+    const retry = await admin.post("/api/updates/upgrade", { all: true, confirm: true });
+    expect(retry.status).toBe(202);
+    const disconnected = await finished(ctx, (await json<UpdateJobView>(retry)).id);
+    expect(disconnected).toMatchObject({ status: "failed", error: "AGENT_UNAVAILABLE" });
+    expect(disconnected.output).toContain("AGENT_UNAVAILABLE");
+    expect((await admin.post("/api/updates/refresh", {})).status).toBe(202);
   });
 });

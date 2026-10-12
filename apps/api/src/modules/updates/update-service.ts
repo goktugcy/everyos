@@ -7,6 +7,7 @@ import { ApiError } from "../../http/errors.ts";
 import type { AgentGateway } from "../../services.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
 import type { NotificationService } from "../notifications/notification-service.ts";
+import { toApiError } from "../../http/agent.ts";
 
 interface Row {
   id: string;
@@ -125,7 +126,7 @@ export class UpdateService {
     const controller = new AbortController();
     this.#running = { id, controller };
     void this.#run(id, action, packages, actor, controller.signal).finally(() => {
-      this.#running = null;
+      if (this.#running?.id === id) this.#running = null;
     });
     return this.job(id)!;
   }
@@ -193,10 +194,17 @@ export class UpdateService {
         }
       }
     } catch (caught) {
-      error = (caught as { code?: string }).code ?? "failed";
-      this.#logger.warn("Update job failed", { id, action, error: caught });
+      const failure = toApiError(caught);
+      const reason = (failure.details as { reason?: string } | undefined)?.reason?.split(":")[0];
+      error = reason && /^[A-Z_]{1,128}$/.test(reason) ? reason : failure.code;
+      append(`Error: ${error}. ${failure.message}`);
+      this.#logger.warn("Update job failed", { id, action, code: failure.code, reason: error });
     }
-    if (signal.aborted && !ok) error ??= "interrupted";
+    if (!ok && !error) {
+      error = signal.aborted ? "interrupted" : "AGENT_INVALID_RESPONSE";
+      append(`Error: ${error}`);
+    }
+    if (!ok && !output.trim()) append(`Error: ${error}`);
     this.#db.run(
       "UPDATE update_jobs SET status = ?, finished_at = ?, upgraded = ?, error = ?, output = ? WHERE id = ?",
       ok ? "succeeded" : signal.aborted ? "interrupted" : "failed",
@@ -235,6 +243,7 @@ export class UpdateService {
             },
       );
     this.#onChanged();
+    if (this.#running?.id === id) this.#running = null;
     this.#emit(id, { type: "done", job: this.job(id)! });
   }
 

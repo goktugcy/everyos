@@ -2019,6 +2019,7 @@ export const en: Messages = {
     refresh: "Refresh lists",
     upgradeSelected: "Upgrade selected ({{count}})",
     upgradeAll: "Upgrade all",
+    authorize: "Verify sudo access",
     selectAll: "Select all",
     select: "Select {{name}}",
     security: "security",
@@ -2050,6 +2051,7 @@ export const en: Messages = {
     errors: {
       busy: "Another package operation is running (apt lock).",
       failed: "apt reported an error; see the output for details.",
+      development: "Host packages cannot be changed in development mode.",
     },
     job: {
       title: "Update operation",

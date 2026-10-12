@@ -705,9 +705,56 @@
       },
       "updatedDisabledTerminalAssertion": {
         "passed": true,
-        "scenarios": 4,
-        "noShellOpened": true
+        "firstRunSetupAndDisabledGuidanceTests": 2,
+        "log": ".dev/account-link/disabled-browser-seeded.log",
+        "note": "The standalone run lacked its first-run account prerequisite; rerunning with first-run setup passed both scenarios."
       }
+    },
+    "packageUpdateJobs014": {
+      "version": "0.1.4",
+      "date": "2026-10-12",
+      "ownerHostModified": false,
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 63,
+        "tests": 616
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build"
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 2,
+        "firstRunPrerequisiteIncluded": true,
+        "log": ".dev/apt-fix/browser.log",
+        "cases": [
+          "selected upgrade releases actions",
+          "refresh completion across tabs with SSE unavailable",
+          "second upgrade after refresh"
+        ]
+      },
+      "candidateArm64PackageBrowser": {
+        "passed": true,
+        "installedVersion": "0.1.4",
+        "platform": "Ubuntu 26.04.1 ARM64",
+        "preflightSudoReasonRetained": true,
+        "historyLocalizedReason": true,
+        "inlineSudoVerification": true,
+        "realPackageUpgrade": "1.0 -> 2.0",
+        "buttonsEnabledAfterFailureAndSuccess": true,
+        "repeatedRefresh": true,
+        "tabSwitchDuringJob": true,
+        "sseUnavailableRecovered": true,
+        "signedEveryosPreflightDiagnostic": true,
+        "passwordsAbsentFromJobOutput": true,
+        "pageErrors": []
+      },
+      "limits": [
+        "No new AMD64 Linux installation was run for this change.",
+        "The complete browser suite was not rerun locally; the previously recorded unrelated failures remain outside this fix."
+      ]
     }
   },
   "operationalRequirements": [

@@ -84,10 +84,24 @@ notification center (`updates-installed`, `updates-failed`). A busy dpkg lock is
 `busy`. A job interrupted by an API restart is marked `interrupted`; its real outcome on the host
 is unknown and the package list shows the current state.
 
+The UI releases its action buttons on every terminal job outcome, including failures. It tracks
+the job independently of the selected tab and polls the persisted status while it is running,
+so a lost SSE connection cannot leave the screen locked. Starting a request also locks the
+actions until the request settles, preventing duplicate submissions.
+
+Preflight failures are retained in the job's error field and bounded output, even when APT
+never started. Both the live log and history show the localized reason. A missing Linux mapping
+or sudo authorization is distinguished from an APT error or agent connection failure.
+
 ## Permissions and modes
 
 - Viewing needs `system:read`; refreshing and upgrading need `system:manage` (administrators). The
   agent re-checks the permission.
+- Production mutations also require a linked Linux account with actual sudo rights. Password
+  authorization is session-scoped and expires after five minutes; linking alone does not grant
+  sudo. A failed job offers **Verify sudo access** in the Updates app, using the same credential
+  flow as Settings → Account. After authorization, the administrator explicitly retries the
+  refresh or upgrade. Passwords are never stored or included in update logs.
 - A development agent never changes host packages: `apt.refresh` and `apt.upgrade` are denied by
   its policy unless the clearly labelled development simulator answers them (used by the
   browser tests).

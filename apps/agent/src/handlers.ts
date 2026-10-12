@@ -20,6 +20,7 @@ import {
   REAL_HOST,
   ServiceError,
   DockerError,
+  CommandError,
   type DockerApi,
   type HostPaths,
   type InternetProbeResult,
@@ -461,7 +462,11 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     "apt.package": ({ name }) => apt.package(name).catch(toOperationError),
 
     "apt.refresh": async (_params, { signal }) => {
-      const result = await apt.refresh(signal).catch(toOperationError);
+      const result = await apt.refresh(signal).catch((error: unknown) => {
+        if (error instanceof CommandError)
+          throw new OperationError(error.kind === "timeout" ? "timeout" : "failed", error.message);
+        toOperationError(error);
+      });
       aptUpdates.invalidate();
       return { source: apt.source, ...result, output: result.output.slice(-64 * 1024) };
     },
@@ -470,6 +475,10 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
       try {
         for await (const event of apt.upgrade(packages, signal)) yield event;
       } catch (error) {
+        if (error instanceof CommandError && !signal.aborted) {
+          yield { type: "line", text: `Error: ${error.message}`.slice(0, 2000) };
+          throw new OperationError(error.kind === "timeout" ? "timeout" : "failed", error.message);
+        }
         if (!signal.aborted) toOperationError(error);
       } finally {
         aptUpdates.invalidate();
