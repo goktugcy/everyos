@@ -863,8 +863,63 @@
       "limits": [
         "Acceptance uses disposable Home Assistant HTTP/WebSocket protocol fixtures, not the owner's physical devices.",
         "No new Linux installation was run for this HTTP/WebSocket and browser change.",
-        "An initial local harness run raced agent-key creation; Home Assistant passed, and the final complete targeted rerun passed both scenarios."
-      ]
+        "An initial local harness run raced agent-key creation; Home Assistant passed, and the final complete targeted rerun passed both scenarios.",
+        "The complete browser suite still reports the three previously recorded folder-icon, file-drag and terminal failures; the new Home Assistant acceptance passes on both architectures."
+      ],
+      "sourceCommit": "86e28e9badd6059ceecf6c2069d2c5e6ac84900e",
+      "releaseUrl": "https://github.com/goktugcy/everyos/releases/tag/v0.1.5",
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38283583535"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.5",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.5_arm64.deb",
+            "size": 56797456,
+            "sha256": "4dc15f8f54d7ae1535873c09626b96b57f7269cfb922c1ecc569da62cbf0e7d2",
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.5_amd64.deb",
+            "size": 57046626,
+            "sha256": "9a56e0d89c3db52bea7142d2c83e0547bab886ffbdc898397c2aa815ee94697a",
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true
+          }
+        ]
+      },
+      "brandAssets": {
+        "verifiedPNGIcons": 24,
+        "families": 24,
+        "browserSameOriginLogosVisuallyVerified": true
+      },
+      "fullSourceBrowserCi": {
+        "passed": false,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38283529376",
+        "eachArchitecture": {
+          "passedTests": 43,
+          "failedTests": 3
+        },
+        "existingFailures": [
+          "power-folder-icons.spec.ts:9",
+          "tools-finder.spec.ts:88",
+          "tools-terminal.spec.ts:120"
+        ],
+        "homeAssistantScenarioPassedOnBothArchitectures": true
+      }
     }
   },
   "operationalRequirements": [
