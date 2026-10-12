@@ -1366,6 +1366,109 @@
         "publisherKeyUntouched": true,
         "downloadedPackagesRemoved": true
       }
+    },
+    "applicationsFolder0110": {
+      "version": "0.1.10",
+      "date": "2026-10-13",
+      "ownerHostModified": false,
+      "publisherKeyChanged": false,
+      "sourceCommit": "e67f0df5dbbd7077678928c6acd75409267be989",
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 65,
+        "tests": 638,
+        "log": ".dev/applications-folder/check-final.log"
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build",
+        "log": ".dev/applications-folder/build-final.log"
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 2,
+        "log": ".dev/applications-folder/browser-verified.log",
+        "coverage": [
+          "Legacy custom desktop receives the folder once without losing its existing shortcut.",
+          "Two real API-backed simulated installations appear in the folder; modifier and marquee selection work.",
+          "Management details show current installed state; application removal clears the folder.",
+          "Installation, stop, start and image-update notices and last-operation summaries can be dismissed.",
+          "Dismissed notices retain completion handling even with the job SSE connection aborted.",
+          "Secrets remain absent from installation list responses."
+        ],
+        "visualInspection": true
+      },
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38316084768"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.10",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.10_arm64.deb",
+            "size": 56832644,
+            "sha256": "5262d61823304fcb130b7bda136e8784a1398346e7c77ccd2fda2dfe072d8c68",
+            "liveApplicationFolderPresent": true,
+            "dismissibleStoreNoticesPresent": true,
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.10_amd64.deb",
+            "size": 57081316,
+            "sha256": "c1a33861f646e3e6a2429490adc80bbf517cdbeebbb71f2c5d4a81e4e92f389c",
+            "liveApplicationFolderPresent": true,
+            "dismissibleStoreNoticesPresent": true,
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          }
+        ]
+      },
+      "fullSourceBrowserCi": {
+        "status": "in_progress",
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38316071558",
+        "sourceChecksPassedOnBothArchitectures": true,
+        "notes": "Full source browser CI was still running when publication acceptance was recorded. The previously completed 0.1.9 CI has two documented Finder-drag and terminal failures; this entry does not claim the new full run passed."
+      },
+      "limits": [
+        "Browser acceptance uses the explicitly labeled development Docker simulator and real API calls; no new production Linux container lifecycle run was performed for these UI and metadata changes.",
+        "The applications folder is a live launcher collection, not a physical folder containing host binaries or moved container data.",
+        "A full desktop with the 300-item limit keeps its layout; the folder remains accessible through the launcher. A user-removed shortcut is not automatically reintroduced.",
+        "Closed notices hide presentation only. Persisted jobs and audit history remain; per-window dismissals reset after reopening/reloading."
+      ],
+      "cleanup": {
+        "ownedLocalBrowserStateRemoved": true,
+        "publisherKeyUntouched": true,
+        "downloadedPackagesRemoved": true
+      }
     }
   },
   "operationalRequirements": [
