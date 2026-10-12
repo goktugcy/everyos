@@ -1266,6 +1266,106 @@
         "newCaptionAndAppStoreScenariosPassedOnBothArchitectures": true,
         "obsoleteFolderCaptionSelectorCorrected": true
       }
+    },
+    "passwordlessUpdates019": {
+      "version": "0.1.9",
+      "date": "2026-10-13",
+      "ownerHostModified": false,
+      "publisherKeyChanged": false,
+      "sourceCommit": "268d06ebc22dc5289e0f1b66f8b64e06bf927236",
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 65,
+        "tests": 638
+      },
+      "build": {
+        "passed": true,
+        "command": "pnpm build"
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "scenarios": 3,
+        "log": ".dev/passwordless-updates/browser.log"
+      },
+      "apiAuthorization": {
+        "passwordlessAndLegacyClients": true,
+        "administratorPermissionRequired": true,
+        "csrfRequired": true,
+        "lockedSessionRejected": true,
+        "staleForeignMissingHomesAndInvalidBackupsRejected": true,
+        "verifiedFreshBackupPinned": true
+      },
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38314139485"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.9",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.9_arm64.deb",
+            "size": 56815160,
+            "sha256": "2a82c9acc144b2cb6d1404eeaf936272c1b8c67faedb28940f73db0bc34a732d",
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.9_amd64.deb",
+            "size": 57065258,
+            "sha256": "27bed41b49f88ac7107ae79c832c222d5db20eb1bb51d2542c7ac34c4fcc4e96",
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          }
+        ]
+      },
+      "fullSourceBrowserCi": {
+        "passed": false,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38314119692",
+        "sourceChecksPassedOnBothArchitectures": true,
+        "eachArchitecture": {
+          "passedTests": 46,
+          "failedTests": 2
+        },
+        "existingFailures": ["tools-finder.spec.ts:88", "tools-terminal.spec.ts:120"],
+        "passwordlessUpdateScenarioPassedOnBothArchitectures": true
+      },
+      "limits": [
+        "API authorization tests stub package installation while creating and verifying real database/home backups. The browser supplies only release discovery as a fixture; backup and installation requests reach the real development API, which still denies host installation.",
+        "No new production Linux upgrade/recovery run was performed for this API/UI authorization change; the root update worker and Linux privilege policy are unchanged.",
+        "The full browser CI retains the two previously recorded Finder-drag and terminal failures."
+      ],
+      "cleanup": {
+        "ownedLocalBrowserStateRemoved": true,
+        "publisherKeyUntouched": true,
+        "downloadedPackagesRemoved": true
+      }
     }
   },
   "operationalRequirements": [

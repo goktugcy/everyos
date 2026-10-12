@@ -26,11 +26,15 @@ export function Progress({
   id,
   onChanged,
   onFinished,
+  dismissed = false,
+  onDismiss,
 }: {
   id: string;
   onChanged: () => void;
   /** Called once when the job succeeds or fails. */
   onFinished?: (job: AppJobView) => void;
+  dismissed?: boolean;
+  onDismiss?: () => void;
 }) {
   const { t } = useTranslation();
   const resource = useApiResource<AppJobView>(`/apps/jobs/${id}`, 5000);
@@ -44,8 +48,9 @@ export function Progress({
   useEffect(() => {
     if (!finished || reported.current) return;
     reported.current = true;
+    onChanged();
     onFinished?.(finished);
-  }, [finished, onFinished]);
+  }, [finished, onChanged, onFinished]);
   useEffect(() => {
     const stream = new EventSource(`/api/apps/jobs/${id}/events`, { withCredentials: true });
     stream.addEventListener("progress", (message) => {
@@ -57,19 +62,23 @@ export function Progress({
     stream.addEventListener("end", () => stream.close());
     return () => stream.close();
   }, [id, onChanged]);
+  if (dismissed) return null;
   return job ? (
-    <Alert
-      tone={job.stage === "failed" ? "danger" : job.stage === "succeeded" ? "info" : "warning"}
-      title={t("appStore.progress", {
-        action: t(`appStore.actions.${job.action}`),
-        stage: t(`appStore.stages.${job.stage}`),
-      })}
-    >
-      <span role="status">
-        {job.rollback !== "not-needed" ? t(`appStore.rollback.${job.rollback}`) : null}
-      </span>
-    </Alert>
+    <div data-testid="app-job-progress">
+      <Alert
+        onDismiss={onDismiss}
+        tone={job.stage === "failed" ? "danger" : job.stage === "succeeded" ? "info" : "warning"}
+        title={t("appStore.progress", {
+          action: t(`appStore.actions.${job.action}`),
+          stage: t(`appStore.stages.${job.stage}`),
+        })}
+      >
+        <span role="status">
+          {job.rollback !== "not-needed" ? t(`appStore.rollback.${job.rollback}`) : null}
+        </span>
+      </Alert>
+    </div>
   ) : (
-    <ResourceError error={resource.error} />
+    <ResourceError error={resource.error} onDismiss={onDismiss} />
   );
 }

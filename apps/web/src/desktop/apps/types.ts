@@ -11,6 +11,7 @@ export type AppId =
   | "everyos.logs"
   | "everyos.docker"
   | "everyos.store"
+  | "everyos.applications"
   | "everyos.settings"
   | "everyos.users"
   | "everyos.audit"

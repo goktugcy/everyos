@@ -1,11 +1,54 @@
 import { expect, test } from "@playwright/test";
-import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
+import {
+  CSRF_HEADER,
+  type AppJobView,
+  type CatalogAppView,
+  type InstalledAppView,
+  type DesktopPreferences,
+} from "../../packages/shared/src/index.ts";
 import { signIn } from "./helpers.ts";
 
 test("catalog sync, installation, streamed progress and lifecycle work together", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const session = await signIn(page);
+  const headers = { [CSRF_HEADER]: session.csrfToken };
+  // An older custom desktop gets the applications folder without losing its existing shortcut.
+  const legacyDesktop: DesktopPreferences = {
+    version: 1,
+    desktops: [{ id: "d1", name: "Custom desktop", wallpaper: null }],
+    files: [],
+    items: [
+      {
+        kind: "app",
+        id: "custom-store",
+        appId: "everyos.store",
+        desktopId: "d1",
+        folderId: null,
+        cell: { col: 2, row: 0 },
+      },
+    ],
+  };
+  expect(
+    (await page.request.put("/api/preferences/desktop", { headers, data: legacyDesktop })).status(),
+  ).toBe(204);
+  await page.reload();
+  await expect(
+    page.getByTestId("desktop-surface").getByRole("button", { name: "Uygulamalarım", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(async () => {
+      const saved = (await (await page.request.get("/api/preferences")).json()) as {
+        preferences: { desktop: DesktopPreferences };
+      };
+      return saved.preferences.desktop.applicationsFolderAdded;
+    })
+    .toBe(true);
+  const saved = (await (await page.request.get("/api/preferences")).json()) as {
+    preferences: { desktop: DesktopPreferences };
+  };
+  expect(saved.preferences.desktop.items).toContainEqual(legacyDesktop.items[0]);
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("mağaza");
   await page.keyboard.press("Enter");
@@ -58,10 +101,59 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   });
   await expect(appWidget).toContainText("Deneme Uygulaması");
   const installedPayload = (await (await page.request.get("/api/apps")).json()) as {
-    apps: { ports: { port: number }[] }[];
+    apps: InstalledAppView[];
   };
   expect(installedPayload.apps[0]?.ports[0]?.port).toBeGreaterThanOrEqual(1024);
-  const app = store.locator("article").filter({ hasText: "Deneme Uygulaması" });
+  const firstId = installedPayload.apps[0]!.id;
+  const catalogApps = (await (await page.request.get("/api/catalogs/apps")).json()) as {
+    apps: CatalogAppView[];
+  };
+  const fixture = catalogApps.apps.find(
+    (entry) => entry.source.format === "casaos-source" || entry.name.tr_TR === "Deneme Uygulaması",
+  )!;
+  const additional = await page.request.post("/api/apps/install", {
+    headers,
+    data: {
+      appId: fixture.id,
+      snapshot: fixture.source.ref,
+      variables: {
+        APP_TOKEN: "extra-fixture-token",
+        SERVICE_PASSWORD_64_DEMO: "extra-fixture-password",
+      },
+      acknowledgeRisks: true,
+    },
+  });
+  expect(additional.status()).toBe(202);
+  const extraJob = (await additional.json()) as AppJobView;
+  await page
+    .getByTestId("desktop-surface")
+    .getByRole("button", { name: "Uygulamalarım", exact: true })
+    .dblclick();
+  const folder = page.locator('[data-app-id="everyos.applications"]');
+  const options = folder.getByRole("option", { name: "Deneme Uygulaması", exact: true });
+  await expect(options).toHaveCount(2);
+  await options.nth(0).click();
+  await options.nth(1).click({ modifiers: ["ControlOrMeta"] });
+  await expect(folder.locator('[data-installed-app][aria-selected="true"]')).toHaveCount(2);
+  const grid = await folder.getByTestId("applications-grid").boundingBox();
+  await page.mouse.move(grid!.x + 5, grid!.y + grid!.height - 6);
+  await page.mouse.down();
+  await page.mouse.move(grid!.x + grid!.width - 10, grid!.y + 4, { steps: 12 });
+  await page.mouse.up();
+  await expect(folder.locator('[data-installed-app][aria-selected="true"]')).toHaveCount(2);
+  await folder.locator(`[data-installed-app="${firstId}"]`).click();
+  await folder.getByRole("button", { name: "Uygulama ayrıntıları", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("Deneme Uygulaması");
+  await page.getByRole("dialog").getByRole("button", { name: "Kapat", exact: true }).click();
+  await page.screenshot({
+    path: test.info().outputPath("applications-folder.png"),
+    animations: "disabled",
+  });
+  await folder.getByRole("button", { name: "Kapat", exact: true }).first().click();
+  const progress = store.getByTestId("app-job-progress");
+  await progress.getByRole("button", { name: "Bildirimi kapat", exact: true }).click();
+  await expect(progress).toHaveCount(0);
+  const app = store.locator(`[data-app-installation="${firstId}"]`);
   await expect(app).toContainText("Çalışıyor");
   await expect(app.getByTestId("simulated-badge")).toBeVisible();
   const payload = await (await page.request.get("/api/apps")).text();
@@ -70,12 +162,33 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await app.getByRole("button", { name: "Durdur", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Durdur", exact: true }).click();
   await expect(app).toContainText("Durduruldu");
+  await expect(progress).toContainText("Durdur");
+  await progress.getByRole("button", { name: "Bildirimi kapat", exact: true }).click();
+  await expect(progress).toHaveCount(0);
+  await page.route("**/api/apps/jobs/*/events", (route) => route.abort());
   await app.getByRole("button", { name: "Başlat", exact: true }).click();
+  await expect(progress).toContainText("Başlat");
+  await progress.getByRole("button", { name: "Bildirimi kapat", exact: true }).click();
+  await expect(progress).toHaveCount(0);
   await expect(app).toContainText("Çalışıyor");
+  await app.getByRole("button", { name: "İmajları güncelle", exact: true }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "İmajları güncelle", exact: true })
+    .click();
+  await expect(progress).toContainText("İmajları güncelle");
+  await progress.getByRole("button", { name: "Bildirimi kapat", exact: true }).click();
+  await expect(progress).toHaveCount(0);
+  await expect(app.getByTestId("app-last-job")).toContainText("İmajları güncelle: Tamamlandı");
+  await app
+    .getByTestId("app-last-job")
+    .getByRole("button", { name: "Bildirimi kapat", exact: true })
+    .click();
+  await expect(app.getByTestId("app-last-job")).toHaveCount(0);
   await page.reload();
   await expect(store).toBeVisible();
   await store.getByRole("tab", { name: "Kurulu uygulamalar", exact: true }).click();
-  await expect(app).toContainText("Başlat: Tamamlandı");
+  await expect(app).toContainText("İmajları güncelle: Tamamlandı");
   const reconciliation = page.waitForResponse(
     (response) => response.url().endsWith("/reconcile") && response.request().method() === "POST",
   );
@@ -100,7 +213,22 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   });
   await app.getByRole("button", { name: "Kaldır", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Kaldır", exact: true }).click();
+  expect(
+    (
+      await page.request.post(`/api/apps/${extraJob.appId}/actions`, {
+        headers,
+        data: { action: "remove", confirmId: extraJob.appId },
+      })
+    ).status(),
+  ).toBe(202);
   await expect(store).toContainText("Henüz EveryOS ile kurulmuş uygulama yok.");
+  await page
+    .getByTestId("desktop-surface")
+    .getByRole("button", { name: "Uygulamalarım", exact: true })
+    .dblclick();
+  await expect(folder).toContainText("Mağazadan kurduğun uygulamalar bu klasörde görünür.");
+  await expect(folder.getByRole("option")).toHaveCount(0);
+  await folder.getByRole("button", { name: "Kapat", exact: true }).first().click();
   // Widgets of an uninstalled app say so and offer removal instead of showing stale data.
   await store.getByRole("button", { name: "Kapat", exact: true }).first().click();
   await expect(store).toHaveCount(0);

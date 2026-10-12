@@ -1,12 +1,13 @@
-EveryOS 0.1.9 removes the extra administrator password prompt from version updates.
+EveryOS 0.1.10 adds the My Applications folder and dismissible Store operation notices.
 
-- Install from Settings → About or Updates → EveryOS using the signed-in administrator session
-  and the existing update confirmation. No additional EveryOS password is requested or sent.
-- The API also accepts passwordless installation requests. An optional password from older
-  clients is accepted for upgrade compatibility and is not used.
-- Current administrator permissions, session locking, CSRF, linked Linux sudo privileges,
-  publisher signatures, package checks and fresh verified database/home backups still apply.
-- The CLI uses the same installation contract; its initial login remains authenticated.
+- Store-managed applications automatically appear in a live desktop folder, including existing
+  installations. Custom desktop layouts are preserved when the folder is added.
+- Browse app icons with adaptive captions, multiple selection and marquee selection. Double-click
+  opens the actual running web app; stopped or unavailable apps expose their management details.
+- Close Store installation/start/stop/update notices and per-app operation/error summaries with ×.
+  Closing a notice keeps the job running and monitored; each new action displays a new notice.
+- EveryOS version updates retain 0.1.9's passwordless confirmation through the signed-in
+  administrator session. Linux privileges, signatures and verified safety backups still apply.
 
 The publisher key and GitHub release source remain unchanged. Automatic App Store defaults,
 available-port allocation, adaptive icon captions, durable Linux privilege durations, version

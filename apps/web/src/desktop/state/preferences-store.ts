@@ -26,6 +26,7 @@ import {
   DEFAULT_SECURITY,
   defaultDesktop,
   defaultDock,
+  withApplicationsFolder,
 } from "./defaults.ts";
 
 type EditableKey = Exclude<PreferenceKey, "windows">;
@@ -174,11 +175,14 @@ export async function loadPreferences(context: LoadContext, signal?: AbortSignal
   ).preferences;
   if (signal?.aborted || currentGeneration !== generation) return;
   const appearance = stored.appearance ?? DEFAULT_APPEARANCE;
+  const desktop = stored.desktop
+    ? withApplicationsFolder(stored.desktop, context.permissions)
+    : defaultDesktop(context.t, context.permissions);
   applyAppearance(appearance);
   usePreferences.setState({
     ready: true,
     appearance,
-    desktop: stored.desktop ?? defaultDesktop(context.t, context.permissions),
+    desktop,
     dock: stored.dock ?? defaultDock(context.permissions),
     menubar: stored.menubar ?? DEFAULT_MENUBAR,
     security: stored.security ?? DEFAULT_SECURITY,
@@ -192,6 +196,8 @@ export async function loadPreferences(context: LoadContext, signal?: AbortSignal
       : (stored.windows ?? null),
     saveError: false,
   });
+  if (stored.desktop && desktop !== stored.desktop)
+    scheduleSave("desktop", () => usePreferences.getState().desktop);
 }
 
 /** Saves defaults through the same ordered queue as edits, including offline retries. */

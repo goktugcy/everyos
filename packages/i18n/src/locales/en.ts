@@ -338,6 +338,7 @@ export const en: Messages = {
     trash: "Trash",
     terminal: "Terminal",
     store: "App Store",
+    applications: "My Applications",
     system: "System Monitor",
     settings: "Settings",
     users: "Users",
@@ -398,6 +399,11 @@ export const en: Messages = {
       endBody:
         "This shell running as {{account}} will close immediately. Running processes may be interrupted.",
     },
+  },
+  applications: {
+    details: "Application details",
+    empty: "Applications installed from the store appear in this folder.",
+    count: "{{count}} applications",
   },
   appStore: {
     choose: "Choose",

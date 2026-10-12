@@ -4,6 +4,27 @@ Phase 5 is implemented and verified with real Docker in a disposable ARM64 Linux
 contract is standalone Linux Docker Compose. Parsing a catalog does not mean every upstream
 application was deployed; features outside this contract produce explicit blockers/skipped entries.
 
+## My Applications folder
+
+Store-managed installations automatically appear in **My Applications** on the desktop and in
+the launcher. This live folder includes existing installations; removing an application removes
+its entry on refresh. Its icon view supports Ctrl/Command/Shift selection, select-all and marquee
+selection, with adaptive transparent captions. Double-click launches a running application's real
+published web endpoint. A stopped app, an app without a reachable web endpoint or a simulated app
+opens its management details instead. Details use the store's existing permissioned lifecycle
+controls; simulated deployments stay explicitly labeled and never produce fabricated launch links.
+
+The folder groups launchers rather than moving container volumes, images or application data.
+Upgrades add its desktop shortcut once while preserving custom layouts; removing that shortcut
+does not uninstall applications or recreate it on the next sign-in. The launcher still opens the
+folder. App icons use the existing bounded same-origin catalog asset endpoint, with a local glyph
+when an image/catalog is unavailable.
+
+Store job notices, per-app last-operation summaries and lifecycle errors have a dismiss button.
+Closing a running notice keeps its job watcher mounted, so completion, refreshed real state and
+widget offers still arrive. The next explicit action displays a new notice. Dismissal does not
+cancel an installation/start/stop/update or alter the persisted job/audit history.
+
 ## Catalogs and metadata
 
 Administrators manage source URLs, format hints and explicit private-network permission. Sync

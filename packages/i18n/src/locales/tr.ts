@@ -363,6 +363,7 @@ export const tr = {
     trash: "Çöp Kutusu",
     terminal: "Terminal",
     store: "Uygulama Mağazası",
+    applications: "Uygulamalarım",
     system: "Sistem İzleyici",
     settings: "Ayarlar",
     users: "Kullanıcılar",
@@ -424,6 +425,11 @@ export const tr = {
       endBody:
         "{{account}} hesabında çalışan bu kabuk hemen kapatılacak. Çalışan işlemler kesilebilir.",
     },
+  },
+  applications: {
+    details: "Uygulama ayrıntıları",
+    empty: "Mağazadan kurduğun uygulamalar bu klasörde görünür.",
+    count: "{{count}} uygulama",
   },
   appStore: {
     choose: "Seçin",

@@ -97,13 +97,23 @@ export function LoadingBlock() {
 }
 
 /** Explains why data is missing (agent down, host without the feature, …). */
-export function ResourceError({ error }: { error: unknown }) {
+export function ResourceError({
+  error,
+  onDismiss,
+}: {
+  error: unknown;
+  onDismiss?: (() => void) | undefined;
+}) {
   const { t } = useTranslation();
   if (!error) return null;
   const agentDown =
     error instanceof ApiRequestError && ["AGENT_UNAVAILABLE", "AGENT_TIMEOUT"].includes(error.code);
   return (
-    <Alert tone="warning" title={agentDown ? t("agent.unavailable") : undefined}>
+    <Alert
+      tone="warning"
+      title={agentDown ? t("agent.unavailable") : undefined}
+      onDismiss={onDismiss}
+    >
       {agentDown ? t("agent.unavailableHelp") : errorMessage(t, error)}
     </Alert>
   );

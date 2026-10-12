@@ -28,6 +28,33 @@ export function defaultDesktop(
       folderId: null,
     })),
     files: [],
+    applicationsFolderAdded: permissions.includes("apps:read"),
+  };
+}
+
+/** Add the new folder once, preserving custom layouts and later user removal. */
+export function withApplicationsFolder(
+  doc: DesktopPreferences,
+  permissions: readonly Permission[],
+): DesktopPreferences {
+  if (doc.applicationsFolderAdded || !permissions.includes("apps:read")) return doc;
+  if (doc.items.some((item) => item.kind === "app" && item.appId === "everyos.applications"))
+    return { ...doc, applicationsFolderAdded: true };
+  if (doc.items.length >= 300) return doc;
+  return {
+    ...doc,
+    applicationsFolderAdded: true,
+    items: [
+      ...doc.items,
+      {
+        kind: "app",
+        id: newId("i"),
+        appId: "everyos.applications",
+        desktopId: doc.desktops[0]!.id,
+        cell: null,
+        folderId: null,
+      },
+    ],
   };
 }
 

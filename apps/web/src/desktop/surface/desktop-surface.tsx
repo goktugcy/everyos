@@ -14,6 +14,7 @@ import {
   LayoutGrid,
   Palette,
   PanelsTopLeft,
+  Package,
   Pencil,
   Pin,
   PinOff,
@@ -1155,6 +1156,8 @@ export function DesktopSurface() {
   const glyphOf = (icon: Icon): ReactNode => {
     if (icon.kind === "app") {
       const manifest = getApp(icon.item.appId);
+      if (manifest?.id === "everyos.applications")
+        return <FolderIcon size={iconSize} badge={Package} />;
       return manifest ? <AppIcon manifest={manifest} size={iconSize} /> : null;
     }
     const thumbnail =

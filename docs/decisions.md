@@ -479,3 +479,19 @@ backups. This does not grant unattended installation or alter Linux sudo verific
 Accept an optional bounded legacy password field without using it, so a cached older client can
 complete an upgrade. New clients do not send it. Authentication, session unlocking and backup
 restoration retain their existing password requirements.
+
+### D38 — Live application folder and dismissible operation notices
+
+Expose Store-managed installations as a built-in folder backed by the existing permissioned
+`/apps` list. Do not relocate host packages or Docker data, create executable shortcut files or
+invent endpoints. Use real published web ports with loopback restrictions; unavailable/stopped
+and simulated applications open management details. Reuse existing catalog image proxies,
+caption fitting, selection geometry and lifecycle controls.
+
+An optional desktop-preference marker adds the shortcut once for existing accounts while
+preserving custom layouts and explicit later removal. App entries remain derived from real
+installations rather than persisted per-user copies, so removal cannot leave stale launchers.
+
+Dismiss notices by their job identity, keeping progress watchers mounted. Completion must
+refresh installation state even when SSE is unavailable. Hide only presentation, preserve job
+history/audits and show the next operation's notice independently.

@@ -29,6 +29,7 @@ export default function StoreApp() {
   const [selected, setSelected] = useState<CatalogAppView | null>(null);
   const [adding, setAdding] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [jobNoticeHidden, setJobNoticeHidden] = useState(false);
   const apps = useApiResource<{ apps: CatalogAppView[] }>("/catalogs/apps", 60_000);
   const installed = useApiResource<{ apps: InstalledAppView[] }>("/apps", 5000);
   const catalogs = useApiResource<{ catalogs: CatalogView[] }>(
@@ -42,6 +43,7 @@ export default function StoreApp() {
   };
   const onJob = (job: AppJobView) => {
     setJobId(job.id);
+    setJobNoticeHidden(false);
     installed.reload();
     setTab("installed");
   };
@@ -85,8 +87,15 @@ export default function StoreApp() {
       </Tabs.List>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {jobId ? (
-          <div className="mb-4">
-            <Progress key={jobId} id={jobId} onChanged={installed.reload} onFinished={onFinished} />
+          <div className={jobNoticeHidden ? undefined : "mb-4"}>
+            <Progress
+              key={jobId}
+              id={jobId}
+              onChanged={installed.reload}
+              onFinished={onFinished}
+              dismissed={jobNoticeHidden}
+              onDismiss={() => setJobNoticeHidden(true)}
+            />
           </div>
         ) : null}
         <Tabs.Content value="browse" className="outline-none">

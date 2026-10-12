@@ -135,6 +135,7 @@ export type AppAction = (typeof APP_ACTIONS)[number];
 export interface InstalledAppView {
   id: string;
   name: LocalizedText;
+  icon?: string | null;
   project: string;
   provenance: CatalogApp["source"];
   source: "host" | "simulated";

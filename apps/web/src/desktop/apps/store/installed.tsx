@@ -1,5 +1,5 @@
 import type { AppAction, AppJobView, InstalledAppView } from "@everyos/shared";
-import { PanelsTopLeft } from "lucide-react";
+import { PanelsTopLeft, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -11,6 +11,7 @@ import { ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { localized } from "./parts.tsx";
 import { offerFor } from "../../widgets/offer.tsx";
 import { widgetUi } from "../../widgets/ui-store.ts";
+import { appLaunchLinks } from "./launch-links.ts";
 
 export function InstalledCard({
   app,
@@ -25,6 +26,10 @@ export function InstalledCard({
   const canManage = usePermissions().includes("apps:manage");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [dismissedJob, setDismissedJob] = useState<string | null>(null);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
+  const errorId = `${app.lastJob?.id ?? ""}:${app.lastError ?? ""}`;
+  const launchLinks = appLaunchLinks(app, window.location.hostname);
   const act = async (action: Exclude<AppAction, "install">) => {
     if (
       action !== "start" &&
@@ -61,7 +66,10 @@ export function InstalledCard({
     }
   };
   return (
-    <article className="glass-inset flex flex-col gap-3 rounded-everyos-md p-4">
+    <article
+      className="glass-inset flex flex-col gap-3 rounded-everyos-md p-4"
+      data-app-installation={app.id}
+    >
       <div className="flex flex-wrap justify-between gap-2">
         <h3 className="font-semibold">{localized(app.name, i18n.language)}</h3>
         <span className="flex items-center gap-2 text-xs">
@@ -70,16 +78,26 @@ export function InstalledCard({
         </span>
       </div>
       <p className="break-all font-mono text-xs text-fg-subtle">{app.project}</p>
-      {app.lastJob ? (
-        <p className="text-xs text-fg-muted">
-          {t("appStore.progress", {
-            action: t(`appStore.actions.${app.lastJob.action}`),
-            stage: t(`appStore.stages.${app.lastJob.stage}`),
-          })}
-          {app.lastJob.stage === "failed"
-            ? ` · ${t(`appStore.rollback.${app.lastJob.rollback}`)}`
-            : ""}
-        </p>
+      {app.lastJob && dismissedJob !== app.lastJob.id ? (
+        <div className="flex items-start gap-2 text-xs text-fg-muted" data-testid="app-last-job">
+          <p>
+            {t("appStore.progress", {
+              action: t(`appStore.actions.${app.lastJob.action}`),
+              stage: t(`appStore.stages.${app.lastJob.stage}`),
+            })}
+            {app.lastJob.stage === "failed"
+              ? ` · ${t(`appStore.rollback.${app.lastJob.rollback}`)}`
+              : ""}
+          </p>
+          <button
+            type="button"
+            aria-label={t("notifications.dismiss")}
+            className="ml-auto grid size-6 shrink-0 place-items-center rounded-everyos-sm hover:bg-hover/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            onClick={() => setDismissedJob(app.lastJob!.id)}
+          >
+            <X className="size-3.5" aria-hidden />
+          </button>
+        </div>
       ) : null}
       {app.images?.length ? (
         <details className="text-xs">
@@ -101,34 +119,28 @@ export function InstalledCard({
       ) : null}
       {app.source === "host" && app.state === "running" ? (
         <div className="flex flex-wrap gap-3">
-          {app.ports
-            ?.filter(
-              (port, index, ports) =>
-                ports.findIndex((entry) => entry.port === port.port) === index &&
-                (!port.hostIp ||
-                  !["127.0.0.1", "::1"].includes(port.hostIp) ||
-                  ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)),
-            )
-            .map((port) => (
-              <a
-                key={port.port}
-                href={`${app.web?.scheme ?? "http"}://${window.location.hostname}:${port.port}${app.web?.path ?? "/"}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-accent underline"
-              >
-                {t("appStore.launch", { port: port.port })}
-              </a>
-            ))}
+          {launchLinks.map((port) => (
+            <a
+              key={port.port}
+              href={port.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-accent underline"
+            >
+              {t("appStore.launch", { port: port.port })}
+            </a>
+          ))}
           {app.ports.length ? (
             <p className="w-full text-xs text-fg-muted">{t("appStore.configureAfterInstall")}</p>
           ) : null}
         </div>
       ) : null}
-      {app.lastError ? (
-        <Alert tone="warning">{t("appStore.failed", { reason: app.lastError })}</Alert>
+      {app.lastError && dismissedError !== errorId ? (
+        <Alert tone="warning" onDismiss={() => setDismissedError(errorId)}>
+          {t("appStore.failed", { reason: app.lastError })}
+        </Alert>
       ) : null}
-      <ResourceError error={error} />
+      <ResourceError error={error} onDismiss={() => setError(null)} />
       <div>
         <Button variant="ghost" size="sm" onClick={() => widgetUi.offer(offerFor(app))}>
           <PanelsTopLeft className="size-4" aria-hidden />

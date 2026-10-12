@@ -6,6 +6,7 @@ import {
   CalendarClock,
   Container,
   FileText,
+  Folder,
   Gauge,
   HardDrive,
   Home,
@@ -22,6 +23,21 @@ import type { AppId, DesktopAppManifest } from "./types.ts";
 
 /** Built-in apps, imported only when their windows open. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
+  {
+    id: "everyos.applications",
+    titleKey: "apps.applications",
+    icon: Folder,
+    tint: "from-sky-400 to-cyan-600",
+    category: "tools",
+    requiredPermission: "apps:read",
+    window: {
+      defaultSize: { width: 900, height: 640 },
+      minSize: { width: 380, height: 340 },
+      instancing: "single",
+    },
+    keywords: ["uygulamalarım", "kurulu", "applications", "installed", "apps", "folder"],
+    load: () => import("./store/applications-app.tsx"),
+  },
   {
     id: "everyos.homeassistant",
     titleKey: "apps.homeassistant",

@@ -182,6 +182,7 @@ export const DesktopPreferencesSchema = z.strictObject({
   desktops: z.array(VirtualDesktopSchema).min(1).max(MAX_DESKTOPS),
   items: z.array(DesktopItemSchema).max(300),
   files: z.array(DesktopFilePositionSchema).max(500).default([]),
+  applicationsFolderAdded: z.boolean().optional(),
 });
 
 export type DesktopPreferences = z.infer<typeof DesktopPreferencesSchema>;

@@ -39,6 +39,7 @@ interface AppRow {
   metadata: string;
 }
 interface AppMetadata {
+  icon?: string | null;
   web?: CatalogApp["web"];
   images?: InstalledAppView["images"];
   dataCopyEligible?: boolean;
@@ -168,11 +169,17 @@ export class AppService {
       .catch((error: unknown) => {
         throw toApiError(error);
       });
+    const catalogIcons = new Map(
+      this.#catalogs
+        .apps()
+        .map((app) => [JSON.stringify([app.source.catalogId, app.source.path]), app.icon]),
+    );
     return this.#db
       .all<AppRow>("SELECT * FROM installed_apps WHERE removed = 0 ORDER BY installed_at DESC")
       .map((row) => {
         const members = list.containers.filter((container) => container.project === row.project);
         const metadata = JSON.parse(row.metadata) as AppMetadata;
+        const provenance = JSON.parse(row.provenance) as CatalogApp["source"];
         const latest = this.#db.get<{ id: string }>(
           "SELECT id FROM app_jobs WHERE app_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1",
           row.id,
@@ -180,8 +187,12 @@ export class AppService {
         return {
           id: row.id,
           name: JSON.parse(row.name) as CatalogApp["name"],
+          icon:
+            metadata.icon ??
+            catalogIcons.get(JSON.stringify([provenance.catalogId, provenance.path])) ??
+            null,
           project: row.project,
-          provenance: JSON.parse(row.provenance) as CatalogApp["source"],
+          provenance,
           source: list.source,
           state: this.#running.has(row.id)
             ? "busy"
@@ -327,6 +338,7 @@ export class AppService {
       system.source,
       this.#now(),
       JSON.stringify({
+        icon: app.icon ? `/api/catalogs/apps/${encodeURIComponent(app.id)}/icon` : null,
         web: app.web ?? { path: "/", scheme: "http" },
         services: Object.keys(parseCompose(compose).services as Record<string, unknown>),
         dataCopyEligible:
