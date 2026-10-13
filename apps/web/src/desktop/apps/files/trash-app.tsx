@@ -1,22 +1,21 @@
-import type { TrashEntry, TrashListing } from "@everyos/shared";
+import type { TrashEntry } from "@everyos/shared";
 import { RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
-import { useApiResource } from "../../../features/system/use-api-resource.ts";
 import { errorMessage } from "../../../lib/errors.ts";
 import { formatBytes, formatDateTime } from "../../../lib/format.ts";
 import { useHasPermission } from "../../../stores/session-store.ts";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
-import { filesApi, filesChanged, useFilesRevision } from "./lib.ts";
+import { filesApi, filesChanged } from "./lib.ts";
+import { useTrashListing } from "./trash-status.tsx";
 
 /** Recoverable files, isolated by account even in shared file locations. */
 export default function TrashApp() {
   const { t, i18n } = useTranslation();
-  const revision = useFilesRevision();
-  const listing = useApiResource<TrashListing>("/files/trash", 10_000, revision);
+  const listing = useTrashListing();
   const canWrite = useHasPermission("files:write");
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
@@ -104,7 +103,7 @@ export default function TrashApp() {
       ) : null}
       <ResourceError error={listing.error} />
       {listing.loading ? <LoadingBlock /> : null}
-      {listing.data && entries.length === 0 ? (
+      {listing.data && !listing.error && !listing.data.truncated && entries.length === 0 ? (
         <p className="p-6 text-center text-sm text-fg-muted">{t("trash.empty")}</p>
       ) : null}
       {listing.data?.truncated ? (

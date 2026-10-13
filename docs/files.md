@@ -1,5 +1,12 @@
 # File manager (Phase 7)
 
+Trash uses a shared, permissioned listing of the current account's recoverable files. Its icon
+changes between an empty bin and a bin with visible paper in the desktop, Dock, launcher,
+window title and Files sidebar. File mutations refresh it immediately; visible sessions also
+poll every ten seconds for changes from another tab. Loading, failed or incomplete empty
+listings show an unknown-state icon rather than claiming the bin is empty. The same listing
+feeds the Trash window and is discarded when the session changes.
+
 Desktop shortcuts, files and installed applications highlight the whole item, including its icon
 and name, with one selection background and outline. The Applications home entry uses the same
 whole-item focus feedback; file-list and Trash selections continue to highlight their rows.

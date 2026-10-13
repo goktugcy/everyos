@@ -18,9 +18,9 @@ import {
   Server,
   Usb,
   Users,
-  Trash2,
   type LucideIcon,
 } from "lucide-react";
+import { TrashGlyph } from "./trash-glyph.tsx";
 import type { DragEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../../lib/cn.ts";
@@ -289,7 +289,7 @@ export function FilesSidebar({
         className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] text-fg outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
         onClick={() => desktop.openApp("everyos.trash")}
       >
-        <Trash2 className="size-4 text-fg-muted" aria-hidden />
+        <TrashGlyph className="size-4 text-fg-muted" />
         {t("apps.trash")}
       </button>
     </nav>

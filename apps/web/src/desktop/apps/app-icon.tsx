@@ -1,6 +1,7 @@
 import { cn } from "../../lib/cn.ts";
 import type { DesktopAppManifest } from "./types.ts";
 import { InstalledAppIcon } from "./store/installed-icon.tsx";
+import { TrashGlyph } from "./files/trash-glyph.tsx";
 
 /** Rounded gradient tile with the app's glyph. Size follows `size` (px). */
 export function AppIcon({
@@ -8,12 +9,12 @@ export function AppIcon({
   size = 40,
   className,
 }: {
-  manifest: Pick<DesktopAppManifest, "icon" | "tint" | "installedApp">;
+  manifest: Pick<DesktopAppManifest, "id" | "icon" | "tint" | "installedApp">;
   size?: number;
   className?: string;
 }) {
   if (manifest.installedApp) return <InstalledAppIcon app={manifest.installedApp} size={size} />;
-  const Icon = manifest.icon;
+  const Icon = manifest.id === "everyos.trash" ? TrashGlyph : manifest.icon;
   return (
     <span
       aria-hidden

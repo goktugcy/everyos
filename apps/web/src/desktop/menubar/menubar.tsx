@@ -1,4 +1,5 @@
 import type { MenubarModuleId } from "@everyos/shared";
+import { useState, type ReactNode } from "react";
 import {
   AppWindow,
   Copy,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
+import { Dialog } from "../../components/ui/dialog.tsx";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions, useSessionStore } from "../../stores/session-store.ts";
 import { Clock } from "../../features/shell/clock.tsx";
@@ -26,7 +28,7 @@ import { getApp } from "../apps/registry.ts";
 import type { AppId } from "../apps/types.ts";
 import { useLauncher } from "../launcher/launcher-store.ts";
 import type { MenuEntry } from "../menus/menu-model.ts";
-import { MenuDropdown } from "../menus/menus.tsx";
+import { ContextMenuArea, MenuDropdown } from "../menus/menus.tsx";
 import { desktop } from "../state/controller.ts";
 import { addDesktop } from "../state/desktop-ops.ts";
 import { updatePreference, usePreferences } from "../state/preferences-store.ts";
@@ -37,6 +39,9 @@ import { QuickSettings } from "./quick-settings.tsx";
 import { NetworkModule, PowerModule, ResourcesModule } from "./system-modules.tsx";
 import { MenubarWidgets } from "../widgets/menubar-widgets.tsx";
 import { NotificationBell } from "../notifications/center.tsx";
+import { MenubarCustomization } from "./customization.tsx";
+import { moduleOrder, moduleVisibility } from "./module-order.ts";
+import { DEFAULT_MENUBAR } from "../state/defaults.ts";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -130,14 +135,60 @@ export function Menubar({ insecure }: { insecure: boolean }) {
   const user = useSessionStore((state) => state.session?.user);
   const signOut = useSessionStore((state) => state.signOut);
   const lock = useSessionStore((state) => state.lock);
-  const hidden = usePreferences((state) => state.menubar.hidden);
-  const clockSeconds = usePreferences((state) => state.menubar.clockSeconds);
+  const preferences = usePreferences((state) => state.menubar);
+  const { hidden, clockSeconds } = preferences;
+  const [customizing, setCustomizing] = useState(false);
   const openLauncher = useLauncher((state) => state.open);
   const focused = useWindowManager((state) =>
     state.focusedId ? state.windows[state.focusedId] : undefined,
   );
   const show = (module: MenubarModuleId) => !hidden.includes(module);
-  const canReadSystem = usePermissions().includes("system:read");
+  const permissions = usePermissions();
+  const canReadSystem = permissions.includes("system:read");
+  const canCustomize = permissions.includes("preferences:manage");
+  const contextMenu = (): MenuEntry[] => [
+    {
+      kind: "item",
+      id: "customize",
+      label: t("menubar.customize"),
+      icon: <Settings />,
+      permission: "preferences:manage",
+      onSelect: () => setCustomizing(true),
+    },
+    {
+      kind: "submenu",
+      id: "visible",
+      label: t("menubar.visibleItems"),
+      permission: "preferences:manage",
+      entries: moduleOrder(preferences.order).map((id) => ({
+        kind: "check",
+        id,
+        label: t(`settings.desktop.menubarModules.${id}`),
+        checked: show(id),
+        onCheckedChange: (visible) =>
+          updatePreference("menubar", (doc) => moduleVisibility(doc, id, visible)),
+      })),
+    },
+    ...(canCustomize
+      ? [
+          {
+            kind: "check" as const,
+            id: "seconds",
+            label: t("settings.desktop.clockSeconds"),
+            checked: clockSeconds,
+            onCheckedChange: (value: boolean) =>
+              updatePreference("menubar", (doc) => ({ ...doc, clockSeconds: value })),
+          },
+        ]
+      : []),
+    {
+      kind: "item",
+      id: "reset",
+      label: t("menubar.reset"),
+      permission: "preferences:manage",
+      onSelect: () => updatePreference("menubar", () => DEFAULT_MENUBAR),
+    },
+  ];
 
   const focusedApp = focused ? getApp(focused.appId) : undefined;
   const everyosMenu: MenuEntry[] = [
@@ -285,87 +336,108 @@ export function Menubar({ insecure }: { insecure: boolean }) {
       ]
     : [];
 
-  return (
-    <header
-      data-testid="menubar"
-      className="menubar-glass fixed inset-x-0 top-0 z-[70] flex h-[var(--everyos-menubar-height)] items-center gap-0.5 px-2.5 pt-[env(safe-area-inset-top)]"
-    >
-      <MenuDropdown
-        label={t("shell.menu.label")}
-        entries={everyosMenu}
-        trigger={
-          <button type="button" className={cn(menubarButton, "px-2.5")}>
-            <LogoMark className="!size-[17px]" />
-          </button>
-        }
-      />
-      <MenuDropdown
-        label={t("menubar.windowMenu")}
-        entries={windowMenu}
-        trigger={
-          <button
-            type="button"
-            className={cn(menubarButton, "font-semibold")}
-            data-testid="menubar-app"
-          >
-            {focusedApp ? focused?.title || t(focusedApp.titleKey) : t("desktop.workspace")}
-          </button>
-        }
-      />
+  const modules: Record<MenubarModuleId, ReactNode> = {
+    widgets: <MenubarWidgets />,
+    notifications: <NotificationBell />,
+    resources: canReadSystem ? <ResourcesModule /> : null,
+    power: canReadSystem ? <PowerModule /> : null,
+    network: canReadSystem ? <NetworkModule /> : null,
+    agent: <AgentIndicator />,
+    desktops: <DesktopSwitcher />,
+    search: (
+      <button
+        type="button"
+        className={menubarButton}
+        aria-label={t("common.search")}
+        title={`${t("common.search")} (Ctrl+K)`}
+        onClick={openLauncher}
+      >
+        <Search className="size-4" aria-hidden />
+      </button>
+    ),
+    quickSettings: <QuickSettings />,
+    clock: (
+      <span
+        className="whitespace-nowrap px-2 text-[0.82rem] font-medium"
+        data-testid="menubar-clock"
+      >
+        <Clock seconds={clockSeconds} />
+      </span>
+    ),
+  };
 
-      <div className="ml-auto flex items-center gap-0.5">
-        {insecure ? (
-          <span
-            className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[0.75rem] text-warning"
-            title={t("transport.insecureBody")}
-          >
-            <ShieldAlert className="size-3.5" aria-hidden />
-            <span className="hidden md:inline">{t("transport.insecureTitle")}</span>
-          </span>
-        ) : null}
-        {show("widgets") ? <MenubarWidgets /> : null}
-        {show("notifications") ? <NotificationBell /> : null}
-        {show("resources") && canReadSystem ? <ResourcesModule /> : null}
-        {show("power") && canReadSystem ? <PowerModule /> : null}
-        {show("network") && canReadSystem ? <NetworkModule /> : null}
-        {show("agent") ? <AgentIndicator /> : null}
-        {show("desktops") ? <DesktopSwitcher /> : null}
-        {show("search") ? (
-          <button
-            type="button"
-            className={menubarButton}
-            aria-label={t("common.search")}
-            title={`${t("common.search")} (Ctrl+K)`}
-            onClick={openLauncher}
-          >
-            <Search className="size-4" aria-hidden />
-          </button>
-        ) : null}
-        {show("quickSettings") ? <QuickSettings /> : null}
-        {show("clock") ? (
-          <span
-            className="whitespace-nowrap px-2 text-[0.82rem] font-medium"
-            data-testid="menubar-clock"
-          >
-            <Clock seconds={clockSeconds} />
-          </span>
-        ) : null}
-        {user ? (
+  return (
+    <>
+      <ContextMenuArea entries={contextMenu}>
+        <header
+          data-testid="menubar"
+          tabIndex={0}
+          aria-label={t("settings.desktop.menubar")}
+          className="menubar-glass fixed inset-x-0 top-0 z-[70] flex h-[var(--everyos-menubar-height)] items-center gap-0.5 px-2.5 pt-[env(safe-area-inset-top)] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+        >
           <MenuDropdown
-            align="end"
-            label={t("shell.userMenu")}
-            entries={userMenu}
+            label={t("shell.menu.label")}
+            entries={everyosMenu}
             trigger={
-              <button
-                type="button"
-                className="ml-1 grid size-[22px] place-items-center rounded-full button-accent text-[0.6rem] font-bold [text-shadow:none] outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                {initials(user.displayName)}
+              <button type="button" className={cn(menubarButton, "px-2.5")}>
+                <LogoMark className="!size-[17px]" />
               </button>
             }
           />
-        ) : null}
-      </div>
-    </header>
+          <MenuDropdown
+            label={t("menubar.windowMenu")}
+            entries={windowMenu}
+            trigger={
+              <button
+                type="button"
+                className={cn(menubarButton, "font-semibold")}
+                data-testid="menubar-app"
+              >
+                {focusedApp ? focused?.title || t(focusedApp.titleKey) : t("desktop.workspace")}
+              </button>
+            }
+          />
+
+          <div className="ml-auto flex items-center gap-0.5">
+            {insecure ? (
+              <span
+                className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[0.75rem] text-warning"
+                title={t("transport.insecureBody")}
+              >
+                <ShieldAlert className="size-3.5" aria-hidden />
+                <span className="hidden md:inline">{t("transport.insecureTitle")}</span>
+              </span>
+            ) : null}
+            {moduleOrder(preferences.order).map((id) =>
+              show(id) && modules[id] ? (
+                <div key={id} className="contents" data-menubar-module={id}>
+                  {modules[id]}
+                </div>
+              ) : null,
+            )}
+            {user ? (
+              <MenuDropdown
+                align="end"
+                label={t("shell.userMenu")}
+                entries={userMenu}
+                trigger={
+                  <button
+                    type="button"
+                    className="ml-1 grid size-[22px] place-items-center rounded-full button-accent text-[0.6rem] font-bold [text-shadow:none] outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    {initials(user.displayName)}
+                  </button>
+                }
+              />
+            ) : null}
+          </div>
+        </header>
+      </ContextMenuArea>
+      {customizing ? (
+        <Dialog open onOpenChange={setCustomizing} title={t("menubar.customize")}>
+          <MenubarCustomization />
+        </Dialog>
+      ) : null}
+    </>
   );
 }

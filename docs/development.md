@@ -1,5 +1,12 @@
 # Development guide
 
+The desktop menu bar supports a right-click or Shift+F10 customization menu. Indicator
+visibility, left-to-right order and clock seconds use the existing per-account preferences API.
+The same editor is available under Settings → Desktop. Legacy documents without `order`
+keep the original layout; partial orders append missing modules, and duplicate/unknown IDs
+are rejected by the server. Reset restores only menu bar preferences. The brand/window menus,
+user actions and insecure-transport warning remain accessible.
+
 ## Requirements
 
 - Node.js **26** (see `.node-version`)

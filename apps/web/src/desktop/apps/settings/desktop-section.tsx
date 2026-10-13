@@ -1,4 +1,4 @@
-import { DOCK_POSITIONS, DOCK_STYLES, MAX_DESKTOPS, MENUBAR_MODULE_IDS } from "@everyos/shared";
+import { DOCK_POSITIONS, DOCK_STYLES, MAX_DESKTOPS } from "@everyos/shared";
 import { workArea } from "@everyos/window-manager";
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { usePermissions } from "../../../stores/session-store.ts";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { formatShortcut } from "../../menus/menu-model.ts";
 import { Toggle } from "../../menubar/quick-settings.tsx";
+import { MenubarCustomization } from "../../menubar/customization.tsx";
 import { DEFAULT_MENUBAR, defaultDesktop, defaultDock } from "../../state/defaults.ts";
 import { addDesktop, removeDesktop, renameDesktop } from "../../state/desktop-ops.ts";
 import { updatePreference, usePreferences } from "../../state/preferences-store.ts";
@@ -35,7 +36,6 @@ export default function DesktopSection() {
   const { t } = useTranslation();
   const desktops = usePreferences((state) => state.desktop.desktops);
   const dock = usePreferences((state) => state.dock);
-  const menubar = usePreferences((state) => state.menubar);
   const pulse = usePreferences((state) => state.pulse);
   const permissions = usePermissions();
   const iconSize = useThemeStore((state) => state.theme.iconSize);
@@ -164,29 +164,7 @@ export default function DesktopSection() {
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.desktop.menubar")}>
-        {MENUBAR_MODULE_IDS.map((module) => (
-          <SettingRow key={module} label={t(`settings.desktop.menubarModules.${module}`)}>
-            <Toggle
-              label={t(`settings.desktop.menubarModules.${module}`)}
-              checked={!menubar.hidden.includes(module)}
-              onCheckedChange={(visible) =>
-                updatePreference("menubar", (m) => ({
-                  ...m,
-                  hidden: visible ? m.hidden.filter((id) => id !== module) : [...m.hidden, module],
-                }))
-              }
-            />
-          </SettingRow>
-        ))}
-        <SettingRow label={t("settings.desktop.clockSeconds")}>
-          <Toggle
-            label={t("settings.desktop.clockSeconds")}
-            checked={menubar.clockSeconds}
-            onCheckedChange={(clockSeconds) =>
-              updatePreference("menubar", (m) => ({ ...m, clockSeconds }))
-            }
-          />
-        </SettingRow>
+        <MenubarCustomization />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.desktop.pulse")}>

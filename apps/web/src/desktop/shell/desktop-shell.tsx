@@ -10,6 +10,7 @@ import { useMediaQuery } from "../../lib/use-media-query.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { registerBeforeSignOut, useSessionStore } from "../../stores/session-store.ts";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
+import { TrashStatusProvider } from "../apps/files/trash-status.tsx";
 import {
   clearInstalledApps,
   installationId,
@@ -283,5 +284,9 @@ export function DesktopShell() {
       </div>
     );
   }
-  return mobile ? <MobileShell /> : <DesktopWorkspace />;
+  return (
+    <TrashStatusProvider key={sessionId}>
+      {mobile ? <MobileShell /> : <DesktopWorkspace />}
+    </TrashStatusProvider>
+  );
 }

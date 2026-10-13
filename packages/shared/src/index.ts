@@ -94,7 +94,7 @@ export type {
 } from "./schemas/api.ts";
 
 /** Single coordinated product version (see docs/decisions.md). */
-export const EVERYOS_VERSION = "0.1.13";
+export const EVERYOS_VERSION = "0.1.14";
 
 /** HTTP header carrying the per-session CSRF token on state-changing requests. */
 export const CSRF_HEADER = "x-everyos-csrf";

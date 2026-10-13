@@ -660,6 +660,13 @@ export const en: Messages = {
     },
   },
   menubar: {
+    customize: "Customize menu bar",
+    customizeHint:
+      "Show or hide the indicators on the right and change their left-to-right order. Changes are saved to your account.",
+    visibleItems: "Visible items",
+    moveLeft: "{{name}}: move left",
+    moveRight: "{{name}}: move right",
+    reset: "Reset menu bar to defaults",
     windowMenu: "Window",
     newWindow: "New window",
     closeWindow: "Close window",
@@ -2113,6 +2120,11 @@ export const en: Messages = {
     },
   },
   trash: {
+    iconStates: {
+      empty: "Trash is empty",
+      full: "Trash contains items",
+      unknown: "Trash status is unavailable",
+    },
     intro:
       "Deleted files stay here. Restoring requires the original folder to exist and its original name to be free. Trash uses disk space until emptied.",
     empty: "The trash is empty.",

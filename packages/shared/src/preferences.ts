@@ -72,7 +72,7 @@ export const DOCK_POSITIONS = ["bottom", "left", "right"] as const;
 
 export type DockPosition = (typeof DOCK_POSITIONS)[number];
 
-/** Menu bar modules that can be shown or hidden individually. */
+/** Menu bar modules that can be shown, hidden and ordered individually. */
 export const MENUBAR_MODULE_IDS = [
   "notifications",
   "widgets",

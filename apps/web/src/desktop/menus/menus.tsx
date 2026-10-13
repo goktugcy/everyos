@@ -126,6 +126,24 @@ export function ContextMenuArea({
       <CM.Trigger
         asChild
         disabled={disabled === true}
+        onKeyDown={(event) => {
+          if (disabled || !(event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)))
+            return;
+          event.preventDefault();
+          event.stopPropagation();
+          // Some browsers do not emit contextmenu for the keyboard gesture.
+          const target = event.target instanceof Element ? event.target : event.currentTarget;
+          const rect = target.getBoundingClientRect();
+          event.currentTarget.dispatchEvent(
+            new MouseEvent("contextmenu", {
+              bubbles: true,
+              cancelable: true,
+              button: 2,
+              clientX: rect.left + Math.min(16, rect.width / 2),
+              clientY: rect.bottom,
+            }),
+          );
+        }}
         onContextMenu={(event) => event.stopPropagation()}
         onPointerDown={(event) => {
           if (event.pointerType === "touch") event.stopPropagation();

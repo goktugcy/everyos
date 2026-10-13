@@ -208,6 +208,11 @@ export const MenubarPreferencesSchema = z.strictObject({
   version: z.literal(1),
   hidden: z.array(z.enum(MENUBAR_MODULE_IDS)).max(MENUBAR_MODULE_IDS.length),
   clockSeconds: z.boolean(),
+  order: z
+    .array(z.enum(MENUBAR_MODULE_IDS))
+    .max(MENUBAR_MODULE_IDS.length)
+    .refine((ids) => new Set(ids).size === ids.length, "duplicate-module")
+    .optional(),
 });
 
 export type MenubarPreferences = z.infer<typeof MenubarPreferencesSchema>;

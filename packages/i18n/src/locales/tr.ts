@@ -690,6 +690,13 @@ export const tr = {
     },
   },
   menubar: {
+    customize: "Üst barı özelleştir",
+    customizeHint:
+      "Sağdaki göstergeleri açıp kapatabilir ve soldan sağa sıralarını değiştirebilirsin. Değişiklikler hesabında saklanır.",
+    visibleItems: "Gösterilecek öğeler",
+    moveLeft: "{{name}}: sola taşı",
+    moveRight: "{{name}}: sağa taşı",
+    reset: "Üst barı varsayılana döndür",
     windowMenu: "Pencere",
     newWindow: "Yeni pencere",
     closeWindow: "Pencereyi kapat",
@@ -2157,6 +2164,11 @@ export const tr = {
     },
   },
   trash: {
+    iconStates: {
+      empty: "Çöp kutusu boş",
+      full: "Çöp kutusu dolu",
+      unknown: "Çöp kutusu durumu alınamadı",
+    },
     intro:
       "Silinen dosyalar burada saklanır. Geri yükleme için özgün klasör bulunmalı ve aynı ad kullanılmıyor olmalıdır. Çöp kutusu boşaltılana kadar disk alanı kullanılır.",
     empty: "Çöp kutusu boş.",
