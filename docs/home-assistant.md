@@ -40,7 +40,7 @@ entities beyond the selected-list limit. Control widgets support small, medium a
 - Choose between saved Home Assistant connections, add a connection or edit its scope.
 - The default **Devices** view groups entities from the same registered physical device.
   **All entities** keeps every exposed entity individually accessible. Search also matches brands
-  and models; room chips select the real Home Assistant area. Advanced domain/control filters
+  and models. Cards are grouped under actual Home Assistant room headings; room chips filter them. Entities whose area overrides their device area form a separate card in that room, so details cannot include siblings from a different room. Advanced domain/control filters
   are tucked into **Filters**.
 - Cards show a device symbol, reported manufacturer/model, current state and a quick toggle
   when supported. **Details** holds secondary sensors, entity IDs and parameterized controls.
@@ -98,24 +98,37 @@ checked before every action, and settings are checked again after capability dis
 the service call. Entity state and available services are read again before execution;
 unavailable entities, unsupported actions/options and out-of-range values are rejected.
 
-| Entity domains                                | Fixed controls                                                |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| light, switch, input_boolean, fan, humidifier | Toggle, on, off                                               |
-| automation                                    | Toggle, on, off, trigger                                      |
-| cover                                         | Open, close, stop when the entity's feature flags permit them |
-| script, scene                                 | Run; scripts may also be stopped                              |
-| button, input_button                          | Press                                                         |
-| lock                                          | Lock, unlock; unlocking requires an explicit confirmation     |
-| climate                                       | On/off when supported, target temperature, HVAC mode          |
-| vacuum                                        | Start, pause, stop, return to base when supported             |
-| media_player                                  | On/off, play, pause when supported                            |
-| number, input_number                          | Set a value within the reported minimum/maximum               |
-| select, input_select                          | Choose a reported option                                      |
+| Entity domains                                                         | Fixed controls                                                                                                                                                 |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| light                                                                  | On/off, brightness, RGB color picker (Home Assistant translates supported color modes), Kelvin color temperature, white channel, effects, flash and transition |
+| switch, input_boolean, automation, script, scene, button, input_button | Existing on/off, run and trigger controls                                                                                                                      |
+| fan                                                                    | On/off, speed, preset, oscillation and direction                                                                                                               |
+| cover                                                                  | Open/close/stop, position and tilt actions/position                                                                                                            |
+| climate                                                                | Temperature, paired low/high temperature range, HVAC/fan/preset/swing modes and target humidity                                                                |
+| humidifier                                                             | On/off, target humidity and mode                                                                                                                               |
+| media_player                                                           | Power, playback, tracks, volume/mute, source/sound mode, shuffle/repeat and seek                                                                               |
+| vacuum                                                                 | Start/pause/stop/return, locate, spot clean and fan speed                                                                                                      |
+| valve                                                                  | Open/close/stop and position                                                                                                                                   |
+| water_heater                                                           | Power, target temperature, operation and away modes                                                                                                            |
+| siren                                                                  | Power, advertised tones, volume and bounded duration                                                                                                           |
+| remote, lawn_mower                                                     | Remote power; mower start/pause/dock/stop                                                                                                                      |
+| lock                                                                   | Lock/unlock/open latch; unlock and open require explicit confirmation                                                                                          |
+| number, input_number, select, input_select                             | Bounded numeric value and reported choices                                                                                                                     |
 
-Available commands are intersected with Home Assistant's registered services and relevant device
-feature flags. Specialized commands that need other parameters, such as a lock PIN, are not
-implemented. Sensors, presence, weather and other domains can be displayed but are read-only.
-Camera streams, alarm codes, arbitrary service calls and host-management commands are not exposed.
+Only registered services and advertised entity features/color modes/options produce controls.
+New parameterized controls require the appropriate feature flags; legacy basic fan/media/vacuum
+controls remain compatible with integrations omitting flags. Controls use explicit draft edits
+and **Apply**; moving a slider does not send commands. The reported value stays separate and
+updates only from Home Assistant state, even when the requested value is rounded by a device.
+Every setting is validated again against fresh capabilities immediately before the service call.
+
+Controls are not universally inferred from a domain-wide service list: those services describe
+all devices in that domain and may include actions a particular device cannot perform. The fixed
+service/field manifest never executes remote descriptions or arbitrary service names. Custom
+integration actions, remote commands, camera streams, alarm codes, media URLs, script-specific
+variables and firmware management remain in Home Assistant's own authenticated interface. The
+panel includes **Open in Home Assistant** without appending or disclosing the stored token.
+Sensors, presence and weather remain read-only. Existing selected scopes are not widened.
 
 Every action writes an audit outcome without tokens or request secrets. Remote requests use the
 existing pinned-DNS, no-redirect client. States are limited to 16 MiB and 10,000 entities; service
@@ -136,9 +149,22 @@ using the same audience as `data.integration.<id>.states`. The topic's successfu
 ```
 
 Parameterized actions use dedicated fields: `temperature` for `set_temperature`, `hvacMode` for
-`set_hvac_mode`, `value` for `set_value`, and `option` for `select_option`. An `unlock` action also
+`set_hvac_mode`, `value` for `set_value`, and `option` for `select_option`. An `unlock` or lock-domain `open` action also
 requires `confirm: true`. Generic service names and additional payload fields are rejected.
 
 The automated acceptance uses disposable HTTP/WebSocket servers implementing the documented
 Home Assistant APIs, including mutable states, registry joins and real HTTP service calls. It checks the full browser path and
 negative authorization cases. It does not claim to exercise the owner's physical devices.
+
+Extended settings use a fixed control identifier, not an arbitrary service or parameter:
+
+```json
+{ "entityId": "light.living_room", "service": "configure", "control": "brightness", "value": 75 }
+{ "entityId": "light.living_room", "service": "configure", "control": "color", "value": [255, 64, 0] }
+```
+
+Each entity includes sanitized `controls` with numeric bounds/current value, available choices,
+boolean state or RGB color. A temperature range sends both low and high in the same command.
+Scope filtering removes both `actions` and `controls`. Strict request validation rejects unknown
+controls, extra targets/parameters, wrong types, invalid RGB channels and unsupported values.
+Audits contain the entity, service and fixed control identifier, never the setting payload.

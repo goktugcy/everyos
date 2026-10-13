@@ -1,5 +1,6 @@
 import {
   HOME_ASSISTANT_SERVICES,
+  HOME_ASSISTANT_CONTROL_FIELDS,
   type HomeAssistantAction,
   type HomeAssistantEntity,
   type HomeAssistantService,
@@ -16,6 +17,7 @@ import {
   type HttpOptions,
 } from "./http.ts";
 import { homeAssistantRegistry } from "./home-assistant-registry.ts";
+import { homeAssistantEntity as toEntity } from "./home-assistant-capabilities.ts";
 
 /*
  * Built-in application adapters. Each feed returns only the fields its
@@ -214,11 +216,6 @@ const immich: AdapterDefinition = {
 const haAuth = (context: AdapterContext) => ({ Authorization: `Bearer ${secret(context)}` });
 
 const ENTITY_ID = /^[a-z_]+\.[a-z0-9_]{1,100}$/;
-const ENTITY_FEATURES: Readonly<Record<string, Partial<Record<HomeAssistantService, number>>>> = {
-  fan: { turn_on: 32, turn_off: 16, toggle: 48 },
-  media_player: { turn_on: 128, turn_off: 256, media_play: 16384, media_pause: 1 },
-  vacuum: { start: 8192, pause: 4, stop: 8, return_to_base: 16 },
-};
 
 function canControl(context: AdapterContext, entityId: string): boolean {
   return (
@@ -251,68 +248,6 @@ function serviceMap(raw: unknown): Map<string, Set<string>> {
   );
 }
 
-function toEntity(raw: Json, services: Map<string, Set<string>>): HomeAssistantEntity {
-  const attributes = obj(raw.attributes);
-  const entityId = str(raw.entity_id, 128) ?? "";
-  const domain = entityId.split(".")[0]!;
-  const changed = Date.parse(str(raw.last_changed, 64) ?? "");
-  const features = num(attributes.supported_features) ?? 0;
-  const min = num(domain === "climate" ? attributes.min_temp : attributes.min);
-  const max = num(domain === "climate" ? attributes.max_temp : attributes.max);
-  const options = arr(domain === "climate" ? attributes.hvac_modes : attributes.options)
-    .filter((v): v is string => typeof v === "string" && v.length > 0 && v.length <= 256)
-    .slice(0, 256);
-  const actions = (
-    Object.hasOwn(HOME_ASSISTANT_SERVICES, domain) ? (HOME_ASSISTANT_SERVICES[domain] ?? []) : []
-  ).filter((service) => {
-    if (!services.get(domain)?.has(service)) return false;
-    const flag = Object.hasOwn(ENTITY_FEATURES, domain)
-      ? ENTITY_FEATURES[domain]?.[service]
-      : undefined;
-    if (
-      flag !== undefined &&
-      num(attributes.supported_features) !== null &&
-      (features & flag) !== flag
-    )
-      return false;
-    if (domain === "cover") {
-      const flag = { open_cover: 1, close_cover: 2, stop_cover: 8 }[
-        service as "open_cover" | "close_cover" | "stop_cover"
-      ];
-      return (features & flag) !== 0;
-    }
-    if (service === "set_temperature")
-      return (features & 1) !== 0 && min !== null && max !== null && min <= max;
-    if (service === "set_value") return min !== null && max !== null && min <= max;
-    if (service === "select_option" || service === "set_hvac_mode") return options.length > 0;
-    if (domain === "climate" && service === "turn_on") return (features & 256) !== 0;
-    if (domain === "climate" && service === "turn_off") return (features & 128) !== 0;
-    return true;
-  });
-  return {
-    entityId,
-    name: str(attributes.friendly_name, 128),
-    state: str(raw.state, 64) ?? "unknown",
-    unit: str(
-      domain === "climate" ? attributes.temperature_unit : attributes.unit_of_measurement,
-      16,
-    ),
-    deviceClass: str(attributes.device_class, 32),
-    device: null,
-    area: null,
-    icon: str(attributes.icon, 128),
-    category: null,
-    lastChanged: Number.isFinite(changed) ? changed : null,
-    actions: [...actions],
-    currentTemperature: num(attributes.current_temperature),
-    targetTemperature: num(attributes.temperature),
-    min,
-    max,
-    step: num(domain === "climate" ? attributes.target_temp_step : attributes.step),
-    options,
-  };
-}
-
 export async function collectHomeAssistantStates(
   context: AdapterContext,
 ): Promise<HomeAssistantStates> {
@@ -343,7 +278,10 @@ export async function collectHomeAssistantStates(
         entity.icon ??= metadata.icon;
         entity.category = metadata.category;
       }
-      if (!canControl(context, entity.entityId)) entity.actions = [];
+      if (!canControl(context, entity.entityId)) {
+        entity.actions = [];
+        entity.controls = [];
+      }
       return entity;
     })
     .sort((a, b) => (a.name ?? a.entityId).localeCompare(b.name ?? b.entityId));
@@ -351,7 +289,9 @@ export async function collectHomeAssistantStates(
     source: "host",
     registry: registry.status,
     entities,
-    controllable: entities.filter((e) => e.actions.length > 0).map((e) => e.entityId),
+    controllable: entities
+      .filter((e) => e.actions.length > 0 || e.controls.length > 0)
+      .map((e) => e.entityId),
   };
 }
 
@@ -421,15 +361,19 @@ export async function callHomeAssistant(
 ): Promise<void> {
   const domain = action.entityId.split(".")[0]!;
   const params =
-    action.service === "set_temperature"
-      ? { temperature: action.temperature }
-      : action.service === "set_hvac_mode"
-        ? { hvac_mode: action.hvacMode }
-        : action.service === "set_value"
-          ? { value: action.value }
-          : action.service === "select_option"
-            ? { option: action.option }
-            : {};
+    action.service === "configure"
+      ? action.control === "temperatureRange" && Array.isArray(action.value)
+        ? { target_temp_low: action.value[0], target_temp_high: action.value[1] }
+        : { [HOME_ASSISTANT_CONTROL_FIELDS[action.control].field]: action.value }
+      : action.service === "set_temperature"
+        ? { temperature: action.temperature }
+        : action.service === "set_hvac_mode"
+          ? { hvac_mode: action.hvacMode }
+          : action.service === "set_value"
+            ? { value: action.value }
+            : action.service === "select_option"
+              ? { option: action.option }
+              : {};
   await http(context, haAuth(context)).json(`/api/services/${domain}/${service}`, undefined, {
     method: "POST",
     body: { entity_id: action.entityId, ...params },

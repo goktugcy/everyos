@@ -11,6 +11,7 @@ import { Select } from "../../components/ui/select.tsx";
 import { api } from "../../lib/api.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { requestConfirm } from "../../desktop/menus/confirm.tsx";
+import { ControlField } from "./control-field.tsx";
 
 export function EntityControls({
   integrationId,
@@ -38,12 +39,15 @@ export function EntityControls({
     setError(null);
     setAccepted(false);
     try {
-      if (action.service === "unlock") {
+      if (
+        action.service === "unlock" ||
+        (action.service === "open" && entity.entityId.startsWith("lock."))
+      ) {
         if (
           !(await requestConfirm({
             title: t("homeAssistant.unlockTitle", { name: entity.name ?? entity.entityId }),
             body: t("homeAssistant.unlockBody"),
-            confirmLabel: t("homeAssistant.actions.unlock"),
+            confirmLabel: t(`homeAssistant.actions.${action.service}`),
             danger: true,
           }))
         )
@@ -168,6 +172,25 @@ export function EntityControls({
             {t(`homeAssistant.actions.${selection}`)}
           </Button>
         </form>
+      ) : null}
+      {!quick && entity.controls?.length ? (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
+          {entity.controls.map((control) => (
+            <ControlField
+              key={control.id}
+              control={control}
+              disabled={pending || unavailable}
+              onApply={(value) =>
+                void run({
+                  entityId: entity.entityId,
+                  service: "configure",
+                  control: control.id,
+                  value,
+                })
+              }
+            />
+          ))}
+        </div>
       ) : null}
       {error ? (
         <p role="alert" className="text-xs text-danger">

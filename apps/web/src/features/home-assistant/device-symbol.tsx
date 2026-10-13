@@ -40,6 +40,11 @@ const ICONS = {
   button: Power,
   input_button: Power,
   input_boolean: Power,
+  valve: Droplets,
+  water_heater: Thermometer,
+  siren: Radio,
+  remote: Radio,
+  lawn_mower: Wind,
   weather: Wind,
 };
 const CLASSES = {

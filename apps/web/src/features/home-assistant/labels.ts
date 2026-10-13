@@ -54,6 +54,11 @@ const DOMAINS = [
   "person",
   "weather",
   "camera",
+  "valve",
+  "water_heater",
+  "siren",
+  "remote",
+  "lawn_mower",
 ] as const;
 
 export function entityValue(t: TFunction, entity: HomeAssistantEntity): string {

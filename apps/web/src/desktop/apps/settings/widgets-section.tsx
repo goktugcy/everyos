@@ -312,7 +312,7 @@ function IntegrationForm({
             controlScope,
             entities: parseEntities(entities),
             controlEntities: parseEntities(controlEntities).filter((e) =>
-              (HOME_ASSISTANT_CONTROL_DOMAINS as readonly string[]).includes(e.split(".")[0]!),
+              HOME_ASSISTANT_CONTROL_DOMAINS.includes(e.split(".")[0]!),
             ),
           }
         : adapter === "postgresql"

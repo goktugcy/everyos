@@ -11,6 +11,7 @@ export * from "./environment.ts";
 export * from "./files.ts";
 export * from "./host.ts";
 export * from "./home-assistant.ts";
+export * from "./home-assistant-controls.ts";
 export * from "./locale.ts";
 export * from "./notifications.ts";
 export * from "./permissions.ts";
@@ -94,7 +95,7 @@ export type {
 } from "./schemas/api.ts";
 
 /** Single coordinated product version (see docs/decisions.md). */
-export const EVERYOS_VERSION = "0.1.16";
+export const EVERYOS_VERSION = "0.1.17";
 
 /** HTTP header carrying the per-session CSRF token on state-changing requests. */
 export const CSRF_HEADER = "x-everyos-csrf";

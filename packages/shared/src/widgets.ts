@@ -1,3 +1,5 @@
+import { HOME_ASSISTANT_SERVICES } from "./home-assistant.ts";
+
 /*
  * Zod-free widget platform constants and types (manifests, layouts,
  * integrations, data topics). Runtime schemas live in
@@ -123,28 +125,9 @@ export interface IntegrationOptions {
   database?: string | undefined;
 }
 
-/** Home Assistant domains that quick controls may switch. */
-export const HOME_ASSISTANT_CONTROL_DOMAINS = [
-  "switch",
-  "light",
-  "input_boolean",
-  "fan",
-  "cover",
-  "script",
-  "humidifier",
-  "automation",
-  "scene",
-  "button",
-  "input_button",
-  "lock",
-  "climate",
-  "vacuum",
-  "media_player",
-  "number",
-  "input_number",
-  "select",
-  "input_select",
-] as const;
+/** The connection selector and server authorization share one fixed domain manifest. */
+export const HOME_ASSISTANT_CONTROL_DOMAINS: readonly string[] =
+  Object.keys(HOME_ASSISTANT_SERVICES);
 
 /* -------------------------------- topics -------------------------------- */
 

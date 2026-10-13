@@ -5,6 +5,7 @@ import type { SecretBox } from "@everyos/security";
 import {
   INTEGRATION_TOPIC_PATTERN,
   HOME_ASSISTANT_SERVICES,
+  HOME_ASSISTANT_CONTROL_FIELDS,
   type HomeAssistantAction,
   type IntegrationAdapter,
   type IntegrationAudience,
@@ -308,20 +309,25 @@ export class IntegrationService {
       throw new ApiError(403, "FORBIDDEN", "This entity is not allowed for quick controls");
     if (row.app_id !== null && !this.#appExists(row.app_id))
       throw new ApiError(409, "CONFLICT", "Linked application was removed");
-    if (action.service === "unlock" && action.confirm !== true)
+    if (
+      (action.service === "unlock" || (domain === "lock" && action.service === "open")) &&
+      action.confirm !== true
+    )
       throw new ApiError(400, "VALIDATION_FAILED", "Unlocking requires explicit confirmation");
     try {
       const context = this.#context(row, signal);
       const entity = await homeAssistantTarget(context, entityId);
       const service =
-        action.service === "toggle" && domain === "script"
-          ? "turn_on"
-          : action.service === "toggle" && domain === "cover"
-            ? entity.state === "open"
-              ? "close_cover"
-              : "open_cover"
-            : action.service;
-      if (!entity.actions.includes(service))
+        action.service === "configure"
+          ? HOME_ASSISTANT_CONTROL_FIELDS[action.control].service
+          : action.service === "toggle" && domain === "script"
+            ? "turn_on"
+            : action.service === "toggle" && domain === "cover"
+              ? entity.state === "open"
+                ? "close_cover"
+                : "open_cover"
+              : action.service;
+      if (action.service !== "configure" && !entity.actions.includes(service))
         throw new ApiError(400, "VALIDATION_FAILED", "This entity does not support the action");
       if (entity.state === "unavailable" || entity.state === "unknown")
         throw new ApiError(409, "CONFLICT", "This entity is unavailable");
@@ -341,6 +347,33 @@ export class IntegrationService {
         (action.service === "set_hvac_mode" && !entity.options.includes(action.hvacMode))
       )
         throw new ApiError(400, "VALIDATION_FAILED", "This entity does not support the option");
+      if (action.service === "configure") {
+        const control = entity.controls.find((c) => c.id === action.control);
+        const value = action.value;
+        const valid =
+          control &&
+          (control.kind === "number"
+            ? typeof value === "number" &&
+              value >= control.min &&
+              value <= control.max &&
+              (control.step !== 1 || Number.isInteger(value))
+            : control.kind === "choice"
+              ? (typeof value === "string" || typeof value === "number") &&
+                control.options.includes(value)
+              : control.kind === "boolean"
+                ? typeof value === "boolean"
+                : control.kind === "temperatureRange"
+                  ? Array.isArray(value) &&
+                    value.length === 2 &&
+                    value[0] >= control.min &&
+                    value[1] <= control.max &&
+                    value[0] <= value[1]
+                  : Array.isArray(value) &&
+                    value.length === 3 &&
+                    value.every((v) => Number.isInteger(v) && v >= 0 && v <= 255));
+        if (!valid)
+          throw new ApiError(400, "VALIDATION_FAILED", "Unsupported device setting or value");
+      }
       const current = this.#row(id);
       if (!current) throw new ApiError(404, "NOT_FOUND", "Integration was removed");
       if (

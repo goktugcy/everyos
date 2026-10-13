@@ -1,5 +1,6 @@
 import type { HomeAssistantStates, IntegrationView } from "@everyos/shared";
 import {
+  ExternalLink,
   ChevronLeft,
   ChevronRight,
   Home,
@@ -17,7 +18,11 @@ import { Field } from "../../../components/ui/field.tsx";
 import { Select } from "../../../components/ui/select.tsx";
 import { EntityControls } from "../../../features/home-assistant/entity-controls.tsx";
 import { BrandIcon, DeviceSymbol } from "../../../features/home-assistant/device-symbol.tsx";
-import { deviceGroups, type DeviceGroup } from "../../../features/home-assistant/device-groups.ts";
+import {
+  deviceGroups,
+  roomGroups,
+  type DeviceGroup,
+} from "../../../features/home-assistant/device-groups.ts";
 import { domainLabel, entityValue } from "../../../features/home-assistant/labels.ts";
 import { api } from "../../../lib/api.ts";
 import { cn } from "../../../lib/cn.ts";
@@ -50,7 +55,9 @@ function DeviceCard({
   );
   const active = ["on", "playing", "cleaning", "heat", "cool", "open"].includes(entity.state);
   const metrics = group.entities
-    .filter((e) => e !== entity && !e.category && e.actions.length === 0 && e.unit)
+    .filter(
+      (e) => e !== entity && !e.category && e.actions.length === 0 && !e.controls?.length && e.unit,
+    )
     .slice(0, 2);
   return (
     <li
@@ -117,10 +124,12 @@ function DeviceCard({
         ) : (
           <span className="text-xs text-fg-subtle">
             {t(
-              group.entities.some((e) => e.actions.length) && canManage
+              group.entities.some((e) => e.actions.length || e.controls?.length) && canManage
                 ? "homeAssistant.controlCount"
                 : "homeAssistant.readOnly",
-              { count: group.entities.filter((e) => e.actions.length).length },
+              {
+                count: group.entities.filter((e) => e.actions.length || e.controls?.length).length,
+              },
             )}
           </span>
         )}
@@ -145,6 +154,7 @@ function EntityPanel({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const abort = useRef<AbortController | null>(null);
+  const content = useRef<HTMLDivElement | null>(null);
   useEffect(() => () => abort.current?.abort(), []);
   const state =
     manual?.status === "ok" &&
@@ -189,13 +199,18 @@ function EntityPanel({
     (group) =>
       (!domain || group.entities.some((e) => e.entityId.startsWith(`${domain}.`))) &&
       (!area || group.entities.some((e) => (area === "__none" ? !e.area : e.area === area))) &&
-      (!controlsOnly || group.entities.some((e) => e.actions.length > 0)) &&
+      (!controlsOnly ||
+        group.entities.some((e) => e.actions.length > 0 || Boolean(e.controls?.length))) &&
       `${group.name} ${group.entities.map((e) => `${e.name ?? ""} ${e.entityId} ${e.device?.manufacturer ?? ""} ${e.device?.model ?? ""}`).join(" ")}`
         .toLocaleLowerCase(i18n.language)
         .includes(query.toLocaleLowerCase(i18n.language)),
   );
+  const ordered = roomGroups(filtered).flatMap((room) => room.groups);
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages - 1);
+  useEffect(() => {
+    if (content.current) content.current.scrollTop = 0;
+  }, [area, domain, query, view, current]);
   const detail = groups.find((g) => g.id === selected);
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="home-assistant-panel">
@@ -303,7 +318,7 @@ function EntityPanel({
           </button>
         ))}
       </div>
-      <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
+      <div ref={content} className="min-h-0 flex-1 overflow-auto px-5 py-4">
         {error ? (
           <Alert tone="danger">
             {error instanceof Error && !("code" in error) ? error.message : errorMessage(t, error)}
@@ -338,17 +353,40 @@ function EntityPanel({
                 {t(entities.length ? "homeAssistant.noMatches" : "homeAssistant.noEntities")}
               </p>
             ) : (
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,210px),1fr))] items-stretch gap-4">
-                {filtered.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE).map((group) => (
-                  <DeviceCard
-                    key={group.id}
-                    group={group}
-                    integrationId={integration.id}
-                    canManage={canManage}
-                    onDetails={() => setSelected(group.id)}
-                  />
-                ))}
-              </ul>
+              <div className="flex flex-col gap-6">
+                {roomGroups(ordered.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE)).map(
+                  (room) => (
+                    <section
+                      key={room.area ?? "__none"}
+                      aria-label={room.area ?? t("homeAssistant.noArea")}
+                    >
+                      <div className="mb-3 flex items-center gap-2">
+                        <Home className="size-4 text-accent" aria-hidden />
+                        <h3 className="text-sm font-semibold">
+                          {room.area ?? t("homeAssistant.noArea")}
+                        </h3>
+                        <span className="text-xs text-fg-subtle">
+                          {t("homeAssistant.deviceCount", {
+                            count: filtered.filter((group) => group.primary.area === room.area)
+                              .length,
+                          })}
+                        </span>
+                      </div>
+                      <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,210px),1fr))] items-stretch gap-4">
+                        {room.groups.map((group) => (
+                          <DeviceCard
+                            key={group.id}
+                            group={group}
+                            integrationId={integration.id}
+                            canManage={canManage}
+                            onDetails={() => setSelected(group.id)}
+                          />
+                        ))}
+                      </ul>
+                    </section>
+                  ),
+                )}
+              </div>
             )}
           </>
         )}
@@ -388,6 +426,7 @@ function EntityPanel({
         onOpenChange={(open) => {
           if (!open) setSelected(null);
         }}
+        className="w-[min(94vw,760px)]"
         title={detail?.name ?? t("homeAssistant.details")}
         description={t("homeAssistant.deviceDetails")}
       >
@@ -414,6 +453,7 @@ function EntityPanel({
                 </div>
               </dl>
             ) : null}
+            <p className="text-xs text-fg-muted">{t("homeAssistant.extendedHelp")}</p>
             {detail.entities.map((entity) => (
               <section
                 key={entity.entityId}
@@ -435,7 +475,7 @@ function EntityPanel({
                     {t("homeAssistant.currentTemperature", { value: entity.currentTemperature })}
                   </p>
                 ) : null}
-                {canManage && entity.actions.length ? (
+                {canManage && (entity.actions.length || entity.controls?.length) ? (
                   <EntityControls integrationId={integration.id} entity={entity} />
                 ) : (
                   <p className="text-xs text-fg-subtle">{t("homeAssistant.readOnly")}</p>
@@ -476,6 +516,17 @@ export default function HomeAssistantApp() {
             onChange={setSelected}
           />
         </div>
+        {active?.baseUrl ? (
+          <a
+            href={active.baseUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-everyos-sm px-3 py-2 text-xs text-fg-muted hover:bg-hover/8 focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            <ExternalLink className="size-4" aria-hidden />
+            {t("homeAssistant.openOriginal")}
+          </a>
+        ) : null}
         {canManage ? (
           <>
             <Button

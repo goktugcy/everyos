@@ -8,7 +8,21 @@ test("Home Assistant all-entity widgets and panel use real API state and typed c
   page,
 }) => {
   const states = [
-    { entity_id: "light.room", state: "off", attributes: { friendly_name: "Test lamp" } },
+    {
+      entity_id: "light.room",
+      state: "off",
+      attributes: {
+        friendly_name: "Test lamp",
+        supported_color_modes: ["rgb", "color_temp"],
+        supported_features: 4,
+        brightness: 128,
+        rgb_color: [12, 34, 56],
+        color_temp_kelvin: 3000,
+        min_color_temp_kelvin: 2000,
+        max_color_temp_kelvin: 6500,
+        effect_list: ["rainbow", "pulse"],
+      },
+    },
     {
       entity_id: "light.offline",
       state: "unavailable",
@@ -76,6 +90,16 @@ test("Home Assistant all-entity widgets and panel use real API state and typed c
         const body = JSON.parse(text) as Record<string, unknown>;
         const entity = states.find((item) => item.entity_id === body.entity_id);
         calls.push({ path: req.url ?? "", body });
+        if (entity && req.url === "/api/services/light/turn_on") {
+          entity.state = "on";
+          Object.assign(entity.attributes, {
+            ...(typeof body.brightness_pct === "number"
+              ? { brightness: Math.round((body.brightness_pct / 100) * 255) }
+              : {}),
+            ...(body.rgb_color ? { rgb_color: body.rgb_color } : {}),
+            ...(body.color_temp_kelvin ? { color_temp_kelvin: body.color_temp_kelvin } : {}),
+          });
+        }
         if (entity && req.url?.endsWith("/toggle"))
           entity.state = entity.state === "on" ? "off" : "on";
         if (entity && req.url?.endsWith("/close_cover")) entity.state = "closed";
@@ -147,6 +171,7 @@ test("Home Assistant all-entity widgets and panel use real API state and typed c
           entity_id: `sensor.test_${i}`,
           device_id: `sensor-${Math.floor(i / 2)}`,
           icon: "mdi:thermometer",
+          ...(i === 1 ? { area_id: "bedroom" } : {}),
         })),
       ],
       areas: [
@@ -188,11 +213,20 @@ test("Home Assistant all-entity widgets and panel use real API state and typed c
     )?.id;
     expect(integrationId).toBeTruthy();
     expect(JSON.stringify(integrationResponse)).not.toContain("test-ha-token");
-    await expect(app.locator("li[data-entity-id]")).toHaveCount(18);
+    await expect(app.locator("li[data-entity-id]")).toHaveCount(19);
     await expect(app.locator('[data-entity-id="light.room"]')).toContainText("Signify · LCA001");
+    await expect(app.getByRole("heading", { name: "Living room", exact: true })).toBeVisible();
+    await expect(app.getByRole("heading", { name: "Bedroom", exact: true })).toBeVisible();
     await app.getByRole("button", { name: "Bedroom", exact: true }).click();
-    await expect(app.locator("li[data-entity-id]")).toHaveCount(8);
+    await expect(app.locator("li[data-entity-id]")).toHaveCount(9);
+    const splitSensor = app.locator('li[data-device-id="sensor-0"]');
+    await splitSensor.getByRole("button", { name: "Ayrıntılar", exact: true }).click();
+    const roomDetails = page.getByRole("dialog", { name: "Room sensor 00", exact: true });
+    await expect(roomDetails.locator('[data-entity-id="sensor.test_1"]')).toBeVisible();
+    await expect(roomDetails.locator('[data-entity-id="sensor.test_0"]')).toHaveCount(0);
+    await page.keyboard.press("Escape");
     await app.getByRole("button", { name: "Tüm odalar", exact: true }).click();
+    await expect(app.getByRole("heading", { name: "Bedroom", exact: true })).toBeInViewport();
     await page.screenshot({
       path: test.info().outputPath("home-assistant-devices.png"),
       animations: "disabled",
@@ -205,6 +239,43 @@ test("Home Assistant all-entity widgets and panel use real API state and typed c
     const lamp = app.locator('[data-entity-id="light.room"]');
     await lamp.getByRole("button", { name: "Değiştir", exact: true }).click();
     await expect(lamp.getByRole("status").first()).toHaveText("Açık");
+    await lamp.getByRole("button", { name: "Ayrıntılar", exact: true }).click();
+    const lampDetails = page.getByRole("dialog", { name: "Test lamp", exact: true });
+    const brightness = lampDetails
+      .locator("form")
+      .filter({ has: page.getByLabel("Parlaklık (%)", { exact: true }) });
+    await brightness.getByLabel("Parlaklık (%)", { exact: true }).fill("75");
+    expect(calls.some((call) => call.body.brightness_pct === 75)).toBe(false);
+    await brightness.getByRole("button", { name: "Uygula", exact: true }).click();
+    await expect
+      .poll(() =>
+        calls.some(
+          (call) => call.path === "/api/services/light/turn_on" && call.body.brightness_pct === 75,
+        ),
+      )
+      .toBe(true);
+    await expect(brightness).toContainText("Home Assistant değeri: 74.9");
+    await expect(brightness.getByRole("button", { name: "Uygula", exact: true })).toBeEnabled();
+    const color = lampDetails
+      .locator("form")
+      .filter({ has: page.getByLabel("Renk", { exact: true }) });
+    await color.getByLabel("Renk", { exact: true }).fill("#ff4000");
+    await color.getByRole("button", { name: "Uygula", exact: true }).click();
+    await expect
+      .poll(() =>
+        calls.some(
+          (call) =>
+            call.path === "/api/services/light/turn_on" &&
+            JSON.stringify(call.body.rgb_color) === "[255,64,0]",
+        ),
+      )
+      .toBe(true);
+    await expect(color).toContainText("Home Assistant değeri: #ff4000");
+    await page.screenshot({
+      path: test.info().outputPath("home-assistant-light-controls.png"),
+      animations: "disabled",
+    });
+    await page.keyboard.press("Escape");
     await app.getByLabel("Varlık ara", { exact: true }).fill("cover.blind");
     const blind = app.locator('[data-entity-id="cover.blind"]');
     await blind.getByRole("button", { name: "Ayrıntılar", exact: true }).click();
@@ -308,7 +379,7 @@ test("Home Assistant all-entity widgets and panel use real API state and typed c
     await app.getByLabel("Cihaz türü", { exact: true }).selectOption("");
     await app.getByText("Filtreler", { exact: true }).click();
     await page.setViewportSize({ width: 900, height: 850 });
-    await expect(app.locator("li[data-entity-id]")).toHaveCount(18);
+    await expect(app.locator("li[data-entity-id]")).toHaveCount(19);
     await page.screenshot({
       path: test.info().outputPath("home-assistant-compact.png"),
       animations: "disabled",

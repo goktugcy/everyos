@@ -162,11 +162,15 @@ export function integrationRoutes(services: Services): Hono<AppEnv> {
         error instanceof ApiError && error.status === 403 ? "denied" : "failure",
         {
           service,
+          ...(input.service === "configure" ? { control: input.control } : {}),
         },
       );
       throw error;
     }
-    audit(c, "integrations.control", `${integration.name}: ${entityId}`, "success", { service });
+    audit(c, "integrations.control", `${integration.name}: ${entityId}`, "success", {
+      service,
+      ...(input.service === "configure" ? { control: input.control } : {}),
+    });
     // The entity changed: collect fresh states for widgets.
     services.widgetData.refresh(`data.integration.${id}.states`);
     return c.json({ accepted: true });

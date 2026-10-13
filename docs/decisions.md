@@ -523,3 +523,17 @@ the tab if the session changes, locks or loses permission. Other states open App
 without automatically starting containers. Both the folder context menu and management cards
 share lifecycle confirmation and the existing server jobs. Shortcut capacity and duplicate checks
 apply before persistence, and removal of the application cleans up its derived shortcuts.
+
+### D41 — Capability-driven Home Assistant controls and room isolation
+
+Expose a fixed, typed service/field manifest rather than generating executable actions from
+remote Home Assistant service descriptions. Registered services, entity feature flags, color
+modes, numeric bounds and choices jointly determine sanitized controls. Re-read those inputs
+before every command and validate the requested setting against the fresh descriptor; existing
+scope, permission, audience, session and audit checks remain authoritative. Keep setting payloads
+out of audits. Unsupported custom integrations open the original authenticated Home Assistant
+interface without transmitting its stored token to the browser.
+
+Editors keep unsent drafts separate from reported device state and require Apply. Split a physical
+device's allowed entities by effective area before making cards; an entity's area override must
+not bring another room's siblings into its details. Paginate room-sorted cards and preserve filters.

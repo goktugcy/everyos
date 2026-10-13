@@ -16,6 +16,10 @@ import { EVENT_TOPICS } from "../host.ts";
 import { CAPABILITY_IDS } from "../system.ts";
 import { PERMISSIONS } from "../permissions.ts";
 import { HOME_ASSISTANT_SIMPLE_SERVICES } from "../home-assistant.ts";
+import {
+  HOME_ASSISTANT_CONTROL_FIELDS,
+  type HomeAssistantControlId,
+} from "../home-assistant-controls.ts";
 
 const source = z.enum(["host", "simulated"]);
 const n = z.number().nonnegative();
@@ -154,10 +158,7 @@ export const IntegrationOptionsSchema = z.strictObject({
     .array(EntityIdSchema)
     .max(32)
     .refine(
-      (ids) =>
-        ids.every((id) =>
-          (HOME_ASSISTANT_CONTROL_DOMAINS as readonly string[]).includes(id.split(".")[0]!),
-        ),
+      (ids) => ids.every((id) => HOME_ASSISTANT_CONTROL_DOMAINS.includes(id.split(".")[0]!)),
       "control-domain",
     )
     .optional(),
@@ -205,6 +206,27 @@ export const IntegrationUpdateRequestSchema = IntegrationCreateRequestSchema.omi
   });
 
 export const IntegrationActionRequestSchema = z.discriminatedUnion("service", [
+  z.strictObject({
+    entityId: EntityIdSchema,
+    service: z.literal("configure"),
+    control: z.enum(
+      Object.keys(HOME_ASSISTANT_CONTROL_FIELDS) as [
+        HomeAssistantControlId,
+        ...HomeAssistantControlId[],
+      ],
+    ),
+    value: z.union([
+      z.number().finite().min(-1e12).max(1e12),
+      z.string().min(1).max(256),
+      z.boolean(),
+      z.tuple([z.number().finite().min(-1000).max(1000), z.number().finite().min(-1000).max(1000)]),
+      z.tuple([
+        z.number().int().min(0).max(255),
+        z.number().int().min(0).max(255),
+        z.number().int().min(0).max(255),
+      ]),
+    ]),
+  }),
   z.strictObject({
     entityId: EntityIdSchema,
     service: z.enum(HOME_ASSISTANT_SIMPLE_SERVICES),
