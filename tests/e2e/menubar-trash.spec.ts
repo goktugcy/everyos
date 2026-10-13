@@ -66,6 +66,103 @@ test("menu bar context controls persist visibility, order and clock options", as
   await expect.poll(async () => (await preferences(page)).menubar?.order).toBeUndefined();
 });
 
+test("trash context menus confirm, cancel, report failures and empty all real contents", async ({
+  page,
+}) => {
+  const session = await signIn(page);
+  const headers = { [CSRF_HEADER]: session.csrfToken };
+  const roots = (await (await page.request.get("/api/files/roots")).json()) as FileRootsResponse;
+  const desktopPath = roots.roots.find((root) => root.kind === "home")!.folders!.desktop!;
+  const names = ["trash-menu-a.txt", "trash-menu-b.txt", "trash-menu-folder"];
+  for (const name of names.slice(0, 2))
+    expect(
+      (
+        await page.request.put("/api/files/text", {
+          headers,
+          data: { root: "home", path: `${desktopPath}/${name}`, content: "real file", etag: null },
+        })
+      ).status(),
+    ).toBe(200);
+  expect(
+    (
+      await page.request.post("/api/files/mkdir", {
+        headers,
+        data: { root: "home", path: desktopPath, name: names[2] },
+      })
+    ).status(),
+  ).toBe(201);
+  expect(
+    (
+      await page.request.put("/api/files/text", {
+        headers,
+        data: {
+          root: "home",
+          path: `${desktopPath}/${names[2]}/child.txt`,
+          content: "nested file",
+          etag: null,
+        },
+      })
+    ).status(),
+  ).toBe(200);
+  expect(
+    (
+      await page.request.post("/api/files/delete", {
+        headers,
+        data: { root: "home", paths: names.map((name) => `${desktopPath}/${name}`), confirm: true },
+      })
+    ).status(),
+  ).toBe(204);
+  await page.reload();
+  const dock = page.getByTestId("dock").getByRole("button", { name: "Çöp Kutusu", exact: true });
+  await expect(dock.locator("[data-trash-state]")).toHaveAttribute("data-trash-state", "full");
+  const desktopTrash = page
+    .getByTestId("desktop-surface")
+    .getByRole("button", { name: "Çöp Kutusu", exact: true });
+  await desktopTrash.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Çöp kutusunu boşalt", exact: true }).click();
+  const confirmation = page.getByRole("alertdialog");
+  await expect(confirmation).toContainText("tüm dosyalar, klasörler");
+  await confirmation.getByRole("button", { name: "Vazgeç", exact: true }).click();
+  const contents = async () =>
+    (await (await page.request.get("/api/files/trash")).json()) as TrashListing;
+  expect((await contents()).entries.filter((item) => names.includes(item.name))).toHaveLength(3);
+
+  await page.getByTestId("dock").getByRole("button", { name: "Dosyalar", exact: true }).click();
+  await page
+    .getByTestId("files-sidebar")
+    .getByRole("button", { name: "Çöp Kutusu", exact: true })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Çöp kutusunu boşalt", exact: true }).click();
+  await confirmation.getByRole("button", { name: "Vazgeç", exact: true }).click();
+  expect((await contents()).entries.filter((item) => names.includes(item.name))).toHaveLength(3);
+
+  await page.route("**/api/files/trash/delete", (route) => route.abort());
+  await dock.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Çöp kutusunu boşalt", exact: true }).click();
+  await confirmation.getByRole("button", { name: "Çöp kutusunu boşalt", exact: true }).click();
+  await expect(page.getByTestId("trash-action-error")).toBeVisible();
+  expect((await contents()).entries.filter((item) => names.includes(item.name))).toHaveLength(3);
+  await page
+    .getByTestId("trash-action-error")
+    .getByRole("button", { name: "Kapat", exact: true })
+    .click();
+  await page.unroute("**/api/files/trash/delete");
+
+  await dock.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Çöp kutusunu boşalt", exact: true }).click();
+  await confirmation.getByRole("button", { name: "Çöp kutusunu boşalt", exact: true }).click();
+  await expect(dock.locator("[data-trash-state]")).toHaveAttribute("data-trash-state", "empty");
+  expect((await contents()).entries).toHaveLength(0);
+  await dock.click({ button: "right" });
+  await expect(
+    page.getByRole("menuitem", { name: "Çöp kutusunu boşalt", exact: true }),
+  ).toBeDisabled();
+  await page.screenshot({
+    path: test.info().outputPath("trash-empty-context.png"),
+    animations: "disabled",
+  });
+});
+
 test("trash icons reflect real delete, restore, empty and unavailable states", async ({ page }) => {
   const session = await signIn(page);
   const headers = { [CSRF_HEADER]: session.csrfToken };
@@ -136,7 +233,7 @@ test("trash icons reflect real delete, restore, empty and unavailable states", a
   await trash.getByRole("button", { name: "Çöp kutusunu boşalt", exact: true }).click();
   await page
     .getByRole("alertdialog")
-    .getByRole("button", { name: "Kalıcı olarak sil", exact: true })
+    .getByRole("button", { name: "Çöp kutusunu boşalt", exact: true })
     .click();
   await expect(icon).toHaveAttribute("data-trash-state", "empty");
   await page.route("**/api/files/trash", (route) => route.abort());

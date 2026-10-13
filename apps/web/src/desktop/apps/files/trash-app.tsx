@@ -10,15 +10,17 @@ import { useHasPermission } from "../../../stores/session-store.ts";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { filesApi, filesChanged } from "./lib.ts";
-import { useTrashListing } from "./trash-status.tsx";
+import { useTrashActions, useTrashListing } from "./trash-status.tsx";
 
 /** Recoverable files, isolated by account even in shared file locations. */
 export default function TrashApp() {
   const { t, i18n } = useTranslation();
   const listing = useTrashListing();
+  const actions = useTrashActions();
   const canWrite = useHasPermission("files:write");
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
-  const [busy, setBusy] = useState(false);
+  const [acting, setBusy] = useState(false);
+  const busy = acting || actions.busy;
   const [error, setError] = useState<unknown>(null);
   const entries = listing.data?.entries ?? [];
   const chosen = entries.filter((item) => selected.has(item.id));
@@ -88,8 +90,15 @@ export default function TrashApp() {
           <Button
             size="sm"
             variant="ghost"
-            disabled={!canWrite || busy || entries.length === 0 || listing.data?.truncated}
-            onClick={() => void act(entries, false)}
+            disabled={
+              !canWrite ||
+              busy ||
+              (!listing.error && entries.length === 0 && !listing.data?.truncated)
+            }
+            onClick={async () => {
+              setError(null);
+              if (await actions.empty()) setSelected(new Set());
+            }}
           >
             {t("trash.emptyAction")}
           </Button>

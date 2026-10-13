@@ -2162,6 +2162,11 @@ export const en: Messages = {
     empty: "The trash is empty.",
     restore: "Restore",
     emptyAction: "Empty trash",
+    emptyTitle: "Empty the entire trash?",
+    emptyBody:
+      "All files, folders and their contents in the trash will be deleted permanently. This cannot be undone.",
+    emptyIncomplete:
+      "The remaining trash contents could not be read. Refresh the list and try again.",
     deletePermanently: "Delete permanently",
     deleteTitle: "Permanently delete {{count}} items?",
     deleteBody:

@@ -192,6 +192,14 @@ paper-filled variants share the current account's permissioned listing across th
 dock, launcher and Files sidebar. A failed or truncated-empty listing retains an unknown
 indicator instead of pretending the basket is empty.
 
+Right-click the Trash icon on the desktop, dock or Files sidebar to **Empty trash**.
+This action confirms permanent deletion of the account's entire recoverable trash, including
+folder contents across configured roots. It fetches a fresh listing, uses existing permissioned
+and audited deletion requests in batches of at most 500, and continues through truncated listings.
+Concurrent empty requests are disabled; changing sessions, locking or losing file permissions stops
+further batches. Failures refresh the real state and show a dismissible error. Incomplete listings
+that cannot advance are reported rather than treated as empty. A known-empty bin disables the action.
+
 `.otuken-trash` is inaccessible to ordinary list, search, download, text, transfer and mutation
 routes even when hidden files are shown, including symlink aliases. It is storage owned by
 EveryOS, not an implementation of the host OS's Trash or the freedesktop Trash specification.

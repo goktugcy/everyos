@@ -32,6 +32,7 @@ import { useShallow } from "zustand/react/shallow";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { AppIcon } from "../apps/app-icon.tsx";
+import { useTrashMenu } from "../apps/files/trash-menu.tsx";
 import { appTitle } from "../apps/app-title.ts";
 import { useInstalledApps } from "../apps/store/installed-apps-store.ts";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
@@ -123,6 +124,7 @@ function DockItem({
   const pinned = dock.pinned.includes(appId);
   const iconSize = useThemeStore((state) => state.theme.iconSize);
   const viewport = useWindowManager((state) => state.viewport);
+  const trashMenu = useTrashMenu();
   if (!manifest) return null;
   const label = appTitle(manifest, t, i18n.language);
 
@@ -155,6 +157,9 @@ function DockItem({
         ]
       : []),
     { kind: "separator", id: "s1" },
+    ...(appId === "everyos.trash"
+      ? [...trashMenu(), { kind: "separator" as const, id: "trash-separator" }]
+      : []),
     ...(manifest.hidden
       ? []
       : [

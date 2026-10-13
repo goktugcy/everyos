@@ -21,6 +21,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { TrashGlyph } from "./trash-glyph.tsx";
+import { useTrashMenu } from "./trash-menu.tsx";
+import { ContextMenuArea } from "../../menus/menus.tsx";
 import type { DragEvent, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../../lib/cn.ts";
@@ -156,6 +158,7 @@ export function FilesSidebar({
 }) {
   const { t } = useTranslation();
   const home = roots.find((root) => root.kind === "home");
+  const trashMenu = useTrashMenu();
   const locations = roots.filter((root) => root.kind === "location");
   const systemRoots = roots.filter((root) => root.kind === "system");
   const at = (root: string, path: string) =>
@@ -284,14 +287,16 @@ export function FilesSidebar({
           )}
         </Section>
       ) : null}
-      <button
-        type="button"
-        className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] text-fg outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
-        onClick={() => desktop.openApp("everyos.trash")}
-      >
-        <TrashGlyph className="size-4 text-fg-muted" />
-        {t("apps.trash")}
-      </button>
+      <ContextMenuArea entries={trashMenu}>
+        <button
+          type="button"
+          className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] text-fg outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+          onClick={() => desktop.openApp("everyos.trash")}
+        >
+          <TrashGlyph className="size-4 text-fg-muted" />
+          {t("apps.trash")}
+        </button>
+      </ContextMenuArea>
     </nav>
   );
 }

@@ -2206,6 +2206,10 @@ export const tr = {
     empty: "Çöp kutusu boş.",
     restore: "Geri yükle",
     emptyAction: "Çöp kutusunu boşalt",
+    emptyTitle: "Çöp kutusu tamamen boşaltılsın mı?",
+    emptyBody:
+      "Çöp kutusundaki tüm dosyalar, klasörler ve içerikleri kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+    emptyIncomplete: "Çöp kutusunun kalan içeriği okunamadı. Listeyi yenileyip tekrar deneyin.",
     deletePermanently: "Kalıcı olarak sil",
     deleteTitle: "{{count}} öğe kalıcı olarak silinsin mi?",
     deleteBody:

@@ -45,6 +45,7 @@ import { appTitle } from "../apps/app-title.ts";
 import { installedAppId, useInstalledApps } from "../apps/store/installed-apps-store.ts";
 import { IconLabel } from "../../components/ui/icon-label.tsx";
 import { FolderIcon } from "../apps/files/folder-icon.tsx";
+import { useTrashMenu } from "../apps/files/trash-menu.tsx";
 import { FolderIconDialog } from "../apps/settings/folder-icon-picker.tsx";
 import { fileGlyph } from "../apps/files/icon-view.tsx";
 import {
@@ -319,6 +320,7 @@ function FileGlyph({
  */
 export function DesktopSurface() {
   const { t, i18n } = useTranslation();
+  const trashMenu = useTrashMenu();
   const installedApps = useInstalledApps((state) => state.apps);
   const permissions = usePermissions();
   const desktopDoc = usePreferences((state) => state.desktop);
@@ -1131,6 +1133,9 @@ export function DesktopSurface() {
           ]
         : []),
       { kind: "separator", id: "s1" },
+      ...(item.appId === "everyos.trash"
+        ? [...trashMenu(), { kind: "separator" as const, id: "trash-separator" }]
+        : []),
       {
         kind: "item",
         id: "pin",
@@ -1181,6 +1186,7 @@ export function DesktopSurface() {
   };
 
   const groupMenu = (icon: Icon): MenuEntry[] => {
+    if (icon.kind === "app" && icon.item.appId === "everyos.trash") return appMenu(icon.item);
     const targets = selectedFor(icon.id);
     if (targets.length < 2) return icon.kind === "app" ? appMenu(icon.item) : fileMenu(icon.entry);
     const files = targets.filter(
