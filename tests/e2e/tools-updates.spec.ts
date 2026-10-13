@@ -8,23 +8,29 @@ test("EveryOS installation confirms and prepares a backup without requesting a p
   await signIn(page);
   const status = (await (await page.request.get("/api/self-update")).json()) as SelfUpdateStatus;
   // Only discovery is a fixture: backup and install requests reach the real development API.
-  await page.route("**/api/self-update", (route) =>
-    route.fulfill({
-      json: {
-        ...status,
-        configured: true,
-        reason: null,
-        job: null,
-        available: {
-          version: "0.2.0",
-          minVersion: status.installedVersion,
-          schemaVersion: 1,
-          notes: "Browser test release discovery fixture",
-          publishedAt: Date.now(),
-        },
-      } satisfies SelfUpdateStatus,
-    }),
-  );
+  const discovery = {
+    ...status,
+    configured: true,
+    reason: null,
+    job: null,
+    available: {
+      version: "0.2.0",
+      minVersion: status.installedVersion,
+      schemaVersion: 1,
+      notes: "Browser test release discovery fixture",
+      publishedAt: Date.now(),
+    },
+  } satisfies SelfUpdateStatus;
+  await page.route("**/api/self-update", (route) => route.fulfill({ json: discovery }));
+  await page.route("**/api/events?**", (route) => {
+    const topics = new URL(route.request().url()).searchParams.get("topics")?.split(",") ?? [];
+    return topics.includes("release")
+      ? route.fulfill({
+          contentType: "text/event-stream",
+          body: `event: ready\ndata: {}\n\nevent: release.status\ndata: ${JSON.stringify(discovery)}\n\n`,
+        })
+      : route.continue();
+  });
   await page.getByTestId("dock").getByRole("button", { name: "Ayarlar", exact: true }).click();
   const settings = page.locator('[data-app-id="everyos.settings"]');
   await settings.getByRole("button", { name: "Hakkında", exact: true }).click();

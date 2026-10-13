@@ -16,6 +16,7 @@ const TOPIC_EVENTS: Record<EventTopic, readonly string[]> = {
   metrics: ["metrics"],
   docker: ["docker.stats", "docker.change"],
   notifications: ["notifications"],
+  release: ["release.status"],
 };
 
 export interface TopicHandlers {
@@ -69,6 +70,7 @@ function open(topics: string): void {
   const events = new EventSource(`/api/events?topics=${topics}`);
   source = events;
   events.addEventListener("ready", () => {
+    if (source !== events) return;
     retryDelay = 1_000;
     setStatus("live");
     for (const subscription of subscriptions) subscription.ready?.();
@@ -76,6 +78,7 @@ function open(topics: string): void {
   const list = topics.split(",");
   if (list.some((topic) => !isStreamTopic(topic))) {
     events.addEventListener("data", (event) => {
+      if (source !== events) return;
       let message: TopicMessage;
       try {
         message = JSON.parse((event as MessageEvent<string>).data) as TopicMessage;
@@ -90,6 +93,7 @@ function open(topics: string): void {
   for (const topic of list.filter(isStreamTopic)) {
     for (const name of TOPIC_EVENTS[topic]) {
       events.addEventListener(name, (event) => {
+        if (source !== events) return;
         let data: unknown;
         try {
           data = JSON.parse((event as MessageEvent<string>).data);
@@ -103,6 +107,7 @@ function open(topics: string): void {
     }
   }
   events.onerror = () => {
+    if (source !== events) return;
     setStatus("retrying");
     // CONNECTING means the browser is already retrying a dropped connection.
     if (events.readyState !== EventSource.CLOSED) return;

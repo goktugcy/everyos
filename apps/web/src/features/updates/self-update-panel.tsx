@@ -1,5 +1,5 @@
 import type { BackupJobView, ReleaseJob, SelfUpdateStatus } from "@everyos/shared";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui/button.tsx";
 import { Alert } from "../../components/ui/alert.tsx";
@@ -8,6 +8,7 @@ import { errorMessage } from "../../lib/errors.ts";
 import { formatDateTime } from "../../lib/format.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { requestConfirm } from "../../desktop/menus/confirm.tsx";
+import { subscribeTopic } from "../../lib/event-stream.ts";
 
 const FAILURE_MESSAGES = {
   "release-metadata-invalid": "selfUpdate.errors.metadata",
@@ -30,35 +31,52 @@ export function SelfUpdatePanel() {
   const [busy, setBusy] = useState(false);
   const [preparing, setPreparing] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const revision = useRef(0);
+  const readController = useRef<AbortController | null>(null);
+  const acceptStatus = useCallback((value: SelfUpdateStatus) => {
+    revision.current++;
+    readController.current?.abort();
+    setStatus(value);
+    setReconnecting(false);
+    setConnectionError(null);
+  }, []);
   useEffect(() => {
     let disposed = false;
     const refresh = async () => {
+      readController.current?.abort();
+      const controller = new AbortController();
+      readController.current = controller;
+      const requestRevision = ++revision.current;
       try {
-        const value = await api<SelfUpdateStatus>("/self-update");
-        if (!disposed) {
-          setStatus(value);
-          setReconnecting(false);
-          setConnectionError(null);
+        const value = await api<SelfUpdateStatus>("/self-update", { signal: controller.signal });
+        if (!disposed && requestRevision === revision.current) {
+          acceptStatus(value);
         }
       } catch (caught) {
-        if (!disposed) {
+        if (!disposed && !controller.signal.aborted && requestRevision === revision.current) {
           setConnectionError(caught);
           setReconnecting(true);
         }
       }
     };
     void refresh();
+    const unsubscribe = subscribeTopic("release", {
+      ready: () => void refresh(),
+      events: { "release.status": (value) => acceptStatus(value as SelfUpdateStatus) },
+    });
     const timer = setInterval(() => void refresh(), 3000);
     return () => {
       disposed = true;
+      readController.current?.abort();
+      unsubscribe();
       clearInterval(timer);
     };
-  }, []);
+  }, [acceptStatus]);
   const check = async () => {
     setBusy(true);
     setError(null);
     try {
-      setStatus(await api<SelfUpdateStatus>("/self-update/check", { method: "POST", body: {} }));
+      acceptStatus(await api<SelfUpdateStatus>("/self-update/check", { method: "POST", body: {} }));
     } catch (caught) {
       setError(caught);
     } finally {
@@ -106,6 +124,8 @@ export function SelfUpdatePanel() {
         method: "POST",
         body: { version, backupId: job.backupId, confirm: true },
       });
+      revision.current++;
+      readController.current?.abort();
       setStatus((previous) => (previous ? { ...previous, job: queued } : previous));
     } catch (caught) {
       setError(caught);

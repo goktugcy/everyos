@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import type { NotificationChange } from "./modules/notifications/notification-service.ts";
-import { json, readEvents, sampleServices, withRoles, type TestClient } from "./test-support.ts";
+import { json, readEvents, sampleServices, withRoles, TestClient } from "./test-support.ts";
 
 const minutes = (n: number) => n * 60_000;
 
@@ -373,6 +373,34 @@ describe("EveryOS release notifications", () => {
       unsubscribe();
       vi.useRealTimers();
     }
+  });
+
+  it("streams verified release snapshots and changes to authenticated readers without a page refresh", async () => {
+    const { ctx, admin, viewer } = await withRoles();
+    let cached = status(ctx.clock.now, null);
+    ctx.agent.handlers.set("release.status", () => cached);
+    ctx.services.releaseMonitor.observe(cached);
+    expect((await new TestClient(ctx).get("/api/events?topics=release")).status).toBe(401);
+    const response = await admin.get("/api/events?topics=release");
+    setTimeout(() => {
+      cached = status(++ctx.clock.now, "0.1.8");
+      ctx.services.releaseMonitor.observe(cached);
+      ctx.services.releaseMonitor.observe(cached);
+      cached = { ...cached, installedVersion: "0.1.8", available: null };
+      ctx.services.releaseMonitor.observe(cached);
+    }, 30);
+    const { events, reader } = await readEvents(response, 4);
+    await reader.cancel();
+    const statuses = events
+      .filter((event) => event.event === "release.status")
+      .map((event) => event.data as SelfUpdateStatus);
+    expect(statuses).toHaveLength(3);
+    expect(statuses.map((s) => s.available?.version ?? null)).toEqual([null, "0.1.8", null]);
+    expect(statuses[2]?.installedVersion).toBe("0.1.8");
+    const replay = await readEvents(await viewer.get("/api/events?topics=release"), 2);
+    await replay.reader.cancel();
+    expect(replay.events[1]?.data).toEqual(cached);
+    expect(ctx.agent.calls.some((call) => call.op === "release.install")).toBe(false);
   });
 
   it("manual checks publish a visible update once and preserve read state across checks and monitor restarts", async () => {

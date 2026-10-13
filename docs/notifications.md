@@ -80,7 +80,7 @@ it requests `release.check`; failed remote checks back off for 15 minutes. Concu
 checks share one request, and shutdown cancels pending work. Cached metadata is already verified
 by the existing release manager; invalid signatures and unavailable sources never create an
 invented update. Background calls allow the system actor only for these two read operations;
-`release.install` still requires the authorized user, password, Linux privilege and verified backup.
+`release.install` still requires the authorized administrator session, explicit confirmation and verified safety backup.
 
 A newer available version raises `everyos-update-available` in the **updates** category, visible
 to users with `system:read` (plus notification access). Warning severity makes it eligible for
@@ -94,3 +94,19 @@ The About status/check endpoints observe the same condition immediately, so a ma
 check updates the center too. Development/non-Linux/unconfigured status does not produce release
 notifications. This reuses the configured signed release source and publisher key; it does not
 fetch an independent or untrusted version feed.
+
+Version discovery reaches open About/EveryOS update panels through the `release` event topic
+(`release.status`), authorized with `system:read`. The monitor replays its verified snapshot and
+publishes changed snapshots; identical reads do not rebroadcast. Installed version, available
+version, check time and job state remain real agent values. Panels refresh after reconnection and
+retain their three-second read-only polling fallback. Live/check results abort older pending reads,
+so a delayed response cannot overwrite a newer result. No release event installs an update.
+
+Notification subscriptions belong to the authenticated shell, independently of bell visibility or
+screen size. On reconnect, return from a hidden tab or restored network, the shell reads pending
+unread EveryOS version notices using the existing permissioned notification list. A 30-second
+internal polling fallback also works when event delivery is unavailable. This does not increase
+the hourly remote release-check cadence. Seen version notices are deduplicated within the session;
+read, dismissed, resolved and muted notices do not produce catch-up pop-ups. Locks/sign-out abort
+pending reads and clear displayed data; a different session cannot receive the preceding user's
+response. Closed event connections cannot deliver late events into a replacement connection.

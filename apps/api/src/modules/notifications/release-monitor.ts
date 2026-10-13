@@ -19,6 +19,9 @@ export class ReleaseMonitor {
   #timer: NodeJS.Timeout | null = null;
   #running: Promise<void> | null = null;
   #nextRemoteAt = 0;
+  #latest: SelfUpdateStatus | null = null;
+  #snapshot = "";
+  readonly #listeners = new Set<(status: SelfUpdateStatus) => void>();
 
   constructor(deps: {
     agent: AgentGateway;
@@ -49,11 +52,33 @@ export class ReleaseMonitor {
     if (this.#timer) clearTimeout(this.#timer);
     this.#timer = null;
     this.#controller.abort();
+    this.#listeners.clear();
+    this.#latest = null;
+  }
+
+  /** Replays the verified snapshot, then publishes changes to authorized event streams. */
+  subscribe(listener: (status: SelfUpdateStatus) => void): () => void {
+    if (this.#controller.signal.aborted) return () => undefined;
+    this.#listeners.add(listener);
+    if (this.#latest) listener(this.#latest);
+    return () => this.#listeners.delete(listener);
   }
 
   /** Manual About checks and background checks share the same durable notification condition. */
   observe(status: SelfUpdateStatus): void {
     if (this.#controller.signal.aborted) return;
+    const snapshot = JSON.stringify(status);
+    if (snapshot !== this.#snapshot) {
+      this.#snapshot = snapshot;
+      this.#latest = status;
+      for (const listener of this.#listeners) {
+        try {
+          listener(status);
+        } catch (error) {
+          this.#logger.warn("Release status listener failed", { error });
+        }
+      }
+    }
     const available =
       status.configured &&
       status.reason === null &&

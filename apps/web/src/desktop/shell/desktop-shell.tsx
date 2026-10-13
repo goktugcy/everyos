@@ -50,6 +50,7 @@ import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
 import { WidgetDesktopLayer } from "../widgets/desktop-layer.tsx";
 import { WidgetHost } from "../widgets/host.tsx";
 import { NotificationToasts } from "../notifications/toasts.tsx";
+import { useNotificationStream } from "../notifications/store.ts";
 import { Pulse } from "../pulse/pulse.tsx";
 import { WindowLayer } from "../windows/window-layer.tsx";
 import { MobileShell } from "./mobile-shell.tsx";
@@ -137,7 +138,6 @@ function DesktopWorkspace() {
             <Pulse />
           </div>
         ) : null}
-        <NotificationToasts />
         <Dock />
         <Launcher />
         <ConfirmHost />
@@ -163,6 +163,7 @@ export function DesktopShell() {
   const sessionId = useSessionStore((state) => state.session?.session.id);
   const locked = useSessionStore((state) => state.locked);
   const mobile = useMediaQuery("(max-width: 767px)");
+  useNotificationStream(ready && !locked && Boolean(permissions?.includes("notifications:read")));
   const [loadError, setLoadError] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
   const desktopDoc = usePreferences((state) => state.desktop);
@@ -285,6 +286,7 @@ export function DesktopShell() {
   return (
     <TrashStatusProvider key={sessionId}>
       {mobile ? <MobileShell /> : <DesktopWorkspace />}
+      {!locked ? <NotificationToasts /> : null}
     </TrashStatusProvider>
   );
 }

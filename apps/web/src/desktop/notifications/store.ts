@@ -5,12 +5,14 @@ import {
   type NotificationEvent,
   type NotificationPreferences,
   type NotificationView,
+  type NotificationList,
 } from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
 import { api } from "../../lib/api.ts";
 import { subscribeTopic } from "../../lib/event-stream.ts";
 import { usePreferences } from "../state/preferences-store.ts";
+import { useSessionStore } from "../../stores/session-store.ts";
 
 interface NotificationState {
   unread: NotificationCounts;
@@ -28,6 +30,8 @@ export const useNotifications = create<NotificationState>()(() => ({
 
 const MAX_TOASTS = 3;
 const rank = (severity: NotificationView["severity"]) => NOTIFICATION_SEVERITIES.indexOf(severity);
+const seenVersions = new Set<string>();
+let seenSession: string | undefined;
 
 /** Unread notifications outside muted categories (the menu bar badge). */
 export function unreadTotal(
@@ -55,8 +59,15 @@ export function shouldToast(
 }
 
 function onEvent(event: NotificationEvent): void {
+  const candidate = event.latest;
+  const repeatedVersion =
+    candidate?.kind === "everyos-update-available" && seenVersions.has(candidate.id);
+  if (candidate?.kind === "everyos-update-available") {
+    if (seenVersions.size >= 128) seenVersions.delete(seenVersions.values().next().value!);
+    seenVersions.add(candidate.id);
+  }
   useNotifications.setState((state) => {
-    const latest = event.latest;
+    const latest = repeatedVersion ? null : event.latest;
     const toasts =
       latest && shouldToast(latest, usePreferences.getState().notifications)
         ? [...state.toasts.filter((t) => t.id !== latest.id), latest].slice(-MAX_TOASTS)
@@ -70,15 +81,77 @@ let unsubscribe: (() => void) | null = null;
 
 /** Keeps the tab subscribed to notification events while the caller is mounted. */
 export function useNotificationStream(enabled: boolean): void {
+  const sessionId = useSessionStore((state) => state.session?.session.id);
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !sessionId) return;
     subscribers++;
     if (subscribers === 1) {
-      unsubscribe = subscribeTopic("notifications", {
+      if (seenSession !== sessionId) {
+        seenVersions.clear();
+        seenSession = sessionId;
+      }
+      const controller = new AbortController();
+      let refreshing = false;
+      const active = () => {
+        const session = useSessionStore.getState();
+        return (
+          !controller.signal.aborted &&
+          session.phase === "authenticated" &&
+          !session.locked &&
+          session.session?.session.id === sessionId
+        );
+      };
+      // Recover version notices missed while hidden/disconnected, without re-alerting seen versions.
+      const refresh = async () => {
+        if (!active() || refreshing || document.visibilityState !== "visible") return;
+        refreshing = true;
+        try {
+          for (let attempt = 0; attempt < 2; attempt++) {
+            const revision = useNotifications.getState().revision;
+            const page = await api<NotificationList & { unread: NotificationCounts }>(
+              "/notifications?category=updates&unread=true&limit=200",
+              { signal: controller.signal },
+            );
+            if (!active()) return;
+            if (revision !== useNotifications.getState().revision) continue;
+            useNotifications.setState({ unread: page.unread });
+            for (const notice of page.notifications) {
+              if (
+                notice.kind === "everyos-update-available" &&
+                !notice.read &&
+                notice.resolvedAt === null &&
+                !seenVersions.has(notice.id)
+              )
+                onEvent({ unread: page.unread, latest: notice });
+            }
+            return;
+          }
+        } catch {
+          /* Event delivery and the next poll can recover a failed read. */
+        } finally {
+          refreshing = false;
+        }
+      };
+      const onVisible = () => void refresh();
+      const stopStream = subscribeTopic("notifications", {
         // A reconnect may have missed changes: refetch open lists.
-        ready: () => useNotifications.setState((s) => ({ revision: s.revision + 1 })),
+        ready: () => {
+          useNotifications.setState((s) => ({ revision: s.revision + 1 }));
+          void refresh();
+        },
         events: { notifications: (data) => onEvent(data as NotificationEvent) },
       });
+      const timer = setInterval(onVisible, 30_000);
+      document.addEventListener("visibilitychange", onVisible);
+      window.addEventListener("online", onVisible);
+      void refresh();
+      unsubscribe = () => {
+        controller.abort();
+        stopStream();
+        clearInterval(timer);
+        document.removeEventListener("visibilitychange", onVisible);
+        window.removeEventListener("online", onVisible);
+      };
     }
     return () => {
       subscribers--;
@@ -88,7 +161,7 @@ export function useNotificationStream(enabled: boolean): void {
         useNotifications.setState({ unread: {}, toasts: [] });
       }
     };
-  }, [enabled]);
+  }, [enabled, sessionId]);
 }
 
 export function closeToast(id: string): void {

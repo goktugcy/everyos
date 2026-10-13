@@ -29,12 +29,7 @@ import { menubarButton } from "../menubar/menubar-button.ts";
 import { desktop } from "../state/controller.ts";
 import { usePreferences } from "../state/preferences-store.ts";
 import { notificationAction, notificationText } from "./content.ts";
-import {
-  notificationActions,
-  unreadTotal,
-  useNotificationStream,
-  useNotifications,
-} from "./store.ts";
+import { notificationActions, unreadTotal, useNotifications } from "./store.ts";
 
 export function SeverityIcon({
   severity,
@@ -310,7 +305,6 @@ function CenterBody() {
 export function NotificationBell() {
   const { t } = useTranslation();
   const permitted = usePermissions().includes("notifications:read");
-  useNotificationStream(permitted);
   const unread = useNotifications((state) => state.unread);
   const muted = usePreferences((state) => state.notifications.mutedCategories);
   const [open, setOpen] = useState(false);

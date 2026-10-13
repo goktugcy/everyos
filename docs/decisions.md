@@ -537,3 +537,16 @@ interface without transmitting its stored token to the browser.
 Editors keep unsent drafts separate from reported device state and require Apply. Split a physical
 device's allowed entities by effective area before making cards; an entity's area override must
 not bring another room's siblings into its details. Paginate room-sorted cards and preserve filters.
+
+### D42 — Live release state and recovery of missed version notifications
+
+Publish verified release snapshots on a fixed `release` event topic requiring `system:read`,
+using the existing session-checked multiplexed stream. Reuse the monitor and signed release cache;
+never infer an available release from unverified notification text. Retain read-only polling and
+cancel older reads when a live or manual result arrives.
+
+Own notification subscriptions at the authenticated shell rather than the optional bell module.
+Recover unread, unresolved version notices on reconnect/visibility/network restoration and with
+a bounded polling fallback. Deduplicate seen version IDs per session and preserve toast/mute
+preferences and server read/dismiss state. Keep late events/requests from previous connections
+or sessions out of the active state. Do not change remote-check frequency or install automatically.

@@ -4,6 +4,7 @@ import { notificationAction } from "./content.ts";
 import { shouldToast, unreadTotal } from "./store.ts";
 
 vi.mock("../../lib/event-stream.ts", () => ({ subscribeTopic: vi.fn() }));
+vi.mock("../../stores/session-store.ts", () => ({ useSessionStore: vi.fn() }));
 vi.mock("../state/preferences-store.ts", () => ({ usePreferences: { getState: vi.fn() } }));
 
 const base: NotificationView = {

@@ -23,6 +23,7 @@ const TOPIC_PERMISSIONS: Record<EventTopic, Permission> = {
   metrics: "system:read",
   docker: "docker:read",
   notifications: "notifications:read",
+  release: "system:read",
 };
 
 /**
@@ -131,6 +132,12 @@ export function eventRoutes(services: Services): Hono<AppEnv> {
               message.kind === "stats" ? stats(message.snapshot) : change(message.event),
             ),
           );
+        }
+        if (streams.includes("release")) {
+          unsubscribers.push(
+            services.releaseMonitor.subscribe(latestWins(channel, "release.status")),
+          );
+          void services.releaseMonitor.check();
         }
         if (streams.includes("notifications")) {
           const me = { id: auth.user.id, permissions: auth.permissions };
