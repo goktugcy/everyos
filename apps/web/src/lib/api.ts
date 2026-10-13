@@ -1,4 +1,5 @@
 import { CSRF_HEADER, isErrorCode, type ApiErrorBody, type ErrorCode } from "@everyos/shared";
+import { traceApiRequest } from "./api-traffic.ts";
 
 export type ClientErrorCode = ErrorCode | "NETWORK" | "UNKNOWN";
 
@@ -57,6 +58,12 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.raw) headers["Content-Type"] = options.raw.contentType;
   if (method !== "GET" && csrfToken) headers[CSRF_HEADER] = csrfToken;
+  const body = options.body !== undefined ? JSON.stringify(options.body) : undefined;
+  const finish = traceApiRequest(
+    method,
+    path,
+    options.raw?.body.size ?? (body ? new TextEncoder().encode(body).length : 0),
+  );
 
   let response: Response;
   try {
@@ -64,23 +71,31 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
       method,
       headers,
       credentials: "same-origin",
-      ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+      ...(body !== undefined ? { body } : {}),
       ...(options.raw ? { body: options.raw.body } : {}),
       ...(options.signal ? { signal: options.signal } : {}),
       ...(options.keepalive ? { keepalive: true } : {}),
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
+    finish(0, null);
     throw new ApiRequestError(0, "NETWORK", "Network request failed");
   }
 
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204) {
+    finish(204, 0);
+    return undefined as T;
+  }
   let payload: unknown;
+  let receivedBytes: number | null = null;
   try {
-    payload = await response.json();
+    const text = await response.text();
+    receivedBytes = new TextEncoder().encode(text).length;
+    payload = JSON.parse(text) as unknown;
   } catch {
     payload = null;
   }
+  finish(response.status, receivedBytes);
   if (response.ok) return payload as T;
 
   const error = (payload as Partial<ApiErrorBody> | null)?.error;
@@ -108,15 +123,20 @@ export function uploadWithProgress(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    const finish = traceApiRequest("POST", path, file.size);
     xhr.open("POST", `/api${path}`);
     xhr.withCredentials = true;
     xhr.setRequestHeader("Accept", "application/json");
     xhr.setRequestHeader("Content-Type", "application/octet-stream");
     if (csrfToken) xhr.setRequestHeader(CSRF_HEADER, csrfToken);
     xhr.upload.onprogress = (event) => onProgress(event.loaded, event.total || file.size);
-    xhr.onerror = () => reject(new ApiRequestError(0, "NETWORK", "Network request failed"));
+    xhr.onerror = () => {
+      finish(0, null);
+      reject(new ApiRequestError(0, "NETWORK", "Network request failed"));
+    };
     xhr.onabort = () => reject(new DOMException("Upload aborted", "AbortError"));
     xhr.onload = () => {
+      finish(xhr.status, new TextEncoder().encode(xhr.responseText).length);
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
         return;

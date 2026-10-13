@@ -108,7 +108,6 @@ function useWindowSession(): void {
 function DesktopWorkspace() {
   const { t } = useTranslation();
   const locked = useSessionStore((state) => state.locked);
-  const bootstrap = useSessionStore((state) => state.bootstrap);
   const saveError = usePreferences((state) => state.saveError);
   const theme = useThemeStore((state) => state.theme);
   const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
@@ -119,7 +118,6 @@ function DesktopWorkspace() {
   useDesktopShortcuts();
   useAutoLock();
 
-  const insecure = bootstrap ? !bootstrap.transport.secure && !bootstrap.transport.loopback : false;
   const pulse = usePreferences((state) => state.pulse.enabled);
   return (
     <>
@@ -132,7 +130,7 @@ function DesktopWorkspace() {
         <WidgetDesktopLayer />
         <WindowLayer />
         <WidgetHost />
-        <Menubar insecure={insecure} />
+        <Menubar />
         {/* Hidden on narrow screens, where it would cover menu bar items. */}
         {pulse ? (
           <div className="hidden min-[1100px]:contents">

@@ -187,6 +187,11 @@ operations may partially succeed; views refresh to show the actual remaining ite
 Permanent deletion and emptying require a separate confirmation. Read-only roots cannot be
 restored or emptied, and every mutation needs `files:write` and is audited.
 
+Trash artwork is a transparent metallic wire basket, without an opaque app tile. Empty and
+paper-filled variants share the current account's permissioned listing across the desktop,
+dock, launcher and Files sidebar. A failed or truncated-empty listing retains an unknown
+indicator instead of pretending the basket is empty.
+
 `.otuken-trash` is inaccessible to ordinary list, search, download, text, transfer and mutation
 routes even when hidden files are shown, including symlink aliases. It is storage owned by
 EveryOS, not an implementation of the host OS's Trash or the freedesktop Trash specification.

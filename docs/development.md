@@ -5,7 +5,17 @@ visibility, left-to-right order and clock seconds use the existing per-account p
 The same editor is available under Settings → Desktop. Legacy documents without `order`
 keep the original layout; partial orders append missing modules, and duplicate/unknown IDs
 are rejected by the server. Reset restores only menu bar preferences. The brand/window menus,
-user actions and insecure-transport warning remain accessible.
+user actions and connection information remain accessible.
+
+The connection indicator is a text-only popover. HTTPS describes the browser-to-server hop;
+HTTP remains unencrypted even on loopback or inside a possible VPN tunnel. The panel cannot
+verify reverse-proxy backend encryption or VPN protection. It subscribes to API-client metadata
+only while open, retains at most 12 completions in component memory, and clears on close, lock
+or session change. Only method, a fixed resource category, status, duration and UTF-8 body sizes
+are exposed. Raw paths, query strings, headers and payloads never enter diagnostics. File uploads
+are included; direct downloads and persistent event/terminal streams are excluded. Body sizes
+exclude compression, HTTP headers and TLS overhead; they are not packet captures. No diagnostic
+API requests or host capture privileges are introduced.
 
 ## Requirements
 

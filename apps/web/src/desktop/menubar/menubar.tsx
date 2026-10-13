@@ -13,7 +13,6 @@ import {
   Plus,
   Search,
   Settings,
-  ShieldAlert,
   ShieldCheck,
   UserRound,
   X,
@@ -42,6 +41,7 @@ import { NotificationBell } from "../notifications/center.tsx";
 import { MenubarCustomization } from "./customization.tsx";
 import { moduleOrder, moduleVisibility } from "./module-order.ts";
 import { DEFAULT_MENUBAR } from "../state/defaults.ts";
+import { ConnectionModule } from "./connection-module.tsx";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -130,7 +130,7 @@ function initials(name: string): string {
   );
 }
 
-export function Menubar({ insecure }: { insecure: boolean }) {
+export function Menubar() {
   const { t } = useTranslation();
   const user = useSessionStore((state) => state.session?.user);
   const signOut = useSessionStore((state) => state.signOut);
@@ -398,16 +398,8 @@ export function Menubar({ insecure }: { insecure: boolean }) {
             }
           />
 
+          <ConnectionModule />
           <div className="ml-auto flex items-center gap-0.5">
-            {insecure ? (
-              <span
-                className="flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[0.75rem] text-warning"
-                title={t("transport.insecureBody")}
-              >
-                <ShieldAlert className="size-3.5" aria-hidden />
-                <span className="hidden md:inline">{t("transport.insecureTitle")}</span>
-              </span>
-            ) : null}
             {moduleOrder(preferences.order).map((id) =>
               show(id) && modules[id] ? (
                 <div key={id} className="contents" data-menubar-module={id}>

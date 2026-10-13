@@ -76,6 +76,38 @@ export const tr = {
     viewer: "İzleyici",
   } satisfies Record<Role, string>,
   transport: {
+    title: "Bağlantı bilgisi",
+    encrypted: "Şifreli",
+    unencrypted: "Şifresiz",
+    encryptedBody:
+      "Tarayıcınız ile bağlandığınız sunucu arasındaki veriler HTTPS ile şifreleniyor. Varsa ters vekil ile EveryOS arasındaki bağlantı bu ekrandan doğrulanamaz.",
+    plainBody:
+      "Bu tarayıcı bağlantısı HTTP kullanıyor; HTTP verileri şifrelemez. Tailscale veya başka bir VPN tünelinin koruması bu ekrandan doğrulanamaz.",
+    protocol: "Bağlantı protokolü",
+    https: "HTTPS / TLS",
+    http: "HTTP",
+    encryptedTraffic: "Şifreli aktarılan istekler",
+    plainTraffic: "Şifresiz aktarılan istekler",
+    liveHint:
+      "Panel açıkken tamamlanan EveryOS API istekleri canlı görünür. Dosya yüklemeleri dahildir; indirmeler ve sürekli olay/terminal akışları bu listede yer almaz.",
+    waiting: "Yeni bir isteğin tamamlanması bekleniyor…",
+    requests: "Canlı istekler",
+    status: "Durum {{value}}",
+    failed: "Bağlantı hatası",
+    duration: "{{value}} ms",
+    sizes: "Gönderilen {{sent}} · Alınan {{received}}",
+    payloadHint:
+      "Boyutlar sıkıştırma öncesi içerik boyutudur; başlıklar ve TLS ek yükü dahil değildir. Ham içerik, parola, token ve şifreli ağ paketleri gösterilmez veya kaydedilmez.",
+    resources: {
+      api: "API",
+      auth: "Hesap",
+      system: "Sistem",
+      files: "Dosyalar",
+      apps: "Uygulamalar",
+      preferences: "Tercihler",
+      updates: "Güncellemeler",
+      widgets: "Araç takımları",
+    },
     insecureTitle: "Bağlantı şifrelenmemiş",
     insecureBody:
       "EveryOS'e düz HTTP üzerinden erişiyorsunuz. Parolanız ve oturum bilginiz ağda okunabilir. Uzaktan erişim için HTTPS veya Tailscale kullanın.",

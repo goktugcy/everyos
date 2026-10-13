@@ -3,7 +3,7 @@ import type { DesktopAppManifest } from "./types.ts";
 import { InstalledAppIcon } from "./store/installed-icon.tsx";
 import { TrashGlyph } from "./files/trash-glyph.tsx";
 
-/** Rounded gradient tile with the app's glyph. Size follows `size` (px). */
+/** App artwork follows `size` (px); the trash basket keeps its transparent silhouette. */
 export function AppIcon({
   manifest,
   size = 40,
@@ -14,7 +14,21 @@ export function AppIcon({
   className?: string;
 }) {
   if (manifest.installedApp) return <InstalledAppIcon app={manifest.installedApp} size={size} />;
-  const Icon = manifest.id === "everyos.trash" ? TrashGlyph : manifest.icon;
+  if (manifest.id === "everyos.trash")
+    return (
+      <span
+        aria-hidden
+        data-trash-icon
+        className={cn(
+          "grid shrink-0 place-items-center drop-shadow-[0_2px_2px_rgb(0_0_0/0.35)]",
+          className,
+        )}
+        style={{ width: size, height: size }}
+      >
+        <TrashGlyph style={{ width: size, height: size }} />
+      </span>
+    );
+  const Icon = manifest.icon;
   return (
     <span
       aria-hidden

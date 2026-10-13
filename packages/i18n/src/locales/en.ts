@@ -52,6 +52,38 @@ export const en: Messages = {
     viewer: "Viewer",
   },
   transport: {
+    title: "Connection information",
+    encrypted: "Encrypted",
+    unencrypted: "Unencrypted",
+    encryptedBody:
+      "Data between your browser and the server you connected to is encrypted with HTTPS. Any connection from a reverse proxy to EveryOS cannot be verified here.",
+    plainBody:
+      "This browser connection uses HTTP, which does not encrypt data. Protection from Tailscale or another VPN tunnel cannot be verified here.",
+    protocol: "Connection protocol",
+    https: "HTTPS / TLS",
+    http: "HTTP",
+    encryptedTraffic: "Requests transferred with encryption",
+    plainTraffic: "Requests transferred without encryption",
+    liveHint:
+      "EveryOS API requests completed while this panel is open appear live. File uploads are included; downloads and persistent event/terminal streams are excluded.",
+    waiting: "Waiting for a new request to complete…",
+    requests: "Live requests",
+    status: "Status {{value}}",
+    failed: "Connection failed",
+    duration: "{{value}} ms",
+    sizes: "Sent {{sent}} · Received {{received}}",
+    payloadHint:
+      "Sizes describe content before compression; headers and TLS overhead are excluded. Raw content, passwords, tokens and encrypted network packets are never shown or recorded.",
+    resources: {
+      api: "API",
+      auth: "Account",
+      system: "System",
+      files: "Files",
+      apps: "Applications",
+      preferences: "Preferences",
+      updates: "Updates",
+      widgets: "Widgets",
+    },
     insecureTitle: "Unencrypted connection",
     insecureBody:
       "You are connected to EveryOS over plain HTTP. Your password and session can be read on the network. Use HTTPS or Tailscale for remote access.",

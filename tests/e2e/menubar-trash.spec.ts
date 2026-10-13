@@ -99,6 +99,11 @@ test("trash icons reflect real delete, restore, empty and unavailable states", a
   const dock = page.getByTestId("dock").getByRole("button", { name: "Çöp Kutusu", exact: true });
   const icon = dock.locator("[data-trash-state]");
   await expect(icon).toHaveAttribute("data-trash-state", "empty");
+  await expect(dock.locator("[data-trash-icon]")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.screenshot({
+    path: test.info().outputPath("trash-empty.png"),
+    animations: "disabled",
+  });
   const file = page.getByTestId("desktop-surface").getByRole("button", { name, exact: true });
   await file.click();
   await file.press("Delete");
