@@ -1,15 +1,15 @@
-EveryOS 0.1.11 integrates Applications into Files and makes automatic version checks visible.
+EveryOS 0.1.12 adds application context menus and persistent Dock/desktop shortcuts.
 
-- The folder is now named Applications (Uygulamalar in Turkish) throughout the interface.
-- Open the same live collection from Files Favorites or the user's home in either icon or list
-  view. The collection opens inside Files and is restored after reloading the desktop.
-- An existing ordinary folder with the same name is preserved. Application entries never become
-  file-deletion, rename, clipboard or drop targets, and container data stays in its managed project.
-- Production EveryOS checks verified releases every hour and automatically notifies once per new
-  compatible version. About shows the automatic cadence and actual last check. This existing
-  background workflow is now additionally verified through its scheduled timer.
+- Right-click a Store-managed application in Applications, including the collection inside
+  Files, to add it to the Dock or desktop, update, uninstall or view information.
+- Updating and uninstalling use the existing confirmation, server permissions, jobs and audit
+  history. Cancel leaves the installation untouched; operation notices remain dismissible.
+- Shortcuts retain real localized names and catalog icons across reloads. Launching resolves
+  current published ports; stopped, simulated and non-web apps open management details.
+- Uninstalling cleans up obsolete shortcuts. Offline listings preserve saved shortcuts, and
+  duplicate additions and preference-capacity overflows are prevented.
 
-The publisher key and GitHub release source remain unchanged. Automatic App Store defaults,
-available-port allocation, adaptive icon captions, durable Linux privilege durations, version
-notifications and Home Assistant integration from previous releases are included.
-Passwordless EveryOS update confirmation and dismissible Store notices remain included.
+The publisher key, GitHub release source and default wallpaper remain unchanged. Applications
+in Files, automatic hourly update notifications, passwordless EveryOS update confirmation,
+automatic application defaults and port allocation, Linux account permissions and Home Assistant
+integration remain included.

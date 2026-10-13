@@ -32,6 +32,8 @@ import { useShallow } from "zustand/react/shallow";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { AppIcon } from "../apps/app-icon.tsx";
+import { appTitle } from "../apps/app-title.ts";
+import { useInstalledApps } from "../apps/store/installed-apps-store.ts";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import type { AppId } from "../apps/types.ts";
 import { useLauncher } from "../launcher/launcher-store.ts";
@@ -110,7 +112,7 @@ function DockItem({
   dock: DockPreferences;
   side: "top" | "left" | "right";
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const manifest = getApp(appId);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: appId,
@@ -122,7 +124,7 @@ function DockItem({
   const iconSize = useThemeStore((state) => state.theme.iconSize);
   const viewport = useWindowManager((state) => state.viewport);
   if (!manifest) return null;
-  const label = t(manifest.titleKey);
+  const label = appTitle(manifest, t, i18n.language);
 
   const menu = (): MenuEntry[] => [
     own.length === 0 || manifest.window.instancing === "multiple"
@@ -161,12 +163,16 @@ function DockItem({
             id: "pin",
             label: pinned ? t("dock.unpin") : t("dock.pin"),
             icon: pinned ? <PinOff /> : <Pin />,
+            permission: "preferences:manage" as const,
+            disabled: !pinned && dock.pinned.length >= 32,
             onSelect: () =>
               updatePreference("dock", (current) => ({
                 ...current,
                 pinned: pinned
                   ? current.pinned.filter((id) => id !== appId)
-                  : [...current.pinned, appId],
+                  : current.pinned.length < 32 && !current.pinned.includes(appId)
+                    ? [...current.pinned, appId]
+                    : current.pinned,
               })),
           },
           {
@@ -174,6 +180,7 @@ function DockItem({
             id: "shortcut",
             label: t("dock.addShortcut"),
             icon: <MonitorUp />,
+            permission: "preferences:manage" as const,
             onSelect: () =>
               updatePreference("desktop", (doc) =>
                 addShortcut(
@@ -281,6 +288,7 @@ function TaskbarWindow({ window, focused }: { window: DockWindow; focused: boole
 
 export function Dock() {
   const { t } = useTranslation();
+  useInstalledApps((state) => state.apps);
   const dock = usePreferences((state) => state.dock);
   const permissions = usePermissions();
   const windows = useDockWindows();
@@ -297,14 +305,10 @@ export function Dock() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const pinned = useMemo(
-    () =>
-      dock.pinned.filter((appId) => {
-        const manifest = getApp(appId);
-        return manifest && isAppAllowed(manifest, permissions);
-      }),
-    [dock.pinned, permissions],
-  );
+  const pinned = dock.pinned.filter((appId) => {
+    const manifest = getApp(appId);
+    return manifest && isAppAllowed(manifest, permissions);
+  });
   const runningExtra = useMemo(() => {
     const seen = new Set(pinned);
     const extra: string[] = [];

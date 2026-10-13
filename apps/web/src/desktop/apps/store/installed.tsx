@@ -6,7 +6,7 @@ import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
 import { api } from "../../../lib/api.ts";
 import { usePermissions } from "../../../stores/session-store.ts";
-import { requestConfirm } from "../../menus/confirm.tsx";
+import { requestAppAction } from "./app-action.ts";
 import { ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { localized } from "./parts.tsx";
 import { offerFor } from "../../widgets/offer.tsx";
@@ -31,34 +31,11 @@ export function InstalledCard({
   const errorId = `${app.lastJob?.id ?? ""}:${app.lastError ?? ""}`;
   const launchLinks = appLaunchLinks(app, window.location.hostname);
   const act = async (action: Exclude<AppAction, "install">) => {
-    if (
-      action !== "start" &&
-      !(await requestConfirm({
-        title: t("appStore.confirmTitle", {
-          name: localized(app.name, i18n.language),
-          action: t(`appStore.actions.${action}`),
-        }),
-        body: t(
-          action === "remove"
-            ? "appStore.removeBody"
-            : action === "update"
-              ? "appStore.updateBody"
-              : "appStore.confirmBody",
-        ),
-        confirmLabel: t(`appStore.actions.${action}`),
-        danger: action === "remove",
-      }))
-    )
-      return;
     setPending(true);
     setError(null);
     try {
-      onJob(
-        await api<AppJobView>(`/apps/${app.id}/actions`, {
-          method: "POST",
-          body: { action, confirmId: app.id },
-        }),
-      );
+      const job = await requestAppAction(app, action, t, i18n.language);
+      if (job) onJob(job);
     } catch (caught) {
       setError(caught);
     } finally {

@@ -1,10 +1,12 @@
 import type { Messages } from "@everyos/i18n";
-import type { CapabilityId, Permission } from "@everyos/shared";
+import type { CapabilityId, InstalledAppView, Permission } from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
+import type { InstalledAppId } from "./store/installed-apps-store.ts";
 
 export type AppId =
+  | InstalledAppId
   | "everyos.homeassistant"
   | "everyos.system"
   | "everyos.services"
@@ -30,6 +32,7 @@ export type AppId =
  */
 export interface DesktopAppManifest {
   id: AppId;
+  installedApp?: InstalledAppView;
   titleKey: `apps.${keyof Messages["apps"]}`;
   icon: LucideIcon;
   /** Tailwind gradient classes for the icon tile. */

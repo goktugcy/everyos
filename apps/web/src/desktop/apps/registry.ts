@@ -1,4 +1,5 @@
 import type { Permission } from "@everyos/shared";
+import { installationId, installedAppId, useInstalledApps } from "./store/installed-apps-store.ts";
 import {
   Activity,
   Boxes,
@@ -383,7 +384,13 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
 const BY_ID = new Map(APP_MANIFESTS.map((manifest) => [manifest.id, manifest]));
 
 export function getApp(id: string): DesktopAppManifest | undefined {
-  return BY_ID.get(id as AppId);
+  const builtin = BY_ID.get(id as AppId);
+  if (builtin) return builtin;
+  const installedId = installationId(id);
+  const app =
+    installedId && useInstalledApps.getState().apps.find((entry) => entry.id === installedId);
+  const folder = BY_ID.get("everyos.applications");
+  return app && folder ? { ...folder, id: installedAppId(app.id), installedApp: app } : undefined;
 }
 
 export function isAppAllowed(

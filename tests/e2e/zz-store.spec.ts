@@ -13,7 +13,7 @@ import { signIn } from "./helpers.ts";
 test("catalog sync, installation, streamed progress and lifecycle work together", async ({
   page,
 }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(90_000);
   const session = await signIn(page);
   const headers = { [CSRF_HEADER]: session.csrfToken };
   // Stop the active desktop's queued saves before injecting an older document out of band.
@@ -146,9 +146,45 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await page.mouse.up();
   await expect(folder.locator('[data-installed-app][aria-selected="true"]')).toHaveCount(2);
   await folder.locator(`[data-installed-app="${firstId}"]`).click();
-  await folder.getByRole("button", { name: "Uygulama ayrıntıları", exact: true }).click();
+  const firstTile = folder.locator(`[data-installed-app="${firstId}"]`);
+  const managedId = `everyos.installed.app-${firstId}`;
+  await firstTile.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Bilgi", exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("Deneme Uygulaması");
   await page.getByRole("dialog").getByRole("button", { name: "Kapat", exact: true }).click();
+  await firstTile.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Dock'a ekle", exact: true }).click();
+  await expect(
+    page.getByTestId("dock").getByRole("button", { name: "Deneme Uygulaması", exact: true }),
+  ).toHaveCount(1);
+  await firstTile.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Masaüstüne ekle", exact: true }).click();
+  await firstTile.click({ button: "right" });
+  await expect(page.getByRole("menuitem", { name: "Masaüstüne ekle", exact: true })).toBeDisabled();
+  await page.screenshot({
+    path: test.info().outputPath("application-context-menu.png"),
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await firstTile.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Güncelle", exact: true }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "İmajları güncelle", exact: true })
+    .click();
+  await expect(folder.getByTestId("app-job-progress")).toContainText("Tamamlandı");
+  await folder
+    .getByTestId("app-job-progress")
+    .getByRole("button", { name: "Bildirimi kapat", exact: true })
+    .click();
+  await firstTile.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Kaldır", exact: true }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Vazgeç", exact: true }).click();
+  expect(
+    (
+      (await (await page.request.get("/api/apps")).json()) as { apps: InstalledAppView[] }
+    ).apps.some((app) => app.id === firstId),
+  ).toBe(true);
   await page.screenshot({
     path: test.info().outputPath("applications-folder.png"),
     animations: "disabled",
@@ -182,6 +218,10 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await expect(files.getByRole("option", { name: "Deneme Uygulaması", exact: true })).toHaveCount(
     2,
   );
+  await files.locator(`[data-installed-app="${firstId}"]`).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Bilgi", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("Deneme Uygulaması");
+  await page.getByRole("dialog").getByRole("button", { name: "Kapat", exact: true }).click();
   await sidebar.getByRole("button", { name: home.name, exact: true }).click();
   await expect(files.getByTestId("applications-home-entry")).toBeVisible();
   await expect(files.locator('[data-name="Uygulamalar"]')).toBeVisible();
@@ -207,13 +247,63 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
       );
     })
     .toBe(true);
+  // An unavailable listing during restore must not destroy the user's persisted shortcuts.
+  await expect
+    .poll(async () => {
+      const prefs = (
+        (await (await page.request.get("/api/preferences")).json()) as {
+          preferences: Partial<PreferenceDocuments>;
+        }
+      ).preferences;
+      return (
+        prefs.dock?.pinned.includes(managedId) &&
+        prefs.desktop?.items.some((item) => item.kind === "app" && item.appId === managedId)
+      );
+    })
+    .toBe(true);
+  await page.route("**/api/apps", (route) => route.abort());
   await page.reload();
   await expect(files.getByTestId("applications-folder")).toBeVisible();
+  await expect(files.getByTestId("applications-folder").getByRole("alert")).toBeVisible();
+  const offlinePrefs = (
+    (await (await page.request.get("/api/preferences")).json()) as {
+      preferences: Partial<PreferenceDocuments>;
+    }
+  ).preferences;
+  expect(offlinePrefs.dock?.pinned).toContain(managedId);
+  expect(
+    offlinePrefs.desktop?.items.some((item) => item.kind === "app" && item.appId === managedId),
+  ).toBe(true);
+  await page.unroute("**/api/apps");
+  await files
+    .getByTestId("applications-folder")
+    .getByRole("button", { name: "Yenile", exact: true })
+    .click();
+  await expect(files.getByRole("option", { name: "Deneme Uygulaması", exact: true })).toHaveCount(
+    2,
+  );
+  await expect(
+    page.getByTestId("dock").getByRole("button", { name: "Deneme Uygulaması", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page
+      .getByTestId("desktop-surface")
+      .getByRole("button", { name: "Deneme Uygulaması", exact: true }),
+  ).toHaveCount(1);
   await expect(applications).toHaveAttribute("aria-current", "location");
   await files.getByRole("button", { name: "Geri", exact: true }).click();
   await expect(files.locator('[data-name="Uygulamalar"]')).toBeVisible();
   await expect(files.getByTestId("applications-home-entry")).toBeVisible();
   await files.getByRole("button", { name: "Kapat", exact: true }).first().click();
+  // Simulated and stopped installations open genuine management details, never a fabricated URL.
+  await page
+    .getByTestId("dock")
+    .getByRole("button", { name: "Deneme Uygulaması", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toContainText("Deneme Uygulaması");
+  await expect(page.getByRole("dialog").getByTestId("simulated-badge")).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Kapat", exact: true }).click();
+  await folder.getByRole("button", { name: "Kapat", exact: true }).first().click();
   const app = store.locator(`[data-app-installation="${firstId}"]`);
   await expect(app).toContainText("Çalışıyor");
   await expect(app.getByTestId("simulated-badge")).toBeVisible();
@@ -274,23 +364,39 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   });
   await app.getByRole("button", { name: "Kaldır", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Kaldır", exact: true }).click();
-  expect(
-    (
-      await page.request.post(`/api/apps/${extraJob.appId}/actions`, {
-        headers,
-        data: { action: "remove", confirmId: extraJob.appId },
-      })
-    ).status(),
-  ).toBe(202);
-  await expect(store).toContainText("Henüz EveryOS ile kurulmuş uygulama yok.", {
-    timeout: 10_000,
-  });
   await page
     .getByTestId("desktop-surface")
     .getByRole("button", { name: "Uygulamalar", exact: true })
     .dblclick();
+  await folder.locator(`[data-installed-app="${extraJob.appId}"]`).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Kaldır", exact: true }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Kaldır", exact: true }).click();
+  await expect(store).toContainText("Henüz EveryOS ile kurulmuş uygulama yok.", {
+    timeout: 10_000,
+  });
   await expect(folder).toContainText("Mağazadan kurduğun uygulamalar bu klasörde görünür.");
   await expect(folder.getByRole("option")).toHaveCount(0);
+  await expect(
+    page.getByTestId("dock").getByRole("button", { name: "Deneme Uygulaması", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByTestId("desktop-surface")
+      .getByRole("button", { name: "Deneme Uygulaması", exact: true }),
+  ).toHaveCount(0);
+  await expect
+    .poll(async () => {
+      const prefs = (
+        (await (await page.request.get("/api/preferences")).json()) as {
+          preferences: Partial<PreferenceDocuments>;
+        }
+      ).preferences;
+      return (
+        !prefs.dock?.pinned.includes(managedId) &&
+        !prefs.desktop?.items.some((item) => item.kind === "app" && item.appId === managedId)
+      );
+    })
+    .toBe(true);
   await folder.getByRole("button", { name: "Kapat", exact: true }).first().click();
   // Widgets of an uninstalled app say so and offer removal instead of showing stale data.
   await store.getByRole("button", { name: "Kapat", exact: true }).first().click();

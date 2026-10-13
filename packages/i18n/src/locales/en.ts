@@ -405,6 +405,12 @@ export const en: Messages = {
     details: "Application details",
     empty: "Applications installed from the store appear in this folder.",
     count: "{{count}} applications",
+    menu: {
+      pinDock: "Add to Dock",
+      addDesktop: "Add to desktop",
+      update: "Update",
+      info: "Get info",
+    },
   },
   appStore: {
     choose: "Choose",

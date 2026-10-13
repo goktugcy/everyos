@@ -32,6 +32,17 @@ export function addShortcut(
   desktopId: string,
   metrics: GridMetrics,
 ): DesktopPreferences {
+  if (
+    doc.items.length >= 300 ||
+    doc.items.some(
+      (item) =>
+        item.kind === "app" &&
+        item.appId === appId &&
+        item.desktopId === desktopId &&
+        item.folderId === null,
+    )
+  )
+    return doc;
   const cell = firstFreeCell(occupiedCells(doc, desktopId), metrics);
   return {
     ...doc,

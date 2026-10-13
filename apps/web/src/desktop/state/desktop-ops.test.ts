@@ -225,4 +225,17 @@ describe("desktop operations", () => {
     const doc = pruneUnavailable(base(), (appId) => appId !== "everyos.settings");
     expect(doc.items.map((i) => i.id)).toEqual(["a"]);
   });
+
+  it("keeps shortcut additions idempotent per desktop and within the persisted item limit", () => {
+    const doc = base();
+    expect(addShortcut(doc, "everyos.system", "d1", metrics)).toBe(doc);
+    const { doc: two, id } = addDesktop(doc, "Second");
+    expect(addShortcut(two, "everyos.system", id!, metrics).items).toHaveLength(3);
+    const full: DesktopPreferences = {
+      ...doc,
+      items: Array.from({ length: 300 }, (_, index) => ({ ...doc.items[0]!, id: `item-${index}` })),
+    };
+    expect(addShortcut(full, "everyos.audit", "d1", metrics)).toBe(full);
+    valid(full);
+  });
 });

@@ -1,6 +1,6 @@
 import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
 import { reassignDesktops } from "@everyos/widget-sdk";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
 import { Alert } from "../../components/ui/alert.tsx";
@@ -10,6 +10,14 @@ import { useMediaQuery } from "../../lib/use-media-query.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { registerBeforeSignOut, useSessionStore } from "../../stores/session-store.ts";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
+import {
+  clearInstalledApps,
+  installationId,
+  rememberInstalledApps,
+  useInstalledApps,
+} from "../apps/store/installed-apps-store.ts";
+import type { InstalledAppView } from "@everyos/shared";
+import { useApiResource } from "../../features/system/use-api-resource.ts";
 import { Dock } from "../dock/dock.tsx";
 import { Launcher } from "../launcher/launcher.tsx";
 import { LockScreen } from "../lock/lock-screen.tsx";
@@ -158,6 +166,52 @@ export function DesktopShell() {
   const mobile = useMediaQuery("(max-width: 767px)");
   const [loadError, setLoadError] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
+  const desktopDoc = usePreferences((state) => state.desktop);
+  const pinned = usePreferences((state) => state.dock.pinned);
+  const installed = useInstalledApps();
+  const installedShortcutIds = [
+    ...pinned,
+    ...desktopDoc.items.flatMap((item) => (item.kind === "app" ? [item.appId] : [])),
+  ]
+    .filter((id) => installationId(id))
+    .sort()
+    .join(",");
+  const lastListing = useRef<{ apps: InstalledAppView[] } | null>(null);
+  const canReadApps = Boolean(permissions?.includes("apps:read"));
+  const watchInstalled = ready && !locked && canReadApps && installedShortcutIds.length > 0;
+  const installedResource = useApiResource<{ apps: InstalledAppView[] }>(
+    watchInstalled ? "/apps" : null,
+    5000,
+    installedShortcutIds,
+  );
+
+  useEffect(() => {
+    // Do not replay the resource's previous listing when polling resumes for a new shortcut.
+    if (
+      watchInstalled &&
+      installedResource.data &&
+      !installedResource.error &&
+      installedResource.data !== lastListing.current
+    ) {
+      lastListing.current = installedResource.data;
+      rememberInstalledApps(installedResource.data.apps);
+    }
+  }, [watchInstalled, installedResource.data, installedResource.error]);
+
+  useEffect(() => {
+    if (!ready || locked || !permissions) return;
+    if (!canReadApps && (installed.loaded || installed.apps.length)) clearInstalledApps();
+    // A failed/offline listing must never erase persisted shortcuts.
+    if (canReadApps && !installed.loaded) return;
+    const available = (id: string) =>
+      !installationId(id) ||
+      (canReadApps && installed.apps.some((app) => app.id === installationId(id)));
+    const current = usePreferences.getState();
+    if (pruneUnavailable(current.desktop, available) !== current.desktop)
+      updatePreference("desktop", (doc) => pruneUnavailable(doc, available));
+    if (current.dock.pinned.some((id) => !available(id)))
+      updatePreference("dock", (doc) => ({ ...doc, pinned: doc.pinned.filter(available) }));
+  }, [ready, locked, permissions, canReadApps, installed]);
 
   useEffect(() => {
     if (!permissions || ready || locked) return;
@@ -167,6 +221,7 @@ export function DesktopShell() {
         if (controller.signal.aborted) return;
         // Drop shortcuts to apps this user can no longer open (e.g. after a role change).
         const available = (appId: string) => {
+          if (installationId(appId)) return permissions.includes("apps:read");
           const manifest = getApp(appId);
           return Boolean(manifest && isAppAllowed(manifest, permissions));
         };
@@ -193,6 +248,7 @@ export function DesktopShell() {
     return () => {
       unregister();
       discardPending();
+      clearInstalledApps();
       wm().hydrate(
         { version: 1, viewport: { width: 1, height: 1 }, activeDesktopId: "d1", windows: [] },
         () => null,

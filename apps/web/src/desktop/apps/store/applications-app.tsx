@@ -1,7 +1,8 @@
 import type { AppJobView, InstalledAppView } from "@everyos/shared";
 import type { Point, Rect } from "@everyos/window-manager";
-import { Info, RefreshCw } from "lucide-react";
-import { useRef, useState, type PointerEvent } from "react";
+import { Info, MonitorUp, Pin, PinOff, RefreshCw, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { workArea } from "@everyos/window-manager";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button.tsx";
 import { Dialog } from "../../../components/ui/dialog.tsx";
@@ -15,16 +16,38 @@ import { InstalledCard } from "./installed.tsx";
 import { InstalledAppIcon } from "./installed-icon.tsx";
 import { appLaunchLinks } from "./launch-links.ts";
 import { localized, Progress } from "./parts.tsx";
+import { useAppHost } from "../app-context.ts";
+import { usePermissions } from "../../../stores/session-store.ts";
+import { ContextMenuArea } from "../../menus/menus.tsx";
+import type { MenuEntry } from "../../menus/menu-model.ts";
+import { updatePreference, usePreferences } from "../../state/preferences-store.ts";
+import { addShortcut } from "../../state/desktop-ops.ts";
+import { useWindowManager, wm } from "../../state/window-store.ts";
+import { gridMetrics } from "../../surface/icon-grid.ts";
+import { useThemeStore } from "../../theme/theme-store.ts";
+import { installedAppId, rememberInstalledApps } from "./installed-apps-store.ts";
+import { requestAppAction } from "./app-action.ts";
 
 /** A live folder of managed applications; never copies or relocates host app data. */
 export default function ApplicationsApp() {
   const { t, i18n } = useTranslation();
+  const host = useAppHost();
+  const state = (host.appState ?? {}) as Record<string, unknown>;
+  const requestedId = typeof state.applicationId === "string" ? state.applicationId : null;
+  const permissions = usePermissions();
+  const pinned = usePreferences((state) => state.dock.pinned);
+  const desktopDoc = usePreferences((state) => state.desktop);
+  const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
+  const viewport = useWindowManager((state) => state.viewport);
+  const iconSize = useThemeStore((state) => state.theme.iconSize);
   const resource = useApiResource<{ apps: InstalledAppView[] }>("/apps", 5000);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<unknown>(null);
   const [marquee, setMarquee] = useState<Rect | null>(null);
   const anchor = useRef<string | null>(null);
   const grid = useRef<HTMLDivElement>(null);
@@ -49,16 +72,125 @@ export default function ApplicationsApp() {
       ),
     );
   const selection = apps.filter((app) => selected.has(app.id));
-  const details = resource.data?.apps.find((app) => app.id === detailsId);
+  useEffect(() => {
+    if (resource.data && !resource.error && permissions.includes("apps:read"))
+      rememberInstalledApps(resource.data.apps);
+  }, [resource.data, resource.error, permissions]);
+  const details = resource.data?.apps.find((app) => app.id === (requestedId ?? detailsId));
+  const showDetails = (id: string | null) => {
+    if (requestedId) {
+      const next = { ...state };
+      delete next.applicationId;
+      host.setAppState(next);
+    }
+    setDetailsId(id);
+  };
   const open = (app: InstalledAppView) => {
     const link = appLaunchLinks(app, window.location.hostname)[0];
     if (link) window.open(link.href, "_blank", "noopener,noreferrer");
-    else setDetailsId(app.id);
+    else showDetails(app.id);
   };
   const onJob = (job: AppJobView) => {
     setJobId(job.id);
     setDismissed(false);
     resource.reload();
+  };
+  const act = async (app: InstalledAppView, action: "remove" | "update") => {
+    if (pending || app.state === "busy" || !permissions.includes("apps:manage")) return;
+    setPending(app.id);
+    setActionError(null);
+    try {
+      const job = await requestAppAction(app, action, t, i18n.language);
+      if (job) onJob(job);
+    } catch (error) {
+      setActionError(error);
+    } finally {
+      setPending(null);
+    }
+  };
+  const menu = (app: InstalledAppView): MenuEntry[] => {
+    const id = installedAppId(app.id);
+    const isPinned = pinned.includes(id);
+    const onDesktop = desktopDoc.items.some(
+      (item) =>
+        item.kind === "app" &&
+        item.appId === id &&
+        item.desktopId === activeDesktopId &&
+        item.folderId === null,
+    );
+    return [
+      {
+        kind: "item",
+        id: "dock",
+        label: isPinned ? t("dock.unpin") : t("applications.menu.pinDock"),
+        icon: isPinned ? <PinOff /> : <Pin />,
+        permission: "preferences:manage",
+        disabled: !isPinned && pinned.length >= 32,
+        onSelect: () =>
+          updatePreference("dock", (doc) => ({
+            ...doc,
+            pinned: doc.pinned.includes(id)
+              ? doc.pinned.filter((entry) => entry !== id)
+              : doc.pinned.length < 32
+                ? [...doc.pinned, id]
+                : doc.pinned,
+          })),
+      },
+      {
+        kind: "item",
+        id: "desktop",
+        label: t("applications.menu.addDesktop"),
+        icon: <MonitorUp />,
+        permission: "preferences:manage",
+        disabled: onDesktop || desktopDoc.items.length >= 300,
+        onSelect: () =>
+          updatePreference("desktop", (doc) =>
+            doc.items.length >= 300 ||
+            doc.items.some(
+              (item) =>
+                item.kind === "app" &&
+                item.appId === id &&
+                item.desktopId === wm().activeDesktopId &&
+                item.folderId === null,
+            )
+              ? doc
+              : addShortcut(
+                  doc,
+                  id,
+                  wm().activeDesktopId,
+                  gridMetrics(iconSize, workArea(viewport)),
+                ),
+          ),
+      },
+      { kind: "separator", id: "manage" },
+      {
+        kind: "item",
+        id: "update",
+        label: t("applications.menu.update"),
+        icon: <RefreshCw />,
+        permission: "apps:manage",
+        disabled: pending !== null || app.state === "busy",
+        onSelect: () => void act(app, "update"),
+      },
+      {
+        kind: "item",
+        id: "remove",
+        label: t("appStore.actions.remove"),
+        icon: <Trash2 />,
+        danger: true,
+        permission: "apps:manage",
+        disabled: pending !== null || app.state === "busy",
+        onSelect: () => void act(app, "remove"),
+      },
+      { kind: "separator", id: "details" },
+      {
+        kind: "item",
+        id: "info",
+        label: t("applications.menu.info"),
+        icon: <Info />,
+        onSelect: () => showDetails(app.id),
+      },
+    ];
   };
   const begin = (event: PointerEvent<HTMLDivElement>) => {
     if (
@@ -144,7 +276,7 @@ export default function ApplicationsApp() {
           variant="ghost"
           size="sm"
           disabled={selection.length !== 1}
-          onClick={() => setDetailsId(selection[0]!.id)}
+          onClick={() => showDetails(selection[0]!.id)}
         >
           <Info className="size-4" aria-hidden />
           {t("applications.details")}
@@ -160,6 +292,7 @@ export default function ApplicationsApp() {
       </div>
       <div className="px-3 pt-3">
         <ResourceError error={resource.error} />
+        <ResourceError error={actionError} onDismiss={() => setActionError(null)} />
         {jobId ? (
           <Progress
             key={jobId}
@@ -199,7 +332,7 @@ export default function ApplicationsApp() {
       >
         {resource.loading ? (
           <LoadingBlock />
-        ) : !apps.length ? (
+        ) : resource.error && !resource.data ? null : !apps.length ? (
           <p className="p-8 text-center text-sm text-fg-muted">
             {t(resource.data?.apps.length ? "appStore.noResults" : "applications.empty")}
           </p>
@@ -214,51 +347,56 @@ export default function ApplicationsApp() {
             {apps.map((app) => {
               const name = localized(app.name, i18n.language);
               return (
-                <button
-                  key={app.id}
-                  type="button"
-                  role="option"
-                  aria-label={name}
-                  aria-selected={selected.has(app.id)}
-                  data-installed-app={app.id}
-                  className={cn(
-                    "relative flex select-none flex-col items-center gap-1.5 rounded-lg p-2 outline-none hover:z-20 hover:bg-hover/5 focus-visible:ring-2 focus-visible:ring-accent",
-                    selected.has(app.id) && "z-10",
-                  )}
-                  onClick={(event) => {
-                    setSelected(
-                      selectIcon(
-                        selected,
-                        app.id,
-                        apps.map((entry) => entry.id),
-                        anchor.current,
-                        event,
-                      ),
-                    );
-                    if (!event.shiftKey) anchor.current = app.id;
-                  }}
-                  onDoubleClick={() => open(app)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      open(app);
-                    }
-                  }}
-                >
-                  <span
+                <ContextMenuArea key={app.id} entries={() => menu(app)}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-label={name}
+                    aria-selected={selected.has(app.id)}
+                    data-installed-app={app.id}
                     className={cn(
-                      "grid size-[68px] place-items-center rounded-xl",
-                      selected.has(app.id) && "bg-hover/15 ring-1 ring-accent/30",
+                      "relative flex select-none flex-col items-center gap-1.5 rounded-lg p-2 outline-none hover:z-20 hover:bg-hover/5 focus-visible:ring-2 focus-visible:ring-accent",
+                      selected.has(app.id) && "z-10",
                     )}
+                    onClick={(event) => {
+                      setSelected(
+                        selectIcon(
+                          selected,
+                          app.id,
+                          apps.map((entry) => entry.id),
+                          anchor.current,
+                          event,
+                        ),
+                      );
+                      if (!event.shiftKey) anchor.current = app.id;
+                    }}
+                    onDoubleClick={() => open(app)}
+                    onContextMenu={() => {
+                      if (!selected.has(app.id)) setSelected(new Set([app.id]));
+                      anchor.current = app.id;
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        open(app);
+                      }
+                    }}
                   >
-                    <InstalledAppIcon app={app} />
-                  </span>
-                  <IconLabel text={name} />
-                  <span className="text-[0.65rem] text-fg-muted">
-                    {t(`appStore.states.${app.state}`)}
-                  </span>
-                  <SimulatedBadge source={app.source} />
-                </button>
+                    <span
+                      className={cn(
+                        "grid size-[68px] place-items-center rounded-xl",
+                        selected.has(app.id) && "bg-hover/15 ring-1 ring-accent/30",
+                      )}
+                    >
+                      <InstalledAppIcon app={app} />
+                    </span>
+                    <IconLabel text={name} />
+                    <span className="text-[0.65rem] text-fg-muted">
+                      {t(`appStore.states.${app.state}`)}
+                    </span>
+                    <SimulatedBadge source={app.source} />
+                  </button>
+                </ContextMenuArea>
               );
             })}
           </div>
@@ -283,7 +421,7 @@ export default function ApplicationsApp() {
       {details ? (
         <Dialog
           open
-          onOpenChange={(value) => !value && setDetailsId(null)}
+          onOpenChange={(value) => !value && showDetails(null)}
           title={localized(details.name, i18n.language)}
         >
           <InstalledCard key={details.id} app={details} onJob={onJob} onChanged={resource.reload} />

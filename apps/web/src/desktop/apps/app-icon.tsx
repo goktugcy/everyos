@@ -1,5 +1,6 @@
 import { cn } from "../../lib/cn.ts";
 import type { DesktopAppManifest } from "./types.ts";
+import { InstalledAppIcon } from "./store/installed-icon.tsx";
 
 /** Rounded gradient tile with the app's glyph. Size follows `size` (px). */
 export function AppIcon({
@@ -7,10 +8,11 @@ export function AppIcon({
   size = 40,
   className,
 }: {
-  manifest: Pick<DesktopAppManifest, "icon" | "tint">;
+  manifest: Pick<DesktopAppManifest, "icon" | "tint" | "installedApp">;
   size?: number;
   className?: string;
 }) {
+  if (manifest.installedApp) return <InstalledAppIcon app={manifest.installedApp} size={size} />;
   const Icon = manifest.icon;
   return (
     <span

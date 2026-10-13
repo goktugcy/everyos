@@ -1,4 +1,4 @@
-import type { AppJobView, LocalizedText } from "@everyos/shared";
+import type { AppJobView } from "@everyos/shared";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -6,16 +6,7 @@ import { useApiResource } from "../../../features/system/use-api-resource.ts";
 import { ApiRequestError } from "../../../lib/api.ts";
 import { ResourceError } from "../system/parts.tsx";
 
-export function localized(value: LocalizedText, locale: string): string {
-  return (
-    value[locale] ??
-    value[`${locale}_${locale === "tr" ? "TR" : "US"}`] ??
-    value.en ??
-    value.en_US ??
-    Object.values(value)[0] ??
-    ""
-  );
-}
+export { localized } from "../localized.ts";
 export function operationReason(error: unknown): string | null {
   return error instanceof ApiRequestError
     ? ((error.details as { reason?: string } | undefined)?.reason ?? null)

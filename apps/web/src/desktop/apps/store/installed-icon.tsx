@@ -2,7 +2,7 @@ import type { InstalledAppView } from "@everyos/shared";
 import { Package } from "lucide-react";
 import { useState } from "react";
 
-export function InstalledAppIcon({ app }: { app: InstalledAppView }) {
+export function InstalledAppIcon({ app, size = 56 }: { app: InstalledAppView; size?: number }) {
   const [failedIcon, setFailedIcon] = useState<string | null>(null);
   return app.icon && failedIcon !== app.icon ? (
     <img
@@ -10,12 +10,16 @@ export function InstalledAppIcon({ app }: { app: InstalledAppView }) {
       alt=""
       draggable={false}
       loading="lazy"
-      className="size-14 rounded-xl object-contain"
+      className="shrink-0 rounded-xl object-contain"
+      style={{ width: size, height: size }}
       onError={() => setFailedIcon(app.icon!)}
     />
   ) : (
-    <span className="grid size-14 place-items-center rounded-xl bg-accent/10 text-accent">
-      <Package className="size-8" aria-hidden />
+    <span
+      className="grid shrink-0 place-items-center rounded-xl bg-accent/10 text-accent"
+      style={{ width: size, height: size }}
+    >
+      <Package style={{ width: size * 0.57, height: size * 0.57 }} aria-hidden />
     </span>
   );
 }

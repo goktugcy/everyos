@@ -508,3 +508,18 @@ from rename, clipboard, trash and drop handlers, and preserve an owner's physica
 the same name. The existing apps permissions and server lifecycle checks remain authoritative.
 Retain the production hourly signed-release monitor and verify its timer-driven notification
 behavior. About displays that cadence and the actual last remote check.
+
+### D40 — Managed application shortcuts and shared lifecycle confirmation
+
+Persist installed-application shortcuts in the existing app-ID preference fields as
+`everyos.installed.app-<installation UUID>`. Resolve only those IDs against the permissioned
+live installation list; store no launch URL, port, executable or catalog code in preferences.
+Built-in launcher defaults stay unchanged. Clear installation metadata between sessions and
+only prune missing installations after a successful listing, preserving shortcuts when offline.
+
+Resolve current ports again on activation. Reserve a browser tab during the user gesture for
+a known running host web app, detach its opener, then navigate after the fresh listing. Close
+the tab if the session changes, locks or loses permission. Other states open Applications details
+without automatically starting containers. Both the folder context menu and management cards
+share lifecycle confirmation and the existing server jobs. Shortcut capacity and duplicate checks
+apply before persistence, and removal of the application cleans up its derived shortcuts.

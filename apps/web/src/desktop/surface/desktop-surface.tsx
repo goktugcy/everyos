@@ -41,6 +41,8 @@ import { errorMessage } from "../../lib/errors.ts";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
 import { AppIcon } from "../apps/app-icon.tsx";
+import { appTitle } from "../apps/app-title.ts";
+import { installedAppId, useInstalledApps } from "../apps/store/installed-apps-store.ts";
 import { IconLabel } from "../../components/ui/icon-label.tsx";
 import { FolderIcon } from "../apps/files/folder-icon.tsx";
 import { FolderIconDialog } from "../apps/settings/folder-icon-picker.tsx";
@@ -323,7 +325,8 @@ function FileGlyph({
  * desktop context menu.
  */
 export function DesktopSurface() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const installedApps = useInstalledApps((state) => state.apps);
   const permissions = usePermissions();
   const desktopDoc = usePreferences((state) => state.desktop);
   const pinned = usePreferences((state) => state.dock.pinned);
@@ -365,8 +368,14 @@ export function DesktopSurface() {
     [iconSizeName, viewport],
   );
   const allowed = useMemo(
-    () => new Set<string>(allowedApps(permissions, { includeHidden: true }).map((app) => app.id)),
-    [permissions],
+    () =>
+      new Set<string>([
+        ...allowedApps(permissions, { includeHidden: true }).map((app) => app.id),
+        ...(permissions.includes("apps:read")
+          ? installedApps.map((app) => installedAppId(app.id))
+          : []),
+      ]),
+    [permissions, installedApps],
   );
   const icons = useMemo<Icon[]>(
     () => [
@@ -441,7 +450,7 @@ export function DesktopSurface() {
   const labelOf = (icon: Icon): string => {
     if (icon.kind === "file") return icon.entry.name;
     const manifest = getApp(icon.item.appId);
-    return manifest ? t(manifest.titleKey) : icon.item.appId;
+    return manifest ? appTitle(manifest, t, i18n.language) : icon.item.appId;
   };
 
   /* ------------------------------ file actions ------------------------------ */
@@ -1134,12 +1143,16 @@ export function DesktopSurface() {
         id: "pin",
         label: isPinned ? t("desktop.menu.unpinFromDock") : t("desktop.menu.pinToDock"),
         icon: isPinned ? <PinOff /> : <Pin />,
+        permission: "preferences:manage",
+        disabled: !isPinned && pinned.length >= 32,
         onSelect: () =>
           updatePreference("dock", (dock) => ({
             ...dock,
             pinned: isPinned
               ? dock.pinned.filter((id) => id !== item.appId)
-              : [...dock.pinned, item.appId],
+              : dock.pinned.length < 32 && !dock.pinned.includes(item.appId)
+                ? [...dock.pinned, item.appId]
+                : dock.pinned,
           })),
       },
       { kind: "separator", id: "s2" },

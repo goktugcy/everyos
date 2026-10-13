@@ -19,6 +19,18 @@ published web endpoint. A stopped app, an app without a reachable web endpoint o
 opens its management details instead. Details use the store's existing permissioned lifecycle
 controls; simulated deployments stay explicitly labeled and never produce fabricated launch links.
 
+Right-click an installation in either Applications window to add it to the Dock or current
+desktop, update its images, uninstall it or view information. Updating and uninstalling reuse
+the Store confirmation, permission checks, jobs and audit history. Cancel leaves the installation
+untouched. Progress and request errors remain dismissible.
+
+Dock and desktop shortcuts persist per user by installation ID, keeping localized names and
+proxied catalog icons. Opening a shortcut fetches the current installation and published web
+ports first. Stopped, simulated or non-web apps open their management details without being
+started automatically. An authoritative application listing removes obsolete shortcuts after
+uninstall; a failed or offline listing does not erase preferences. Duplicate desktop shortcuts
+are prevented per virtual desktop, and the existing Dock/desktop limits remain enforced.
+
 The folder groups launchers rather than moving container volumes, images or application data.
 Upgrades add its desktop shortcut once while preserving custom layouts; removing that shortcut
 does not uninstall applications or recreate it on the next sign-in. The launcher still opens the

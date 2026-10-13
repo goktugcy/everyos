@@ -431,6 +431,12 @@ export const tr = {
     details: "Uygulama ayrıntıları",
     empty: "Mağazadan kurduğun uygulamalar bu klasörde görünür.",
     count: "{{count}} uygulama",
+    menu: {
+      pinDock: "Dock'a ekle",
+      addDesktop: "Masaüstüne ekle",
+      update: "Güncelle",
+      info: "Bilgi",
+    },
   },
   appStore: {
     choose: "Seçin",

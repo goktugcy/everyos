@@ -1,4 +1,4 @@
-import type { Permission } from "@everyos/shared";
+import type { InstalledAppView, Permission } from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import type { AppId, DesktopAppManifest } from "../apps/types.ts";
@@ -6,6 +6,9 @@ import type { SettingsSection } from "../commands.tsx";
 import { usePreferences } from "./preferences-store.ts";
 import { wm } from "./window-store.ts";
 import { useSessionStore } from "../../stores/session-store.ts";
+import { api } from "../../lib/api.ts";
+import { installationId, rememberInstalledApps } from "../apps/store/installed-apps-store.ts";
+import { appLaunchLinks } from "../apps/store/launch-links.ts";
 
 function permissions(): readonly Permission[] {
   return useSessionStore.getState().session?.permissions ?? [];
@@ -24,6 +27,7 @@ export function specFor(manifest: DesktopAppManifest): WindowSpec {
 
 /** Resolves persisted windows on restore; unknown or forbidden apps are dropped. */
 export function resolveSpec(appId: string): WindowSpec | null {
+  if (installationId(appId)) return null;
   const manifest = getApp(appId);
   return manifest && isAppAllowed(manifest, permissions()) ? specFor(manifest) : null;
 }
@@ -39,6 +43,43 @@ export const desktop = {
   ): string | null {
     const manifest = getApp(appId);
     if (!manifest || !isAppAllowed(manifest, permissions())) return null;
+    const installedId = installationId(appId);
+    if (installedId && manifest.installedApp) {
+      const sessionId = useSessionStore.getState().session?.session.id;
+      // Reserve the tab during the user gesture, then resolve current published ports.
+      const popup = appLaunchLinks(manifest.installedApp, window.location.hostname).length
+        ? window.open("about:blank", "_blank")
+        : null;
+      if (popup) popup.opener = null;
+      void api<{ apps: InstalledAppView[] }>("/apps")
+        .then(({ apps }) => {
+          if (
+            useSessionStore.getState().session?.session.id !== sessionId ||
+            useSessionStore.getState().locked ||
+            !permissions().includes("apps:read")
+          ) {
+            popup?.close();
+            return;
+          }
+          rememberInstalledApps(apps);
+          const app = apps.find((entry) => entry.id === installedId);
+          const link = app && appLaunchLinks(app, window.location.hostname)[0];
+          if (link && popup && !popup.closed) popup.location.replace(link.href);
+          else {
+            popup?.close();
+            desktop.openApp("everyos.applications", { appState: { applicationId: installedId } });
+          }
+        })
+        .catch(() => {
+          popup?.close();
+          if (
+            useSessionStore.getState().session?.session.id === sessionId &&
+            !useSessionStore.getState().locked
+          )
+            desktop.openApp("everyos.applications", { appState: { applicationId: installedId } });
+        });
+      return null;
+    }
     return wm().open(specFor(manifest), options);
   },
   openWindow(appId: AppId, appState?: unknown): string | null {
