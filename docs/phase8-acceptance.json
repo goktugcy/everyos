@@ -1595,10 +1595,30 @@
         ]
       },
       "fullSourceBrowserCi": {
-        "status": "in_progress",
+        "status": "cancelled",
         "url": "https://github.com/goktugcy/everyos/actions/runs/38318656850",
         "sourceChecksPassedOnBothArchitectures": true,
-        "notes": "The full browser run was ongoing at publication acceptance. The prior 0.1.10 full-run failures are recorded separately; this entry does not claim the new full run passed."
+        "followup": {
+          "url": "https://github.com/goktugcy/everyos/actions/runs/38319288729",
+          "status": "completed",
+          "conclusion": "failure",
+          "architectures": {
+            "arm64": {
+              "passed": 46,
+              "failed": 2
+            },
+            "amd64": {
+              "passed": 46,
+              "failed": 2
+            }
+          },
+          "applicationsStoreScenarioPassedOnBothArchitectures": true,
+          "preExistingFailures": [
+            "Files drag between windows and desktop",
+            "Terminal multiple windows, themes and restart"
+          ]
+        },
+        "notes": "The original run was superseded by the acceptance-document push. Its follow-up completed: Applications/Store passed on both architectures; the two previously recorded unrelated browser failures remained."
       },
       "limits": [
         "Browser acceptance uses explicitly labeled development Docker data and real filesystem/API calls; no new production Linux container lifecycle or upgrade run was performed for this UI integration.",
@@ -1610,6 +1630,124 @@
         "ownedLocalBrowserStateRemoved": true,
         "publisherKeyUntouched": true,
         "downloadedPackagesRemoved": true
+      }
+    },
+    "applicationMenus0112": {
+      "date": "2026-10-13",
+      "version": "0.1.12",
+      "sourceCommit": "2d79ab754c29649812e5d24c32143a0fa7af3cfa",
+      "sourceChecks": {
+        "passed": true,
+        "command": "pnpm check",
+        "testFiles": 66,
+        "tests": 645,
+        "format": true,
+        "lint": true,
+        "typecheck": true
+      },
+      "productionBuild": {
+        "passed": true,
+        "version": "0.1.12"
+      },
+      "targetedBrowser": {
+        "passed": true,
+        "tests": 2,
+        "durationSeconds": 37.0,
+        "command": "pnpm test:e2e foundation.spec.ts zz-store.spec.ts --grep \"first-run setup|catalog sync\"",
+        "scenarios": [
+          "Right-click menus in standalone Applications and in Files use real API installation identities.",
+          "Info opens current installation details; update and uninstall use the existing confirmation/jobs.",
+          "Cancel uninstall leaves the installation intact.",
+          "Dock and desktop shortcuts persist with real names and icons and prevent duplicate desktop additions.",
+          "Offline listing on reload preserves saved shortcuts; successful listing restores them.",
+          "Simulated launch opens management details with explicit simulation labels and no invented endpoint.",
+          "Uninstall removes obsolete Dock/desktop shortcuts and persists cleanup; dismissible notices remain."
+        ],
+        "visualInspection": true
+      },
+      "shortcutLaunch": {
+        "passed": true,
+        "test": "apps/web/src/desktop/state/installed-launch.test.ts",
+        "tests": 5,
+        "freshPortsAndPath": true,
+        "reservedTabOpenerDetached": true,
+        "pendingLockSignOutPermissionChangeClosesTab": true,
+        "simulatedLaunchDoesNotStartContainers": true
+      },
+      "limits": [
+        "Browser lifecycle acceptance uses explicitly labeled development Docker data with real API/filesystem/preferences calls; no new production Linux container lifecycle deployment was performed for this UI change.",
+        "Launcher shortcuts are per-user installation-ID references, not physical executable files or relocated container data.",
+        "Pop-up blocking or a stopped/non-web installation opens management details; no container is started automatically."
+      ],
+      "cleanup": {
+        "ownedLocalBrowserStateRemoved": true,
+        "publisherKeyUntouched": true,
+        "downloadedPackagesRemoved": true
+      },
+      "signedWorkflow": {
+        "passed": true,
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38330470084"
+      },
+      "publishedArtifacts": {
+        "passed": true,
+        "release": "https://github.com/goktugcy/everyos/releases/tag/v0.1.12",
+        "anonymousDownloads": true,
+        "manifestSignatureVerified": true,
+        "bootstrapSignatureVerified": true,
+        "publisherFingerprint": "a6fe59f9100da36a9551dcfab392ee1e69b93f788bfdb7c81169d65c111d0cce",
+        "assets": 7,
+        "artifacts": [
+          {
+            "arch": "arm64",
+            "file": "everyos_0.1.12_arm64.deb",
+            "size": 56836754,
+            "sha256": "2b7bca4c9a11e43b3acfaa46889a39a095f8a7f0012489a24c666afcfd742966",
+            "applicationContextMenuAndPersistentShortcutsPresent": true,
+            "filesFavoritesAndHomeApplicationsPresent": true,
+            "automaticVersionChecksVisible": true,
+            "liveApplicationFolderPresent": true,
+            "dismissibleStoreNoticesPresent": true,
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          },
+          {
+            "arch": "amd64",
+            "file": "everyos_0.1.12_amd64.deb",
+            "size": 57087214,
+            "sha256": "bbb352aa6494624f2f1ab5a93405ee07aa4e01f2c2dd16400725ccd1b1512291",
+            "applicationContextMenuAndPersistentShortcutsPresent": true,
+            "filesFavoritesAndHomeApplicationsPresent": true,
+            "automaticVersionChecksVisible": true,
+            "liveApplicationFolderPresent": true,
+            "dismissibleStoreNoticesPresent": true,
+            "passwordlessUpdateApiAndClientPresent": true,
+            "updatePermissionsAndVerifiedBackupRetained": true,
+            "automaticAppDefaultsPresent": true,
+            "availablePortPinningPresent": true,
+            "adaptiveTransparentLabelsPresent": true,
+            "identityAndContentsVerified": true,
+            "homeAssistantPanelAndRegistryPresent": true,
+            "defaultWallpaperVerified": true,
+            "releaseNotificationsPresent": true,
+            "persistentLinuxPrivilegesPresent": true,
+            "durationPickerPresent": true
+          }
+        ]
+      },
+      "fullSourceBrowserCi": {
+        "status": "in_progress",
+        "url": "https://github.com/goktugcy/everyos/actions/runs/38330470302",
+        "sourceChecksPassedOnBothArchitectures": true,
+        "notes": "Full browser result will be recorded when the current source run completes."
       }
     }
   },
