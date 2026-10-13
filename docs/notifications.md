@@ -110,3 +110,6 @@ the hourly remote release-check cadence. Seen version notices are deduplicated w
 read, dismissed, resolved and muted notices do not produce catch-up pop-ups. Locks/sign-out abort
 pending reads and clear displayed data; a different session cannot receive the preceding user's
 response. Closed event connections cannot deliver late events into a replacement connection.
+
+A notification-list response arriving while the document is hidden is discarded without marking
+version notices as seen; returning to the tab reads them again before displaying the pop-up.

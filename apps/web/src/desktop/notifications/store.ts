@@ -96,6 +96,7 @@ export function useNotificationStream(enabled: boolean): void {
         const session = useSessionStore.getState();
         return (
           !controller.signal.aborted &&
+          document.visibilityState === "visible" &&
           session.phase === "authenticated" &&
           !session.locked &&
           session.session?.session.id === sessionId

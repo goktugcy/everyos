@@ -50,16 +50,33 @@ test("hidden bell keeps live notifications and missed version notices recover on
     };
     await visibility(page, "hidden");
     await page.route("**/api/events?**", (route) => route.abort());
-    await page.route("**/api/notifications?**", (route) => {
+    let delayed: (() => void) | null = null;
+    let holdNotice = true;
+    await page.route("**/api/notifications?**", async (route) => {
       const query = new URL(route.request().url()).searchParams;
-      return query.get("category") === "updates" && query.get("unread") === "true"
-        ? route.fulfill({
-            json: { notifications: [notice], nextCursor: null, unread: { updates: 1 } },
-          })
-        : route.continue();
+      if (query.get("category") !== "updates" || query.get("unread") !== "true")
+        return route.continue();
+      if (holdNotice)
+        await new Promise<void>((resolve) => {
+          delayed = resolve;
+        });
+      return route.fulfill({
+        json: { notifications: [notice], nextCursor: null, unread: { updates: 1 } },
+      });
     });
     await visibility(page, "visible");
+    await expect.poll(() => delayed !== null).toBe(true);
+    await visibility(page, "hidden");
+    holdNotice = false;
+    const response = page.waitForResponse((r) =>
+      r.url().includes("/api/notifications?category=updates&unread=true"),
+    );
+    (delayed as (() => void) | null)?.();
+    await response;
+    await page.waitForTimeout(100);
     const toast = page.getByTestId("notification-toast").filter({ hasText: "9.9.9" });
+    await expect(toast).toHaveCount(0);
+    await visibility(page, "visible");
     await expect(toast).toBeVisible();
     await toast.getByRole("button", { name: "Kapat", exact: true }).click();
     await visibility(page, "hidden");
