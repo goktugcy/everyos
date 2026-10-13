@@ -19,8 +19,8 @@ export function ApplicationsEntry({
       type="button"
       className={
         view === "icons"
-          ? "group relative flex w-full flex-col items-center gap-1 rounded-lg p-1.5 outline-none hover:z-20 focus:z-20 focus-visible:ring-2 focus-visible:ring-accent"
-          : "flex w-full items-center gap-2 rounded px-2 py-1 text-left outline-none hover:bg-hover/5 focus-visible:ring-2 focus-visible:ring-accent"
+          ? "relative flex w-full flex-col items-center gap-1 rounded-lg p-1.5 outline-none hover:z-20 focus:z-20 focus:bg-hover/15 focus-visible:ring-2 focus-visible:ring-accent"
+          : "flex w-full items-center gap-2 rounded px-2 py-1 text-left outline-none hover:bg-hover/5 focus:bg-hover/15 focus-visible:ring-2 focus-visible:ring-accent"
       }
       aria-label={t("apps.applications")}
       title={t("applications.folder")}
@@ -51,7 +51,7 @@ export function ApplicationsEntry({
     >
       {view === "icons" ? (
         <>
-          <span className="grid size-[68px] place-items-center rounded-lg group-focus:bg-hover/15">
+          <span className="grid size-[68px] place-items-center rounded-lg">
             <FolderIcon badge={Package} />
           </span>
           <IconLabel text={t("apps.applications")} />

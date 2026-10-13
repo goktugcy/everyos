@@ -1,7 +1,9 @@
 # File manager (Phase 7)
 
-Desktop app/file captions and the file manager's icon view show selection on the glyph, with no
-colored plate behind the name. Captions wrap unbroken names and shrink based on measured width
+Desktop shortcuts, files and installed applications highlight the whole item, including its icon
+and name, with one selection background and outline. The Applications home entry uses the same
+whole-item focus feedback; file-list and Trash selections continue to highlight their rows.
+Names have no separate colored plate. Captions wrap unbroken names and shrink based on measured width
 and loaded fonts, down to 9px within three lines. Names exceeding that readable space expand in
 full when selected, hovered or keyboard-focused; the full title and accessible name remain intact.
 Mobile launcher names use the same fitting component. Icon layout and drag/selection hit areas

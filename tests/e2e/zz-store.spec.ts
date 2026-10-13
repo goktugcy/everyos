@@ -147,6 +147,11 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
   await expect(folder.locator('[data-installed-app][aria-selected="true"]')).toHaveCount(2);
   await folder.locator(`[data-installed-app="${firstId}"]`).click();
   const firstTile = folder.locator(`[data-installed-app="${firstId}"]`);
+  await expect(firstTile).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(firstTile.locator("[data-icon-label]")).toHaveCSS(
+    "background-color",
+    "rgba(0, 0, 0, 0)",
+  );
   const managedId = `everyos.installed.app-${firstId}`;
   await firstTile.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Bilgi", exact: true }).click();

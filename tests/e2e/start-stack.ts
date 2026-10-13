@@ -3,7 +3,7 @@
  * state in a throwaway directory. Run `pnpm build` before `pnpm test:e2e`.
  */
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer, type ServerResponse } from "node:http";
@@ -21,6 +21,9 @@ if (!existsSync(join(root, "dist/api/server.mjs"))) {
 
 rmSync(E2E_STATE_DIR, { recursive: true, force: true });
 mkdirSync(E2E_STATE_DIR, { recursive: true });
+const apiConfig = join(E2E_STATE_DIR, "api.yaml");
+// These disposable fixtures need a reserve, but not the production 1 GiB allowance.
+writeFileSync(apiConfig, "files:\n  minFreeMiB: 64\nbackups:\n  minFreeMiB: 64\n");
 
 const env = {
   ...process.env,
@@ -109,7 +112,10 @@ function tailscaleStatus(peers: boolean) {
 
 const children: ChildProcess[] = [
   spawn(process.execPath, [join(root, "dist/agent/agent.mjs")], { env, stdio: "inherit" }),
-  spawn(process.execPath, [join(root, "dist/api/server.mjs")], { env, stdio: "inherit" }),
+  spawn(process.execPath, [join(root, "dist/api/server.mjs")], {
+    env: { ...env, EVERYOS_CONFIG: apiConfig },
+    stdio: "inherit",
+  }),
 ];
 
 // Original catalog fixture served over HTTP to exercise the real safe fetcher.

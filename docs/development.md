@@ -24,6 +24,11 @@ pnpm check            # format check + lint + typecheck + tests
 The first `pnpm test:e2e` run on a machine needs the browser binary:
 `pnpm exec playwright install --only-shell chromium`.
 
+API and browser fixtures use a 64 MiB free-space reserve in their disposable directories so
+small real-file scenarios run on developer disks with limited free space. Tests that verify
+insufficient-space rejection explicitly override that reserve. Production configuration keeps
+its default 1 GiB reserve for files and backups.
+
 The end-to-end stack uses disposable state under `tests/e2e/.state` and port 7480 by default
 (`EVERYOS_E2E_PORT` overrides it); it does not reuse or stop a running development stack. Phase 2
 coverage includes window drag/resize/snap and restoration, dock/context menus, folders, all seven

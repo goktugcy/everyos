@@ -14,7 +14,8 @@ same localized name remains independent and usable. The collection is excluded f
 rename, clipboard, trash and drop operations.
 This live folder includes existing installations; removing an application removes
 its entry on refresh. Its icon view supports Ctrl/Command/Shift selection, select-all and marquee
-selection, with adaptive transparent captions. Double-click launches a running application's real
+selection, with a shared highlight around each selected icon and name and adaptive captions.
+Double-click launches a running application's real
 published web endpoint. A stopped app, an app without a reachable web endpoint or a simulated app
 opens its management details instead. Details use the store's existing permissioned lifecycle
 controls; simulated deployments stay explicitly labeled and never produce fabricated launch links.

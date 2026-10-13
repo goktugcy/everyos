@@ -220,7 +220,7 @@ function DesktopIcon(props: IconProps) {
       className={cn(
         "group absolute left-0 top-0 flex flex-col items-center gap-1.5 rounded-everyos-md p-1.5 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent",
         native ? "touch-manipulation" : "touch-none",
-        selected && "z-10",
+        selected && "z-10 bg-hover/15 ring-1 ring-accent/30",
         "hover:z-20 focus-visible:z-20",
         props.dropTarget && "bg-[rgb(var(--everyos-accent)/0.18)] ring-2 ring-accent",
       )}
@@ -243,14 +243,7 @@ function DesktopIcon(props: IconProps) {
       onDoubleClick={() => props.onOpen(id)}
       onKeyDown={(event) => props.onKey(event, id)}
     >
-      <span
-        className={cn(
-          "grid place-items-center rounded-everyos-md",
-          selected && "bg-hover/20 ring-1 ring-accent/40",
-        )}
-      >
-        {props.glyph}
-      </span>
+      <span className="grid place-items-center rounded-everyos-md">{props.glyph}</span>
       {renaming ? (
         <input
           autoFocus

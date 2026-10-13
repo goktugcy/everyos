@@ -289,8 +289,8 @@
 }
 
 /*
- * Desktop icon labels: no plate, like macOS. A halo keeps them legible on any
- * wallpaper; selection is indicated on the icon rather than the name.
+ * A halo keeps desktop labels legible on any wallpaper. Selection covers the
+ * whole item, including its glyph and caption, without a separate label plate.
  */
 .everyos-icon-label {
   text-shadow:

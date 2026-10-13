@@ -1,15 +1,13 @@
-EveryOS 0.1.12 adds application context menus and persistent Dock/desktop shortcuts.
+EveryOS 0.1.13 highlights selected icons and names together.
 
-- Right-click a Store-managed application in Applications, including the collection inside
-  Files, to add it to the Dock or desktop, update, uninstall or view information.
-- Updating and uninstalling use the existing confirmation, server permissions, jobs and audit
-  history. Cancel leaves the installation untouched; operation notices remain dismissible.
-- Shortcuts retain real localized names and catalog icons across reloads. Launching resolves
-  current published ports; stopped, simulated and non-web apps open management details.
-- Uninstalling cleans up obsolete shortcuts. Offline listings preserve saved shortcuts, and
-  duplicate additions and preference-capacity overflows are prevented.
+- Desktop shortcuts and files, Files icon view and installed applications now share one
+  selection background and outline around the complete item, including its name.
+- The Applications entry in the user's home highlights both icon and name when focused.
+- Multi-selection, marquee selection, keyboard focus, adaptive long captions and file-list
+  row highlighting retain their existing behavior.
 
 The publisher key, GitHub release source and default wallpaper remain unchanged. Applications
 in Files, automatic hourly update notifications, passwordless EveryOS update confirmation,
 automatic application defaults and port allocation, Linux account permissions and Home Assistant
 integration remain included.
+Application context menus and persistent installation shortcuts from 0.1.12 remain included.

@@ -466,6 +466,9 @@ export async function createTestContext(
 ): Promise<TestContext> {
   const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));
   const config = loadApiConfig({ EVERYOS_ENV: "development", EVERYOS_DEV_ROOT: dir });
+  // Small fixtures keep a real reserve without requiring an almost-empty developer disk.
+  config.files.minFreeBytes = 64 * 1024 * 1024;
+  config.backups.minFreeBytes = 64 * 1024 * 1024;
   if (options.webDir) config.paths.webDir = options.webDir;
   options.configure?.(config);
   const db = openDatabase(config.paths.databaseFile);

@@ -55,7 +55,7 @@ interface ItemProps {
 
 /**
  * Finder's icon view: large icons (thumbnails for images), names below, the
- * selection highlighted on the glyph. Behaviour comes from the same handlers as
+ * selection highlighted around both glyph and name. Behaviour comes from the same handlers as
  * the list view.
  */
 export function FileIconView({
@@ -108,16 +108,11 @@ export function FileIconView({
                 "flex cursor-default select-none flex-col items-center gap-1 rounded-lg p-1.5",
                 isCut(entry) && "opacity-50",
                 "relative hover:z-20",
-                isSelected && "z-10",
+                isSelected && "z-10 bg-hover/15 ring-1 ring-accent/30",
                 dropTarget === `row:${entry.name}` && "ring-2 ring-accent",
               )}
             >
-              <div
-                className={cn(
-                  "relative grid size-[68px] place-items-center rounded-lg",
-                  isSelected && "bg-hover/15",
-                )}
-              >
+              <div className="relative grid size-[68px] place-items-center rounded-lg">
                 {folder ? (
                   <FolderIcon
                     location={

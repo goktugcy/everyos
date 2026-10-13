@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { CSRF_HEADER, type FileRootsResponse } from "../../packages/shared/src/index.ts";
 import { signIn } from "./helpers.ts";
 
-test("icon names stay transparent and long unbroken names fit or expand completely", async ({
+test("selection covers icons and names while long unbroken names fit or expand completely", async ({
   page,
 }) => {
   const session = await signIn(page);
@@ -23,9 +23,24 @@ test("icon names stay transparent and long unbroken names fit or expand complete
   const surface = page.getByTestId("desktop-surface");
   const app = surface.getByRole("button", { name: "Ayarlar", exact: true });
   await app.click();
+  await expect(app).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(app.locator("[data-icon-label]")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   const ordinary = surface.getByRole("button", { name: names[0], exact: true });
   await ordinary.click();
+  await expect(ordinary).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(app).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  expect(
+    await ordinary.evaluate((node) => {
+      const item = node.getBoundingClientRect();
+      const caption = node.querySelector(".everyos-icon-caption")!.getBoundingClientRect();
+      return (
+        caption.top >= item.top &&
+        caption.bottom <= item.bottom &&
+        caption.left >= item.left &&
+        caption.right <= item.right
+      );
+    }),
+  ).toBe(true);
   const label = ordinary.locator("[data-icon-label]");
   await expect(label).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect
@@ -47,10 +62,11 @@ test("icon names stay transparent and long unbroken names fit or expand complete
   await files.getByRole("button", { name: "Simgeler", exact: true }).click();
   const row = files.getByTestId("file-row").filter({ hasText: names[1] });
   await row.click();
+  await expect(row).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(row.locator(".everyos-caption-expanded")).toBeVisible();
   await expect(row.locator("[data-icon-label]")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await page.screenshot({
-    path: test.info().outputPath("adaptive-transparent-labels.png"),
+    path: test.info().outputPath("whole-item-selection.png"),
     animations: "disabled",
   });
 });

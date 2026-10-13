@@ -355,8 +355,10 @@ export default function ApplicationsApp() {
                     aria-selected={selected.has(app.id)}
                     data-installed-app={app.id}
                     className={cn(
-                      "relative flex select-none flex-col items-center gap-1.5 rounded-lg p-2 outline-none hover:z-20 hover:bg-hover/5 focus-visible:ring-2 focus-visible:ring-accent",
-                      selected.has(app.id) && "z-10",
+                      "relative flex select-none flex-col items-center gap-1.5 rounded-lg p-2 outline-none hover:z-20 focus-visible:ring-2 focus-visible:ring-accent",
+                      selected.has(app.id)
+                        ? "z-10 bg-hover/15 ring-1 ring-accent/30"
+                        : "hover:bg-hover/5",
                     )}
                     onClick={(event) => {
                       setSelected(
@@ -382,12 +384,7 @@ export default function ApplicationsApp() {
                       }
                     }}
                   >
-                    <span
-                      className={cn(
-                        "grid size-[68px] place-items-center rounded-xl",
-                        selected.has(app.id) && "bg-hover/15 ring-1 ring-accent/30",
-                      )}
-                    >
+                    <span className="grid size-[68px] place-items-center rounded-xl">
                       <InstalledAppIcon app={app} />
                     </span>
                     <IconLabel text={name} />
