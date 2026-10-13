@@ -1744,10 +1744,28 @@
         ]
       },
       "fullSourceBrowserCi": {
-        "status": "in_progress",
+        "status": "completed",
+        "conclusion": "failure",
         "url": "https://github.com/goktugcy/everyos/actions/runs/38330470302",
         "sourceChecksPassedOnBothArchitectures": true,
-        "notes": "Full browser result will be recorded when the current source run completes."
+        "unitTestsPerArchitecture": 645,
+        "architectures": {
+          "arm64": {
+            "passed": 46,
+            "failed": 2,
+            "applicationsStoreScenarioPassed": true
+          },
+          "amd64": {
+            "passed": 46,
+            "failed": 2,
+            "applicationsStoreScenarioPassed": true
+          }
+        },
+        "preExistingFailures": [
+          "Files drag between windows and desktop (tests/e2e/tools-finder.spec.ts:88)",
+          "Terminal multiple windows, themes and restart (tests/e2e/tools-terminal.spec.ts:120)"
+        ],
+        "notes": "The expanded Applications/Store context-menu scenario passed on both architectures. The two failures match the previous 0.1.11 full run; the overall full browser suite is not claimed green."
       }
     }
   },
