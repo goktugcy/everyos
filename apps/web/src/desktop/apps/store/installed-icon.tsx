@@ -6,10 +6,13 @@ import { AiAgentIcon } from "../ai-agents/agent-icon.tsx";
 export function InstalledAppIcon({ app, size = 56 }: { app: InstalledAppView; size?: number }) {
   const [failedIcon, setFailedIcon] = useState<string | null>(null);
   const kind =
-    app.provenance.catalogId === AI_AGENT_CATALOG_ID &&
-    (app.provenance.path === "hermes" || app.provenance.path === "openclaw")
-      ? app.provenance.path
-      : null;
+    app.provenance.catalogId !== AI_AGENT_CATALOG_ID
+      ? null
+      : app.provenance.path === "hermes" || app.provenance.path === "openclaw"
+        ? app.provenance.path
+        : app.provenance.path === "ollama"
+          ? "local"
+          : null;
   if (kind)
     return (
       <span

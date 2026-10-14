@@ -1,12 +1,14 @@
 import type { AiAgentKind } from "@everyos/shared";
+import { BrainCircuit } from "lucide-react";
 import type { CSSProperties } from "react";
 import { cn } from "../../../lib/cn.ts";
 
-const marks: Record<AiAgentKind, string> = {
+const marks: Record<Exclude<AiAgentKind, "local">, string> = {
   hermes: "/agent-logos/hermes.svg",
   openclaw: "/agent-logos/openclaw.svg",
 };
 
+/** Agent marks, plus a generic model symbol for local models (and the EveryOS Ollama). */
 export function AiAgentIcon({
   kind,
   className,
@@ -16,6 +18,15 @@ export function AiAgentIcon({
   className?: string;
   style?: CSSProperties;
 }) {
+  if (kind === "local")
+    return (
+      <BrainCircuit
+        aria-hidden
+        data-agent-logo={kind}
+        className={cn("inline-block size-[1em] shrink-0 align-middle", className)}
+        style={style}
+      />
+    );
   const mask = `url("${marks[kind]}")`;
   return (
     <span

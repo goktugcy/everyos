@@ -16,6 +16,10 @@ export function AiAgentModule() {
     error = useAiAgents((state) => state.error);
   const [open, setOpen] = useState(false);
   const configured = agents.filter((agent) => agent.configured);
+  // One symbol keeps the menu bar narrow however many assistants are set up; the panel lists them.
+  const single = configured.length === 1 ? configured[0]! : null;
+  const busy = configured.some((agent) => agent.busy),
+    running = configured.some((agent) => agent.status === "running");
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger
@@ -23,32 +27,37 @@ export function AiAgentModule() {
         aria-label={t("aiAgents.title")}
         data-testid="ai-agent-menubar"
       >
-        {configured.length ? (
-          configured.map((agent) => (
+        <span
+          className="relative"
+          title={configured
+            .map(
+              (agent) =>
+                `${t(`aiAgents.names.${agent.kind}`)} · ${t(`aiAgents.statuses.${agent.status}`)}`,
+            )
+            .join("\n")}
+        >
+          {single ? (
+            <AiAgentIcon
+              kind={single.kind}
+              className={cn("size-4", running ? "text-fg" : "text-fg-subtle")}
+            />
+          ) : (
+            <Bot
+              className={cn("size-4", configured.length && !running && "text-fg-subtle")}
+              aria-hidden
+            />
+          )}
+          {configured.length ? (
             <span
-              key={agent.kind}
-              className="relative"
-              title={`${t(`aiAgents.names.${agent.kind}`)} · ${t(`aiAgents.statuses.${agent.status}`)}`}
-            >
-              <AiAgentIcon
-                kind={agent.kind}
-                className={cn("size-4", agent.status === "running" ? "text-fg" : "text-fg-subtle")}
-              />
-              <span
-                className={cn(
-                  "absolute -bottom-0.5 -right-1 size-1.5 rounded-full",
-                  agent.busy
-                    ? "bg-warning"
-                    : agent.status === "running"
-                      ? "bg-success"
-                      : "bg-fg-subtle",
-                )}
-              />
-            </span>
-          ))
-        ) : (
-          <Bot className="size-4" aria-hidden />
-        )}
+              data-testid="ai-agent-menubar-state"
+              data-state={busy ? "busy" : running ? "running" : "idle"}
+              className={cn(
+                "absolute -bottom-0.5 -right-1 size-1.5 rounded-full",
+                busy ? "bg-warning" : running ? "bg-success" : "bg-fg-subtle",
+              )}
+            />
+          ) : null}
+        </span>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content

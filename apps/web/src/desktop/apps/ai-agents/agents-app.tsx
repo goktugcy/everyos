@@ -22,8 +22,23 @@ import { ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { AiAgentIcon } from "./agent-icon.tsx";
 import { useAiAgents } from "./agent-store.ts";
 
+const CHAT_TARGETS = [...AI_AGENT_KINDS, "auto"] as const;
+
 export default function AgentsApp() {
-  const [kind, setKind] = useAppStateField("kind", AI_AGENT_KINDS, "hermes");
+  const [chosen, setKind] = useAppStateField("kind", CHAT_TARGETS, "auto");
+  const agents = useAiAgents((state) => state.agents);
+  // Without a choice, open the first ready assistant, then the first one that is set up. The pick
+  // is kept, so a later status change never switches away from (and aborts) a running chat.
+  const [auto, setAuto] = useState<AiAgentKind | null>(null);
+  if (chosen === "auto" && auto === null && agents.length)
+    setAuto(
+      (
+        agents.find((agent) => agent.configured && agent.status === "running") ??
+        agents.find((agent) => agent.configured)
+      )?.kind ?? "local",
+    );
+  const kind = chosen !== "auto" ? chosen : (auto ?? "local");
+  const agent = agents.find((entry) => entry.kind === kind);
   const sessionId = useSessionStore((state) => state.session?.session.id);
   const { t } = useTranslation();
   return (
@@ -37,6 +52,13 @@ export default function AgentsApp() {
           onChange={setKind}
           className="w-48"
         />
+        {agent?.configured ? (
+          <span className="truncate text-xs text-fg-muted" data-testid="ai-chat-model">
+            {kind === "local" || agent.settings.mode === "external"
+              ? agent.settings.apiModel
+              : agent.settings.model}
+          </span>
+        ) : null}
         <Button
           variant="ghost"
           className="ml-auto"
@@ -302,7 +324,9 @@ function Chat({ kind }: { kind: AiAgentKind }) {
                 {t("aiAgents.welcome", { agent: t(`aiAgents.names.${kind}`) })}
               </h2>
               <p className="text-sm leading-relaxed text-fg-muted">
-                {t(available ? "aiAgents.chatHint" : "aiAgents.setupHint")}
+                {available
+                  ? t(kind === "local" ? "aiAgents.descriptions.local" : "aiAgents.chatHint")
+                  : t("aiAgents.setupHint")}
               </p>
               {!available ? (
                 <Button
