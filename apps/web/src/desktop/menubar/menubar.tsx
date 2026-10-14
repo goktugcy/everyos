@@ -42,6 +42,7 @@ import { MenubarCustomization } from "./customization.tsx";
 import { moduleOrder, moduleVisibility } from "./module-order.ts";
 import { DEFAULT_MENUBAR } from "../state/defaults.ts";
 import { ConnectionModule } from "./connection-module.tsx";
+import { AiAgentModule } from "./ai-agent-module.tsx";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -343,6 +344,10 @@ export function Menubar() {
     power: canReadSystem ? <PowerModule /> : null,
     network: canReadSystem ? <NetworkModule /> : null,
     agent: <AgentIndicator />,
+    aiAgents:
+      permissions.includes("terminal:access") && permissions.includes("apps:manage") ? (
+        <AiAgentModule />
+      ) : null,
     desktops: <DesktopSwitcher />,
     search: (
       <button

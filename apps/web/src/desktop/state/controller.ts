@@ -1,6 +1,7 @@
 import type { InstalledAppView, Permission } from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
+import { useAiAgents } from "../apps/ai-agents/agent-store.ts";
 import type { AppId, DesktopAppManifest } from "../apps/types.ts";
 import type { SettingsSection } from "../commands.tsx";
 import { usePreferences } from "./preferences-store.ts";
@@ -45,6 +46,11 @@ export const desktop = {
     if (!manifest || !isAppAllowed(manifest, permissions())) return null;
     const installedId = installationId(appId);
     if (installedId && manifest.installedApp) {
+      const nativeChat = useAiAgents
+        .getState()
+        .agents.find((agent) => agent.settings.mode === "managed" && agent.app?.id === installedId);
+      if (nativeChat)
+        return desktop.openApp("everyos.agents", { appState: { kind: nativeChat.kind } });
       const sessionId = useSessionStore.getState().session?.session.id;
       // Reserve the tab during the user gesture, then resolve current published ports.
       const popup = appLaunchLinks(manifest.installedApp, window.location.hostname).length

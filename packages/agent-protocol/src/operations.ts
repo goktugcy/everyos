@@ -1,6 +1,9 @@
 import { AGENT_FILE_OPERATIONS } from "./file-operations.ts";
 import type { Permission } from "@everyos/shared";
 import {
+  AiDiscoverySchema,
+  NativeAgentIdSchema,
+  NativeAgentSnapshotSchema,
   LinuxAccountSchema,
   LinuxAccountStatusSchema,
   LinuxBindingSchema,
@@ -142,6 +145,29 @@ const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
   ...AGENT_FILE_OPERATIONS,
+  "ai.discover": unary({
+    params: NoParams,
+    result: z.strictObject({
+      source: z.enum(["host", "simulated"]),
+      discoveries: z.array(AiDiscoverySchema).max(40),
+    }),
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 30_000,
+  }),
+  "ai.snapshot": unary({
+    params: z.strictObject({
+      id: NativeAgentIdSchema,
+      fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+      includeHistory: z.boolean(),
+    }),
+    result: NativeAgentSnapshotSchema,
+    permission: "terminal:access",
+    allowSystemActor: false,
+    mutating: false,
+    timeoutMs: 30_000,
+  }),
   "identity.accounts": unary({
     params: NoParams,
     result: z.array(LinuxAccountSchema),

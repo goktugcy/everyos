@@ -1,3 +1,19 @@
+EveryOS 0.1.20 adds Hermes Agent and OpenClaw integration.
+
+- Agent Settings installs a pinned official isolated package or connects an existing agent.
+- Per-account model/provider credentials, confirmed lifecycle actions and live connection state.
+- Native streaming chat with encrypted private history, explicit stop, reload recovery and deletion.
+- Configurable menu bar icons show each agent and open its chat quickly.
+- Automatic discovery of native/profile and official Docker installations, with reviewed settings
+  and readable chat import. Existing native files and services are never modified.
+- Existing application ownership, Linux account policy, permissions, audit and backup checks apply.
+- Managed API ports are allocated automatically on loopback; tools are off by default.
+- Partial turns are never committed or automatically replayed; locks and access changes close streams.
+
+Docker/Compose v2 is required for managed installation. No personal host directories or Docker
+socket are mounted. Advanced OAuth, channels/plugins and multimodal uploads remain in independently
+configured agents; see [AI agents](ai-agents.md). All previous EveryOS features remain included.
+
 EveryOS 0.1.19 makes version updates visible without reloading the page.
 
 - About and EveryOS update panels receive live verified status, including newly available and

@@ -32,7 +32,8 @@ test("menu bar context controls persist visibility, order and clock options", as
   const dialog = page.getByRole("dialog", { name: "Üst barı özelleştir", exact: true });
   const clock = dialog.locator('[data-menubar-control="clock"]');
   await clock.getByRole("switch", { name: "Saat", exact: true }).click();
-  for (let index = 0; index < 9; index++)
+  const moduleCount = await dialog.locator("[data-menubar-control]").count();
+  for (let index = 0; index < moduleCount - 1; index++)
     await clock.getByRole("button", { name: "Saat: sola taşı", exact: true }).click();
   await expect(clock.getByRole("button", { name: "Saat: sola taşı", exact: true })).toBeDisabled();
   await dialog.getByRole("switch", { name: "Saatte saniyeleri göster", exact: true }).click();

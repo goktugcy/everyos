@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Actor } from "@everyos/agent-protocol";
 import {
   CatalogError,
@@ -39,6 +39,7 @@ interface AppRow {
   metadata: string;
 }
 interface AppMetadata {
+  pendingConfig?: { sealedCompose: string; previousHash: string; provenance: CatalogApp["source"] };
   icon?: string | null;
   web?: CatalogApp["web"];
   images?: InstalledAppView["images"];
@@ -271,10 +272,65 @@ export class AppService {
     actor: Actor,
   ): Promise<AppJobView> {
     this.#capacity();
-    let app = this.#catalogs.app(input.appId);
+    const app = this.#catalogs.app(input.appId);
     if (!app) throw new ApiError(404, "NOT_FOUND", "Catalog application not found");
     if (app.source.ref !== input.snapshot)
       throw new ApiError(409, "CONFLICT", "Catalog snapshot changed");
+    return this.#installApp(app, input, actor);
+  }
+  /** Repository-owned templates; no HTTP route accepts a template from the caller. */
+  installBuiltin(app: CatalogApp, actor: Actor): Promise<AppJobView> {
+    return this.#installApp(app, { variables: {}, ports: [], acknowledgeRisks: true }, actor);
+  }
+  async configureBuiltin(id: string, template: CatalogApp, actor: Actor): Promise<AppJobView> {
+    this.#capacity(id);
+    const row = this.#row(id);
+    if (!row) throw new ApiError(404, "NOT_FOUND", "Installed application not found");
+    const provenance = JSON.parse(row.provenance) as CatalogApp["source"];
+    if (
+      provenance.catalogId !== template.source.catalogId ||
+      provenance.path !== template.source.path
+    )
+      throw new ApiError(403, "FORBIDDEN", "Application template does not match");
+    // Built-in templates carry freshly generated keys, which inspection classifies as literals.
+    if (template.blockers.length || template.risks.some((risk) => risk !== "default-secret"))
+      throw new ApiError(422, "VALIDATION_FAILED", "Unsafe built-in template");
+    const inspection = await this.#agent
+      .call("apps.inspect", { id }, actor)
+      .catch((error: unknown) => {
+        throw toApiError(error);
+      });
+    if (inspection.busy) throw new ApiError(409, "CONFLICT", "Application operation in progress");
+    const compose = prepareInstall(template, id, { variables: {}, ports: [] });
+    this.#capacity(id);
+    const metadata = JSON.parse(row.metadata) as AppMetadata;
+    metadata.pendingConfig = {
+      sealedCompose: this.#secrets.seal(compose, `app:${id}:pending-compose:v1`),
+      previousHash: createHash("sha256")
+        .update(this.#secrets.open(row.sealed_compose, `app:${id}:compose:v1`))
+        .digest("hex"),
+      provenance: template.source,
+    };
+    this.#db.run(
+      "UPDATE installed_apps SET metadata = ? WHERE id = ?",
+      JSON.stringify(metadata),
+      id,
+    );
+    return this.#enqueue(id, "update", actor);
+  }
+  async #installApp(
+    template: CatalogApp,
+    input: {
+      variables: Record<string, string>;
+      ports: { service: string; index: number; host: number }[];
+      acknowledgeRisks: boolean;
+      dataFrom?: string | undefined;
+      confirmDataFrom?: string | undefined;
+    },
+    actor: Actor,
+  ): Promise<AppJobView> {
+    this.#capacity();
+    let app = template;
     const system = await this.#agent.call("system.info", {}, actor).catch((error: unknown) => {
       throw toApiError(error);
     });
@@ -342,9 +398,13 @@ export class AppService {
         web: app.web ?? { path: "/", scheme: "http" },
         services: Object.keys(parseCompose(compose).services as Record<string, unknown>),
         dataCopyEligible:
-          app.mounts.length > 0 &&
+          app.mounts.some((mount) => /^\$\{?APP_DATA_DIR\}?\//.test(mount.source ?? "")) &&
           app.mounts.every(
-            (mount) => mount.kind === "bind" && /^\$\{?APP_DATA_DIR\}?\//.test(mount.source ?? ""),
+            (mount) =>
+              mount.kind === "bind" &&
+              (/^\$\{?APP_DATA_DIR\}?\//.test(mount.source ?? "") ||
+                (mount.readOnly &&
+                  /^\{\{otuken\.configDir\}\}\/config[0-9]{1,2}$/.test(mount.source ?? ""))),
           ),
         ...(input.dataFrom ? { dataFrom: input.dataFrom } : {}),
       }),
@@ -357,7 +417,7 @@ export class AppService {
     actor: Actor,
   ): Promise<AppJobView> {
     this.#capacity(id);
-    const app = this.#row(id);
+    let app = this.#row(id);
     if (!app) throw new ApiError(404, "NOT_FOUND", "Installed application not found");
     if (
       (action === "update" || action === "retry") &&
@@ -372,6 +432,15 @@ export class AppService {
       });
     if (inspection.busy)
       throw new ApiError(409, "CONFLICT", "The agent is still executing an operation");
+    if (
+      (JSON.parse(app.metadata) as AppMetadata).pendingConfig &&
+      app.last_error === "interrupted"
+    ) {
+      await this.reconcile(id, actor);
+      app = this.#row(id)!;
+    }
+    if (action === "retry" && (JSON.parse(app.metadata) as AppMetadata).pendingConfig)
+      action = "update";
     this.#capacity(id);
     return this.#enqueue(id, action, actor);
   }
@@ -401,6 +470,8 @@ export class AppService {
         );
         const metadata = JSON.parse(row.metadata) as AppMetadata;
         if (run.ok && run.images.length) metadata.images = run.images;
+        if (run.ok && run.action === "update" && metadata.pendingConfig)
+          this.#commitConfig(row.id, metadata);
         this.#db.run(
           "UPDATE installed_apps SET last_error = ?, removed = ?, metadata = ? WHERE id = ?",
           run.ok ? null : "compose-failed",
@@ -424,6 +495,20 @@ export class AppService {
       busy: inspection.busy,
       job: job ? this.job(job.id) : null,
     };
+  }
+  #commitConfig(id: string, metadata: AppMetadata): void {
+    const pending = metadata.pendingConfig;
+    if (!pending) return;
+    this.#db.run(
+      "UPDATE installed_apps SET sealed_compose = ?, provenance = ? WHERE id = ?",
+      this.#secrets.seal(
+        this.#secrets.open(pending.sealedCompose, `app:${id}:pending-compose:v1`),
+        `app:${id}:compose:v1`,
+      ),
+      JSON.stringify(pending.provenance),
+      id,
+    );
+    delete metadata.pendingConfig;
   }
   #enqueue(id: string, action: AppAction, actor: Actor): AppJobView {
     const jobId = randomUUID();
@@ -454,6 +539,8 @@ export class AppService {
     try {
       const app = this.#row(job.appId);
       if (!app) throw new Error("App record missing");
+      const metadata = JSON.parse(app.metadata) as AppMetadata;
+      const pending = job.action === "update" ? metadata.pendingConfig : undefined;
       this.#db.run(
         "UPDATE app_jobs SET stage = 'deploying', updated_at = ? WHERE id = ?",
         this.#now(),
@@ -465,7 +552,11 @@ export class AppService {
         {
           id: app.id,
           action: job.action,
-          compose: this.#secrets.open(app.sealed_compose, `app:${app.id}:compose:v1`),
+          compose: this.#secrets.open(
+            pending?.sealedCompose ?? app.sealed_compose,
+            pending ? `app:${app.id}:pending-compose:v1` : `app:${app.id}:compose:v1`,
+          ),
+          ...(pending ? { previousComposeHash: pending.previousHash } : {}),
           riskOverride: app.risk_override === 1,
           jobId: job.id,
           ...((JSON.parse(app.metadata) as AppMetadata).dataFrom
@@ -480,9 +571,9 @@ export class AppService {
       if (!ok) error = "compose-failed";
       if (!this.#stopped)
         this.#db.run("UPDATE installed_apps SET source = ? WHERE id = ?", result.source, app.id);
-      if (!this.#stopped && ok && result.images?.length) {
-        const metadata = JSON.parse(app.metadata) as AppMetadata;
-        metadata.images = result.images;
+      if (!this.#stopped && ok && (pending || result.images?.length)) {
+        if (result.images?.length) metadata.images = result.images;
+        if (pending) this.#commitConfig(app.id, metadata);
         this.#db.run(
           "UPDATE installed_apps SET metadata = ? WHERE id = ?",
           JSON.stringify(metadata),

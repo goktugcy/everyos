@@ -1,5 +1,6 @@
 import {
   Bell,
+  Bot,
   Info,
   LayoutDashboard,
   Palette,
@@ -23,6 +24,7 @@ const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnTyp
     notifications: { icon: Bell, component: lazy(() => import("./notifications-section.tsx")) },
     account: { icon: UserRound, component: lazy(() => import("./account-section.tsx")) },
     security: { icon: ShieldCheck, component: lazy(() => import("./security-section.tsx")) },
+    agents: { icon: Bot, component: lazy(() => import("./agents-section.tsx")) },
     about: { icon: Info, component: lazy(() => import("./about-section.tsx")) },
   };
 

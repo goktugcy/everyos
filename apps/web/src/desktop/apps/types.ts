@@ -8,6 +8,7 @@ import type { InstalledAppId } from "./store/installed-apps-store.ts";
 export type AppId =
   | InstalledAppId
   | "everyos.homeassistant"
+  | "everyos.agents"
   | "everyos.system"
   | "everyos.services"
   | "everyos.logs"

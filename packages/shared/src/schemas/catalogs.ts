@@ -49,6 +49,10 @@ export const ManagedAppRunSchema = z.strictObject({
   compose: z.string().max(512 * 1024),
   riskOverride: z.boolean(),
   jobId: z.string().uuid().optional(),
+  previousComposeHash: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .optional(),
   dataFrom: z.string().uuid().optional(),
 });
 const AppImageSchema = z.strictObject({

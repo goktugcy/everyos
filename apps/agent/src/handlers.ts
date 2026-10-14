@@ -190,6 +190,11 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     throw new OperationError("unsupported", "Account files require a linked Linux account");
   };
   return {
+    "ai.discover": () => {
+      if (deps.mode === "development") return { source: "simulated", discoveries: [] };
+      return filesDisabled();
+    },
+    "ai.snapshot": filesDisabled,
     "files.roots": filesDisabled,
     "files.list": filesDisabled,
     "files.properties": filesDisabled,

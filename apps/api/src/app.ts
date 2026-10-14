@@ -15,6 +15,7 @@ import { authRoutes } from "./modules/auth/routes.ts";
 import { dockerRoutes } from "./modules/docker/routes.ts";
 import { catalogRoutes } from "./modules/catalogs/routes.ts";
 import { appRoutes } from "./modules/apps/routes.ts";
+import { aiAgentRoutes } from "./modules/ai-agents/routes.ts";
 import { eventRoutes } from "./modules/events/routes.ts";
 import { healthRoutes } from "./modules/health/routes.ts";
 import { selfUpdateRoutes } from "./modules/self-update/routes.ts";
@@ -103,6 +104,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/backups", backupRoutes(services));
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
+  api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
   api.route("/wallpapers", wallpaperRoutes(services));

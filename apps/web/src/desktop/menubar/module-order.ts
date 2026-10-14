@@ -8,6 +8,7 @@ const DEFAULT_ORDER: readonly MenubarModuleId[] = [
   "power",
   "network",
   "agent",
+  "aiAgents",
   "desktops",
   "search",
   "quickSettings",

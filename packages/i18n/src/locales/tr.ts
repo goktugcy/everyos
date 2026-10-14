@@ -467,7 +467,122 @@ export const tr = {
       camera: "Kameralar",
     },
   },
+  aiAgents: {
+    discoveryTitle: "Mevcut agent'ları algıla",
+    discoveryHint:
+      "Eşleştirilmiş Linux hesabının kurulum verileri ve resmi Docker imajları otomatik aranır. Başka kullanıcıların özel dosyaları okunmaz.",
+    scan: "Tekrar tara",
+    noDiscovered:
+      "Erişilebilir bir kurulum verisi bulunamadı. Yeni kurabilir veya adresi elle girebilirsiniz.",
+    discoveryUnavailable: "Algılama tamamlanamadı; bu sonuç kurulum olmadığı anlamına gelmez.",
+    discoveryLimited:
+      "Bazı kaynaklar okunamadı. Yerel dosyalar için Ayarlar → Hesap'tan Linux hesabı eşlemesi ve o hesabın dosya izinleri gerekir.",
+    nativeSource: "Linux hesabının kurulum verisi",
+    containerSource: "Mevcut Docker konteyneri",
+    discoveredDetails: "API anahtarı okunabilir: {{key}} · Alınabilecek sohbet: {{count}}",
+    import: "İçe aktar",
+    useConnection: "Bağlantı adresini kullan",
+    importTitle: "{{agent}} verilerini içe aktar",
+    importConfirm:
+      "Seçilen veriler EveryOS hesabınıza kopyalanır. Ayarlar seçiliyse bu agent için mevcut EveryOS bağlantı ayarları değiştirilir. Asıl agent, dosyaları ve servisleri değiştirilmez veya durdurulmaz.",
+    importSettings: "Bağlantı/model ayarlarını ve okunabilir anahtarları al",
+    importHistory: "Okunabilir sohbetleri al ({{count}})",
+    importLimits:
+      "En fazla 20 sohbetin son 40 metin mesajı, boyut sınırları içinde alınır. Ekler, araç kayıtları ve uzak belleğin tümü taşınmaz. Önceden alınan sohbetler atlanır; EveryOS'te devam ettiğiniz sohbetin üstüne yazılmaz.",
+    imported: "{{imported}} sohbet alındı; {{skipped}} sohbet atlandı.",
+    importMissingKey:
+      "Okunabilir bir API anahtarı bulunamadı. Agent API'sini etkinleştirip anahtarını bağlantı ayarlarından ekleyin.",
+    historyWarnings: {
+      limited: "Sohbetler okuma/boyut sınırları nedeniyle kısmen alınabilir.",
+      unreadable:
+        "Bu kaynağın sohbetlerine veya anahtarlarına dosya yetkileriyle erişilemedi; bağlantı anahtarını elle girebilirsiniz.",
+      unsupported: "Bazı sohbet kayıtlarının biçimi okunamadı. Desteklenen kayıtlar alınabilir.",
+    },
+    title: "AI agent'ları",
+    names: { hermes: "Hermes Agent", openclaw: "OpenClaw" },
+    providers: { openrouter: "OpenRouter", openai: "OpenAI", custom: "Yerel / OpenAI uyumlu" },
+    statuses: {
+      unconfigured: "Henüz ayarlanmadı",
+      "not-installed": "Kurulu değil",
+      starting: "Başlatılıyor",
+      running: "Bağlı · sohbet hazır",
+      stopped: "Durduruldu",
+      offline: "Bağlantı kurulamadı",
+      "auth-failed": "API anahtarı reddedildi",
+      error: "API veya kurulum hatası",
+      unknown: "Durum doğrulanamadı",
+    },
+    busy: "İşlem sürüyor…",
+    statusUnavailable: "Agent durumu alınamadı. Bağlantıyı kontrol edin.",
+    setupHint:
+      "Agent Ayarları'ndan Hermes veya OpenClaw'ı kurabilir ya da mevcut kurulumunuza bağlanabilirsiniz.",
+    settingsHint:
+      "Hermes ve OpenClaw için kurulum, model, API anahtarı ve araç erişimini buradan yönetin. Her hesabın ayarları ve sohbet geçmişi ayrıdır.",
+    permissionsRequired:
+      "Agent'ları kullanmak için uygulama yönetimi ve terminal erişimi yetkisi gerekir.",
+    agent: "Agent",
+    mode: "Kurulum türü",
+    managed: "EveryOS ile kur",
+    external: "Mevcut agent'a bağlan",
+    installHint:
+      "Docker ve Compose v2 gerekir. Resmi kararlı paket ARM64 / AMD64 için indirilir; API yalnızca yerel bir boş porttan EveryOS'e açılır. Mevcut agent kurulumları değiştirilmez.",
+    provider: "Model sağlayıcısı",
+    providerUrl: "Model API adresi",
+    localHint:
+      "Konteynerden erişilebilen /v1 API adresini girin. 127.0.0.1 konteynerin kendisidir; sunucudaki yerel model için sunucunun ağ adresini kullanın.",
+    model: "Model kimliği",
+    modelPlaceholder: "Sağlayıcıdaki tam model kimliği",
+    providerKey: "Model sağlayıcısı API anahtarı",
+    gatewayKey: "Agent API anahtarı / Gateway token",
+    gatewayKeyHint: "Hermes API_SERVER_KEY veya OpenClaw Gateway token/parolasını girin.",
+    keepKey:
+      "Anahtar kayıtlı. Aynı API adresinde boş bırakılırsa korunur; adres değişirse anahtarı yeniden girin. Mevcut anahtar tarayıcıya gönderilmez.",
+    keyHint: "Anahtar şifreli saklanır. Anahtarsız yerel model için alanı boş bırakabilirsiniz.",
+    clearProviderKey: "Kayıtlı sağlayıcı anahtarını kaldır",
+    maxIterations: "Bir istekte en fazla araç adımı",
+    tools: "Agent araçlarını etkinleştir",
+    toolsHint:
+      "Agent konteynerinde dosya ve terminal işlemleri yapabilir. Sunucunun dosyaları ve Docker soketi bağlanmaz. Gönderdiğiniz sohbet bir araç işlemi başlatabilir.",
+    externalHint:
+      "EveryOS mevcut agent'ın yapılandırmasını değiştirmez. Araçlar o agent'ın çalıştığı ortamda ve yetkileriyle çalışır; belleği diğer istemcilerle paylaşılabilir.",
+    externalHelp: {
+      hermes:
+        "Hermes Gateway'de API_SERVER_ENABLED=true ve API_SERVER_KEY tanımlı olmalı. Varsayılan API model kimliği hermes-agent'dır.",
+      openclaw:
+        "OpenClaw'da gateway.http.endpoints.chatCompletions.enabled=true olmalı. Gateway token'ını kullanın; varsayılan API model kimliği openclaw/default'tur.",
+    },
+    baseUrl: "Agent API adresi",
+    apiModel: "Agent API model kimliği",
+    testConnection: "Bağlantı durumunu yenile",
+    saved: "Ayarlar kaydedildi. Bağlantı durumu otomatik kontrol ediliyor.",
+    saveAndRestart: "Kaydet ve yeniden başlat",
+    install: "Agent'ı indir ve kur",
+    installConfirm:
+      "Resmi paket indirilir ve bu hesaba ait yeni bir konteyner başlatılır. Kalıcı agent verileri EveryOS uygulama dizininde tutulur. Kurulum birkaç dakika sürebilir; mevcut servisler değiştirilmez.",
+    controlConfirm:
+      "Bu işlem yalnızca bu hesabın EveryOS ile kurulmuş agent'ını etkiler. Aktif sohbet kesilebilir.",
+    confirmTitle: "{{agent}} · {{action}}",
+    quickChat: "Sohbeti aç",
+    newChat: "Yeni sohbet",
+    history: "Sohbet geçmişi",
+    untitled: "Yeni sohbet",
+    chat: "Agent sohbeti",
+    welcome: "{{agent}} ile sohbet",
+    chatHint:
+      "Bir soru sorun veya agent'a bir görev verin. Araçlar kapalıysa yalnızca sohbet yanıtı üretir.",
+    thinking: "Agent yanıtı bekleniyor…",
+    message: "Mesaj",
+    messagePlaceholder: "Bir mesaj yazın…",
+    send: "Gönder",
+    cancelChat: "Yanıtı durdur",
+    chatFooter:
+      "Enter: gönder · Shift+Enter: yeni satır. Durdurmak tamamlanan araç işlemlerini geri almaz. Mesajlar seçtiğiniz model sağlayıcısına iletilir.",
+    deleteChat: "Sohbeti sil",
+    deleteConfirm:
+      "EveryOS'teki bu sohbet geçmişi kalıcı silinir. Agent'ın belleği ve model sağlayıcısındaki kayıtlar silinmez.",
+  },
   apps: {
+    agents: "Agent Sohbeti",
     homeassistant: "Home Assistant",
     trash: "Çöp Kutusu",
     terminal: "Terminal",
@@ -900,6 +1015,7 @@ export const tr = {
   },
   settings: {
     sections: {
+      agents: "Agent Ayarları",
       appearance: "Görünüm",
       desktop: "Masaüstü ve Dock",
       account: "Hesap",
@@ -995,6 +1111,7 @@ export const tr = {
       autoHide: "Otomatik gizle",
       menubar: "Menü çubuğu",
       menubarModules: {
+        aiAgents: "Hermes ve OpenClaw",
         notifications: "Bildirimler",
         widgets: "Widget'lar",
         agent: "Ajan durumu",

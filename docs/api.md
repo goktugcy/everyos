@@ -1,7 +1,31 @@
-# HTTP API (Phases 1–7)
+# HTTP API
 
 Base path: `/api`. Bodies are JSON except raw wallpaper, folder-icon, file and backup uploads. JSON responses are never cached
 (`Cache-Control: no-store`); owned raster images use private immutable caching.
+
+## AI agents
+
+All `/ai-agents` routes require `apps:manage` and `terminal:access`. Settings and conversations
+are scoped to the authenticated account; there is no caller-supplied user ID, Compose template,
+agent command, arbitrary upstream path or secret-read endpoint. Params/query/body use strict schemas.
+
+| Method     | Path                                 | Behavior                                                                                                          |
+| ---------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| GET        | `/ai-agents`                         | Both agents' sanitized settings, live API state and owned app job                                                 |
+| GET        | `/ai-agents/:kind`                   | One `hermes`/`openclaw` state                                                                                     |
+| PUT        | `/ai-agents/:kind`                   | Save settings; blank keys preserve existing matching credentials; apply an installed managed configuration        |
+| POST       | `/ai-agents/:kind/actions`           | Confirmed fixed `install`, `start`, `stop`, `restart`, `retry`; returns an app job                                |
+| GET / POST | `/ai-agents/:kind/conversations`     | List metadata / create an empty private conversation                                                              |
+| GET        | `/ai-agents/:kind/conversations/:id` | Owner's decrypted history                                                                                         |
+| DELETE     | `/ai-agents/:kind/conversations/:id` | Confirm ID and delete local history                                                                               |
+| POST       | `/ai-agents/:kind/chat`              | CSRF-protected `{conversationId, content}`; SSE `ready`, `delta`, `complete` or sanitized `error`; never replayed |
+| POST       | `/ai-agents/:kind/chat/cancel`       | Abort the owner's active conversation and wait for the upstream turn to release its busy state                    |
+
+The chat stream uses existing heartbeat access checks and bounded DNS-pinned upstream transport.
+`GET /ai-agents/discover` returns sanitized native/account and Docker discoveries, with no keys or
+chat contents. `POST /ai-agents/:kind/import` validates the native candidate ID, settings fingerprint,
+settings/history choices and explicit kind confirmation, then returns import/skip counts.
+Agent credentials and messages are excluded from audit metadata. See [AI agents](ai-agents.md).
 
 **Errors** always have this shape:
 

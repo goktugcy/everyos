@@ -10,7 +10,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { OperationContext } from "@everyos/agent-protocol";
 import { silentLogger } from "@everyos/logger";
 import { createDockerSimulator } from "@everyos/system";
@@ -55,6 +55,65 @@ async function fixture() {
 }
 
 describe("managed application agent", () => {
+  it("changes an owned configuration only from its exact old hash and preserves it on rollback", async () => {
+    const f = await fixture(),
+      hash = (value: string) => createHash("sha256").update(value).digest("hex");
+    await f.manager.run({ id: f.id, action: "install", compose, riskOverride: false }, context());
+    const next = compose.replace("literal-test-secret", "different-test-secret");
+    f.run.mockClear();
+    await expect(
+      f.manager.run(
+        {
+          id: f.id,
+          action: "update",
+          compose: next,
+          previousComposeHash: "0".repeat(64),
+          riskOverride: false,
+        },
+        context(),
+      ),
+    ).rejects.toThrow("ownership");
+    expect(f.run).not.toHaveBeenCalled();
+    f.run.mockResolvedValueOnce({ ok: false, output: "fixture deployment failure" });
+    expect(
+      await f.manager.run(
+        {
+          id: f.id,
+          action: "update",
+          compose: next,
+          previousComposeHash: hash(compose),
+          riskOverride: false,
+        },
+        context(),
+      ),
+    ).toMatchObject({ ok: false, rollback: "succeeded" });
+    expect(
+      JSON.parse(await readFile(join(f.root, f.id, "ownership.json"), "utf8")) as {
+        composeHash: string;
+      },
+    ).toMatchObject({ composeHash: hash(compose) });
+    expect(
+      await f.manager.run(
+        {
+          id: f.id,
+          action: "update",
+          compose: next,
+          previousComposeHash: hash(compose),
+          riskOverride: false,
+        },
+        context(),
+      ),
+    ).toMatchObject({ ok: true });
+    expect(
+      await f.manager.run(
+        { id: f.id, action: "restart", compose: next, riskOverride: false },
+        context(),
+      ),
+    ).toMatchObject({ ok: true });
+    await expect(
+      f.manager.run({ id: f.id, action: "restart", compose, riskOverride: false }, context()),
+    ).rejects.toThrow("ownership");
+  });
   it("allocates distinct automatic ports and retains them across restart and update", async () => {
     const f = await fixture();
     const automatic = `${compose}    ports: [{ target: 80, protocol: tcp }]\n`;

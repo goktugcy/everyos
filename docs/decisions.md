@@ -550,3 +550,30 @@ Recover unread, unresolved version notices on reconnect/visibility/network resto
 a bounded polling fallback. Deduplicate seen version IDs per session and preserve toast/mute
 preferences and server read/dismiss state. Keep late events/requests from previous connections
 or sessions out of the active state. Do not change remote-check frequency or install automatically.
+
+### D43 — Per-account agent runtimes and native chat
+
+Use fixed repository-owned, digest-pinned official Hermes/OpenClaw templates through the existing
+managed-application service and agent policy. Do not add shell/install-script operations. Keep
+new runtimes per account, loopback-only, with persistent owned app data and no host mounts/socket.
+Generated deployment keys are encrypted; Compose's literal-secret classification is acknowledged
+only for these trusted templates. Inline configs are read-only and materialized in verified tmpfs;
+they do not invalidate backup eligibility of otherwise exclusively owned app-data mounts.
+
+Require application management plus terminal access even with tools disabled, since the upstream
+runtime can perform agent actions. Offer explicit external connections without adopting or
+modifying them. Keep each owner's sealed chat history separate, forward only bounded fixed chat
+requests, and re-check session permissions during streams. Persist only completed turns; abort
+on lock/disconnect and never retry automatically. Do not claim that stopping undoes tools or that
+deleting local history clears upstream memory. Label development simulator state as unverified.
+
+Use Linux AMD64/ARM64 runtime smoke checks with real official containers and a disposable fake
+provider to verify template compatibility and tool disabling without paid calls or personal data.
+
+Existing native agents are detected/imported with two fixed read-only operations executed as the
+bound Linux account, even when sudo is active. Only known layouts/executable locations are probed;
+no root file reads, arbitrary paths, commands, executable config imports or service changes.
+Review import choices against a settings fingerprint. Seal copied credentials/history, cap imports,
+preserve source-ID deduplication, and never overwrite EveryOS conversations already continued.
+Read current SQLite active transcripts (bounded zstd) and legacy text JSONL without migrations.
+Scrub known credentials across streamed delta boundaries and imported messages.

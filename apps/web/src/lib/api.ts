@@ -111,6 +111,75 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
   );
 }
 
+/** POST event stream: sends CSRF once and never retries a potentially mutating agent turn. */
+export async function postApiEvents(
+  path: string,
+  body: unknown,
+  signal: AbortSignal,
+  onEvent: (event: string, data: unknown) => void,
+): Promise<void> {
+  const headers: Record<string, string> = {
+    Accept: "text/event-stream",
+    "Content-Type": "application/json",
+  };
+  if (csrfToken) headers[CSRF_HEADER] = csrfToken;
+  const response = await fetch(`/api${path}`, {
+    method: "POST",
+    credentials: "same-origin",
+    headers,
+    body: JSON.stringify(body),
+    signal,
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ApiErrorBody | null;
+    const code = isErrorCode(payload?.error?.code) ? payload.error.code : "UNKNOWN";
+    if (response.status === 401 && code === "UNAUTHENTICATED") unauthenticatedHandler?.();
+    if (response.status === 423 && code === "SESSION_LOCKED") lockedHandler?.();
+    throw new ApiRequestError(
+      response.status,
+      code,
+      "Agent request failed",
+      payload?.error?.details,
+    );
+  }
+  if (!response.body) throw new ApiRequestError(502, "UNKNOWN", "Missing chat stream");
+  const reader = response.body.getReader(),
+    decoder = new TextDecoder();
+  let buffer = "",
+    event = "message",
+    data = "",
+    complete = false;
+  try {
+    while (!signal.aborted) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      buffer += decoder.decode(chunk.value, { stream: true });
+      let end: number;
+      while ((end = buffer.indexOf("\n")) >= 0) {
+        const line = buffer.slice(0, end).replace(/\r$/, "");
+        buffer = buffer.slice(end + 1);
+        if (!line) {
+          if (data) {
+            const payload = JSON.parse(data) as unknown;
+            onEvent(event, payload);
+            if (event === "complete") complete = true;
+          }
+          event = "message";
+          data = "";
+        } else if (line.startsWith("event:")) event = line.slice(6).trim();
+        else if (line.startsWith("data:")) data += line.slice(5).trimStart();
+      }
+      if (buffer.length > 256 * 1024)
+        throw new ApiRequestError(502, "UNKNOWN", "Chat event too large");
+    }
+    if (!signal.aborted && !complete)
+      throw new ApiRequestError(502, "AGENT_OPERATION_FAILED", "Chat interrupted");
+  } finally {
+    await reader.cancel().catch(() => undefined);
+    reader.releaseLock();
+  }
+}
+
 /**
  * Uploads a file as the raw request body with progress reports (fetch cannot
  * report upload progress). Errors map to `ApiRequestError` like `api()`.

@@ -167,7 +167,7 @@ export class ManagedAppManager {
     }
   }
   async #run(
-    { id, action, compose, riskOverride, jobId, dataFrom }: RunParams,
+    { id, action, compose, riskOverride, jobId, dataFrom, previousComposeHash }: RunParams,
     { actor, signal, logger }: OperationContext,
   ): Promise<RunResult> {
     const project = `otk-${id.replaceAll("-", "")}`;
@@ -272,7 +272,8 @@ export class ManagedAppManager {
       if (
         record.id !== id ||
         record.project !== project ||
-        record.composeHash !== digest(compose) ||
+        record.composeHash !==
+          (action === "update" && previousComposeHash ? previousComposeHash : digest(compose)) ||
         record.removed === true
       )
         throw new OperationError(
@@ -441,7 +442,10 @@ export class ManagedAppManager {
     if (ok && ["install", "retry", "update"].includes(action)) {
       await this.#write(deployment, this.#secrets.seal(runningInput, deploymentContext));
       const record = object(JSON.parse(await readFile(marker, "utf8")));
-      await this.#write(marker, JSON.stringify({ ...record, phase: "deployed" }));
+      await this.#write(
+        marker,
+        JSON.stringify({ ...record, composeHash: digest(compose), phase: "deployed" }),
+      );
     }
     if (ok && action === "remove")
       await writeFile(

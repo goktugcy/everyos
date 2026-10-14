@@ -28,6 +28,7 @@ import { UserRepository } from "./modules/users/user-repository.ts";
 import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
 import { CatalogService } from "./modules/catalogs/catalog-service.ts";
 import { AppService, type FinishedJob } from "./modules/apps/app-service.ts";
+import { AiAgentService } from "./modules/ai-agents/agent-service.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { FileService } from "./modules/files/file-service.ts";
@@ -72,6 +73,7 @@ export interface Services {
   dockerProjects: DockerProjectRepository;
   catalogs: CatalogService;
   apps: AppService;
+  aiAgents: AiAgentService;
   integrations: IntegrationService;
   /** Shared, reference-counted widget data topics. */
   widgetData: DataHub;
@@ -260,6 +262,15 @@ export function createServices(deps: ServiceDependencies): Services {
     catalogs,
     apps,
     integrations,
+    aiAgents: new AiAgentService({
+      db: deps.db,
+      secrets,
+      apps,
+      agent: deps.agent,
+      audit,
+      now,
+      ...(deps.resolveHost ? { resolve: deps.resolveHost } : {}),
+    }),
     widgetData,
     notifications,
     files,

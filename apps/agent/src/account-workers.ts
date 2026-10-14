@@ -118,6 +118,7 @@ export class AccountWorkers {
         if (
           privileged ||
           (!op.startsWith("files.") &&
+            !op.startsWith("ai.") &&
             (!contract.mutating || op.startsWith("docker.")) &&
             this.#identities.status(context.actor).privileged)
         ) {

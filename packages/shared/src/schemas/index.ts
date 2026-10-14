@@ -22,3 +22,4 @@ export * from "./power.ts";
 export * from "./self-update.ts";
 
 export * from "./linux-accounts.ts";
+export * from "./ai-agents.ts";

@@ -33,6 +33,7 @@ export const SETTINGS_SECTIONS = [
   "notifications",
   "account",
   "security",
+  "agents",
   "about",
 ] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];

@@ -16,6 +16,7 @@ import { selectBackends } from "./backends.ts";
 import { createContainerProtection, createUnitProtection } from "./protection.ts";
 import { createPolicy } from "./policy.ts";
 import { accountFiles } from "./account-files.ts";
+import { accountNativeAgents } from "./native-agents.ts";
 
 const BootstrapSchema = z.strictObject({
   account: LinuxAccountSchema,
@@ -59,6 +60,7 @@ const handlers = {
     internet: createInternetProbe(boot.internetCheckTargets),
   }),
   ...accountFiles({ ...boot, home: boot.account.home, logger }),
+  ...accountNativeAgents(boot.account.home),
 };
 const policy = createPolicy({
   mode: "production",

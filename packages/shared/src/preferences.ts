@@ -80,6 +80,7 @@ export const MENUBAR_MODULE_IDS = [
   "network",
   "power",
   "agent",
+  "aiAgents",
   "desktops",
   "search",
   "quickSettings",

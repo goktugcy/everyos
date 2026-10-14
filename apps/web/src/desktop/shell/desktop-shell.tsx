@@ -11,6 +11,7 @@ import { errorMessage } from "../../lib/errors.ts";
 import { registerBeforeSignOut, useSessionStore } from "../../stores/session-store.ts";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import { TrashStatusProvider } from "../apps/files/trash-status.tsx";
+import { useAiAgentPolling } from "../apps/ai-agents/agent-store.ts";
 import {
   clearInstalledApps,
   installationId,
@@ -157,6 +158,7 @@ function DesktopWorkspace() {
  * desktop on wide screens or the simplified launcher on phones.
  */
 export function DesktopShell() {
+  useAiAgentPolling();
   const { t } = useTranslation();
   const ready = usePreferences((state) => state.ready);
   const permissions = useSessionStore((state) => state.session?.permissions);

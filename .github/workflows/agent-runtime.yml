@@ -1,0 +1,45 @@
+name: Agent runtimes
+on:
+  push:
+    branches: [main]
+    paths:
+      [
+        "apps/api/src/modules/ai-agents/**",
+        "apps/agent/src/managed-configs.ts",
+        "scripts/check-agent-runtime.ts",
+        ".github/workflows/agent-runtime.yml",
+      ]
+  pull_request:
+    paths:
+      [
+        "apps/api/src/modules/ai-agents/**",
+        "apps/agent/src/managed-configs.ts",
+        "scripts/check-agent-runtime.ts",
+        ".github/workflows/agent-runtime.yml",
+      ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare private runtime config directory
+        run: |
+          sudo mkdir -p /run/everyos/app-configs
+          sudo chown "$(id -u):$(id -g)" /run/everyos/app-configs
+          chmod 700 /run/everyos/app-configs
+      - name: Verify real Hermes and OpenClaw runtimes
+        run: node scripts/check-agent-runtime.ts

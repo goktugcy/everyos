@@ -2,6 +2,7 @@ import type { Permission } from "@everyos/shared";
 import { installationId, installedAppId, useInstalledApps } from "./store/installed-apps-store.ts";
 import {
   Activity,
+  Bot,
   Boxes,
   ArchiveRestore,
   CalendarClock,
@@ -24,6 +25,31 @@ import type { AppId, DesktopAppManifest } from "./types.ts";
 
 /** Built-in apps, imported only when their windows open. */
 export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
+  {
+    id: "everyos.agents",
+    titleKey: "apps.agents",
+    icon: Bot,
+    tint: "from-violet-400 to-indigo-600",
+    category: "tools",
+    requiredPermission: "terminal:access",
+    window: {
+      defaultSize: { width: 1080, height: 740 },
+      minSize: { width: 380, height: 360 },
+      instancing: "single",
+    },
+    keywords: [
+      "hermes",
+      "openclaw",
+      "clawdbot",
+      "clawd",
+      "agent",
+      "yapay zeka",
+      "ai",
+      "chat",
+      "sohbet",
+    ],
+    load: () => import("./ai-agents/agents-app.tsx"),
+  },
   {
     id: "everyos.applications",
     titleKey: "apps.applications",

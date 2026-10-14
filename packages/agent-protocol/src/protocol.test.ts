@@ -65,6 +65,8 @@ const notUsed = () => {
 
 function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers {
   return {
+    "ai.discover": notUsed,
+    "ai.snapshot": notUsed,
     "files.roots": notUsed,
     "files.list": notUsed,
     "files.properties": notUsed,

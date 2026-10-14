@@ -171,6 +171,7 @@ async function main(): Promise<void> {
     detachTerminals();
     services.catalogs.stop();
     services.apps.stop();
+    services.aiAgents.stop();
     const forceExit = setTimeout(() => process.exit(1), 10_000);
     forceExit.unref();
     server.close(() => {

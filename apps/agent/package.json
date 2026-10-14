@@ -12,11 +12,12 @@
     "@everyos/agent-protocol": "workspace:*",
     "@everyos/catalogs": "workspace:*",
     "@everyos/logger": "workspace:*",
+    "@everyos/release": "workspace:*",
     "@everyos/security": "workspace:*",
     "@everyos/shared": "workspace:*",
     "@everyos/system": "workspace:*",
+    "json5": "2.2.3",
     "yaml": "catalog:",
-    "zod": "catalog:",
-    "@everyos/release": "workspace:*"
+    "zod": "catalog:"
   }
 }

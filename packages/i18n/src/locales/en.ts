@@ -442,7 +442,123 @@ export const en: Messages = {
       camera: "Cameras",
     },
   },
+  aiAgents: {
+    discoveryTitle: "Detect existing agents",
+    discoveryHint:
+      "Automatically searches the linked Linux account's agent data and official Docker images. Other users' private files are not read.",
+    scan: "Scan again",
+    noDiscovered:
+      "No accessible installation data found. Install a new agent or enter its address manually.",
+    discoveryUnavailable: "Discovery could not finish; this does not mean no agent is installed.",
+    discoveryLimited:
+      "Some sources could not be read. Local files require a Linux account link in Settings → Account and that account's file permissions.",
+    nativeSource: "Linked Linux account data",
+    containerSource: "Existing Docker container",
+    discoveredDetails: "Readable API key: {{key}} · Importable chats: {{count}}",
+    import: "Import",
+    useConnection: "Use connection address",
+    importTitle: "Import {{agent}} data",
+    importConfirm:
+      "Copies selected data into your EveryOS account. Selecting settings replaces this agent's current EveryOS connection settings. The original agent, files and services are never modified or stopped.",
+    importSettings: "Import connection/model settings and readable keys",
+    importHistory: "Import readable chats ({{count}})",
+    importLimits:
+      "Imports up to 20 chats with their last 40 text messages within size limits. Attachments, tool logs and all remote memory are not transferred. Previously imported chats are skipped; chats continued in EveryOS are never overwritten.",
+    imported: "Imported {{imported}} chats; skipped {{skipped}}.",
+    importMissingKey:
+      "No readable API key was found. Enable the agent API and enter its key in the connection settings.",
+    historyWarnings: {
+      limited: "Some chat content may be omitted due to read/size limits.",
+      unreadable:
+        "Chat records or keys could not be read with the account's file permissions; enter the connection key manually.",
+      unsupported:
+        "Some chat record formats could not be read. Supported records can still be imported.",
+    },
+    title: "AI agents",
+    names: { hermes: "Hermes Agent", openclaw: "OpenClaw" },
+    providers: { openrouter: "OpenRouter", openai: "OpenAI", custom: "Local / OpenAI compatible" },
+    statuses: {
+      unconfigured: "Not configured",
+      "not-installed": "Not installed",
+      starting: "Starting",
+      running: "Connected · chat ready",
+      stopped: "Stopped",
+      offline: "Connection failed",
+      "auth-failed": "API key rejected",
+      error: "API or installation error",
+      unknown: "Status not verified",
+    },
+    busy: "Operation in progress…",
+    statusUnavailable: "Agent status could not be loaded. Check the connection.",
+    setupHint:
+      "Install Hermes or OpenClaw, or connect an existing installation, in Agent Settings.",
+    settingsHint:
+      "Manage installation, model, API credentials and tool access for Hermes and OpenClaw. Each account has separate settings and chat history.",
+    permissionsRequired:
+      "Application management and terminal access permissions are required to use agents.",
+    agent: "Agent",
+    mode: "Installation type",
+    managed: "Install with EveryOS",
+    external: "Connect an existing agent",
+    installHint:
+      "Requires Docker and Compose v2. Downloads the official stable ARM64 / AMD64 package; only EveryOS can reach its API through a free loopback port. Existing agent installations are kept intact.",
+    provider: "Model provider",
+    providerUrl: "Model API URL",
+    localHint:
+      "Enter a /v1 endpoint reachable from the container. 127.0.0.1 is the container itself; use the server's network address for a host-local model.",
+    model: "Model ID",
+    modelPlaceholder: "Exact model ID from your provider",
+    providerKey: "Model provider API key",
+    gatewayKey: "Agent API key / Gateway token",
+    gatewayKeyHint: "Enter Hermes API_SERVER_KEY or the OpenClaw Gateway token/password.",
+    keepKey:
+      "A key is stored. Leave blank to keep it for the same API URL; changing the URL requires a new key. The current key is never sent to the browser.",
+    keyHint: "The key is stored encrypted. Leave blank for a local model without authentication.",
+    clearProviderKey: "Remove the stored provider key",
+    maxIterations: "Maximum tool steps per request",
+    tools: "Enable agent tools",
+    toolsHint:
+      "The agent can operate on files and a terminal inside its container. Host files and the Docker socket are not mounted. A chat message may start a tool operation.",
+    externalHint:
+      "EveryOS does not change an existing agent's configuration. Tools run in that agent's environment with its permissions; its memory may be shared with other clients.",
+    externalHelp: {
+      hermes:
+        "Enable API_SERVER_ENABLED=true and set API_SERVER_KEY in the Hermes Gateway. The default API model ID is hermes-agent.",
+      openclaw:
+        "Enable gateway.http.endpoints.chatCompletions.enabled=true in OpenClaw. Use its Gateway token; the default API model ID is openclaw/default.",
+    },
+    baseUrl: "Agent API URL",
+    apiModel: "Agent API model ID",
+    testConnection: "Refresh connection status",
+    saved: "Settings saved. Connection status is being checked automatically.",
+    saveAndRestart: "Save and restart",
+    install: "Download and install agent",
+    installConfirm:
+      "Downloads the official package and starts a new container for this account. Persistent agent data lives in the EveryOS application directory. Installation may take a few minutes; existing services are kept intact.",
+    controlConfirm:
+      "This only affects this account's agent installed by EveryOS. An active chat may be interrupted.",
+    confirmTitle: "{{agent}} · {{action}}",
+    quickChat: "Open chat",
+    newChat: "New chat",
+    history: "Chat history",
+    untitled: "New chat",
+    chat: "Agent chat",
+    welcome: "Chat with {{agent}}",
+    chatHint:
+      "Ask a question or give the agent a task. With tools disabled, it only generates chat responses.",
+    thinking: "Waiting for the agent…",
+    message: "Message",
+    messagePlaceholder: "Write a message…",
+    send: "Send",
+    cancelChat: "Stop response",
+    chatFooter:
+      "Enter: send · Shift+Enter: new line. Stopping does not undo completed tool operations. Messages are sent to your selected model provider.",
+    deleteChat: "Delete chat",
+    deleteConfirm:
+      "Permanently deletes this chat history in EveryOS. Agent memory and records held by the model provider are not deleted.",
+  },
   apps: {
+    agents: "Agent Chat",
     homeassistant: "Home Assistant",
     trash: "Trash",
     terminal: "Terminal",
@@ -869,6 +985,7 @@ export const en: Messages = {
   },
   settings: {
     sections: {
+      agents: "Agent Settings",
       appearance: "Appearance",
       desktop: "Desktop & Dock",
       account: "Account",
@@ -963,6 +1080,7 @@ export const en: Messages = {
       autoHide: "Hide automatically",
       menubar: "Menu bar",
       menubarModules: {
+        aiAgents: "Hermes and OpenClaw",
         notifications: "Notifications",
         widgets: "Widgets",
         agent: "Agent status",
