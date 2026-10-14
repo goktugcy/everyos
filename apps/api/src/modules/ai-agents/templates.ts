@@ -89,7 +89,12 @@ export function agentTemplate(
           },
           tools: settings.tools
             ? { profile: "coding", elevated: { enabled: false } }
-            : { profile: "minimal", deny: ["*"], elevated: { enabled: false } },
+            : {
+                profile: "minimal",
+                deny: ["*"],
+                toolSearch: false,
+                elevated: { enabled: false },
+              },
         });
   const environment =
     kind === "hermes"

@@ -34,6 +34,8 @@ using the current digest preserve the same reviewed image.
 
 Tools are disabled by default. Enabling tools allows Hermes's terminal/files/web/memory toolsets
 or OpenClaw's coding profile inside that account's container. It does not grant host access.
+OpenClaw's automatic Tool Search is also disabled when tools are off, so no discovery/control
+schemas are sent to the model provider. See the upstream [Tool Search setting](https://docs.openclaw.ai/tools/tool-search).
 The Hermes maximum tool-step limit is configurable. Other advanced agent settings, messaging
 channels, OAuth provider onboarding, arbitrary plugins/MCP servers and multimodal uploads are
 outside this native form; an independently configured installation can be connected instead.

@@ -1,7 +1,7 @@
 /** Runs only in disposable Linux CI: official pinned agents against a local fake model provider. */
 import { randomBytes, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
-import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -16,10 +16,20 @@ import {
 } from "../apps/api/src/modules/ai-agents/templates.ts";
 import { AI_AGENT_KINDS } from "../packages/shared/src/ai-agents.ts";
 import { streamAgentChat } from "../apps/api/src/modules/ai-agents/chat-client.ts";
+import { NativeAgents } from "../apps/agent/src/native-agents.ts";
 
 if (process.platform !== "linux" || process.env.CI !== "true")
   throw new Error("This check is restricted to disposable Linux CI");
 const root = await mkdtemp(join(tmpdir(), "everyos-agent-runtime-"));
+async function privilegedFixture(args: string[]) {
+  return new Promise<void>((resolve, reject) => {
+    const child = spawn("sudo", args, { stdio: "inherit" });
+    child.on("error", reject);
+    child.on("close", (code) =>
+      code === 0 ? resolve() : reject(new Error("Disposable runtime state operation failed")),
+    );
+  });
+}
 const key = randomBytes(32).toString("hex");
 const calls: Array<{ tools?: Array<{ function?: { name?: string } }>; model?: string }> = [];
 const handle = async (request: IncomingMessage, response: ServerResponse) => {
@@ -164,6 +174,32 @@ try {
       console.log(
         `${kind}: real API, configured model, streamed answer and disabled tools verified`,
       );
+      await command([...cli, "down", "--remove-orphans"]);
+      await privilegedFixture(["chown", "-R", `${process.getuid!()}:${process.getgid!()}`, data]);
+      const nativeHome = join(root, `${kind}-native-home`),
+        nativeRoot = join(nativeHome, kind === "hermes" ? ".hermes" : ".openclaw");
+      await mkdir(nativeHome);
+      await rename(kind === "hermes" ? data : join(data, "state"), nativeRoot);
+      await writeFile(
+        join(nativeRoot, kind === "hermes" ? "config.yaml" : "openclaw.json"),
+        await readFile(`/run/everyos/app-configs/${id}/config0`),
+        { mode: 0o600 },
+      );
+      if (kind === "hermes")
+        await writeFile(join(nativeRoot, ".env"), `API_SERVER_KEY=${key}\n`, { mode: 0o600 });
+      const snapshot = await new NativeAgents(nativeHome).snapshot(kind, true);
+      const history = snapshot.conversations.flatMap((chat) => chat.messages);
+      if (
+        snapshot.gatewayKey !== key ||
+        !history.some(
+          (message) => message.role === "user" && message.content.includes("runtime-smoke-ok"),
+        ) ||
+        !history.some(
+          (message) => message.role === "assistant" && message.content.includes("runtime-smoke-ok"),
+        )
+      )
+        throw new Error(`${kind}: native reader did not recover actual runtime settings/history`);
+      console.log(`${kind}: actual native settings and persisted SQLite chat recovered read-only`);
     } catch (error) {
       console.error(error instanceof Error ? error.message : "Runtime check failed");
       console.error(
@@ -186,11 +222,5 @@ try {
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   // The official images create private state with their own container UID.
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn("sudo", ["rm", "-rf", "--", root], { stdio: "inherit" });
-    child.on("error", reject);
-    child.on("close", (code) =>
-      code === 0 ? resolve() : reject(new Error("Disposable runtime state cleanup failed")),
-    );
-  });
+  await privilegedFixture(["rm", "-rf", "--", root]);
 }
