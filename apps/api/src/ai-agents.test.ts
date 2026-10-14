@@ -162,7 +162,7 @@ describe("AI agent integrations", () => {
     );
     await writeFile(
       join(data, "sessions", "native-thread.jsonl"),
-      '{"role":"user","content":"native question"}\n{"role":"assistant","content":"native answer"}\n',
+      '{"role":"user","content":"native question"}\n{"role":"assistant","content":"native answer","timestamp":1791325313.5494144}\n',
     );
     const reader = new NativeAgents(await realpath(nativeHome));
     ctx.agent.handlers.set("ai.discover", async () => ({

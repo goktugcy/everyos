@@ -82,7 +82,7 @@ export const NativeAgentSnapshotSchema = z.strictObject({
             }),
           )
           .max(40),
-        updatedAt: z.number().finite(),
+        updatedAt: z.number().int().min(0),
         truncated: z.boolean(),
       }),
     )

@@ -22,14 +22,19 @@ const object = (value: unknown): Record<string, unknown> =>
 const text = (value: unknown) => (typeof value === "string" ? value : "");
 const secret = (value: unknown) =>
   typeof value === "string" && value.length <= 4096 && !/[\r\n\0]/.test(value) ? value : "";
-const stamp = (value: unknown) =>
-  typeof value === "number"
-    ? value < 1e12
-      ? value * 1000
-      : value
-    : typeof value === "string"
-      ? Date.parse(value) || 0
-      : 0;
+const stamp = (value: unknown) => {
+  const ms = Math.trunc(
+    typeof value === "number"
+      ? value < 1e12
+        ? value * 1000
+        : value
+      : typeof value === "string"
+        ? Date.parse(value)
+        : 0,
+  );
+  // Hermes stores fractional epoch seconds; EveryOS keeps integer milliseconds.
+  return Number.isSafeInteger(ms) && ms > 0 ? ms : 0;
+};
 function message(raw: unknown): AiChatMessage | null {
   const record = object(raw),
     inner = Object.keys(object(record.message)).length ? object(record.message) : record;
@@ -116,7 +121,7 @@ export class NativeAgents {
       conversations.push({
         sourceId: id.slice(0, 250),
         messages,
-        updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
+        updatedAt,
         truncated: rows.length > messages.length,
       });
     };

@@ -31,7 +31,8 @@ describe("native account agent discovery", () => {
     db.exec(
       "CREATE TABLE sessions(id TEXT PRIMARY KEY, started_at REAL); CREATE TABLE messages(id INTEGER PRIMARY KEY, session_id TEXT, role TEXT, content TEXT);",
     );
-    db.prepare("INSERT INTO sessions VALUES (?, ?)").run("native-session", 1234);
+    // Hermes records fractional epoch seconds.
+    db.prepare("INSERT INTO sessions VALUES (?, ?)").run("native-session", 1791325313.5494144);
     db.prepare("INSERT INTO messages VALUES (?, ?, ?, ?)").run(
       1,
       "native-session",
@@ -67,6 +68,7 @@ describe("native account agent discovery", () => {
     NativeAgentSnapshotSchema.parse(snapshot);
     expect(snapshot.gatewayKey).toBe("native-gateway-secret");
     expect(snapshot.providerKey).toBe("native-model-secret");
+    expect(snapshot.conversations[0]?.updatedAt).toBe(1791325313549);
     expect(snapshot.conversations[0]?.messages).toEqual([
       { role: "user", content: "native private question" },
       { role: "assistant", content: "native answer" },
