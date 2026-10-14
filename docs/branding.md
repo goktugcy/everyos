@@ -23,6 +23,20 @@ The README uses a `picture` element to select the wordmark for the reader's colo
 Wordmarks keep their original aspect ratio and clear space. The supplied screenshot shows
 the owner's desktop; it is not a generated product mockup or a source of benchmark claims.
 
+## Agent integration marks
+
+Hermes Agent and OpenClaw use their official upstream vector marks, bundled in
+`apps/web/public/agent-logos/`. The original shapes and aspect ratios are retained;
+transparent masks inherit the active EveryOS foreground/accent color. Menu status colors
+remain separate from the marks. The shared component is used by Agent Settings, discovery,
+chat and the menu bar, plus owned agent shortcuts in Applications, the desktop and dock.
+Owned installations are identified by their built-in catalog provenance, not their display name.
+
+Hermes's solid background is removed. OpenClaw's animation is frozen, with its original eye
+cutouts and pupils retained in the monochrome mask. No remote images or scripts are loaded.
+Pinned upstream sources, changes and MIT notices ship alongside the SVGs in
+`apps/web/public/agent-logos/THIRD_PARTY_NOTICES.md`.
+
 ## Wallpaper behavior
 
 `everyos-mountains` is a new built-in wallpaper preset, selectable in Settings → Appearance.

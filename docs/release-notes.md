@@ -1,3 +1,11 @@
+EveryOS 0.1.21 uses official theme-aware agent logos.
+
+- Hermes Agent and OpenClaw use locally bundled official vector marks with preserved shapes.
+- Transparent monochrome marks follow the active theme foreground/accent color.
+- Agent Settings, discovery, chat and menu bar use the same marks; owned agent installations
+  also show them in Applications, desktop shortcuts and the dock.
+- Upstream source references and license notices are included with the assets.
+
 EveryOS 0.1.20 adds Hermes Agent and OpenClaw integration.
 
 - Agent Settings installs a pinned official isolated package or connects an existing agent.

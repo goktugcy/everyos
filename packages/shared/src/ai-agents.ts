@@ -1,6 +1,7 @@
 import type { AppJobView, InstalledAppView } from "./catalogs.ts";
 
 export const AI_AGENT_KINDS = ["hermes", "openclaw"] as const;
+export const AI_AGENT_CATALOG_ID = "2d17f74b-a6bf-4bc1-a6e0-cece08c09f07";
 export type AiAgentKind = (typeof AI_AGENT_KINDS)[number];
 export const AI_PROVIDERS = ["openrouter", "openai", "custom"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];

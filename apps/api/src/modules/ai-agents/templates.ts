@@ -1,10 +1,15 @@
 import { createHash } from "node:crypto";
 import { inspectCompose } from "@everyos/catalogs";
 import { CONFIG_PLACEHOLDER } from "@everyos/catalogs/compose";
-import type { AiAgentKind, AiAgentSettings, CatalogApp } from "@everyos/shared";
+import {
+  AI_AGENT_CATALOG_ID,
+  type AiAgentKind,
+  type AiAgentSettings,
+  type CatalogApp,
+} from "@everyos/shared";
 import { stringify } from "yaml";
 
-export const AGENT_CATALOG_ID = "2d17f74b-a6bf-4bc1-a6e0-cece08c09f07";
+export const AGENT_CATALOG_ID = AI_AGENT_CATALOG_ID;
 // Official multi-architecture stable images, resolved on 2026-10-14. No moving tags.
 export const AGENT_IMAGES: Record<AiAgentKind, string> = {
   hermes:
