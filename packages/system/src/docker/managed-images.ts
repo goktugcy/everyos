@@ -40,10 +40,11 @@ export async function resolveManagedImages(
         (!image || update || service.pull_policy === "always") &&
         service.pull_policy !== "never"
       ) {
+        // Model servers ship multi-GB images (Ollama: ~3.8 GB on amd64); allow slow links.
         const result = await runCapture(
           docker,
           ["image", "pull", "--platform", platform, reference],
-          { env, timeoutMs: 5 * 60_000, maxOutputBytes: 0, ...(signal ? { signal } : {}) },
+          { env, timeoutMs: 45 * 60_000, maxOutputBytes: 0, ...(signal ? { signal } : {}) },
         );
         if (result.exitCode !== 0) throw new Error("Image pull failed");
         image = await inspect();

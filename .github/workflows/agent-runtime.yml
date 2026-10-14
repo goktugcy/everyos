@@ -6,6 +6,9 @@ on:
       [
         "apps/api/src/modules/ai-agents/**",
         "apps/agent/src/managed-configs.ts",
+        "apps/agent/src/ai-network.ts",
+        "packages/catalogs/src/install.ts",
+        "packages/system/src/docker/client.ts",
         "scripts/check-agent-runtime.ts",
         ".github/workflows/agent-runtime.yml",
       ]
@@ -14,6 +17,9 @@ on:
       [
         "apps/api/src/modules/ai-agents/**",
         "apps/agent/src/managed-configs.ts",
+        "apps/agent/src/ai-network.ts",
+        "packages/catalogs/src/install.ts",
+        "packages/system/src/docker/client.ts",
         "scripts/check-agent-runtime.ts",
         ".github/workflows/agent-runtime.yml",
       ]
@@ -27,7 +33,8 @@ jobs:
       matrix:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    # Includes the multi-GB Ollama image and a tiny model.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -41,5 +48,5 @@ jobs:
           sudo mkdir -p /run/everyos/app-configs
           sudo chown "$(id -u):$(id -g)" /run/everyos/app-configs
           chmod 700 /run/everyos/app-configs
-      - name: Verify real Hermes and OpenClaw runtimes
+      - name: Verify real Hermes, OpenClaw and Ollama runtimes
         run: node scripts/check-agent-runtime.ts

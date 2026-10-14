@@ -215,6 +215,12 @@ unprivileged and exposes a small attack surface.
   Inspect exposes environment names, hides commands from viewers and masks sensitive label names.
   Logs require both `docker:read` and `logs:read`. Applications can write secrets into logs/health
   output; those outputs remain sensitive and are not guaranteed to be secret-free.
+- EveryOS's own AI templates (the EveryOS Ollama and managed agents using it) may join `everyos-ai`,
+  an internal bridge network the agent creates with an ownership label; a same-named foreign network
+  is refused. Catalog templates lose the request with every other `x-` key, and the agent validates
+  member services and aliases before creating anything. The network has no outside route; members
+  keep their own project network. GPU access for the EveryOS Ollama is the `devices` risk, offered
+  only for hardware Docker reports and approved by administrators on install and reconfiguration.
 - Local Compose files can change after import and remain trusted host configuration, not immutable
   EveryOS-managed data. Labels cannot cause execution without an explicit import/action. Remote
   catalog validation and installation policy remain Phase 5 work.

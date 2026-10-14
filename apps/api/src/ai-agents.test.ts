@@ -12,6 +12,7 @@ import {
   AGENT_MODELS,
   agentDefaults,
   agentTemplate,
+  type AgentRuntime,
 } from "./modules/ai-agents/templates.ts";
 import { streamAgentChat } from "./modules/ai-agents/chat-client.ts";
 import { json, STRONG_PASSWORD, TestClient, withRoles, type TestContext } from "./test-support.ts";
@@ -46,7 +47,7 @@ async function roles() {
   return result;
 }
 async function gateway(
-  kind: AiAgentKind,
+  kind: AgentRuntime,
   options: {
     incomplete?: boolean;
     hold?: boolean;

@@ -48,6 +48,8 @@ export const DockerStatusSchema = z.object({
   containers: z.object({ total: n, running: n, paused: n, stopped: n }),
   images: n,
   compose: z.object({ available: z.boolean(), version: text(64).nullable() }),
+  /** GPU access Docker can grant containers: NVIDIA runtime/CDI devices, AMD ROCm (/dev/kfd). */
+  gpu: z.object({ nvidia: z.boolean(), amd: z.boolean() }).optional(),
 });
 
 export type DockerStatus = z.infer<typeof DockerStatusSchema>;

@@ -26,7 +26,14 @@ import {
   type HttpOptions,
 } from "../integrations/http.ts";
 import { AgentRunError, streamAgentChat } from "./chat-client.ts";
-import { AGENT_MODELS, PROVIDER_URLS, agentDefaults, agentTemplate } from "./templates.ts";
+import type { LocalModelService } from "./local-models.ts";
+import {
+  AGENT_MODELS,
+  PROVIDER_URLS,
+  agentDefaults,
+  agentTemplate,
+  type AgentRuntime,
+} from "./templates.ts";
 
 type Input = z.infer<typeof AiAgentSettingsSchema>;
 interface Stored {
@@ -66,6 +73,7 @@ export class AiAgentService {
   readonly #apps: AppService;
   readonly #agent: AgentGateway;
   readonly #audit: AuditLog;
+  readonly #local: LocalModelService;
   readonly #now: () => number;
   readonly #resolve: HttpOptions["resolve"];
   readonly #busy = new Set<string>();
@@ -79,6 +87,7 @@ export class AiAgentService {
     apps: AppService;
     agent: AgentGateway;
     audit: AuditLog;
+    local: LocalModelService;
     now: () => number;
     resolve?: HttpOptions["resolve"];
   }) {
@@ -87,6 +96,7 @@ export class AiAgentService {
     this.#apps = deps.apps;
     this.#agent = deps.agent;
     this.#audit = deps.audit;
+    this.#local = deps.local;
     this.#now = deps.now;
     this.#resolve = deps.resolve;
   }
@@ -338,9 +348,19 @@ export class AiAgentService {
     const row = this.#row(userId, kind);
     const stored = row ? this.#stored(row) : null;
     const settings = stored?.settings ?? agentDefaults(kind);
-    const app = row?.app_id
-      ? ((await this.#apps.list(actor)).find((app) => app.id === row.app_id) ?? null)
-      : null;
+    // A managed local model is the system-wide EveryOS Ollama, not a per-account app.
+    let unreachable = false;
+    const app =
+      kind === "local"
+        ? row && settings.mode === "managed"
+          ? await this.#local.ollamaApp(actor).catch(() => {
+              unreachable = true;
+              return null;
+            })
+          : null
+        : row?.app_id
+          ? ((await this.#apps.list(actor)).find((app) => app.id === row.app_id) ?? null)
+          : null;
     const busy = this.#busy.has(this.#key(userId, kind)) || app?.state === "busy";
     const view: AiAgentView = {
       kind,
@@ -358,8 +378,14 @@ export class AiAgentService {
       busy,
       job: app?.lastJob ?? null,
     };
+    // Docker could not be asked: the EveryOS Ollama may still exist.
+    if (unreachable) {
+      view.status = "offline";
+      return view;
+    }
     if (!row || (settings.mode === "managed" && !app)) return view;
-    if (settings.mode === "external" && !stored?.gatewayKey) {
+    // Local model servers usually need no key.
+    if (settings.mode === "external" && !stored?.gatewayKey && kind !== "local") {
       view.status = "unconfigured";
       return view;
     }
@@ -379,7 +405,7 @@ export class AiAgentService {
     try {
       const base = await this.#base(row, actor);
       const result = await requestJson(joinUrl(base, "/v1/models"), {
-        headers: { Authorization: `Bearer ${stored!.gatewayKey}` },
+        headers: stored!.gatewayKey ? { Authorization: `Bearer ${stored!.gatewayKey}` } : {},
         maxBytes: 256 * 1024,
         ...(signal ? { signal } : {}),
         ...(this.#resolve ? { resolve: this.#resolve } : {}),
@@ -402,6 +428,7 @@ export class AiAgentService {
   async #base(row: ConfigRow, actor: Actor): Promise<string> {
     const stored = this.#stored(row);
     if (stored.settings.mode === "external") return stored.settings.baseUrl.replace(/\/v1\/?$/, "");
+    if (row.kind === "local") return this.#local.ollamaBase(actor);
     if (!row.app_id) throw new ApiError(409, "CONFLICT", "Agent is not installed");
     const app = (await this.#apps.list(actor)).find((entry) => entry.id === row.app_id);
     if (!app || app.source === "simulated" || app.state !== "running" || app.lastError)
@@ -423,35 +450,58 @@ export class AiAgentService {
       const previous = this.#row(userId, kind);
       const old = previous ? this.#stored(previous) : null;
       const { gatewayKey, providerKey, clearProviderKey, ...settings } = input;
+      if (kind === "local") {
+        // A direct chat: the server is the model provider; the chosen model is its API model.
+        settings.provider = "custom";
+        settings.providerUrl = `${settings.baseUrl.replace(/\/v1\/?$/, "")}/v1`;
+        settings.model = settings.apiModel;
+        settings.tools = false;
+      }
       settings.providerUrl =
         settings.provider === "custom" ? settings.providerUrl : PROVIDER_URLS[settings.provider];
-      if (settings.mode === "managed") settings.apiModel = AGENT_MODELS[kind];
+      if (settings.mode === "managed" && kind !== "local") settings.apiModel = AGENT_MODELS[kind];
       const stored: Stored = {
         settings,
         gatewayKey:
-          settings.mode === "managed"
-            ? old?.settings.mode === "managed"
-              ? old.gatewayKey
-              : randomBytes(32).toString("hex")
-            : gatewayKey ||
-              (old?.settings.mode === "external" && old.settings.baseUrl === settings.baseUrl
+          kind === "local" && settings.mode === "managed"
+            ? ""
+            : settings.mode === "managed"
+              ? old?.settings.mode === "managed"
                 ? old.gatewayKey
-                : ""),
-        providerKey: clearProviderKey
-          ? ""
-          : providerKey ||
-            (old?.settings.providerUrl === settings.providerUrl ? old.providerKey : ""),
+                : randomBytes(32).toString("hex")
+              : gatewayKey ||
+                (old?.settings.mode === "external" && old.settings.baseUrl === settings.baseUrl
+                  ? old.gatewayKey
+                  : ""),
+        providerKey:
+          clearProviderKey || kind === "local"
+            ? ""
+            : providerKey ||
+              (old?.settings.providerUrl === settings.providerUrl ? old.providerKey : ""),
       };
-      if (settings.mode === "external" && !stored.gatewayKey)
+      if (settings.mode === "external" && !stored.gatewayKey && kind !== "local")
         throw new ApiError(422, "VALIDATION_FAILED", "Agent API token required");
-      if (settings.mode === "managed" && settings.provider !== "custom" && !stored.providerKey)
+      if (
+        settings.mode === "managed" &&
+        kind !== "local" &&
+        (settings.provider === "openrouter" || settings.provider === "openai") &&
+        !stored.providerKey
+      )
         throw new ApiError(422, "VALIDATION_FAILED", "Model provider API key required");
+      if (settings.mode === "managed" && settings.provider === "ollama" && kind !== "local")
+        if (!(await this.#local.ollamaApp(actor)))
+          throw new ApiError(409, "CONFLICT", "Install the EveryOS Ollama first", {
+            details: { reason: "ollama-missing" },
+          });
       let job: AppJobView | null = null;
-      const appId = previous?.app_id && this.#apps.exists(previous.app_id) ? previous.app_id : null;
+      const appId =
+        kind !== "local" && previous?.app_id && this.#apps.exists(previous.app_id)
+          ? previous.app_id
+          : null;
       if (settings.mode === "managed" && appId)
         job = await this.#apps.configureBuiltin(
           appId,
-          agentTemplate(kind, settings, stored.gatewayKey, stored.providerKey),
+          agentTemplate(kind as AgentRuntime, settings, stored.gatewayKey, stored.providerKey),
           actor,
         );
       this.#record(userId, kind, stored, appId);
@@ -469,6 +519,9 @@ export class AiAgentService {
     const key = this.#key(userId, kind);
     this.#busy.add(key);
     try {
+      // The EveryOS Ollama is installed system-wide from the local model settings.
+      if (kind === "local")
+        throw new ApiError(409, "CONFLICT", "Local models are not installed per account");
       const row = this.#row(userId, kind);
       if (!row) throw new ApiError(409, "CONFLICT", "Configure the agent first");
       const stored = this.#stored(row);
@@ -479,6 +532,10 @@ export class AiAgentService {
       const status = await this.#agent.call("docker.status", {}, actor);
       if (!status.status.available || !status.compose.available)
         throw new ApiError(409, "CONFLICT", "Docker and Compose v2 are required");
+      if (stored.settings.provider === "ollama" && !(await this.#local.ollamaApp(actor)))
+        throw new ApiError(409, "CONFLICT", "Install the EveryOS Ollama first", {
+          details: { reason: "ollama-missing" },
+        });
       const job = await this.#apps.installBuiltin(
         agentTemplate(kind, stored.settings, stored.gatewayKey, stored.providerKey),
         actor,
@@ -498,7 +555,7 @@ export class AiAgentService {
   ): Promise<AppJobView> {
     this.#assertFree(userId, kind);
     const row = this.#row(userId, kind);
-    if (!row?.app_id || this.#stored(row).settings.mode !== "managed")
+    if (kind === "local" || !row?.app_id || this.#stored(row).settings.mode !== "managed")
       throw new ApiError(409, "CONFLICT", "No managed agent installation");
     return this.#apps.control(row.app_id, action, actor);
   }

@@ -13,7 +13,8 @@ import { join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { OperationContext } from "@everyos/agent-protocol";
 import { silentLogger } from "@everyos/logger";
-import { createDockerSimulator } from "@everyos/system";
+import { createDockerSimulator, DockerError } from "@everyos/system";
+import { parse } from "yaml";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ManagedAppManager } from "./managed-apps.ts";
 import { createPolicy } from "./policy.ts";
@@ -55,6 +56,56 @@ async function fixture() {
 }
 
 describe("managed application agent", () => {
+  it("attaches only declared services of a built-in AI app to the EveryOS AI network", async () => {
+    const f = await fixture();
+    const ensure = vi.spyOn(f.docker, "ensureAiNetwork");
+    const ai = `x-otuken-ai-network: {app: everyos-ollama}\n${compose}`;
+    expect(
+      await f.manager.run(
+        { id: f.id, action: "install", compose: ai, riskOverride: false },
+        context(),
+      ),
+    ).toMatchObject({ ok: true });
+    expect(ensure).toHaveBeenCalledTimes(1);
+    const deployed = parse(f.run.mock.calls[0]![5]!) as Record<string, unknown>;
+    expect(deployed["x-otuken-ai-network"]).toBeUndefined();
+    expect(deployed.networks).toEqual({
+      default: {},
+      "everyos-ai": { external: true, name: "everyos-ai" },
+    });
+    expect((deployed.services as Record<string, Record<string, unknown>>).app!.networks).toEqual({
+      default: {},
+      "everyos-ai": { aliases: ["everyos-ollama"] },
+    });
+    ensure.mockClear();
+    await f.manager.run(
+      { id: f.id, action: "remove", compose: ai, riskOverride: false },
+      context(),
+    );
+    expect(ensure).not.toHaveBeenCalled();
+    const before = await readdir(f.root);
+    for (const invalid of [
+      `x-otuken-ai-network: {missing: null}\n${compose}`,
+      `x-otuken-ai-network: {app: "Bad Alias"}\n${compose}`,
+      `x-otuken-ai-network: {app: null}\nnetworks: {own: {}}\n${compose}`,
+    ])
+      await expect(
+        f.manager.run(
+          { id: randomUUID(), action: "install", compose: invalid, riskOverride: false },
+          context(),
+        ),
+      ).rejects.toThrow("Invalid AI network membership");
+    expect(await readdir(f.root)).toEqual(before);
+    // A network EveryOS did not create is never joined.
+    ensure.mockRejectedValueOnce(new DockerError("conflict", "not created by EveryOS"));
+    await expect(
+      f.manager.run(
+        { id: randomUUID(), action: "install", compose: ai, riskOverride: false },
+        context(),
+      ),
+    ).rejects.toThrow("foreign Docker network");
+  });
+
   it("changes an owned configuration only from its exact old hash and preserves it on rollback", async () => {
     const f = await fixture(),
       hash = (value: string) => createHash("sha256").update(value).digest("hex");

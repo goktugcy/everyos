@@ -8,9 +8,10 @@ import {
   type OperationResult,
 } from "@everyos/agent-protocol";
 import { inspectCompose, object, parseCompose } from "@everyos/catalogs/compose";
-import type { DockerApi } from "@everyos/system";
+import { DockerError, type DockerApi } from "@everyos/system";
 import { stringify } from "yaml";
 import type { AppImage } from "@everyos/shared";
+import { aiNetworkMembers, applyAiNetwork } from "./ai-network.ts";
 import type { SecretBox } from "@everyos/security";
 import { copyManagedData } from "./managed-data.ts";
 import { materializeConfigs } from "./managed-configs.ts";
@@ -177,6 +178,8 @@ export class ManagedAppManager {
     const original = inspectCompose(compose);
     if (original.blockers.length || original.variables.length)
       throw new OperationError("invalid_params", "Unsupported or unresolved application template");
+    // Validated before anything is created on the host.
+    aiNetworkMembers(doc);
     const riskDoc = parseCompose(compose);
     for (const raw of Object.values(object(riskDoc.services))) {
       const service = object(raw);
@@ -295,6 +298,12 @@ export class ManagedAppManager {
       string,
       unknown
     >;
+    if (applyAiNetwork(actual) && action !== "remove")
+      await this.#docker.ensureAiNetwork().catch((error: unknown) => {
+        throw error instanceof DockerError && error.kind === "conflict"
+          ? new OperationError("policy_denied", "A foreign Docker network named everyos-ai exists")
+          : new OperationError("failed", "The AI network could not be prepared");
+      });
     // Check every existing path component; app data may have been written by a container.
     for (const raw of Object.values(object(actual.services))) {
       const service = object(raw);

@@ -3,7 +3,7 @@
 Base path: `/api`. Bodies are JSON except raw wallpaper, folder-icon, file and backup uploads. JSON responses are never cached
 (`Cache-Control: no-store`); owned raster images use private immutable caching.
 
-## AI agents
+## AI assistants
 
 All `/ai-agents` routes require `apps:manage` and `terminal:access`. Settings and conversations
 are scoped to the authenticated account; there is no caller-supplied user ID, Compose template,
@@ -11,8 +11,8 @@ agent command, arbitrary upstream path or secret-read endpoint. Params/query/bod
 
 | Method     | Path                                 | Behavior                                                                                                          |
 | ---------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| GET        | `/ai-agents`                         | Both agents' sanitized settings, live API state and owned app job                                                 |
-| GET        | `/ai-agents/:kind`                   | One `hermes`/`openclaw` state                                                                                     |
+| GET        | `/ai-agents`                         | Every assistant's (`local`, `hermes`, `openclaw`) sanitized settings, live API state and owned app job            |
+| GET        | `/ai-agents/:kind`                   | One assistant's state                                                                                             |
 | PUT        | `/ai-agents/:kind`                   | Save settings; blank keys preserve existing matching credentials; apply an installed managed configuration        |
 | POST       | `/ai-agents/:kind/actions`           | Confirmed fixed `install`, `start`, `stop`, `restart`, `retry`; returns an app job                                |
 | GET / POST | `/ai-agents/:kind/conversations`     | List metadata / create an empty private conversation                                                              |
@@ -25,7 +25,18 @@ The chat stream uses existing heartbeat access checks and bounded DNS-pinned ups
 `GET /ai-agents/discover` returns sanitized native/account and Docker discoveries, with no keys or
 chat contents. `POST /ai-agents/:kind/import` validates the native candidate ID, settings fingerprint,
 settings/history choices and explicit kind confirmation, then returns import/skip counts.
-Agent credentials and messages are excluded from audit metadata. See [AI agents](ai-agents.md).
+Agent credentials and messages are excluded from audit metadata. See [AI assistants](ai-agents.md).
+
+Local model servers and the system-wide EveryOS Ollama (servers are named by discovered id, never by URL):
+
+| Method | Path                                         | Behavior                                                                                   |
+| ------ | -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| GET    | `/ai-agents/local-models`                    | EveryOS Ollama state and GPU hardware, discovered servers with models, downloads           |
+| POST   | `/ai-agents/local-models/ollama`             | `{acceleration, confirm: "ollama"}`: install or reconfigure; GPU needs an administrator    |
+| POST   | `/ai-agents/local-models/ollama/actions`     | Confirmed `start`, `stop`, `restart`, `retry`; returns an app job                          |
+| POST   | `/ai-agents/local-models/servers/:id/pull`   | `{model, confirmExternal?}`: start a download on an Ollama server; external ones confirmed |
+| POST   | `/ai-agents/local-models/pulls/:id/cancel`   | Cancel a running download                                                                  |
+| DELETE | `/ai-agents/local-models/servers/:id/models` | `{model, confirm: model, confirmExternal?}`: delete a model                                |
 
 **Errors** always have this shape:
 

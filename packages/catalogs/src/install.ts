@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
-import type { AppInstallDefaults, CatalogApp } from "@everyos/shared";
+import { AI_AGENT_CATALOG_ID, type AppInstallDefaults, type CatalogApp } from "@everyos/shared";
 import {
   cleanCompose,
   CONFIG_PLACEHOLDER,
@@ -122,6 +122,11 @@ export function prepareInstall(
     vars.set(entry.key, value);
   }
   const doc = parseCompose(cleanCompose(app.compose));
+  // Only EveryOS's own AI templates may join the internal AI network; catalogs lose the key above.
+  if (app.source.catalogId === AI_AGENT_CATALOG_ID) {
+    const network = parseCompose(app.compose)["x-otuken-ai-network"];
+    if (network !== undefined) doc["x-otuken-ai-network"] = network;
+  }
   for (const raw of Object.values(object(doc.services))) {
     const service = object(raw);
     for (const [key, value] of Object.entries(object(service.environment))) {

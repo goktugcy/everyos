@@ -271,7 +271,8 @@ export const AGENT_OPERATIONS = {
     permission: "apps:manage",
     allowSystemActor: false,
     mutating: true,
-    timeoutMs: 12 * 60_000,
+    // Image pulls (up to 45 min for multi-GB model servers) plus two Compose runs.
+    timeoutMs: 75 * 60_000,
   }),
   "agent.ping": unary({
     params: NoParams,

@@ -484,6 +484,8 @@ export async function createTestContext(
     agent,
     scryptParams: { log2N: 10, r: 8, p: 1 },
     now: () => clock.now,
+    // Never probe model servers on the developer's machine; tests announce theirs as sockets.
+    localModelPorts: [],
   });
   services.setup.initialize();
   await services.backups.start();

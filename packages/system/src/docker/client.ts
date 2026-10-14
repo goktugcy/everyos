@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import { request, type IncomingMessage } from "node:http";
 import { totalmem } from "node:os";
 import { createInterface } from "node:readline";
@@ -19,6 +20,7 @@ import type {
   NetworkSummary,
   VolumeSummary,
 } from "@everyos/shared";
+import { EVERYOS_AI_NETWORK } from "@everyos/shared";
 import type { PostgresStats } from "@everyos/shared/schemas";
 import { mapLimit, pathKind } from "../fs-utils.ts";
 import { checkComposeFiles, ComposeError, detectCompose, runCompose } from "./compose.ts";
@@ -92,6 +94,11 @@ export interface DockerApi {
   removeVolume(name: string): Promise<void>;
   listNetworks(): Promise<NetworkSummary[]>;
   removeNetwork(id: string): Promise<void>;
+  /**
+   * Creates or verifies the internal network that built-in AI apps share. A same-named
+   * network that EveryOS did not create is never adopted.
+   */
+  ensureAiNetwork(): Promise<void>;
   listProjects(): Promise<ComposeProject[]>;
   /** Checks the Compose files a discovered project was created from (for import). */
   checkProject(project: string): Promise<ComposeFileCheck>;
@@ -117,6 +124,7 @@ export interface DockerApi {
 }
 
 const DEFAULT_SOCKETS = ["/var/run/docker.sock", "/run/docker.sock"];
+const AI_NETWORK_LABEL = "io.everyos.owned";
 const SQL_IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]{0,62}$/;
 /** Images of PostgreSQL and its common distributions; exec is refused for anything else. */
 const POSTGRES_IMAGE = /(^|\/)(postgres|postgresql|pgvector|pgvecto-rs|postgis)(:|@|$)/;
@@ -349,6 +357,20 @@ export function createDockerClient(options: DockerClientOptions = {}): DockerApi
         const count = (value: unknown) => (typeof value === "number" ? value : 0);
         const text = (value: unknown, max: number) =>
           typeof value === "string" ? value.slice(0, max) : null;
+        const runtimes = info.Runtimes,
+          devices = Array.isArray(info.DiscoveredDevices) ? info.DiscoveredDevices : [];
+        const nvidia =
+          (runtimes !== null && typeof runtimes === "object" && "nvidia" in runtimes) ||
+          devices.some(
+            (device: unknown) =>
+              typeof (device as { ID?: unknown }).ID === "string" &&
+              (device as { ID: string }).ID.startsWith("nvidia.com/gpu"),
+          );
+        // ROCm containers need the kernel fusion driver of an AMD GPU.
+        const amd = await stat("/dev/kfd").then(
+          (entry) => entry.isCharacterDevice(),
+          () => false,
+        );
         return {
           source: "host",
           status: { available: true },
@@ -365,6 +387,7 @@ export function createDockerClient(options: DockerClientOptions = {}): DockerApi
           },
           images: count(info.Images),
           compose: { available: compose !== null, version: compose },
+          gpu: { nvidia, amd },
         };
       } catch (error) {
         const kind = error instanceof DockerError ? error.kind : "failed";
@@ -521,6 +544,36 @@ export function createDockerClient(options: DockerClientOptions = {}): DockerApi
     async listNetworks() {
       const [raw, containers] = await Promise.all([transport.json("/networks"), listed()]);
       return parseNetworks(raw, containers);
+    },
+
+    async ensureAiNetwork() {
+      const inspect = () =>
+        transport.json(`/networks/${EVERYOS_AI_NETWORK}`).catch((error: unknown) => {
+          if (error instanceof DockerError && error.kind === "not-found") return null;
+          throw error;
+        });
+      let network = await inspect();
+      if (network === null) {
+        await transport
+          .json("/networks/create", {
+            method: "POST",
+            timeoutMs: 30_000,
+            body: {
+              Name: EVERYOS_AI_NETWORK,
+              Driver: "bridge",
+              // Members keep their own project network for outside access; this one has none.
+              Internal: true,
+              Labels: { [AI_NETWORK_LABEL]: "ai" },
+            },
+          })
+          .catch((error: unknown) => {
+            if (!(error instanceof DockerError && error.kind === "conflict")) throw error;
+          });
+        network = await inspect();
+      }
+      const record = (network ?? {}) as { Labels?: Record<string, unknown>; Internal?: unknown };
+      if (record.Labels?.[AI_NETWORK_LABEL] !== "ai" || record.Internal !== true)
+        throw new DockerError("conflict", "The AI network exists but was not created by EveryOS");
     },
 
     async removeNetwork(id) {

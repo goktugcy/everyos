@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AI_AGENT_KINDS, AI_PROVIDERS } from "../ai-agents.ts";
+import { AI_AGENT_KINDS, AI_PROVIDERS, OLLAMA_ACCELERATIONS } from "../ai-agents.ts";
 
 export const AiAgentKindSchema = z.enum(AI_AGENT_KINDS);
 const Url = z
@@ -42,6 +42,30 @@ export const AiAgentSettingsSchema = SettingsBase.refine(
 export const AiChatRequestSchema = z.strictObject({
   conversationId: z.string().uuid(),
   content: z.string().trim().min(1).max(16_000),
+});
+
+/** Ollama-style model names: `[host/][namespace/]name[:tag]`, e.g. `qwen2.5:3b`. */
+export const LocalModelNameSchema = z
+  .string()
+  .max(200)
+  .regex(/^[A-Za-z0-9][\w.-]*(?:\/[A-Za-z0-9][\w.-]*){0,3}(?::[A-Za-z0-9][\w.-]{0,127})?$/);
+export const LocalServerIdSchema = z
+  .string()
+  .regex(/^(?:everyos|port:[1-9]\d{0,4}|container:[a-f0-9]{12,64})$/);
+export const LocalModelPullRequestSchema = z.strictObject({
+  model: LocalModelNameSchema,
+  /** Required for a server EveryOS did not install. */
+  confirmExternal: z.boolean().optional(),
+});
+export const LocalModelDeleteRequestSchema = z.strictObject({
+  model: LocalModelNameSchema,
+  /** Must repeat the model name. */
+  confirm: z.string().max(200),
+  confirmExternal: z.boolean().optional(),
+});
+export const OllamaSetupRequestSchema = z.strictObject({
+  acceleration: z.enum(OLLAMA_ACCELERATIONS),
+  confirm: z.literal("ollama"),
 });
 
 export const NativeAgentIdSchema = z

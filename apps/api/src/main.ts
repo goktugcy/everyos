@@ -172,6 +172,7 @@ async function main(): Promise<void> {
     services.catalogs.stop();
     services.apps.stop();
     services.aiAgents.stop();
+    services.localModels.stop();
     const forceExit = setTimeout(() => process.exit(1), 10_000);
     forceExit.unref();
     server.close(() => {

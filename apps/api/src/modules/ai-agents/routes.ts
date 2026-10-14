@@ -3,7 +3,11 @@ import {
   AiAgentKindSchema,
   AiAgentSettingsSchema,
   AiChatRequestSchema,
+  LocalModelDeleteRequestSchema,
+  LocalModelPullRequestSchema,
+  LocalServerIdSchema,
   NativeAgentIdSchema,
+  OllamaSetupRequestSchema,
 } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -41,6 +45,66 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
   app.get("/discover", async (c) => {
     parseQuery(c, Empty);
     return c.json(await services.aiAgents.discover(actor(c), c.req.raw.signal));
+  });
+  // Local model servers and the system-wide EveryOS Ollama (before the `/:kind` routes).
+  app.get("/local-models", async (c) => {
+    parseQuery(c, Empty);
+    return c.json(await services.localModels.view(actor(c), c.req.raw.signal));
+  });
+  app.post("/local-models/ollama", async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, OllamaSetupRequestSchema);
+    return c.json(
+      { job: await services.localModels.setupOllama(input.acceleration, actor(c)) },
+      202,
+    );
+  });
+  app.post("/local-models/ollama/actions", async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(
+      c,
+      z.strictObject({
+        action: z.enum(["start", "stop", "restart", "retry"]),
+        confirm: z.literal("ollama"),
+      }),
+    );
+    return c.json({ job: await services.localModels.controlOllama(input.action, actor(c)) }, 202);
+  });
+  app.post("/local-models/servers/:id/pull", async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, z.strictObject({ id: LocalServerIdSchema }));
+    const input = await parseJsonBody(c, LocalModelPullRequestSchema);
+    return c.json(
+      {
+        pull: await services.localModels.pull(
+          id,
+          input.model,
+          input.confirmExternal === true,
+          actor(c),
+        ),
+      },
+      202,
+    );
+  });
+  app.post("/local-models/pulls/:id/cancel", async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, z.strictObject({ id: z.string().uuid() }));
+    await parseJsonBody(c, Empty);
+    return c.json({ pull: services.localModels.cancelPull(id) });
+  });
+  app.delete("/local-models/servers/:id/models", async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, z.strictObject({ id: LocalServerIdSchema }));
+    const input = await parseJsonBody(c, LocalModelDeleteRequestSchema);
+    if (input.confirm !== input.model)
+      throw new ApiError(422, "VALIDATION_FAILED", "Model deletion confirmation required");
+    await services.localModels.deleteModel(
+      id,
+      input.model,
+      input.confirmExternal === true,
+      actor(c),
+    );
+    return c.body(null, 204);
   });
   app.post("/:kind/import", async (c) => {
     parseQuery(c, Empty);

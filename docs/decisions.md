@@ -599,3 +599,24 @@ single-turn "### Task:" prompts; on a real host they outnumbered chats seven to 
 them and Hermes's text-less tool-call steps, scanning up to 200 sessions. Import removes earlier
 copies of tasks that have only their imported prompt and answer. It refreshes imported copies still
 at the source timestamp, since continuing a chat in EveryOS moves that timestamp.
+
+### D46 — Local models and a private network for EveryOS AI apps
+
+Add `local` as a third chat target: a direct, tool-free chat with an OpenAI-compatible server,
+sending a key only when one is set. Discovery stays read-only and loopback-only: default ports of
+common servers, ports of matching processes from the agent's socket list, and official server
+images among containers. Model management only addresses discovered Ollama servers by id.
+
+Install at most one system-wide EveryOS Ollama as a repository-owned built-in app: models are large
+and shared, chats stay per account. GPU acceleration is offered only for hardware Docker reports
+and reuses the application `devices` risk with administrator approval; built-in reconfiguration may
+accept exactly that risk. Raise image pull and job deadlines for multi-gigabyte model servers.
+
+A container cannot reach another project's port published on 127.0.0.1, and catalog networks stay
+blocked. Let only EveryOS's own AI templates request an agent-created internal network with an
+ownership label, injected after validation. Servers listening beyond loopback remain reachable from
+managed agents through `host.docker.internal`. Downloads and deletions on an Ollama EveryOS did not
+install need an extra confirmation, since other applications may depend on its models.
+
+Settings become an overview of assistants plus a four-step setup wizard; details are split into
+Connection, Model and Advanced. Plain-language copy replaces gateway/API-model jargon.

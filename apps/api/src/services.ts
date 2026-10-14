@@ -9,6 +9,7 @@ import {
   type ScryptParams,
 } from "@everyos/auth";
 import type { Database } from "@everyos/database";
+import type { LocalServerKind } from "@everyos/shared";
 import type { Logger } from "@everyos/logger";
 import { deriveKey, SecretBox } from "@everyos/security";
 import { createProxyMatcher, type ApiConfig } from "./config.ts";
@@ -29,6 +30,7 @@ import { WallpaperService } from "./modules/wallpapers/wallpaper-service.ts";
 import { CatalogService } from "./modules/catalogs/catalog-service.ts";
 import { AppService, type FinishedJob } from "./modules/apps/app-service.ts";
 import { AiAgentService } from "./modules/ai-agents/agent-service.ts";
+import { LocalModelService } from "./modules/ai-agents/local-models.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { FileService } from "./modules/files/file-service.ts";
@@ -74,6 +76,7 @@ export interface Services {
   catalogs: CatalogService;
   apps: AppService;
   aiAgents: AiAgentService;
+  localModels: LocalModelService;
   integrations: IntegrationService;
   /** Shared, reference-counted widget data topics. */
   widgetData: DataHub;
@@ -107,6 +110,8 @@ export interface ServiceDependencies {
   requestRestart?: () => void;
   /** Test hook: DNS resolution for integration requests. */
   resolveHost?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
+  /** Test hook: loopback ports probed for local model servers. */
+  localModelPorts?: ReadonlyArray<readonly [number, LocalServerKind]>;
 }
 
 export function createPasswordHasher(params: ScryptParams = DEFAULT_SCRYPT_PARAMS): PasswordHasher {
@@ -175,6 +180,15 @@ export function createServices(deps: ServiceDependencies): Services {
     audit,
     now,
     onJobFinished: (job) => notifyAppJob(notifications, job),
+  });
+  const localModels = new LocalModelService({
+    db: deps.db,
+    apps,
+    agent: deps.agent,
+    audit,
+    now,
+    ...(deps.resolveHost ? { resolve: deps.resolveHost } : {}),
+    ...(deps.localModelPorts ? { ports: deps.localModelPorts } : {}),
   });
   const integrations = new IntegrationService({
     db: deps.db,
@@ -268,9 +282,11 @@ export function createServices(deps: ServiceDependencies): Services {
       apps,
       agent: deps.agent,
       audit,
+      local: localModels,
       now,
       ...(deps.resolveHost ? { resolve: deps.resolveHost } : {}),
     }),
+    localModels,
     widgetData,
     notifications,
     files,

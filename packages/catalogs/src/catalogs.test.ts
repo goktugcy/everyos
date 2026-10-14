@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { crc32, deflateRawSync } from "node:zlib";
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { AI_AGENT_CATALOG_ID } from "@everyos/shared";
 import { readCatalog } from "./adapters.ts";
 import { readZip } from "./archive.ts";
 import { inspectCompose, object, parseCompose } from "./compose.ts";
@@ -644,4 +645,36 @@ describe("untrusted catalog form constraints", () => {
       "invalid-field-value",
     );
   });
+});
+
+it("keeps the AI network request only for EveryOS's own AI templates", async () => {
+  const template = `x-otuken-ai-network: {app: everyos-ollama}
+services:
+  app:
+    image: example.invalid/app:1
+`;
+  const external = (
+    await readCatalog({
+      url: "https://fixture.invalid/app.yml",
+      format: "compose-dir",
+      catalogId: "00000000-0000-4000-8000-000000000001",
+      fetcher: { get: () => Promise.resolve(Buffer.from(template)) },
+    })
+  ).apps[0]!;
+  // A catalog cannot enroll itself, even when its synced template still carries the key.
+  const forged = { ...external, compose: template };
+  expect(
+    parseCompose(prepareInstall(forged, "instance", { variables: {}, ports: [] }))[
+      "x-otuken-ai-network"
+    ],
+  ).toBeUndefined();
+  const builtin = {
+    ...forged,
+    source: { ...forged.source, catalogId: AI_AGENT_CATALOG_ID },
+  };
+  expect(
+    parseCompose(prepareInstall(builtin, "instance", { variables: {}, ports: [] }))[
+      "x-otuken-ai-network"
+    ],
+  ).toEqual({ app: "everyos-ollama" });
 });

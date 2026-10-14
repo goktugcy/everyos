@@ -282,7 +282,13 @@ export class AppService {
   installBuiltin(app: CatalogApp, actor: Actor): Promise<AppJobView> {
     return this.#installApp(app, { variables: {}, ports: [], acknowledgeRisks: true }, actor);
   }
-  async configureBuiltin(id: string, template: CatalogApp, actor: Actor): Promise<AppJobView> {
+  /** `allowedRisks` are risks the caller's template deliberately has (e.g. GPU devices). */
+  async configureBuiltin(
+    id: string,
+    template: CatalogApp,
+    actor: Actor,
+    allowedRisks: readonly string[] = [],
+  ): Promise<AppJobView> {
     this.#capacity(id);
     const row = this.#row(id);
     if (!row) throw new ApiError(404, "NOT_FOUND", "Installed application not found");
@@ -293,8 +299,11 @@ export class AppService {
     )
       throw new ApiError(403, "FORBIDDEN", "Application template does not match");
     // Built-in templates carry freshly generated keys, which inspection classifies as literals.
-    if (template.blockers.length || template.risks.some((risk) => risk !== "default-secret"))
+    const risks = template.risks.filter((risk) => risk !== "default-secret");
+    if (template.blockers.length || risks.some((risk) => !allowedRisks.includes(risk)))
       throw new ApiError(422, "VALIDATION_FAILED", "Unsafe built-in template");
+    if (risks.length && (actor.kind !== "user" || actor.role !== "admin"))
+      throw new ApiError(403, "FORBIDDEN", "Administrator risk approval required");
     const inspection = await this.#agent
       .call("apps.inspect", { id }, actor)
       .catch((error: unknown) => {
@@ -311,9 +320,11 @@ export class AppService {
         .digest("hex"),
       provenance: template.source,
     };
+    // The agent re-checks the administrator approval for a risky update.
     this.#db.run(
-      "UPDATE installed_apps SET metadata = ? WHERE id = ?",
+      "UPDATE installed_apps SET metadata = ?, risk_override = ? WHERE id = ?",
       JSON.stringify(metadata),
+      risks.length ? 1 : row.risk_override,
       id,
     );
     return this.#enqueue(id, "update", actor);

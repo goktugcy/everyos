@@ -77,7 +77,8 @@ export async function streamAgentChat(input: {
         family: pinned.family,
         lookup: (_hostname, _options, callback) => callback(null, pinned.address, pinned.family),
         headers: {
-          Authorization: `Bearer ${input.key}`,
+          // Local model servers often have no key.
+          ...(input.key ? { Authorization: `Bearer ${input.key}` } : {}),
           "Content-Type": "application/json",
           Accept: "text/event-stream",
           "Accept-Encoding": "identity",

@@ -1,16 +1,88 @@
-# Hermes and OpenClaw
+# AI assistants: local models, Hermes and OpenClaw
 
-EveryOS provides a native chat application and **Settings → Agent Settings** for Hermes Agent
-and OpenClaw (formerly Clawdbot). A configurable menu bar module shows each configured agent's
-connection/operation state, selected model and a shortcut to its chat.
+EveryOS provides a native chat application (**AI Chat**) and **Settings → AI Assistants** for
+three kinds of assistant: a **local model** (a direct chat with a model server on the host), Hermes
+Agent and OpenClaw (formerly Clawdbot). The settings page shows one card per assistant with its
+state, model and source, plus **Add assistant**, a four-step wizard (type → source → model →
+review). A configured assistant's **Settings** open its Connection, Model and Advanced sections.
+A configurable menu bar module shows each configured assistant's state, model and a chat shortcut.
+Everything works on any Linux host with Docker (AMD64 or ARM64), not only on Raspberry Pi.
+
+## Local models
+
+A local model chats directly with an OpenAI-compatible server; no agent runtime is involved and
+messages stay on the host. The source is the EveryOS Ollama, a discovered server or a typed address
+(another machine of the network or another port). An API key is optional and is sent only when set.
+The model is picked from the server's list, or typed when the server does not list its models.
+Status checks the server's `/v1/models` and reports a missing model as an error.
+
+Discovery (Settings → AI Assistants → Local models) finds, without sending anything else than
+read-only GET requests to loopback:
+
+- the EveryOS Ollama;
+- servers on the default ports 11434 (Ollama), 1234 (LM Studio), 8080 (llama.cpp) and 8000 (vLLM),
+  plus ports of processes named like these servers in the agent's listening-socket list (servers on
+  non-default ports);
+- containers of the official Ollama, llama.cpp, vLLM and LocalAI images with a published port,
+  for example the CasaOS/Big Bear Ollama. EveryOS-managed projects are excluded.
+
+Ollama servers report their version and model details (`/api/version`, `/api/tags`); others are
+identified through `/v1/models`, where 401/403 marks a server that needs a key. Each server is
+classified by whether EveryOS-managed agent containers can reach it: over the private AI network
+(the EveryOS Ollama), through `host.docker.internal` when it listens on all interfaces, or not at
+all when it listens on 127.0.0.1 only (direct chat still works). Actions name a server by its
+discovered id and are always sent to `127.0.0.1`; no request accepts a caller-supplied server URL
+for model management.
+
+## EveryOS Ollama
+
+An administrator can install one system-wide Ollama; every account allowed to use assistants shares
+its models while chat histories stay per account. It is a repository-owned built-in application:
+the official multi-architecture `ollama/ollama` 0.40.4 image pinned by digest (about 3.8 GB on
+AMD64, 2.8 GB on ARM64), models persisted in its owned app-data directory, a Docker-assigned
+`127.0.0.1` port for EveryOS, `no-new-privileges` and dropped `NET_RAW`/`NET_ADMIN`. Image pulls
+may take up to 45 minutes and an application job up to 75 minutes, so slow links can install it.
+It is managed through the normal application jobs (start, restart, retry; removal from
+Applications) and shows in Applications with the local-model symbol.
+
+Acceleration is chosen at installation and can be changed later:
+
+- **CPU** works everywhere.
+- **NVIDIA** is offered only when Docker reports the NVIDIA runtime or CDI devices; it reserves all
+  GPUs through Compose device reservations.
+- **AMD** uses the separate ROCm image (AMD64 only) and is offered only when `/dev/kfd` exists;
+  it maps `/dev/kfd` and `/dev/dri`.
+
+GPU access is the application `devices` risk: only administrators can approve it, and the agent
+re-checks the approval on install and update. Built-in reconfiguration accepts no other risk.
+
+### Models
+
+On Ollama servers EveryOS lists models with size, parameters and quantization, downloads models
+(at most two downloads at a time, with live progress and cancellation) and deletes them after
+confirmation. Names must look like Ollama library names (`[host/][namespace/]name[:tag]`).
+Suggestions come from a fixed list of verified library models filtered by the host's memory.
+A server EveryOS did not install, such as CasaOS's Ollama, may be used by other applications:
+downloads and deletions there require an extra explicit confirmation. Downloads and deletions are
+audited as `ai-local.model-pull` / `ai-local.model-delete`.
 
 ## Managed installation
 
-Configure a model provider, model ID and provider API key, save, then confirm **Download and
-install agent**. OpenRouter, OpenAI and custom OpenAI-compatible endpoints are supported.
-Custom local endpoints may omit the provider key. A loopback endpoint inside the container
-addresses the container itself; use a server address reachable from that container for host-local
-Ollama/vLLM/other compatible model servers.
+Choose **Let EveryOS install it**, a model and, for cloud providers, an API key, then confirm the
+installation (the wizard's review step or the confirmation dialog). The model can be:
+
+- the **EveryOS Ollama**: the agent joins EveryOS's private internal Docker network and reaches it
+  at `http://everyos-ollama:11434/v1`; no key is needed and models are picked from its list;
+- another discovered **host server** that listens beyond loopback, through
+  `http://host.docker.internal:<port>/v1` (every managed agent has a `host-gateway` entry);
+- **OpenRouter** or **OpenAI** (API key required);
+- **another model server** at any OpenAI-compatible `/v1` address, key optional. A loopback address
+  inside the container addresses the container itself.
+
+The private network `everyos-ai` is created by the agent as an internal bridge labeled as owned by
+EveryOS; a same-named network that EveryOS did not create is never joined. Only EveryOS's own AI
+templates can request membership: catalog templates lose every `x-` key except inline files before
+installation, and the agent validates the requested services and aliases before creating anything.
 
 The Linux host must already have Docker Engine and Compose v2. Existing EveryOS application
 management checks, Linux account binding/sudo policy, audit, asynchronous jobs, ownership markers,
@@ -42,7 +114,7 @@ outside this native form; an independently configured installation can be connec
 
 ## Existing installation
 
-Agent Settings scans automatically on opening and every minute while visible. It detects the
+AI Assistants scans automatically on opening and every minute while visible. It detects the
 linked Linux account's default `.hermes`, Hermes named profiles, `.openclaw`, named OpenClaw
 profiles and legacy `.clawdbot` data, fixed executable locations and official Docker containers.
 Discovery failure is distinguished from no accessible installation data. Existing EveryOS-owned
@@ -71,7 +143,7 @@ continued in EveryOS; continuing a chat moves its timestamp. An imported copy st
 timestamp is refreshed from the source, and such copies of Open WebUI tasks are removed.
 Docker metadata can suggest a connection address; unreadable container secrets are entered manually.
 
-Choose **Connect an existing agent**, its server URL, API model ID and bearer key. A URL ending
+Choose **Connect to an existing installation**, its address, model name and access key. A URL ending
 in `/v1` is also accepted. Custom Hermes profiles can use their advertised API model ID.
 
 - Hermes: enable `API_SERVER_ENABLED=true`, set `API_SERVER_KEY`, and run its Gateway. Default
@@ -90,7 +162,7 @@ cloud metadata and link-local addresses are refused; DNS is resolved and pinned 
 
 ## Chat and access
 
-All agent routes require both `apps:manage` and `terminal:access`. The current role bundles grant
+All assistant routes, including local models, require both `apps:manage` and `terminal:access`. The current role bundles grant
 both only to administrators. Each request and open chat stream is checked on the server; locking,
 expiration, disabling an account or withdrawing a permission cancels its stream.
 
@@ -109,7 +181,7 @@ completed answers enter durable history; interrupted turns can be explicitly res
 available after reload and has confirmed deletion. Deleting EveryOS history does not erase remote
 agent memory or the model provider's records.
 
-Bounds: 50 conversations per account/agent, 40 committed messages per conversation, 16,000
+Bounds: 50 conversations per account/assistant, 40 committed messages per conversation, 16,000
 characters per user message, 128 KiB per answer, 1 MiB of upstream stream data, 64 KiB per frame,
 and a ten-minute run timeout. Start a new conversation when its context limit is reached.
 Status polling runs every 15 seconds while visible and pauses for locked/signed-out sessions.
@@ -118,12 +190,17 @@ Development deployments are labeled simulated and never presented as a live chat
 ## Verification and primary references
 
 Permission/CSRF/ownership, real HTTP streaming, encryption, interruption and fixed-template
-installation tests run locally. Targeted browser tests exercise the real EveryOS UI/API against
-disposable HTTP agent fixtures. `Agent runtimes` CI runs the actual pinned images on Linux AMD64
-and ARM64 against a fake local model provider: authenticated readiness, model routing, streaming
-and tools-off behavior. It uses no personal credentials or paid model calls.
+installation tests run locally, including a real HTTP Ollama look-alike for discovery, direct chat,
+streamed downloads and deletion. Targeted browser tests exercise the wizard, editor, local models
+panel and chat against disposable HTTP fixtures. `Agent runtimes` CI runs the actual pinned images
+on Linux AMD64 and ARM64: Hermes and OpenClaw against a fake local model provider (authenticated
+readiness, model routing, streaming, tools-off behavior), and the EveryOS Ollama with a tiny model
+(network creation, model download, direct streamed chat, and both agents reaching it over the
+private AI network). It uses no personal credentials or paid model calls.
 
 - [Hermes Docker](https://hermes-agent.nousresearch.com/docs/user-guide/docker)
 - [Hermes API server](https://hermes-agent.nousresearch.com/docs/user-guide/features/api-server)
 - [OpenClaw Docker](https://docs.openclaw.ai/install/docker)
 - [OpenClaw OpenAI API](https://docs.openclaw.ai/gateway/openai-http-api)
+- [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
+- [Ollama Docker image and GPU support](https://docs.ollama.com/docker)

@@ -53,12 +53,14 @@ brand and model, logos and type symbols. Browse rooms and live states in a calm 
 then open details for sensors and supported controls. Existing connection scopes stay under your control; access tokens
 remain on the server. Learn more in the [Home Assistant guide](docs/home-assistant.md).
 
-### Agents in your workspace
+### AI assistants in your workspace
 
-Chat with **Hermes Agent** or **OpenClaw** from EveryOS. Agent Settings can install an isolated
-official package, choose a model/provider and save credentials, or connect an existing agent.
-Live menu bar indicators show connection state and open chat quickly. Conversations and keys
-are encrypted on your server. Learn more in the [agent guide](docs/ai-agents.md).
+Chat with a **local model** on your own server, **Hermes Agent** or **OpenClaw** from EveryOS.
+AI Assistants finds model servers such as Ollama, LM Studio, llama.cpp and vLLM, can install a
+shared Ollama (with NVIDIA or AMD GPU acceleration when available) and download models for you,
+and sets up agents step by step with a local or cloud model. Live menu bar indicators show state
+and open chat quickly. Conversations and keys are encrypted on your server. Learn more in the
+[assistant guide](docs/ai-agents.md).
 
 ### Your files, at home
 

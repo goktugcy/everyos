@@ -364,6 +364,7 @@ export function createDockerSimulator(
         },
         images: images().length,
         compose: { available: true, version: "2.40.0-simulated" },
+        gpu: { nvidia: false, amd: false },
       }),
 
     listContainers: () => Promise.resolve(containers.map(summary)),
@@ -558,6 +559,9 @@ export function createDockerSimulator(
       emit("network", "destroy", network.id, network.name);
       return Promise.resolve();
     },
+
+    // Simulated deployments never start containers, so they need no shared network.
+    ensureAiNetwork: () => Promise.resolve(),
 
     listProjects: () =>
       Promise.resolve(

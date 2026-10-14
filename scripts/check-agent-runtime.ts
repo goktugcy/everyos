@@ -1,4 +1,7 @@
-/** Runs only in disposable Linux CI: official pinned agents against a local fake model provider. */
+/**
+ * Runs only in disposable Linux CI: official pinned agents against a local fake model provider,
+ * and the EveryOS Ollama with a tiny model on the internal AI network.
+ */
 import { randomBytes, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
 import { chmod, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
@@ -6,17 +9,28 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseCompose } from "../packages/catalogs/src/compose.ts";
 import { prepareInstall } from "../packages/catalogs/src/install.ts";
+import { createDockerClient } from "../packages/system/src/docker/client.ts";
+import { applyAiNetwork } from "../apps/agent/src/ai-network.ts";
 import { materializeConfigs } from "../apps/agent/src/managed-configs.ts";
 import {
   agentDefaults,
   agentTemplate,
   AGENT_MODELS,
   AGENT_IMAGES,
+  OLLAMA_PORT,
+  PROVIDER_URLS,
+  ollamaTemplate,
+  type AgentRuntime,
 } from "../apps/api/src/modules/ai-agents/templates.ts";
-import { AI_AGENT_KINDS } from "../packages/shared/src/ai-agents.ts";
+import { EVERYOS_AI_NETWORK } from "../packages/shared/src/ai-agents.ts";
 import { streamAgentChat } from "../apps/api/src/modules/ai-agents/chat-client.ts";
 import { NativeAgents } from "../apps/agent/src/native-agents.ts";
+
+const RUNTIMES: readonly AgentRuntime[] = ["hermes", "openclaw"];
+/** The smallest Ollama library model (~270 MB); its answers only need to be non-empty. */
+const TINY_MODEL = "smollm2:135m";
 
 if (process.platform !== "linux" || process.env.CI !== "true")
   throw new Error("This check is restricted to disposable Linux CI");
@@ -102,8 +116,77 @@ async function command(args: string[], capture = false): Promise<string> {
     );
   });
 }
+/** The Compose file the agent would run: prepared, configs materialized, AI network attached. */
+async function deployable(template: ReturnType<typeof ollamaTemplate>, id: string, data: string) {
+  const prepared = prepareInstall(template, id, { variables: {}, ports: [] }).replaceAll(
+    "{{otuken.appData}}",
+    data,
+  );
+  const doc = parseCompose(await materializeConfigs(prepared, id, false));
+  applyAiNetwork(doc);
+  // JSON is valid YAML for Compose.
+  return JSON.stringify(doc);
+}
+async function ready(url: string, headers: Record<string, string> = {}, attempts = 90) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(2000) });
+      if (response.ok) return true;
+    } catch {
+      /* Container may still be initializing. */
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  return false;
+}
+const ollamaId = randomUUID(),
+  ollamaData = join(root, "ollama"),
+  ollamaFile = join(root, "ollama.yaml"),
+  ollamaCli = [
+    "compose",
+    "-p",
+    `everyos-runtime-${ollamaId.replaceAll("-", "")}`,
+    "-f",
+    ollamaFile,
+  ];
 try {
-  for (const kind of AI_AGENT_KINDS) {
+  // The same call the agent makes; twice, since deployments reuse the network.
+  const docker = createDockerClient();
+  await docker.ensureAiNetwork();
+  await docker.ensureAiNetwork();
+  await mkdir(ollamaData);
+  await chmod(ollamaData, 0o777);
+  await writeFile(ollamaFile, await deployable(ollamaTemplate("cpu"), ollamaId, ollamaData), {
+    mode: 0o600,
+  });
+  console.log("ollama: pulling the pinned EveryOS Ollama image");
+  await command([...ollamaCli, "up", "-d", "--pull", "always"]);
+  const ollamaPort = (await command([...ollamaCli, "port", "ollama", String(OLLAMA_PORT)], true))
+    .trim()
+    .split(":")
+    .at(-1);
+  const ollamaUrl = `http://127.0.0.1:${ollamaPort}`;
+  if (!(await ready(`${ollamaUrl}/api/version`))) throw new Error("ollama: API did not start");
+  const pull = await fetch(`${ollamaUrl}/api/pull`, {
+    method: "POST",
+    body: JSON.stringify({ model: TINY_MODEL, stream: true }),
+  });
+  const lines = (await pull.text()).trim().split("\n");
+  if ((JSON.parse(lines.at(-1) ?? "{}") as { status?: string }).status !== "success")
+    throw new Error("ollama: model download did not finish");
+  const answer = await streamAgentChat({
+    url: `${ollamaUrl}/v1/chat/completions`,
+    key: "",
+    model: TINY_MODEL,
+    user: "everyos-smoke-local",
+    messages: [{ role: "user", content: "Say hello." }],
+    signal: AbortSignal.timeout(180_000),
+    onDelta: () => Promise.resolve(),
+  });
+  if (!answer.trim()) throw new Error("ollama: direct chat returned no answer");
+  console.log("ollama: pinned image, AI network, model download and direct streamed chat verified");
+
+  for (const kind of RUNTIMES) {
     const id = randomUUID(),
       data = join(root, kind);
     await mkdir(data);
@@ -111,6 +194,7 @@ try {
     const settings = {
       ...agentDefaults(kind),
       provider: "custom" as const,
+      // The template's own host-gateway entry reaches the fake provider on this host.
       providerUrl: `http://host.docker.internal:${providerPort}/v1`,
       model: "fixture-model",
       tools: false,
@@ -120,12 +204,7 @@ try {
       "{{otuken.appData}}",
       data,
     );
-    let compose = await materializeConfigs(prepared, id, false);
-    // Test-only hostname for the fake provider; the deployed template is otherwise identical.
-    compose = compose.replace(
-      "restart: unless-stopped",
-      'restart: unless-stopped\n    extra_hosts: ["host.docker.internal:host-gateway"]',
-    );
+    const compose = await materializeConfigs(prepared, id, false);
     const file = join(root, `${kind}.yaml`);
     await writeFile(file, compose, { mode: 0o600 });
     const project = `everyos-runtime-${id.replaceAll("-", "")}`,
@@ -200,6 +279,68 @@ try {
       )
         throw new Error(`${kind}: native reader did not recover actual runtime settings/history`);
       console.log(`${kind}: actual native settings and persisted SQLite chat recovered read-only`);
+
+      // With the EveryOS Ollama as provider, the agent joins the internal AI network.
+      const networkId = randomUUID(),
+        networkData = join(root, `${kind}-ollama`),
+        networkFile = join(root, `${kind}-ollama.yaml`);
+      await mkdir(networkData);
+      await chmod(networkData, 0o777);
+      await writeFile(
+        networkFile,
+        await deployable(
+          agentTemplate(
+            kind,
+            {
+              ...settings,
+              provider: "ollama",
+              providerUrl: PROVIDER_URLS.ollama,
+              model: TINY_MODEL,
+            },
+            key,
+            "",
+          ),
+          networkId,
+          networkData,
+        ),
+        { mode: 0o600 },
+      );
+      const networkCli = [
+        "compose",
+        "-p",
+        `everyos-runtime-${networkId.replaceAll("-", "")}`,
+        "-f",
+        networkFile,
+      ];
+      try {
+        await command([...networkCli, "up", "-d"]);
+        const probe =
+          kind === "hermes"
+            ? [
+                "python3",
+                "-c",
+                "import urllib.request;print(urllib.request.urlopen('http://everyos-ollama:11434/api/version',timeout=10).read().decode())",
+              ]
+            : [
+                "node",
+                "-e",
+                "fetch('http://everyos-ollama:11434/api/version').then(r=>r.text()).then(t=>console.log(t))",
+              ];
+        let reached = "";
+        for (let attempt = 0; attempt < 30 && !reached.includes("version"); attempt++) {
+          reached = await command([...networkCli, "exec", "-T", kind, ...probe], true).catch(
+            () => "",
+          );
+          if (!reached.includes("version"))
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        if (!reached.includes("version"))
+          throw new Error(`${kind}: the EveryOS Ollama is not reachable on the AI network`);
+        console.log(`${kind}: reaches the EveryOS Ollama over the internal AI network`);
+      } finally {
+        await command([...networkCli, "down", "--remove-orphans"]).catch(() => undefined);
+        await rm(`/run/everyos/app-configs/${networkId}`, { recursive: true, force: true });
+      }
     } catch (error) {
       console.error(error instanceof Error ? error.message : "Runtime check failed");
       console.error(
@@ -219,6 +360,8 @@ try {
     }
   }
 } finally {
+  await command([...ollamaCli, "down", "--remove-orphans"]).catch(() => undefined);
+  await command(["network", "rm", EVERYOS_AI_NETWORK]).catch(() => undefined);
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
   // The official images create private state with their own container UID.

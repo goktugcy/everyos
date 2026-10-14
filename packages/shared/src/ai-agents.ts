@@ -1,10 +1,22 @@
 import type { AppJobView, InstalledAppView } from "./catalogs.ts";
 
-export const AI_AGENT_KINDS = ["hermes", "openclaw"] as const;
+/** `local` is a direct chat with a local model server; the others are agent runtimes. */
+export const AI_AGENT_KINDS = ["local", "hermes", "openclaw"] as const;
 export const AI_AGENT_CATALOG_ID = "2d17f74b-a6bf-4bc1-a6e0-cece08c09f07";
 export type AiAgentKind = (typeof AI_AGENT_KINDS)[number];
-export const AI_PROVIDERS = ["openrouter", "openai", "custom"] as const;
+/** `ollama` is the EveryOS-installed Ollama, reached by managed agents over a private network. */
+export const AI_PROVIDERS = ["openrouter", "openai", "ollama", "custom"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
+/** Internal Docker network shared by EveryOS-installed AI apps only. */
+export const EVERYOS_AI_NETWORK = "everyos-ai";
+/** Base URL of the EveryOS Ollama inside that network. */
+export const EVERYOS_OLLAMA_NETWORK_URL = "http://everyos-ollama:11434";
+/** Fixed endpoints of the named providers; `custom` takes any URL. */
+export const AI_PROVIDER_URLS: Record<Exclude<AiProvider, "custom">, string> = {
+  openrouter: "https://openrouter.ai/api/v1",
+  openai: "https://api.openai.com/v1",
+  ollama: `${EVERYOS_OLLAMA_NETWORK_URL}/v1`,
+};
 export interface AiAgentSettings {
   mode: "managed" | "external";
   baseUrl: string;
@@ -68,6 +80,89 @@ export interface AiAgentDiscovery {
   hasProviderKey: boolean;
   historyCount: number;
   historyWarning: "limited" | "unreadable" | "unsupported" | null;
+}
+export const LOCAL_SERVER_KINDS = [
+  "ollama",
+  "lmstudio",
+  "llamacpp",
+  "vllm",
+  "localai",
+  "openai",
+] as const;
+export type LocalServerKind = (typeof LOCAL_SERVER_KINDS)[number];
+export interface LocalModel {
+  id: string;
+  /** Bytes on disk, when the server reports it. */
+  size: number | null;
+  parameters: string | null;
+  quantization: string | null;
+  family: string | null;
+}
+/** A local model server found on this host. Only fixed loopback ports and containers are probed. */
+export interface LocalModelServer {
+  /** `everyos`, `port:<port>` or `container:<id>`; actions name a server by this id, never by URL. */
+  id: string;
+  kind: LocalServerKind;
+  source: "everyos" | "native" | "container";
+  name: string;
+  /** Address the EveryOS host uses. */
+  baseUrl: string;
+  version: string | null;
+  /** False when the server is installed but did not answer. */
+  online: boolean;
+  needsKey: boolean;
+  models: LocalModel[];
+  /** Base URL that EveryOS-managed agent containers can use, if any. */
+  containerUrl: string | null;
+  containerAccess: "network" | "host-gateway" | "loopback-only" | "unknown";
+  /** Ollama servers can pull and delete models. */
+  manageable: boolean;
+}
+export const OLLAMA_ACCELERATIONS = ["cpu", "nvidia", "amd"] as const;
+export type OllamaAcceleration = (typeof OLLAMA_ACCELERATIONS)[number];
+/**
+ * Ollama library models offered for download, smallest first. Sizes are download sizes, verified
+ * on 2026-10-15; `memoryGb` is the host memory a CPU-only run comfortably needs.
+ */
+export const SUGGESTED_LOCAL_MODELS = [
+  { id: "qwen3:0.6b", bytes: 520_000_000, memoryGb: 2 },
+  { id: "gemma3:1b", bytes: 810_000_000, memoryGb: 2 },
+  { id: "llama3.2:3b", bytes: 2_020_000_000, memoryGb: 4 },
+  { id: "qwen3:4b", bytes: 2_500_000_000, memoryGb: 6 },
+  { id: "gemma3:4b", bytes: 3_350_000_000, memoryGb: 6 },
+  { id: "llama3.1:8b", bytes: 4_920_000_000, memoryGb: 10 },
+  { id: "qwen3:8b", bytes: 5_230_000_000, memoryGb: 10 },
+  { id: "gemma3:12b", bytes: 8_160_000_000, memoryGb: 16 },
+  { id: "qwen3:14b", bytes: 9_280_000_000, memoryGb: 16 },
+  { id: "gpt-oss:20b", bytes: 13_790_000_000, memoryGb: 24 },
+] as const;
+export interface EveryosOllamaView {
+  app: InstalledAppView | null;
+  acceleration: OllamaAcceleration;
+  /** GPU runtimes Docker can use on this host. */
+  hardware: { nvidia: boolean; amd: boolean };
+  /** Host memory, for model suggestions. */
+  memoryBytes: number | null;
+  /** Why EveryOS cannot install Ollama here, if it cannot. */
+  unavailable: "docker" | "compose" | "architecture" | null;
+}
+export interface LocalModelsView {
+  ollama: EveryosOllamaView;
+  servers: LocalModelServer[];
+  pulls: LocalModelPull[];
+}
+export interface LocalModelPull {
+  id: string;
+  serverId: string;
+  model: string;
+  state: "running" | "succeeded" | "failed" | "cancelled";
+  /** The server's last progress status, e.g. "pulling manifest". */
+  status: string;
+  completed: number;
+  total: number;
+  error: string | null;
+  startedAt: number;
+  updatedAt: number;
 }
 /** Agent-to-API only; snapshots must never be forwarded to the browser. */
 export interface NativeAgentSnapshot {

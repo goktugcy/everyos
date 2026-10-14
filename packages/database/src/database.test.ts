@@ -261,4 +261,43 @@ describe("migrate", () => {
       expect((await migrate(db, EVERYOS_MIGRATIONS)).applied).toEqual([]);
     },
   );
+
+  it("widens AI agent kinds to local models without losing configs, chats or import records", async () => {
+    const { db } = tempDb();
+    await migrate(db, EVERYOS_MIGRATIONS.slice(0, 11));
+    db.run(
+      "INSERT INTO users (id, username, display_name, password_hash, role, password_changed_at, created_at, updated_at) VALUES ('u1', 'owner', 'Owner', 'x', 'admin', 1, 1, 1)",
+    );
+    db.run(
+      "INSERT INTO ai_agent_configs (user_id, kind, sealed_settings, app_id, updated_at) VALUES ('u1', 'hermes', 'sealed-settings', NULL, 2)",
+    );
+    db.run(
+      "INSERT INTO ai_conversations (id, user_id, kind, sealed_messages, updated_at) VALUES ('c1', 'u1', 'hermes', 'sealed-chat', 3)",
+    );
+    db.run(
+      "INSERT INTO ai_agent_imports (user_id, kind, source_id, conversation_id) VALUES ('u1', 'hermes', 'hermes:session', 'c1')",
+    );
+    await migrate(db, EVERYOS_MIGRATIONS);
+    expect(db.all("SELECT kind, sealed_settings FROM ai_agent_configs")).toEqual([
+      { kind: "hermes", sealed_settings: "sealed-settings" },
+    ]);
+    expect(db.all("SELECT id, sealed_messages, updated_at FROM ai_conversations")).toEqual([
+      { id: "c1", sealed_messages: "sealed-chat", updated_at: 3 },
+    ]);
+    expect(db.all("SELECT source_id, conversation_id FROM ai_agent_imports")).toEqual([
+      { source_id: "hermes:session", conversation_id: "c1" },
+    ]);
+    db.run(
+      "INSERT INTO ai_conversations (id, user_id, kind, sealed_messages, updated_at) VALUES ('c2', 'u1', 'local', 'sealed', 4)",
+    );
+    expect(() =>
+      db.run(
+        "INSERT INTO ai_agent_configs (user_id, kind, sealed_settings, updated_at) VALUES ('u1', 'other', 'x', 5)",
+      ),
+    ).toThrow();
+    // Import records still follow their conversation.
+    db.run("DELETE FROM ai_conversations WHERE id = 'c1'");
+    expect(db.all("SELECT * FROM ai_agent_imports")).toEqual([]);
+    expect(db.all("PRAGMA foreign_key_check")).toEqual([]);
+  });
 });
