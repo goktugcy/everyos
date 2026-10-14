@@ -1,3 +1,11 @@
+EveryOS 0.1.22 fixes Hermes chat import and announces new versions sooner.
+
+- Importing Hermes chats no longer fails with an internal error. Hermes records fractional
+  session timestamps; they are now stored as whole milliseconds.
+- New EveryOS releases are checked every five minutes instead of every hour, so a published
+  version appears in notifications within about six minutes. Each check still downloads and
+  verifies only the signed release metadata; nothing installs automatically.
+
 EveryOS 0.1.21 uses official theme-aware agent logos.
 
 - Hermes Agent and OpenClaw use locally bundled official vector marks with preserved shapes.
