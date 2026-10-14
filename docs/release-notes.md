@@ -1,3 +1,14 @@
+EveryOS 0.1.23 imports real Hermes chats and explains agent chat failures.
+
+- Chat import skips Open WebUI background tasks (title, tag and follow-up generation), which
+  previously filled the import, and scans further back for real conversations.
+- Tool-call steps without text no longer crowd out messages, so imported chats are complete.
+- Importing again removes background tasks copied by 0.1.22 and refreshes partially imported
+  chats; chats you continued in EveryOS are never changed.
+- When the agent reports a failed answer, the chat shows its reason (for example, a model the
+  provider does not support) instead of a generic system error. Keys are redacted.
+- The chat list updates after an import and after a failed message.
+
 EveryOS 0.1.22 fixes Hermes chat import and announces new versions sooner.
 
 - Importing Hermes chats no longer fails with an internal error. Hermes records fractional
