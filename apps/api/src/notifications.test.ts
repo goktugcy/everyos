@@ -331,7 +331,7 @@ describe("EveryOS release notifications", () => {
     job: null,
   });
 
-  it("the scheduled production monitor discovers a new release after an hour and emits one automatic toast", async () => {
+  it("the scheduled production monitor discovers a new release within five minutes and emits one automatic toast", async () => {
     const { ctx, admin } = await withRoles();
     let candidate: string | null = null;
     let cached: SelfUpdateStatus = { ...status(ctx.clock.now, null), checkedAt: null };
@@ -350,8 +350,8 @@ describe("EveryOS release notifications", () => {
       expect(ctx.agent.calls.filter((call) => call.op === "release.check")).toHaveLength(1);
       expect((await list(admin, "?category=updates")).notifications).toHaveLength(0);
       candidate = "0.1.8";
-      ctx.clock.now += minutes(59);
-      await vi.advanceTimersByTimeAsync(minutes(59));
+      ctx.clock.now += minutes(4);
+      await vi.advanceTimersByTimeAsync(minutes(4));
       expect(ctx.agent.calls.filter((call) => call.op === "release.check")).toHaveLength(1);
       ctx.clock.now += minutes(1);
       await vi.advanceTimersByTimeAsync(minutes(1));
@@ -435,7 +435,7 @@ describe("EveryOS release notifications", () => {
     expect((await list(viewer, "?category=updates")).unread).toEqual({ updates: 1 });
   });
 
-  it("checks in the background without a browser, coalesces checks and respects hourly refresh and retry backoff", async () => {
+  it("checks in the background without a browser, coalesces checks and respects the five-minute refresh and retry backoff", async () => {
     const { ctx, admin } = await withRoles();
     let cached: SelfUpdateStatus = { ...status(ctx.clock.now, null), checkedAt: null };
     let fail = false;
@@ -453,7 +453,7 @@ describe("EveryOS release notifications", () => {
       component: "release-monitor",
     });
     expect((await list(admin, "?category=updates")).notifications).toHaveLength(1);
-    ctx.clock.now += minutes(59);
+    ctx.clock.now += minutes(4);
     await monitor.check();
     expect(ctx.agent.calls.filter((c) => c.op === "release.check")).toHaveLength(1);
     ctx.clock.now += minutes(2);

@@ -2426,7 +2426,8 @@ export const tr = {
     },
     title: "EveryOS sürüm güncellemesi",
     description: "İmzalı sürümler kurulum öncesi doğrulanır. Yedek tüm hesap evlerini içerir.",
-    automaticChecks: "Yeni sürümler her saat otomatik denetlenir ve bildirim merkezine eklenir.",
+    automaticChecks:
+      "Yeni sürümler beş dakikada bir otomatik denetlenir ve bildirim merkezine eklenir.",
     checkedAt: "Son denetim",
     installed: "Kurulu sürüm",
     available: "Yeni sürüm",

@@ -2,9 +2,11 @@
 
 ## EveryOS version updates (Phase 8)
 
-The production API checks the signed release feed automatically once per hour, starting about
-20 seconds after service startup. It inspects cached status each minute and retries a failed
-remote check after 15 minutes, preserving verified cached data. No browser or signed-in user is
+The production API checks the signed release feed automatically every five minutes, starting
+about 20 seconds after service startup, so a published release is announced within about six
+minutes. It inspects cached status each minute and retries a failed remote check after 15
+minutes, preserving verified cached data. Each remote check downloads only the small signed
+`release.json`. No browser or signed-in user is
 needed for discovery. Each new compatible version creates one durable update notification;
 repeated checks preserve read/dismiss state. Popup preferences are honored. Its action opens
 Settings → About, which also displays the real last-check time and automatic-check cadence.

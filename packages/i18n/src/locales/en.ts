@@ -2387,7 +2387,7 @@ export const en: Messages = {
     description:
       "Signed releases are verified before installation. The backup includes all account homes.",
     automaticChecks:
-      "New versions are checked automatically every hour and added to notifications.",
+      "New versions are checked automatically every five minutes and added to notifications.",
     checkedAt: "Last check",
     installed: "Installed version",
     available: "Available version",

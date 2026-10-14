@@ -6,7 +6,7 @@ import type { AgentGateway } from "../../services.ts";
 import type { NotificationService } from "./notification-service.ts";
 
 const ACTOR: Actor = { kind: "system", component: "release-monitor" };
-const CHECK_INTERVAL_MS = 60 * 60_000;
+const CHECK_INTERVAL_MS = 5 * 60_000;
 const RETRY_INTERVAL_MS = 15 * 60_000;
 
 /** Reads the agent's verified release status. It never queues or installs an update. */

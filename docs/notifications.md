@@ -106,7 +106,7 @@ Notification subscriptions belong to the authenticated shell, independently of b
 screen size. On reconnect, return from a hidden tab or restored network, the shell reads pending
 unread EveryOS version notices using the existing permissioned notification list. A 30-second
 internal polling fallback also works when event delivery is unavailable. This does not increase
-the hourly remote release-check cadence. Seen version notices are deduplicated within the session;
+the five-minute remote release-check cadence. Seen version notices are deduplicated within the session;
 read, dismissed, resolved and muted notices do not produce catch-up pop-ups. Locks/sign-out abort
 pending reads and clear displayed data; a different session cannot receive the preceding user's
 response. Closed event connections cannot deliver late events into a replacement connection.

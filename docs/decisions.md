@@ -577,3 +577,12 @@ Review import choices against a settings fingerprint. Seal copied credentials/hi
 preserve source-ID deduplication, and never overwrite EveryOS conversations already continued.
 Read current SQLite active transcripts (bounded zstd) and legacy text JSONL without migrations.
 Scrub known credentials across streamed delta boundaries and imported messages.
+
+### D44 — Five-minute signed release checks
+
+Supersedes the hourly cadence in D34, D39 and D42. An hour-long discovery delay left published
+releases unannounced for up to an hour, and the per-check cost is one small signed `release.json`
+download. The monitor now checks remotely every five minutes with the same one-minute cache tick,
+15-minute failure backoff, signature verification and shared manual-check timestamp. A pushed
+notification would need a relay service outside the host; EveryOS does not add one. Discovery
+still never installs an update.
