@@ -21,7 +21,7 @@ if (process.platform !== "linux" || process.env.CI !== "true")
   throw new Error("This check is restricted to disposable Linux CI");
 const root = await mkdtemp(join(tmpdir(), "everyos-agent-runtime-"));
 const key = randomBytes(32).toString("hex");
-const calls: Array<{ tools?: unknown[]; model?: string }> = [];
+const calls: Array<{ tools?: Array<{ function?: { name?: string } }>; model?: string }> = [];
 const handle = async (request: IncomingMessage, response: ServerResponse) => {
   if (request.url === "/v1/models") {
     response.setHeader("Content-Type", "application/json");
@@ -37,7 +37,7 @@ const handle = async (request: IncomingMessage, response: ServerResponse) => {
   for await (const part of request) chunks.push(part as Buffer);
   const input = JSON.parse(Buffer.concat(chunks).toString()) as {
     stream?: boolean;
-    tools?: unknown[];
+    tools?: Array<{ function?: { name?: string } }>;
     model?: string;
   };
   calls.push(input);
@@ -165,6 +165,11 @@ try {
         `${kind}: real API, configured model, streamed answer and disabled tools verified`,
       );
     } catch (error) {
+      console.error(error instanceof Error ? error.message : "Runtime check failed");
+      console.error(
+        "Provider tool names:",
+        calls.map((call) => call.tools?.map((tool) => tool.function?.name) ?? []),
+      );
       const logs = await command([...cli, "logs", "--no-color", "--tail", "100"], true).catch(
         () => "",
       );
@@ -180,5 +185,12 @@ try {
 } finally {
   server.closeAllConnections();
   await new Promise<void>((resolve) => server.close(() => resolve()));
-  await rm(root, { recursive: true, force: true });
+  // The official images create private state with their own container UID.
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn("sudo", ["rm", "-rf", "--", root], { stdio: "inherit" });
+    child.on("error", reject);
+    child.on("close", (code) =>
+      code === 0 ? resolve() : reject(new Error("Disposable runtime state cleanup failed")),
+    );
+  });
 }
