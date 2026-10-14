@@ -40,6 +40,13 @@ export interface AiChatMessage {
   role: "user" | "assistant";
   content: string;
 }
+/**
+ * Open WebUI sends its background title/tag/follow-up generation through the same chat API as
+ * single "### Task:" prompts. They are not conversations and are never imported.
+ */
+export function isOpenWebUiTask(content: string): boolean {
+  return /^\s*###\s*Task:/i.test(content);
+}
 export interface AiConversation {
   id: string;
   kind: AiAgentKind;

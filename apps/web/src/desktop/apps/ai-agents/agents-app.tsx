@@ -5,6 +5,7 @@ import {
   type AiChatMessage,
 } from "@everyos/shared";
 import { MessageCircle, Plus, Send, Settings, Square, Trash2 } from "lucide-react";
+import type { TFunction } from "i18next";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -55,10 +56,12 @@ function Chat({ kind }: { kind: AiAgentKind }) {
   const { t } = useTranslation();
   const agent = useAiAgents((state) => state.agents.find((entry) => entry.kind === kind));
   const refresh = useAiAgents((state) => state.refresh);
+  const chatsRevision = useAiAgents((state) => state.chatsRevision);
   const locked = useSessionStore((state) => state.locked);
   const history = useApiResource<{ conversations: Omit<AiConversation, "messages">[] }>(
     `/ai-agents/${kind}/conversations`,
     null,
+    chatsRevision,
   );
   const [conversation, setConversation] = useState<AiConversation | null>(null),
     [input, setInput] = useState("");
@@ -141,7 +144,12 @@ function Chat({ kind }: { kind: AiAgentKind }) {
         controller.signal,
         (event, raw) => {
           if (controller.signal.aborted || useSessionStore.getState().locked) return;
-          const data = raw as { text?: unknown; conversation?: AiConversation; code?: unknown };
+          const data = raw as {
+            text?: unknown;
+            conversation?: AiConversation;
+            code?: unknown;
+            message?: unknown;
+          };
           if (event === "delta" && typeof data.text === "string") {
             const text = data.text;
             setPartial((old) => old + text);
@@ -154,10 +162,10 @@ function Chat({ kind }: { kind: AiAgentKind }) {
           if (event === "error")
             throw new ApiRequestError(502, "AGENT_OPERATION_FAILED", "Agent chat failed", {
               reason: typeof data.code === "string" ? data.code : "offline",
+              message: typeof data.message === "string" ? data.message : undefined,
             });
         },
       );
-      history.reload();
     } catch (error) {
       if (request.current === controller && !controller.signal.aborted) {
         setError(error);
@@ -168,6 +176,8 @@ function Chat({ kind }: { kind: AiAgentKind }) {
         setPending(false);
         setSending("");
         setPartial("");
+        // A failed turn still leaves its newly created conversation in the list.
+        history.reload();
       }
       void refresh();
     }
@@ -317,7 +327,13 @@ function Chat({ kind }: { kind: AiAgentKind }) {
           ) : null}
         </div>
         <div className="flex flex-col gap-2 border-t border-line p-3">
-          <ResourceError error={error} onDismiss={() => setError(null)} />
+          {chatError(t, kind, error) ? (
+            <Alert tone="warning" onDismiss={() => setError(null)}>
+              {chatError(t, kind, error)}
+            </Alert>
+          ) : (
+            <ResourceError error={error} onDismiss={() => setError(null)} />
+          )}
           <form
             className="flex items-end gap-2"
             onSubmit={(event) => {
@@ -386,6 +402,21 @@ function Chat({ kind }: { kind: AiAgentKind }) {
       ) : null}
     </div>
   );
+}
+
+const CHAT_ERROR_REASONS = ["auth", "offline", "status", "invalid", "too-large"] as const;
+
+/** The agent's own failure reason when it gave one, instead of a generic system error. */
+function chatError(t: TFunction, kind: AiAgentKind, error: unknown): string | null {
+  if (!(error instanceof ApiRequestError) || error.code !== "AGENT_OPERATION_FAILED") return null;
+  const { reason, message } = (error.details ?? {}) as { reason?: unknown; message?: unknown };
+  const agent = t(`aiAgents.names.${kind}`);
+  if (reason === "agent-error")
+    return typeof message === "string" && message
+      ? t("aiAgents.chatErrors.agentReason", { agent, message })
+      : t("aiAgents.chatErrors.agent", { agent });
+  const known = CHAT_ERROR_REASONS.find((value) => value === reason);
+  return known ? t(`aiAgents.chatErrors.${known}`, { agent }) : null;
 }
 
 function Message({ message, kind }: { message: AiChatMessage; kind: AiAgentKind }) {

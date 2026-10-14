@@ -8,11 +8,12 @@ import { parseEnv } from "node:util";
 import JSON5 from "json5";
 import { parse as parseYaml } from "yaml";
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
-import type {
-  AiAgentDiscovery,
-  AiAgentSettings,
-  AiChatMessage,
-  NativeAgentSnapshot,
+import {
+  isOpenWebUiTask,
+  type AiAgentDiscovery,
+  type AiAgentSettings,
+  type AiChatMessage,
+  type NativeAgentSnapshot,
 } from "@everyos/shared";
 
 const object = (value: unknown): Record<string, unknown> =>
@@ -108,10 +109,9 @@ export class NativeAgents {
     const conversations: NativeAgentSnapshot["conversations"] = [];
     let warning: AiAgentDiscovery["historyWarning"] = null;
     const add = (id: string, rows: unknown[], updatedAt: number) => {
-      const messages = rows
-        .map(message)
-        .filter((item): item is AiChatMessage => item !== null)
-        .slice(-40);
+      const parsed = rows.map(message).filter((item): item is AiChatMessage => item !== null);
+      if (isOpenWebUiTask(parsed.find((item) => item.role === "user")?.content ?? "")) return;
+      const messages = parsed.slice(-40);
       while (messages.at(0)?.role === "assistant") messages.shift();
       if (!messages.length || conversations.length >= 20) return;
       // Keep imported contexts within the same limit used for native EveryOS chat.
@@ -146,24 +146,32 @@ export class NativeAgents {
           allowExtension: false,
         });
         db.exec("PRAGMA trusted_schema = OFF");
+        // Skipped background-task sessions are why both stores are scanned past the import limit.
         if (kind === "hermes") {
           const sessions = db
-            .prepare("SELECT id, started_at FROM sessions ORDER BY started_at DESC LIMIT 21")
+            .prepare("SELECT id, started_at FROM sessions ORDER BY started_at DESC LIMIT 201")
             .all() as Array<{ id: string; started_at: number }>;
-          for (const session of sessions.slice(0, 20)) {
-            const rows = db
-              .prepare(
-                "SELECT role, content FROM messages WHERE session_id = ? AND role IN ('user', 'assistant') ORDER BY id DESC LIMIT 41",
-              )
-              .all(session.id);
-            add(session.id, rows.reverse(), stamp(session.started_at));
+          // Tool-calling assistant steps have no text; skip them so they do not crowd out the chat.
+          const recent = db.prepare(
+            "SELECT role, content FROM messages WHERE session_id = ? AND role IN ('user', 'assistant') AND length(trim(content)) > 0 ORDER BY id DESC LIMIT 41",
+          );
+          for (const session of sessions.slice(0, 200)) {
+            if (conversations.length >= 20) {
+              warning = "limited";
+              break;
+            }
+            add(session.id, recent.all(session.id).reverse(), stamp(session.started_at));
           }
-          if (sessions.length > 20) warning = "limited";
+          if (sessions.length > 200) warning = "limited";
         } else {
           const sessions = db
-            .prepare("SELECT DISTINCT session_id FROM session_transcript_active_events LIMIT 21")
+            .prepare("SELECT DISTINCT session_id FROM session_transcript_active_events LIMIT 61")
             .all() as Array<{ session_id: string }>;
-          for (const session of sessions.slice(0, 20)) {
+          for (const session of sessions.slice(0, 60)) {
+            if (conversations.length >= 20) {
+              warning = "limited";
+              break;
+            }
             const rows = db
               .prepare(
                 "SELECT event.event_json, event.event_zstd, event.event_utf8_bytes FROM session_transcript_active_events AS active JOIN transcript_events AS event ON event.session_id = active.session_id AND event.seq = active.event_seq WHERE active.session_id = ? AND active.message_position IS NOT NULL ORDER BY active.message_position DESC LIMIT 41",
@@ -198,7 +206,7 @@ export class NativeAgents {
               stamp(object(events.at(-1)).timestamp),
             );
           }
-          if (sessions.length > 20) warning = "limited";
+          if (sessions.length > 60) warning = "limited";
         }
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") warning = "unsupported";

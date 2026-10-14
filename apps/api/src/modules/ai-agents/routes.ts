@@ -151,10 +151,12 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
     );
     return openEventStream(c, services, {
       permissions: ["apps:manage", "terminal:access"],
-      describeError: (error) =>
-        error instanceof ApiError
-          ? String((error.details as { reason?: string } | undefined)?.reason ?? error.code)
-          : "offline",
+      describeError: (error) => {
+        if (!(error instanceof ApiError)) return "offline";
+        const details = error.details as { reason?: string; message?: string } | undefined;
+        const code = String(details?.reason ?? error.code);
+        return details?.message ? { code, message: details.message } : code;
+      },
       async run({ signal, send }) {
         const conversation = await run(signal, (text) => send("delta", { text }));
         if (!signal.aborted) await send("complete", { conversation });

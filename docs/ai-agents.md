@@ -62,9 +62,13 @@ in the form. A settings fingerprint prevents importing a changed source after di
 
 Chat import supports Hermes's read-only SQLite state, OpenClaw's current active SQLite transcript
 (including bounded zstd payloads), and older/archived JSONL text transcripts. It copies at most
-20 conversations, the last 40 user/assistant messages of each, within byte limits. Attachments,
-tool records and complete remote memory are not copied. Unsupported/unreadable/limited history is
-labeled. Repeat imports skip existing source IDs and never overwrite a chat continued in EveryOS.
+20 conversations, the last 40 user/assistant text messages of each, within byte limits. Attachments,
+tool records, text-less tool-call steps and complete remote memory are not copied. Open WebUI's
+background title/tag/follow-up generations ("### Task:" prompts sent through the same API) are
+not chats: they are skipped, and Hermes's 200 most recent sessions are scanned to find real chats
+behind them. Unsupported/unreadable/limited history is labeled. Repeat imports never overwrite a chat
+continued in EveryOS; continuing a chat moves its timestamp. An imported copy still at its source
+timestamp is refreshed from the source, and such copies of Open WebUI tasks are removed.
 Docker metadata can suggest a connection address; unreadable container secrets are entered manually.
 
 Choose **Connect an existing agent**, its server URL, API model ID and bearer key. A URL ending
@@ -78,7 +82,10 @@ in `/v1` is also accepted. Custom Hermes profiles can use their advertised API m
 EveryOS never modifies an external installation. External agent tools execute with that agent's
 own permissions; its memory can be shared with other clients. Connection status checks the
 authenticated `/v1/models` endpoint and selected API model, not provider billing/authentication.
-Only a successful chat verifies that the configured model provider can answer. Redirects,
+Only a successful chat verifies that the configured model provider can answer. When the agent
+itself reports a failed run (for example, its provider rejects the configured model), the chat shows
+that agent-reported reason, with known keys redacted and at most 300 characters; HTTP error bodies
+are never shown. A stream ending with `finish_reason: "error"` is never saved as an answer. Redirects,
 cloud metadata and link-local addresses are refused; DNS is resolved and pinned for each request.
 
 ## Chat and access

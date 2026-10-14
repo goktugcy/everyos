@@ -586,3 +586,16 @@ download. The monitor now checks remotely every five minutes with the same one-m
 15-minute failure backoff, signature verification and shared manual-check timestamp. A pushed
 notification would need a relay service outside the host; EveryOS does not add one. Discovery
 still never installs an update.
+
+### D45 — Agent-reported chat failures and Open WebUI task filtering
+
+Show the reason an agent itself reports for a failed run (its stream `error.message`), redacted for
+the configured keys, stripped of control characters and capped at 300 characters, instead of a
+generic system error. The reason only goes to the owner of that agent connection. Raw HTTP error
+bodies stay hidden. A `finish_reason: "error"` stream is a failure even after fallback text.
+
+Open WebUI sends background title/tag/follow-up generations through the same chat API as
+single-turn "### Task:" prompts; on a real host they outnumbered chats seven to one. Import skips
+them and Hermes's text-less tool-call steps, scanning up to 200 sessions. Import removes earlier
+copies of tasks that have only their imported prompt and answer. It refreshes imported copies still
+at the source timestamp, since continuing a chat in EveryOS moves that timestamp.

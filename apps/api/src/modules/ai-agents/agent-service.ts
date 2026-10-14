@@ -2,14 +2,15 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Actor } from "@everyos/agent-protocol";
 import type { Database } from "@everyos/database";
 import type { SecretBox } from "@everyos/security";
-import type {
-  AiAgentKind,
-  AiAgentSettings,
-  AiAgentView,
-  AiAgentDiscovery,
-  AiChatMessage,
-  AiConversation,
-  AppJobView,
+import {
+  isOpenWebUiTask,
+  type AiAgentKind,
+  type AiAgentSettings,
+  type AiAgentView,
+  type AiAgentDiscovery,
+  type AiChatMessage,
+  type AiConversation,
+  type AppJobView,
 } from "@everyos/shared";
 import type { AiAgentSettingsSchema } from "@everyos/shared/schemas";
 import { z } from "zod";
@@ -24,7 +25,7 @@ import {
   requestJson,
   type HttpOptions,
 } from "../integrations/http.ts";
-import { streamAgentChat } from "./chat-client.ts";
+import { AgentRunError, streamAgentChat } from "./chat-client.ts";
 import { AGENT_MODELS, PROVIDER_URLS, agentDefaults, agentTemplate } from "./templates.ts";
 
 type Input = z.infer<typeof AiAgentSettingsSchema>;
@@ -169,8 +170,28 @@ export class AiAgentService {
       if (snapshot.discovery.kind !== kind)
         throw new ApiError(400, "VALIDATION_FAILED", "Native agent kind does not match");
       let imported = 0,
-        skipped = 0;
+        updated = 0,
+        skipped = 0,
+        removed = 0;
       this.#db.transaction(() => {
+        // Earlier imports copied Open WebUI background tasks; drop those never continued here.
+        if (input.includeHistory)
+          for (const { id } of this.#db.all<{ id: string }>(
+            "SELECT chat.id FROM ai_agent_imports AS record JOIN ai_conversations AS chat ON chat.id = record.conversation_id AND chat.user_id = record.user_id WHERE record.user_id = ? AND record.kind = ?",
+            userId,
+            kind,
+          )) {
+            const { messages } = this.conversation(userId, kind, id);
+            // A continued task has more than its imported prompt and answer and is kept.
+            if (messages.length > 2 || !isOpenWebUiTask(messages[0]?.content ?? "")) continue;
+            this.#db.run(
+              "DELETE FROM ai_agent_imports WHERE user_id = ? AND conversation_id = ?",
+              userId,
+              id,
+            );
+            this.#db.run("DELETE FROM ai_conversations WHERE id = ? AND user_id = ?", id, userId);
+            removed++;
+          }
         if (input.includeSettings)
           this.#record(
             userId,
@@ -185,13 +206,39 @@ export class AiAgentService {
         if (input.includeHistory)
           for (const chat of snapshot.conversations) {
             const sourceId = `${input.id}:${chat.sourceId}`;
-            const exists = this.#db.get(
-              "SELECT conversation_id FROM ai_agent_imports WHERE user_id = ? AND kind = ? AND source_id = ?",
+            const messages = JSON.stringify(
+              chat.messages.map((message) => ({
+                ...message,
+                content: [snapshot.gatewayKey, snapshot.providerKey]
+                  .filter((key): key is string => Boolean(key))
+                  .reduce((content, key) => content.replaceAll(key, "[REDACTED]"), message.content),
+              })),
+            );
+            const existing = this.#db.get<ChatRow>(
+              "SELECT chat.* FROM ai_agent_imports AS record JOIN ai_conversations AS chat ON chat.id = record.conversation_id AND chat.user_id = record.user_id WHERE record.user_id = ? AND record.kind = ? AND record.source_id = ?",
               userId,
               kind,
               sourceId,
             );
-            if (exists || this.conversations(userId, kind).length >= 50 || !chat.messages.length) {
+            if (existing) {
+              // Continuing a chat moves its timestamp; a copy still at the source's is refreshed.
+              if (
+                chat.messages.length &&
+                chat.updatedAt > 0 &&
+                existing.updated_at === chat.updatedAt &&
+                JSON.stringify(this.#conversation(existing).messages) !== messages
+              ) {
+                this.#db.run(
+                  "UPDATE ai_conversations SET sealed_messages = ? WHERE id = ? AND user_id = ?",
+                  this.#secrets.seal(messages, `ai-chat:${userId}:${existing.id}:messages:v1`),
+                  existing.id,
+                  userId,
+                );
+                updated++;
+              } else skipped++;
+              continue;
+            }
+            if (this.conversations(userId, kind).length >= 50 || !chat.messages.length) {
               skipped++;
               continue;
             }
@@ -201,20 +248,7 @@ export class AiAgentService {
               id,
               userId,
               kind,
-              this.#secrets.seal(
-                JSON.stringify(
-                  chat.messages.map((message) => ({
-                    ...message,
-                    content: [snapshot.gatewayKey, snapshot.providerKey]
-                      .filter((key): key is string => Boolean(key))
-                      .reduce(
-                        (content, key) => content.replaceAll(key, "[REDACTED]"),
-                        message.content,
-                      ),
-                  })),
-                ),
-                `ai-chat:${userId}:${id}:messages:v1`,
-              ),
+              this.#secrets.seal(messages, `ai-chat:${userId}:${id}:messages:v1`),
               chat.updatedAt || this.#now(),
             );
             this.#db.run(
@@ -231,11 +265,15 @@ export class AiAgentService {
         source: input.id,
         settings: input.includeSettings,
         imported,
+        updated,
         skipped,
+        removed,
       });
       return {
         imported,
+        updated,
         skipped,
+        removed,
         warning: snapshot.discovery.historyWarning,
         missingGatewayKey: input.includeSettings && !snapshot.gatewayKey,
       };
@@ -597,7 +635,10 @@ export class AiAgentService {
         });
         if (error instanceof ApiError) throw error;
         throw new ApiError(502, "AGENT_OPERATION_FAILED", "Agent chat failed", {
-          details: { reason: error instanceof IntegrationHttpError ? error.kind : "offline" },
+          details:
+            error instanceof AgentRunError
+              ? { reason: "agent-error", message: error.detail }
+              : { reason: error instanceof IntegrationHttpError ? error.kind : "offline" },
         });
       } finally {
         this.#busy.delete(key);

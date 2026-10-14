@@ -488,8 +488,12 @@ export const tr = {
     importSettings: "Bağlantı/model ayarlarını ve okunabilir anahtarları al",
     importHistory: "Okunabilir sohbetleri al ({{count}})",
     importLimits:
-      "En fazla 20 sohbetin son 40 metin mesajı, boyut sınırları içinde alınır. Ekler, araç kayıtları ve uzak belleğin tümü taşınmaz. Önceden alınan sohbetler atlanır; EveryOS'te devam ettiğiniz sohbetin üstüne yazılmaz.",
+      "En fazla 20 sohbetin son 40 metin mesajı, boyut sınırları içinde alınır. Open WebUI arka plan görevleri (başlık, etiket, öneri üretimi), ekler, araç kayıtları ve uzak belleğin tümü taşınmaz. Önceden alınan sohbetler atlanır; EveryOS'te devam ettiğiniz sohbetin üstüne yazılmaz.",
     imported: "{{imported}} sohbet alındı; {{skipped}} sohbet atlandı.",
+    importUpdated:
+      "EveryOS'te devam ettirilmemiş, daha önce alınan {{count}} sohbet kaynaktan yenilendi.",
+    importRemoved:
+      "Daha önce sohbet olarak alınan {{count}} Open WebUI arka plan görevi kaldırıldı.",
     importMissingKey:
       "Okunabilir bir API anahtarı bulunamadı. Agent API'sini etkinleştirip anahtarını bağlantı ayarlarından ekleyin.",
     historyWarnings: {
@@ -571,6 +575,15 @@ export const tr = {
     chatHint:
       "Bir soru sorun veya agent'a bir görev verin. Araçlar kapalıysa yalnızca sohbet yanıtı üretir.",
     thinking: "Agent yanıtı bekleniyor…",
+    chatErrors: {
+      agent: "{{agent}} yanıtı tamamlayamadı.",
+      agentReason: "{{agent}} yanıtı tamamlayamadı: {{message}}",
+      auth: "{{agent}} API anahtarını reddetti. Anahtarı Agent Ayarları'ndan kontrol edin.",
+      offline: "{{agent}} sunucusuna ulaşılamadı. API sunucusunun çalıştığını kontrol edin.",
+      status: "{{agent}} isteği reddetti.",
+      invalid: "{{agent}} geçerli bir yanıt döndürmedi.",
+      "too-large": "{{agent}} yanıtı boyut sınırını aştı.",
+    },
     message: "Mesaj",
     messagePlaceholder: "Bir mesaj yazın…",
     send: "Gönder",

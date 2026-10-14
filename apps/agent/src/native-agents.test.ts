@@ -77,6 +77,37 @@ describe("native account agent discovery", () => {
     expect(await readFile(join(data, "config.yaml"), "utf8")).toBe(config);
     expect(await readFile(join(data, ".env"), "utf8")).toBe(env);
   });
+  it("skips Open WebUI background tasks and tool-call steps, scanning past them for real Hermes chats", async () => {
+    const root = await home(),
+      data = join(root, ".hermes");
+    await mkdir(data);
+    await writeFile(join(data, "config.yaml"), "model: {default: fixture-model}\n");
+    const db = new DatabaseSync(join(data, "state.db"));
+    db.exec(
+      "CREATE TABLE sessions(id TEXT PRIMARY KEY, started_at REAL); CREATE TABLE messages(id INTEGER PRIMARY KEY, session_id TEXT, role TEXT, content TEXT);",
+    );
+    const session = db.prepare("INSERT INTO sessions VALUES (?, ?)"),
+      write = db.prepare("INSERT INTO messages(session_id, role, content) VALUES (?, ?, ?)");
+    session.run("real-chat", 1_000.5);
+    write.run("real-chat", "user", "How do I keep Tailscale connected?");
+    // Each tool call is stored as an assistant row without text.
+    for (let index = 0; index < 45; index++) write.run("real-chat", "assistant", "");
+    write.run("real-chat", "assistant", "Disable key expiry for this device.");
+    // Open WebUI generates titles, tags and follow-ups as newer single-turn sessions.
+    for (let index = 0; index < 25; index++) {
+      session.run(`task-${index}`, 2_000 + index);
+      write.run(`task-${index}`, "user", "### Task:\nSuggest 3-5 relevant follow-up questions");
+      write.run(`task-${index}`, "assistant", '{"follow_ups": []}');
+    }
+    db.close();
+    const snapshot = await new NativeAgents(root).snapshot("hermes", true);
+    expect(snapshot.conversations.map((chat) => chat.sourceId)).toEqual(["real-chat"]);
+    expect(snapshot.conversations[0]?.messages).toEqual([
+      { role: "user", content: "How do I keep Tailscale connected?" },
+      { role: "assistant", content: "Disable key expiry for this device." },
+    ]);
+    expect(snapshot.discovery).toMatchObject({ historyCount: 1, historyWarning: null });
+  });
   it("reads JSON5 OpenClaw settings and the active SQLite transcript including bounded zstd payloads", async () => {
     const root = await home(),
       data = join(root, ".openclaw"),

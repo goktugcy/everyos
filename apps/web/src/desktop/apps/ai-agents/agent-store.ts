@@ -8,6 +8,8 @@ interface State {
   agents: AiAgentView[];
   error: unknown;
   loading: boolean;
+  /** Bumped when chats change outside the chat window (e.g. an import in Settings). */
+  chatsRevision: number;
   refresh: () => Promise<void>;
 }
 let controller: AbortController | null = null;
@@ -16,6 +18,7 @@ export const useAiAgents = create<State>((set) => ({
   agents: [],
   error: null,
   loading: false,
+  chatsRevision: 0,
   refresh: async () => {
     const session = useSessionStore.getState();
     const sessionId = session.session?.session.id;

@@ -17,8 +17,8 @@ export interface EventStreamOptions {
   run(channel: EventChannel): Promise<void>;
   /** How often access is re-checked and a keep-alive comment is sent. */
   heartbeatMs?: number;
-  /** Maps a failure to a code sent to the client before closing. */
-  describeError?: (error: unknown) => string;
+  /** Maps a failure to a code (and optional display message) sent to the client before closing. */
+  describeError?: (error: unknown) => string | { code: string; message: string };
 }
 
 /**
@@ -73,9 +73,12 @@ export function openEventStream(
     } catch (error) {
       if (!controller.signal.aborted) {
         logger.warn("Event stream failed", { error });
-        const code = options.describeError?.(error) ?? "INTERNAL_ERROR";
+        const described = options.describeError?.(error) ?? "INTERNAL_ERROR";
         await stream
-          .writeSSE({ event: "error", data: JSON.stringify({ code }) })
+          .writeSSE({
+            event: "error",
+            data: JSON.stringify(typeof described === "string" ? { code: described } : described),
+          })
           .catch(() => undefined);
       }
     } finally {

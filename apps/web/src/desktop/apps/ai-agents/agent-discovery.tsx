@@ -17,6 +17,13 @@ interface Discovery {
   nativeError: string | null;
   dockerError: string | null;
 }
+interface ImportResult {
+  imported: number;
+  updated: number;
+  skipped: number;
+  removed: number;
+  missingGatewayKey: boolean;
+}
 export function AgentDiscovery({
   onImported,
   onConnect,
@@ -31,32 +38,26 @@ export function AgentDiscovery({
     [includeHistory, setIncludeHistory] = useState(false);
   const [pending, setPending] = useState(false),
     [error, setError] = useState<unknown>(null);
-  const [result, setResult] = useState<{
-    imported: number;
-    skipped: number;
-    missingGatewayKey: boolean;
-  } | null>(null);
+  const [result, setResult] = useState<ImportResult | null>(null);
   const refresh = useAiAgents((state) => state.refresh);
   const importing = async () => {
     if (!selected) return;
     setPending(true);
     setError(null);
     try {
-      const result = await api<{ imported: number; skipped: number; missingGatewayKey: boolean }>(
-        `/ai-agents/${selected.kind}/import`,
-        {
-          method: "POST",
-          body: {
-            id: selected.id,
-            fingerprint: selected.fingerprint,
-            includeSettings,
-            includeHistory,
-            confirm: selected.kind,
-          },
+      const result = await api<ImportResult>(`/ai-agents/${selected.kind}/import`, {
+        method: "POST",
+        body: {
+          id: selected.id,
+          fingerprint: selected.fingerprint,
+          includeSettings,
+          includeHistory,
+          confirm: selected.kind,
         },
-      );
+      });
       setResult(result);
       setSelected(null);
+      useAiAgents.setState((state) => ({ chatsRevision: state.chatsRevision + 1 }));
       await refresh();
       onImported(selected.kind);
       scan.reload();
@@ -153,7 +154,13 @@ export function AgentDiscovery({
           tone={result.missingGatewayKey ? "warning" : "success"}
           onDismiss={() => setResult(null)}
         >
-          {t("aiAgents.imported", result)}
+          {t("aiAgents.imported", { imported: result.imported, skipped: result.skipped })}
+          {result.updated ? (
+            <p className="mt-1">{t("aiAgents.importUpdated", { count: result.updated })}</p>
+          ) : null}
+          {result.removed ? (
+            <p className="mt-1">{t("aiAgents.importRemoved", { count: result.removed })}</p>
+          ) : null}
           {result.missingGatewayKey ? (
             <p className="mt-1">{t("aiAgents.importMissingKey")}</p>
           ) : null}

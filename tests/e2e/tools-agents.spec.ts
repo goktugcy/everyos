@@ -37,6 +37,23 @@ test("agent settings connect both real HTTP gateways, menu status opens chat, an
     };
     requests.push({ kind, messages: input.messages });
     response.writeHead(200, { "Content-Type": "text/event-stream" });
+    if (input.messages.at(-1)?.content === "Model hatası") {
+      // Hermes's failed turn: fallback text, then finish_reason "error" with its own reason.
+      response.write(
+        `data: ${JSON.stringify({ choices: [{ delta: { content: "⚠️ Hata" } }] })}\n\n`,
+      );
+      response.write(
+        `data: ${JSON.stringify({
+          choices: [{ delta: {}, finish_reason: "error" }],
+          error: {
+            message: "HTTP 400: The 'gpt-5.5' model is not supported.",
+            type: "agent_error",
+          },
+        })}\n\n`,
+      );
+      response.end("data: [DONE]\n\n");
+      return;
+    }
     const text =
       input.messages.at(-1)?.content === "Uzun görev"
         ? "Devam eden yanıt · agent çalışıyor."
@@ -123,6 +140,22 @@ test("agent settings connect both real HTTP gateways, menu status opens chat, an
     await expect.poll(() => requests.length).toBe(4);
     expect(requests.at(-1)?.messages).toHaveLength(3);
     await expect(app.getByRole("button", { name: "Gönder", exact: true })).toBeVisible();
+    // An agent-reported failure shows its reason, and the new chat still appears in the list.
+    await app.getByRole("button", { name: "Yeni sohbet", exact: true }).first().click();
+    await app.getByLabel("Mesaj", { exact: true }).fill("Model hatası");
+    await app.getByRole("button", { name: "Gönder", exact: true }).click();
+    await expect(app).toContainText(
+      "Hermes Agent yanıtı tamamlayamadı: HTTP 400: The 'gpt-5.5' model is not supported.",
+    );
+    await expect(app.getByLabel("Mesaj", { exact: true })).toHaveValue("Model hatası");
+    const failed = (
+      (await (await page.request.get("/api/ai-agents/hermes/conversations")).json()) as {
+        conversations: AiConversation[];
+      }
+    ).conversations.find((entry) => entry.title === "")!;
+    threads.push({ kind: "hermes", id: failed.id });
+    await expect(app.getByRole("button", { name: "Yeni sohbet", exact: true })).toHaveCount(2);
+    await app.getByLabel("Mesaj", { exact: true }).fill("");
     await page.reload();
     const restored = page.locator('[data-app-id="everyos.agents"]');
     await restored.getByRole("button", { name: "hermes sorusu", exact: true }).click();

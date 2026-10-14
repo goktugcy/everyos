@@ -47,7 +47,13 @@ async function roles() {
 }
 async function gateway(
   kind: AiAgentKind,
-  options: { incomplete?: boolean; hold?: boolean; error?: boolean; echoKey?: boolean } = {},
+  options: {
+    incomplete?: boolean;
+    hold?: boolean;
+    error?: boolean;
+    echoKey?: boolean;
+    agentFailure?: boolean;
+  } = {},
 ) {
   const requests: Array<{ model: string; user: string; messages: unknown[]; stream: boolean }> = [];
   let disconnected = false;
@@ -76,6 +82,23 @@ async function gateway(
       return;
     }
     response.writeHead(200, { "Content-Type": "text/event-stream" });
+    if (options.agentFailure) {
+      // Hermes's failed turn: fallback text, then finish_reason "error" with its own reason.
+      const frames = [
+        { choices: [{ delta: { content: "Fallback notice" }, finish_reason: null }] },
+        {
+          choices: [{ delta: {}, finish_reason: "error" }],
+          error: {
+            message:
+              "HTTP 400: {'detail': \"The 'fixture-model' model is not supported.\"}\nkey=fixture-agent-key",
+            type: "BadRequestError",
+          },
+        },
+      ];
+      for (const frame of frames) response.write(`data: ${JSON.stringify(frame)}\n\n`);
+      response.end("data: [DONE]\n\n");
+      return;
+    }
     if (options.echoKey) {
       for (const text of ["token:fixture-", "agent-key"])
         response.write(`data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`);
@@ -228,6 +251,100 @@ describe("AI agent integrations", () => {
     expect(JSON.stringify(ctx.db.all("SELECT * FROM audit_events"))).not.toContain(
       "private-native-provider-key",
     );
+  });
+  it("removes earlier imported background tasks and refreshes imported chats unless they were continued", async () => {
+    const { ctx, admin } = await roles();
+    const fixture = await gateway("hermes");
+    await put(admin, "/api/ai-agents/hermes", external("hermes", fixture.baseUrl));
+    const chat = (sourceId: string, user: string, turns = 1) => ({
+      sourceId,
+      messages: Array.from({ length: turns }, (_, turn) => [
+        { role: "user", content: turn ? `${user} ${turn}` : user },
+        { role: "assistant", content: "answer" },
+      ]).flat(),
+      updatedAt: 1_000,
+      truncated: false,
+    });
+    // Earlier agent versions returned Open WebUI tasks as chats and dropped text behind tool calls.
+    let conversations = [
+      chat("task-1", "### Task: first"),
+      chat("task-2", "### Task: second"),
+      chat("real", "A real question"),
+    ];
+    ctx.agent.handlers.set("ai.snapshot", () => ({
+      discovery: {
+        id: "hermes",
+        kind: "hermes",
+        source: "native",
+        name: "hermes",
+        fingerprint: "a".repeat(64),
+        baseUrl: fixture.baseUrl,
+        apiModel: "hermes-agent",
+        canImport: true,
+        hasGatewayKey: false,
+        hasProviderKey: false,
+        historyCount: conversations.length,
+        historyWarning: null,
+      },
+      settings: { ...agentDefaults("hermes"), mode: "external", baseUrl: fixture.baseUrl },
+      gatewayKey: null,
+      providerKey: null,
+      conversations,
+    }));
+    const input = {
+      id: "hermes",
+      fingerprint: "a".repeat(64),
+      includeSettings: false,
+      includeHistory: true,
+      confirm: "hermes",
+    };
+    expect(await json(await admin.post("/api/ai-agents/hermes/import", input))).toMatchObject({
+      imported: 3,
+      removed: 0,
+    });
+    const list = async () =>
+      (
+        await json<{ conversations: AiConversation[] }>(
+          await admin.get("/api/ai-agents/hermes/conversations"),
+        )
+      ).conversations.map((entry) => entry.title);
+    const continued = (
+      await json<{ conversations: AiConversation[] }>(
+        await admin.get("/api/ai-agents/hermes/conversations"),
+      )
+    ).conversations.find((entry) => entry.title === "### Task: second")!;
+    await (
+      await admin.post("/api/ai-agents/hermes/chat", {
+        conversationId: continued.id,
+        content: "continued in EveryOS",
+      })
+    ).text();
+    conversations = [chat("real", "A real question", 2)];
+    expect(await json(await admin.post("/api/ai-agents/hermes/import", input))).toMatchObject({
+      imported: 0,
+      updated: 1,
+      skipped: 0,
+      removed: 1,
+    });
+    expect((await list()).sort()).toEqual(["### Task: second", "A real question"]);
+    const real = (
+      await json<{ conversations: AiConversation[] }>(
+        await admin.get("/api/ai-agents/hermes/conversations"),
+      )
+    ).conversations.find((entry) => entry.title === "A real question")!;
+    expect(
+      (
+        await json<AiConversation>(
+          await admin.get(`/api/ai-agents/hermes/conversations/${real.id}`),
+        )
+      ).messages,
+    ).toHaveLength(4);
+    expect(await json(await admin.post("/api/ai-agents/hermes/import", input))).toMatchObject({
+      imported: 0,
+      updated: 0,
+      skipped: 1,
+      removed: 0,
+    });
   });
   it("requires permissions and CSRF, validates settings, seals keys, and isolates each owner's history", async () => {
     const { ctx, admin, operator, viewer } = await roles();
@@ -405,6 +522,31 @@ describe("AI agent integrations", () => {
       ).toEqual([]);
     },
   );
+  it("reports the agent's own redacted failure reason and keeps no partial turn", async () => {
+    const { admin } = await roles();
+    const fixture = await gateway("hermes", { agentFailure: true });
+    await put(admin, "/api/ai-agents/hermes", external("hermes", fixture.baseUrl));
+    const thread = await json<AiConversation>(
+      await admin.post("/api/ai-agents/hermes/conversations", {}),
+    );
+    const stream = await (
+      await admin.post("/api/ai-agents/hermes/chat", { conversationId: thread.id, content: "hi" })
+    ).text();
+    expect(stream).not.toContain("event: complete");
+    const error = /event: error\ndata: (.+)\n/.exec(stream)?.[1];
+    expect(JSON.parse(error ?? "null")).toEqual({
+      code: "agent-error",
+      message:
+        "HTTP 400: {'detail': \"The 'fixture-model' model is not supported.\"} key=[REDACTED]",
+    });
+    expect(
+      (
+        await json<AiConversation>(
+          await admin.get(`/api/ai-agents/hermes/conversations/${thread.id}`),
+        )
+      ).messages,
+    ).toEqual([]);
+  });
   it.each(["hermes", "openclaw"] as const)(
     "installs only the pinned owned %s template through existing agent policy",
     async (kind) => {

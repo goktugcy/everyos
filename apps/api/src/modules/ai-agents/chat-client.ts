@@ -21,7 +21,19 @@ const Chunk = z.object({
   error: z.unknown().optional(),
 });
 
-/** Fixed OpenAI chat endpoint, pinned DNS, bounded SSE, no redirects or raw upstream errors. */
+/** A run the agent reported as failed, with its own redacted, bounded explanation. */
+export class AgentRunError extends IntegrationHttpError {
+  readonly detail: string;
+  constructor(detail: string) {
+    super("invalid", "Agent run failed");
+    this.detail = detail;
+  }
+}
+
+/**
+ * Fixed OpenAI chat endpoint, pinned DNS, bounded SSE, no redirects. Upstream errors surface only
+ * as the agent's own stream error message, with known secrets redacted and bounded in size.
+ */
 export async function streamAgentChat(input: {
   url: string;
   key: string;
@@ -144,8 +156,22 @@ export async function streamAgentChat(input: {
         throw new IntegrationHttpError("invalid", "Invalid agent stream");
       }
       const chunk = Chunk.safeParse(parsed);
-      if (!chunk.success || chunk.data.error !== undefined)
-        throw new IntegrationHttpError("invalid", "Agent run failed");
+      if (!chunk.success) throw new IntegrationHttpError("invalid", "Agent run failed");
+      // Hermes ends a failed turn with finish_reason "error", sometimes after fallback text.
+      if (chunk.data.error !== undefined || chunk.data.choices?.[0]?.finish_reason === "error") {
+        const error = chunk.data.error,
+          message =
+            typeof error === "string"
+              ? error
+              : error !== null && typeof error === "object" && "message" in error
+                ? String(error.message)
+                : "";
+        const detail = secrets
+          .reduce((value, secret) => value.replaceAll(secret, "[REDACTED]"), message)
+          .replace(/[\p{Cc}\s]+/gu, " ")
+          .trim();
+        throw new AgentRunError(detail.length > 300 ? `${detail.slice(0, 299)}…` : detail);
+      }
       const text = chunk.data.choices?.[0]?.delta?.content;
       if (text) {
         if (signal.aborted) throw new IntegrationHttpError("offline", "Chat cancelled");

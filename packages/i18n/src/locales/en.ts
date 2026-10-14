@@ -463,8 +463,12 @@ export const en: Messages = {
     importSettings: "Import connection/model settings and readable keys",
     importHistory: "Import readable chats ({{count}})",
     importLimits:
-      "Imports up to 20 chats with their last 40 text messages within size limits. Attachments, tool logs and all remote memory are not transferred. Previously imported chats are skipped; chats continued in EveryOS are never overwritten.",
+      "Imports up to 20 chats with their last 40 text messages within size limits. Open WebUI background tasks (titles, tags, follow-up suggestions), attachments, tool logs and all remote memory are not transferred. Previously imported chats are skipped; chats continued in EveryOS are never overwritten.",
     imported: "Imported {{imported}} chats; skipped {{skipped}}.",
+    importUpdated:
+      "Refreshed {{count}} previously imported chats from the source; they had not been continued in EveryOS.",
+    importRemoved:
+      "Removed {{count}} previously imported Open WebUI background tasks that were not chats.",
     importMissingKey:
       "No readable API key was found. Enable the agent API and enter its key in the connection settings.",
     historyWarnings: {
@@ -547,6 +551,15 @@ export const en: Messages = {
     chatHint:
       "Ask a question or give the agent a task. With tools disabled, it only generates chat responses.",
     thinking: "Waiting for the agent…",
+    chatErrors: {
+      agent: "{{agent}} could not complete the answer.",
+      agentReason: "{{agent}} could not complete the answer: {{message}}",
+      auth: "{{agent}} rejected the API key. Check the key in Agent Settings.",
+      offline: "{{agent}} could not be reached. Check that its API server is running.",
+      status: "{{agent}} rejected the request.",
+      invalid: "{{agent}} did not return a valid answer.",
+      "too-large": "{{agent}}'s answer exceeded the size limit.",
+    },
     message: "Message",
     messagePlaceholder: "Write a message…",
     send: "Send",
