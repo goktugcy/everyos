@@ -578,7 +578,12 @@ export const tr = {
       connectedTo: "Bağlı: {{address}}",
     },
     form: {
-      sections: { connection: "Bağlantı", model: "Model", advanced: "Gelişmiş" },
+      sections: {
+        connection: "Bağlantı",
+        model: "Model",
+        behavior: "Davranış",
+        advanced: "Gelişmiş",
+      },
       recommended: "Önerilen",
       private: "Gizli ağ",
       managedHint:
@@ -703,6 +708,67 @@ export const tr = {
         failed: "İndirilemedi",
         cancelled: "İptal edildi",
       },
+    },
+    behavior: {
+      wizardTitle: "Davranış (isteğe bağlı)",
+      persona: "Kişilik",
+      presets: {
+        assistant: "Yardımsever asistan",
+        concise: "Kısa ve net",
+        teacher: "Öğretmen",
+        coder: "Kod yardımcısı",
+        custom: "Özel",
+      },
+      presetTexts: {
+        assistant:
+          "Sen yardımsever ve dürüst bir asistansın. Soruları açık ve anlaşılır biçimde yanıtla. Emin olmadığın bir şeyi uydurma; bilmiyorsan bunu açıkça söyle.",
+        concise:
+          "Yanıtların kısa, net ve doğrudan olsun. Gereksiz giriş, özür ve tekrar yapma. Uygunsa madde işaretleri kullan.",
+        teacher:
+          "Sabırlı bir öğretmen gibi konuları adım adım ve basit örneklerle açıkla. Teknik terimleri kısaca tanımla ve sonunda kısa bir özet ver.",
+        coder:
+          "Deneyimli bir yazılım geliştiricisi gibi yanıt ver. Çalışan, kısa kod örnekleri ver ve kodu kod bloğu içinde yaz. Açıklamaları kısa tut, riskleri belirt.",
+      },
+      instructions: "Talimatlar",
+      instructionsHint:
+        "Model her yanıtta bu kurallara uyar. Bir şablon seçebilir ya da kendi talimatını yazabilirsin; düzenleyince şablon “Özel” olur.",
+      language: "Yanıt dili",
+      languages: {
+        auto: "Otomatik (yazdığım dilde)",
+        tr: "Her zaman Türkçe",
+        en: "Her zaman İngilizce",
+      },
+      creativity: "Yaratıcılık",
+      creativityLevels: { consistent: "Tutarlı", balanced: "Dengeli", creative: "Yaratıcı" },
+      creativityHint:
+        "Düşük değer daha tutarlı ve gerçeklere bağlı yanıt verir. Saçma ya da konudan sapan yanıtlarda düşür.",
+      length: "Yanıt uzunluğu",
+      lengths: { short: "Kısa", normal: "Normal", long: "Uzun" },
+      memory: "Sohbet hafızası",
+      memories: {
+        auto: "Otomatik (sunucu varsayılanı)",
+        "2k": "Kısa · ~1.500 kelime",
+        "4k": "Normal · ~3.000 kelime",
+        "8k": "Uzun · ~6.000 kelime",
+        "16k": "Çok uzun · ~12.000 kelime",
+      },
+      memoryHint:
+        "Modelin sohbetin ne kadarını hatırlayacağı. Uzun hafıza daha fazla bellek kullanır ve yanıtı yavaşlatabilir. Yalnızca Ollama sunucularında uygulanır.",
+      repetition: "Tekrar azaltma",
+      repetitionLevels: { off: "Kapalı", light: "Az", medium: "Orta", strong: "Güçlü" },
+      repetitionHint: "Model aynı cümleleri tekrarlıyorsa artır.",
+      reset: "Varsayılanlara dön",
+      smallModelTitle: "Bu model küçük",
+      smallModel:
+        "{{model}} yaklaşık {{size}} parametreli. Küçük modeller özellikle Türkçede tutarsız ya da saçma yanıt verebilir; ayarlar yardımcı olur ama yetmeyebilir. 4B veya daha büyük bir model (ör. gemma3:4b, qwen3:4b) çok daha iyi sonuç verir.",
+      betterModel: "Daha iyi bir model indir",
+      previewTitle: "Dene",
+      previewHint: "Ayarları kaydetmeden kayıtlı modelle dener. Sonuç sohbet geçmişine eklenmez.",
+      previewUnavailable:
+        "Denemek için önce asistanı kaydet; model hazır olunca buradan deneyebilirsin.",
+      previewPrompt: "Deneme mesajı",
+      previewRun: "Dene",
+      samplePrompt: "Kendini iki cümleyle tanıt ve bana nasıl yardımcı olabileceğini söyle.",
     },
     newChat: "Yeni sohbet",
     history: "Sohbet geçmişi",

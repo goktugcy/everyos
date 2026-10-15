@@ -552,7 +552,12 @@ export const en: Messages = {
       connectedTo: "Connected: {{address}}",
     },
     form: {
-      sections: { connection: "Connection", model: "Model", advanced: "Advanced" },
+      sections: {
+        connection: "Connection",
+        model: "Model",
+        behavior: "Behavior",
+        advanced: "Advanced",
+      },
       recommended: "Recommended",
       private: "Private network",
       managedHint:
@@ -682,6 +687,68 @@ export const en: Messages = {
         failed: "Download failed",
         cancelled: "Cancelled",
       },
+    },
+    behavior: {
+      wizardTitle: "Behavior (optional)",
+      persona: "Personality",
+      presets: {
+        assistant: "Helpful assistant",
+        concise: "Short and clear",
+        teacher: "Teacher",
+        coder: "Coding helper",
+        custom: "Custom",
+      },
+      presetTexts: {
+        assistant:
+          "You are a helpful and honest assistant. Answer questions clearly and simply. Never make things up; if you do not know, say so plainly.",
+        concise:
+          "Keep your answers short, clear and direct. No unnecessary introductions, apologies or repetition. Use bullet points when they fit.",
+        teacher:
+          "Like a patient teacher, explain topics step by step with simple examples. Briefly define technical terms and end with a short summary.",
+        coder:
+          "Answer like an experienced software developer. Give short, working code examples inside code blocks. Keep explanations brief and mention risks.",
+      },
+      instructions: "Instructions",
+      instructionsHint:
+        "The model follows these rules in every answer. Pick a template or write your own; editing it switches the template to “Custom”.",
+      language: "Answer language",
+      languages: {
+        auto: "Automatic (the language I write in)",
+        tr: "Always Turkish",
+        en: "Always English",
+      },
+      creativity: "Creativity",
+      creativityLevels: { consistent: "Consistent", balanced: "Balanced", creative: "Creative" },
+      creativityHint:
+        "Lower values give more consistent, factual answers. Lower it when answers are nonsensical or wander off topic.",
+      length: "Answer length",
+      lengths: { short: "Short", normal: "Normal", long: "Long" },
+      memory: "Conversation memory",
+      memories: {
+        auto: "Automatic (server default)",
+        "2k": "Short · ~1,500 words",
+        "4k": "Normal · ~3,000 words",
+        "8k": "Long · ~6,000 words",
+        "16k": "Very long · ~12,000 words",
+      },
+      memoryHint:
+        "How much of the conversation the model remembers. Longer memory uses more RAM and can slow answers down. Applied by Ollama servers only.",
+      repetition: "Avoid repetition",
+      repetitionLevels: { off: "Off", light: "Light", medium: "Medium", strong: "Strong" },
+      repetitionHint: "Raise it if the model keeps repeating the same sentences.",
+      reset: "Restore defaults",
+      smallModelTitle: "This model is small",
+      smallModel:
+        "{{model}} has about {{size}} parameters. Small models can give inconsistent or nonsensical answers, especially in languages other than English; these settings help but may not be enough. A model with 4B parameters or more (e.g. gemma3:4b, qwen3:4b) works much better.",
+      betterModel: "Download a better model",
+      previewTitle: "Try it",
+      previewHint:
+        "Tries the settings with the saved model without saving them. The answer is not added to your chats.",
+      previewUnavailable:
+        "Save the assistant first; once its model is ready you can try settings here.",
+      previewPrompt: "Test message",
+      previewRun: "Try",
+      samplePrompt: "Introduce yourself in two sentences and tell me how you can help me.",
     },
     newChat: "New chat",
     history: "Chat history",

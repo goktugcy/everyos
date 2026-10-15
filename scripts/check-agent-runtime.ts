@@ -24,7 +24,8 @@ import {
   ollamaTemplate,
   type AgentRuntime,
 } from "../apps/api/src/modules/ai-agents/templates.ts";
-import { EVERYOS_AI_NETWORK } from "../packages/shared/src/ai-agents.ts";
+import { DEFAULT_LOCAL_BEHAVIOR, EVERYOS_AI_NETWORK } from "../packages/shared/src/ai-agents.ts";
+import { localRequest } from "../apps/api/src/modules/ai-agents/behavior.ts";
 import { streamAgentChat } from "../apps/api/src/modules/ai-agents/chat-client.ts";
 import { NativeAgents } from "../apps/agent/src/native-agents.ts";
 
@@ -185,6 +186,28 @@ try {
   });
   if (!answer.trim()) throw new Error("ollama: direct chat returned no answer");
   console.log("ollama: pinned image, AI network, model download and direct streamed chat verified");
+  // Behavior settings go through Ollama's own API: system message plus sampling options.
+  const behavior = localRequest(
+    { ...DEFAULT_LOCAL_BEHAVIOR, length: "short", memory: "2k", creativity: 0 },
+    "ollama",
+  );
+  const tuned = await streamAgentChat({
+    url: `${ollamaUrl}/api/chat`,
+    key: "",
+    model: TINY_MODEL,
+    user: "everyos-smoke-behavior",
+    messages: [
+      { role: "system", content: behavior.system },
+      { role: "user", content: "Say hello." },
+    ],
+    protocol: "ollama",
+    parameters: behavior.parameters,
+    signal: AbortSignal.timeout(180_000),
+    onDelta: () => Promise.resolve(),
+  });
+  if (!tuned.trim())
+    throw new Error("ollama: native chat with behavior options returned no answer");
+  console.log("ollama: native streamed chat with instructions and behavior options verified");
 
   for (const kind of RUNTIMES) {
     const id = randomUUID(),

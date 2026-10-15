@@ -20,6 +20,7 @@ agent command, arbitrary upstream path or secret-read endpoint. Params/query/bod
 | DELETE     | `/ai-agents/:kind/conversations/:id` | Confirm ID and delete local history                                                                               |
 | POST       | `/ai-agents/:kind/chat`              | CSRF-protected `{conversationId, content}`; SSE `ready`, `delta`, `complete` or sanitized `error`; never replayed |
 | POST       | `/ai-agents/:kind/chat/cancel`       | Abort the owner's active conversation and wait for the upstream turn to release its busy state                    |
+| POST       | `/ai-agents/local/preview`           | `{behavior, prompt}`: try unsaved local behavior on the saved model; SSE `delta`, `complete`; nothing stored      |
 
 The chat stream uses existing heartbeat access checks and bounded DNS-pinned upstream transport.
 `GET /ai-agents/discover` returns sanitized native/account and Docker discoveries, with no keys or

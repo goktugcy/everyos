@@ -11,6 +11,7 @@ import {
   type AiChatMessage,
   type AiConversation,
   type AppJobView,
+  type LocalBehavior,
 } from "@everyos/shared";
 import type { AiAgentSettingsSchema } from "@everyos/shared/schemas";
 import { z } from "zod";
@@ -25,6 +26,7 @@ import {
   requestJson,
   type HttpOptions,
 } from "../integrations/http.ts";
+import { localRequest } from "./behavior.ts";
 import { AgentRunError, streamAgentChat } from "./chat-client.ts";
 import type { LocalModelService } from "./local-models.ts";
 import {
@@ -60,6 +62,7 @@ const Messages = z
     z.strictObject({ role: z.enum(["user", "assistant"]), content: z.string().max(128 * 1024) }),
   )
   .max(40);
+const OllamaVersion = z.object({ version: z.string().max(64) });
 const Models = z.object({
   data: z
     .array(z.object({ id: z.string().max(200) }))
@@ -77,6 +80,7 @@ export class AiAgentService {
   readonly #now: () => number;
   readonly #resolve: HttpOptions["resolve"];
   readonly #busy = new Set<string>();
+  readonly #protocols = new Map<string, { at: number; value: "openai" | "ollama" }>();
   readonly #chats = new Map<
     string,
     { controller: AbortController; conversationId: string; finished: Promise<void> }
@@ -450,6 +454,9 @@ export class AiAgentService {
       const previous = this.#row(userId, kind);
       const old = previous ? this.#stored(previous) : null;
       const { gatewayKey, providerKey, clearProviderKey, ...settings } = input;
+      // Behavior belongs to local chats; a save that omits it keeps the stored one.
+      if (kind === "local") settings.behavior = settings.behavior ?? old?.settings.behavior;
+      else delete settings.behavior;
       if (kind === "local") {
         // A direct chat: the server is the model provider; the chosen model is its API model.
         settings.provider = "custom";
@@ -615,6 +622,87 @@ export class AiAgentService {
     this.#db.run("DELETE FROM ai_conversations WHERE id = ? AND user_id = ?", id, userId);
     this.#event("delete-chat", actor, kind, "success", { conversationId: id });
   }
+  /** One streamed turn; local chats add their behavior and may use Ollama's own API. */
+  async #stream(
+    row: ConfigRow,
+    stored: Stored,
+    base: string,
+    messages: AiChatMessage[],
+    options: {
+      user: string;
+      signal: AbortSignal;
+      onDelta: (text: string) => Promise<void>;
+      behavior?: LocalBehavior;
+    },
+  ): Promise<string> {
+    const local = row.kind === "local";
+    const protocol = local ? await this.#protocol(row, base) : "openai";
+    const request = local
+      ? localRequest(options.behavior ?? stored.settings.behavior, protocol)
+      : null;
+    return streamAgentChat({
+      url: joinUrl(base, protocol === "ollama" ? "/api/chat" : "/v1/chat/completions"),
+      key: stored.gatewayKey,
+      model: stored.settings.apiModel,
+      user: options.user,
+      messages: request ? [{ role: "system", content: request.system }, ...messages] : messages,
+      signal: options.signal,
+      onDelta: options.onDelta,
+      redactSecrets: [stored.providerKey],
+      ...(request ? { protocol, parameters: request.parameters } : {}),
+      ...(this.#resolve ? { resolve: this.#resolve } : {}),
+    });
+  }
+  /** Ollama's own API also applies memory and repetition; other servers get OpenAI fields. */
+  async #protocol(row: ConfigRow, base: string): Promise<"openai" | "ollama"> {
+    if (this.#stored(row).settings.mode === "managed") return "ollama";
+    const cached = this.#protocols.get(base);
+    if (cached && this.#now() - cached.at < 5 * 60_000) return cached.value;
+    const value = await requestJson(joinUrl(base, "/api/version"), {
+      timeoutMs: 2_000,
+      maxBytes: 4096,
+      ...(this.#resolve ? { resolve: this.#resolve } : {}),
+    }).then(
+      (result) => (OllamaVersion.safeParse(result).success ? "ollama" : "openai"),
+      () => "openai" as const,
+    );
+    this.#protocols.set(base, { at: this.#now(), value });
+    return value;
+  }
+  /** Tries unsaved behavior settings on the saved local model; nothing is stored. */
+  beginPreview(userId: string, behavior: LocalBehavior, prompt: string, actor: Actor) {
+    this.#assertFree(userId, "local");
+    const row = this.#row(userId, "local");
+    if (!row) throw new ApiError(409, "CONFLICT", "Configure the local model first");
+    const key = this.#key(userId, "local");
+    return async (signal: AbortSignal, onDelta: (text: string) => Promise<void>) => {
+      this.#assertFree(userId, "local");
+      this.#busy.add(key);
+      try {
+        const stored = this.#stored(row);
+        const answer = await this.#stream(
+          row,
+          stored,
+          await this.#base(row, actor),
+          [{ role: "user", content: prompt }],
+          { user: `everyos-${userId}-preview`, signal, onDelta, behavior },
+        );
+        this.#event("preview", actor, "local", "success");
+        return answer;
+      } catch (error) {
+        this.#event("preview", actor, "local", "failure");
+        if (error instanceof ApiError) throw error;
+        throw new ApiError(502, "AGENT_OPERATION_FAILED", "Agent chat failed", {
+          details:
+            error instanceof AgentRunError
+              ? { reason: "agent-error", message: error.detail }
+              : { reason: error instanceof IntegrationHttpError ? error.kind : "offline" },
+        });
+      } finally {
+        this.#busy.delete(key);
+      }
+    };
+  }
   beginChat(userId: string, kind: AiAgentKind, id: string, content: string, actor: Actor) {
     this.#assertFree(userId, kind);
     const row = this.#row(userId, kind);
@@ -649,16 +737,10 @@ export class AiAgentService {
           ...currentConversation.messages,
           { role: "user", content },
         ];
-        const answer = await streamAgentChat({
-          url: joinUrl(base, "/v1/chat/completions"),
-          key: stored.gatewayKey,
-          model: stored.settings.apiModel,
+        const answer = await this.#stream(row, stored, base, messages, {
           user: `everyos-${userId}-${id}`,
-          messages,
           signal: AbortSignal.any([signal, controller.signal]),
           onDelta,
-          redactSecrets: [stored.providerKey],
-          ...(this.#resolve ? { resolve: this.#resolve } : {}),
         });
         if (signal.aborted || controller.signal.aborted)
           throw new ApiError(409, "CONFLICT", "Chat cancelled");

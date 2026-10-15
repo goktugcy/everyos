@@ -620,3 +620,14 @@ install need an extra confirmation, since other applications may depend on its m
 
 Settings become an overview of assistants plus a four-step setup wizard; details are split into
 Connection, Model and Advanced. Plain-language copy replaces gateway/API-model jargon.
+
+### D47 — Plain-language behavior settings for local models
+
+Small local models answered without any system message and with server-default sampling, which
+made them drift between languages and invent facts. Send every local chat a system message
+(template or user instructions, a length hint and an explicit language rule) and sampling settings
+expressed as human choices: creativity, answer length, conversation memory and repetition. Store
+them with the sealed local settings; saves that omit them keep the stored ones, and agents never
+store them. Use Ollama's own chat API for Ollama servers so memory and repetition apply, and
+OpenAI-compatible parameters elsewhere. Offer a non-persisting **Try it** on the saved model, and
+warn below 4B parameters instead of pretending settings can fix a model that is too small.

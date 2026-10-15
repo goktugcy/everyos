@@ -31,6 +31,7 @@ import {
 } from "./assistant-form.tsx";
 import { JobProgress, saveAndDeploy, StatusPill } from "./assistant-editor.tsx";
 import { ConnectionSection, ModelSection } from "./assistant-sections.tsx";
+import { BehaviorSection, withBehavior } from "./behavior-section.tsx";
 import { OllamaSetupDialog, PullModelDialog } from "./local-models-panel.tsx";
 
 const STEPS = ["type", "source", "model", "finish"] as const;
@@ -126,7 +127,8 @@ export function AssistantWizard({
   const [kind, setKind] = useState<AiAgentKind>(initialKind ?? "local");
   const agent = agents.find((entry) => entry.kind === kind);
   const [forms, setForms] = useState<Partial<Record<AiAgentKind, AssistantForm>>>({});
-  const form = forms[kind] ?? (agent ? initialForm(agent, local) : null);
+  const initial = agent ? initialForm(agent, local) : null;
+  const form = forms[kind] ?? (initial && kind === "local" ? withBehavior(initial, t) : initial);
   const setForm = (next: AssistantForm) => setForms({ ...forms, [kind]: next });
   const [step, setStep] = useState<Step>(initialKind ? "source" : "type");
   const [pending, setPending] = useState(false),
@@ -237,6 +239,23 @@ export function AssistantWizard({
               local={local}
               onPull={setPullFrom}
             />
+            {kind === "local" ? (
+              <details className="rounded-everyos-md border border-line p-3">
+                <summary className="cursor-pointer text-sm">
+                  {t("aiAgents.behavior.wizardTitle")}
+                </summary>
+                <div className="mt-3">
+                  <BehaviorSection
+                    agent={agent}
+                    form={form}
+                    setForm={setForm}
+                    local={local}
+                    onPull={setPullFrom}
+                    preview={false}
+                  />
+                </div>
+              </details>
+            ) : null}
             {local?.pulls.some((pull) => pull.state === "running") ? (
               <Alert>{t("aiAgents.wizard.pullRunning")}</Alert>
             ) : null}

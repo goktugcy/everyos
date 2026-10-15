@@ -20,6 +20,7 @@ import { AiAgentIcon } from "./agent-icon.tsx";
 import { useAiAgents } from "./agent-store.ts";
 import { AdvancedFields, formFor, saveAssistant, type AssistantForm } from "./assistant-form.tsx";
 import { ConnectionSection, ModelSection } from "./assistant-sections.tsx";
+import { BehaviorSection, withBehavior } from "./behavior-section.tsx";
 import { OllamaSetupDialog, PullModelDialog } from "./local-models-panel.tsx";
 
 /** Status colors shared by cards, the editor and the wizard. */
@@ -107,7 +108,7 @@ export function AssistantEditor({
   const { t } = useTranslation();
   const refresh = useAiAgents((state) => state.refresh);
   const [form, setForm] = useState<AssistantForm>(() => {
-    const base = formFor(agent);
+    const base = agent.kind === "local" ? withBehavior(formFor(agent), t) : formFor(agent);
     return initialConnection
       ? {
           ...base,
@@ -239,6 +240,17 @@ export function AssistantEditor({
                 onPull={setPullFrom}
               />
             </Section>
+            {agent.kind === "local" ? (
+              <Section title={t("aiAgents.form.sections.behavior")}>
+                <BehaviorSection
+                  agent={agent}
+                  form={form}
+                  setForm={setForm}
+                  local={local}
+                  onPull={setPullFrom}
+                />
+              </Section>
+            ) : null}
             {managedAgent ? (
               <Section title={t("aiAgents.form.sections.advanced")}>
                 <AdvancedFields

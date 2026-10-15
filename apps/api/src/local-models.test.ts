@@ -2,14 +2,16 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { rmSync } from "node:fs";
 import type { AddressInfo } from "node:net";
 import { parseCompose } from "@everyos/catalogs";
-import type {
-  AiAgentView,
-  AiConversation,
-  AppJobView,
-  LocalModelPull,
-  LocalModelsView,
+import {
+  DEFAULT_LOCAL_BEHAVIOR,
+  type AiAgentView,
+  type AiConversation,
+  type AppJobView,
+  type LocalModelPull,
+  type LocalModelsView,
 } from "@everyos/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_INSTRUCTIONS } from "./modules/ai-agents/behavior.ts";
 import { agentDefaults, agentTemplate, ollamaTemplate } from "./modules/ai-agents/templates.ts";
 import { json, withRoles, type TestContext } from "./test-support.ts";
 
@@ -37,7 +39,7 @@ async function roles() {
 }
 
 /** A real HTTP Ollama look-alike: versions, models, streamed pulls, deletion and chat. */
-async function ollama(options: { key?: string } = {}) {
+async function ollama(options: { key?: string; openAiOnly?: boolean } = {}) {
   const models = new Set(["qwen3:0.6b"]);
   const requests: Array<{ path: string; auth: string | undefined; body: unknown }> = [];
   const handle = async (request: IncomingMessage, response: ServerResponse) => {
@@ -54,6 +56,12 @@ async function ollama(options: { key?: string } = {}) {
       response.setHeader("Content-Type", "application/json");
       response.end(JSON.stringify(value));
     };
+    // LM Studio, llama.cpp and vLLM only speak the OpenAI API.
+    if (options.openAiOnly && request.url?.startsWith("/api/")) {
+      response.writeHead(404);
+      response.end();
+      return;
+    }
     switch (`${request.method} ${request.url}`) {
       case "GET /api/version":
         return send({ version: "0.40.4" });
@@ -90,6 +98,17 @@ async function ollama(options: { key?: string } = {}) {
       case "DELETE /api/delete":
         models.delete((body as { model: string }).model);
         return send({});
+      case "POST /api/chat": {
+        response.writeHead(200, { "Content-Type": "application/x-ndjson" });
+        for (const line of [
+          { message: { role: "assistant", content: "Yerel " }, done: false },
+          { message: { role: "assistant", content: "yanıt" }, done: false },
+          { message: { role: "assistant", content: "" }, done: true, done_reason: "stop" },
+        ])
+          response.write(`${JSON.stringify(line)}\n`);
+        response.end();
+        return;
+      }
       case "POST /v1/chat/completions": {
         response.writeHead(200, { "Content-Type": "text/event-stream" });
         response.write(
@@ -218,9 +237,21 @@ describe("local model servers", () => {
       })
     ).text();
     expect(stream).toContain("event: complete");
-    const chat = server.requests.find((entry) => entry.path === "/v1/chat/completions")!;
+    // Ollama's own API, with EveryOS's default instructions and parameters.
+    const chat = server.requests.find((entry) => entry.path === "/api/chat")!;
     expect(chat.auth).toBeUndefined();
-    expect(chat.body).toMatchObject({ model: "qwen3:0.6b", stream: true });
+    expect(chat.body).toEqual({
+      model: "qwen3:0.6b",
+      stream: true,
+      messages: [
+        {
+          role: "system",
+          content: `${DEFAULT_INSTRUCTIONS}\n\nReply in the same language as the user's latest message.`,
+        },
+        { role: "user", content: "Merhaba" },
+      ],
+      options: { temperature: 0.43, num_predict: 1200, repeat_penalty: 1.09 },
+    });
     expect(
       (
         await json<AiConversation>(
@@ -238,6 +269,126 @@ describe("local model servers", () => {
         )
       ).conversations,
     ).toEqual([]);
+  });
+
+  it("applies the behavior settings through Ollama's API and OpenAI parameters elsewhere", async () => {
+    const { ctx, admin } = await roles();
+    const ollamaServer = await ollama(),
+      openAi = await ollama({ openAiOnly: true });
+    sockets(ctx, []);
+    const behavior = {
+      preset: "custom",
+      instructions: "Sen deneyimli bir sistem yöneticisisin.",
+      language: "tr",
+      creativity: 0,
+      length: "short",
+      memory: "8k",
+      repetition: 100,
+    };
+    for (const server of [ollamaServer, openAi]) {
+      await admin.request("PUT", "/api/ai-agents/local", {
+        body: {
+          ...agentDefaults("local"),
+          mode: "external",
+          baseUrl: `http://127.0.0.1:${server.port}`,
+          apiModel: "qwen3:0.6b",
+          model: "qwen3:0.6b",
+          behavior,
+        },
+      });
+      const thread = await json<AiConversation>(
+        await admin.post("/api/ai-agents/local/conversations", {}),
+      );
+      expect(
+        await (
+          await admin.post("/api/ai-agents/local/chat", {
+            conversationId: thread.id,
+            content: "Disk dolu",
+          })
+        ).text(),
+      ).toContain("event: complete");
+    }
+    const system = {
+      role: "system",
+      content:
+        "Sen deneyimli bir sistem yöneticisisin.\n\nKeep every answer short: a few sentences at most.\n\nAlways reply in Turkish, even if the user writes in another language.",
+    };
+    expect(ollamaServer.requests.find((entry) => entry.path === "/api/chat")?.body).toMatchObject({
+      messages: [system, { role: "user", content: "Disk dolu" }],
+      options: { temperature: 0.1, num_predict: 300, repeat_penalty: 1.3, num_ctx: 8192 },
+    });
+    expect(
+      openAi.requests.find((entry) => entry.path === "/v1/chat/completions")?.body,
+    ).toMatchObject({
+      messages: [system, { role: "user", content: "Disk dolu" }],
+      temperature: 0.1,
+      max_tokens: 300,
+      frequency_penalty: 0.8,
+    });
+    // A save that omits the behavior keeps it; agents never store one.
+    const stored = await json<AiAgentView>(await admin.get("/api/ai-agents/local"));
+    await admin.request("PUT", "/api/ai-agents/local", {
+      body: { ...stored.settings, behavior: undefined },
+    });
+    expect(
+      (await json<AiAgentView>(await admin.get("/api/ai-agents/local"))).settings.behavior,
+    ).toEqual(behavior);
+    await admin.request("PUT", "/api/ai-agents/hermes", {
+      body: {
+        ...agentDefaults("hermes"),
+        mode: "external",
+        baseUrl: "http://127.0.0.1:9",
+        gatewayKey: "key",
+        behavior,
+      },
+    });
+    expect(
+      (await json<AiAgentView>(await admin.get("/api/ai-agents/hermes"))).settings.behavior,
+    ).toBeUndefined();
+  });
+
+  it("previews unsaved behavior on the saved local model without storing anything", async () => {
+    const { ctx, admin, viewer } = await roles();
+    const server = await ollama();
+    sockets(ctx, []);
+    const behavior = { ...DEFAULT_LOCAL_BEHAVIOR, language: "en", creativity: 100 };
+    const preview = () =>
+      admin.post("/api/ai-agents/local/preview", { behavior, prompt: "Introduce yourself." });
+    expect((await preview()).status).toBe(409);
+    await admin.request("PUT", "/api/ai-agents/local", {
+      body: {
+        ...agentDefaults("local"),
+        mode: "external",
+        baseUrl: `http://127.0.0.1:${server.port}`,
+        apiModel: "qwen3:0.6b",
+        model: "qwen3:0.6b",
+      },
+    });
+    expect(
+      (
+        await viewer.post("/api/ai-agents/local/preview", {
+          behavior,
+          prompt: "Introduce yourself.",
+        })
+      ).status,
+    ).toBe(403);
+    const stream = await (await preview()).text();
+    expect(stream).toContain("event: delta");
+    expect(stream).toContain('"answer":"Yerel yanıt"');
+    expect(server.requests.find((entry) => entry.path === "/api/chat")?.body).toMatchObject({
+      options: { temperature: 1.2 },
+    });
+    expect(
+      (
+        await json<{ conversations: AiConversation[] }>(
+          await admin.get("/api/ai-agents/local/conversations"),
+        )
+      ).conversations,
+    ).toEqual([]);
+    // The saved behavior did not change.
+    expect(
+      (await json<AiAgentView>(await admin.get("/api/ai-agents/local"))).settings.behavior,
+    ).toBeUndefined();
   });
 
   it("pulls and deletes models only after confirming a server EveryOS did not install", async () => {

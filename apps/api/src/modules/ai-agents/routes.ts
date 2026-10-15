@@ -5,6 +5,7 @@ import {
   AiChatRequestSchema,
   LocalModelDeleteRequestSchema,
   LocalModelPullRequestSchema,
+  LocalPreviewRequestSchema,
   LocalServerIdSchema,
   NativeAgentIdSchema,
   OllamaSetupRequestSchema,
@@ -26,6 +27,13 @@ const Action = z.strictObject({
   action: z.enum(["install", "start", "stop", "restart", "retry"]),
   confirm: AiAgentKindSchema,
 });
+/** A failed turn's reason for the stream, including the agent's own redacted message. */
+function chatError(error: unknown): string | { code: string; message: string } {
+  if (!(error instanceof ApiError)) return "offline";
+  const details = error.details as { reason?: string; message?: string } | undefined;
+  const code = String(details?.reason ?? error.code);
+  return details?.message ? { code, message: details.message } : code;
+}
 export function aiAgentRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
   app.use("*", requirePermission("apps:manage"), requirePermission("terminal:access"));
@@ -202,6 +210,24 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
     services.aiAgents.deleteConversation(requireAuth(c).user.id, kind, id, actor(c));
     return c.body(null, 204);
   });
+  app.post("/local/preview", async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, LocalPreviewRequestSchema);
+    const run = services.aiAgents.beginPreview(
+      requireAuth(c).user.id,
+      input.behavior,
+      input.prompt,
+      actor(c),
+    );
+    return openEventStream(c, services, {
+      permissions: ["apps:manage", "terminal:access"],
+      describeError: chatError,
+      async run({ signal, send }) {
+        const answer = await run(signal, (text) => send("delta", { text }));
+        if (!signal.aborted) await send("complete", { answer });
+      },
+    });
+  });
   app.post("/:kind/chat", async (c) => {
     parseQuery(c, Empty);
     const { kind } = parseParams(c, Kind);
@@ -215,12 +241,7 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
     );
     return openEventStream(c, services, {
       permissions: ["apps:manage", "terminal:access"],
-      describeError: (error) => {
-        if (!(error instanceof ApiError)) return "offline";
-        const details = error.details as { reason?: string; message?: string } | undefined;
-        const code = String(details?.reason ?? error.code);
-        return details?.message ? { code, message: details.message } : code;
-      },
+      describeError: chatError,
       async run({ signal, send }) {
         const conversation = await run(signal, (text) => send("delta", { text }));
         if (!signal.aborted) await send("complete", { conversation });

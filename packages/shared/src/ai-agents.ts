@@ -17,6 +17,35 @@ export const AI_PROVIDER_URLS: Record<Exclude<AiProvider, "custom">, string> = {
   openai: "https://api.openai.com/v1",
   ollama: `${EVERYOS_OLLAMA_NETWORK_URL}/v1`,
 };
+export const LOCAL_PRESETS = ["assistant", "concise", "teacher", "coder", "custom"] as const;
+export type LocalPreset = (typeof LOCAL_PRESETS)[number];
+export const LOCAL_LANGUAGES = ["auto", "tr", "en"] as const;
+export const LOCAL_LENGTHS = ["short", "normal", "long"] as const;
+/** Conversation memory (context window); applied by Ollama servers only. */
+export const LOCAL_MEMORY = ["auto", "2k", "4k", "8k", "16k"] as const;
+/** How a local model answers: what EveryOS sends with every direct chat request. */
+export interface LocalBehavior {
+  /** The preset the instructions came from; `custom` once edited. */
+  preset: LocalPreset;
+  /** System instructions. Empty uses EveryOS's default assistant instructions. */
+  instructions: string;
+  language: (typeof LOCAL_LANGUAGES)[number];
+  /** 0 = consistent and factual … 100 = creative (sampling temperature). */
+  creativity: number;
+  length: (typeof LOCAL_LENGTHS)[number];
+  memory: (typeof LOCAL_MEMORY)[number];
+  /** 0 = off … 100 = strongly avoid repeating itself. */
+  repetition: number;
+}
+export const DEFAULT_LOCAL_BEHAVIOR: LocalBehavior = {
+  preset: "assistant",
+  instructions: "",
+  language: "auto",
+  creativity: 30,
+  length: "normal",
+  memory: "auto",
+  repetition: 30,
+};
 export interface AiAgentSettings {
   mode: "managed" | "external";
   baseUrl: string;
@@ -26,6 +55,8 @@ export interface AiAgentSettings {
   model: string;
   maxIterations: number;
   tools: boolean;
+  /** Local models only. */
+  behavior?: LocalBehavior | undefined;
 }
 export interface AiAgentView {
   kind: AiAgentKind;

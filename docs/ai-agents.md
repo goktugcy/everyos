@@ -34,6 +34,26 @@ all when it listens on 127.0.0.1 only (direct chat still works). Actions name a 
 discovered id and are always sent to `127.0.0.1`; no request accepts a caller-supplied server URL
 for model management.
 
+### Behavior
+
+A local chat sends a system message and sampling settings with every request, edited in plain
+terms in its **Behavior** section (also offered, optionally, in the wizard):
+
+- **Personality**: templates (helpful assistant, short and clear, teacher, coding helper) fill the
+  instructions in the interface language; editing them makes them custom (at most 4,000
+  characters). Settings saved before this existed use built-in instructions that ask for honest,
+  clear answers and no invented facts.
+- **Answer language**: the user's language, always Turkish or always English.
+- **Creativity** (temperature 0.1–1.2), **answer length** (300/1,200/4,000 tokens) and **avoid
+  repetition** (Ollama `repeat_penalty` 1.0–1.3, otherwise `frequency_penalty` 0–0.8).
+- **Conversation memory**: the context window (2K–16K tokens), applied by Ollama servers only.
+
+Ollama servers (the EveryOS Ollama, or any server answering `/api/version`) are addressed through
+Ollama's own `/api/chat` so these options apply; others receive OpenAI-compatible parameters on
+`/v1/chat/completions`. **Try it** sends a sample message with the unsaved settings to the saved
+model and stores nothing. Models with fewer than 4B parameters show a warning and a shortcut to
+download a larger one.
+
 ## EveryOS Ollama
 
 An administrator can install one system-wide Ollama; every account allowed to use assistants shares

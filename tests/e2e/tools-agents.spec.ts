@@ -176,6 +176,31 @@ test("the wizard connects a local model and both agents, chat works and cancella
     }
     for (const kind of ["local", "hermes", "openclaw"] as const)
       await expect(settings.getByTestId(`assistant-card-${kind}`)).toContainText("Hazır");
+    // The local model's behavior is tuned in plain terms and tried before saving.
+    await settings.getByTestId("assistant-edit-local").click();
+    const editor = page.getByTestId("ai-settings-local");
+    const behavior = editor.getByTestId("local-behavior");
+    await behavior.getByTestId("behavior-preset-concise").click();
+    await behavior.getByLabel("Yanıt dili", { exact: true }).selectOption("tr");
+    await behavior.getByTestId("behavior-preview-run").click();
+    await expect(behavior.getByTestId("behavior-preview-answer")).toContainText("local yanıtı");
+    const tried = requests.at(-1)!;
+    expect(tried.kind).toBe("local");
+    expect(tried.messages[0]?.role).toBe("system");
+    expect(tried.messages[0]?.content).toContain("Yanıtların kısa, net ve doğrudan olsun.");
+    expect(tried.messages[0]?.content).toContain("Always reply in Turkish");
+    await page.screenshot({
+      path: test.info().outputPath("local-behavior.png"),
+      animations: "disabled",
+    });
+    await editor.getByTestId("ai-settings-save").click();
+    await expect(editor).toContainText("Ayarlar kaydedildi");
+    expect(
+      ((await (await page.request.get("/api/ai-agents/local")).json()) as AiAgentView).settings
+        .behavior,
+    ).toMatchObject({ preset: "concise", language: "tr" });
+    await page.keyboard.press("Escape");
+    await expect(editor).toHaveCount(0);
     await settings.getByRole("button", { name: "Kapat", exact: true }).click();
     await page.getByTestId("ai-agent-menubar").click();
     const panel = page.getByRole("dialog", { name: "AI asistanları", exact: true });
@@ -218,7 +243,7 @@ test("the wizard connects a local model and both agents, chat works and cancella
     await expect(app.getByLabel("Mesaj", { exact: true })).toBeEnabled();
     await app.getByLabel("Mesaj", { exact: true }).fill("İkinci soru");
     await app.getByRole("button", { name: "Gönder", exact: true }).click();
-    await expect.poll(() => requests.length).toBe(5);
+    await expect.poll(() => requests.length).toBe(6);
     expect(requests.at(-1)?.messages).toHaveLength(3);
     await expect(app.getByRole("button", { name: "Gönder", exact: true })).toBeVisible();
     // An agent-reported failure shows its reason, and the new chat still appears in the list.

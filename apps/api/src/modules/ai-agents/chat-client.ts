@@ -30,21 +30,33 @@ export class AgentRunError extends IntegrationHttpError {
   }
 }
 
+const OllamaLine = z.object({
+  message: z.object({ content: z.string().nullable().optional() }).optional(),
+  done: z.boolean().optional(),
+  error: z.unknown().optional(),
+});
+
 /**
- * Fixed OpenAI chat endpoint, pinned DNS, bounded SSE, no redirects. Upstream errors surface only
+ * Fixed chat endpoint, pinned DNS, bounded stream, no redirects. Upstream errors surface only
  * as the agent's own stream error message, with known secrets redacted and bounded in size.
+ * `openai` streams SSE from /v1/chat/completions; `ollama` streams NDJSON from Ollama's
+ * /api/chat, which also honors context-window and repetition options.
  */
 export async function streamAgentChat(input: {
   url: string;
   key: string;
   model: string;
   user: string;
-  messages: AiChatMessage[];
+  messages: ReadonlyArray<AiChatMessage | { role: "system"; content: string }>;
   signal: AbortSignal;
   onDelta: (text: string) => Promise<void>;
   resolve?: HttpOptions["resolve"];
   redactSecrets?: string[];
+  protocol?: "openai" | "ollama";
+  /** Sampling parameters: top-level fields (OpenAI) or `options` (Ollama). */
+  parameters?: Record<string, number>;
 }): Promise<string> {
+  const ollama = input.protocol === "ollama";
   const target = new URL(input.url);
   const signal = AbortSignal.any([input.signal, AbortSignal.timeout(10 * 60_000)]);
   // Cancellation must also release the turn while an upstream DNS lookup is pending.
@@ -60,12 +72,22 @@ export async function streamAgentChat(input: {
     void resolving.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
   });
   const body = Buffer.from(
-    JSON.stringify({
-      model: input.model,
-      messages: input.messages,
-      stream: true,
-      user: input.user,
-    }),
+    JSON.stringify(
+      ollama
+        ? {
+            model: input.model,
+            messages: input.messages,
+            stream: true,
+            ...(input.parameters ? { options: input.parameters } : {}),
+          }
+        : {
+            model: input.model,
+            messages: input.messages,
+            stream: true,
+            user: input.user,
+            ...input.parameters,
+          },
+    ),
   );
   const response = await new Promise<IncomingMessage>((resolve, reject) => {
     const request = (target.protocol === "https:" ? httpsRequest : httpRequest)(
@@ -80,7 +102,7 @@ export async function streamAgentChat(input: {
           // Local model servers often have no key.
           ...(input.key ? { Authorization: `Bearer ${input.key}` } : {}),
           "Content-Type": "application/json",
-          Accept: "text/event-stream",
+          Accept: ollama ? "application/x-ndjson" : "text/event-stream",
           "Accept-Encoding": "identity",
           "Content-Length": String(body.length),
         },
@@ -98,7 +120,7 @@ export async function streamAgentChat(input: {
       throw new IntegrationHttpError("auth", "Agent rejected authentication");
     if (status < 200 || status >= 300)
       throw new IntegrationHttpError("status", "Agent request failed", status);
-    if (!response.headers["content-type"]?.includes("text/event-stream"))
+    if (!response.headers["content-type"]?.includes(ollama ? "json" : "text/event-stream"))
       throw new IntegrationHttpError("invalid", "Agent did not return a chat stream");
     const decoder = new StringDecoder("utf8");
     let content = "";
@@ -142,7 +164,39 @@ export async function streamAgentChat(input: {
     let buffer = "",
       bytes = 0,
       done = false;
+    const failure = (error: unknown) => {
+      const message =
+        typeof error === "string"
+          ? error
+          : error !== null && typeof error === "object" && "message" in error
+            ? String(error.message)
+            : "";
+      const detail = secrets
+        .reduce((value, secret) => value.replaceAll(secret, "[REDACTED]"), message)
+        .replace(/[\p{Cc}\s]+/gu, " ")
+        .trim();
+      return new AgentRunError(detail.length > 300 ? `${detail.slice(0, 299)}…` : detail);
+    };
+    const ollamaLine = async (value: string) => {
+      if (!value.trim() || done) return;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(value);
+      } catch {
+        throw new IntegrationHttpError("invalid", "Invalid agent stream");
+      }
+      const chunk = OllamaLine.safeParse(parsed);
+      if (!chunk.success) throw new IntegrationHttpError("invalid", "Agent run failed");
+      if (chunk.data.error !== undefined) throw failure(chunk.data.error);
+      const text = chunk.data.message?.content;
+      if (text) {
+        if (signal.aborted) throw new IntegrationHttpError("offline", "Chat cancelled");
+        await safeDelta(text);
+      }
+      if (chunk.data.done) done = true;
+    };
     const line = async (value: string) => {
+      if (ollama) return ollamaLine(value);
       if (!value.startsWith("data:")) return;
       const data = value.slice(5).trim();
       if (data === "[DONE]") {
@@ -159,20 +213,8 @@ export async function streamAgentChat(input: {
       const chunk = Chunk.safeParse(parsed);
       if (!chunk.success) throw new IntegrationHttpError("invalid", "Agent run failed");
       // Hermes ends a failed turn with finish_reason "error", sometimes after fallback text.
-      if (chunk.data.error !== undefined || chunk.data.choices?.[0]?.finish_reason === "error") {
-        const error = chunk.data.error,
-          message =
-            typeof error === "string"
-              ? error
-              : error !== null && typeof error === "object" && "message" in error
-                ? String(error.message)
-                : "";
-        const detail = secrets
-          .reduce((value, secret) => value.replaceAll(secret, "[REDACTED]"), message)
-          .replace(/[\p{Cc}\s]+/gu, " ")
-          .trim();
-        throw new AgentRunError(detail.length > 300 ? `${detail.slice(0, 299)}…` : detail);
-      }
+      if (chunk.data.error !== undefined || chunk.data.choices?.[0]?.finish_reason === "error")
+        throw failure(chunk.data.error);
       const text = chunk.data.choices?.[0]?.delta?.content;
       if (text) {
         if (signal.aborted) throw new IntegrationHttpError("offline", "Chat cancelled");

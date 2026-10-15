@@ -5,7 +5,6 @@ import {
   type AiChatMessage,
 } from "@everyos/shared";
 import { MessageCircle, Plus, Send, Settings, Square, Trash2 } from "lucide-react";
-import type { TFunction } from "i18next";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -13,7 +12,7 @@ import { Button } from "../../../components/ui/button.tsx";
 import { Dialog } from "../../../components/ui/dialog.tsx";
 import { Select } from "../../../components/ui/select.tsx";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
-import { api, ApiRequestError, postApiEvents } from "../../../lib/api.ts";
+import { api, postApiEvents } from "../../../lib/api.ts";
 import { cn } from "../../../lib/cn.ts";
 import { useSessionStore } from "../../../stores/session-store.ts";
 import { desktop } from "../../state/controller.ts";
@@ -21,6 +20,7 @@ import { useAppStateField } from "../app-context.ts";
 import { ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { AiAgentIcon } from "./agent-icon.tsx";
 import { useAiAgents } from "./agent-store.ts";
+import { chatError, streamError } from "./chat-errors.ts";
 
 const CHAT_TARGETS = [...AI_AGENT_KINDS, "auto"] as const;
 
@@ -181,11 +181,7 @@ function Chat({ kind }: { kind: AiAgentKind }) {
             setSending("");
             setPartial("");
           }
-          if (event === "error")
-            throw new ApiRequestError(502, "AGENT_OPERATION_FAILED", "Agent chat failed", {
-              reason: typeof data.code === "string" ? data.code : "offline",
-              message: typeof data.message === "string" ? data.message : undefined,
-            });
+          if (event === "error") throw streamError(data);
         },
       );
     } catch (error) {
@@ -426,21 +422,6 @@ function Chat({ kind }: { kind: AiAgentKind }) {
       ) : null}
     </div>
   );
-}
-
-const CHAT_ERROR_REASONS = ["auth", "offline", "status", "invalid", "too-large"] as const;
-
-/** The agent's own failure reason when it gave one, instead of a generic system error. */
-function chatError(t: TFunction, kind: AiAgentKind, error: unknown): string | null {
-  if (!(error instanceof ApiRequestError) || error.code !== "AGENT_OPERATION_FAILED") return null;
-  const { reason, message } = (error.details ?? {}) as { reason?: unknown; message?: unknown };
-  const agent = t(`aiAgents.names.${kind}`);
-  if (reason === "agent-error")
-    return typeof message === "string" && message
-      ? t("aiAgents.chatErrors.agentReason", { agent, message })
-      : t("aiAgents.chatErrors.agent", { agent });
-  const known = CHAT_ERROR_REASONS.find((value) => value === reason);
-  return known ? t(`aiAgents.chatErrors.${known}`, { agent }) : null;
 }
 
 function Message({ message, kind }: { message: AiChatMessage; kind: AiAgentKind }) {

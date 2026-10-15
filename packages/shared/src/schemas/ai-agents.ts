@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { AI_AGENT_KINDS, AI_PROVIDERS, OLLAMA_ACCELERATIONS } from "../ai-agents.ts";
+import {
+  AI_AGENT_KINDS,
+  AI_PROVIDERS,
+  LOCAL_LANGUAGES,
+  LOCAL_LENGTHS,
+  LOCAL_MEMORY,
+  LOCAL_PRESETS,
+  OLLAMA_ACCELERATIONS,
+} from "../ai-agents.ts";
 
 export const AiAgentKindSchema = z.enum(AI_AGENT_KINDS);
 const Url = z
@@ -10,6 +18,22 @@ const Secret = z
   .string()
   .max(4096)
   .refine((value) => !/[\r\n\0]/.test(value));
+export const LocalBehaviorSchema = z.strictObject({
+  preset: z.enum(LOCAL_PRESETS),
+  instructions: z
+    .string()
+    .max(4000)
+    .refine((value) => !value.includes("\0")),
+  language: z.enum(LOCAL_LANGUAGES),
+  creativity: z.number().int().min(0).max(100),
+  length: z.enum(LOCAL_LENGTHS),
+  memory: z.enum(LOCAL_MEMORY),
+  repetition: z.number().int().min(0).max(100),
+});
+export const LocalPreviewRequestSchema = z.strictObject({
+  behavior: LocalBehaviorSchema,
+  prompt: z.string().trim().min(1).max(2000),
+});
 const SettingsBase = z.strictObject({
   mode: z.enum(["managed", "external"]),
   baseUrl: Url,
@@ -28,6 +52,7 @@ const SettingsBase = z.strictObject({
     .refine((value) => !/[\r\n\0]/.test(value)),
   maxIterations: z.number().int().min(1).max(100),
   tools: z.boolean(),
+  behavior: LocalBehaviorSchema.optional(),
   gatewayKey: Secret.optional(),
   providerKey: Secret.optional(),
   clearProviderKey: z.boolean().optional(),
