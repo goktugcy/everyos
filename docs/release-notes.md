@@ -1,3 +1,16 @@
+EveryOS 0.1.25 lets you tune how local models answer.
+
+- A new Behavior section for local models, in plain language: a personality template (helpful
+  assistant, short and clear, teacher, coding helper) or your own instructions, answer language,
+  creativity, answer length, conversation memory and avoid repetition. It is also offered,
+  optionally, in the "Add assistant" wizard.
+- Every local chat now sends instructions to the model. Without your own, it is asked to answer
+  honestly and clearly, not to invent facts, and to reply in your language.
+- Ollama servers are addressed through Ollama's own chat API, so memory and repetition settings
+  apply; other servers receive the matching OpenAI-compatible settings.
+- "Try it" sends a sample message with unsaved settings to the saved model; nothing is stored.
+- Models under 4B parameters show a warning and a shortcut to download a larger model.
+
 EveryOS 0.1.24 adds local AI models and a simpler AI assistants setup.
 
 - Chat directly with a local model on your own server; messages never leave it. Works on any
