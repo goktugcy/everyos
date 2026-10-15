@@ -1,3 +1,20 @@
+EveryOS 0.1.24 adds local AI models and a simpler AI assistants setup.
+
+- Chat directly with a local model on your own server; messages never leave it. Works on any
+  Linux host with Docker, AMD64 or ARM64.
+- AI Assistants finds model servers already running: Ollama, LM Studio, llama.cpp and vLLM,
+  installed natively or in Docker (including CasaOS), and lists their models.
+- EveryOS can install one shared Ollama for all accounts, with NVIDIA or AMD GPU acceleration
+  when Docker can use the GPU (administrator approval), and download or delete models with live
+  progress. Suggested models fit the host's memory. Changes to an Ollama EveryOS did not install
+  need an extra confirmation.
+- Hermes and OpenClaw installed by EveryOS can use the EveryOS Ollama over a private network, or
+  another local model server on the host.
+- Redesigned AI Assistants settings: one card per assistant with its state, model and source,
+  an "Add assistant" wizard (type, source, model, review) and clearer Connection, Model and
+  Advanced sections in plain language.
+- The chat opens the first ready assistant and shows the model in use.
+
 EveryOS 0.1.23 imports real Hermes chats and explains agent chat failures.
 
 - Chat import skips Open WebUI background tasks (title, tag and follow-up generation), which
