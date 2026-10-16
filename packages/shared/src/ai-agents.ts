@@ -58,10 +58,19 @@ export interface AiAgentSettings {
   /** Local models only. */
   behavior?: LocalBehavior | undefined;
 }
+/** A model a chat uses. `provider` is the agent's own provider slug (Hermes), otherwise null. */
+export interface AiModelRef {
+  provider: string | null;
+  model: string;
+}
 export interface AiAgentView {
   kind: AiAgentKind;
   configured: boolean;
   settings: AiAgentSettings;
+  /** The model chats use, as far as EveryOS knows it; null means the agent's own default. */
+  chatModel: AiModelRef | null;
+  /** Hermes: the model was chosen in EveryOS and is sent with every request. */
+  chatModelChosen: boolean;
   hasGatewayKey: boolean;
   hasProviderKey: boolean;
   app: InstalledAppView | null;
@@ -82,6 +91,8 @@ export interface AiAgentView {
 export interface AiChatMessage {
   role: "user" | "assistant";
   content: string;
+  /** Assistant answers: the model EveryOS asked for, when known. */
+  model?: string | undefined;
 }
 /**
  * Open WebUI sends its background title/tag/follow-up generation through the same chat API as
@@ -95,7 +106,37 @@ export interface AiConversation {
   kind: AiAgentKind;
   title: string;
   updatedAt: number;
+  /** Favorites and archived chats are exclusive: archiving drops the favorite mark. */
+  favorite: boolean;
+  archived: boolean;
   messages: AiChatMessage[];
+}
+export type AiConversationSummary = Omit<AiConversation, "messages">;
+
+/** Models a chat can switch to, grouped by the agent's providers. */
+export interface AiModelGroup {
+  /** Hermes provider slug; null for a single list (local server, managed OpenClaw provider). */
+  provider: string | null;
+  name: string;
+  models: string[];
+}
+export interface AiModelCatalog {
+  kind: AiAgentKind;
+  /** The model chats use now; null when the agent did not say. */
+  current: AiModelRef | null;
+  /** Hermes's own configured model, used when no model is chosen in EveryOS. */
+  agentDefault: AiModelRef | null;
+  chosen: boolean;
+  groups: AiModelGroup[];
+  /**
+   * `instant`: the next message uses the new model; `restart`: EveryOS rewrites the agent's
+   * configuration and restarts it; `none`: EveryOS cannot change this agent's model.
+   */
+  switching: "instant" | "restart" | "none";
+  /** Why the list is empty or switching is unavailable. */
+  problem:
+    "unconfigured" | "not-ready" | "offline" | "auth-failed" | "unsupported" | "external" | null;
+  truncated: boolean;
 }
 
 export interface AiAgentDiscovery {

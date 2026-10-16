@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import * as ai from "./ai.tsx";
 import * as apps from "./apps.tsx";
 import * as docker from "./docker.tsx";
 import type { WidgetRenderProps } from "./gate.tsx";
@@ -55,4 +56,5 @@ export const WIDGET_RENDERERS: Readonly<Record<string, ComponentType<WidgetRende
   "nextcloud.status": apps.NextcloudStatusWidget,
   "nextcloud.storage": apps.NextcloudStorageWidget,
   "postgresql.stats": apps.PostgresStatsWidget,
+  "ai.chat": ai.AiChatWidget,
 };

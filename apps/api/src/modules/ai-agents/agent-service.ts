@@ -10,6 +10,10 @@ import {
   type AiAgentDiscovery,
   type AiChatMessage,
   type AiConversation,
+  type AiConversationSummary,
+  type AiModelCatalog,
+  type AiModelGroup,
+  type AiModelRef,
   type AppJobView,
   type LocalBehavior,
 } from "@everyos/shared";
@@ -31,6 +35,7 @@ import { AgentRunError, streamAgentChat } from "./chat-client.ts";
 import type { LocalModelService } from "./local-models.ts";
 import {
   AGENT_MODELS,
+  HOST_GATEWAY,
   PROVIDER_URLS,
   agentDefaults,
   agentTemplate,
@@ -42,6 +47,8 @@ interface Stored {
   settings: AiAgentSettings;
   gatewayKey: string;
   providerKey: string;
+  /** Hermes: the model chosen in EveryOS, sent with every request instead of Hermes's default. */
+  chatModel?: AiModelRef | null;
 }
 interface ConfigRow {
   user_id: string;
@@ -56,10 +63,16 @@ interface ChatRow {
   kind: AiAgentKind;
   sealed_messages: string;
   updated_at: number;
+  favorite: number;
+  archived_at: number | null;
 }
 const Messages = z
   .array(
-    z.strictObject({ role: z.enum(["user", "assistant"]), content: z.string().max(128 * 1024) }),
+    z.strictObject({
+      role: z.enum(["user", "assistant"]),
+      content: z.string().max(128 * 1024),
+      model: z.string().max(200).optional(),
+    }),
   )
   .max(40);
 const OllamaVersion = z.object({ version: z.string().max(64) });
@@ -69,6 +82,35 @@ const Models = z.object({
     .min(1)
     .max(500),
 });
+// Model lists are bounded by response size; ids beyond these limits are dropped, not rejected.
+const ListedModels = z.object({ data: z.array(z.object({ id: z.string() })) });
+const OllamaModels = z.object({ models: z.array(z.object({ name: z.string() })).nullish() });
+/** Hermes's `/api/model/options`: the provider/model inventory its own model picker uses. */
+const HermesModelOptions = z.object({
+  providers: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string().nullish(),
+      authenticated: z.boolean().nullish(),
+      models: z.array(z.union([z.string(), z.object({ id: z.string() })])).nullish(),
+    }),
+  ),
+  model: z.string().nullish(),
+  provider: z.string().nullish(),
+});
+const MAX_LISTED_MODELS = 1000;
+const CATALOG_TTL_MS = 60_000;
+/** Embedding, speech and image models cannot hold a chat. */
+const NOT_CHAT =
+  /embed|whisper|tts|dall-e|moderation|transcri|rerank|realtime|audio|(?:^|[-/])image/i;
+const listedId = (value: string, max: number) =>
+  value.length > 0 && value.length <= max && !/\p{Cc}/u.test(value) && value.trim() === value;
+function modelList(ids: Iterable<string>, chatOnly: boolean): { models: string[]; cut: boolean } {
+  const models = [...new Set(ids)].filter(
+    (id) => listedId(id, 200) && !(chatOnly && NOT_CHAT.test(id)),
+  );
+  return { models: models.slice(0, MAX_LISTED_MODELS), cut: models.length > MAX_LISTED_MODELS };
+}
 
 export class AiAgentService {
   readonly #db: Database;
@@ -81,6 +123,8 @@ export class AiAgentService {
   readonly #resolve: HttpOptions["resolve"];
   readonly #busy = new Set<string>();
   readonly #protocols = new Map<string, { at: number; value: "openai" | "ollama" }>();
+  /** Model lists per account and agent, tied to the settings they were fetched with. */
+  readonly #catalogs = new Map<string, { at: number; settings: string; value: AiModelCatalog }>();
   readonly #chats = new Map<
     string,
     { controller: AbortController; conversationId: string; finished: Promise<void> }
@@ -275,6 +319,7 @@ export class AiAgentService {
             imported++;
           }
       });
+      if (input.includeSettings) this.#catalogs.delete(key);
       this.#event("import", actor, kind, "success", {
         source: input.id,
         settings: input.includeSettings,
@@ -366,10 +411,13 @@ export class AiAgentService {
           ? ((await this.#apps.list(actor)).find((app) => app.id === row.app_id) ?? null)
           : null;
     const busy = this.#busy.has(this.#key(userId, kind)) || app?.state === "busy";
+    const chat = this.#chatModel(userId, kind, stored);
     const view: AiAgentView = {
       kind,
       configured: row !== null,
       settings,
+      chatModel: chat.ref,
+      chatModelChosen: chat.chosen,
       hasGatewayKey: Boolean(stored?.gatewayKey),
       hasProviderKey: Boolean(stored?.providerKey),
       app,
@@ -429,6 +477,232 @@ export class AiAgentService {
     }
     return view;
   }
+  /**
+   * The model chats use as far as EveryOS knows: a model chosen for Hermes, otherwise the
+   * configured one. External agents report their own default only through the model list.
+   */
+  #chatModel(
+    userId: string,
+    kind: AiAgentKind,
+    stored: Stored | null,
+  ): { ref: AiModelRef | null; chosen: boolean } {
+    if (!stored) return { ref: null, chosen: false };
+    if (kind === "hermes" && stored.chatModel) return { ref: stored.chatModel, chosen: true };
+    const model = kind === "local" ? stored.settings.apiModel : stored.settings.model;
+    if (model) return { ref: { provider: null, model }, chosen: false };
+    const listed = this.#catalogs.get(this.#key(userId, kind))?.value.agentDefault ?? null;
+    return { ref: listed, chosen: false };
+  }
+  /** Models this agent can chat with. Lists are cached briefly; `fresh` asks the source again. */
+  async models(
+    userId: string,
+    kind: AiAgentKind,
+    actor: Actor,
+    options: { signal?: AbortSignal; fresh?: boolean } = {},
+  ): Promise<AiModelCatalog> {
+    const row = this.#row(userId, kind);
+    const stored = row ? this.#stored(row) : null;
+    const chat = this.#chatModel(userId, kind, stored);
+    const catalog = (patch: Partial<AiModelCatalog>): AiModelCatalog => ({
+      kind,
+      current: chat.ref,
+      agentDefault: null,
+      chosen: chat.chosen,
+      groups: [],
+      switching: "none",
+      problem: null,
+      truncated: false,
+      ...patch,
+    });
+    if (!row || !stored) return catalog({ problem: "unconfigured" });
+    const key = this.#key(userId, kind),
+      cached = this.#catalogs.get(key);
+    if (
+      !options.fresh &&
+      cached?.settings === row.sealed_settings &&
+      this.#now() - cached.at < CATALOG_TTL_MS
+    )
+      return cached.value;
+    const settings = stored.settings;
+    // An OpenClaw EveryOS does not manage keeps the model its own configuration names.
+    if (kind === "openclaw" && settings.mode !== "managed") return catalog({ problem: "external" });
+    const http = (token: string, maxBytes: number): HttpOptions => ({
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      timeoutMs: 15_000,
+      maxBytes,
+      ...(options.signal ? { signal: options.signal } : {}),
+      ...(this.#resolve ? { resolve: this.#resolve } : {}),
+    });
+    let value: AiModelCatalog;
+    try {
+      if (kind === "local") {
+        const base = await this.#base(row, actor);
+        const protocol = await this.#protocol(row, base);
+        const ids =
+          protocol === "ollama"
+            ? (
+                OllamaModels.parse(
+                  await requestJson(joinUrl(base, "/api/tags"), http(stored.gatewayKey, 1 << 20)),
+                ).models ?? []
+              ).map((model) => model.name)
+            : ListedModels.parse(
+                await requestJson(joinUrl(base, "/v1/models"), http(stored.gatewayKey, 1 << 20)),
+              ).data.map((model) => model.id);
+        const list = modelList(ids, true);
+        value = catalog({
+          groups: [{ provider: null, name: "", models: list.models }],
+          switching: "instant",
+          truncated: list.cut,
+        });
+      } else if (kind === "hermes") {
+        const base = await this.#base(row, actor);
+        const inventory = HermesModelOptions.parse(
+          await requestJson(
+            joinUrl(base, "/api/model/options", { include_unconfigured: "false" }),
+            http(stored.gatewayKey, 4 << 20),
+          ),
+        );
+        let truncated = false;
+        const groups: AiModelGroup[] = [];
+        for (const provider of inventory.providers) {
+          if (provider.authenticated === false || !listedId(provider.slug, 120)) continue;
+          const list = modelList(
+            (provider.models ?? []).map((model) => (typeof model === "string" ? model : model.id)),
+            false,
+          );
+          truncated ||= list.cut;
+          if (list.models.length)
+            groups.push({
+              provider: provider.slug,
+              name: (provider.name || provider.slug).slice(0, 120),
+              models: list.models,
+            });
+        }
+        const agentDefault =
+          inventory.model && listedId(inventory.model, 200)
+            ? {
+                provider:
+                  inventory.provider && listedId(inventory.provider, 120)
+                    ? inventory.provider
+                    : null,
+                model: inventory.model,
+              }
+            : null;
+        value = catalog({
+          current: chat.chosen ? chat.ref : (agentDefault ?? chat.ref),
+          agentDefault,
+          groups: groups.slice(0, 50),
+          switching: "instant",
+          truncated: truncated || groups.length > 50,
+        });
+      } else {
+        // EveryOS configured this OpenClaw's provider, so the provider itself lists the models.
+        const url =
+          settings.provider === "ollama"
+            ? joinUrl(await this.#local.ollamaBase(actor), "/v1/models")
+            : joinUrl(settings.providerUrl.replace(`//${HOST_GATEWAY}`, "//127.0.0.1"), "models");
+        const list = modelList(
+          ListedModels.parse(await requestJson(url, http(stored.providerKey, 8 << 20))).data.map(
+            (model) => model.id,
+          ),
+          true,
+        );
+        value = catalog({
+          groups: [{ provider: null, name: settings.provider, models: list.models }],
+          switching: "restart",
+          truncated: list.cut,
+        });
+      }
+    } catch (error) {
+      return catalog({
+        problem:
+          error instanceof ApiError
+            ? "not-ready"
+            : error instanceof IntegrationHttpError
+              ? error.kind === "auth"
+                ? "auth-failed"
+                : error.kind === "status" && error.status === 404
+                  ? "unsupported"
+                  : error.kind === "invalid"
+                    ? "unsupported"
+                    : "offline"
+              : error instanceof z.ZodError
+                ? "unsupported"
+                : "offline",
+      });
+    }
+    this.#catalogs.set(key, { at: this.#now(), settings: row.sealed_settings, value });
+    return value;
+  }
+  /**
+   * Switches the chat model. Local models and Hermes switch at the next message; a managed
+   * OpenClaw is reconfigured and restarted. Only a model the agent just listed is accepted.
+   */
+  async setChatModel(
+    userId: string,
+    kind: AiAgentKind,
+    ref: AiModelRef | null,
+    restart: boolean,
+    actor: Actor,
+  ): Promise<AppJobView | null> {
+    this.#assertFree(userId, kind);
+    const key = this.#key(userId, kind);
+    this.#busy.add(key);
+    try {
+      const row = this.#row(userId, kind);
+      if (!row) throw new ApiError(409, "CONFLICT", "Configure the agent first");
+      const stored = this.#stored(row);
+      let job: AppJobView | null = null;
+      if (!ref) {
+        // Only Hermes has a default to return to; it needs no list.
+        if (kind !== "hermes") throw new ApiError(422, "VALIDATION_FAILED", "A model is required");
+        stored.chatModel = null;
+      } else {
+        const catalog = await this.models(userId, kind, actor, { fresh: true });
+        if (catalog.switching === "none")
+          throw new ApiError(409, "CONFLICT", "This agent's model cannot be changed here", {
+            details: { reason: catalog.problem ?? "unsupported" },
+          });
+        if (
+          !catalog.groups.some(
+            (group) => group.provider === ref.provider && group.models.includes(ref.model),
+          )
+        )
+          throw new ApiError(422, "VALIDATION_FAILED", "The agent does not offer this model");
+        if (kind === "local")
+          stored.settings = { ...stored.settings, apiModel: ref.model, model: ref.model };
+        else if (kind === "hermes")
+          // Choosing Hermes's own default is the same as choosing nothing.
+          stored.chatModel =
+            catalog.agentDefault?.model === ref.model &&
+            catalog.agentDefault.provider === ref.provider
+              ? null
+              : ref;
+        else {
+          if (!restart)
+            throw new ApiError(409, "CONFLICT", "Switching restarts the agent", {
+              details: { reason: "restart-required" },
+            });
+          stored.settings = { ...stored.settings, model: ref.model };
+          if (row.app_id && this.#apps.exists(row.app_id))
+            job = await this.#apps.configureBuiltin(
+              row.app_id,
+              agentTemplate("openclaw", stored.settings, stored.gatewayKey, stored.providerKey),
+              actor,
+            );
+        }
+      }
+      // The cached list is refetched for the new settings; its Hermes default still names the chip.
+      this.#record(userId, kind, stored, row.app_id);
+      this.#event("model", actor, kind, "success", {
+        model: ref?.model ?? "default",
+        ...(ref?.provider ? { provider: ref.provider } : {}),
+      });
+      return job;
+    } finally {
+      this.#busy.delete(key);
+    }
+  }
   async #base(row: ConfigRow, actor: Actor): Promise<string> {
     const stored = this.#stored(row);
     if (stored.settings.mode === "external") return stored.settings.baseUrl.replace(/\/v1\/?$/, "");
@@ -485,6 +759,14 @@ export class AiAgentService {
             ? ""
             : providerKey ||
               (old?.settings.providerUrl === settings.providerUrl ? old.providerKey : ""),
+        // A chosen chat model belongs to one Hermes and its model setup; changing either resets it.
+        chatModel:
+          old?.chatModel &&
+          (["mode", "baseUrl", "provider", "providerUrl", "model"] as const).every(
+            (field) => old.settings[field] === settings[field],
+          )
+            ? old.chatModel
+            : null,
       };
       if (settings.mode === "external" && !stored.gatewayKey && kind !== "local")
         throw new ApiError(422, "VALIDATION_FAILED", "Agent API token required");
@@ -512,6 +794,7 @@ export class AiAgentService {
           actor,
         );
       this.#record(userId, kind, stored, appId);
+      this.#catalogs.delete(key);
       this.#event("configure", actor, kind, "success", {
         mode: settings.mode,
         tools: settings.tools,
@@ -577,10 +860,12 @@ export class AiAgentService {
       kind: row.kind,
       title: messages.find((message) => message.role === "user")?.content.slice(0, 64) ?? "",
       updatedAt: row.updated_at,
+      favorite: row.favorite === 1,
+      archived: row.archived_at !== null,
       messages,
     };
   }
-  conversations(userId: string, kind: AiAgentKind): Omit<AiConversation, "messages">[] {
+  conversations(userId: string, kind: AiAgentKind): AiConversationSummary[] {
     return this.#db
       .all<ChatRow>(
         "SELECT * FROM ai_conversations WHERE user_id = ? AND kind = ? ORDER BY updated_at DESC",
@@ -616,6 +901,39 @@ export class AiAgentService {
     );
     return this.conversation(userId, kind, id);
   }
+  /** Favorite and archived are exclusive: archiving drops the mark, favoriting restores the chat. */
+  updateConversation(
+    userId: string,
+    kind: AiAgentKind,
+    id: string,
+    input: { favorite?: boolean | undefined; archived?: boolean | undefined },
+  ): AiConversationSummary {
+    this.conversation(userId, kind, id);
+    if (input.archived === true)
+      this.#db.run(
+        "UPDATE ai_conversations SET archived_at = ?, favorite = 0 WHERE id = ? AND user_id = ?",
+        this.#now(),
+        id,
+        userId,
+      );
+    else {
+      if (input.favorite !== undefined)
+        this.#db.run(
+          "UPDATE ai_conversations SET favorite = ? WHERE id = ? AND user_id = ?",
+          input.favorite ? 1 : 0,
+          id,
+          userId,
+        );
+      if (input.archived === false || input.favorite === true)
+        this.#db.run(
+          "UPDATE ai_conversations SET archived_at = NULL WHERE id = ? AND user_id = ?",
+          id,
+          userId,
+        );
+    }
+    const { messages: _messages, ...summary } = this.conversation(userId, kind, id);
+    return summary;
+  }
   deleteConversation(userId: string, kind: AiAgentKind, id: string, actor: Actor): void {
     this.#assertFree(userId, kind);
     this.conversation(userId, kind, id);
@@ -640,15 +958,19 @@ export class AiAgentService {
     const request = local
       ? localRequest(options.behavior ?? stored.settings.behavior, protocol)
       : null;
+    // Hermes answers with another model when a request names it together with its provider.
+    const chosen = row.kind === "hermes" ? stored.chatModel : null;
+    const turns = messages.map(({ role, content }) => ({ role, content }));
     return streamAgentChat({
       url: joinUrl(base, protocol === "ollama" ? "/api/chat" : "/v1/chat/completions"),
       key: stored.gatewayKey,
-      model: stored.settings.apiModel,
+      model: chosen?.model ?? stored.settings.apiModel,
       user: options.user,
-      messages: request ? [{ role: "system", content: request.system }, ...messages] : messages,
+      messages: request ? [{ role: "system", content: request.system }, ...turns] : turns,
       signal: options.signal,
       onDelta: options.onDelta,
       redactSecrets: [stored.providerKey],
+      ...(chosen?.provider ? { fields: { provider: chosen.provider } } : {}),
       ...(request ? { protocol, parameters: request.parameters } : {}),
       ...(this.#resolve ? { resolve: this.#resolve } : {}),
     });
@@ -744,9 +1066,11 @@ export class AiAgentService {
         });
         if (signal.aborted || controller.signal.aborted)
           throw new ApiError(409, "CONFLICT", "Chat cancelled");
-        messages.push({ role: "assistant", content: answer });
+        const model = this.#chatModel(userId, kind, stored).ref?.model;
+        messages.push({ role: "assistant", content: answer, ...(model ? { model } : {}) });
+        // Continuing an archived chat brings it back to the list.
         this.#db.run(
-          "UPDATE ai_conversations SET sealed_messages = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+          "UPDATE ai_conversations SET sealed_messages = ?, updated_at = ?, archived_at = NULL WHERE id = ? AND user_id = ?",
           this.#secrets.seal(
             JSON.stringify(
               messages.map((message) => ({
@@ -765,6 +1089,7 @@ export class AiAgentService {
         this.#event("chat", actor, kind, "success", {
           conversationId: id,
           messages: messages.length,
+          ...(model ? { model } : {}),
         });
         return this.conversation(userId, kind, id);
       } catch (error) {

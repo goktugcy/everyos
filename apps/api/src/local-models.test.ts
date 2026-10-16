@@ -260,7 +260,8 @@ describe("local model servers", () => {
       ).messages,
     ).toEqual([
       { role: "user", content: "Merhaba" },
-      { role: "assistant", content: "Yerel yanıt" },
+      // Answers name the model that was asked.
+      { role: "assistant", content: "Yerel yanıt", model: "qwen3:0.6b" },
     ]);
     expect(
       (

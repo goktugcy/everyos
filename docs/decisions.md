@@ -631,3 +631,17 @@ them with the sealed local settings; saves that omit them keep the stored ones, 
 store them. Use Ollama's own chat API for Ollama servers so memory and repetition apply, and
 OpenAI-compatible parameters elsewhere. Offer a non-persisting **Try it** on the saved model, and
 warn below 4B parameters instead of pretending settings can fix a model that is too small.
+
+### D48 — Switching chat models per assistant, and a chat widget
+
+The owner wants to see and switch the model behind every chat. Each runtime offers a different
+dependable route, so EveryOS uses the one each documents instead of one lowest-common mechanism:
+local models change the account's saved model; Hermes (managed or found on the host) lists its
+authenticated providers through `GET /api/model/options` and runs a turn on another model when
+the request names `model` and `provider`, leaving its `config.yaml` untouched; OpenClaw's
+`x-openclaw-model` header is limited to models already in its catalog, so an OpenClaw EveryOS
+manages is reconfigured and restarted after a confirmation, and one it does not manage is left
+alone. Only a model the agent just listed is accepted. Answers record the model asked for, so a
+switch inside a conversation stays visible. Favorites and the archive are per-conversation columns
+and exclusive. The `ai.chat` widget calls the permission-checked assistant routes directly, so the
+widget manifest allows an empty `dataSources` list for interactive widgets.

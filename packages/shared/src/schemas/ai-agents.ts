@@ -68,6 +68,29 @@ export const AiChatRequestSchema = z.strictObject({
   conversationId: z.string().uuid(),
   content: z.string().trim().min(1).max(16_000),
 });
+const ListedId = (max: number) =>
+  z
+    .string()
+    .min(1)
+    .max(max)
+    .refine((value) => !/\p{Cc}/u.test(value) && value.trim() === value);
+/**
+ * Provider slugs (Hermes: `openrouter`, `custom`, `custom:<name>`) and model ids exactly as the
+ * agent listed them; the API only accepts a pair found in a freshly fetched list.
+ */
+export const AiModelRefSchema = z.strictObject({
+  provider: ListedId(120).nullable(),
+  model: ListedId(200),
+});
+export const AiChatModelRequestSchema = z.strictObject({
+  /** null returns to the agent's own default (Hermes). */
+  model: AiModelRefSchema.nullable(),
+  /** Required when the switch restarts the agent (managed OpenClaw). */
+  restart: z.boolean().optional(),
+});
+export const AiConversationUpdateSchema = z
+  .strictObject({ favorite: z.boolean().optional(), archived: z.boolean().optional() })
+  .refine((value) => value.favorite !== undefined || value.archived !== undefined);
 
 /** Ollama-style model names: `[host/][namespace/]name[:tag]`, e.g. `qwen2.5:3b`. */
 export const LocalModelNameSchema = z

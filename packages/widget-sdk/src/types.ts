@@ -21,7 +21,8 @@ export type WidgetConfigField =
   /** Home Assistant entities exposed by the chosen integration. */
   | { key: string; type: "entities"; control: boolean; maxItems: number };
 
-export type WidgetCategory = "system" | "storage" | "network" | "docker" | "raspberryPi" | "apps";
+export type WidgetCategory =
+  "system" | "storage" | "network" | "docker" | "raspberryPi" | "apps" | "ai";
 
 /** `{integration}` is replaced by the configured integration id. */
 export type WidgetTopicTemplate =
@@ -33,7 +34,7 @@ export interface WidgetManifest {
   id: string;
   /** Bumped when the configuration format changes; older configurations are migrated. */
   version: number;
-  provider: "system" | "docker" | "raspberryPi" | IntegrationAdapter;
+  provider: "system" | "docker" | "raspberryPi" | "ai" | IntegrationAdapter;
   categories: WidgetCategory[];
   supportedSizes: WidgetSize[];
   defaultSize: WidgetSize;
@@ -41,6 +42,7 @@ export interface WidgetManifest {
   /** Every permission is required to add the widget and to receive its data. */
   permissions: Permission[];
   requiresCapability?: CapabilityId;
+  /** Empty for interactive widgets that call their own API routes (e.g. AI chat). */
   dataSources: Array<{ topic: WidgetTopicTemplate; minIntervalMs: number }>;
   config: WidgetConfigField[];
 }

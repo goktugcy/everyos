@@ -180,6 +180,53 @@ that agent-reported reason, with known keys redacted and at most 300 characters;
 are never shown. A stream ending with `finish_reason: "error"` is never saved as an answer. Redirects,
 cloud metadata and link-local addresses are refused; DNS is resolved and pinned for each request.
 
+## Chat models
+
+The chat window and the AI chat widget show the model in use next to the assistant, and every
+saved answer records the model EveryOS asked for (`Hermes Agent · <model>`), so a switch in the
+middle of a conversation stays visible. The model menu lists what the assistant can use and
+switches it; EveryOS accepts only a model that the assistant or its provider has just listed.
+
+| Assistant                        | Listed from                                                     | Switching                                                                              |
+| -------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Local model                      | The connected server (`/api/tags` on Ollama, else `/v1/models`) | Immediately: the account's saved model changes                                         |
+| Hermes (managed or existing)     | Hermes's own `GET /api/model/options` (authenticated providers) | Immediately: each request carries `model` and `provider`; Hermes's config is untouched |
+| OpenClaw installed by EveryOS    | The provider EveryOS configured (`<provider>/models`)           | EveryOS rewrites its configuration and restarts it, after a confirmation               |
+| OpenClaw EveryOS did not install | —                                                               | Not offered: its model is set in OpenClaw's own configuration                          |
+
+Hermes's per-request selection is its documented API server behavior (supported by the Hermes
+releases checked on 2026-10-16, including the owner's native `v0.21.4` canary): a request naming
+both `model` and `provider` runs that turn with the provider's stored credentials, without
+changing `config.yaml`. Choosing Hermes's own default (or nothing) sends the `hermes-agent` alias
+again. A Hermes found on the host names its default only in that list; the chat asks for it once
+so the chip shows the real model. A chosen Hermes model belongs to one Hermes and model setup:
+saving a different address, mode, provider or model resets it. Older Hermes builds without the
+route show "does not list models" and keep their default. Embedding, speech and image models are
+left out of local and provider lists; lists are capped at 1,000 models per provider and cached
+for a minute per account.
+
+OpenClaw's `x-openclaw-model` header would switch per request too, but only to models already in
+the gateway's catalog, which for EveryOS's provider holds just the configured model; a restart
+with the new model is therefore the dependable route for installs EveryOS manages.
+
+## Chat lists
+
+Right-click (or the Menu key / Shift+F10) on a chat in the history adds it to favorites, archives
+it, or deletes it after the usual confirmation. Favorites sit in a collapsible list at the top,
+archived chats in a collapsible archive at the bottom (closed by default). The two are exclusive:
+archiving drops the favorite mark and favoriting brings a chat back from the archive. Archived
+chats can still be opened; sending a new message moves the chat out of the archive. Archived chats
+count toward the 50-chat limit.
+
+## AI chat widget
+
+The `ai.chat` widget (AI category, desktop and sidebar, large or custom size) chats with the local
+model, Hermes or OpenClaw from the desktop. The assistant is chosen in the widget itself and saved
+in its configuration (`auto` follows the first ready assistant, like the chat window). It resumes
+the most recent chat of that assistant, offers the history (with the same right-click menu), a
+new chat, the model menu, and a button that opens the AI Chat window. It uses the same routes and
+permissions (`apps:manage` and `terminal:access`) as the window and reads no shared data topic.
+
 ## Chat and access
 
 All assistant routes, including local models, require both `apps:manage` and `terminal:access`. The current role bundles grant
@@ -205,6 +252,7 @@ Bounds: 50 conversations per account/assistant, 40 committed messages per conver
 characters per user message, 128 KiB per answer, 1 MiB of upstream stream data, 64 KiB per frame,
 and a ten-minute run timeout. Start a new conversation when its context limit is reached.
 Status polling runs every 15 seconds while visible and pauses for locked/signed-out sessions.
+Model switches are audited as `ai-agent.model` with the model name, never with keys.
 Development deployments are labeled simulated and never presented as a live chat runtime.
 
 ## Verification and primary references

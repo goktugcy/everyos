@@ -1,3 +1,4 @@
+import { AI_AGENT_KINDS } from "@everyos/shared";
 import type { WidgetConfigField, WidgetManifest } from "./types.ts";
 
 /*
@@ -299,6 +300,29 @@ export const BUILT_IN_WIDGETS: readonly WidgetManifest[] = [
     supportedSizes: ["small", "medium"],
   }),
   app("postgresql.stats", "postgresql", "stats", 30_000, { supportedSizes: ["small", "medium"] }),
+
+  /* ---------------------------------- AI ---------------------------------- */
+  /** Chats through the account's AI assistant routes; it reads no shared data topic. */
+  {
+    schemaVersion: 1,
+    id: "ai.chat",
+    version: 1,
+    provider: "ai",
+    categories: ["ai"],
+    supportedSizes: ["large"],
+    defaultSize: "large",
+    placements: PANEL,
+    permissions: ["apps:manage", "terminal:access"],
+    dataSources: [],
+    config: [
+      {
+        key: "agent",
+        type: "select",
+        options: ["auto", ...AI_AGENT_KINDS],
+        default: "auto",
+      },
+    ],
+  },
 ];
 
 const BY_ID = new Map(BUILT_IN_WIDGETS.map((manifest) => [manifest.id, manifest]));

@@ -78,8 +78,8 @@ export function AiAgentModule() {
               <p role="status" className="my-2 text-xs text-fg-muted">
                 {t(agent.busy ? "aiAgents.busy" : `aiAgents.statuses.${agent.status}`)}
               </p>
-              {agent.settings.model ? (
-                <p className="mb-3 truncate text-xs text-fg-subtle">{agent.settings.model}</p>
+              {agent.chatModel ? (
+                <p className="mb-3 truncate text-xs text-fg-subtle">{agent.chatModel.model}</p>
               ) : null}
               <Button
                 size="sm"

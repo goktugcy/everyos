@@ -30,6 +30,7 @@ const CATEGORIES: Array<WidgetCategory | "all"> = [
   "docker",
   "raspberryPi",
   "apps",
+  "ai",
 ];
 const PLACEMENTS: WidgetPlacement[] = ["desktop", "sidebar", "menubar"];
 
@@ -40,7 +41,7 @@ function adapterOf(manifest: WidgetManifest) {
   return manifest.categories.includes("apps")
     ? (manifest.provider as Exclude<
         WidgetManifest["provider"],
-        "system" | "docker" | "raspberryPi"
+        "system" | "docker" | "raspberryPi" | "ai"
       >)
     : null;
 }

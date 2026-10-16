@@ -9,18 +9,21 @@ All `/ai-agents` routes require `apps:manage` and `terminal:access`. Settings an
 are scoped to the authenticated account; there is no caller-supplied user ID, Compose template,
 agent command, arbitrary upstream path or secret-read endpoint. Params/query/body use strict schemas.
 
-| Method     | Path                                 | Behavior                                                                                                          |
-| ---------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| GET        | `/ai-agents`                         | Every assistant's (`local`, `hermes`, `openclaw`) sanitized settings, live API state and owned app job            |
-| GET        | `/ai-agents/:kind`                   | One assistant's state                                                                                             |
-| PUT        | `/ai-agents/:kind`                   | Save settings; blank keys preserve existing matching credentials; apply an installed managed configuration        |
-| POST       | `/ai-agents/:kind/actions`           | Confirmed fixed `install`, `start`, `stop`, `restart`, `retry`; returns an app job                                |
-| GET / POST | `/ai-agents/:kind/conversations`     | List metadata / create an empty private conversation                                                              |
-| GET        | `/ai-agents/:kind/conversations/:id` | Owner's decrypted history                                                                                         |
-| DELETE     | `/ai-agents/:kind/conversations/:id` | Confirm ID and delete local history                                                                               |
-| POST       | `/ai-agents/:kind/chat`              | CSRF-protected `{conversationId, content}`; SSE `ready`, `delta`, `complete` or sanitized `error`; never replayed |
-| POST       | `/ai-agents/:kind/chat/cancel`       | Abort the owner's active conversation and wait for the upstream turn to release its busy state                    |
-| POST       | `/ai-agents/local/preview`           | `{behavior, prompt}`: try unsaved local behavior on the saved model; SSE `delta`, `complete`; nothing stored      |
+| Method     | Path                                 | Behavior                                                                                                           |
+| ---------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| GET        | `/ai-agents`                         | Every assistant's (`local`, `hermes`, `openclaw`) sanitized settings, live API state and owned app job             |
+| GET        | `/ai-agents/:kind`                   | One assistant's state                                                                                              |
+| PUT        | `/ai-agents/:kind`                   | Save settings; blank keys preserve existing matching credentials; apply an installed managed configuration         |
+| POST       | `/ai-agents/:kind/actions`           | Confirmed fixed `install`, `start`, `stop`, `restart`, `retry`; returns an app job                                 |
+| GET / POST | `/ai-agents/:kind/conversations`     | List metadata / create an empty private conversation                                                               |
+| GET        | `/ai-agents/:kind/conversations/:id` | Owner's decrypted history                                                                                          |
+| PATCH      | `/ai-agents/:kind/conversations/:id` | `{favorite?, archived?}`: favorites and archive are exclusive; returns the conversation summary                    |
+| DELETE     | `/ai-agents/:kind/conversations/:id` | Confirm ID and delete local history                                                                                |
+| GET        | `/ai-agents/:kind/models`            | Models the chat can use, grouped by provider, with the current one and how switching works; `?refresh=1` refetches |
+| PUT        | `/ai-agents/:kind/model`             | `{model: {provider, model} \| null, restart?}`: only a listed model; managed OpenClaw needs `restart: true`        |
+| POST       | `/ai-agents/:kind/chat`              | CSRF-protected `{conversationId, content}`; SSE `ready`, `delta`, `complete` or sanitized `error`; never replayed  |
+| POST       | `/ai-agents/:kind/chat/cancel`       | Abort the owner's active conversation and wait for the upstream turn to release its busy state                     |
+| POST       | `/ai-agents/local/preview`           | `{behavior, prompt}`: try unsaved local behavior on the saved model; SSE `delta`, `complete`; nothing stored       |
 
 The chat stream uses existing heartbeat access checks and bounded DNS-pinned upstream transport.
 `GET /ai-agents/discover` returns sanitized native/account and Docker discoveries, with no keys or

@@ -119,9 +119,12 @@ export const WidgetManifestSchema = z.strictObject({
   schemaVersion: z.literal(WIDGET_SCHEMA_VERSION),
   id: WidgetIdSchema,
   version: z.number().int().min(1),
-  provider: z.union([z.enum(["system", "docker", "raspberryPi"]), z.enum(INTEGRATION_ADAPTERS)]),
+  provider: z.union([
+    z.enum(["system", "docker", "raspberryPi", "ai"]),
+    z.enum(INTEGRATION_ADAPTERS),
+  ]),
   categories: z
-    .array(z.enum(["system", "storage", "network", "docker", "raspberryPi", "apps"]))
+    .array(z.enum(["system", "storage", "network", "docker", "raspberryPi", "apps", "ai"]))
     .min(1),
   supportedSizes: z.array(z.enum(WIDGET_SIZES)).min(1),
   defaultSize: z.enum(WIDGET_SIZES),
@@ -132,7 +135,7 @@ export const WidgetManifestSchema = z.strictObject({
     .array(
       z.strictObject({ topic: TopicTemplateSchema, minIntervalMs: z.number().int().min(1000) }),
     )
-    .min(1),
+    .max(8),
   config: z.array(ConfigFieldSchema).max(12),
 });
 

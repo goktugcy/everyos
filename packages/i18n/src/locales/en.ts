@@ -776,6 +776,53 @@ export const en: Messages = {
     deleteChat: "Delete chat",
     deleteConfirm:
       "Permanently deletes this chat history in EveryOS. The assistant's memory and records held by the model provider are not deleted.",
+    messageFrom: "{{agent}} · {{model}}",
+    archivedNotice: "This chat is archived. Sending a new message moves it out of the archive.",
+    lists: {
+      favorites: "Favorites",
+      recent: "Chats",
+      archive: "Archive",
+    },
+    chatMenu: {
+      favorite: "Add to favorites",
+      unfavorite: "Remove from favorites",
+      archive: "Archive",
+      unarchive: "Unarchive",
+      delete: "Delete",
+    },
+    models: {
+      label: "Model",
+      current: "Model in use: {{model}}",
+      unknown: "Default model",
+      defaultOf: "{{agent}} default",
+      chosen: "Chosen in EveryOS; {{agent}}'s own settings stay unchanged.",
+      search: "Search models…",
+      loading: "Loading models…",
+      empty: "No matching model.",
+      refresh: "Refresh list",
+      truncated: "The list is long; type a model's name to find it.",
+      instant: "The chosen model is used from the next message on.",
+      restartHint: "Changing the model restarts OpenClaw with the new setting.",
+      restartTitle: "Switch to {{model}}?",
+      restartConfirm:
+        "OpenClaw is reconfigured with the new model and restarted. Chatting is unavailable for a few seconds meanwhile.",
+      restart: "Switch and restart",
+      problems: {
+        unconfigured: "Set up this assistant first.",
+        "not-ready": "The assistant is not ready; models are listed once it runs.",
+        offline:
+          "The model list could not be loaded; the assistant or model provider is unreachable.",
+        "auth-failed": "The key was rejected when listing models.",
+        unsupported: "This {{agent}} version does not list models; it uses its own default model.",
+        external:
+          "EveryOS does not manage this OpenClaw; change its model in OpenClaw's own settings.",
+      },
+    },
+    widget: {
+      openApp: "Open in AI Chat",
+      pick: "Assistant",
+      notConfigured: "Not set up",
+    },
   },
   apps: {
     agents: "AI Chat",
@@ -1927,6 +1974,7 @@ export const en: Messages = {
       docker: "Docker",
       raspberryPi: "Raspberry Pi",
       apps: "Apps",
+      ai: "AI",
     },
     layoutErrors: {
       limit: "At most 64 widgets can be placed.",
@@ -2069,10 +2117,15 @@ export const en: Messages = {
         integration: "App connection",
         target: "Container, project or app",
         entities: "Entities to show",
+        agent: "Assistant",
       },
       values: {
         cpu: "CPU usage",
         memory: "Memory usage",
+        auto: "Automatic (first ready assistant)",
+        local: "Local model",
+        hermes: "Hermes Agent",
+        openclaw: "OpenClaw",
       },
       noIntegrations: "There is no connection for this app yet.",
       manageIntegrations: "Manage connections",
@@ -2312,6 +2365,11 @@ export const en: Messages = {
       postgresql_stats: {
         title: "PostgreSQL",
         description: "Connection count and database sizes.",
+      },
+      ai_chat: {
+        title: "AI chat",
+        description:
+          "Chat with a local model, Hermes or OpenClaw from the desktop, and switch the model in use here.",
       },
     },
   },

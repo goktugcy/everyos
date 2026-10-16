@@ -5,7 +5,13 @@ import { join } from "node:path";
 import { NativeAgents } from "../../agent/src/native-agents.ts";
 import type { AddressInfo } from "node:net";
 import { inspectCompose, parseCompose } from "@everyos/catalogs";
-import type { AiAgentKind, AiAgentView, AiConversation, AppJobView } from "@everyos/shared";
+import type {
+  AiAgentKind,
+  AiAgentView,
+  AiConversation,
+  AiModelCatalog,
+  AppJobView,
+} from "@everyos/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   AGENT_IMAGES,
@@ -54,9 +60,20 @@ async function gateway(
     error?: boolean;
     echoKey?: boolean;
     agentFailure?: boolean;
+    /** Ids `/v1/models` lists; the agent's API model by default. */
+    models?: string[];
+    /** Hermes's `/api/model/options` body; absent answers 404 like an older Hermes. */
+    modelOptions?: unknown;
   } = {},
 ) {
-  const requests: Array<{ model: string; user: string; messages: unknown[]; stream: boolean }> = [];
+  const requests: Array<{
+    model: string;
+    user: string;
+    messages: unknown[];
+    stream: boolean;
+    provider?: string;
+  }> = [];
+  const urls: string[] = [];
   let disconnected = false;
   const handle = async (request: IncomingMessage, response: ServerResponse) => {
     if (request.headers.authorization !== "Bearer fixture-agent-key") {
@@ -64,9 +81,17 @@ async function gateway(
       response.end();
       return;
     }
+    urls.push(request.url ?? "");
     if (request.url === "/v1/models") {
       response.setHeader("Content-Type", "application/json");
-      response.end(JSON.stringify({ data: [{ id: AGENT_MODELS[kind] }] }));
+      response.end(
+        JSON.stringify({ data: (options.models ?? [AGENT_MODELS[kind]]).map((id) => ({ id })) }),
+      );
+      return;
+    }
+    if (request.url?.startsWith("/api/model/options") && options.modelOptions) {
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify(options.modelOptions));
       return;
     }
     if (request.url !== "/v1/chat/completions" || request.method !== "POST") {
@@ -126,6 +151,7 @@ async function gateway(
   return {
     baseUrl: `http://127.0.0.1:${(server.address() as AddressInfo).port}`,
     requests,
+    urls,
     disconnected: () => disconnected,
   };
 }
@@ -618,4 +644,237 @@ describe("AI agent integrations", () => {
       );
     },
   );
+  it("lists Hermes's own models and sends a chosen one with its provider on every turn", async () => {
+    const { ctx, admin, operator } = await roles();
+    const fixture = await gateway("hermes", {
+      modelOptions: {
+        model: "gpt-6-astra",
+        provider: "openrouter",
+        providers: [
+          {
+            slug: "openrouter",
+            name: "OpenRouter",
+            authenticated: true,
+            models: ["gpt-6-astra", "qwen/qwen3-coder"],
+          },
+          { slug: "anthropic", name: "Anthropic", authenticated: false, models: ["claude-x"] },
+          { slug: "custom", name: "Local", models: [{ id: "llama3.2:3b" }, "bad\nid"] },
+        ],
+      },
+    });
+    await put(admin, "/api/ai-agents/hermes", external("hermes", fixture.baseUrl));
+    expect((await operator.get("/api/ai-agents/hermes/models")).status).toBe(403);
+    const catalog = await json<AiModelCatalog>(await admin.get("/api/ai-agents/hermes/models"));
+    expect(catalog).toMatchObject({
+      switching: "instant",
+      problem: null,
+      chosen: false,
+      current: { provider: "openrouter", model: "gpt-6-astra" },
+      agentDefault: { provider: "openrouter", model: "gpt-6-astra" },
+      groups: [
+        { provider: "openrouter", name: "OpenRouter", models: ["gpt-6-astra", "qwen/qwen3-coder"] },
+        { provider: "custom", name: "Local", models: ["llama3.2:3b"] },
+      ],
+    });
+    expect(fixture.urls).toContain("/api/model/options?include_unconfigured=false");
+    // Hermes's default shows in the menu before anything is chosen.
+    expect(await json<AiAgentView>(await admin.get("/api/ai-agents/hermes"))).toMatchObject({
+      chatModel: { provider: "openrouter", model: "gpt-6-astra" },
+      chatModelChosen: false,
+    });
+    const choose = (model: unknown) => put(admin, "/api/ai-agents/hermes/model", { model });
+    expect((await choose({ provider: "anthropic", model: "claude-x" })).status).toBe(422);
+    expect((await choose({ provider: "openrouter", model: "llama3.2:3b" })).status).toBe(422);
+    expect((await choose({ provider: "custom", model: "x", extra: 1 })).status).toBe(400);
+    expect((await choose({ provider: "custom", model: "llama3.2:3b" })).status).toBe(200);
+    expect(await json<AiAgentView>(await admin.get("/api/ai-agents/hermes"))).toMatchObject({
+      chatModel: { provider: "custom", model: "llama3.2:3b" },
+      chatModelChosen: true,
+    });
+    const thread = await json<AiConversation>(
+      await admin.post("/api/ai-agents/hermes/conversations", {}),
+    );
+    await (
+      await admin.post("/api/ai-agents/hermes/chat", { conversationId: thread.id, content: "hi" })
+    ).text();
+    expect(fixture.requests.at(-1)).toMatchObject({ model: "llama3.2:3b", provider: "custom" });
+    const saved = await json<AiConversation>(
+      await admin.get(`/api/ai-agents/hermes/conversations/${thread.id}`),
+    );
+    expect(saved.messages[1]).toMatchObject({ role: "assistant", model: "llama3.2:3b" });
+    // Earlier turns go upstream without EveryOS's labels.
+    await (
+      await admin.post("/api/ai-agents/hermes/chat", {
+        conversationId: thread.id,
+        content: "again",
+      })
+    ).text();
+    expect(fixture.requests.at(-1)!.messages).toEqual([
+      { role: "user", content: "hi" },
+      { role: "assistant", content: "Merhaba 🌍\n<script>literal</script>" },
+      { role: "user", content: "again" },
+    ]);
+    // Choosing Hermes's default (or nothing) sends the agent's alias again.
+    expect((await choose({ provider: "openrouter", model: "gpt-6-astra" })).status).toBe(200);
+    expect(
+      (await json<AiAgentView>(await admin.get("/api/ai-agents/hermes"))).chatModelChosen,
+    ).toBe(false);
+    expect((await choose({ provider: "openrouter", model: "qwen/qwen3-coder" })).status).toBe(200);
+    expect((await choose(null)).status).toBe(200);
+    await (
+      await admin.post("/api/ai-agents/hermes/chat", { conversationId: thread.id, content: "3" })
+    ).text();
+    expect(fixture.requests.at(-1)).toMatchObject({ model: AGENT_MODELS.hermes });
+    expect(fixture.requests.at(-1)).not.toHaveProperty("provider");
+    // A different Hermes drops the choice made for the previous one.
+    await choose({ provider: "custom", model: "llama3.2:3b" });
+    const other = await gateway("hermes");
+    await put(admin, "/api/ai-agents/hermes", external("hermes", other.baseUrl));
+    expect(
+      (await json<AiAgentView>(await admin.get("/api/ai-agents/hermes"))).chatModelChosen,
+    ).toBe(false);
+    // An older Hermes without the inventory route offers no switch.
+    expect(
+      await json<AiModelCatalog>(await admin.get("/api/ai-agents/hermes/models?refresh=1")),
+    ).toMatchObject({ problem: "unsupported", switching: "none", groups: [] });
+    expect(JSON.stringify(ctx.db.all("SELECT * FROM audit_events"))).toContain("ai-agent.model");
+  });
+  it("switches a local model only to one its server lists", async () => {
+    const { admin } = await roles();
+    const fixture = await gateway("hermes", {
+      models: ["qwen3:4b", "gemma3:1b", "nomic-embed-text"],
+    });
+    await put(admin, "/api/ai-agents/local", {
+      ...external("local", fixture.baseUrl),
+      apiModel: "qwen3:4b",
+    });
+    const catalog = await json<AiModelCatalog>(await admin.get("/api/ai-agents/local/models"));
+    expect(catalog).toMatchObject({
+      switching: "instant",
+      current: { provider: null, model: "qwen3:4b" },
+      groups: [{ provider: null, models: ["qwen3:4b", "gemma3:1b"] }],
+    });
+    expect(
+      (
+        await put(admin, "/api/ai-agents/local/model", {
+          model: { provider: null, model: "llama-not-there" },
+        })
+      ).status,
+    ).toBe(422);
+    expect((await put(admin, "/api/ai-agents/local/model", { model: null })).status).toBe(422);
+    expect(
+      (
+        await put(admin, "/api/ai-agents/local/model", {
+          model: { provider: null, model: "gemma3:1b" },
+        })
+      ).status,
+    ).toBe(200);
+    expect(await json<AiAgentView>(await admin.get("/api/ai-agents/local"))).toMatchObject({
+      settings: { apiModel: "gemma3:1b", model: "gemma3:1b" },
+      chatModel: { model: "gemma3:1b" },
+    });
+  });
+  it("restarts a managed OpenClaw with a model its provider lists, only when asked to", async () => {
+    const { ctx, admin } = await roles();
+    ctx.agent.handlers.set("apps.run", () => ({
+      source: "simulated",
+      ok: true,
+      rollback: "not-needed",
+    }));
+    const provider = await gateway("openclaw", { models: ["model-a", "model-b", "tts-1"] });
+    await put(admin, "/api/ai-agents/openclaw", {
+      ...agentDefaults("openclaw"),
+      model: "model-a",
+      provider: "custom",
+      providerUrl: `${provider.baseUrl}/v1`,
+      providerKey: "fixture-agent-key",
+    });
+    await admin.post("/api/ai-agents/openclaw/actions", { action: "install", confirm: "openclaw" });
+    await finished(ctx, (await json<AiAgentView>(await admin.get("/api/ai-agents/openclaw"))).job!);
+    expect(
+      await json<AiModelCatalog>(await admin.get("/api/ai-agents/openclaw/models")),
+    ).toMatchObject({
+      switching: "restart",
+      current: { model: "model-a" },
+      groups: [{ provider: null, models: ["model-a", "model-b"] }],
+    });
+    const choice = { model: { provider: null, model: "model-b" } };
+    const refused = await put(admin, "/api/ai-agents/openclaw/model", choice);
+    expect(refused.status).toBe(409);
+    expect(await refused.text()).toContain("restart-required");
+    const switched = await put(admin, "/api/ai-agents/openclaw/model", {
+      ...choice,
+      restart: true,
+    });
+    expect(switched.status).toBe(200);
+    await finished(ctx, (await json<{ job: AppJobView }>(switched)).job);
+    const runs = ctx.agent.calls.filter((call) => call.op === "apps.run");
+    expect((runs.at(-1)!.params as { compose: string }).compose).toContain("everyos/model-b");
+    expect(await json<AiAgentView>(await admin.get("/api/ai-agents/openclaw"))).toMatchObject({
+      settings: { model: "model-b" },
+      chatModel: { model: "model-b" },
+    });
+    // An OpenClaw EveryOS does not manage keeps its own model.
+    await put(admin, "/api/ai-agents/openclaw", external("openclaw", provider.baseUrl));
+    expect(
+      await json<AiModelCatalog>(await admin.get("/api/ai-agents/openclaw/models")),
+    ).toMatchObject({ switching: "none", problem: "external" });
+    expect(
+      (
+        await put(admin, "/api/ai-agents/openclaw/model", {
+          ...choice,
+          restart: true,
+        })
+      ).status,
+    ).toBe(409);
+  });
+  it("favorites and archives chats for their owner only, keeping the two exclusive", async () => {
+    const { ctx, admin } = await roles();
+    const fixture = await gateway("hermes");
+    await put(admin, "/api/ai-agents/hermes", external("hermes", fixture.baseUrl));
+    const thread = await json<AiConversation>(
+      await admin.post("/api/ai-agents/hermes/conversations", {}),
+    );
+    expect(thread).toMatchObject({ favorite: false, archived: false });
+    const patch = (body: unknown, kind = "hermes", id = thread.id) =>
+      admin.patch(`/api/ai-agents/${kind}/conversations/${id}`, body);
+    expect((await patch({})).status).toBe(400);
+    expect((await patch({ favorite: "yes" })).status).toBe(400);
+    expect((await patch({ favorite: true }, "openclaw")).status).toBe(404);
+    expect(await json(await patch({ favorite: true }))).toMatchObject({
+      favorite: true,
+      archived: false,
+    });
+    expect(await json(await patch({ archived: true }))).toMatchObject({
+      favorite: false,
+      archived: true,
+    });
+    expect(await json(await patch({ favorite: true }))).toMatchObject({
+      favorite: true,
+      archived: false,
+    });
+    await patch({ archived: true });
+    const list = await json<{ conversations: AiConversation[] }>(
+      await admin.get("/api/ai-agents/hermes/conversations"),
+    );
+    expect(list.conversations[0]).toMatchObject({ id: thread.id, archived: true });
+    await (
+      await admin.post("/api/ai-agents/hermes/chat", { conversationId: thread.id, content: "hi" })
+    ).text();
+    expect(
+      await json(await admin.get(`/api/ai-agents/hermes/conversations/${thread.id}`)),
+    ).toMatchObject({ archived: false });
+    await admin.post("/api/users", {
+      username: "second-admin",
+      displayName: "Second administrator",
+      password: STRONG_PASSWORD,
+      role: "admin",
+    });
+    const second = new TestClient(ctx);
+    await second.login("second-admin", STRONG_PASSWORD);
+    expect(
+      (await second.patch(`/api/ai-agents/hermes/conversations/${thread.id}`, { favorite: true }))
+        .status,
+    ).toBe(404);
+  });
 });

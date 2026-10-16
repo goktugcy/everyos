@@ -36,9 +36,12 @@ async function removeApp(page: Page, headers: Record<string, string>, appId: str
 test("the wizard connects a local model and both agents, chat works and cancellation recovers", async ({
   page,
 }) => {
+  // Setup, three chats, model switching, chat lists and the desktop widget in one flow.
+  test.setTimeout(90_000);
   const requests: Array<{
     kind: AiAgentKind;
     model: string;
+    provider?: string;
     messages: Array<{ role: string; content: string }>;
   }> = [];
   let cancelled = false;
@@ -72,13 +75,38 @@ test("the wizard connects a local model and both agents, chat works and cancella
       );
       return;
     }
+    // Hermes's own model inventory, which the chat's model menu lists.
+    if (kind === "hermes" && request.url?.includes("/api/model/options")) {
+      response.setHeader("Content-Type", "application/json");
+      response.end(
+        JSON.stringify({
+          model: "hermes-default",
+          provider: "openrouter",
+          providers: [
+            {
+              slug: "openrouter",
+              name: "OpenRouter",
+              authenticated: true,
+              models: ["hermes-default", "fast-model"],
+            },
+          ],
+        }),
+      );
+      return;
+    }
     const chunks: Buffer[] = [];
     for await (const part of request) chunks.push(part as Buffer);
     const input = JSON.parse(Buffer.concat(chunks).toString()) as {
       model: string;
+      provider?: string;
       messages: Array<{ role: string; content: string }>;
     };
-    requests.push({ kind, model: input.model, messages: input.messages });
+    requests.push({
+      kind,
+      model: input.model,
+      ...(input.provider ? { provider: input.provider } : {}),
+      messages: input.messages,
+    });
     response.writeHead(200, { "Content-Type": "text/event-stream" });
     if (input.messages.at(-1)?.content === "Model hatası") {
       // Hermes's failed turn: fallback text, then finish_reason "error" with its own reason.
@@ -262,6 +290,66 @@ test("the wizard connects a local model and both agents, chat works and cancella
     threads.push({ kind: "hermes", id: failed.id });
     await expect(app.getByRole("button", { name: "Yeni sohbet", exact: true })).toHaveCount(2);
     await app.getByLabel("Mesaj", { exact: true }).fill("");
+    // The chat shows the model in use and switches it; Hermes gets the choice with each request.
+    // A Hermes found on the host names its own default model only in its model list.
+    const modelChip = app.getByTestId("ai-chat-model");
+    await expect(modelChip).toContainText("hermes-default");
+    await modelChip.click();
+    const models = page.getByRole("dialog", { name: "Model", exact: true });
+    await expect(models.getByRole("option", { name: /Hermes Agent varsayılanı/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("agent-models.png"),
+      animations: "disabled",
+    });
+    await models.getByRole("option", { name: "fast-model", exact: true }).click();
+    await expect(models).toBeHidden();
+    await expect(modelChip).toContainText("fast-model");
+    await app.getByRole("button", { name: "Yeni sohbet", exact: true }).first().click();
+    await app.getByLabel("Mesaj", { exact: true }).fill("Model sorusu");
+    await app.getByRole("button", { name: "Gönder", exact: true }).click();
+    await expect(app.getByTestId("ai-chat-messages")).toContainText("Hermes Agent · fast-model");
+    expect(requests.at(-1)).toMatchObject({
+      kind: "hermes",
+      model: "fast-model",
+      provider: "openrouter",
+    });
+    const modelThread = (
+      (await (await page.request.get("/api/ai-agents/hermes/conversations")).json()) as {
+        conversations: AiConversation[];
+      }
+    ).conversations.find((entry) => entry.title === "Model sorusu")!;
+    threads.push({ kind: "hermes", id: modelThread.id });
+    await modelChip.click();
+    await models.getByRole("option", { name: /Hermes Agent varsayılanı/ }).click();
+    await expect(modelChip).toContainText("hermes-default");
+    // Right-click favorites, archives and deletes a chat.
+    const modelEntry = app.getByRole("button", { name: "Model sorusu", exact: true });
+    await modelEntry.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Favorilere ekle", exact: true }).click();
+    await expect(
+      app.getByTestId("ai-chat-favorites").getByRole("button", { name: "Model sorusu" }),
+    ).toBeVisible();
+    await modelEntry.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Arşivle", exact: true }).click();
+    const archive = app.getByTestId("ai-chat-archive");
+    await expect(app.getByTestId("ai-chat-favorites")).toHaveCount(0);
+    await expect(modelEntry).toHaveCount(0);
+    await archive.getByRole("button", { name: "Arşiv", exact: true }).click();
+    await expect(archive.getByRole("button", { name: "Model sorusu", exact: true })).toBeVisible();
+    await page.screenshot({
+      path: test.info().outputPath("agent-chat-lists.png"),
+      animations: "disabled",
+    });
+    await modelEntry.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Sil", exact: true }).click();
+    await page
+      .getByRole("dialog", { name: "Sohbeti sil", exact: true })
+      .getByRole("button", { name: "Sil", exact: true })
+      .click();
+    await expect(modelEntry).toHaveCount(0);
     await page.reload();
     const restored = page.locator('[data-app-id="everyos.agents"]');
     await restored.getByRole("button", { name: "hermes sorusu", exact: true }).click();
@@ -278,6 +366,45 @@ test("the wizard connects a local model and both agents, chat works and cancella
     await expect(restored.getByRole("button", { name: "hermes sorusu", exact: true })).toHaveCount(
       0,
     );
+    // The AI chat widget chooses its assistant itself and chats from the desktop.
+    await restored.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    await page
+      .getByTestId("desktop-surface")
+      .click({ button: "right", position: { x: 550, y: 250 } });
+    await page.getByRole("menuitem", { name: "Widget ekle…", exact: true }).click();
+    const gallery = page.getByRole("dialog", { name: "Widget galerisi" });
+    await gallery.getByRole("tab", { name: "AI", exact: true }).click();
+    await gallery.getByRole("button", { name: "Ekle: AI sohbet" }).click();
+    await page.keyboard.press("Escape");
+    const widget = page.getByTestId("ai-chat-widget");
+    await widget.getByRole("radio", { name: "OpenClaw", exact: true }).click();
+    await expect(widget.getByRole("radio", { name: "OpenClaw", exact: true })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await widget.getByLabel("Mesaj", { exact: true }).fill("widget sorusu");
+    await widget.getByRole("button", { name: "Gönder", exact: true }).click();
+    await expect(widget.getByTestId("ai-chat-messages")).toContainText("openclaw yanıtı 🌍");
+    // It continued the last OpenClaw chat instead of starting another one.
+    await expect(widget.getByTestId("ai-chat-messages")).toContainText("openclaw sorusu");
+    await page.screenshot({
+      path: test.info().outputPath("agent-widget.png"),
+      animations: "disabled",
+    });
+    // The choice is the widget's own configuration and survives a reload.
+    await page.reload();
+    await expect(
+      page.getByTestId("ai-chat-widget").getByRole("radio", { name: "OpenClaw", exact: true }),
+    ).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByTestId("ai-chat-widget").getByTestId("ai-chat-messages")).toContainText(
+      "widget sorusu",
+    );
+    await page
+      .locator('[data-widget="ai.chat"]')
+      .getByRole("button", { name: "AI sohbet widget menüsü" })
+      .click();
+    await page.getByRole("menuitem", { name: '"AI sohbet" widget\'ını kaldır' }).click();
+    await expect(page.getByTestId("ai-chat-widget")).toHaveCount(0);
     expect(errors).toEqual([]);
   } finally {
     for (const thread of threads)

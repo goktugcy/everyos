@@ -136,14 +136,14 @@ The complete contract, limits and verification are in [widgets.md](widgets.md). 
   "schemaVersion": 1,
   "id": "system.diskUsage", // "<provider>.<name>"; i18n key widgets.items.system_diskUsage
   "version": 1, // configuration format; stored instances are migrated on load
-  "provider": "system", // system | docker | raspberryPi | built-in integration adapter
+  "provider": "system", // system | docker | raspberryPi | ai | built-in integration adapter
   "categories": ["storage"],
   "supportedSizes": ["compact", "small", "medium"], // + "custom" on the desktop
   "defaultSize": "small",
   "placements": ["desktop", "sidebar", "menubar"],
   "permissions": ["system:read"], // required to add the widget and to receive its data
   "requiresCapability": "procfs", // optional
-  "dataSources": [{ "topic": "data.storage", "minIntervalMs": 30000 }],
+  "dataSources": [{ "topic": "data.storage", "minIntervalMs": 30000 }], // [] for ai.chat
   "config": [{ "key": "mount", "type": "mount", "default": "/" }],
 }
 ```

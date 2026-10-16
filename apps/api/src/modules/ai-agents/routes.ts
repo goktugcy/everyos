@@ -2,7 +2,9 @@ import { AI_AGENT_KINDS } from "@everyos/shared";
 import {
   AiAgentKindSchema,
   AiAgentSettingsSchema,
+  AiChatModelRequestSchema,
   AiChatRequestSchema,
+  AiConversationUpdateSchema,
   LocalModelDeleteRequestSchema,
   LocalModelPullRequestSchema,
   LocalPreviewRequestSchema,
@@ -185,6 +187,29 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
       throw error;
     }
   });
+  app.get("/:kind/models", async (c) => {
+    const { refresh } = parseQuery(c, z.strictObject({ refresh: z.enum(["1"]).optional() }));
+    const { kind } = parseParams(c, Kind);
+    return c.json(
+      await services.aiAgents.models(requireAuth(c).user.id, kind, actor(c), {
+        signal: c.req.raw.signal,
+        fresh: refresh === "1",
+      }),
+    );
+  });
+  app.put("/:kind/model", async (c) => {
+    parseQuery(c, Empty);
+    const { kind } = parseParams(c, Kind);
+    const input = await parseJsonBody(c, AiChatModelRequestSchema);
+    const job = await services.aiAgents.setChatModel(
+      requireAuth(c).user.id,
+      kind,
+      input.model,
+      input.restart === true,
+      actor(c),
+    );
+    return c.json({ job });
+  });
   app.get("/:kind/conversations", (c) => {
     parseQuery(c, Empty);
     const { kind } = parseParams(c, Kind);
@@ -200,6 +225,12 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
     parseQuery(c, Empty);
     const { kind, id } = parseParams(c, Conversation);
     return c.json(services.aiAgents.conversation(requireAuth(c).user.id, kind, id));
+  });
+  app.patch("/:kind/conversations/:id", async (c) => {
+    parseQuery(c, Empty);
+    const { kind, id } = parseParams(c, Conversation);
+    const input = await parseJsonBody(c, AiConversationUpdateSchema);
+    return c.json(services.aiAgents.updateConversation(requireAuth(c).user.id, kind, id, input));
   });
   app.delete("/:kind/conversations/:id", async (c) => {
     parseQuery(c, Empty);

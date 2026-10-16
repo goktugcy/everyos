@@ -55,6 +55,8 @@ export async function streamAgentChat(input: {
   protocol?: "openai" | "ollama";
   /** Sampling parameters: top-level fields (OpenAI) or `options` (Ollama). */
   parameters?: Record<string, number>;
+  /** Extra OpenAI request fields, e.g. Hermes's per-request `provider`. */
+  fields?: Record<string, string>;
 }): Promise<string> {
   const ollama = input.protocol === "ollama";
   const target = new URL(input.url);
@@ -86,6 +88,7 @@ export async function streamAgentChat(input: {
             stream: true,
             user: input.user,
             ...input.parameters,
+            ...input.fields,
           },
     ),
   );

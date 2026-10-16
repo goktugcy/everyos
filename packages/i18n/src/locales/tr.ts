@@ -796,6 +796,53 @@ export const tr = {
     deleteChat: "Sohbeti sil",
     deleteConfirm:
       "EveryOS'teki bu sohbet geçmişi kalıcı silinir. Asistanın belleği ve model sağlayıcısındaki kayıtlar silinmez.",
+    messageFrom: "{{agent}} · {{model}}",
+    archivedNotice: "Bu sohbet arşivde. Yeni bir mesaj göndermek onu arşivden çıkarır.",
+    lists: {
+      favorites: "Favoriler",
+      recent: "Sohbetler",
+      archive: "Arşiv",
+    },
+    chatMenu: {
+      favorite: "Favorilere ekle",
+      unfavorite: "Favorilerden çıkar",
+      archive: "Arşivle",
+      unarchive: "Arşivden çıkar",
+      delete: "Sil",
+    },
+    models: {
+      label: "Model",
+      current: "Kullanılan model: {{model}}",
+      unknown: "Varsayılan model",
+      defaultOf: "{{agent}} varsayılanı",
+      chosen: "EveryOS'te seçildi; {{agent}} ayarları değişmez.",
+      search: "Model ara…",
+      loading: "Modeller alınıyor…",
+      empty: "Eşleşen model yok.",
+      refresh: "Listeyi yenile",
+      truncated: "Liste çok uzun; aradığınız modeli adını yazarak bulun.",
+      instant: "Seçilen model sonraki mesajdan itibaren kullanılır.",
+      restartHint: "Model değişince OpenClaw yeni ayarla yeniden başlatılır.",
+      restartTitle: "{{model}} modeline geçilsin mi?",
+      restartConfirm:
+        "OpenClaw yeni modelle yeniden yapılandırılıp yeniden başlatılır. Bu sırada birkaç saniye sohbet edilemez.",
+      restart: "Geç ve yeniden başlat",
+      problems: {
+        unconfigured: "Önce bu asistanı kurun.",
+        "not-ready": "Asistan hazır değil; çalıştığında modeller listelenir.",
+        offline: "Model listesi alınamadı; asistana veya model sağlayıcısına ulaşılamıyor.",
+        "auth-failed": "Model listesi için anahtar reddedildi.",
+        unsupported:
+          "Bu {{agent}} sürümü model listesi vermiyor; kendi varsayılan modeli kullanılır.",
+        external:
+          "Bu OpenClaw EveryOS tarafından yönetilmiyor; modelini OpenClaw'ın kendi ayarlarından değiştirin.",
+      },
+    },
+    widget: {
+      openApp: "AI Sohbet'te aç",
+      pick: "Asistan",
+      notConfigured: "Kurulmadı",
+    },
   },
   apps: {
     agents: "AI Sohbet",
@@ -1956,6 +2003,7 @@ export const tr = {
       docker: "Docker",
       raspberryPi: "Raspberry Pi",
       apps: "Uygulamalar",
+      ai: "AI",
     },
     layoutErrors: {
       limit: "En fazla 64 widget yerleştirilebilir.",
@@ -2098,10 +2146,15 @@ export const tr = {
         integration: "Uygulama bağlantısı",
         target: "Konteyner, proje veya uygulama",
         entities: "Gösterilecek varlıklar",
+        agent: "Asistan",
       },
       values: {
         cpu: "CPU kullanımına göre",
         memory: "Bellek kullanımına göre",
+        auto: "Otomatik (ilk hazır asistan)",
+        local: "Yerel model",
+        hermes: "Hermes Agent",
+        openclaw: "OpenClaw",
       },
       noIntegrations: "Bu uygulama için henüz bağlantı yok.",
       manageIntegrations: "Bağlantıları yönet",
@@ -2346,6 +2399,11 @@ export const tr = {
       postgresql_stats: {
         title: "PostgreSQL",
         description: "Bağlantı sayısı ve veritabanı boyutları.",
+      },
+      ai_chat: {
+        title: "AI sohbet",
+        description:
+          "Yerel model, Hermes veya OpenClaw ile masaüstünden sohbet edin; kullanılan modeli de buradan değiştirin.",
       },
     },
   },

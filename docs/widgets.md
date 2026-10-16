@@ -27,16 +27,16 @@ browser tab ── one EventSource ──► /api/events?topics=metrics,data.sto
 | `schemaVersion`      | Always `1`.                                                                                                                                                                                                                                                                                                |
 | `id`                 | `<provider>.<name>`, e.g. `system.cpu`, `jellyfin.sessions`. The i18n key is `widgets.items.<id with "." → "_">`.                                                                                                                                                                                          |
 | `version`            | Configuration format version. Stored instances record it, and `migrateWidgets` normalizes older configurations on load. Unknown widgets are kept and shown with a "remove" action.                                                                                                                         |
-| `provider`           | `system`, `docker`, `raspberryPi` or an integration adapter.                                                                                                                                                                                                                                               |
-| `categories`         | Gallery filters: `system`, `storage`, `network`, `docker`, `raspberryPi`, `apps`.                                                                                                                                                                                                                          |
+| `provider`           | `system`, `docker`, `raspberryPi`, `ai` or an integration adapter.                                                                                                                                                                                                                                         |
+| `categories`         | Gallery filters: `system`, `storage`, `network`, `docker`, `raspberryPi`, `apps`, `ai`.                                                                                                                                                                                                                    |
 | `supportedSizes`     | `compact` (menu bar line), `small` 2×2, `medium` 4×2, `large` 4×4 cells. Desktop widgets can also be resized to `custom` (2×1 to 12×10).                                                                                                                                                                   |
 | `placements`         | `desktop`, `sidebar`, `menubar`. The menu bar takes only widgets with a `compact` size.                                                                                                                                                                                                                    |
 | `permissions`        | All are required to add the widget **and** to receive its data. The server enforces this per subscriber.                                                                                                                                                                                                   |
 | `requiresCapability` | Host capability from `/api/system/info`. The gallery explains why it is unavailable instead of hiding it.                                                                                                                                                                                                  |
-| `dataSources`        | Topics the widget reads. `{integration}` is replaced by the configured integration id.                                                                                                                                                                                                                     |
+| `dataSources`        | Topics the widget reads. `{integration}` is replaced by the configured integration id. Empty for the interactive AI chat widget, which uses the permission-checked AI assistant routes.                                                                                                                    |
 | `config`             | Declarative fields: `boolean`, `select`, `number` (min/max), `mount`, `integration` (adapter), `dockerTarget` (`app:`/`project:`/`container:`), `entities` (Home Assistant, `control`, `maxItems`). The configuration dialog and validation (`normalizeConfig`, `missingConfig`) are generated from these. |
 
-The 44 built-in widgets cover the following:
+The 45 built-in widgets cover the following:
 
 - **System:** CPU, frequency, temperature, memory, swap, disk usage, disk I/O, mounts, network,
   interfaces, ports, connections, Tailscale, uptime, load, processes, fans, sensors, NVMe, APT,
@@ -46,6 +46,8 @@ The 44 built-in widgets cover the following:
 - **Apps:** Jellyfin (status, sessions, library), Immich (status, storage, statistics), Home
   Assistant (entities, automations, quick controls), Uptime Kuma (monitors, incidents), Nextcloud
   (status, storage) and PostgreSQL (statistics).
+- **AI:** a chat with the local model, Hermes or OpenClaw, with its model menu (see
+  [AI assistants](ai-agents.md#ai-chat-widget)).
 
 A unit test checks that every manifest has a renderer and Turkish and English texts.
 
