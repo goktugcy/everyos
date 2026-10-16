@@ -1,3 +1,19 @@
+EveryOS 0.1.26 adds an AI chat widget and lets you switch the model behind every chat.
+
+- The chat shows the model in use next to the assistant, and every answer names the model that
+  wrote it, so a switch in the middle of a conversation stays visible.
+- A model menu lists what the assistant can use and switches it: local models change at once,
+  Hermes (installed by EveryOS or found on the host) lists its own providers and models and uses
+  the choice from the next message without changing Hermes's settings, and an OpenClaw installed
+  by EveryOS is reconfigured and restarted after a confirmation.
+- A Hermes found on the host now shows its real default model instead of a generic label.
+- Right-click a chat to add it to favorites, archive it or delete it. Favorites sit in a
+  collapsible list at the top, archived chats in an archive at the bottom; writing in an archived
+  chat brings it back.
+- New AI chat widget (AI category, desktop and sidebar): pick the local model, Hermes or OpenClaw
+  in the widget, continue the latest chat, browse the history, switch the model and open the
+  chat window.
+
 EveryOS 0.1.25 lets you tune how local models answer.
 
 - A new Behavior section for local models, in plain language: a personality template (helpful
