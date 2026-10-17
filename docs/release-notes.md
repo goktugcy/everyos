@@ -1,3 +1,9 @@
+EveryOS 0.1.30 fixes uploads when EveryOS is opened by the server's address over plain HTTP.
+
+- Dropping files on the pulse shelf or the desktop, uploading in Files and uploading to Google
+  Drive failed with "An unknown error occurred" since 0.1.28 on pages opened over plain HTTP. They
+  work again.
+
 EveryOS 0.1.29 fixes the pulse after file drops and deleting on USB disks.
 
 - Dropping files on a Files window or the desktop no longer leaves the pulse showing its drop
