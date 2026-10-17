@@ -1,38 +1,42 @@
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import type { Context } from "hono";
-import type { AppEnv } from "../../context.ts";
-import { requireAuth } from "../../middleware/auth.ts";
+import type { Logger } from "@everyos/logger";
 import type { Services } from "../../services.ts";
-import { callAgent } from "../../http/agent.ts";
+import { callAgentAs, type UserActor } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import type { FileService } from "./file-service.ts";
-import { readFileSettings } from "./file-settings.ts";
+
+/** Who uses a file view, and what their Linux-side requests carry. */
+export interface FileViewIdentity {
+  actor: UserActor;
+  locale: "tr" | "en";
+  systemRoots: boolean;
+  signal?: AbortSignal | undefined;
+  logger: Logger;
+}
 
 /** EveryOS personal storage stays in the API; every host location runs as the linked Linux UID. */
 export class AccountFileView {
-  readonly context: Context<AppEnv>;
   readonly services: Services;
   readonly personal: FileService;
-  constructor(context: Context<AppEnv>, services: Services, personal: FileService) {
-    this.context = context;
+  readonly identity: FileViewIdentity;
+  constructor(services: Services, personal: FileService, identity: FileViewIdentity) {
     this.services = services;
     this.personal = personal;
+    this.identity = identity;
   }
 
   #params() {
-    const auth = requireAuth(this.context);
-    return {
-      locale: auth.user.locale === "en" ? ("en" as const) : ("tr" as const),
-      systemRoots:
-        auth.permissions.has("system:manage") && readFileSettings(this.services.db).systemRoots,
-    };
+    return { locale: this.identity.locale, systemRoots: this.identity.systemRoots };
   }
-  #call = <N extends Parameters<typeof callAgent>[2]>(
+  #call = <N extends Parameters<typeof callAgentAs>[2]>(
     op: N,
-    params: Parameters<typeof callAgent<N>>[3],
+    params: Parameters<typeof callAgentAs<N>>[3],
   ) =>
-    callAgent(this.context, this.services, op, params).catch((error: unknown) => {
+    callAgentAs(this.services, this.identity.actor, op, params, {
+      signal: this.identity.signal,
+      logger: this.identity.logger,
+    }).catch((error: unknown) => {
       // A full location is the person's to resolve, not an agent failure.
       if (error instanceof ApiError && error.message === "FILES_INSUFFICIENT_SPACE")
         throw new ApiError(507, "FILES_INSUFFICIENT_SPACE", "Not enough free space");

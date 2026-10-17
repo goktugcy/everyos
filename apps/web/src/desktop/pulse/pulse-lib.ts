@@ -134,3 +134,86 @@ export function arrowDots(cols = MATRIX_COLS, rows = MATRIX_ROWS): Set<string> {
     for (const [x, y] of shape) dots.add(`${center - 2 + x}:${top + y}`);
   return dots;
 }
+
+/** What a dot shows while files move: the progress bar, its leading edge, or the arrow. */
+export type TransferDot = "fill" | "head" | "arrow";
+
+/** Columns kept for the direction arrow at the right end. */
+const ARROW_COLS = 6;
+
+/**
+ * Files on the move: a three-row progress bar filling from the left (or nothing when the total is
+ * unknown; the sweep shows activity then) and an arrow for the direction at the right end.
+ */
+export function transferDots(
+  fraction: number | null,
+  direction: "upload" | "download" | "both",
+  cols = MATRIX_COLS,
+  rows = MATRIX_ROWS,
+): Map<string, TransferDot> {
+  const dots = new Map<string, TransferDot>();
+  const bar = cols - ARROW_COLS - 1;
+  const top = Math.max(0, Math.floor((rows - 3) / 2));
+  if (fraction !== null) {
+    const lit = Math.max(1, Math.min(bar, Math.round(fraction * bar)));
+    for (let col = 0; col < lit; col++)
+      for (let row = top; row < top + 3; row++)
+        dots.set(`${col}:${row}`, col === lit - 1 && lit < bar ? "head" : "fill");
+  }
+  const up = [
+    [2, 0],
+    [1, 1],
+    [2, 1],
+    [3, 1],
+    [0, 2],
+    [2, 2],
+    [4, 2],
+    [2, 3],
+    [2, 4],
+  ] as const;
+  const down = [
+    [2, 0],
+    [2, 1],
+    [0, 2],
+    [2, 2],
+    [4, 2],
+    [1, 3],
+    [2, 3],
+    [3, 3],
+    [2, 4],
+  ] as const;
+  const start = cols - ARROW_COLS;
+  const shapes =
+    direction === "both"
+      ? [
+          {
+            shape: [
+              [1, 0],
+              [0, 1],
+              [1, 1],
+              [2, 1],
+              [1, 2],
+              [1, 3],
+              [1, 4],
+            ] as const,
+            at: start,
+          },
+          {
+            shape: [
+              [1, 0],
+              [1, 1],
+              [1, 2],
+              [0, 3],
+              [1, 3],
+              [2, 3],
+              [1, 4],
+            ] as const,
+            at: start + 3,
+          },
+        ]
+      : [{ shape: direction === "upload" ? up : down, at: start + 1 }];
+  const arrowTop = Math.max(0, Math.floor((rows - 5) / 2));
+  for (const { shape, at } of shapes)
+    for (const [x, y] of shape) dots.set(`${at + x}:${arrowTop + y}`, "arrow");
+  return dots;
+}

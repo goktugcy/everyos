@@ -1,5 +1,14 @@
-import { readdirSync, readFileSync, realpathSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  watch as watchPath,
+  type FSWatcher,
+} from "node:fs";
 import { mkdir, readdir, readFile, rename, rm, rmdir, writeFile } from "node:fs/promises";
+import { setTimeout as sleep } from "node:timers/promises";
 import { join } from "node:path";
 import {
   DISK_UUID_PATTERN,
@@ -32,7 +41,8 @@ export interface DiskManager {
   readonly source: "host" | "simulated";
   list(signal?: AbortSignal): Promise<DiskList>;
   /**
-   * Mounts a volume under the mount root (or only changes whether it mounts at boot). Files on
+   * Mounts a volume under the mount root (or only changes whether it is remembered, that is
+   * mounted at boot and whenever it is plugged in). Files on
    * FAT, exFAT and NTFS belong to `owner`; other users may read them.
    */
   mount(
@@ -41,8 +51,13 @@ export interface DiskManager {
     owner: DiskOwner | null,
     signal?: AbortSignal,
   ): Promise<DiskList>;
-  /** Unmounts an EveryOS-mounted volume and forgets it, so it can be unplugged. */
+  /**
+   * Unmounts an EveryOS-mounted volume and forgets it, so it can be unplugged; a remembered disk
+   * that is not plugged in is only forgotten.
+   */
   unmount(uuid: string, signal?: AbortSignal): Promise<DiskList>;
+  /** Ticks when disks may have come or gone (first tick at once). */
+  watch(signal: AbortSignal): AsyncIterable<{ at: number }>;
 }
 
 interface LsblkEntry {
@@ -229,14 +244,97 @@ export function readMountedDisks(options: {
 }
 
 /**
+ * Ticks whenever something below `dir` changes (udev adds and removes `/dev/disk/by-uuid` links
+ * as disks come and go), debounced, plus follow-up ticks so mounts that systemd starts for a
+ * plugged-in disk are seen, and a slow safety tick. Polls when the directory cannot be watched.
+ */
+export async function* watchDirectory(
+  dir: string,
+  signal: AbortSignal,
+  options: { debounceMs?: number; followUpMs?: number[]; safetyMs?: number } = {},
+): AsyncGenerator<{ at: number }> {
+  const debounceMs = options.debounceMs ?? 700;
+  const followUps = options.followUpMs ?? [2_000, 6_000];
+  let dirty = false;
+  // A real change (not a follow-up or safety tick) since the last tick.
+  let changed = false;
+  let wake: (() => void) | null = null;
+  const notify = (real: boolean) => {
+    dirty = true;
+    if (real) changed = true;
+    wake?.();
+  };
+  let watcher: FSWatcher | null = null;
+  try {
+    watcher = watchPath(dir, () => notify(true));
+    watcher.on("error", () => undefined);
+  } catch {
+    // Not watchable (missing directory, no inotify): the safety tick polls instead.
+  }
+  const timers = new Set<NodeJS.Timeout>();
+  const safety = setInterval(() => notify(false), options.safetyMs ?? (watcher ? 60_000 : 5_000));
+  safety.unref?.();
+  const aborted = () => wake?.();
+  signal.addEventListener("abort", aborted);
+  try {
+    yield { at: Date.now() };
+    while (!signal.aborted) {
+      if (!dirty)
+        await new Promise<void>((resolve) => {
+          wake = resolve;
+        });
+      wake = null;
+      if (signal.aborted) break;
+      await sleep(debounceMs, undefined, { signal }).catch(() => undefined);
+      if (signal.aborted) break;
+      const real = changed;
+      dirty = changed = false;
+      yield { at: Date.now() };
+      // A disk systemd mounts on plug-in shows up as mounted a moment later.
+      if (real)
+        for (const ms of followUps) {
+          const timer = setTimeout(() => {
+            timers.delete(timer);
+            notify(false);
+          }, ms);
+          timer.unref?.();
+          timers.add(timer);
+        }
+    }
+  } finally {
+    signal.removeEventListener("abort", aborted);
+    watcher?.close();
+    clearInterval(safety);
+    for (const timer of timers) clearTimeout(timer);
+  }
+}
+
+/** systemd's name for the device node of a filesystem UUID. */
+function deviceUnit(uuid: string): string {
+  return `${escapeUnitPath(`/dev/disk/by-uuid/${uuid}`)}.device`;
+}
+
+/** Remembered units mount at boot and whenever their disk is plugged in. */
+function installSection(uuid: string): string {
+  return `WantedBy=multi-user.target ${deviceUnit(uuid)}`;
+}
+
+function withInstallSection(content: string, uuid: string): string {
+  return content.replace(/^WantedBy=.*$/m, installSection(uuid));
+}
+
+/**
  * The host's disks through `lsblk`, mounted by systemd itself: a mount unit per volume under the
- * mount root, in /run (until the next boot) or /etc (at every boot). Mounting through PID 1 makes
- * the mount visible to the whole host, not only to the agent's own mount namespace.
+ * mount root, in /run (once, until the next boot) or /etc (remembered: at every boot and whenever
+ * the disk is plugged in). Mounting through PID 1 makes the mount visible to the whole host, not
+ * only to the agent's own mount namespace.
  */
 export function createDiskManager(options: {
   mountRoot: string;
   unitDir?: string;
   runtimeUnitDir?: string;
+  /** Watched for disks coming and going. */
+  devDir?: string;
 }): DiskManager {
   const mountRoot = options.mountRoot.replace(/\/$/, "");
   const unitDir = options.unitDir ?? "/etc/systemd/system";
@@ -252,21 +350,33 @@ export function createDiskManager(options: {
       timeoutMs: 60_000,
       ...(signal ? { signal } : {}),
     });
+  /** Remembered volumes: UUID → the unit's content. */
   const persistent = async () => {
     const prefix = escapeUnitPath(`${mountRoot}/`);
     const names = await readdir(unitDir).catch(() => [] as string[]);
-    return new Set(
-      names
-        .filter((name) => name.startsWith(`${prefix}-`) && name.endsWith(".mount"))
-        .map((name) =>
-          name
-            .slice(prefix.length + 1, -".mount".length)
-            .replace(/\\x([0-9a-f]{2})/g, (_, hex: string) =>
-              String.fromCharCode(parseInt(hex, 16)),
-            ),
-        ),
-    );
+    const units = new Map<string, string>();
+    for (const name of names.slice(0, 256)) {
+      if (!name.startsWith(`${prefix}-`) || !name.endsWith(".mount")) continue;
+      const content = await readFile(join(unitDir, name), "utf8").catch(() => "");
+      if (!content.startsWith(MARKER)) continue;
+      const uuid = name
+        .slice(prefix.length + 1, -".mount".length)
+        .replace(/\\x([0-9a-f]{2})/g, (_, hex: string) => String.fromCharCode(parseInt(hex, 16)));
+      if (DISK_UUID_PATTERN.test(uuid)) units.set(uuid, content);
+    }
+    return units;
   };
+  // Units written before disks were remembered mounted only at boot.
+  let upgraded: Promise<void> | null = null;
+  const upgrade = (units: Map<string, string>) =>
+    (upgraded ??= (async () => {
+      const stale = [...units].filter(([uuid, content]) => !content.includes(deviceUnit(uuid)));
+      if (!stale.length) return;
+      for (const [uuid, content] of stale)
+        await writeUnit(join(unitDir, unit(uuid)), withInstallSection(content, uuid));
+      await systemctl(["daemon-reload"]);
+      for (const [uuid] of stale) await systemctl(["enable", unit(uuid)]).catch(() => undefined);
+    })().catch(() => undefined));
   const list = async (signal?: AbortSignal): Promise<DiskList> => {
     const output = await runCommand(
       await tool("lsblk"),
@@ -277,31 +387,54 @@ export function createDiskManager(options: {
         ? new DiskError("unavailable", "lsblk could not list the disks")
         : error;
     });
+    const units = await persistent();
+    void upgrade(units);
+    const disks = parseLsblk(JSON.parse(output) as unknown, {
+      mountRoot,
+      persistent: new Set(units.keys()),
+    });
+    const present = new Set(disks.flatMap((disk) => disk.volumes.map((volume) => volume.uuid)));
     return {
       source: "host",
       mountRoot,
-      disks: parseLsblk(JSON.parse(output) as unknown, {
-        mountRoot,
-        persistent: await persistent(),
-      }),
+      disks,
+      remembered: [...units]
+        .filter(([uuid]) => !present.has(uuid))
+        .slice(0, 64)
+        .map(([uuid, content]) => {
+          const label = /^Description=EveryOS disk (.+)$/m.exec(content)?.[1]?.trim().slice(0, 128);
+          return { uuid, label: label && label !== uuid ? label : null };
+        }),
     };
   };
   const find = (disks: DiskList, uuid: string) => {
     for (const disk of disks.disks)
       for (const volume of disk.volumes) if (volume.uuid === uuid) return { disk, volume };
-    throw new DiskError("not-found", "No volume with this UUID");
+    return null;
   };
   const writeUnit = async (path: string, content: string) => {
     await mkdir(join(path, ".."), { recursive: true });
     await writeFile(`${path}.tmp`, content, { mode: 0o644 });
     await rename(`${path}.tmp`, path);
   };
+  const forget = async (uuid: string, signal?: AbortSignal) => {
+    const name = unit(uuid);
+    await systemctl(["disable", name], signal).catch(() => undefined);
+    await Promise.all([
+      rm(join(unitDir, name), { force: true }),
+      rm(join(runtimeDir, name), { force: true }),
+    ]);
+    await systemctl(["daemon-reload"], signal);
+    await rmdir(`${mountRoot}/${uuid}`).catch(() => undefined);
+  };
   return {
     source: "host",
     list,
     async mount(uuid, persist, owner, signal) {
       if (!DISK_UUID_PATTERN.test(uuid)) throw new DiskError("not-found", "Invalid volume UUID");
-      const { disk, volume } = find(await list(signal), uuid);
+      const found = find(await list(signal), uuid);
+      if (!found) throw new DiskError("not-found", "No volume with this UUID");
+      const { disk, volume } = found;
       if (disk.system) throw new DiskError("system-disk", "The disk holds the running system");
       if (!volume.supported)
         throw new DiskError("unsupported-filesystem", "EveryOS does not mount this filesystem");
@@ -309,7 +442,7 @@ export function createDiskManager(options: {
         throw new DiskError("mounted-elsewhere", "The volume is already mounted elsewhere");
       const where = `${mountRoot}/${uuid}`;
       const name = unit(uuid);
-      // Changing only the boot setting keeps the unit as it was (and its owner).
+      // Changing only the remembered setting keeps the unit as it was (and its owner).
       const existing = (
         await Promise.all(
           [unitDir, runtimeDir].map((dir) => readFile(join(dir, name), "utf8").catch(() => "")),
@@ -328,26 +461,28 @@ export function createDiskManager(options: {
         ...(foreign && owner ? [`uid=${owner.uid}`, `gid=${owner.gid}`] : []),
         ...(foreign ? ["umask=0022"] : []),
       ].join(",");
-      const content =
+      const content = withInstallSection(
         existing ??
-        [
-          MARKER,
-          "[Unit]",
-          `Description=EveryOS disk ${volume.label ?? uuid}`.replace(/[\r\n]/g, " "),
-          "",
-          "[Mount]",
-          `What=/dev/disk/by-uuid/${uuid}`,
-          `Where=${where}`,
-          `Type=${volume.fsType === "ntfs" ? "ntfs3" : volume.fsType}`,
-          `Options=${mountOptions}`,
-          "TimeoutSec=60",
-          "",
-          "[Install]",
-          "WantedBy=multi-user.target",
-          "",
-        ].join("\n");
+          [
+            MARKER,
+            "[Unit]",
+            `Description=EveryOS disk ${volume.label ?? uuid}`.replace(/[\r\n]/g, " "),
+            "",
+            "[Mount]",
+            `What=/dev/disk/by-uuid/${uuid}`,
+            `Where=${where}`,
+            `Type=${volume.fsType === "ntfs" ? "ntfs3" : volume.fsType}`,
+            `Options=${mountOptions}`,
+            "TimeoutSec=60",
+            "",
+            "[Install]",
+            installSection(uuid),
+            "",
+          ].join("\n"),
+        uuid,
+      );
       await mkdir(where, { recursive: true, mode: 0o755 });
-      // /run units last until the next boot; /etc units come back at every boot.
+      // /run units last until the next boot; /etc units are remembered.
       await writeUnit(join(persist ? unitDir : runtimeDir, name), content);
       await rm(join(persist ? runtimeDir : unitDir, name), { force: true });
       await systemctl(["daemon-reload"], signal);
@@ -368,36 +503,59 @@ export function createDiskManager(options: {
     },
     async unmount(uuid, signal) {
       if (!DISK_UUID_PATTERN.test(uuid)) throw new DiskError("not-found", "Invalid volume UUID");
-      const { disk, volume } = find(await list(signal), uuid);
+      const listing = await list(signal);
+      const found = find(listing, uuid);
+      if (!found) {
+        // A remembered disk that is not plugged in is only forgotten.
+        if (!listing.remembered.some((disk) => disk.uuid === uuid))
+          throw new DiskError("not-found", "No volume with this UUID");
+        await forget(uuid, signal);
+        return list(signal);
+      }
+      const { disk, volume } = found;
       if (disk.system) throw new DiskError("system-disk", "The disk holds the running system");
       if (!volume.managed && !volume.persistent)
         throw new DiskError("not-found", "EveryOS did not mount this volume");
-      const name = unit(uuid);
       if (volume.managed)
         try {
-          await systemctl(["stop", name], signal);
+          await systemctl(["stop", unit(uuid)], signal);
         } catch {
           throw new DiskError("busy", "The volume is in use");
         }
-      await systemctl(["disable", name], signal).catch(() => undefined);
-      await Promise.all([
-        rm(join(unitDir, name), { force: true }),
-        rm(join(runtimeDir, name), { force: true }),
-      ]);
-      await systemctl(["daemon-reload"], signal);
-      await rmdir(`${mountRoot}/${uuid}`).catch(() => undefined);
+      await forget(uuid, signal);
       return list(signal);
     },
+    watch: (signal) => watchDirectory(options.devDir ?? "/dev/disk/by-uuid", signal),
   };
 }
 
-/** Development stand-in: a system card and a USB disk with two volumes; nothing on the host. */
+const SIMULATED_STICK = "5E6F-7A8B";
+/** In development, this file below the mount root stands for a plugged-in USB stick. */
+export const SIMULATED_STICK_MARKER = ".simulated-usb-stick";
+
+/**
+ * Development stand-in: a system card and a USB disk with two volumes, plus a USB stick that is
+ * plugged in while `<mount root>/.simulated-usb-stick` exists. Nothing on the host changes.
+ */
 export function createDiskSimulator(options: { mountRoot: string }): DiskManager {
   const mountRoot = options.mountRoot.replace(/\/$/, "");
   const state = new Map<string, { mounted: boolean; persistent: boolean }>([
     ["2f6a3c1e-8b4d-4e7a-9f10-3b5c7d9e1a24", { mounted: false, persistent: false }],
     ["A1B2-C3D4", { mounted: false, persistent: false }],
+    [SIMULATED_STICK, { mounted: false, persistent: false }],
   ]);
+  let stickPresent = false;
+  const plugged = () => {
+    const present = existsSync(join(mountRoot, SIMULATED_STICK_MARKER));
+    const stick = state.get(SIMULATED_STICK)!;
+    if (present !== stickPresent) {
+      stickPresent = present;
+      // Unplugging drops the mount; a remembered stick mounts again when plugged in.
+      stick.mounted = present && stick.persistent;
+      if (stick.mounted) mkdirSync(join(mountRoot, SIMULATED_STICK), { recursive: true });
+    }
+    return present;
+  };
   const list = (): Promise<DiskList> => {
     const volume = (
       uuid: string,
@@ -420,6 +578,7 @@ export function createDiskSimulator(options: { mountRoot: string }): DiskManager
         readOnly: false,
       };
     };
+    const stick = plugged();
     return Promise.resolve({
       source: "simulated",
       mountRoot,
@@ -476,12 +635,30 @@ export function createDiskSimulator(options: { mountRoot: string }): DiskManager
             volume("A1B2-C3D4", "sda2", "exfat", "PHOTOS", 100_204_886_016),
           ],
         },
+        ...(stick
+          ? [
+              {
+                name: "sdb",
+                model: "Simulated USB Stick",
+                sizeBytes: 32_015_679_488,
+                transport: "usb",
+                removable: true,
+                system: false,
+                volumes: [volume(SIMULATED_STICK, "sdb1", "exfat", "KINGSTON", 32_014_630_912)],
+              },
+            ]
+          : []),
       ],
+      remembered:
+        !stick && state.get(SIMULATED_STICK)!.persistent
+          ? [{ uuid: SIMULATED_STICK, label: "KINGSTON" }]
+          : [],
     });
   };
   const known = (uuid: string) => {
     const entry = state.get(uuid);
-    if (!entry) throw new DiskError("not-found", "No volume with this UUID");
+    if (!entry || (uuid === SIMULATED_STICK && !plugged() && !entry.persistent))
+      throw new DiskError("not-found", "No volume with this UUID");
     return entry;
   };
   return {
@@ -491,6 +668,8 @@ export function createDiskSimulator(options: { mountRoot: string }): DiskManager
       if (uuid === "B3D1-5A2F" || uuid === "9c2e7f41-63a8-4b0e-8d5c-1f7a2b3c4d5e")
         throw new DiskError("system-disk", "The disk holds the running system");
       const entry = known(uuid);
+      if (uuid === SIMULATED_STICK && !plugged())
+        throw new DiskError("not-found", "No volume with this UUID");
       // A real directory, so the development Files app can browse the simulated disk.
       await mkdir(join(mountRoot, uuid), { recursive: true });
       entry.mounted = true;
@@ -502,6 +681,10 @@ export function createDiskSimulator(options: { mountRoot: string }): DiskManager
       entry.mounted = false;
       entry.persistent = false;
       return list();
+    },
+    watch: (signal) => {
+      mkdirSync(mountRoot, { recursive: true });
+      return watchDirectory(mountRoot, signal, { followUpMs: [], safetyMs: 5_000 });
     },
   };
 }

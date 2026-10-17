@@ -41,7 +41,7 @@ test("disks mount from Settings, appear in Files and eject after confirmation", 
   await expect(disks.locator('[data-disk="mmcblk0"]').getByRole("button")).toHaveCount(0);
   const volume = disks.locator('[data-volume="sda1"]');
   await volume.getByRole("button", { name: "Bağla", exact: true }).click();
-  await expect(volume).toContainText("Bağlı · açılışta yeniden bağlanır");
+  await expect(volume).toContainText("Bağlı · her takıldığında bağlanır");
   await page.screenshot({ path: test.info().outputPath("disks.png"), animations: "disabled" });
   await volume.getByRole("button", { name: "Dosyalar'da aç", exact: true }).click();
   const files = page.locator('[data-app-id="everyos.files"]');

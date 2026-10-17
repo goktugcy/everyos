@@ -9,6 +9,9 @@ import {
   FilePlus2,
   FolderOpen,
   FolderPlus,
+  HardDrive,
+  LogOut,
+  Plug,
   ImageIcon,
   Info,
   LayoutGrid,
@@ -40,6 +43,14 @@ import { useTranslation } from "react-i18next";
 import { errorMessage } from "../../lib/errors.ts";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
+import {
+  DiskGlyph,
+  disks,
+  shownVolumes,
+  useLiveDisks,
+  volumeName,
+  type ShownVolume,
+} from "../../features/disks/disks.tsx";
 import { AppIcon } from "../apps/app-icon.tsx";
 import { appTitle } from "../apps/app-title.ts";
 import { installedAppId, useInstalledApps } from "../apps/store/installed-apps-store.ts";
@@ -122,6 +133,8 @@ type Icon =
   | { id: string; kind: "file"; entry: FileEntry; cell: Cell | null };
 
 const fileId = (name: string) => `file:${name}`;
+/** Plugged-in disks sit in the right-most column, above everything else. */
+const volumeId = (uuid: string) => `volume:${uuid}`;
 const refOf = (icon: Icon): IconRef =>
   icon.kind === "app" ? { kind: "app", id: icon.item.id } : { kind: "file", name: icon.entry.name };
 const sameCell = (a: Cell | undefined, b: Cell) => a?.col === b.col && a.row === b.row;
@@ -330,6 +343,8 @@ export function DesktopSurface() {
   const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
   const folder = useDesktopFolder();
   const clipboard = useFileClipboard();
+  const diskList = useLiveDisks((state) => state.list);
+  const volumes = useMemo(() => shownVolumes(diskList), [diskList]);
   const [selection, setSelection] = useState<{ desktopId: string; ids: ReadonlySet<string> }>({
     desktopId: activeDesktopId,
     ids: new Set(),
@@ -394,8 +409,20 @@ export function DesktopSurface() {
     [desktopDoc, activeDesktopId, allowed, folder.entries],
   );
   const placed = useMemo(
-    () => placeItems(icons, metrics, (icon) => icon.kind === "file"),
-    [icons, metrics],
+    () =>
+      placeItems(
+        [
+          ...volumes.slice(0, metrics.rows).map((entry, row) => ({
+            id: volumeId(entry.volume.uuid),
+            kind: "volume" as const,
+            cell: { col: metrics.columns - 1, row },
+          })),
+          ...icons,
+        ],
+        metrics,
+        (icon) => icon.kind === "file",
+      ),
+    [icons, volumes, metrics],
   );
   const selectedCount = icons.filter((icon) => selected.has(icon.id)).length;
   const names = useMemo(() => new Set(folder.entries.map((entry) => entry.name)), [folder.entries]);
@@ -437,7 +464,7 @@ export function DesktopSurface() {
   }, [legacy, folder.status]);
 
   useEffect(() => {
-    if (!notice?.error) return;
+    if (!notice) return;
     const timer = window.setTimeout(() => setNotice(null), 8000);
     return () => window.clearTimeout(timer);
   }, [notice]);
@@ -797,7 +824,13 @@ export function DesktopSurface() {
     const file = icon.kind === "file" ? icon.entry : null;
     if (mod && event.key.toLowerCase() === "a") {
       event.preventDefault();
-      setSelected(new Set(icons.map((item) => item.id)));
+      // Like the Finder, select all includes the plugged-in disks.
+      setSelected(
+        new Set([
+          ...icons.map((item) => item.id),
+          ...volumes.map((entry) => volumeId(entry.volume.uuid)),
+        ]),
+      );
     } else if (event.key === "Escape") {
       setSelected(new Set());
       setRenaming(null);
@@ -1164,6 +1197,62 @@ export function DesktopSurface() {
     ];
   };
 
+  const openVolume = ({ volume }: ShownVolume) => {
+    if (volume.managed) disks.open(volume.uuid);
+    else if (permissions.includes("system:manage")) disks.askMount(volume.uuid);
+    else setNotice({ text: t("disks.desktop.needsAdmin"), error: false });
+  };
+
+  const volumeMenu = (entry: ShownVolume): MenuEntry[] => {
+    const { device, volume } = entry;
+    const manage = permissions.includes("system:manage");
+    return [
+      volume.managed
+        ? {
+            kind: "item",
+            id: "open",
+            label: t("disks.desktop.open"),
+            icon: <FolderOpen />,
+            onSelect: () => disks.open(volume.uuid),
+          }
+        : {
+            kind: "item",
+            id: "mount",
+            label: t("disks.desktop.mount"),
+            icon: <Plug />,
+            permission: "system:manage",
+            onSelect: () => disks.askMount(volume.uuid),
+          },
+      ...(volume.managed && manage
+        ? [
+            { kind: "separator" as const, id: "s0" },
+            {
+              kind: "check" as const,
+              id: "remember",
+              label: t("disks.desktop.remember"),
+              checked: volume.persistent,
+              onCheckedChange: (checked: boolean) => void disks.remember(volume.uuid, checked),
+            },
+            {
+              kind: "item" as const,
+              id: "eject",
+              label: t("disks.desktop.eject"),
+              icon: <LogOut />,
+              onSelect: () => void disks.eject(t, volume, device),
+            },
+          ]
+        : []),
+      { kind: "separator", id: "s1" },
+      {
+        kind: "item",
+        id: "settings",
+        label: t("disks.desktop.settings"),
+        icon: <HardDrive />,
+        onSelect: () => desktop.openSettings("disks"),
+      },
+    ];
+  };
+
   const glyphOf = (icon: Icon): ReactNode => {
     if (icon.kind === "app") {
       const manifest = getApp(icon.item.appId);
@@ -1349,6 +1438,56 @@ export function DesktopSurface() {
                     onMove={onMove}
                     onRename={(id, name) => void commitRename(id, name)}
                     onKey={onKey}
+                  />
+                </div>
+              </ContextMenuArea>
+            );
+          })}
+          {volumes.map((entry) => {
+            const { device, volume } = entry;
+            const id = volumeId(volume.uuid);
+            const cell = placed.get(id);
+            if (!cell) return null;
+            return (
+              <ContextMenuArea key={id} entries={() => volumeMenu(entry)}>
+                <div
+                  className="contents"
+                  data-testid="desktop-volume"
+                  data-volume={volume.uuid}
+                  data-mounted={volume.managed ? "true" : "false"}
+                  onContextMenu={() => {
+                    if (!selected.has(id)) setSelected(new Set([id]));
+                  }}
+                >
+                  <DesktopIcon
+                    id={id}
+                    cell={cell}
+                    metrics={metrics}
+                    label={volumeName(volume, device)}
+                    glyph={
+                      <DiskGlyph
+                        size={iconSize}
+                        usb={device.transport === "usb"}
+                        mounted={volume.managed}
+                      />
+                    }
+                    selected={selected.has(id)}
+                    folder={false}
+                    renaming={false}
+                    renameLimit={0}
+                    dropTarget={false}
+                    native={null}
+                    onSelect={onSelect}
+                    onOpen={() => openVolume(entry)}
+                    // Disks keep their place; a drag puts them back.
+                    onMove={() => undefined}
+                    onRename={() => undefined}
+                    onKey={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        openVolume(entry);
+                      }
+                    }}
                   />
                 </div>
               </ContextMenuArea>

@@ -112,6 +112,13 @@ export interface MetricsHistory {
 }
 
 /** Topics of the shared server-sent event stream (`GET /api/events`). */
-export const EVENT_TOPICS = ["metrics", "docker", "notifications", "release"] as const;
+export const EVENT_TOPICS = [
+  "metrics",
+  "docker",
+  "notifications",
+  "release",
+  "disks",
+  "transfers",
+] as const;
 
 export type EventTopic = (typeof EVENT_TOPICS)[number];

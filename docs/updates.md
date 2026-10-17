@@ -150,8 +150,8 @@ raises the `reboot-required` condition (resolved after the restart).
 
 **Restart and shut down** are in the EveryOS menu (and the mobile shell) for `system:manage`. The
 dialog asks for the account password, confirms the action by name, and lists running work that a
-restart would interrupt: an EveryOS update being installed, a backup or restore, app jobs, and an
-APT job. An EveryOS update in progress always blocks; the others can be overridden explicitly
+restart would interrupt: an EveryOS update being installed, a backup or restore, app jobs, an
+APT job, and file transfers. An EveryOS update in progress always blocks; the others can be overridden explicitly
 (`force`). The agent schedules `systemctl reboot|poweroff` 5 s later through a transient systemd
 timer (`everyos-power`), so the API can answer first; a second request while one is pending is a
 conflict. Production also requires a linked Linux account with sudo authorized, like upgrades.

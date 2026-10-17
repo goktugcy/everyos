@@ -675,3 +675,25 @@ Detection compares catalog definitions only (no registry polling, as the owner c
 installations are adopted only when their inputs reproduce the stored Compose file exactly.
 
 **Mobile.** The notification center and the power actions are available in the mobile shell.
+
+### D50 — Plugged-in disks, Google Drive and live transfers
+
+**Disks come and go live.** The agent watches `/dev/disk/by-uuid` (inotify, a stream operation)
+instead of the API polling `lsblk`; the API re-lists on each debounced tick and pushes listings on
+a `disks` event topic. A new disk is announced and drawn on the desktop, but it is mounted only by
+an administrator's click: mounting as root without anyone's decision would give FAT files no
+owner. "Remembered" disks reuse the boot unit with an extra `WantedBy=` on the filesystem's device
+unit, so systemd itself mounts them whenever they are plugged in and releases them when they go;
+EveryOS runs no hot-plug handler of its own.
+
+**Google Drive with the owner's own client.** Full Drive access for the public needs Google's
+verification and a security assessment, so every server registers its own Desktop-app OAuth
+client. Consent uses PKCE and a loopback redirect: automatic when the browser runs on the server,
+a pasted address elsewhere (Google retired the copy-a-code flow). Each person connects their own
+Drive; refresh tokens are sealed per person and only EveryOS's API talks to Google.
+
+**One transfer model for every view.** Server copies are jobs with bytes, totals, a smoothed speed
+and time left, streamed per person on a `transfers` topic; browser uploads report into the same
+client store. The menu bar, dock shelf, pulse, Files and the phone header are views of that store,
+so they never disagree. The pulse moves into the free middle of the menu bar instead of covering
+modules, and a storage item with nothing to show takes no room.

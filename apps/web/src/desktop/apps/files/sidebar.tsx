@@ -1,7 +1,13 @@
-import type { FileRootView, FileRootsResponse, StandardFolder } from "@everyos/shared";
-import { STANDARD_FOLDERS } from "@everyos/shared";
+import type {
+  DriveAccountView,
+  FileRootView,
+  FileRootsResponse,
+  StandardFolder,
+} from "@everyos/shared";
+import { diskRootId, STANDARD_FOLDERS } from "@everyos/shared";
 import {
   Clapperboard,
+  Cloud,
   Computer,
   Download,
   EyeOff,
@@ -11,9 +17,11 @@ import {
   House,
   Image,
   Lock,
+  LogOut,
   Monitor,
   Music,
   Package,
+  Plug,
   ScrollText,
   Server,
   type LucideIcon,
@@ -28,6 +36,13 @@ import { useTranslation } from "react-i18next";
 import { cn } from "../../../lib/cn.ts";
 import type { FileLocation } from "./lib.ts";
 import { desktop } from "../../state/controller.ts";
+import { usePermissions } from "../../../stores/session-store.ts";
+import {
+  disks as diskActions,
+  shownVolumes,
+  useLiveDisks,
+  volumeName,
+} from "../../../features/disks/disks.tsx";
 
 export const FILES_FOLDER_ICONS: Record<StandardFolder, LucideIcon> = {
   desktop: Monitor,
@@ -87,6 +102,7 @@ function Item({
   into,
   onGo,
   drops,
+  action,
 }: {
   icon: LucideIcon;
   label: string;
@@ -98,10 +114,12 @@ function Item({
   into: FileLocation;
   onGo: (location: FileLocation) => void;
   drops: DropHandlers;
+  /** A small button at the end of the row (e.g. eject). */
+  action?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
-    <li>
+    <li className="group/item relative">
       <button
         type="button"
         disabled={disabled}
@@ -129,9 +147,16 @@ function Item({
           />
         ) : null}
       </button>
+      {action ? (
+        <span className="absolute inset-y-0 right-1 flex items-center">{action}</span>
+      ) : null}
     </li>
   );
 }
+
+/** Eject and mount buttons inside sidebar rows. */
+const rowAction =
+  "grid size-5 place-items-center rounded text-fg-muted outline-none hover:bg-hover/15 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent";
 
 /**
  * Finder-style sidebar: the user's home and its fixed standard folders,
@@ -146,6 +171,9 @@ export function FilesSidebar({
   onSystem,
   applicationsOpen = false,
   onApplications,
+  drive = null,
+  driveOpen = false,
+  onDrive,
 }: {
   roots: FileRootView[];
   system: FileRootsResponse["system"] | null;
@@ -155,15 +183,30 @@ export function FilesSidebar({
   onSystem: (enabled: boolean) => void;
   applicationsOpen?: boolean;
   onApplications?: (() => void) | undefined;
+  /** The person's Google Drive connection (docs/drive.md). */
+  drive?: DriveAccountView | null;
+  driveOpen?: boolean;
+  onDrive?: () => void;
 }) {
   const { t } = useTranslation();
   const home = roots.find((root) => root.kind === "home");
   const trashMenu = useTrashMenu();
   const locations = roots.filter((root) => root.kind === "location");
   const disks = roots.filter((root) => root.kind === "disk");
+  const permissions = usePermissions();
+  const canMount = permissions.includes("system:manage");
+  const diskList = useLiveDisks((state) => state.list);
+  const volumes = shownVolumes(diskList);
+  const volumeOf = (root: FileRootView) =>
+    volumes.find((entry) => diskRootId(entry.volume.uuid) === root.id);
+  // Plugged in but not mounted: offered for mounting, never browsable yet.
+  const unmounted = volumes.filter(
+    (entry) =>
+      !entry.volume.managed && !disks.some((root) => root.id === diskRootId(entry.volume.uuid)),
+  );
   const systemRoots = roots.filter((root) => root.kind === "system");
   const at = (root: string, path: string) =>
-    !applicationsOpen && location?.root === root && location.path === path;
+    !applicationsOpen && !driveOpen && location?.root === root && location.path === path;
 
   return (
     <nav
@@ -243,22 +286,87 @@ export function FilesSidebar({
         </Section>
       ) : null}
 
-      {disks.length > 0 ? (
+      {disks.length > 0 || unmounted.length > 0 ? (
         <Section title={t("files.disks")}>
-          {disks.map((root) => (
-            <Item
-              key={root.id}
-              icon={Usb}
-              label={root.name}
-              active={at(root.id, "")}
-              disabled={!root.available}
-              readOnly={root.readOnly}
-              target={`root:${root.id}`}
-              into={{ root: root.id, path: "" }}
-              onGo={onGo}
-              drops={drops}
-            />
+          {disks.map((root) => {
+            const entry = volumeOf(root);
+            return (
+              <Item
+                key={root.id}
+                icon={Usb}
+                label={root.name}
+                active={at(root.id, "")}
+                disabled={!root.available}
+                readOnly={root.readOnly}
+                target={`root:${root.id}`}
+                into={{ root: root.id, path: "" }}
+                onGo={onGo}
+                drops={drops}
+                action={
+                  entry && canMount ? (
+                    <button
+                      type="button"
+                      className={rowAction}
+                      aria-label={t("disks.desktop.eject")}
+                      title={t("disks.desktop.eject")}
+                      onClick={() => void diskActions.eject(t, entry.volume, entry.device)}
+                    >
+                      <LogOut className="size-3.5" aria-hidden />
+                    </button>
+                  ) : undefined
+                }
+              />
+            );
+          })}
+          {unmounted.map(({ device, volume }) => (
+            <li key={volume.uuid} data-testid="files-unmounted-disk">
+              <button
+                type="button"
+                disabled={!canMount}
+                title={canMount ? t("disks.desktop.mount") : t("disks.desktop.needsAdmin")}
+                onClick={() => diskActions.askMount(volume.uuid)}
+                className="flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] text-fg-muted outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-default"
+              >
+                <Plug className="size-4 shrink-0 text-fg-subtle" aria-hidden />
+                <span className="min-w-0 truncate">{volumeName(volume, device)}</span>
+                <span className="ml-auto shrink-0 text-[0.7rem] text-fg-subtle">
+                  {t("disks.desktop.notMounted")}
+                </span>
+              </button>
+            </li>
           ))}
+        </Section>
+      ) : null}
+
+      {drive?.configured ? (
+        <Section title={t("files.cloud")}>
+          <li>
+            <button
+              type="button"
+              aria-current={driveOpen ? "location" : undefined}
+              data-testid="files-drive"
+              onClick={() =>
+                drive.account?.status === "connected"
+                  ? onDrive?.()
+                  : desktop.openSettings("connections")
+              }
+              className={cn(
+                "flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[0.82rem] outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                driveOpen ? "bg-hover/15 font-medium text-fg" : "text-fg hover:bg-hover/8",
+              )}
+            >
+              <Cloud
+                className={cn("size-4 shrink-0", driveOpen ? "text-accent" : "text-accent/80")}
+                aria-hidden
+              />
+              <span className="min-w-0 truncate">{t("drive.title")}</span>
+              {drive.account?.status !== "connected" ? (
+                <span className="ml-auto shrink-0 text-[0.7rem] text-fg-subtle">
+                  {drive.account ? t("drive.reconnect") : t("drive.connect")}
+                </span>
+              ) : null}
+            </button>
+          </li>
         </Section>
       ) : null}
 

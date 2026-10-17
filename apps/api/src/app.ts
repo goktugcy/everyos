@@ -23,6 +23,8 @@ import { existsSync } from "node:fs";
 import { integrationRoutes } from "./modules/integrations/routes.ts";
 import { logRoutes } from "./modules/logs/routes.ts";
 import { notificationChannelRoutes } from "./modules/notifications/channel-routes.ts";
+import { transferRoutes } from "./modules/transfers/routes.ts";
+import { driveRoutes } from "./modules/drive/routes.ts";
 import { notificationRoutes } from "./modules/notifications/routes.ts";
 import { fileRoutes } from "./modules/files/routes.ts";
 import { terminalRoutes } from "./modules/terminal/routes.ts";
@@ -64,6 +66,7 @@ export function createApp(services: Services): Hono<AppEnv> {
       (c.req.path === "/api/wallpapers" ||
         c.req.path === "/api/folder-icons" ||
         c.req.path === "/api/files/upload" ||
+        c.req.path === "/api/drive/upload" ||
         c.req.path === "/api/backups/upload")
     )
       return next();
@@ -98,6 +101,8 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/docker", dockerRoutes(services));
   api.route("/integrations", integrationRoutes(services));
   api.route("/notification-channels", notificationChannelRoutes(services));
+  api.route("/transfers", transferRoutes(services));
+  api.route("/drive", driveRoutes(services));
   api.route("/notifications", notificationRoutes(services));
   api.route("/files", fileRoutes(services));
   api.route("/terminal", terminalRoutes(services));

@@ -69,10 +69,13 @@ The desktop shows the contents of your Desktop folder, so folders and files beha
 across views. Select several items, draw a selection rectangle, drag between folders, preview
 images and edit text. Deleted files go to a private trash where they can be restored.
 
-Administrators can also make selected host locations available with explicit access rules, and
-mount extra and USB disks from **Settings → Disks** so they appear in Files. EveryOS never formats
-a disk or touches the system disk. Learn more in the [file manager](docs/files.md) and
-[disks](docs/disks.md) guides.
+Administrators can also make selected host locations available with explicit access rules. Plug
+in a USB disk and it appears on the desktop and in Files; mount it with one click, and EveryOS
+can mount it by itself whenever it is plugged in. EveryOS never formats a disk or touches the
+system disk. Connect your own Google Drive to browse it in Files and copy files both ways; every
+upload and copy shows its speed and time left in the menu bar, the dock and the pulse. Learn
+more in the [file manager](docs/files.md), [disks](docs/disks.md), [Google Drive](docs/drive.md)
+and [transfers](docs/transfers.md) guides.
 
 ### Apps on your own machine
 
@@ -211,20 +214,20 @@ the [architecture guide](docs/architecture.md). See [development.md](docs/develo
 
 ## Documentation
 
-| Start here                          | Guide                                                                                   |
-| ----------------------------------- | --------------------------------------------------------------------------------------- |
-| Installation, CLI and recovery      | [Packaging](docs/packaging.md)                                                          |
-| Host configuration                  | [Configuration](docs/configuration.md)                                                  |
-| Files, homes and trash              | [Files](docs/files.md) · [Disks](docs/disks.md)                                         |
-| Self-hosted applications            | [App Store](docs/app-store.md)                                                          |
-| Docker resources                    | [Docker management](docs/docker-management.md)                                          |
-| Browser shell access                | [Terminal](docs/terminal.md)                                                            |
-| Personalization and visual assets   | [Branding](docs/branding.md) · [Folder icons and power](docs/power-and-folder-icons.md) |
-| Widgets and integrations            | [Widgets](docs/widgets.md)                                                              |
-| Scheduled operations                | [Tasks](docs/tasks.md)                                                                  |
-| Data protection and version updates | [Backups](docs/backups.md) · [Updates](docs/updates.md)                                 |
-| Remote access                       | [Tailscale](docs/tailscale.md)                                                          |
-| APIs and extensions                 | [API](docs/api.md) · [Contracts](docs/contracts.md)                                     |
+| Start here                          | Guide                                                                                                            |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Installation, CLI and recovery      | [Packaging](docs/packaging.md)                                                                                   |
+| Host configuration                  | [Configuration](docs/configuration.md)                                                                           |
+| Files, homes and trash              | [Files](docs/files.md) · [Disks](docs/disks.md) · [Google Drive](docs/drive.md) · [Transfers](docs/transfers.md) |
+| Self-hosted applications            | [App Store](docs/app-store.md)                                                                                   |
+| Docker resources                    | [Docker management](docs/docker-management.md)                                                                   |
+| Browser shell access                | [Terminal](docs/terminal.md)                                                                                     |
+| Personalization and visual assets   | [Branding](docs/branding.md) · [Folder icons and power](docs/power-and-folder-icons.md)                          |
+| Widgets and integrations            | [Widgets](docs/widgets.md)                                                                                       |
+| Scheduled operations                | [Tasks](docs/tasks.md)                                                                                           |
+| Data protection and version updates | [Backups](docs/backups.md) · [Updates](docs/updates.md)                                                          |
+| Remote access                       | [Tailscale](docs/tailscale.md)                                                                                   |
+| APIs and extensions                 | [API](docs/api.md) · [Contracts](docs/contracts.md)                                                              |
 
 ## License
 

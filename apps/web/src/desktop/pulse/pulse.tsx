@@ -1,8 +1,17 @@
 import type { BackupJobView, UpdateJobView } from "@everyos/shared";
-import { EyeOff, Inbox, LayoutDashboard, Settings2 } from "lucide-react";
+import { ArrowDownUp, EyeOff, Inbox, LayoutDashboard, Settings2, Unplug, Usb } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLiveMetrics, useLiveMetricsSubscription } from "../../features/metrics/live-metrics.ts";
+import { shownVolumes, useLiveDisks, volumeName } from "../../features/disks/disks.tsx";
+import { StoragePanel } from "../../features/transfers/storage-panel.tsx";
+import {
+  formatEta,
+  formatRate,
+  isActive,
+  useTransfers,
+  useTransferSummary,
+} from "../../features/transfers/transfers.ts";
 import { api } from "../../lib/api.ts";
 import { cn } from "../../lib/cn.ts";
 import { formatPercent } from "../../lib/format.ts";
@@ -18,7 +27,51 @@ import { MATRIX_COLS } from "./pulse-lib.ts";
 import { PulseMatrix, type MatrixMode } from "./pulse-matrix.tsx";
 import { PulseShelf } from "./shelf.tsx";
 
-type Tab = "home" | "shelf";
+type Tab = "home" | "shelf" | "transfers";
+
+/** How long the pulse names a disk that was plugged in or removed. */
+const DISK_MESSAGE_MS = 5_000;
+
+interface DiskMessage {
+  kind: "attached" | "detached";
+  /** The disk's name, plus how many more came or went with it. */
+  name: string;
+  at: number;
+}
+
+/** A disk that just came or went (not the disks present when the shell opened). */
+function useDiskMessage(): DiskMessage | null {
+  const list = useLiveDisks((state) => state.list);
+  const known = useRef<Map<string, string> | null>(null);
+  const [message, setMessage] = useState<DiskMessage | null>(null);
+  useEffect(() => {
+    if (!list) return;
+    const present = new Map(
+      shownVolumes(list).map((entry) => [
+        entry.volume.uuid,
+        volumeName(entry.volume, entry.device),
+      ]),
+    );
+    const before = known.current;
+    known.current = present;
+    if (!before) return;
+    const added = [...present].filter(([uuid]) => !before.has(uuid)).map(([, name]) => name);
+    const removed = [...before].filter(([uuid]) => !present.has(uuid)).map(([, name]) => name);
+    const names = added.length ? added : removed;
+    if (!names.length) return;
+    setMessage({
+      kind: added.length ? "attached" : "detached",
+      name: names.length > 1 ? `${names[0]} +${names.length - 1}` : names[0]!,
+      at: Date.now(),
+    });
+  }, [list]);
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(null), DISK_MESSAGE_MS);
+    return () => clearTimeout(timer);
+  }, [message]);
+  return message;
+}
 
 const HOVER_OPEN_MS = 160;
 const HOVER_CLOSE_MS = 320;
@@ -106,17 +159,74 @@ export function Pulse() {
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const activity = useActivity();
   const cpu = useCpuHistory(canSystem);
-  const busy = activity.backup !== null || activity.update !== null;
+  const transfer = useTransferSummary();
+  const localTransfers = useTransfers((state) => state.local);
+  const serverTransfers = useTransfers((state) => state.server);
+  const transfers = useMemo(
+    () => [...localTransfers, ...serverTransfers].filter(isActive),
+    [localTransfers, serverTransfers],
+  );
+  const diskMessage = useDiskMessage();
+  const fraction =
+    transfer.bytesTotal && transfer.bytesTotal > 0
+      ? Math.min(1, transfer.bytesDone / transfer.bytesTotal)
+      : null;
+  // A transfer of unknown size shows its activity with the sweeping light.
+  const busy =
+    activity.backup !== null ||
+    activity.update !== null ||
+    (transfer.active > 0 && fraction === null);
 
   const mode: MatrixMode = useMemo(
     () =>
       dragging
         ? { kind: "drop" }
-        : canSystem && cpu.length > 0
-          ? { kind: "graph", values: cpu }
-          : { kind: "idle" },
-    [dragging, canSystem, cpu],
+        : transfer.active > 0
+          ? { kind: "transfer", fraction, direction: transfer.direction ?? "download" }
+          : canSystem && cpu.length > 0
+            ? { kind: "graph", values: cpu }
+            : { kind: "idle" },
+    [dragging, transfer.active, transfer.direction, fraction, canSystem, cpu],
   );
+
+  // The dots sit in the free middle of the menu bar: centred when they fit there, moved aside
+  // when long app names or many modules take the room, and hidden only when they do not fit.
+  const [shift, setShift] = useState<number | null>(0);
+  useEffect(() => {
+    const check = () => {
+      const width = triggerRef.current?.offsetWidth;
+      if (!width) return;
+      const right =
+        document.querySelector("[data-menubar-right]")?.getBoundingClientRect().left ??
+        window.innerWidth;
+      const left = [
+        ...document.querySelectorAll(
+          '[data-testid="menubar-app"],[data-testid="connection-status"]',
+        ),
+      ].reduce((edge, element) => Math.max(edge, element.getBoundingClientRect().right), 0);
+      const low = left + 8;
+      const high = right - 8;
+      if (high - low < width) {
+        setShift(null);
+        return;
+      }
+      const middle = window.innerWidth / 2;
+      const centre = Math.min(Math.max(middle, low + width / 2), high - width / 2);
+      setShift(Math.round(centre - middle));
+    };
+    check();
+    const observer = new ResizeObserver(check);
+    for (const element of document.querySelectorAll(
+      '[data-menubar-right],[data-testid="menubar-app"]',
+    ))
+      observer.observe(element);
+    window.addEventListener("resize", check);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", check);
+    };
+  }, []);
+  const crowded = shift === null;
 
   const close = useCallback((restoreFocus = false) => {
     clearTimeout(hoverTimer.current);
@@ -207,6 +317,17 @@ export function Pulse() {
           },
         ]
       : []),
+    ...(canFiles || canSystem
+      ? [
+          {
+            kind: "item" as const,
+            id: "transfers",
+            label: t("pulse.tabs.transfers"),
+            icon: <ArrowDownUp />,
+            onSelect: () => show("transfers", true),
+          },
+        ]
+      : []),
     { kind: "separator", id: "s" },
     {
       kind: "item",
@@ -219,8 +340,22 @@ export function Pulse() {
   ];
 
   const latest = cpu.at(-1);
+  const eta = formatEta(transfer.etaSeconds, t);
+  const moving =
+    transfer.active > 0
+      ? [
+          transfer.active === 1 && transfers[0]
+            ? transfers[0].name
+            : t("transfers.active", { count: transfer.active }),
+          transfer.speed > 0 ? formatRate(transfer.speed, i18n.language, t) : null,
+          eta ? t("transfers.left", { eta }) : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : null;
   const status = [
-    busy ? t("pulse.working") : null,
+    moving,
+    busy && !moving ? t("pulse.working") : null,
     canSystem && latest !== undefined
       ? t("pulse.cpu", { value: formatPercent(latest, i18n.language) })
       : null,
@@ -270,7 +405,10 @@ export function Pulse() {
         );
       }}
     >
-      <div className="flex h-[var(--everyos-menubar-height)] items-center">
+      <div
+        className="flex h-[var(--everyos-menubar-height)] items-center"
+        style={shift ? { transform: `translateX(${shift}px)` } : undefined}
+      >
         <ContextMenuArea entries={menu}>
           <button
             ref={triggerRef}
@@ -280,13 +418,40 @@ export function Pulse() {
             title={status || t("pulse.label")}
             data-testid="pulse-trigger"
             data-open={open}
+            data-mode={mode.kind}
+            data-crowded={crowded && !open ? "true" : undefined}
             onClick={() => (open ? close() : show(tab, true))}
             className={cn(
               "pointer-events-auto relative flex h-[32px] items-center rounded-full px-3 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
               open || dragging ? "bg-hover/15" : "hover:bg-hover/10",
+              crowded && !open && !dragging && "pointer-events-none invisible",
             )}
           >
-            <PulseMatrix mode={mode} busy={busy} />
+            {/* A disk that came or went is named for a moment; the pill keeps its size. */}
+            <span className={cn(diskMessage && !dragging && "invisible")}>
+              <PulseMatrix mode={mode} busy={busy} />
+            </span>
+            {diskMessage && !dragging ? (
+              <span
+                key={diskMessage.at}
+                role="status"
+                data-testid="pulse-message"
+                data-kind={diskMessage.kind}
+                className="everyos-enter absolute inset-0 flex items-center gap-2 px-3.5 text-left"
+              >
+                {diskMessage.kind === "attached" ? (
+                  <Usb className="size-4 shrink-0 text-accent" aria-hidden />
+                ) : (
+                  <Unplug className="size-4 shrink-0 text-fg-muted" aria-hidden />
+                )}
+                <span className="flex min-w-0 flex-col leading-[1.15]">
+                  <span className="text-[0.7rem] font-semibold">
+                    {t(`pulse.disk.${diskMessage.kind}`)}
+                  </span>
+                  <span className="truncate text-[0.66rem] text-fg-muted">{diskMessage.name}</span>
+                </span>
+              </span>
+            ) : null}
             {unread > 0 ? (
               <span
                 className="absolute -right-0.5 top-1/2 size-[7px] -translate-y-1/2 rounded-full bg-[rgb(var(--everyos-accent))] shadow-[0_0_8px_rgb(var(--everyos-accent)/0.9)]"
@@ -304,7 +469,13 @@ export function Pulse() {
         >
           <div className="mb-3 flex items-center gap-2">
             <div role="tablist" aria-label={t("pulse.label")} className="flex gap-1">
-              {(["home", ...(canFiles ? (["shelf"] as const) : [])] as Tab[]).map((id) => (
+              {(
+                [
+                  "home",
+                  ...(canFiles ? (["shelf"] as const) : []),
+                  ...(canFiles || canSystem ? (["transfers"] as const) : []),
+                ] as Tab[]
+              ).map((id) => (
                 <button
                   key={id}
                   type="button"
@@ -322,13 +493,20 @@ export function Pulse() {
                 >
                   {id === "home" ? (
                     <LayoutDashboard className="size-3.5" aria-hidden />
-                  ) : (
+                  ) : id === "shelf" ? (
                     <Inbox className="size-3.5" aria-hidden />
+                  ) : (
+                    <ArrowDownUp className="size-3.5" aria-hidden />
                   )}
                   {t(`pulse.tabs.${id}`)}
                   {id === "shelf" && shelfCount > 0 ? (
                     <span className="rounded-full bg-hover/15 px-1.5 text-[0.65rem] tabular-nums">
                       {shelfCount}
+                    </span>
+                  ) : null}
+                  {id === "transfers" && transfer.active > 0 ? (
+                    <span className="rounded-full bg-accent/20 px-1.5 text-[0.65rem] tabular-nums text-accent">
+                      {transfer.active}
                     </span>
                   ) : null}
                 </button>
@@ -361,6 +539,10 @@ export function Pulse() {
           <div role="tabpanel" className="min-h-0 flex-1">
             {tab === "shelf" && canFiles ? (
               <PulseShelf />
+            ) : tab === "transfers" ? (
+              <div className="h-full overflow-y-auto pr-1" data-testid="pulse-transfers">
+                <StoragePanel onNavigate={() => close()} />
+              </div>
             ) : (
               <PulseDashboard backup={activity.backup} update={activity.update} />
             )}

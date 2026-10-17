@@ -42,6 +42,20 @@ describe("notification preferences", () => {
       shouldToast({ ...base, severity: "info" }, { ...preferences, toastMinSeverity: "info" }),
     ).toBe(true);
   });
+
+  it("always pops up plugged-in and removed disks, unless pop-ups or the category are off", () => {
+    const disk = {
+      ...base,
+      kind: "disk-attached" as const,
+      category: "storage" as const,
+      severity: "info" as const,
+    };
+    expect(shouldToast(disk, preferences)).toBe(true);
+    expect(shouldToast({ ...disk, kind: "disk-detached" }, preferences)).toBe(true);
+    expect(shouldToast(disk, { ...preferences, toasts: false })).toBe(false);
+    expect(shouldToast(disk, { ...preferences, mutedCategories: ["storage"] })).toBe(false);
+    expect(shouldToast({ ...base, severity: "info" }, preferences)).toBe(false);
+  });
 });
 
 it("opens EveryOS version notifications in Settings About and respects update-category toast preferences", () => {

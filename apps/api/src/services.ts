@@ -33,6 +33,9 @@ import { AiAgentService } from "./modules/ai-agents/agent-service.ts";
 import { LocalModelService } from "./modules/ai-agents/local-models.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
 import { DiskService } from "./modules/system/disks.ts";
+import { TransferService } from "./modules/transfers/transfer-service.ts";
+import { DriveService } from "./modules/drive/drive-service.ts";
+import { GoogleHttp, type GoogleEndpoints } from "./modules/drive/google-http.ts";
 import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { FileService } from "./modules/files/file-service.ts";
 import { TerminalService } from "./modules/terminal/terminal-service.ts";
@@ -90,6 +93,8 @@ export interface Services {
   notificationChannels: NotificationChannelService;
   /** Disks mounted from Settings › Disks. */
   disks: DiskService;
+  transfers: TransferService;
+  drive: DriveService;
   files: FileService;
   terminals: TerminalService;
   updates: UpdateService;
@@ -125,6 +130,8 @@ export interface ServiceDependencies {
   smtp?: SmtpTransportFactory;
   /** Test hook: the Telegram Bot API origin. */
   telegramApi?: string;
+  /** Test hook: Google's OAuth and Drive endpoints (a local fake). */
+  google?: GoogleEndpoints;
 }
 
 export function createPasswordHasher(params: ScryptParams = DEFAULT_SCRYPT_PARAMS): PasswordHasher {
@@ -238,7 +245,13 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
     onChanged: () => widgetData.refresh("data.apt"),
   });
-  const disks = new DiskService({ agent: deps.agent, audit, logger: deps.logger, now });
+  const disks = new DiskService({
+    agent: deps.agent,
+    audit,
+    logger: deps.logger,
+    now,
+    notifications,
+  });
   const files = new FileService({
     ...deps.config.files,
     logger: deps.logger,
@@ -281,6 +294,15 @@ export function createServices(deps: ServiceDependencies): Services {
     users,
     notificationChannels,
     disks,
+    transfers: new TransferService({ now, logger: deps.logger, notifications }),
+    drive: new DriveService({
+      db: deps.db,
+      secrets,
+      http: new GoogleHttp(deps.google ? { endpoints: deps.google, allowPrivate: true } : {}),
+      logger: deps.logger,
+      audit,
+      now,
+    }),
     preferences: new PreferenceRepository(deps.db, deps.logger, now),
     wallpapers: new WallpaperService(deps.db, deps.config.paths.dataDir, now),
     sessions: new SessionService(

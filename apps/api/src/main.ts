@@ -76,12 +76,19 @@ async function main(): Promise<void> {
   agent.start();
 
   let shutdown: (signal: string, code?: number) => void = () => undefined;
+  // Development and browser tests can use an in-memory stand-in for Google (never in production).
+  const fakeGoogle =
+    config.mode === "development" && process.env.EVERYOS_DEV_FAKE_GOOGLE === "1"
+      ? await (await import("./modules/drive/fake-google.ts")).startFakeGoogle()
+      : null;
+  if (fakeGoogle) logger.warn("Using the fake Google Drive", { origin: fakeGoogle.endpoints.api });
   const services = createServices({
     config,
     logger,
     db,
     masterKey,
     agent,
+    ...(fakeGoogle ? { google: fakeGoogle.endpoints } : {}),
     requestRestart: () => shutdown("restore", RESTART_EXIT_CODE),
   });
   services.setup.initialize();
@@ -98,6 +105,7 @@ async function main(): Promise<void> {
   const app = createApp(services);
   services.metrics.start();
   services.hostMonitor.start();
+  services.disks.start();
   if (config.mode === "production") services.releaseMonitor.start();
   const startTasks = () => {
     if (config.mode === "production" && existsSync("/run/everyos-update-maintenance")) return;
@@ -163,6 +171,8 @@ async function main(): Promise<void> {
     services.docker.stop();
     services.widgetData.stop();
     services.hostMonitor.stop();
+    services.disks.stop();
+    services.transfers.stop();
     services.releaseMonitor.stop();
     services.terminals.stop();
     services.updates.stop();

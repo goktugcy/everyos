@@ -474,6 +474,10 @@ export class FakeAgent implements AgentGateway {
       yield* this.docker.events(signal);
       return;
     }
+    if (op === "disks.watch") {
+      yield* this.disks.watch(signal);
+      return;
+    }
     if (op === "apt.upgrade") {
       yield* this.apt.upgrade((params as { packages: string[] | null }).packages, signal);
       return;
@@ -501,7 +505,7 @@ export async function createTestContext(
     configure?: (config: ApiConfig) => void;
     webDir?: string;
     /** Extra service test hooks (SMTP transports, the Telegram API origin). */
-    services?: Pick<ServiceDependencies, "smtp" | "telegramApi">;
+    services?: Pick<ServiceDependencies, "smtp" | "telegramApi" | "google">;
   } = {},
 ): Promise<TestContext> {
   const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));

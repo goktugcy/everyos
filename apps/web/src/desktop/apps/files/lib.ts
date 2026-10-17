@@ -1,3 +1,4 @@
+import { localTransfers } from "../../../features/transfers/transfers.ts";
 import type {
   FileEntry,
   FileListing,
@@ -107,15 +108,44 @@ export async function uploadUnique(
   file: File,
   progress: (loaded: number, total: number) => void,
 ): Promise<string> {
-  for (let attempt = 1; ; attempt++) {
-    const name = numberedName(file.name, attempt);
-    try {
-      await uploadWithProgress(filesApi.uploadPath(into, name, false), file, progress);
-      return name;
-    } catch (caught) {
-      if (!(caught instanceof ApiRequestError && caught.code === "CONFLICT") || attempt >= 20)
-        throw caught;
+  // Listed with speed and time left in the menu bar and the dock shelf, where it can be stopped.
+  const controller = new AbortController();
+  const transfer = localTransfers.start({
+    id: crypto.randomUUID(),
+    name: file.name,
+    to: into.path || into.root,
+    total: file.size,
+    abort: () => controller.abort(),
+  });
+  try {
+    for (let attempt = 1; ; attempt++) {
+      const name = numberedName(file.name, attempt);
+      try {
+        await uploadWithProgress(
+          filesApi.uploadPath(into, name, false),
+          file,
+          (loaded, total) => {
+            progress(loaded, total);
+            transfer.progress(loaded, total);
+          },
+          controller.signal,
+        );
+        transfer.done();
+        return name;
+      } catch (caught) {
+        if (!(caught instanceof ApiRequestError && caught.code === "CONFLICT") || attempt >= 20)
+          throw caught;
+      }
     }
+  } catch (caught) {
+    transfer.fail(
+      caught instanceof DOMException && caught.name === "AbortError"
+        ? "CANCELLED"
+        : caught instanceof ApiRequestError
+          ? caught.code
+          : "UNKNOWN",
+    );
+    throw caught;
   }
 }
 

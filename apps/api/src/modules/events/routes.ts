@@ -24,6 +24,8 @@ const TOPIC_PERMISSIONS: Record<EventTopic, Permission> = {
   docker: "docker:read",
   notifications: "notifications:read",
   release: "system:read",
+  disks: "system:read",
+  transfers: "files:read",
 };
 
 /**
@@ -139,6 +141,12 @@ export function eventRoutes(services: Services): Hono<AppEnv> {
           );
           void services.releaseMonitor.check();
         }
+        if (streams.includes("disks"))
+          unsubscribers.push(services.disks.subscribe(latestWins(channel, "disks.change")));
+        if (streams.includes("transfers"))
+          unsubscribers.push(
+            services.transfers.subscribe(auth.user.id, latestWins(channel, "transfers")),
+          );
         if (streams.includes("notifications")) {
           const me = { id: auth.user.id, permissions: auth.permissions };
           // Rare events, sent in order (a pop-up must not be replaced by a count update).

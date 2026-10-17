@@ -61,7 +61,16 @@ Disks an administrator mounts in Settings › Disks appear in the sidebar's **Di
 by their label (else their UUID), as locations of kind `disk` with id `disk-<uuid>`. In production
 they are found in the account worker's mount table and used with the linked Linux account's
 permissions, like other host locations. The free-space reserve (`minFreeMiB`) protects the
-system's filesystem and does not apply on a disk. See [disks.md](disks.md).
+system's filesystem and does not apply on a disk. Plugged-in disks that are not mounted are listed
+too, with a mount button for administrators, and mounted ones have an eject button. See
+[disks.md](disks.md).
+
+### Google Drive
+
+A person who connected their Google Drive finds it under **Cloud** in the sidebar: browse My Drive
+and Shared with me, upload from the computer, download, rename, move to Drive's trash, and copy
+between Drive and EveryOS locations. **Send to Google Drive…** on local items copies them up. See
+[drive.md](drive.md); copies are [transfers](transfers.md) with live progress.
 
 Development mode adds a sandbox root (`<dev root>/files`). Production has no roots until
 they are configured, and `/api/files/*` then answers `FILES_DISABLED`.

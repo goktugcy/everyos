@@ -16,6 +16,7 @@ import { Alert } from "../../../components/ui/alert.tsx";
 import { Dialog } from "../../../components/ui/dialog.tsx";
 import { errorMessage } from "../../../lib/errors.ts";
 import { formatBytes, formatDateTime, formatNumber } from "../../../lib/format.ts";
+import { formatEta, formatRate, useTransfers } from "../../../features/transfers/transfers.ts";
 import { FolderIcon } from "./folder-icon.tsx";
 import { filesApi, kindOf, nameOf, type FileKind, type FileLocation } from "./lib.ts";
 
@@ -63,8 +64,11 @@ export interface UploadItem {
 /** Compact progress of the current upload queue (status bar). */
 export function UploadStatus({ items, onClear }: { items: UploadItem[]; onClear: () => void }) {
   const { t, i18n } = useTranslation();
-  if (items.length === 0) return null;
   const active = items.find((item) => item.status === "uploading");
+  const live = useTransfers((state) =>
+    active ? state.local.find((transfer) => transfer.id === active.id) : undefined,
+  );
+  if (items.length === 0) return null;
   const done = items.filter((item) => item.status === "done").length;
   const failed = items.filter((item) => item.status === "error");
   return (
@@ -79,6 +83,12 @@ export function UploadStatus({ items, onClear }: { items: UploadItem[]; onClear:
             })
           : t("files.uploaded", { done, total: items.length })}
       </span>
+      {active && live?.state === "running" && live.speed > 0 ? (
+        <span className="shrink-0 tabular-nums text-fg-muted" data-testid="upload-speed">
+          {formatRate(live.speed, i18n.language, t)}
+          {formatEta(live.etaSeconds, t) ? ` · ${formatEta(live.etaSeconds, t)}` : ""}
+        </span>
+      ) : null}
       {failed.length > 0 ? (
         <span
           className="text-danger"

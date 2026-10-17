@@ -34,6 +34,7 @@ import {
   PowerActionSchema,
   PowerActionResultSchema,
   RebootStatusSchema,
+  DiskChangeSchema,
   DiskListSchema,
   DiskMountSchema,
   DiskUnmountSchema,
@@ -758,6 +759,15 @@ export const AGENT_OPERATIONS = {
     allowSystemActor: false,
     mutating: false,
     timeoutMs: 30_000,
+  }),
+  /** Ticks when disks may have been plugged in or removed; the listing comes from `disks.list`. */
+  "disks.watch": stream({
+    params: NoParams,
+    event: DiskChangeSchema,
+    permission: "system:read",
+    allowSystemActor: true,
+    mutating: false,
+    maxDurationMs: 60 * 60_000,
   }),
   "docker.events": stream({
     params: NoParams,

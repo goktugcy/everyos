@@ -1,6 +1,7 @@
 import {
   Bell,
   Bot,
+  Cloud,
   HardDrive,
   Info,
   LayoutDashboard,
@@ -24,6 +25,7 @@ const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnTyp
     widgets: { icon: PanelsTopLeft, component: lazy(() => import("./widgets-section.tsx")) },
     notifications: { icon: Bell, component: lazy(() => import("./notifications-section.tsx")) },
     disks: { icon: HardDrive, component: lazy(() => import("./disks-section.tsx")) },
+    connections: { icon: Cloud, component: lazy(() => import("./connections-section.tsx")) },
     account: { icon: UserRound, component: lazy(() => import("./account-section.tsx")) },
     security: { icon: ShieldCheck, component: lazy(() => import("./security-section.tsx")) },
     agents: { icon: Bot, component: lazy(() => import("./agents-section.tsx")) },

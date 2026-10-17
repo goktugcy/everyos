@@ -33,6 +33,7 @@ import { addDesktop } from "../state/desktop-ops.ts";
 import { updatePreference, usePreferences } from "../state/preferences-store.ts";
 import { useWindowManager, wm } from "../state/window-store.ts";
 import { useAgentStatus, useAgentStatusPolling } from "./agent-status.ts";
+import { StorageModule } from "./storage-module.tsx";
 import { menubarButton } from "./menubar-button.ts";
 import { QuickSettings } from "./quick-settings.tsx";
 import { NetworkModule, PowerModule, ResourcesModule } from "./system-modules.tsx";
@@ -343,6 +344,7 @@ export function Menubar() {
   const modules: Record<MenubarModuleId, ReactNode> = {
     widgets: <MenubarWidgets />,
     notifications: <NotificationBell />,
+    storage: permissions.includes("files:read") || canReadSystem ? <StorageModule /> : null,
     resources: canReadSystem ? <ResourcesModule /> : null,
     power: canReadSystem ? <PowerModule /> : null,
     network: canReadSystem ? <NetworkModule /> : null,
@@ -407,7 +409,7 @@ export function Menubar() {
           />
 
           <ConnectionModule />
-          <div className="ml-auto flex items-center gap-0.5">
+          <div className="ml-auto flex items-center gap-0.5" data-menubar-right>
             {moduleOrder(preferences.order).map((id) =>
               show(id) && modules[id] ? (
                 <div key={id} className="contents" data-menubar-module={id}>

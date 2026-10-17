@@ -9,6 +9,8 @@ import {
   isSystemMount,
   parseLsblk,
   readMountedDisks,
+  SIMULATED_STICK_MARKER,
+  watchDirectory,
 } from "./disks.ts";
 
 // Shaped like util-linux 2.39 `lsblk --json --bytes` on a Raspberry Pi with a USB disk.
@@ -141,7 +143,12 @@ describe("disk listing", () => {
       mountRoot: "/srv/everyos/disks",
       persistent: new Set(["2f6a3c1e-8b4d-4e7a-9f10-3b5c7d9e1a24"]),
     });
-    DiskListSchema.parse({ source: "host", mountRoot: "/srv/everyos/disks", disks });
+    DiskListSchema.parse({
+      source: "host",
+      mountRoot: "/srv/everyos/disks",
+      disks,
+      remembered: [],
+    });
     expect(disks.map((disk) => [disk.name, disk.system, disk.removable])).toEqual([
       ["mmcblk0", true, false],
       ["sda", false, true],
@@ -225,6 +232,59 @@ describe("disk listing", () => {
       expect(
         readMountedDisks({ mountRoot: "/srv/everyos/disks", mountinfo: join(root, "none") }),
       ).toEqual([]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("ticks once at start and once per burst of changes in the watched directory", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "everyos-watch-"));
+    const controller = new AbortController();
+    try {
+      const ticks = watchDirectory(dir, controller.signal, {
+        debounceMs: 50,
+        followUpMs: [],
+        safetyMs: 60_000,
+      })[Symbol.asyncIterator]();
+      expect((await ticks.next()).done).toBe(false);
+      // Several links appearing together (a disk with partitions) give one tick.
+      for (const name of ["a", "b", "c"]) writeFileSync(join(dir, name), "");
+      const next = await Promise.race([
+        ticks.next(),
+        new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 3_000)),
+      ]);
+      expect(next).not.toBe("timeout");
+      controller.abort();
+      expect((await ticks.next()).done).toBe(true);
+    } finally {
+      controller.abort();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("simulates a USB stick that is plugged in, remembered and mounted again by itself", async () => {
+    const root = mkdtempSync(join(tmpdir(), "everyos-sim-stick-"));
+    try {
+      const disks = createDiskSimulator({ mountRoot: root });
+      const stick = async () =>
+        (await disks.list()).disks.find((disk) => disk.name === "sdb")?.volumes[0];
+      expect(await stick()).toBeUndefined();
+      writeFileSync(join(root, SIMULATED_STICK_MARKER), "");
+      expect(await stick()).toMatchObject({ uuid: "5E6F-7A8B", label: "KINGSTON", managed: false });
+      await disks.mount("5E6F-7A8B", true, { uid: 1000, gid: 1000 });
+      expect(await stick()).toMatchObject({ managed: true, persistent: true });
+      // Unplugged without ejecting: gone, but remembered.
+      rmSync(join(root, SIMULATED_STICK_MARKER));
+      const away = await disks.list();
+      expect(away.disks.some((disk) => disk.name === "sdb")).toBe(false);
+      expect(away.remembered).toEqual([{ uuid: "5E6F-7A8B", label: "KINGSTON" }]);
+      // Plugged in again: mounted by itself.
+      writeFileSync(join(root, SIMULATED_STICK_MARKER), "");
+      expect(await stick()).toMatchObject({ managed: true, persistent: true });
+      rmSync(join(root, SIMULATED_STICK_MARKER));
+      // Forgetting a remembered disk that is not plugged in.
+      expect((await disks.unmount("5E6F-7A8B")).remembered).toEqual([]);
+      DiskListSchema.parse(await disks.list());
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

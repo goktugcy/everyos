@@ -30,7 +30,12 @@ export const DiskListSchema = z.strictObject({
       }),
     )
     .max(64),
+  remembered: z
+    .array(z.strictObject({ uuid: DiskUuidSchema, label: z.string().max(128).nullable() }))
+    .max(64),
 });
+/** A tick from the agent's disk watcher: something below /dev/disk changed. */
+export const DiskChangeSchema = z.strictObject({ at: z.number().int().nonnegative() });
 export const DiskMountSchema = z.strictObject({ uuid: DiskUuidSchema, persistent: z.boolean() });
 export const DiskUnmountSchema = z.strictObject({ uuid: DiskUuidSchema });
 /** Browser request: unmounting repeats the UUID as confirmation. */

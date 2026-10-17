@@ -4,6 +4,7 @@ import { MENUBAR_MODULE_IDS, type MenubarModuleId, type MenubarPreferences } fro
 const DEFAULT_ORDER: readonly MenubarModuleId[] = [
   "widgets",
   "notifications",
+  "storage",
   "resources",
   "power",
   "network",
@@ -16,9 +17,14 @@ const DEFAULT_ORDER: readonly MenubarModuleId[] = [
 ];
 
 export function moduleOrder(order?: readonly MenubarModuleId[]): MenubarModuleId[] {
-  return [...new Set([...(order ?? []), ...DEFAULT_ORDER])].filter((id) =>
-    MENUBAR_MODULE_IDS.includes(id),
-  );
+  const result = [...new Set(order ?? [])].filter((id) => MENUBAR_MODULE_IDS.includes(id));
+  // A module added in a later version goes next to its default neighbour, not after the clock.
+  DEFAULT_ORDER.forEach((id, index) => {
+    if (result.includes(id)) return;
+    const before = DEFAULT_ORDER.slice(0, index).findLast((other) => result.includes(other));
+    result.splice(before ? result.indexOf(before) + 1 : 0, 0, id);
+  });
+  return result;
 }
 
 export function moduleVisibility(

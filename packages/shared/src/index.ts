@@ -16,6 +16,8 @@ export * from "./locale.ts";
 export * from "./notifications.ts";
 export * from "./notification-channels.ts";
 export * from "./disks.ts";
+export * from "./transfers.ts";
+export * from "./drive.ts";
 export * from "./permissions.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";

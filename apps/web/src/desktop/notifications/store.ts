@@ -1,11 +1,12 @@
 import {
+  ANNOUNCED_KINDS,
   NOTIFICATION_SEVERITIES,
   type NotificationCategory,
   type NotificationCounts,
   type NotificationEvent,
+  type NotificationList,
   type NotificationPreferences,
   type NotificationView,
-  type NotificationList,
 } from "@everyos/shared";
 import { useEffect } from "react";
 import { create } from "zustand";
@@ -54,7 +55,8 @@ export function shouldToast(
     preferences.toasts &&
     !notification.read &&
     !preferences.mutedCategories.includes(notification.category) &&
-    rank(notification.severity) >= rank(preferences.toastMinSeverity)
+    (rank(notification.severity) >= rank(preferences.toastMinSeverity) ||
+      ANNOUNCED_KINDS.has(notification.kind))
   );
 }
 

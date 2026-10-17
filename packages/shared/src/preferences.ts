@@ -76,6 +76,7 @@ export type DockPosition = (typeof DOCK_POSITIONS)[number];
 export const MENUBAR_MODULE_IDS = [
   "notifications",
   "widgets",
+  "storage",
   "resources",
   "network",
   "power",

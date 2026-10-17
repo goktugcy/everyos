@@ -19,5 +19,6 @@ export async function powerBlockers(
   if (services.apps.activeJobs() > 0) blockers.push("app-jobs");
   if (services.updates.jobs().some((job) => job.status === "running"))
     blockers.push("package-upgrade");
+  if (services.transfers.active() > 0) blockers.push("transfers");
   return blockers;
 }

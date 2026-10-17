@@ -38,6 +38,8 @@ const env = {
   EVERYOS_DEV_TERMINAL: "1",
   // The stand-in tailscaled below (the real LocalAPI client and parsers run against it).
   EVERYOS_TAILSCALE_SOCKET: join(E2E_STATE_DIR, "tailscaled.sock"),
+  // An in-memory Google OAuth and Drive for the Drive browser tests.
+  EVERYOS_DEV_FAKE_GOOGLE: "1",
 };
 
 /**

@@ -18,11 +18,12 @@ import {
 } from "@everyos/shared/schemas";
 import { Hono, type Context, type MiddlewareHandler } from "hono";
 import type { AppEnv } from "../../context.ts";
+import { agentActor } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import { parseJsonBody, parseQuery } from "../../http/validation.ts";
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
-import { AccountFileView } from "./account-file-view.ts";
+import { fileViewFor } from "./file-view.ts";
 import { readFileSettings, writeFileSettings } from "./file-settings.ts";
 
 /** Raster formats that are safe to show in place; everything else downloads. */
@@ -70,17 +71,15 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
   // locations and, for administrators who enabled them, system paths.
   const files = (c: Context<AppEnv>) => {
     const auth = requireAuth(c);
-    const personal = services.files.view({
-      id: auth.user.id,
-      username: auth.user.username,
-      locale: auth.user.locale,
-      personalOnly: services.config.mode === "production",
-      systemRoots:
-        auth.permissions.has("system:manage") && readFileSettings(services.db).systemRoots,
-    });
-    return services.config.mode === "production"
-      ? new AccountFileView(c, services, personal)
-      : personal;
+    return fileViewFor(
+      services,
+      {
+        user: auth.user,
+        permissions: auth.permissions,
+        actor: agentActor(auth, c.get("client").ip),
+      },
+      { signal: c.req.raw.signal, logger: c.get("logger") },
+    );
   };
   const enabled: MiddlewareHandler<AppEnv> = async (c, next) => {
     if (!services.files.enabled && services.config.mode !== "production")

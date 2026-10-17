@@ -10,8 +10,10 @@ icon labels have no plate, only a legibility halo.
 ## The pulse
 
 In the middle of the menu bar sits a 34 × 5 dot matrix, the **pulse**. It is part of the desktop
-shell only (not the mobile shell) and is hidden below 1100 px of width, where it would cover menu
-bar items.
+shell only (not the mobile shell) and is hidden below 1100 px of width. It stays in the free space
+between the menu bar's left items (logo, app name, connection) and its right modules: centred when
+it fits there, moved aside when long app names or many modules take the middle, and hidden only
+when it does not fit at all.
 
 What the dots show:
 
@@ -24,6 +26,15 @@ What the dots show:
 - **Unread notifications:** an accent dot at the right edge (live, no polling).
 - **Dragged files:** anywhere on the desktop, the dots turn into blinking arrows; dropping onto
   the pulse opens the shelf.
+- **Files on the move** ([transfers.md](transfers.md)): a three-row progress bar fills from the
+  left, with a blinking arrow for the direction at the right end (up, down or both); transfers of
+  unknown size show the sweeping light instead of the bar. The tooltip names the file or the
+  count, the speed and the time left.
+- **Disks coming and going:** for five seconds the pill shows **New disk connected** or **Disk
+  removed** with the disk's name (two lines, the pill keeps its size), whatever the dots were
+  showing ([disks.md](disks.md)). Several disks at once are named as "first +n".
+
+Dragging wins over everything; then a disk message, transfers and the heartbeat.
 
 Hovering the dots shows the current state as a tooltip. Reduced motion and the Performance render
 mode stop the animations.
@@ -46,6 +57,12 @@ pulse") or Settings › Desktop › Pulse. The `pulse` preference document store
 - **System:** live CPU, memory and temperature (`system:read`).
 - **Activity:** running backup/restore jobs (`GET /api/backups/job`, `backups:manage`) and
   package updates (`GET /api/updates/jobs`, `system:read`), each opening its app.
+
+**Transfers**
+
+The same list as the menu bar's storage item: running and finished transfers with progress, speed,
+time left and a stop button, the plugged-in disks (open, mount, eject) and Google Drive. The tab
+shows the number of running transfers; the dots' context menu opens it.
 
 **Shelf**
 

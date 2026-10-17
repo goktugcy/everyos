@@ -17,6 +17,8 @@ const TOPIC_EVENTS: Record<EventTopic, readonly string[]> = {
   docker: ["docker.stats", "docker.change"],
   notifications: ["notifications"],
   release: ["release.status"],
+  disks: ["disks.change"],
+  transfers: ["transfers"],
 };
 
 export interface TopicHandlers {

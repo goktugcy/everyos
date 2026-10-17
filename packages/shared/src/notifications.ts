@@ -60,12 +60,28 @@ export const NOTIFICATION_KINDS = {
   "login-locked": { category: "security", permission: "audit:read", condition: false },
   /** An administrator restarts or powers off the host. */
   "power-scheduled": { category: "system", permission: "system:read", condition: false },
+  /** A disk was plugged in (and mounted when EveryOS remembers it). */
+  "disk-attached": { category: "storage", permission: "system:manage", condition: false },
+  /** A disk was unplugged (a warning when it was still mounted). */
+  "disk-detached": { category: "storage", permission: "system:read", condition: false },
+  /** A long transfer of the person's own files finished (personal notification). */
+  "transfer-succeeded": { category: "storage", permission: "files:read", condition: false },
+  "transfer-failed": { category: "storage", permission: "files:read", condition: false },
 } as const satisfies Record<
   string,
   { category: NotificationCategory; permission: Permission; condition: boolean }
 >;
 
 export type NotificationKind = keyof typeof NOTIFICATION_KINDS;
+
+/**
+ * Kinds that pop up whatever the minimum pop-up severity: they answer something the person just
+ * did (plugging in or pulling out a disk). Muted categories and turned-off pop-ups still apply.
+ */
+export const ANNOUNCED_KINDS: ReadonlySet<NotificationKind> = new Set([
+  "disk-attached",
+  "disk-detached",
+]);
 
 export const NOTIFICATION_KIND_IDS = Object.keys(NOTIFICATION_KINDS) as NotificationKind[];
 

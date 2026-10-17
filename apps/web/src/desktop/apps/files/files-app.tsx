@@ -13,6 +13,7 @@ import {
   ArrowUp,
   ChevronRight,
   ClipboardPaste,
+  CloudUpload,
   Copy,
   Download,
   Eye,
@@ -43,6 +44,11 @@ import {
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { localTransfers } from "../../../features/transfers/transfers.ts";
+import { DriveBrowser } from "../../../features/drive/drive-browser.tsx";
+import { driveApi, isDriveConnected, useDriveAccount } from "../../../features/drive/drive.ts";
+import { DriveFolderPicker } from "../../../features/drive/pickers.tsx";
+import { shownVolumes, useLiveDisks } from "../../../features/disks/disks.tsx";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { ApiRequestError, uploadWithProgress } from "../../../lib/api.ts";
@@ -118,6 +124,20 @@ export default function FilesApp() {
   const { location, host } = useLocationState(roots);
   const applicationsOpen =
     canReadApps && (host.appState as { place?: unknown } | undefined)?.place === "applications";
+  const driveView = useDriveAccount((state) => state.view);
+  const driveOpen =
+    isDriveConnected(driveView) &&
+    (host.appState as { place?: unknown } | undefined)?.place === "drive";
+  const driveFolder =
+    ((host.appState as { driveFolder?: unknown } | undefined)?.driveFolder as string | undefined) ??
+    "root";
+  const [sendToDrive, setSendToDrive] = useState<string[] | null>(null);
+  const [driveNotice, setDriveNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!driveNotice) return;
+    const timer = window.setTimeout(() => setDriveNotice(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [driveNotice]);
   const [back, setBack] = useState<FileLocation[]>([]);
   const [forward, setForward] = useState<FileLocation[]>([]);
   const [listing, setListing] = useState<FileListing | null>(null);
@@ -174,9 +194,16 @@ export default function FilesApp() {
     [],
   );
 
+  // Disks mounted or removed elsewhere (desktop, menu bar, Settings) change the locations.
+  const mountedDisks = useLiveDisks((state) =>
+    shownVolumes(state.list)
+      .filter((entry) => entry.volume.managed)
+      .map((entry) => entry.volume.uuid)
+      .join(","),
+  );
   useEffect(() => {
     void loadRoots();
-  }, [loadRoots]);
+  }, [loadRoots, mountedDisks]);
 
   // Finder's default is the icon view; each window remembers its own choice.
   const view: ViewMode =
@@ -225,14 +252,16 @@ export default function FilesApp() {
 
   useEffect(() => {
     host.setTitle(
-      applicationsOpen
-        ? t("apps.applications")
-        : location?.path
-          ? nameOf(location.path)
-          : (root?.name ?? ""),
+      driveOpen
+        ? t("drive.title")
+        : applicationsOpen
+          ? t("apps.applications")
+          : location?.path
+            ? nameOf(location.path)
+            : (root?.name ?? ""),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- title follows the location
-  }, [location?.path, root?.name, applicationsOpen, t]);
+  }, [location?.path, root?.name, applicationsOpen, driveOpen, t]);
 
   const refresh = useCallback(() => setRevision((n) => n + 1), []);
 
@@ -263,6 +292,18 @@ export default function FilesApp() {
       ...(host.appState as object | undefined),
       ...(home ? { root: home.id, path: "" } : {}),
       place: "applications",
+    });
+  };
+  const openDrive = (folder = "root") => {
+    endMarquee();
+    setSelected(new Set());
+    setRenaming(null);
+    setResults(null);
+    setSearchText("");
+    host.setAppState({
+      ...(host.appState as object | undefined),
+      place: "drive",
+      driveFolder: folder,
     });
   };
   const homeApplicationsEntry = showHomeApplications ? (
@@ -439,12 +480,31 @@ export default function FilesApp() {
     ]);
     const update = (id: string, patch: Partial<UploadItem>) =>
       setUploads((current) => current.map((u) => (u.id === id ? { ...u, ...patch } : u)));
+    const intoRoot = roots?.find((candidate) => candidate.id === into.root);
+    const destination = [intoRoot?.name ?? into.root, ...into.path.split("/").filter(Boolean)].join(
+      " › ",
+    );
     for (const [index, file] of files.entries()) {
       const item = items[index]!;
       update(item.id, { status: "uploading" });
+      // Listed with speed and time left in the menu bar and the dock shelf, where it can be stopped.
+      const controller = new AbortController();
+      const transfer = localTransfers.start({
+        id: item.id,
+        name: file.name,
+        to: destination,
+        total: file.size,
+        abort: () => controller.abort(),
+      });
       const send = (overwrite: boolean) =>
-        uploadWithProgress(filesApi.uploadPath(into, file.name, overwrite), file, (loaded, total) =>
-          update(item.id, { loaded, total }),
+        uploadWithProgress(
+          filesApi.uploadPath(into, file.name, overwrite),
+          file,
+          (loaded, total) => {
+            update(item.id, { loaded, total });
+            transfer.progress(loaded, total);
+          },
+          controller.signal,
         );
       try {
         try {
@@ -459,13 +519,22 @@ export default function FilesApp() {
           });
           if (!replace) {
             update(item.id, { status: "error", error: t("files.skipped") });
+            transfer.fail("CONFLICT");
             continue;
           }
           await send(true);
         }
         update(item.id, { status: "done", loaded: file.size });
+        transfer.done();
       } catch (caught) {
-        update(item.id, { status: "error", error: errorMessage(t, caught) });
+        const cancelled = caught instanceof DOMException && caught.name === "AbortError";
+        update(item.id, {
+          status: "error",
+          error: cancelled ? t("transfers.cancelled") : errorMessage(t, caught),
+        });
+        transfer.fail(
+          cancelled ? "CANCELLED" : caught instanceof ApiRequestError ? caught.code : "UNKNOWN",
+        );
       }
     }
     filesChanged();
@@ -758,6 +827,18 @@ export default function FilesApp() {
         disabled: !single,
         onSelect: () => open(entry),
       },
+      ...(isDriveConnected(driveView) && kindOf(entry) !== "link"
+        ? [
+            {
+              kind: "item" as const,
+              id: "send-to-drive",
+              label: t("drive.browser.sendToDrive"),
+              icon: <CloudUpload />,
+              permission: "files:write" as const,
+              onSelect: () => setSendToDrive(paths),
+            },
+          ]
+        : []),
       ...(!folder && kindOf(entry) !== "link"
         ? [
             {
@@ -968,11 +1049,25 @@ export default function FilesApp() {
         onSystem={(enabled) => void toggleSystem(enabled)}
         applicationsOpen={applicationsOpen}
         onApplications={canReadApps ? openApplications : undefined}
+        drive={driveView}
+        driveOpen={driveOpen}
+        onDrive={() => openDrive()}
         drops={{ allowDrop, drop, dropTarget, clearDrop: () => setDropTarget(null) }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {applicationsOpen ? (
+        {driveOpen ? (
+          <DriveBrowser
+            key={driveFolder}
+            folder={driveFolder}
+            canWrite={canWrite}
+            onFolder={(id) => openDrive(id)}
+            onBack={() => {
+              const target = home ? { root: home.id, path: "" } : location;
+              if (target) go(target, false);
+            }}
+          />
+        ) : applicationsOpen ? (
           <>
             <div className="flex shrink-0 items-center gap-2 border-b border-line px-2 py-1.5">
               <button
@@ -1430,11 +1525,39 @@ export default function FilesApp() {
                 {listing?.truncated ? ` · ${t("files.truncated")}` : ""}
                 {root?.readOnly ? ` · ${t("files.readOnly")}` : ""}
               </span>
+              {driveNotice ? (
+                <span className="truncate" role="status" data-testid="drive-notice">
+                  {driveNotice}
+                </span>
+              ) : null}
               <UploadStatus items={uploads} onClear={() => setUploads([])} />
             </div>
           </>
         )}
       </div>
+      {sendToDrive && location ? (
+        <DriveFolderPicker
+          title={t("drive.browser.pickDriveFolder", {
+            name: sendToDrive.length === 1 ? nameOf(sendToDrive[0]!) : sendToDrive.length,
+          })}
+          confirmLabel={t("drive.browser.sendHere")}
+          onClose={() => setSendToDrive(null)}
+          onPick={(folder) => {
+            const paths = sendToDrive;
+            const root = location.root;
+            setSendToDrive(null);
+            void (async () => {
+              for (const path of paths)
+                await driveApi
+                  .transfer({ kind: "files", root, path }, { kind: "drive", id: folder })
+                  .then((started) =>
+                    setDriveNotice(t("drive.browser.started", { name: started.name })),
+                  )
+                  .catch(setActionError);
+            })();
+          }}
+        />
+      ) : null}
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
       <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />
       <ImagePreview location={preview} onClose={() => setPreview(null)} />

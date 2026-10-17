@@ -5,6 +5,7 @@ import {
   type OperationResult,
   type UnaryOperationName,
 } from "@everyos/agent-protocol";
+import type { Logger } from "@everyos/logger";
 import type { Context } from "hono";
 import type { AppEnv, AuthState } from "../context.ts";
 import { requireAuth } from "../middleware/auth.ts";
@@ -68,18 +69,34 @@ export async function callAgent<N extends UnaryOperationName>(
   op: N,
   params: OperationParams<N>,
 ): Promise<OperationResult<N>> {
-  const auth = requireAuth(c);
+  return callAgentAs(services, agentActor(requireAuth(c), c.get("client").ip), op, params, {
+    signal: c.req.raw.signal,
+    logger: c.get("logger"),
+  });
+}
+
+/** Calls a unary agent operation for a person outside a request (e.g. a running transfer). */
+export async function callAgentAs<N extends UnaryOperationName>(
+  services: Services,
+  actor: UserActor,
+  op: N,
+  params: OperationParams<N>,
+  options: { signal?: AbortSignal | undefined; logger: Logger },
+): Promise<OperationResult<N>> {
   try {
-    return await services.agent.call(op, params, agentActor(auth, c.get("client").ip), {
-      signal: c.req.raw.signal,
-    });
+    return await services.agent.call(
+      op,
+      params,
+      actor,
+      options.signal ? { signal: options.signal } : {},
+    );
   } catch (error) {
     // A client that navigates away (or React re-running an effect in dev)
     // aborts its request; that is routine, not a failure worth a warning.
-    const logger = c.get("logger");
+    const logger = options.logger;
     if (!(error instanceof AgentClientError)) logger.warn("Agent operation failed", { op, error });
     else if (
-      c.req.raw.signal.aborted ||
+      options.signal?.aborted ||
       error.agentCode === "not_found" ||
       error.agentCode === "conflict" ||
       error.agentCode === "unsupported"

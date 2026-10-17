@@ -37,6 +37,10 @@ export function notificationText(
     params.power = t(`hostPower.progress.${params.power as "reboot"}`, {
       defaultValue: params.power,
     });
+  if (params.mounted === "yes" || params.mounted === "no")
+    params.mounted = t(`disks.attachedState.${params.mounted}`);
+  if (params.unsafe === "yes" || params.unsafe === "no")
+    params.unsafe = t(`disks.detachedState.${params.unsafe}`);
   return {
     title: t(`notifications.kinds.${notification.kind}.title`, params),
     body: t(`notifications.kinds.${notification.kind}.body`, params),
@@ -63,6 +67,8 @@ const ACTIONS: Partial<
   "login-locked": { appId: "everyos.audit" },
   "security-updates": { appId: "everyos.updates" },
   "reboot-required": { appId: "everyos.updates" },
+  "disk-attached": { appId: "everyos.settings", appState: { section: "disks" } },
+  "disk-detached": { appId: "everyos.settings", appState: { section: "disks" } },
   "everyos-update-available": { appId: "everyos.settings", appState: { section: "about" } },
   "backup-succeeded": { appId: "everyos.backups" },
   "backup-failed": { appId: "everyos.backups" },

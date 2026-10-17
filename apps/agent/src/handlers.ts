@@ -586,6 +586,13 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     "backups.appdata.import.commit": (params, context) => appData().commit(params, context),
     "backups.appdata.import.abort": (params, context) => appData().abort(params, context),
 
+    "disks.watch": async function* (_params, { signal }) {
+      try {
+        for await (const tick of disks().watch(signal)) yield tick;
+      } catch (error) {
+        if (!signal.aborted) toOperationError(error);
+      }
+    },
     "docker.events": async function* (_params, { signal }) {
       try {
         for await (const event of docker.events(signal)) yield event;

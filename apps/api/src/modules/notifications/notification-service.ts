@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
 import {
+  ANNOUNCED_KINDS,
   NOTIFICATION_KINDS,
   NOTIFICATION_SEVERITIES,
   type NotificationCategory,
@@ -233,12 +234,16 @@ export class NotificationService {
       );
       return;
     }
-    const renotify = now - recent.notified_at >= RENOTIFY_MS;
+    // Announced kinds answer what the person just did: each one pops up, as it is now.
+    const announced = ANNOUNCED_KINDS.has(input.kind);
+    const renotify = announced || now - recent.notified_at >= RENOTIFY_MS;
     this.#db.transaction(() => {
       this.#db.run(
         "UPDATE notifications SET count = count + 1, params = ?, severity = ?, updated_at = ?, notified_at = ? WHERE id = ?",
         JSON.stringify(params),
-        rank(input.severity) > rank(recent.severity) ? input.severity : recent.severity,
+        announced || rank(input.severity) > rank(recent.severity)
+          ? input.severity
+          : recent.severity,
         now,
         renotify ? now : recent.notified_at,
         recent.id,

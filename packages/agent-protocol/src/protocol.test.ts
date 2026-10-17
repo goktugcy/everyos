@@ -116,6 +116,7 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "disks.list": notUsed,
     "disks.mount": notUsed,
     "disks.unmount": notUsed,
+    "disks.watch": notUsed,
     "network.status": notUsed,
     "tailscale.status": notUsed,
     "tailscale.details": notUsed,

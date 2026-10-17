@@ -41,6 +41,7 @@ import { useLauncher } from "../launcher/launcher-store.ts";
 import type { MenuEntry } from "../menus/menu-model.ts";
 import { ContextMenuArea } from "../menus/menus.tsx";
 import { desktop } from "../state/controller.ts";
+import { StorageShelf } from "./storage-shelf.tsx";
 import { addShortcut } from "../state/desktop-ops.ts";
 import { updatePreference, usePreferences } from "../state/preferences-store.ts";
 import { useWindowManager, wm } from "../state/window-store.ts";
@@ -497,6 +498,16 @@ export function Dock() {
               </ul>
             </>
           ) : null}
+          <StorageShelf
+            side={side}
+            size={dock.iconSize}
+            vertical={vertical}
+            tooltip={(label, trigger) => (
+              <WithTooltip label={label} side={side}>
+                {trigger}
+              </WithTooltip>
+            )}
+          />
           <span id="dock-reorder-hint" className="sr-only">
             {t("dock.reorderHint")}
           </span>

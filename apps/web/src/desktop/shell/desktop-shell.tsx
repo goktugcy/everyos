@@ -26,9 +26,12 @@ import { LockScreen } from "../lock/lock-screen.tsx";
 import { useAutoLock } from "../lock/use-auto-lock.ts";
 import { ConfirmHost } from "../menus/confirm.tsx";
 import { PowerHost } from "../power/power.tsx";
+import { DiskDialogHost, useLiveDisksStream } from "../../features/disks/disks.tsx";
+import { useTransfersStream } from "../../features/transfers/transfers-stream.ts";
+import { useDriveAccountLoader, useDriveConsentReturn } from "../../features/drive/drive.ts";
 import { Menubar } from "../menubar/menubar.tsx";
 import { useDesktopShortcuts } from "../shortcuts.ts";
-import { resolveSpec } from "../state/controller.ts";
+import { desktop, resolveSpec } from "../state/controller.ts";
 import { pruneUnavailable } from "../state/desktop-ops.ts";
 import {
   discardPending,
@@ -144,6 +147,7 @@ function DesktopWorkspace() {
         <Launcher />
         <ConfirmHost />
         <PowerHost />
+        <DiskDialogHost />
         {saveError ? (
           <div className="fixed right-3 top-12 z-[75] w-80">
             <Alert tone="warning">{t("common.saveFailed")}</Alert>
@@ -168,6 +172,12 @@ export function DesktopShell() {
   const locked = useSessionStore((state) => state.locked);
   const mobile = useMediaQuery("(max-width: 767px)");
   useNotificationStream(ready && !locked && Boolean(permissions?.includes("notifications:read")));
+  useLiveDisksStream(ready && !locked && Boolean(permissions?.includes("system:read")));
+  useTransfersStream(ready && !locked && Boolean(permissions?.includes("files:read")));
+  useDriveAccountLoader(ready && !locked && Boolean(permissions?.includes("files:read")));
+  useDriveConsentReturn(ready && !locked && Boolean(permissions?.includes("files:read")), () =>
+    desktop.openSettings("connections"),
+  );
   const [loadError, setLoadError] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
   const desktopDoc = usePreferences((state) => state.desktop);

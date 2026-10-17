@@ -1,5 +1,5 @@
 import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
-import { ChevronLeft, Lock, LogOut, Power, RotateCcw, Search } from "lucide-react";
+import { ArrowDownUp, ChevronLeft, Lock, LogOut, Power, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
@@ -16,6 +16,10 @@ import { useAutoLock } from "../lock/use-auto-lock.ts";
 import { ConfirmHost } from "../menus/confirm.tsx";
 import { NotificationBell } from "../notifications/center.tsx";
 import { power, PowerHost } from "../power/power.tsx";
+import { DiskDialogHost } from "../../features/disks/disks.tsx";
+import { StoragePanel, TransferRing } from "../../features/transfers/storage-panel.tsx";
+import { useTransfers, useTransferSummary } from "../../features/transfers/transfers.ts";
+import { Dialog } from "../../components/ui/dialog.tsx";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
 import { AppContent } from "../windows/app-content.tsx";
@@ -74,6 +78,11 @@ export function MobileShell() {
     />
   );
   const canPower = permissions.includes("system:manage");
+  const storage = (
+    <MobileStorage
+      onOpenApp={(appId, appState) => setOpen({ appId: appId as AppId, appState, title: "" })}
+    />
+  );
 
   return (
     <>
@@ -101,7 +110,10 @@ export function MobileShell() {
               <h1 className="min-w-0 flex-1 truncate text-center text-sm font-semibold">
                 {open.title || t(manifest.titleKey)}
               </h1>
-              <span className="flex w-16 justify-end">{bell}</span>
+              <span className="flex w-20 justify-end">
+                {storage}
+                {bell}
+              </span>
             </>
           ) : (
             <>
@@ -110,6 +122,7 @@ export function MobileShell() {
               <span className="ml-auto text-sm text-fg-muted">
                 <Clock />
               </span>
+              {storage}
               {bell}
             </>
           )}
@@ -193,8 +206,45 @@ export function MobileShell() {
         )}
         <ConfirmHost />
         <PowerHost />
+        <DiskDialogHost />
       </div>
       {locked ? <LockScreen /> : null}
+    </>
+  );
+}
+
+/** While files move, a ring with the progress; it opens the transfers and disks panel. */
+function MobileStorage({
+  onOpenApp,
+}: {
+  onOpenApp: (appId: string, appState?: Record<string, unknown>) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const summary = useTransferSummary();
+  const listed = useTransfers((state) => state.local.length + state.server.length);
+  if (!listed && !open) return null;
+  return (
+    <>
+      <button
+        type="button"
+        className="grid size-9 place-items-center rounded-everyos-sm text-fg hover:bg-hover/10"
+        aria-label={t("transfers.storage")}
+        data-testid="mobile-storage"
+        onClick={() => setOpen(true)}
+      >
+        <TransferRing summary={summary} size={24}>
+          <ArrowDownUp className="size-3.5" aria-hidden />
+        </TransferRing>
+      </button>
+      <Dialog open={open} onOpenChange={setOpen} title={t("transfers.storage")}>
+        <div className="px-6 py-5">
+          <StoragePanel
+            onNavigate={() => setOpen(false)}
+            openApp={(appId, appState) => onOpenApp(appId, appState)}
+          />
+        </div>
+      </Dialog>
     </>
   );
 }

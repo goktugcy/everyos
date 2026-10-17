@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { numberedName } from "../apps/files/lib.ts";
 import {
   arrowDots,
+  transferDots,
   dayKey,
   graphColumns,
   firstDayOfWeek,
@@ -97,5 +98,22 @@ describe("pulse dot matrix", () => {
       expect(row).toBeGreaterThanOrEqual(0);
       expect(row).toBeLessThan(5);
     }
+  });
+});
+
+describe("transfer frames", () => {
+  it("fills a three-row bar from the left and draws the direction at the right end", () => {
+    const half = transferDots(0.5, "upload");
+    const fill = [...half].filter(([, kind]) => kind !== "arrow");
+    // 27 bar columns: 14 lit, the last one the leading edge.
+    expect(fill.length).toBe(14 * 3);
+    expect(half.get("13:2")).toBe("head");
+    expect(half.get("0:0")).toBeUndefined();
+    expect([...half.values()].filter((kind) => kind === "arrow")).toHaveLength(9);
+    // Unknown totals show only the arrow; finished bars have no leading edge.
+    expect([...transferDots(null, "download").values()].every((kind) => kind === "arrow")).toBe(
+      true,
+    );
+    expect([...transferDots(1, "both").values()].includes("head")).toBe(false);
   });
 });

@@ -57,6 +57,12 @@ volume deletion, logs, live stats and error recovery run against the in-memory s
 the developer's containers. Socket-level Docker tests use temporary fake Unix-socket servers;
 Compose tests mock execution and inspect the exact arguments and environment.
 
+The browser tests also set `EVERYOS_DEV_FAKE_GOOGLE=1`, which starts an in-memory stand-in for
+Google's OAuth and Drive endpoints inside a development API ([drive.md](drive.md)), and plug in the
+simulator's USB stick by creating `<state dir>/disks/.simulated-usb-stick`
+([disks.md](disks.md)). `pnpm dev` can use the same variable to try Google Drive without a Google
+account.
+
 After signing in, open System from the dock for real host information, or Settings for appearance,
 desktop/dock, account and security preferences. Files and folders on the desktop live in the
 home's Desktop folder (inside EveryOS's data directory, not the host's home directories). Keyboard

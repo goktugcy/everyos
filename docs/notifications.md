@@ -31,15 +31,17 @@ Retention: 30 days, and at most 2,000 notifications. Open conditions are kept.
 
 ## Sources
 
-| Source                                       | Kinds                                                                                                                             |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `HostMonitor` (API, every 2 min, after 20 s) | service, storage, container, hardware and security-update conditions; internet (two failed checks), Tailscale, agent (two checks) |
-| `AppService` job completion                  | `app-succeeded`, `app-failed` (app name, action, reason, rollback)                                                                |
-| Login limiter                                | `login-locked` when an account or address becomes locked (`audit:read`)                                                           |
-| `HostMonitor` Tailscale checks               | `tailscale-key-expiry` (`system:read`), `tailscale-funnel` (`system:manage`, security)                                            |
-| Phase 7 modules                              | updates ([updates.md](updates.md)), backups ([backups.md](backups.md)) and scheduled tasks ([tasks.md](tasks.md))                 |
-| `HostMonitor` restart and app checks         | `reboot-required` (packages, kernel), `app-update-available` per installed app (catalog definition changed)                       |
-| Power route                                  | `power-scheduled` when an administrator restarts or shuts down the host                                                           |
+| Source                                       | Kinds                                                                                                                              |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `HostMonitor` (API, every 2 min, after 20 s) | service, storage, container, hardware and security-update conditions; internet (two failed checks), Tailscale, agent (two checks)  |
+| `AppService` job completion                  | `app-succeeded`, `app-failed` (app name, action, reason, rollback)                                                                 |
+| Login limiter                                | `login-locked` when an account or address becomes locked (`audit:read`)                                                            |
+| `HostMonitor` Tailscale checks               | `tailscale-key-expiry` (`system:read`), `tailscale-funnel` (`system:manage`, security)                                             |
+| Phase 7 modules                              | updates ([updates.md](updates.md)), backups ([backups.md](backups.md)) and scheduled tasks ([tasks.md](tasks.md))                  |
+| `HostMonitor` restart and app checks         | `reboot-required` (packages, kernel), `app-update-available` per installed app (catalog definition changed)                        |
+| Power route                                  | `power-scheduled` when an administrator restarts or shuts down the host                                                            |
+| Disk watcher (`DiskService`)                 | `disk-attached` (administrators; mounted by itself or not), `disk-detached` for every removed disk (a warning when it was mounted) |
+| Transfers                                    | `transfer-succeeded`, `transfer-failed` for the person's own transfers that ran 20 s or more, or failed                            |
 
 The monitor reuses the agent's cached collectors (`collectAlerts`). It resolves a condition only
 when the source that reports it answered: a failing check never clears a real problem.
@@ -113,9 +115,10 @@ touch screens. The center offers:
 - older pages;
 - deep links to the related app (opened only when the user may open that app).
 
-Pop-ups appear at the top right. Critical ones stay until closed; others disappear after 8 s. The
-preference document `notifications` holds `toasts`, `toastMinSeverity` (default: warning) and
-`mutedCategories`. Muted categories stay listed, but are not counted and never pop up.
+Pop-ups appear at the top right. Critical ones stay until closed; others disappear after 8 s.
+Disk notices (`ANNOUNCED_KINDS`) pop up whatever the minimum severity, and every time, because
+they answer what the person just did. The preference document `notifications` holds `toasts`,
+`toastMinSeverity` (default: warning) and `mutedCategories`. Muted categories stay listed, but are not counted and never pop up.
 
 ## EveryOS version updates
 

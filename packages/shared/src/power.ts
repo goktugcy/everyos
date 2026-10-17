@@ -64,5 +64,6 @@ export const POWER_BLOCKERS = [
   "restore",
   "app-jobs",
   "package-upgrade",
+  "transfers",
 ] as const;
 export type PowerBlocker = (typeof POWER_BLOCKERS)[number];

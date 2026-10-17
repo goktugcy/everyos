@@ -100,6 +100,7 @@ export class AccountWorkers {
       "apps.inspect",
       "power.reboot.status",
       "disks.list",
+      "disks.watch",
     ]);
     for (const [op, contract] of Object.entries(AGENT_OPERATIONS)) {
       if (op.startsWith("identity.") || op.startsWith("terminal.") || publicReads.has(op)) continue;

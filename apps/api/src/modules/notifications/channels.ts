@@ -126,6 +126,10 @@ export function renderNotification(
     params.action = message(language, `appStore.actions.${params.action}`) ?? params.action;
   if (typeof params.power === "string")
     params.power = message(language, `hostPower.progress.${params.power}`) ?? params.power;
+  if (params.mounted === "yes" || params.mounted === "no")
+    params.mounted = message(language, `disks.attachedState.${params.mounted}`) ?? "";
+  if (params.unsafe === "yes" || params.unsafe === "no")
+    params.unsafe = message(language, `disks.detachedState.${params.unsafe}`) ?? "";
   if (typeof params.reason === "string") {
     const code = params.reason.split(":")[0]!;
     params.reason =

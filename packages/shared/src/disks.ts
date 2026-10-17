@@ -42,7 +42,7 @@ export interface DiskVolume {
   mountpoints: string[];
   /** Mounted by EveryOS under its mount root. */
   managed: boolean;
-  /** EveryOS mounts it again when the host starts. */
+  /** EveryOS mounts it whenever it is plugged in and when the host starts. */
   persistent: boolean;
   /** The filesystem is one EveryOS can mount. */
   supported: boolean;
@@ -61,10 +61,17 @@ export interface DiskDevice {
   volumes: DiskVolume[];
 }
 
+/** A disk set to mount whenever it is plugged in, while it is not plugged in. */
+export interface RememberedDisk {
+  uuid: string;
+  label: string | null;
+}
+
 export interface DiskList {
   source: "host" | "simulated";
   mountRoot: string;
   disks: DiskDevice[];
+  remembered: RememberedDisk[];
 }
 
 /** Why a volume cannot be mounted, as the API reports it. */
