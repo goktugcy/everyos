@@ -1,3 +1,13 @@
+EveryOS 0.1.29 fixes the pulse after file drops and deleting on USB disks.
+
+- Dropping files on a Files window or the desktop no longer leaves the pulse showing its drop
+  arrows; they also go away when a drag is cancelled.
+- While files move, the bottom two rows of the pulse fill like a progress bar, and the amount
+  moved, the total and the speed are written right above them ("↑ 12,4 MB / 48 MB · 3,2 MB/s").
+  The usual dots return when the transfer has finished.
+- Deleting files on FAT, exFAT and NTFS USB disks works again: they go to the trash like
+  everywhere else and can be restored or emptied.
+
 EveryOS 0.1.28 brings USB disks to the desktop, Google Drive into Files, and live progress for
 every transfer.
 
