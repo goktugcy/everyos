@@ -1,3 +1,20 @@
+EveryOS 0.1.27 brings the essentials of a home server: restart and shutdown, disks, notifications
+outside the app and settings for installed apps.
+
+- Restart or shut down the server from the EveryOS menu or on your phone. EveryOS asks for your
+  password, warns about work that would be interrupted (backups, app jobs, package upgrades) and
+  never interrupts an EveryOS update. Updates shows when installed updates need a restart.
+- Settings › Disks lists your disks and mounts extra and USB disks, once or at every startup. They
+  appear in Files under Disks. EveryOS never formats a disk and never touches the system disk.
+  Remove a disk safely before unplugging it.
+- Notifications can also reach you through ntfy, Telegram, e-mail or a webhook (Discord, Slack or
+  JSON), each with its own minimum severity, categories and language, and a test message.
+- Change an installed app's settings later. When its catalog definition changes, EveryOS notifies
+  you and applies the update with your values kept.
+- The notification center is available on phones.
+- Restarting, shutting down and mounting disks need your linked Linux account with sudo
+  authorized; the dialogs offer to authorize it when it is missing.
+
 EveryOS 0.1.26 adds an AI chat widget and lets you switch the model behind every chat.
 
 - The chat shows the model in use next to the assistant, and every answer names the model that
