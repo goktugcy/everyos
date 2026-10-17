@@ -32,3 +32,37 @@ export interface PowerStatus {
   batteries: BatteryReading[];
   supplies: PowerSupplyReading[];
 }
+
+/** What an administrator can do with the host's power; `shutdown` powers it off. */
+export const POWER_ACTIONS = ["reboot", "shutdown"] as const;
+export type PowerAction = (typeof POWER_ACTIONS)[number];
+/** Seconds between the accepted request and the host acting on it, so clients get an answer. */
+export const POWER_DELAY_SECONDS = 5;
+
+/** Whether the host must restart to finish installed updates. */
+export interface RebootStatus {
+  source: "host" | "simulated";
+  required: boolean;
+  /** `flag`: the distribution's reboot-required marker; `kernel`: the running kernel's modules are gone. */
+  reasons: Array<"flag" | "kernel">;
+  /** Packages that asked for the restart, when the distribution lists them. */
+  packages: string[];
+  kernel: string | null;
+}
+
+export interface PowerActionResult {
+  source: "host" | "simulated";
+  action: PowerAction;
+  /** When the host acts (epoch milliseconds). */
+  at: number;
+}
+
+/** Work a power action would interrupt; `release-install` cannot be overridden. */
+export const POWER_BLOCKERS = [
+  "release-install",
+  "backup",
+  "restore",
+  "app-jobs",
+  "package-upgrade",
+] as const;
+export type PowerBlocker = (typeof POWER_BLOCKERS)[number];

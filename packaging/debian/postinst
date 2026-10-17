@@ -18,6 +18,14 @@ if [ "$1" = configure ]; then
   chmod 0700 /var/lib/everyos-updates
   chown root:root /var/lib/everyos-agent
   chmod 0700 /var/lib/everyos-agent
+  # Settings › Disks mounts volumes below this directory (one per filesystem UUID).
+  for dir in /srv/everyos /srv/everyos/disks; do
+    if [ -L "$dir" ]; then echo 'Unsafe EveryOS directory' >&2; exit 1; fi
+    mkdir -p "$dir"
+  done
+  # Linux accounts reach mounted disks through Files, so the path stays traversable.
+  chown root:root /srv/everyos /srv/everyos/disks
+  chmod 0755 /srv/everyos /srv/everyos/disks
   for file in config.yaml agent.yaml agent.key; do
     if [ -L "/etc/everyos/$file" ]; then echo 'Unsafe EveryOS configuration' >&2; exit 1; fi
   done

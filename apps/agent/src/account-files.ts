@@ -4,8 +4,9 @@ import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { PassThrough, Readable } from "node:stream";
 import { once } from "node:events";
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
-import { roleHasPermission } from "@everyos/shared";
+import { diskRootId, roleHasPermission } from "@everyos/shared";
 import type { Logger } from "@everyos/logger";
+import { readMountedDisks } from "@everyos/system";
 import {
   FileService,
   SYSTEM_ROOTS,
@@ -15,6 +16,8 @@ import { ApiError } from "../../api/src/http/errors.ts";
 
 export function accountFiles(options: {
   roots: FileRootConfig[];
+  /** Disks mounted from Settings › Disks appear as Files locations. */
+  disksRoot: string;
   home: string;
   userId: string;
   logger: Logger;
@@ -53,6 +56,13 @@ export function accountFiles(options: {
         readOnly: false,
         kind: "location" as const,
       },
+      ...readMountedDisks({ mountRoot: options.disksRoot }).map((disk) => ({
+        id: diskRootId(disk.uuid),
+        name: disk.label ?? disk.uuid,
+        path: disk.path,
+        readOnly: disk.readOnly,
+        kind: "disk" as const,
+      })),
     ];
     if (
       params.systemRoots &&
@@ -82,7 +92,8 @@ export function accountFiles(options: {
       if (error instanceof ApiError) {
         if (error.status === 403) throw new OperationError("policy_denied", "LINUX_FILE_DENIED");
         if (error.status === 404) throw new OperationError("not_found", "File not found");
-        if (error.status === 409) throw new OperationError("conflict", error.code);
+        if (error.status === 409 || error.status === 507)
+          throw new OperationError("conflict", error.code);
         throw new OperationError("failed", error.code);
       }
       throw error;

@@ -43,6 +43,15 @@ export const AppInstallRequestSchema = z.strictObject({
   dataFrom: z.string().uuid().optional(),
   confirmDataFrom: z.string().uuid().optional(),
 });
+/** Changes an installed app's settings, or moves it to the catalog's newer definition. */
+export const AppConfigureRequestSchema = z.strictObject({
+  target: z.enum(["current", "update"]),
+  /** Blank secret values keep the stored ones. */
+  variables: AppInstallRequestSchema.shape.variables,
+  ports: AppInstallRequestSchema.shape.ports,
+  acknowledgeRisks: z.boolean().default(false),
+  confirmId: z.string().uuid(),
+});
 export const ManagedAppRunSchema = z.strictObject({
   id: z.string().uuid(),
   action: z.enum(APP_ACTIONS),

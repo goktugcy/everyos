@@ -160,6 +160,42 @@ Early development installations without an encrypted pinned agent deployment mus
 explicit retry before updating. The agent refuses such updates before any image/container mutation
 instead of claiming it can restore an artifact it never recorded.
 
+## Settings and catalog updates
+
+EveryOS keeps what each installation was made from: the inputs (variables, fixed ports and the
+generated defaults, sealed with `app:<instance>:inputs:v1`), the catalog definition it used, and
+that definition's fingerprint (SHA-256 of its Compose file and architecture variants; catalogs
+rarely publish a usable content hash).
+
+**Settings** on an installed app opens the same form as the installation, filled with the values
+in use. Secret and generated values are never sent to the browser; they are kept unless a new
+value is entered, and generated values are never regenerated. Saving renders the definition
+again with the new values, checks it like an installation (risks, administrator approval for host
+access, unknown settings, unsupported Compose) and, when the result differs, runs it as an
+`update` job with the usual rollback. The new inputs, definition and fingerprint are committed
+only when the job succeeds. An unchanged result answers `409` (`unchanged`), and the instance id
+must be confirmed (`confirmId`).
+
+**Catalog updates.** When the catalog's current definition of an installed app has another
+fingerprint than the one installed, the app shows an update banner with the catalog version and
+the monitor raises `app-update-available` (one condition per installation, resolved once it is
+applied or the definition returns). Applying opens the settings form on the new definition
+(`target: "update"`) with the kept values; new settings use their defaults. EveryOS does not poll
+image registries: image-only updates stay with the existing **Update** action, which pulls the
+same references again.
+
+Installations made before EveryOS kept inputs are adopted once: the inputs are recovered from the
+stored Compose file with the catalog's current definition and kept only when preparing that
+definition again reproduces the file exactly. Otherwise Settings explains that the values cannot
+be recovered (reinstalling with data transfer is the way back), and the first definition EveryOS
+sees becomes the baseline for later updates. Built-in AI agent apps are configured in the AI
+settings, not here.
+
+| Method & path                         | Permission    | Description                                                                         |
+| ------------------------------------- | ------------- | ----------------------------------------------------------------------------------- |
+| `GET /apps/:id/configuration?target=` | `apps:manage` | `current` or `update`: variables with values (never secrets), ports, risks, images. |
+| `POST /apps/:id/configure`            | `apps:manage` | `{target, variables, ports, acknowledgeRisks, confirmId}` → `202 AppJobView`.       |
+
 ## Durable jobs and data transfer
 
 API jobs allow two concurrent operations and one per instance. Authenticated read-only SSE reports

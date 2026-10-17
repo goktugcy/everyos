@@ -133,8 +133,41 @@ or sudo authorization is distinguished from an APT error or agent connection fai
 | `POST` | `/api/updates/refresh`         | `system:manage` | `{}` → `202` job                                                            |
 | `POST` | `/api/updates/upgrade`         | `system:manage` | `{ all: true, confirm: true }` or `{ packages, confirm: true }` → `202` job |
 
+## Restart and shutdown
+
+**Restart required.** The agent reports `power.reboot.status` (cached for 5 s):
+
+- `flag`: Debian/Ubuntu's `/run/reboot-required` exists; `/run/reboot-required.pkgs` names the
+  packages that asked for it (validated names, at most 200).
+- `kernel`: `/boot` holds a kernel of the running flavour (`-generic`, `-raspi`, `-rpi-v8`…) that is
+  newer than the running one, or the running one was removed. Releases compare by their numeric
+  parts, so `6.8.0-10` is newer than `6.8.0-9`. `/boot` is used rather than `/lib/modules`, which
+  services with `ProtectKernelModules` cannot see. Hosts without kernels in `/boot` report only
+  the flag.
+
+The Updates app shows a notice with **Restart now** while a restart is required, and the monitor
+raises the `reboot-required` condition (resolved after the restart).
+
+**Restart and shut down** are in the EveryOS menu (and the mobile shell) for `system:manage`. The
+dialog asks for the account password, confirms the action by name, and lists running work that a
+restart would interrupt: an EveryOS update being installed, a backup or restore, app jobs, and an
+APT job. An EveryOS update in progress always blocks; the others can be overridden explicitly
+(`force`). The agent schedules `systemctl reboot|poweroff` 5 s later through a transient systemd
+timer (`everyos-power`), so the API can answer first; a second request while one is pending is a
+conflict. Production also requires a linked Linux account with sudo authorized, like upgrades.
+The action is audited (`system.power`, with any overridden blockers) and announced to everyone
+who can see the system (`power-scheduled`). The browser shows a waiting screen and reloads once
+the host answers again. A development agent never powers off the host; the simulator only logs.
+
+| Method | Path                         | Permission      | Notes                                                                                                 |
+| ------ | ---------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/system/power/reboot`   | `system:read`   | `{ source, required, reasons, packages, kernel }`                                                     |
+| `GET`  | `/api/system/power/blockers` | `system:manage` | `{ blockers }`                                                                                        |
+| `POST` | `/api/system/power`          | `system:manage` | `{ action, confirm, password, force? }` → `202 { source, action, at }`; `409` with `details.blockers` |
+
 ## Limitations
 
-- Kernel and firmware updates may need a reboot; EveryOS does not reboot the host.
+- Firmware updates outside APT (for example the Raspberry Pi EEPROM) are not detected as
+  requiring a restart.
 - Held packages and phased updates are left to apt's own rules.
 - Only APT is supported (Debian, Ubuntu, Raspberry Pi OS).

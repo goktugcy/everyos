@@ -6,6 +6,8 @@ import { migrate, openDatabase, EVERYOS_MIGRATIONS, type Database } from "@every
 import { silentLogger } from "@everyos/logger";
 import {
   createAptSimulator,
+  createDiskSimulator,
+  DiskError,
   createDockerSimulator,
   DockerError,
   type DockerApi,
@@ -23,7 +25,12 @@ import type { Hono } from "hono";
 import { createApp } from "./app.ts";
 import { loadApiConfig, type ApiConfig } from "./config.ts";
 import type { AppEnv } from "./context.ts";
-import { createServices, type AgentGateway, type Services } from "./services.ts";
+import {
+  createServices,
+  type AgentGateway,
+  type ServiceDependencies,
+  type Services,
+} from "./services.ts";
 
 export const TEST_HOST = "localhost:7470";
 export const TEST_ORIGIN = `http://${TEST_HOST}`;
@@ -169,6 +176,14 @@ type FakeHandler = (params: unknown) => unknown;
 
 /** Maps simulator errors to what the real agent client would report. */
 function toAgentError(error: unknown): Error {
+  if (error instanceof DiskError)
+    return error.kind === "not-found"
+      ? new AgentClientError("AGENT_OPERATION_FAILED", error.message, "not_found")
+      : new AgentClientError(
+          "AGENT_OPERATION_FAILED",
+          `${error.kind}: ${error.message}`,
+          "conflict",
+        );
   if (!(error instanceof DockerError))
     return error instanceof Error ? error : new Error(String(error));
   const code =
@@ -201,6 +216,10 @@ export class FakeAgent implements AgentGateway {
   now: () => number = Date.now;
   /** Package updates, answered by the development simulator. */
   readonly apt = createAptSimulator(() => this.now());
+  /** Disks, answered by the development simulator under a throwaway mount root. */
+  readonly disks = createDiskSimulator({
+    mountRoot: mkdtempSync(join(tmpdir(), "everyos-disks-")),
+  });
 
   #defaults(op: string, params: unknown): unknown {
     switch (op) {
@@ -239,6 +258,22 @@ export class FakeAgent implements AgentGateway {
           acConnected: null,
           batteries: [],
           supplies: [],
+        };
+      case "disks.list":
+        return this.disks.list();
+      case "disks.mount": {
+        const { uuid, persistent } = params as { uuid: string; persistent: boolean };
+        return this.disks.mount(uuid, persistent, null);
+      }
+      case "disks.unmount":
+        return this.disks.unmount((params as { uuid: string }).uuid);
+      case "power.reboot.status":
+        return { source: "host", required: false, reasons: [], packages: [], kernel: "6.8.0-test" };
+      case "power.control":
+        return {
+          source: "simulated",
+          action: (params as { action: string }).action,
+          at: this.now() + 5_000,
         };
       case "hardware.status":
         return {
@@ -462,7 +497,12 @@ export interface TestContext {
 }
 
 export async function createTestContext(
-  options: { configure?: (config: ApiConfig) => void; webDir?: string } = {},
+  options: {
+    configure?: (config: ApiConfig) => void;
+    webDir?: string;
+    /** Extra service test hooks (SMTP transports, the Telegram API origin). */
+    services?: Pick<ServiceDependencies, "smtp" | "telegramApi">;
+  } = {},
 ): Promise<TestContext> {
   const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));
   const config = loadApiConfig({ EVERYOS_ENV: "development", EVERYOS_DEV_ROOT: dir });
@@ -486,6 +526,7 @@ export async function createTestContext(
     now: () => clock.now,
     // Never probe model servers on the developer's machine; tests announce theirs as sockets.
     localModelPorts: [],
+    ...options.services,
   });
   services.setup.initialize();
   await services.backups.start();

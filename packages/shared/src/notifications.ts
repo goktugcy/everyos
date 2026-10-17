@@ -39,6 +39,8 @@ export const NOTIFICATION_KINDS = {
   "nvme-unhealthy": { category: "storage", permission: "system:read", condition: true },
   "security-updates": { category: "updates", permission: "system:read", condition: true },
   "everyos-update-available": { category: "updates", permission: "system:read", condition: true },
+  /** Installed updates wait for the host to restart. */
+  "reboot-required": { category: "updates", permission: "system:read", condition: true },
   "internet-offline": { category: "network", permission: "system:read", condition: true },
   "tailscale-offline": { category: "network", permission: "system:read", condition: true },
   "tailscale-key-expiry": { category: "network", permission: "system:read", condition: true },
@@ -47,6 +49,8 @@ export const NOTIFICATION_KINDS = {
   "agent-unavailable": { category: "system", permission: "system:read", condition: true },
   "app-succeeded": { category: "apps", permission: "apps:read", condition: false },
   "app-failed": { category: "apps", permission: "apps:read", condition: false },
+  /** The catalog has a newer definition of an installed app. */
+  "app-update-available": { category: "apps", permission: "apps:read", condition: true },
   "updates-installed": { category: "updates", permission: "system:read", condition: false },
   "updates-failed": { category: "updates", permission: "system:read", condition: false },
   "backup-succeeded": { category: "backups", permission: "backups:manage", condition: false },
@@ -54,6 +58,8 @@ export const NOTIFICATION_KINDS = {
   "task-succeeded": { category: "tasks", permission: "tasks:manage", condition: false },
   "task-failed": { category: "tasks", permission: "tasks:manage", condition: false },
   "login-locked": { category: "security", permission: "audit:read", condition: false },
+  /** An administrator restarts or powers off the host. */
+  "power-scheduled": { category: "system", permission: "system:read", condition: false },
 } as const satisfies Record<
   string,
   { category: NotificationCategory; permission: Permission; condition: boolean }

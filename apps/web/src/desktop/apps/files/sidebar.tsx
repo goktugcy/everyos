@@ -16,9 +16,9 @@ import {
   Package,
   ScrollText,
   Server,
+  type LucideIcon,
   Usb,
   Users,
-  type LucideIcon,
 } from "lucide-react";
 import { TrashGlyph } from "./trash-glyph.tsx";
 import { useTrashMenu } from "./trash-menu.tsx";
@@ -160,6 +160,7 @@ export function FilesSidebar({
   const home = roots.find((root) => root.kind === "home");
   const trashMenu = useTrashMenu();
   const locations = roots.filter((root) => root.kind === "location");
+  const disks = roots.filter((root) => root.kind === "disk");
   const systemRoots = roots.filter((root) => root.kind === "system");
   const at = (root: string, path: string) =>
     !applicationsOpen && location?.root === root && location.path === path;
@@ -229,6 +230,25 @@ export function FilesSidebar({
             <Item
               key={root.id}
               icon={HardDrive}
+              label={root.name}
+              active={at(root.id, "")}
+              disabled={!root.available}
+              readOnly={root.readOnly}
+              target={`root:${root.id}`}
+              into={{ root: root.id, path: "" }}
+              onGo={onGo}
+              drops={drops}
+            />
+          ))}
+        </Section>
+      ) : null}
+
+      {disks.length > 0 ? (
+        <Section title={t("files.disks")}>
+          {disks.map((root) => (
+            <Item
+              key={root.id}
+              icon={Usb}
               label={root.name}
               active={at(root.id, "")}
               disabled={!root.available}

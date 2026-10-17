@@ -28,6 +28,8 @@ export interface PolicyOptions {
   dockerSource: "host" | "simulated";
   /** Same for package updates. */
   aptSource?: "host" | "simulated";
+  /** Same for disks. */
+  disksSource?: "host" | "simulated";
 }
 
 /**
@@ -58,6 +60,20 @@ export function createPolicy(options: PolicyOptions): OperationPolicy {
           }
         : { allowed: true };
     }
+    if (op === "disks.mount" || op === "disks.unmount")
+      return options.mode === "development" && options.disksSource !== "simulated"
+        ? {
+            allowed: false,
+            reason: `${POLICY_REASONS.developmentMode}: mounting host disks is disabled in development mode`,
+          }
+        : { allowed: true };
+    if (op === "power.control")
+      return options.mode === "development" && options.servicesSource === "host"
+        ? {
+            allowed: false,
+            reason: `${POLICY_REASONS.developmentMode}: restarting or powering off the host is disabled in development mode`,
+          }
+        : { allowed: true };
     if (op !== "services.control") return { allowed: true };
     const { unit, action } = params as {
       unit: string;

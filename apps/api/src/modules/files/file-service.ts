@@ -244,6 +244,7 @@ export class FileService {
   readonly #trashOwner: string | null;
   readonly #homeLocks: Set<string>;
   readonly #access: FileAccess;
+  readonly #extraRoots: () => readonly FileRootConfig[];
 
   constructor(options: {
     roots: readonly FileRootConfig[];
@@ -255,7 +256,10 @@ export class FileService {
     trashOwner?: string | null;
     homeLocks?: Set<string>;
     access?: FileAccess;
+    /** Locations that come and go (mounted disks), shared like configured ones. */
+    extraRoots?: () => readonly FileRootConfig[];
   }) {
+    this.#extraRoots = options.extraRoots ?? (() => []);
     this.#roots = new Map(options.roots.map((root) => [root.id, root]));
     this.#maxUploadBytes = options.maxUploadBytes;
     this.#minFreeBytes = options.minFreeBytes;
@@ -289,7 +293,7 @@ export class FileService {
         kind: "home",
         locale: user.locale,
       });
-    if (!user.personalOnly) roots.push(...this.#roots.values());
+    if (!user.personalOnly) roots.push(...this.#roots.values(), ...this.#extraRoots());
     if (user.systemRoots && !user.personalOnly)
       for (const root of SYSTEM_ROOTS)
         roots.push({
@@ -1042,15 +1046,20 @@ export class FileService {
   }
 
   async #ensureSpace(dir: string, bytes: number): Promise<void> {
+    // The reserve keeps the system's filesystem usable; an added disk may be filled up.
+    let reserve = this.#minFreeBytes;
+    for (const root of this.#roots.values())
+      if (root.kind === "disk" && inside(await realpath(root.path).catch(() => root.path), dir))
+        reserve = 0;
     try {
       const fs = await statfs(dir);
       const available = Number(fs.bavail) * Number(fs.bsize);
-      if (bytes + this.#minFreeBytes > available)
+      if (bytes + reserve > available)
         throw new ApiError(507, "FILES_INSUFFICIENT_SPACE", "Not enough free space", {
           details: {
             requiredBytes: bytes,
             availableBytes: available,
-            reserveBytes: this.#minFreeBytes,
+            reserveBytes: reserve,
           },
         });
     } catch (error) {

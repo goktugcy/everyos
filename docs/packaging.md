@@ -240,12 +240,22 @@ schemas, policy, limits and audit remain the primary privileged-operation bounda
 The app-config tmpfs is a real host mount, so Docker can read its bind sources outside the agent's
 namespace. A private `TemporaryFileSystem` would not satisfy that requirement.
 
+Disks from Settings › Disks are mounted by systemd itself through mount units below
+`/srv/everyos/disks` ([disks.md](disks.md)); the post-installation script creates `/srv/everyos`
+and `/srv/everyos/disks` as `root:root 0755` and refuses symlinks there. The API never reads
+them: Files reaches disks through the account workers. Restart and shutdown run through a
+transient `everyos-power` timer. Because `ProtectKernelModules` hides `/lib/modules`, the
+restart-required check reads the kernels in `/boot` instead.
+
 ```sh
 sudo apt-get remove everyos
 sudo apt-get purge everyos
 ```
 
-Removal stops/disables only EveryOS units and unmounts its own transient configs. Purge removes
+Removal stops/disables only EveryOS units and unmounts its own transient configs. Disks mounted
+from Settings stay mounted, and those set to mount at startup keep their
+`/etc/systemd/system/srv-everyos-disks-*.mount` units; remove them in Settings › Disks before
+uninstalling to unmount them. Purge removes
 packaged conffiles and binaries but retains account data, homes, archives, secret keys, root app
 state, update cache and the service account. Erasing retained data is a separate explicit owner
 action. Existing containers, volumes, images, SSH, reverse proxies and Tailscale are never removed.

@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { Popover } from "radix-ui";
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../lib/api.ts";
 import { cn } from "../../lib/cn.ts";
@@ -61,16 +61,26 @@ export function SeverityIcon({
   );
 }
 
+type OpenApp = (
+  appId: NonNullable<ReturnType<typeof notificationAction>>["appId"],
+  appState?: Record<string, string>,
+) => void;
+const openOnDesktop: OpenApp = (appId, appState) =>
+  desktop.openApp(appId, appState ? { appState } : {});
+/** How a notification opens its app: a desktop window, or the phone's full-screen app. */
+const OpenAppContext = createContext<OpenApp>(openOnDesktop);
+
 /** Opens the app a notification refers to (marking it read). */
 export function openNotification(
   notification: NotificationView,
   permissions: Parameters<typeof notificationAction>[1],
+  open: OpenApp = openOnDesktop,
 ): boolean {
   const action = notificationAction(notification.kind, permissions);
   if (!notification.read)
     void notificationActions.markRead({ ids: [notification.id] }).catch(() => undefined);
   if (!action) return false;
-  desktop.openApp(action.appId, action.appState ? { appState: action.appState } : {});
+  open(action.appId, action.appState);
   return true;
 }
 
@@ -83,6 +93,7 @@ function NotificationItem({
 }) {
   const { t, i18n } = useTranslation();
   const permissions = usePermissions();
+  const open = useContext(OpenAppContext);
   const { title, body } = notificationText(t, notification);
   const action = notificationAction(notification.kind, permissions);
   return (
@@ -100,7 +111,7 @@ function NotificationItem({
         <button
           type="button"
           className="text-left text-sm font-semibold leading-snug outline-none hover:underline focus-visible:underline disabled:no-underline"
-          onClick={() => openNotification(notification, permissions)}
+          onClick={() => openNotification(notification, permissions, open)}
         >
           {!notification.read ? (
             <span className="sr-only">{t("notifications.unread")}: </span>
@@ -127,7 +138,7 @@ function NotificationItem({
         ) : null}
         <button
           type="button"
-          className="grid size-6 place-items-center rounded-md text-fg-subtle opacity-0 outline-none hover:bg-hover/10 hover:text-fg focus-visible:opacity-100 group-hover/item:opacity-100"
+          className="grid size-6 place-items-center rounded-md text-fg-subtle opacity-0 outline-none hover:bg-hover/10 hover:text-fg focus-visible:opacity-100 group-hover/item:opacity-100 pointer-coarse:opacity-100"
           aria-label={t("notifications.dismiss")}
           title={t("notifications.dismiss")}
           onClick={() => void notificationActions.dismiss({ ids: [notification.id] })}
@@ -301,8 +312,14 @@ function CenterBody() {
   );
 }
 
-/** Menu bar bell with the unread badge; opens the notification center. */
-export function NotificationBell() {
+/**
+ * Bell with the unread badge; opens the notification center. The phone shell passes its own
+ * button style and opens apps full-screen instead of in windows.
+ */
+export function NotificationBell({
+  className,
+  onOpenApp,
+}: { className?: string; onOpenApp?: OpenApp } = {}) {
   const { t } = useTranslation();
   const permitted = usePermissions().includes("notifications:read");
   const unread = useNotifications((state) => state.unread);
@@ -320,7 +337,7 @@ export function NotificationBell() {
       }}
     >
       <Popover.Trigger
-        className={cn(menubarButton, "relative")}
+        className={cn(className ?? menubarButton, "relative")}
         aria-label={
           total > 0 ? t("notifications.titleUnread", { count: total }) : t("notifications.title")
         }
@@ -364,13 +381,23 @@ export function NotificationBell() {
               title={t("notifications.settings")}
               onClick={() => {
                 setOpen(false);
-                desktop.openSettings("notifications");
+                if (onOpenApp) onOpenApp("everyos.settings", { section: "notifications" });
+                else desktop.openSettings("notifications");
               }}
             >
               <Settings2 className="size-4" aria-hidden />
             </button>
           </div>
-          {open ? <CenterBody /> : null}
+          {open ? (
+            <OpenAppContext.Provider
+              value={(appId, appState) => {
+                setOpen(false);
+                (onOpenApp ?? openOnDesktop)(appId, appState);
+              }}
+            >
+              <CenterBody />
+            </OpenAppContext.Provider>
+          ) : null}
           <div className="flex justify-end border-t border-line px-4 py-2">
             <button
               type="button"

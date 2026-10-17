@@ -1,11 +1,17 @@
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
 import { SelfUpdateManager } from "@everyos/release";
-import { roleHasPermission, type ProcessList, type SystemInfo } from "@everyos/shared";
+import {
+  POWER_DELAY_SECONDS,
+  roleHasPermission,
+  type ProcessList,
+  type SystemInfo,
+} from "@everyos/shared";
 import {
   createAptManager,
   type AptManager,
   collectHardware,
   collectPower,
+  collectRebootStatus,
   collectMetrics,
   collectNetwork,
   collectProcesses,
@@ -21,6 +27,8 @@ import {
   ServiceError,
   DockerError,
   CommandError,
+  DiskError,
+  type DiskManager,
   type DockerApi,
   type HostPaths,
   type InternetProbeResult,
@@ -59,6 +67,8 @@ export interface HandlerDependencies {
   /** Browser terminals; disabled when absent. */
   terminal?: TerminalManager;
   identities?: LinuxIdentities;
+  /** Disks EveryOS may mount (simulated in development). */
+  disks?: DiskManager;
 }
 
 /** Host information changes rarely; cache it briefly to bound filesystem reads. */
@@ -114,6 +124,8 @@ function toOperationError(error: unknown): never {
         throw new OperationError("invalid_params", "Invalid unit name");
       case "failed":
         throw new OperationError("failed", error.message);
+      case "conflict":
+        throw new OperationError("conflict", error.message);
     }
   }
   if (error instanceof DockerError) {
@@ -136,6 +148,12 @@ function toOperationError(error: unknown): never {
       case "failed":
         throw new OperationError("failed", error.message);
     }
+  }
+  if (error instanceof DiskError) {
+    // "<refusal>: …" lets the API name the reason (system disk, in use, …).
+    if (error.kind === "unavailable") throw new OperationError("unsupported", error.message);
+    if (error.kind === "not-found") throw new OperationError("not_found", error.message);
+    throw new OperationError("conflict", `${error.kind}: ${error.message}`);
   }
   if (error instanceof LogSourceUnavailableError) {
     throw new OperationError("unsupported", "journald is not available on this host");
@@ -160,6 +178,7 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
   const hardware = cached(HARDWARE_TTL_MS, now, async () =>
     collectHardware({ paths, isRaspberryPi: (await systemInfo()).hardware.isRaspberryPi }),
   );
+  const rebootStatus = cached(5_000, now, () => collectRebootStatus({ paths }));
   /** Listening sockets change rarely and scanning /proc/<pid>/fd costs a little. */
   const sockets = cached(30_000, now, () => collectSockets({ paths }));
   /** apt reads large package lists; its data only changes when the lists are refreshed. */
@@ -178,6 +197,10 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     return deps.appData;
   };
 
+  const disks = () => {
+    if (!deps.disks) throw new OperationError("unsupported", "Disk management is not available");
+    return deps.disks;
+  };
   const identities = () => {
     if (!deps.identities)
       throw new OperationError(
@@ -289,6 +312,36 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
 
     "hardware.status": () => hardware(),
     "power.status": cached(10_000, now, () => collectPower({ paths, now })),
+    "disks.list": (_params, { signal }) => disks().list(signal).catch(toOperationError),
+    "disks.mount": async ({ uuid, persistent }, { actor, signal, logger }) => {
+      // FAT, exFAT and NTFS files belong to the mounting administrator's Linux account.
+      const account =
+        actor.kind === "user" && deps.identities && disks().source === "host"
+          ? deps.identities.resolve(actor)
+          : null;
+      const owner = account ? { uid: account.uid, gid: account.gid } : null;
+      const result = await disks().mount(uuid, persistent, owner, signal).catch(toOperationError);
+      logger.info("Disk mounted", { uuid, persistent, source: result.source });
+      return result;
+    },
+    "disks.unmount": async ({ uuid }, { signal, logger }) => {
+      const result = await disks().unmount(uuid, signal).catch(toOperationError);
+      logger.info("Disk unmounted", { uuid, source: result.source });
+      return result;
+    },
+    "power.reboot.status": async () =>
+      deps.services.source === "simulated"
+        ? { source: "simulated", required: false, reasons: [], packages: [], kernel: null }
+        : rebootStatus(),
+    "power.control": async ({ action }, { logger }) => {
+      await deps.services.power(action, POWER_DELAY_SECONDS).catch(toOperationError);
+      logger.info("Power action scheduled", { action, source: deps.services.source });
+      return {
+        source: deps.services.source,
+        action,
+        at: now() + POWER_DELAY_SECONDS * 1000,
+      };
+    },
 
     "network.status": () => collectNetwork({ paths, internet: deps.internet }),
 

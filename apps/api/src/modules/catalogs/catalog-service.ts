@@ -198,6 +198,15 @@ export class CatalogService {
       };
     });
   }
+  /** An enabled catalog's app by its source path (what installed apps record). */
+  appAt(catalogId: string, path: string): CatalogApp | null {
+    const row = this.#db.get<{ manifest: string }>(
+      "SELECT manifest FROM catalog_apps JOIN catalogs ON catalog_apps.catalog_id = catalogs.id WHERE catalog_apps.catalog_id = ? AND json_extract(catalog_apps.manifest, '$.source.path') = ? AND catalogs.enabled = 1 ORDER BY catalog_apps.id LIMIT 1",
+      catalogId,
+      path,
+    );
+    return row ? (JSON.parse(row.manifest) as CatalogApp) : null;
+  }
   app(id: string): CatalogApp | null {
     const row = this.#db.get<{ manifest: string }>(
       "SELECT manifest FROM catalog_apps JOIN catalogs ON catalog_apps.catalog_id = catalogs.id WHERE catalog_apps.id = ? AND catalogs.enabled = 1",

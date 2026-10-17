@@ -11,6 +11,8 @@ export * from "./system.ts";
 export * from "./widgets.ts";
 export * from "./catalogs.ts";
 export * from "./notifications.ts";
+export * from "./notification-channels.ts";
+export * from "./disks.ts";
 export * from "./files.ts";
 export * from "./terminal.ts";
 export * from "./updates.ts";

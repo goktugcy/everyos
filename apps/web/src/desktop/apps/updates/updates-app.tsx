@@ -1,5 +1,13 @@
-import type { AptUpdates, PackageInfo, UpdateJobView } from "@everyos/shared";
-import { AlertTriangle, CircleCheck, Loader2, PackageCheck, RefreshCw, X } from "lucide-react";
+import type { AptUpdates, PackageInfo, RebootStatus, UpdateJobView } from "@everyos/shared";
+import {
+  AlertTriangle,
+  CircleCheck,
+  Loader2,
+  PackageCheck,
+  RefreshCw,
+  RotateCcw,
+  X,
+} from "lucide-react";
 import { Tabs } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -18,6 +26,7 @@ import { useAppStateField } from "../app-context.ts";
 import { LoadingBlock, ResourceError, SimulatedBadge } from "../system/parts.tsx";
 import { SelfUpdatePanel } from "../../../features/updates/self-update-panel.tsx";
 import { updateJobError } from "../../../features/updates/job-error.ts";
+import { power } from "../../power/power.tsx";
 
 const TABS = ["packages", "everyos", "history"] as const;
 
@@ -144,6 +153,37 @@ function PackageDetails({ name, onClose }: { name: string; onClose: () => void }
 }
 
 /** Update manager: pending packages, explicit refresh and upgrades, history. */
+/** Installed updates that wait for a restart, with the restart itself for administrators. */
+function RebootNotice({ revision, canManage }: { revision: number; canManage: boolean }) {
+  const { t } = useTranslation();
+  const reboot = useApiResource<RebootStatus>("/system/power/reboot", 60_000, revision);
+  const status = reboot.data;
+  if (!status?.required) return null;
+  return (
+    <div className="px-4 pt-3" data-testid="reboot-required">
+      <Alert tone="warning" title={t("hostPower.rebootRequired.title")}>
+        <p>
+          {status.packages.length
+            ? t("hostPower.rebootRequired.body", { count: status.packages.length })
+            : t("hostPower.rebootRequired.generic")}
+          {status.reasons.includes("kernel") ? ` ${t("hostPower.rebootRequired.kernel")}` : ""}
+        </p>
+        {canManage ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="mt-2"
+            onClick={() => power.ask("reboot")}
+          >
+            <RotateCcw className="size-4" aria-hidden />
+            {t("hostPower.rebootRequired.action")}
+          </Button>
+        ) : null}
+      </Alert>
+    </div>
+  );
+}
+
 export default function UpdatesApp() {
   const { t, i18n } = useTranslation();
   const canManage = usePermissions().includes("system:manage");
@@ -322,6 +362,7 @@ export default function UpdatesApp() {
             </div>
           ) : null}
         </div>
+        <RebootNotice revision={revision} canManage={canManage} />
         {error ? (
           <div className="px-4 pt-3">
             <Alert tone="danger">{errorMessage(t, error)}</Alert>

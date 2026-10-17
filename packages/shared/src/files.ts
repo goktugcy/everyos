@@ -18,8 +18,11 @@ export const STANDARD_FOLDERS = [
 
 export type StandardFolder = (typeof STANDARD_FOLDERS)[number];
 
-/** The user's private home, an administrator-configured location, or a read-only system path. */
-export type FileRootKind = "home" | "location" | "system";
+/**
+ * The user's private home, an administrator-configured location, a disk mounted from Settings
+ * › Disks, or a read-only system path.
+ */
+export type FileRootKind = "home" | "location" | "disk" | "system";
 
 export interface FileRootView {
   id: string;

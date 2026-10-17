@@ -55,6 +55,14 @@ them. They are always read-only, they are read with the API user's own permissio
 `/etc/shadow` stays unreadable), and the kernel's pseudo file systems `/proc`, `/sys` and `/dev`
 are never listed, opened or searched through `/`.
 
+### Disks
+
+Disks an administrator mounts in Settings › Disks appear in the sidebar's **Disks** section, named
+by their label (else their UUID), as locations of kind `disk` with id `disk-<uuid>`. In production
+they are found in the account worker's mount table and used with the linked Linux account's
+permissions, like other host locations. The free-space reserve (`minFreeMiB`) protects the
+system's filesystem and does not apply on a disk. See [disks.md](disks.md).
+
 Development mode adds a sandbox root (`<dev root>/files`). Production has no roots until
 they are configured, and `/api/files/*` then answers `FILES_DISABLED`.
 

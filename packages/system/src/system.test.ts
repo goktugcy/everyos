@@ -4,7 +4,15 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { SystemInfoSchema } from "@everyos/shared/schemas";
 import { afterEach, describe, expect, it } from "vitest";
-import { collectSystemInfo, cpuModelFromCpuinfo, parseOsRelease, type OsFacts } from "./index.ts";
+import {
+  collectRebootStatus,
+  collectSystemInfo,
+  compareKernelReleases,
+  cpuModelFromCpuinfo,
+  parseOsRelease,
+  type OsFacts,
+} from "./index.ts";
+import { RebootStatusSchema } from "@everyos/shared/schemas";
 
 const servers: Server[] = [];
 afterEach(async () => {
@@ -154,5 +162,69 @@ describe("collectSystemInfo", () => {
     expect(SystemInfoSchema.safeParse(info).success).toBe(true);
     expect(info.cpu.cores).toBeGreaterThan(0);
     expect(info.memory.totalBytes).toBeGreaterThan(0);
+  });
+});
+
+describe("collectRebootStatus", () => {
+  const host = () => {
+    const root = mkdtempSync(join(tmpdir(), "everyos-reboot-"));
+    mkdirSync(join(root, "run"), { recursive: true });
+    mkdirSync(join(root, "boot"), { recursive: true });
+    // Another flavour and non-kernel files never count.
+    for (const name of [
+      "vmlinuz-6.8.0-2-raspi",
+      "vmlinuz-6.9.0-1-generic",
+      "initrd.img-9.9.9-raspi",
+    ])
+      writeFileSync(join(root, "boot", name), "");
+    return root;
+  };
+
+  it("reports the distribution's marker with the packages that asked for it", async () => {
+    const root = host();
+    writeFileSync(join(root, "run/reboot-required"), "*** System restart required ***\n");
+    writeFileSync(
+      join(root, "run/reboot-required.pkgs"),
+      "linux-image-6.8.0-2-raspi\nlibc6\nlibc6\n$(evil)\n",
+    );
+    const status = await collectRebootStatus({
+      paths: { root, platform: "linux" },
+      kernel: "6.8.0-2-raspi",
+    });
+    expect(RebootStatusSchema.parse(status)).toEqual({
+      source: "host",
+      required: true,
+      reasons: ["flag"],
+      packages: ["linux-image-6.8.0-2-raspi", "libc6"],
+      kernel: "6.8.0-2-raspi",
+    });
+  });
+
+  it("notices a newer kernel in /boot, or the running one removed", async () => {
+    const root = host();
+    const status = (kernel: string) =>
+      collectRebootStatus({ paths: { root, platform: "linux" }, kernel });
+    expect(await status("6.8.0-2-raspi")).toMatchObject({ required: false, reasons: [] });
+    // Upgraded: 6.8.0-10 sorts after 6.8.0-2 although "1" < "2".
+    writeFileSync(join(root, "boot/vmlinuz-6.8.0-10-raspi"), "");
+    expect(await status("6.8.0-2-raspi")).toMatchObject({
+      required: true,
+      reasons: ["kernel"],
+      packages: [],
+    });
+    // Removed by autoremove while still running.
+    expect(await status("6.8.0-1-raspi")).toMatchObject({ required: true, reasons: ["kernel"] });
+    expect(await status("6.8.0-10-raspi")).toMatchObject({ required: false });
+    // Raspberry Pi OS names, and hosts without kernels in /boot.
+    writeFileSync(join(root, "boot/vmlinuz-6.12.25+rpt-rpi-v8"), "");
+    writeFileSync(join(root, "boot/vmlinuz-6.12.34+rpt-rpi-2712"), "");
+    expect(await status("6.12.25+rpt-rpi-v8")).toMatchObject({ required: false });
+    expect(await status("6.12.20+rpt-rpi-2712")).toMatchObject({ required: true });
+    expect(await status("6.1.0-26-arm64")).toMatchObject({ required: false });
+    expect(compareKernelReleases("6.8.0-49-generic", "6.8.0-50-generic")).toBe(-1);
+    expect(compareKernelReleases("6.12.1+rpt-rpi-v8", "6.6.51+rpt-rpi-v8")).toBe(1);
+    expect(
+      await collectRebootStatus({ paths: { root, platform: "darwin" }, kernel: "6.8.0-1-raspi" }),
+    ).toMatchObject({ required: false, kernel: null });
   });
 });

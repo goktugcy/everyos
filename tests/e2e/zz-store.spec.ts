@@ -341,6 +341,21 @@ test("catalog sync, installation, streamed progress and lifecycle work together"
     .getByRole("button", { name: "Bildirimi kapat", exact: true })
     .click();
   await expect(app.getByTestId("app-last-job")).toHaveCount(0);
+  // Settings change through the same deployment: secrets arrive empty and stay unless replaced.
+  await app.getByRole("button", { name: "Ayarlar", exact: true }).click();
+  const settingsForm = page.getByTestId("app-configure-form");
+  await expect(settingsForm.getByLabel("APP_TOKEN", { exact: true })).toHaveValue("");
+  await expect(settingsForm).toContainText("Kayıtlı bir değer var");
+  await expect(settingsForm.getByLabel("SERVICE_PASSWORD_64_DEMO", { exact: true })).toHaveCount(0);
+  const configured = page.waitForResponse(
+    (response) => response.url().endsWith("/configure") && response.request().method() === "POST",
+  );
+  await settingsForm.getByLabel("APP_TOKEN", { exact: true }).fill("changed-e2e-secret");
+  await settingsForm.getByRole("button", { name: "Kaydet ve yeniden oluştur" }).click();
+  expect((await configured).status()).toBe(202);
+  await expect(settingsForm).toBeHidden();
+  await expect(app.getByTestId("app-last-job")).toContainText("Tamamlandı");
+  expect(await (await page.request.get("/api/apps")).text()).not.toContain("changed-e2e-secret");
   await page.reload();
   await expect(store).toBeVisible();
   await store.getByRole("tab", { name: "Kurulu uygulamalar", exact: true }).click();

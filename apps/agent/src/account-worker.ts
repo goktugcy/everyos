@@ -26,6 +26,7 @@ const BootstrapSchema = z.strictObject({
   protectedUnits: z.array(z.string()),
   protectedContainers: z.array(z.string()),
   internetCheckTargets: z.array(z.string()),
+  disksRoot: z.string(),
   roots: z.array(
     z.strictObject({ id: z.string(), name: z.string(), path: z.string(), readOnly: z.boolean() }),
   ),

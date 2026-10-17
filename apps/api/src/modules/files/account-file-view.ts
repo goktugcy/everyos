@@ -31,7 +31,13 @@ export class AccountFileView {
   #call = <N extends Parameters<typeof callAgent>[2]>(
     op: N,
     params: Parameters<typeof callAgent<N>>[3],
-  ) => callAgent(this.context, this.services, op, params);
+  ) =>
+    callAgent(this.context, this.services, op, params).catch((error: unknown) => {
+      // A full location is the person's to resolve, not an agent failure.
+      if (error instanceof ApiError && error.message === "FILES_INSUFFICIENT_SPACE")
+        throw new ApiError(507, "FILES_INSUFFICIENT_SPACE", "Not enough free space");
+      throw error;
+    });
 
   async roots(canWrite: boolean) {
     const personal = (await this.personal.roots(canWrite)).filter((r) => r.id === "home");

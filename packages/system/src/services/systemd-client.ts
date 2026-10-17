@@ -1,5 +1,6 @@
 import {
   isValidUnitName,
+  type PowerAction,
   type ServiceAction,
   type ServiceDetail,
   type ServiceList,
@@ -16,7 +17,7 @@ import {
 } from "../linux/systemd.ts";
 
 export class ServiceError extends Error {
-  readonly kind: "unavailable" | "not-found" | "invalid" | "failed";
+  readonly kind: "unavailable" | "not-found" | "invalid" | "failed" | "conflict";
 
   constructor(kind: ServiceError["kind"], message: string) {
     super(message);
@@ -37,7 +38,12 @@ export interface ServiceManager {
   control(unit: string, action: ServiceAction, signal?: AbortSignal): Promise<void>;
   /** systemd timers (the host's scheduled tasks). */
   timers(signal?: AbortSignal): Promise<TimerSummary>;
+  /** Reboots or powers off the host after `delaySeconds`, so the caller can still answer. */
+  power(action: PowerAction, delaySeconds: number, signal?: AbortSignal): Promise<void>;
 }
+
+/** One transient timer: a second request while one is pending is refused, not stacked. */
+export const POWER_UNIT = "everyos-power";
 
 async function systemctl(): Promise<string> {
   const path = await findExecutable("systemctl");
@@ -126,6 +132,35 @@ export function createSystemdManager(): ServiceManager {
           throw new ServiceError("not-found", `Unit ${unit} not found`);
         }
         throw new ServiceError("failed", `systemctl ${action} ${unit} failed`);
+      }
+    },
+
+    async power(action, delaySeconds, signal) {
+      const bin = await systemctl();
+      const run = await findExecutable("systemd-run");
+      if (!run) throw new ServiceError("unavailable", "systemd-run is not installed");
+      try {
+        // A transient timer owned by systemd, so the request is answered before the host goes down.
+        await runCommand(
+          run,
+          [
+            "--no-ask-password",
+            "--collect",
+            `--on-active=${Math.max(1, Math.round(delaySeconds))}`,
+            "--timer-property=AccuracySec=1s",
+            `--unit=${POWER_UNIT}`,
+            "--description=EveryOS power action",
+            "--",
+            bin,
+            "--no-ask-password",
+            action === "reboot" ? "reboot" : "poweroff",
+          ],
+          { timeoutMs: 15_000, ...(signal ? { signal } : {}) },
+        );
+      } catch (error) {
+        if (error instanceof CommandError && /already (exists|loaded|active)/i.test(error.stderr))
+          throw new ServiceError("conflict", "A power action is already scheduled");
+        throw new ServiceError("failed", `Scheduling ${action} failed`);
       }
     },
 

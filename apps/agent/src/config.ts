@@ -2,7 +2,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { userInfo } from "node:os";
 import { dirname } from "node:path";
 import { isLogLevel, LOG_LEVELS, type LogLevel } from "@everyos/logger";
-import { resolveEnvironment } from "@everyos/shared";
+import { DISK_MOUNT_ROOT, resolveEnvironment } from "@everyos/shared";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import type { TerminalConfig } from "./terminal.ts";
@@ -83,6 +83,8 @@ export type AgentMode = "production" | "development";
 export interface AgentConfig {
   mode: AgentMode;
   appsRoot: string;
+  /** Where disks are mounted (each volume at `<root>/<filesystem UUID>`). */
+  disksRoot: string;
   socketPath: string;
   agentKeyFile: string;
   socketGroup: string | number | null;
@@ -193,6 +195,10 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
           ? "/var/lib/everyos/apps"
           : "/var/lib/otuken/apps"
         : `${devRoot ?? dirname(env.EVERYOS_AGENT_SOCKET ?? defaults.socketPath)}/agent-apps`),
+    disksRoot:
+      mode === "production"
+        ? DISK_MOUNT_ROOT
+        : `${devRoot ?? dirname(env.EVERYOS_AGENT_SOCKET ?? defaults.socketPath)}/disks`,
     socketPath: env.EVERYOS_AGENT_SOCKET ?? file.socketPath ?? defaults.socketPath,
     agentKeyFile: env.EVERYOS_AGENT_KEY_FILE ?? file.agentKeyFile ?? defaults.agentKeyFile,
     socketGroup: file.socketGroup ?? defaults.socketGroup,

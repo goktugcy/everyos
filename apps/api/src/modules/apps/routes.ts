@@ -1,4 +1,8 @@
-import { AppInstallRequestSchema, CatalogIdSchema } from "@everyos/shared/schemas";
+import {
+  AppConfigureRequestSchema,
+  AppInstallRequestSchema,
+  CatalogIdSchema,
+} from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";
@@ -61,6 +65,39 @@ export function appRoutes(services: Services): Hono<AppEnv> {
         actor: { userId: auth.user.id, username: auth.user.username },
         ip: c.get("client").ip,
         details: { reason: error instanceof ApiError ? error.code : "INTERNAL_ERROR" },
+      });
+      throw error;
+    }
+  });
+  /** The settings form; secret values are never included. */
+  app.get("/:id/configuration", requirePermission("apps:manage"), async (c) => {
+    const { target } = parseQuery(
+      c,
+      z.strictObject({ target: z.enum(["current", "update"]).default("current") }),
+    );
+    const { id } = parseParams(c, Id);
+    return c.json(await services.apps.configuration(id, target, actor(c)));
+  });
+  app.post("/:id/configure", requirePermission("apps:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, Id);
+    const input = await parseJsonBody(c, AppConfigureRequestSchema);
+    try {
+      if (input.confirmId !== id)
+        throw new ApiError(422, "VALIDATION_FAILED", "Application confirmation required");
+      return c.json(await services.apps.configure(id, input, actor(c)), 202);
+    } catch (error) {
+      const auth = requireAuth(c);
+      services.audit.record({
+        action: "apps.configure",
+        target: id,
+        outcome: error instanceof ApiError && error.status === 403 ? "denied" : "failure",
+        actor: { userId: auth.user.id, username: auth.user.username },
+        ip: c.get("client").ip,
+        details: {
+          target: input.target,
+          reason: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        },
       });
       throw error;
     }

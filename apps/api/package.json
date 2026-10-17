@@ -14,6 +14,7 @@
     "@everyos/auth": "workspace:*",
     "@everyos/catalogs": "workspace:*",
     "@everyos/database": "workspace:*",
+    "@everyos/i18n": "workspace:*",
     "@everyos/logger": "workspace:*",
     "@everyos/security": "workspace:*",
     "@everyos/shared": "workspace:*",
@@ -23,7 +24,8 @@
     "zod": "catalog:",
     "@everyos/widget-sdk": "workspace:*",
     "@everyos/system": "workspace:*",
-    "@everyos/release": "workspace:*"
+    "@everyos/release": "workspace:*",
+    "nodemailer": "catalog:"
   },
   "devDependencies": {
     "@types/ws": "catalog:"

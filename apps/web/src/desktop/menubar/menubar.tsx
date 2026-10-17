@@ -43,6 +43,7 @@ import { moduleOrder, moduleVisibility } from "./module-order.ts";
 import { DEFAULT_MENUBAR } from "../state/defaults.ts";
 import { ConnectionModule } from "./connection-module.tsx";
 import { AiAgentModule } from "./ai-agent-module.tsx";
+import { powerMenuEntries } from "../power/power.tsx";
 
 function AgentIndicator() {
   const { t } = useTranslation();
@@ -232,6 +233,8 @@ export function Menubar() {
       icon: <LogOut />,
       onSelect: () => void signOut(),
     },
+    { kind: "separator", id: "s3" },
+    ...powerMenuEntries(t),
   ];
   const windowMenu: MenuEntry[] = [
     ...(focused && focusedApp?.window.instancing === "multiple"

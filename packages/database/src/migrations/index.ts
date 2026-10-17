@@ -12,6 +12,7 @@ import { migration0010 } from "./0010-scheduled-tasks.ts";
 import { migration0011 } from "./0011-ai-agents.ts";
 import { migration0012 } from "./0012-ai-local-models.ts";
 import { migration0013 } from "./0013-ai-chat-lists.ts";
+import { migration0014 } from "./0014-notification-channels.ts";
 
 /** Ordered list of all EveryOS schema migrations. Append only. */
 export const EVERYOS_MIGRATIONS: readonly Migration[] = [
@@ -28,4 +29,5 @@ export const EVERYOS_MIGRATIONS: readonly Migration[] = [
   migration0011,
   migration0012,
   migration0013,
+  migration0014,
 ];

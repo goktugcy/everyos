@@ -31,6 +31,16 @@ export function selectArchitecture(app: CatalogApp, architecture: string): Catal
   };
 }
 
+/** What an installation was prepared from; enough to prepare it again with other values. */
+export interface InstallInputs {
+  /** Every declared variable's resolved value, generated secrets included. */
+  variables: Record<string, string>;
+  /** Host ports the user fixed; others are allocated by Docker. */
+  ports: { service: string; index: number; host: number }[];
+  /** The account defaults (PUID, PGID, TZ) applied at installation, if any. */
+  defaults: AppInstallDefaults | null;
+}
+
 /** Resolve only declared inputs. No process environment participates in interpolation. */
 export function prepareInstall(
   app: CatalogApp,
@@ -41,6 +51,19 @@ export function prepareInstall(
   },
   defaults?: AppInstallDefaults,
 ): string {
+  return prepareInstallValues(app, id, input, defaults).compose;
+}
+
+/** {@link prepareInstall}, also returning the resolved values so they can be kept. */
+export function prepareInstallValues(
+  app: CatalogApp,
+  id: string,
+  input: {
+    variables: Record<string, string>;
+    ports: { service: string; index: number; host: number }[];
+  },
+  defaults?: AppInstallDefaults,
+): { compose: string; variables: Record<string, string> } {
   if (app.blockers.length) throw new CatalogError("unsupported-compose");
   const allowed = new Set(app.variables.map((entry) => entry.key));
   if (Object.keys(input.variables).some((key) => !allowed.has(key)))
@@ -214,5 +237,13 @@ export function prepareInstall(
   }
   const result = stringify(prepared, { lineWidth: 0 });
   if (Buffer.byteLength(result) > 512 * 1024) throw new CatalogError("too-large");
-  return result;
+  return {
+    compose: result,
+    variables: Object.fromEntries(
+      app.variables.flatMap((entry) => {
+        const value = vars.get(entry.key);
+        return value === undefined ? [] : [[entry.key, value]];
+      }),
+    ),
+  };
 }

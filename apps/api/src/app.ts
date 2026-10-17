@@ -22,6 +22,7 @@ import { selfUpdateRoutes } from "./modules/self-update/routes.ts";
 import { existsSync } from "node:fs";
 import { integrationRoutes } from "./modules/integrations/routes.ts";
 import { logRoutes } from "./modules/logs/routes.ts";
+import { notificationChannelRoutes } from "./modules/notifications/channel-routes.ts";
 import { notificationRoutes } from "./modules/notifications/routes.ts";
 import { fileRoutes } from "./modules/files/routes.ts";
 import { terminalRoutes } from "./modules/terminal/routes.ts";
@@ -96,6 +97,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/logs", logRoutes(services));
   api.route("/docker", dockerRoutes(services));
   api.route("/integrations", integrationRoutes(services));
+  api.route("/notification-channels", notificationChannelRoutes(services));
   api.route("/notifications", notificationRoutes(services));
   api.route("/files", fileRoutes(services));
   api.route("/terminal", terminalRoutes(services));

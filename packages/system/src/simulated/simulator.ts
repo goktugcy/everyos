@@ -233,6 +233,10 @@ export function createSimulator(now: () => number = Date.now): Simulator {
       return Promise.resolve();
     },
     timers: () => Promise.resolve(timers()),
+    power(action) {
+      log("systemd-logind.service", 5, `Simulated ${action}; the host keeps running`);
+      return Promise.resolve();
+    },
   };
 
   const timers = (): TimerSummary => ({

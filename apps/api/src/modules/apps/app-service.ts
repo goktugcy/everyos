@@ -6,18 +6,24 @@ import {
   managedProject,
   parseCompose,
   prepareInstall,
+  prepareInstallValues,
+  recoverInputs,
   selectArchitecture,
+  type InstallInputs,
 } from "@everyos/catalogs";
 import type { Database } from "@everyos/database";
 import { detectAdapters } from "@everyos/widget-sdk";
 import type { SecretBox } from "@everyos/security";
-import type {
-  AppAction,
-  AppDataSupport,
-  AppJobView,
-  CatalogApp,
-  InstalledAppView,
-  LocalizedText,
+import {
+  AI_AGENT_CATALOG_ID,
+  type AppAction,
+  type AppCatalogUpdate,
+  type AppConfiguration,
+  type AppDataSupport,
+  type AppJobView,
+  type CatalogApp,
+  type InstalledAppView,
+  type LocalizedText,
 } from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
@@ -38,8 +44,28 @@ interface AppRow {
   removed: number;
   metadata: string;
 }
+interface CatalogBaseline {
+  hash: string | null;
+  version: string | null;
+}
 interface AppMetadata {
-  pendingConfig?: { sealedCompose: string; previousHash: string; provenance: CatalogApp["source"] };
+  pendingConfig?: {
+    sealedCompose: string;
+    previousHash: string;
+    provenance: CatalogApp["source"];
+    /** Sealed {@link InstallInputs} (`app:<id>:pending-inputs:v1`), committed with the file. */
+    inputs?: string;
+    template?: CatalogApp;
+    catalog?: CatalogBaseline;
+  };
+  /** Sealed {@link InstallInputs} (`app:<id>:inputs:v1`): what the running file was prepared from. */
+  inputs?: string;
+  /** The definition the app runs, so its settings can be changed without updating it. */
+  template?: CatalogApp;
+  /** The catalog definition the app runs; a different catalog hash means an update. */
+  catalog?: CatalogBaseline;
+  /** Installed before EveryOS kept inputs, and they could not be recovered exactly. */
+  inputsUnavailable?: boolean;
   icon?: string | null;
   web?: CatalogApp["web"];
   images?: InstalledAppView["images"];
@@ -56,6 +82,18 @@ export interface FinishedJob {
   error: string | null;
   rollback: AppJobView["rollback"];
 }
+/** A definition kept with the app: everything needed to prepare it again, no display extras. */
+function storedTemplate(app: CatalogApp): CatalogApp {
+  return { ...app, screenshots: [], description: {}, notes: {}, variants: {} };
+}
+/** What a catalog definition is, for noticing that it changed (catalog hashes are optional). */
+function fingerprint(app: CatalogApp): string {
+  return createHash("sha256")
+    .update(app.compose)
+    .update(JSON.stringify(app.variants ?? {}))
+    .digest("hex");
+}
+const hostArch = (arch: string) => (arch === "x64" ? "amd64" : arch === "aarch64" ? "arm64" : arch);
 interface JobRow {
   id: string;
   app_id: string;
@@ -170,10 +208,11 @@ export class AppService {
       .catch((error: unknown) => {
         throw toApiError(error);
       });
-    const catalogIcons = new Map(
+    await this.#adoptLegacy(actor);
+    const catalogApps = new Map(
       this.#catalogs
         .apps()
-        .map((app) => [JSON.stringify([app.source.catalogId, app.source.path]), app.icon]),
+        .map((app) => [JSON.stringify([app.source.catalogId, app.source.path]), app]),
     );
     return this.#db
       .all<AppRow>("SELECT * FROM installed_apps WHERE removed = 0 ORDER BY installed_at DESC")
@@ -190,7 +229,7 @@ export class AppService {
           name: JSON.parse(row.name) as CatalogApp["name"],
           icon:
             metadata.icon ??
-            catalogIcons.get(JSON.stringify([provenance.catalogId, provenance.path])) ??
+            catalogApps.get(JSON.stringify([provenance.catalogId, provenance.path]))?.icon ??
             null,
           project: row.project,
           provenance,
@@ -237,8 +276,256 @@ export class AppService {
               .map((image) => image.reference)
               .concat(members.map((c) => c.image)),
           ),
+          configurable: Boolean(metadata.inputs && metadata.template),
+          catalogUpdate: this.#catalogUpdate(row.id, metadata, provenance),
         };
       });
+  }
+  /**
+   * A newer catalog definition, compared by fingerprint (catalog hashes are optional). Apps
+   * installed before EveryOS kept one take the current one as their baseline.
+   */
+  #catalogUpdate(
+    id: string,
+    metadata: AppMetadata,
+    provenance: CatalogApp["source"],
+  ): AppCatalogUpdate | null {
+    if (provenance.catalogId === AI_AGENT_CATALOG_ID) return null;
+    const app = this.#catalogApp(provenance);
+    if (!app) return null;
+    const current = { hash: fingerprint(app), version: app.version };
+    if (!metadata.catalog?.hash) {
+      metadata.catalog = current;
+      this.#db.run(
+        "UPDATE installed_apps SET metadata = ? WHERE id = ?",
+        JSON.stringify(metadata),
+        id,
+      );
+      return null;
+    }
+    return current.hash === metadata.catalog.hash
+      ? null
+      : { version: current.version, installedVersion: metadata.catalog.version };
+  }
+  /** Installed apps with a newer catalog definition, for the notification center. */
+  catalogUpdates(): Array<{ id: string; name: LocalizedText; version: string | null }> {
+    return this.#db.all<AppRow>("SELECT * FROM installed_apps WHERE removed = 0").flatMap((row) => {
+      const update = this.#catalogUpdate(
+        row.id,
+        JSON.parse(row.metadata) as AppMetadata,
+        JSON.parse(row.provenance) as CatalogApp["source"],
+      );
+      return update
+        ? [{ id: row.id, name: JSON.parse(row.name) as LocalizedText, version: update.version }]
+        : [];
+    });
+  }
+  /**
+   * Apps installed before EveryOS kept their inputs: recovered once from the stored file with
+   * the current catalog definition, and kept only when preparing it again reproduces that file.
+   */
+  async #adoptLegacy(actor: Actor): Promise<void> {
+    const rows = this.#db
+      .all<AppRow>("SELECT * FROM installed_apps WHERE removed = 0")
+      .filter((row) => {
+        const metadata = JSON.parse(row.metadata) as AppMetadata;
+        const provenance = JSON.parse(row.provenance) as CatalogApp["source"];
+        return (
+          !metadata.inputs &&
+          !metadata.inputsUnavailable &&
+          !metadata.pendingConfig &&
+          provenance.catalogId !== AI_AGENT_CATALOG_ID
+        );
+      });
+    if (!rows.length) return;
+    const system = await this.#agent.call("system.info", {}, actor).catch(() => null);
+    if (!system) return;
+    for (const row of rows) {
+      const metadata = JSON.parse(row.metadata) as AppMetadata;
+      const found = this.#catalogTemplate(
+        JSON.parse(row.provenance) as CatalogApp["source"],
+        hostArch(system.arch),
+      );
+      // A catalog that is disabled or gone may come back; only a real attempt is final.
+      if (!found) continue;
+      const recovered = recoverInputs(
+        found.app,
+        row.id,
+        this.#secrets.open(row.sealed_compose, `app:${row.id}:compose:v1`),
+      );
+      if (recovered) {
+        metadata.inputs = this.#sealInputs(row.id, "inputs", recovered);
+        metadata.template = storedTemplate(found.app);
+        metadata.catalog = { hash: found.hash, version: found.app.version };
+      } else metadata.inputsUnavailable = true;
+      this.#db.run(
+        "UPDATE installed_apps SET metadata = ? WHERE id = ?",
+        JSON.stringify(metadata),
+        row.id,
+      );
+    }
+  }
+  /** The catalog's current definition of an installed app. */
+  #catalogApp(provenance: CatalogApp["source"]): CatalogApp | null {
+    return this.#catalogs.appAt(provenance.catalogId, provenance.path);
+  }
+  /** That definition for this host's architecture, with the whole definition's fingerprint. */
+  #catalogTemplate(
+    provenance: CatalogApp["source"],
+    arch: string,
+  ): { app: CatalogApp; hash: string } | null {
+    const app = this.#catalogApp(provenance);
+    return app ? { app: selectArchitecture(app, arch), hash: fingerprint(app) } : null;
+  }
+  #sealInputs(id: string, kind: "inputs" | "pending-inputs", inputs: InstallInputs): string {
+    return this.#secrets.seal(JSON.stringify(inputs), `app:${id}:${kind}:v1`);
+  }
+  #openInputs(id: string, sealed: string): InstallInputs {
+    return JSON.parse(this.#secrets.open(sealed, `app:${id}:inputs:v1`)) as InstallInputs;
+  }
+  /** The settings form: the running definition, or the catalog's newer one with kept values. */
+  async configuration(
+    id: string,
+    target: "current" | "update",
+    actor: Actor,
+  ): Promise<AppConfiguration> {
+    const { template, inputs } = await this.#configurable(id, target, actor);
+    return {
+      target,
+      version: template.version,
+      variables: template.variables.map((entry) => {
+        const stored = inputs.variables[entry.key];
+        const hidden = entry.secret || entry.generated;
+        return {
+          ...entry,
+          // Secrets never leave the server; they are kept unless replaced.
+          default: hidden ? null : entry.default,
+          value: hidden ? null : (stored ?? null),
+          hasValue: stored !== undefined && stored !== "",
+        };
+      }),
+      ports: template.ports,
+      fixedPorts: inputs.ports.filter((port) =>
+        template.ports.some(
+          (entry) => entry.service === port.service && entry.index === port.index,
+        ),
+      ),
+      risks: template.risks,
+      images: template.images,
+    };
+  }
+  async #configurable(id: string, target: "current" | "update", actor: Actor) {
+    const row = this.#row(id);
+    if (!row) throw new ApiError(404, "NOT_FOUND", "Installed application not found");
+    await this.#adoptLegacy(actor);
+    const metadata = JSON.parse(this.#row(id)!.metadata) as AppMetadata;
+    if (!metadata.inputs || !metadata.template)
+      throw new ApiError(409, "CONFLICT", "This installation's settings cannot be changed", {
+        details: { reason: "inputs-unavailable" },
+      });
+    let template = metadata.template;
+    let baseline = metadata.catalog ?? null;
+    if (target === "update") {
+      const system = await this.#agent.call("system.info", {}, actor).catch((error: unknown) => {
+        throw toApiError(error);
+      });
+      const current = this.#catalogTemplate(
+        JSON.parse(row.provenance) as CatalogApp["source"],
+        hostArch(system.arch),
+      );
+      if (!current) throw new ApiError(404, "NOT_FOUND", "The catalog no longer offers this app");
+      template = current.app;
+      baseline = { hash: current.hash, version: current.app.version };
+    }
+    return { row, metadata, template, baseline, inputs: this.#openInputs(id, metadata.inputs) };
+  }
+  /**
+   * Changes settings or moves to the catalog's newer definition with the kept values. The new
+   * file is deployed by an update job; a failed deployment restores the previous one.
+   */
+  async configure(
+    id: string,
+    input: {
+      target: "current" | "update";
+      variables: Record<string, string>;
+      ports: { service: string; index: number; host: number }[];
+      acknowledgeRisks: boolean;
+    },
+    actor: Actor,
+  ): Promise<AppJobView> {
+    this.#capacity(id);
+    const { row, metadata, template, baseline, inputs } = await this.#configurable(
+      id,
+      input.target,
+      actor,
+    );
+    const declared = new Map(template.variables.map((entry) => [entry.key, entry]));
+    if (Object.keys(input.variables).some((key) => !declared.has(key)))
+      throw new ApiError(422, "VALIDATION_FAILED", "Unknown setting");
+    if (template.blockers.length)
+      throw new ApiError(422, "VALIDATION_FAILED", "Unsupported Compose template", {
+        details: { reason: "unsupported-compose", blockers: template.blockers },
+      });
+    const risky = template.risks.some(
+      (risk) => risk !== "unpinned-image" && risk !== "default-secret",
+    );
+    if (template.risks.length && !input.acknowledgeRisks)
+      throw new ApiError(422, "VALIDATION_FAILED", "Risk acknowledgement required", {
+        details: { reason: "risk-acknowledgement" },
+      });
+    if (risky && (actor.kind !== "user" || actor.role !== "admin"))
+      throw new ApiError(403, "FORBIDDEN", "Administrator risk approval required");
+    const variables: Record<string, string> = {};
+    for (const entry of template.variables) {
+      const given = input.variables[entry.key];
+      const hidden = entry.secret || entry.generated;
+      // A blank secret keeps the stored one; generated values are never regenerated.
+      if (given !== undefined && !(hidden && given === "")) variables[entry.key] = given;
+      else if (inputs.variables[entry.key] !== undefined)
+        variables[entry.key] = inputs.variables[entry.key]!;
+    }
+    let prepared: { compose: string; variables: Record<string, string> };
+    try {
+      prepared = prepareInstallValues(
+        template,
+        id,
+        { variables, ports: input.ports },
+        inputs.defaults ?? undefined,
+      );
+    } catch (error) {
+      throw new ApiError(422, "VALIDATION_FAILED", "Invalid installation inputs", {
+        details: { reason: error instanceof CatalogError ? error.reason : "invalid-input" },
+      });
+    }
+    const previous = this.#secrets.open(row.sealed_compose, `app:${id}:compose:v1`);
+    if (prepared.compose === previous && input.target === "current")
+      throw new ApiError(409, "CONFLICT", "Nothing changed", { details: { reason: "unchanged" } });
+    const inspection = await this.#agent
+      .call("apps.inspect", { id }, actor)
+      .catch((error: unknown) => {
+        throw toApiError(error);
+      });
+    if (inspection.busy) throw new ApiError(409, "CONFLICT", "Application operation in progress");
+    this.#capacity(id);
+    metadata.pendingConfig = {
+      sealedCompose: this.#secrets.seal(prepared.compose, `app:${id}:pending-compose:v1`),
+      previousHash: createHash("sha256").update(previous).digest("hex"),
+      provenance: template.source,
+      inputs: this.#sealInputs(id, "pending-inputs", {
+        variables: prepared.variables,
+        ports: input.ports,
+        defaults: inputs.defaults,
+      }),
+      template: storedTemplate(template),
+      ...(baseline ? { catalog: baseline } : {}),
+    };
+    this.#db.run(
+      "UPDATE installed_apps SET metadata = ?, risk_override = ? WHERE id = ?",
+      JSON.stringify(metadata),
+      risky ? 1 : 0,
+      id,
+    );
+    return this.#enqueue(id, "update", actor);
   }
   job(id: string): AppJobView | null {
     const row = this.#db.get<JobRow>("SELECT * FROM app_jobs WHERE id = ?", id);
@@ -254,6 +541,10 @@ export class AppService {
           updatedAt: row.updated_at,
         }
       : null;
+  }
+  /** Application jobs queued or deploying right now. */
+  activeJobs(): number {
+    return this.#running.size;
   }
   #capacity(id?: string): void {
     if (this.#stopped || this.#running.size >= 2 || (id && this.#running.has(id)))
@@ -382,12 +673,12 @@ export class AppService {
       )
         throw new ApiError(409, "CONFLICT", "Stop the source application before copying data");
     }
-    let compose: string;
+    let compose: string, resolved: Record<string, string>;
     const defaults = await this.#agent.call("apps.defaults", {}, actor).catch((error: unknown) => {
       throw toApiError(error);
     });
     try {
-      compose = prepareInstall(app, id, input, defaults);
+      ({ compose, variables: resolved } = prepareInstallValues(app, id, input, defaults));
     } catch (error) {
       throw new ApiError(422, "VALIDATION_FAILED", "Invalid installation inputs", {
         details: { reason: error instanceof CatalogError ? error.reason : "invalid-input" },
@@ -418,7 +709,14 @@ export class AppService {
                   /^\{\{otuken\.configDir\}\}\/config[0-9]{1,2}$/.test(mount.source ?? ""))),
           ),
         ...(input.dataFrom ? { dataFrom: input.dataFrom } : {}),
-      }),
+        inputs: this.#sealInputs(id, "inputs", {
+          variables: resolved,
+          ports: input.ports,
+          defaults,
+        }),
+        template: storedTemplate(app),
+        catalog: { hash: fingerprint(template), version: template.version },
+      } satisfies AppMetadata),
     );
     return this.#enqueue(id, "install", actor);
   }
@@ -510,6 +808,13 @@ export class AppService {
   #commitConfig(id: string, metadata: AppMetadata): void {
     const pending = metadata.pendingConfig;
     if (!pending) return;
+    if (pending.inputs)
+      metadata.inputs = this.#secrets.seal(
+        this.#secrets.open(pending.inputs, `app:${id}:pending-inputs:v1`),
+        `app:${id}:inputs:v1`,
+      );
+    if (pending.template) metadata.template = pending.template;
+    if (pending.catalog) metadata.catalog = pending.catalog;
     this.#db.run(
       "UPDATE installed_apps SET sealed_compose = ?, provenance = ? WHERE id = ?",
       this.#secrets.seal(

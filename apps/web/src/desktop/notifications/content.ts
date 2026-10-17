@@ -33,6 +33,10 @@ export function notificationText(
       defaultValue: params.action,
     });
   if (typeof params.reason === "string") params.reason = reasonText(t, params.reason);
+  if (typeof params.power === "string")
+    params.power = t(`hostPower.progress.${params.power as "reboot"}`, {
+      defaultValue: params.power,
+    });
   return {
     title: t(`notifications.kinds.${notification.kind}.title`, params),
     body: t(`notifications.kinds.${notification.kind}.body`, params),
@@ -55,8 +59,10 @@ const ACTIONS: Partial<
   "agent-unavailable": { appId: "everyos.system" },
   "app-succeeded": { appId: "everyos.store", appState: { tab: "installed" } },
   "app-failed": { appId: "everyos.store", appState: { tab: "installed" } },
+  "app-update-available": { appId: "everyos.store", appState: { tab: "installed" } },
   "login-locked": { appId: "everyos.audit" },
   "security-updates": { appId: "everyos.updates" },
+  "reboot-required": { appId: "everyos.updates" },
   "everyos-update-available": { appId: "everyos.settings", appState: { section: "about" } },
   "backup-succeeded": { appId: "everyos.backups" },
   "backup-failed": { appId: "everyos.backups" },

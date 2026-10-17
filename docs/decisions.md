@@ -645,3 +645,33 @@ alone. Only a model the agent just listed is accepted. Answers record the model 
 switch inside a conversation stays visible. Favorites and the archive are per-conversation columns
 and exclusive. The `ai.chat` widget calls the permission-checked assistant routes directly, so the
 widget manifest allows an empty `dataSources` list for interactive widgets.
+
+### D49 — Home-server essentials: power, disks, external channels, app settings
+
+The production review found five gaps for a home server, implemented in one release.
+
+**Power.** Restart and shutdown are typed operations (`power.control`), never a generic command:
+the agent asks PID 1 for a transient timer that runs `systemctl reboot|poweroff` 5 s later, so the
+API can answer and audit first. The account password, the action name and the blocker list guard
+it; an EveryOS update in progress cannot be overridden. Restart-required uses the distribution
+marker and the kernels in `/boot`, because the hardened units cannot see `/lib/modules`.
+
+**Disks.** Mount only volumes on disks without any system mount, only known filesystems, only
+under `/srv/everyos/disks/<uuid>`, never format or repair. Mounting through systemd mount units
+(in `/run` or `/etc`) makes mounts host-wide and lets systemd own boot-time mounting with
+`nofail`; `nodev,nosuid,noexec` always apply. Files reaches disks as the person's Linux account
+(the account worker reads its own mount table), so Linux permissions keep applying; filesystems
+without Unix permissions belong to the mounting administrator's Linux account, as a desktop
+automounter would do. The API never gets write access to the disks.
+
+**External channels.** ntfy, Telegram, e-mail (SMTP through nodemailer) and webhooks (Discord,
+Slack, generic JSON) are notification providers. Anything that works like a credential (tokens,
+topics, webhook URLs) is sealed and never returned. Texts are rendered on the server in the
+channel's language; personal notifications never leave the app; a burst limit caps each channel.
+
+**App settings and updates.** Keep the inputs, definition and fingerprint of each installation
+so its settings can be changed and a newer catalog definition can be offered with the kept values.
+Detection compares catalog definitions only (no registry polling, as the owner chose); older
+installations are adopted only when their inputs reproduce the stored Compose file exactly.
+
+**Mobile.** The notification center and the power actions are available in the mobile shell.

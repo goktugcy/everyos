@@ -1,5 +1,5 @@
 import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
-import { ChevronLeft, Lock, LogOut, Search } from "lucide-react";
+import { ChevronLeft, Lock, LogOut, Power, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
@@ -14,6 +14,8 @@ import { searchEntries } from "../launcher/search.ts";
 import { LockScreen } from "../lock/lock-screen.tsx";
 import { useAutoLock } from "../lock/use-auto-lock.ts";
 import { ConfirmHost } from "../menus/confirm.tsx";
+import { NotificationBell } from "../notifications/center.tsx";
+import { power, PowerHost } from "../power/power.tsx";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
 import { AppContent } from "../windows/app-content.tsx";
@@ -65,6 +67,13 @@ export function MobileShell() {
     [open],
   );
   const manifest = open ? getApp(open.appId) : undefined;
+  const bell = (
+    <NotificationBell
+      className="grid size-9 place-items-center rounded-everyos-sm text-fg hover:bg-hover/10"
+      onOpenApp={(appId, appState) => setOpen({ appId, appState, title: "" })}
+    />
+  );
+  const canPower = permissions.includes("system:manage");
 
   return (
     <>
@@ -92,7 +101,7 @@ export function MobileShell() {
               <h1 className="min-w-0 flex-1 truncate text-center text-sm font-semibold">
                 {open.title || t(manifest.titleKey)}
               </h1>
-              <span className="w-16" />
+              <span className="flex w-16 justify-end">{bell}</span>
             </>
           ) : (
             <>
@@ -101,6 +110,7 @@ export function MobileShell() {
               <span className="ml-auto text-sm text-fg-muted">
                 <Clock />
               </span>
+              {bell}
             </>
           )}
         </header>
@@ -158,10 +168,31 @@ export function MobileShell() {
                 <LogOut className="size-4" aria-hidden />
                 {t("shell.menu.signOut")}
               </button>
+              {canPower ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => power.ask("reboot")}
+                    className="glass flex h-11 items-center justify-center gap-2 rounded-everyos-md text-sm"
+                  >
+                    <RotateCcw className="size-4" aria-hidden />
+                    {t("hostPower.menu.reboot")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => power.ask("shutdown")}
+                    className="glass flex h-11 items-center justify-center gap-2 rounded-everyos-md text-sm"
+                  >
+                    <Power className="size-4" aria-hidden />
+                    {t("hostPower.menu.shutdown")}
+                  </button>
+                </>
+              ) : null}
             </div>
           </main>
         )}
         <ConfirmHost />
+        <PowerHost />
       </div>
       {locked ? <LockScreen /> : null}
     </>

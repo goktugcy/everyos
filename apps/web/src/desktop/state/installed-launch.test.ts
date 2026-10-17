@@ -47,6 +47,8 @@ const app: InstalledAppView = {
   lastJob: null,
   dataCopyEligible: false,
   widgetAdapters: [],
+  configurable: true,
+  catalogUpdate: null,
 };
 const popup = {
   opener: {} as unknown,

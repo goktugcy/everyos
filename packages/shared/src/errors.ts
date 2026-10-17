@@ -49,6 +49,7 @@ export const ERROR_CODES = [
   "BACKUP_INVALID",
   "BACKUP_INCOMPATIBLE",
   "BACKUP_APP_RUNNING",
+  "CHANNEL_DELIVERY_FAILED",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

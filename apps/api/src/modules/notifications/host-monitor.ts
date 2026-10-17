@@ -50,6 +50,8 @@ export class HostMonitor {
   #offline = 0;
 
   readonly #tailscale: TailscaleContext | null;
+  readonly #appUpdates:
+    (() => Array<{ id: string; name: Record<string, string>; version: string | null }>) | null;
 
   constructor(deps: {
     agent: AgentGateway;
@@ -58,7 +60,10 @@ export class HostMonitor {
     intervalMs?: number;
     /** Enables the Tailscale key-expiry and Funnel checks. */
     tailscale?: TailscaleContext;
+    /** Installed apps with a newer catalog definition. */
+    appUpdates?: () => Array<{ id: string; name: Record<string, string>; version: string | null }>;
   }) {
+    this.#appUpdates = deps.appUpdates ?? null;
     this.#tailscale = deps.tailscale ?? null;
     this.#agent = deps.agent;
     this.#notifications = deps.notifications;
@@ -96,6 +101,7 @@ export class HostMonitor {
   }
 
   async #check(): Promise<void> {
+    this.#checkAppUpdates();
     if (this.#agent.state !== "connected") {
       if (++this.#agentDown >= CONFIRMATIONS)
         this.#notifications.raise({ kind: "agent-unavailable", severity: "critical" });
@@ -127,7 +133,41 @@ export class HostMonitor {
     ];
     this.#notifications.resolveMissing(checked, active);
 
+    const reboot = await this.#agent
+      .call("power.reboot.status", {}, ACTOR, { signal })
+      .catch(() => null);
+    if (reboot?.required)
+      this.#notifications.raise({
+        kind: "reboot-required",
+        severity: "warning",
+        params: {
+          packages: reboot.packages.length,
+          kernel: reboot.reasons.includes("kernel") ? 1 : 0,
+        },
+      });
+    else if (reboot) this.#notifications.resolve("reboot-required");
+
     await this.#checkNetwork(signal);
+  }
+
+  /** Catalog updates come from synchronized catalogs, so they need no agent. */
+  #checkAppUpdates(): void {
+    if (!this.#appUpdates) return;
+    const active = new Set<string>();
+    for (const update of this.#appUpdates()) {
+      this.#notifications.raise({
+        kind: "app-update-available",
+        severity: "info",
+        key: update.id,
+        params: {
+          app: update.name.en ?? Object.values(update.name)[0] ?? update.id,
+          appId: update.id,
+          version: update.version ?? "?",
+        },
+      });
+      active.add(`app-update-available:${update.id}`);
+    }
+    this.#notifications.resolveMissing(["app-update-available"], active);
   }
 
   async #checkNetwork(signal: AbortSignal): Promise<void> {

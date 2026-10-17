@@ -14,7 +14,8 @@ and the permission needed to see it. Texts are rendered by the client from `kind
 - **Conditions** (`condition: true`) describe a state that lasts:
   - failed service, low disk space, container with problems;
   - under-voltage, throttling, NVMe health;
-  - pending security updates;
+  - pending security updates, a restart required by installed updates (`reboot-required`), a
+    newer catalog definition for an installed app (`app-update-available`);
   - internet offline, Tailscale offline, Tailscale key expiring, EveryOS public through Tailscale
     Funnel ([tailscale.md](tailscale.md)), agent unreachable.
 
@@ -37,6 +38,8 @@ Retention: 30 days, and at most 2,000 notifications. Open conditions are kept.
 | Login limiter                                | `login-locked` when an account or address becomes locked (`audit:read`)                                                           |
 | `HostMonitor` Tailscale checks               | `tailscale-key-expiry` (`system:read`), `tailscale-funnel` (`system:manage`, security)                                            |
 | Phase 7 modules                              | updates ([updates.md](updates.md)), backups ([backups.md](backups.md)) and scheduled tasks ([tasks.md](tasks.md))                 |
+| `HostMonitor` restart and app checks         | `reboot-required` (packages, kernel), `app-update-available` per installed app (catalog definition changed)                       |
+| Power route                                  | `power-scheduled` when an administrator restarts or shuts down the host                                                           |
 
 The monitor reuses the agent's cached collectors (`collectAlerts`). It resolves a condition only
 when the source that reports it answered: a failing check never clears a real problem.
@@ -53,14 +56,56 @@ when the source that reports it answered: a failing check never clears a real pr
   `latest` is set only when the notification should pop up. Events are delivered in order, with
   at most 20 queued per stream.
 - **Providers:** the `NotificationProvider` interface (`deliver(notification)`) is the extension
-  point for external channels (Telegram, e-mail, web push). The built-in log provider writes new
-  notifications to the service log (journald). Providers get only new or re-alerted notifications,
-  and a failing provider never affects the in-app center.
+  point for delivery outside the app. The built-in log provider writes new notifications to the
+  service log (journald); the channel provider sends them to [external channels](#external-channels).
+  Providers get only new or re-alerted notifications, and a failing provider never affects the
+  in-app center.
+
+## External channels
+
+Administrators (`system:manage`) add up to 10 channels in Settings › Notifications:
+
+| Kind     | Settings                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| ntfy     | Server (default `https://ntfy.sh`), topic, optional access token. Published as JSON, so non-ASCII titles survive.                  |
+| Telegram | Bot token and chat id. Plain text without a parse mode, so notification text never becomes markup.                                 |
+| E-mail   | SMTP host, port, `tls` (465), `starttls` (587) or `none`, optional user and password, sender and up to 10 recipients (nodemailer). |
+| Webhook  | URL, optional bearer token and format: `discord` (mentions disabled), `slack` (escaped) or `json` (the full notification).         |
+
+Each channel has a language (`tr`/`en`; texts are rendered on the server from the same
+resources as the app), a minimum severity and optional categories (none means all). Only
+notifications without a `user_id` leave the server: personal ones stay in the app.
+
+The bot token, SMTP password, access tokens, the ntfy topic and the webhook URL work like
+credentials. They are sealed with SecretBox (`notify-channel:<id>:config:v1`) and never returned:
+the list shows a topic hint, the webhook's origin and whether a secret is stored. An update that
+omits a credential keeps the stored one; `clearToken`/`clearPassword` remove an optional one.
+Webhook URLs may carry a query string but no user information. Audit entries name the channel and
+kind, never the secrets.
+
+Requests use the integrations HTTP client: DNS is resolved once and pinned (SMTP connects to the
+pinned address while TLS still checks the configured name), redirects are not followed, link-local
+and cloud metadata addresses are refused, and requests time out after 10 s. Private addresses are
+allowed for self-hosted ntfy, mail and webhook servers.
+
+A channel sends at most 20 messages per ten minutes; the rest is dropped and logged. The last
+delivery time and the last failure's short, credential-free reason (`http-status-401`,
+`http-timeout`, `smtp-auth`…) are shown on the channel. **Send test message** delivers a fixed
+message in the channel's language and reports `CHANNEL_DELIVERY_FAILED` with the reason.
+
+| Method & path                          | Description                                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| `GET /notification-channels`           | Channel views, without secrets.                                                       |
+| `POST /notification-channels`          | Create; `{ kind, name, enabled, minSeverity, categories, language, …kind settings }`. |
+| `PUT /notification-channels/:id`       | Replace; omitted credentials keep the stored ones.                                    |
+| `DELETE /notification-channels/:id`    | `{ confirmId }` equal to the id.                                                      |
+| `POST /notification-channels/:id/test` | Send a test message now.                                                              |
 
 ## Client
 
-The menu bar bell (module `notifications`) shows the unread count without muted categories. The
-center offers:
+The menu bar bell (module `notifications`) shows the unread count without muted categories. On
+phones the bell sits in the header of the mobile shell, and dismiss buttons are always visible on
+touch screens. The center offers:
 
 - all and unread filters, plus severity and category filters;
 - grouping by category;

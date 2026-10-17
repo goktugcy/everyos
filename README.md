@@ -69,8 +69,10 @@ The desktop shows the contents of your Desktop folder, so folders and files beha
 across views. Select several items, draw a selection rectangle, drag between folders, preview
 images and edit text. Deleted files go to a private trash where they can be restored.
 
-Administrators can also make selected host locations available with explicit access rules.
-Learn more in the [file manager guide](docs/files.md).
+Administrators can also make selected host locations available with explicit access rules, and
+mount extra and USB disks from **Settings → Disks** so they appear in Files. EveryOS never formats
+a disk or touches the system disk. Learn more in the [file manager](docs/files.md) and
+[disks](docs/disks.md) guides.
 
 ### Apps on your own machine
 
@@ -78,7 +80,9 @@ Browse supported catalogs in the App Store, install self-hosted applications and
 deployment progress. Open the Docker app to inspect containers and manage supported lifecycle
 actions. EveryOS distinguishes its own deployments from external and protected resources.
 
-App updates, deployment rollback and selected app-data backups are part of the same workspace.
+Change an installed app's settings later, get notified when its catalog definition changes, and
+apply the update with your values kept. Deployment rollback and selected app-data backups are part
+of the same workspace.
 Docker must be installed on the host to use these features; the EveryOS installer does not install
 it automatically. See the [App Store](docs/app-store.md) and [Docker](docs/docker-management.md) guides.
 
@@ -104,7 +108,9 @@ Your appearance settings stay with your account.
 ### Linux, within reach
 
 See real CPU, memory, storage and network readings in System Monitor. Inspect services and logs,
-manage host packages and schedule supported tasks. The menu bar shows battery and power details
+manage host packages and schedule supported tasks. Restart or shut down the host from the EveryOS
+menu, with a notice when installed updates need a restart. Notifications can also reach you
+through ntfy, Telegram, e-mail or a webhook ([notifications](docs/notifications.md)). The menu bar shows battery and power details
 when the Linux host exposes those sensors, including charging state and watts where available.
 
 The browser terminal connects to a real shell with independent windows and themes. An administrator
@@ -209,7 +215,7 @@ the [architecture guide](docs/architecture.md). See [development.md](docs/develo
 | ----------------------------------- | --------------------------------------------------------------------------------------- |
 | Installation, CLI and recovery      | [Packaging](docs/packaging.md)                                                          |
 | Host configuration                  | [Configuration](docs/configuration.md)                                                  |
-| Files, homes and trash              | [Files](docs/files.md)                                                                  |
+| Files, homes and trash              | [Files](docs/files.md) · [Disks](docs/disks.md)                                         |
 | Self-hosted applications            | [App Store](docs/app-store.md)                                                          |
 | Docker resources                    | [Docker management](docs/docker-management.md)                                          |
 | Browser shell access                | [Terminal](docs/terminal.md)                                                            |

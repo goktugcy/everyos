@@ -5,7 +5,14 @@ import { AgentServer } from "@everyos/agent-protocol";
 import { createLogger, serializeError } from "@everyos/logger";
 import { deriveKey, loadKeyFile, SecretBox } from "@everyos/security";
 
-import { createAptManager, createAptSimulator, createInternetProbe } from "@everyos/system";
+import {
+  createAptManager,
+  createAptSimulator,
+  createDiskManager,
+  createDiskSimulator,
+  createInternetProbe,
+  findExecutable,
+} from "@everyos/system";
 import { selectBackends } from "./backends.ts";
 import { ConfigError, loadAgentConfig, resolveGroupId } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
@@ -118,6 +125,11 @@ async function main(): Promise<void> {
     isProtected: isProtectedContainer,
   });
   const appData = new AppDataBackups({ apps, logger });
+  // Development lists the host's disks where lsblk exists but never mounts them (policy).
+  const disks =
+    config.mode === "development" && (config.simulate || !(await findExecutable("lsblk")))
+      ? createDiskSimulator({ mountRoot: config.disksRoot })
+      : createDiskManager({ mountRoot: config.disksRoot });
   const handlers = createHandlers({
     mode: config.mode,
     version: installedVersion(),
@@ -134,6 +146,7 @@ async function main(): Promise<void> {
     ...(config.tailscaleSocket ? { tailscaleSockets: [config.tailscaleSocket] } : {}),
     apps,
     appData,
+    disks,
   });
   const server = new AgentServer({
     // Terminals and log tails hold streams open; the API uses one connection.
@@ -148,6 +161,7 @@ async function main(): Promise<void> {
       servicesSource: services.source,
       dockerSource: docker.source,
       aptSource: apt.source,
+      disksSource: disks.source,
     }),
     logger,
     socketMode: socketGroupId === null ? 0o600 : 0o660,

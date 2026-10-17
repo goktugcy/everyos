@@ -25,6 +25,7 @@ import { Launcher } from "../launcher/launcher.tsx";
 import { LockScreen } from "../lock/lock-screen.tsx";
 import { useAutoLock } from "../lock/use-auto-lock.ts";
 import { ConfirmHost } from "../menus/confirm.tsx";
+import { PowerHost } from "../power/power.tsx";
 import { Menubar } from "../menubar/menubar.tsx";
 import { useDesktopShortcuts } from "../shortcuts.ts";
 import { resolveSpec } from "../state/controller.ts";
@@ -142,6 +143,7 @@ function DesktopWorkspace() {
         <Dock />
         <Launcher />
         <ConfirmHost />
+        <PowerHost />
         {saveError ? (
           <div className="fixed right-3 top-12 z-[75] w-80">
             <Alert tone="warning">{t("common.saveFailed")}</Alert>

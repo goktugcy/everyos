@@ -32,6 +32,7 @@ import { AppService, type FinishedJob } from "./modules/apps/app-service.ts";
 import { AiAgentService } from "./modules/ai-agents/agent-service.ts";
 import { LocalModelService } from "./modules/ai-agents/local-models.ts";
 import { HostMonitor } from "./modules/notifications/host-monitor.ts";
+import { DiskService } from "./modules/system/disks.ts";
 import { ReleaseMonitor } from "./modules/notifications/release-monitor.ts";
 import { FileService } from "./modules/files/file-service.ts";
 import { TerminalService } from "./modules/terminal/terminal-service.ts";
@@ -40,6 +41,10 @@ import { TaskService } from "./modules/tasks/task-service.ts";
 import { taskExecutors } from "./modules/tasks/executors.ts";
 import { BackupService } from "./modules/backups/backup-service.ts";
 import { logProvider, NotificationService } from "./modules/notifications/notification-service.ts";
+import {
+  NotificationChannelService,
+  type SmtpTransportFactory,
+} from "./modules/notifications/channels.ts";
 
 /** The subset of the agent client the HTTP layer depends on. */
 export type AgentGateway = Pick<AgentClient, "state" | "call" | "stream">;
@@ -81,6 +86,10 @@ export interface Services {
   /** Shared, reference-counted widget data topics. */
   widgetData: DataHub;
   notifications: NotificationService;
+  /** External delivery channels (ntfy, Telegram, e-mail, webhooks). */
+  notificationChannels: NotificationChannelService;
+  /** Disks mounted from Settings › Disks. */
+  disks: DiskService;
   files: FileService;
   terminals: TerminalService;
   updates: UpdateService;
@@ -112,6 +121,10 @@ export interface ServiceDependencies {
   resolveHost?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
   /** Test hook: loopback ports probed for local model servers. */
   localModelPorts?: ReadonlyArray<readonly [number, LocalServerKind]>;
+  /** Test hook: SMTP transports for e-mail channels. */
+  smtp?: SmtpTransportFactory;
+  /** Test hook: the Telegram Bot API origin. */
+  telegramApi?: string;
 }
 
 export function createPasswordHasher(params: ScryptParams = DEFAULT_SCRYPT_PARAMS): PasswordHasher {
@@ -172,6 +185,17 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
     providers: [logProvider(deps.logger)],
   });
+  const notificationChannels = new NotificationChannelService({
+    db: deps.db,
+    secrets,
+    audit,
+    logger: deps.logger,
+    now,
+    ...(deps.resolveHost ? { resolve: deps.resolveHost } : {}),
+    ...(deps.smtp ? { smtp: deps.smtp } : {}),
+    ...(deps.telegramApi ? { telegram: deps.telegramApi } : {}),
+  });
+  notifications.addProvider(notificationChannels.provider());
   const apps = new AppService({
     db: deps.db,
     agent: deps.agent,
@@ -214,7 +238,12 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
     onChanged: () => widgetData.refresh("data.apt"),
   });
-  const files = new FileService({ ...deps.config.files, logger: deps.logger });
+  const disks = new DiskService({ agent: deps.agent, audit, logger: deps.logger, now });
+  const files = new FileService({
+    ...deps.config.files,
+    logger: deps.logger,
+    extraRoots: () => disks.fileRoots(),
+  });
   const backups = new BackupService({
     db: deps.db,
     agent: deps.agent,
@@ -250,6 +279,8 @@ export function createServices(deps: ServiceDependencies): Services {
     logger: deps.logger,
     db: deps.db,
     users,
+    notificationChannels,
+    disks,
     preferences: new PreferenceRepository(deps.db, deps.logger, now),
     wallpapers: new WallpaperService(deps.db, deps.config.paths.dataDir, now),
     sessions: new SessionService(
@@ -317,6 +348,7 @@ export function createServices(deps: ServiceDependencies): Services {
         isTrustedProxy: createProxyMatcher(deps.config.server.trustedProxies),
         now,
       },
+      appUpdates: () => apps.catalogUpdates(),
     }),
     eventStreamHeartbeatMs: 15_000,
     limiters: createLimiters(now),

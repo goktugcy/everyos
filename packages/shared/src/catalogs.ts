@@ -149,6 +149,33 @@ export interface InstalledAppView {
   dataCopyEligible: boolean;
   /** Built-in widget adapters matching the deployed images. */
   widgetAdapters: IntegrationAdapter[];
+  /** EveryOS knows the inputs the app was prepared from, so its settings can be changed. */
+  configurable: boolean;
+  /** The catalog changed the app's definition since it was installed or last updated. */
+  catalogUpdate: AppCatalogUpdate | null;
+}
+export interface AppCatalogUpdate {
+  version: string | null;
+  installedVersion: string | null;
+}
+/** What the settings form of an installed app shows; secret values are never included. */
+export interface AppConfiguration {
+  /** `current`: the definition the app runs; `update`: the catalog's newer one. */
+  target: "current" | "update";
+  version: string | null;
+  variables: Array<
+    CatalogApp["variables"][number] & {
+      /** The value in use (null for secrets and generated values). */
+      value: string | null;
+      /** A secret or generated value is kept unless a new one is entered. */
+      hasValue: boolean;
+    }
+  >;
+  ports: CatalogApp["ports"];
+  /** Host ports fixed by the user; others are allocated automatically. */
+  fixedPorts: { service: string; index: number; host: number }[];
+  risks: InstallRisk[];
+  images: string[];
 }
 export interface AppJobView {
   id: string;

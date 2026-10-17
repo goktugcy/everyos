@@ -1,5 +1,5 @@
 import type { AppAction, AppJobView, InstalledAppView } from "@everyos/shared";
-import { PanelsTopLeft, X } from "lucide-react";
+import { ArrowUpCircle, PanelsTopLeft, Settings2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -12,6 +12,7 @@ import { localized } from "./parts.tsx";
 import { offerFor } from "../../widgets/offer.tsx";
 import { widgetUi } from "../../widgets/ui-store.ts";
 import { appLaunchLinks } from "./launch-links.ts";
+import { ConfigureDialog } from "./configure-dialog.tsx";
 
 export function InstalledCard({
   app,
@@ -28,6 +29,7 @@ export function InstalledCard({
   const [error, setError] = useState<unknown>(null);
   const [dismissedJob, setDismissedJob] = useState<string | null>(null);
   const [dismissedError, setDismissedError] = useState<string | null>(null);
+  const [configuring, setConfiguring] = useState<"current" | "update" | null>(null);
   const errorId = `${app.lastJob?.id ?? ""}:${app.lastError ?? ""}`;
   const launchLinks = appLaunchLinks(app, window.location.hostname);
   const act = async (action: Exclude<AppAction, "install">) => {
@@ -55,6 +57,32 @@ export function InstalledCard({
         </span>
       </div>
       <p className="break-all font-mono text-xs text-fg-subtle">{app.project}</p>
+      {app.catalogUpdate ? (
+        <div
+          className="flex flex-wrap items-center gap-2 rounded-everyos-md bg-accent/10 p-2 text-xs"
+          data-testid="app-catalog-update"
+        >
+          <ArrowUpCircle className="size-4 shrink-0 text-accent" aria-hidden />
+          <span className="flex-1">
+            {app.catalogUpdate.version
+              ? t("appStore.configure.available", {
+                  version: app.catalogUpdate.version,
+                  installed: app.catalogUpdate.installedVersion ?? "?",
+                })
+              : t("appStore.configure.availableUnknown")}
+          </span>
+          {canManage ? (
+            <Button
+              size="sm"
+              disabled={pending || app.state === "busy" || !app.configurable}
+              title={app.configurable ? undefined : t("appStore.configure.unavailable")}
+              onClick={() => setConfiguring("update")}
+            >
+              {t("appStore.configure.update")}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {app.lastJob && dismissedJob !== app.lastJob.id ? (
         <div className="flex items-start gap-2 text-xs text-fg-muted" data-testid="app-last-job">
           <p>
@@ -126,6 +154,16 @@ export function InstalledCard({
       </div>
       {canManage ? (
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={pending || app.state === "busy" || !app.configurable}
+            title={app.configurable ? undefined : t("appStore.configure.unavailable")}
+            onClick={() => setConfiguring("current")}
+          >
+            <Settings2 className="size-4" aria-hidden />
+            {t("appStore.configure.open")}
+          </Button>
           {(["start", "stop", "restart", "update", "remove"] as const).map((action) => (
             <Button
               key={action}
@@ -167,6 +205,17 @@ export function InstalledCard({
             {t("appStore.reconcile")}
           </Button>
         </div>
+      ) : null}
+      {canManage && !app.configurable ? (
+        <p className="text-xs text-fg-subtle">{t("appStore.configure.unavailable")}</p>
+      ) : null}
+      {configuring ? (
+        <ConfigureDialog
+          app={app}
+          target={configuring}
+          onClose={() => setConfiguring(null)}
+          onJob={onJob}
+        />
       ) : null}
     </article>
   );

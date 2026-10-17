@@ -32,3 +32,5 @@ export * from "./apt/manager.ts";
 export * from "./simulated/apt-simulator.ts";
 
 export * from "./collect/power.ts";
+export * from "./collect/reboot.ts";
+export * from "./disks/disks.ts";

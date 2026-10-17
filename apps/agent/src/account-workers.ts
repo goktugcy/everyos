@@ -98,6 +98,8 @@ export class AccountWorkers {
       "release.status",
       "release.check",
       "apps.inspect",
+      "power.reboot.status",
+      "disks.list",
     ]);
     for (const [op, contract] of Object.entries(AGENT_OPERATIONS)) {
       if (op.startsWith("identity.") || op.startsWith("terminal.") || publicReads.has(op)) continue;
@@ -108,13 +110,16 @@ export class AccountWorkers {
       const execute = async (params: unknown, context: OperationContext) => {
         if (context.actor.kind === "system") return original(params, context);
         this.#identities.resolve(context.actor);
-        // Root-owned application/release state and root-only package/service actions need sudo.
+        // Root-owned application/release state and root-only package, service, power and mount
+        // actions need sudo.
         const privileged =
           op.startsWith("backups.") ||
           op.startsWith("apps.") ||
           op === "release.install" ||
           (op.startsWith("apt.") && contract.mutating) ||
-          op === "services.control";
+          op === "services.control" ||
+          op === "power.control" ||
+          (op.startsWith("disks.") && contract.mutating);
         if (
           privileged ||
           (!op.startsWith("files.") &&
@@ -210,7 +215,7 @@ export class AccountWorkers {
     child.once("error", failed);
     child.once("close", failed);
     child.stdin.write(
-      `${JSON.stringify({ account, userId: actor.userId, version: this.#version, dockerSocket: this.#config.dockerSocket, protectedUnits: this.#config.protectedUnits, protectedContainers: this.#config.protectedContainers, internetCheckTargets: this.#config.internetCheckTargets, ...this.#files })}\n`,
+      `${JSON.stringify({ account, userId: actor.userId, version: this.#version, dockerSocket: this.#config.dockerSocket, protectedUnits: this.#config.protectedUnits, protectedContainers: this.#config.protectedContainers, internetCheckTargets: this.#config.internetCheckTargets, disksRoot: this.#config.disksRoot, ...this.#files })}\n`,
     );
     return worker;
   }

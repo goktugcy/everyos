@@ -7,11 +7,14 @@ import { useTranslation } from "react-i18next";
 import { Select } from "../../../components/ui/select.tsx";
 import { Toggle } from "../../menubar/quick-settings.tsx";
 import { updatePreference, usePreferences } from "../../state/preferences-store.ts";
+import { usePermissions } from "../../../stores/session-store.ts";
 import { SettingRow, SettingsGroup } from "./group.tsx";
+import { NotificationChannelsGroup } from "./notification-channels.tsx";
 
 /** Per-user notification preferences (pop-ups and muted categories). */
 export default function NotificationsSection() {
   const { t } = useTranslation();
+  const canManage = usePermissions().includes("system:manage");
   const preferences = usePreferences((state) => state.notifications);
   const update = (patch: Partial<typeof preferences>) =>
     updatePreference("notifications", (current) => ({ ...current, ...patch }));
@@ -69,6 +72,7 @@ export default function NotificationsSection() {
           })}
         </ul>
       </SettingsGroup>
+      {canManage ? <NotificationChannelsGroup /> : null}
     </>
   );
 }

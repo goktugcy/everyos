@@ -29,8 +29,10 @@ existing account with working PAM authentication. There is no password bypass or
 
 ## Privileged operations
 
-Service control, APT mutations, managed application state, application-data backup transfers and
-EveryOS release installation require a linked account and actual sudo authorization. Sudo runs
+Service control, APT mutations, managed application state, application-data backup transfers,
+host restart and shutdown, mounting and removing disks, and EveryOS release installation require a
+linked account and actual sudo authorization. The disk list and the restart-required state are
+public host information and need no linked account. Sudo runs
 the root-owned, fixed `sudo-witness.mjs` with the packaged Node interpreter. The witness accepts
 no commands, prints one fixed marker only when it runs as root, and exits. Membership of a group
 called `sudo` is never treated as proof of authorization. Standard Ubuntu full sudo policies work;

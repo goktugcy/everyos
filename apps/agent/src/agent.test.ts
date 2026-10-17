@@ -282,6 +282,12 @@ describe("unit protection and policy", () => {
     expect(
       simulated("services.control", { unit: "jellyfin.service", action: "start" }, admin).allowed,
     ).toBe(true);
+    // Rebooting or powering off follows the same rule as the host's services.
+    expect(onHost("power.control", { action: "reboot" }, admin)).toMatchObject({
+      allowed: false,
+      reason: expect.stringContaining("DEVELOPMENT_MODE") as string,
+    });
+    expect(simulated("power.control", { action: "shutdown" }, admin).allowed).toBe(true);
   });
 });
 
@@ -330,11 +336,43 @@ describe("host operation handlers", () => {
       get: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
       control: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
       timers: () => Promise.reject(new ServiceError("unavailable", "no systemctl")),
+      power: () => Promise.reject(new ServiceError("unavailable", "no systemd-run")),
     };
     const handlers = createHandlers(deps({ services: unavailable }));
     await expect(handlers["services.list"]({}, contextFor(admin))).rejects.toMatchObject({
       code: "unsupported",
     });
+    await expect(
+      handlers["power.control"]({ action: "reboot" }, contextFor(admin)),
+    ).rejects.toMatchObject({ code: "unsupported" });
+  });
+
+  it("schedules one power action at a time after a short delay", async () => {
+    const calls: Array<[string, number]> = [];
+    const services: ServiceManager = {
+      ...createSimulator().services,
+      source: "host",
+      power: (action, delay) => {
+        calls.push([action, delay]);
+        return calls.length > 1
+          ? Promise.reject(new ServiceError("conflict", "A power action is already scheduled"))
+          : Promise.resolve();
+      },
+    };
+    const handlers = createHandlers(deps({ services, now: () => 1_000 }));
+    expect(await handlers["power.control"]({ action: "shutdown" }, contextFor(admin))).toEqual({
+      source: "host",
+      action: "shutdown",
+      at: 6_000,
+    });
+    expect(calls).toEqual([["shutdown", 5]]);
+    await expect(
+      handlers["power.control"]({ action: "reboot" }, contextFor(admin)),
+    ).rejects.toMatchObject({ code: "conflict" });
+    // The simulator never reports a pending restart it cannot know about.
+    expect(
+      await createHandlers(deps())["power.reboot.status"]({}, contextFor(operator)),
+    ).toMatchObject({ source: "simulated", required: false });
   });
 
   it("limits concurrent live log streams", async () => {

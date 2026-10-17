@@ -59,7 +59,7 @@ const roots = z.array(
   z.strictObject({
     id: FileRootIdSchema,
     name: z.string(),
-    kind: z.enum(["home", "location", "system"]),
+    kind: z.enum(["home", "location", "disk", "system"]),
     readOnly: z.boolean(),
     available: z.boolean(),
   }),
