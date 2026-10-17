@@ -1,3 +1,4 @@
+import { randomId } from "../../../lib/random-id.ts";
 import { localTransfers } from "../../../features/transfers/transfers.ts";
 import type {
   FileEntry,
@@ -111,7 +112,7 @@ export async function uploadUnique(
   // Listed with speed and time left in the menu bar and the dock shelf, where it can be stopped.
   const controller = new AbortController();
   const transfer = localTransfers.start({
-    id: crypto.randomUUID(),
+    id: randomId(),
     name: file.name,
     to: into.path || into.root,
     total: file.size,

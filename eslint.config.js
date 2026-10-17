@@ -53,7 +53,22 @@ export default tseslint.config(
     files: ["apps/web/**/*.{ts,tsx}"],
     languageOptions: { globals: { ...globals.browser } },
     plugins: { "react-hooks": reactHooks },
-    rules: { ...reactHooks.configs.recommended.rules },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      // EveryOS is often opened over plain HTTP by a host address, where it does not exist.
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "crypto",
+          property: "randomUUID",
+          message: "Use randomId() from lib/random-id.ts; plain HTTP pages have no randomUUID.",
+        },
+      ],
+    },
+  },
+  {
+    files: ["apps/web/src/lib/random-id.ts"],
+    rules: { "no-restricted-properties": "off" },
   },
   {
     // Scripts and tests are allowed to print to the console.

@@ -2,6 +2,7 @@ import type { DriveAccountView, DriveEntry, DriveListing, TransferView } from "@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { api, uploadWithProgress } from "../../lib/api.ts";
+import { randomId } from "../../lib/random-id.ts";
 import { localTransfers } from "../transfers/transfers.ts";
 
 /*
@@ -105,7 +106,7 @@ export const driveApi = {
   async upload(file: File, parent: string, to: string): Promise<void> {
     const controller = new AbortController();
     const transfer = localTransfers.start({
-      id: crypto.randomUUID(),
+      id: randomId(),
       name: file.name,
       to,
       total: file.size,

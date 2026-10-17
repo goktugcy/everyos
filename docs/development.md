@@ -63,6 +63,12 @@ simulator's USB stick by creating `<state dir>/disks/.simulated-usb-stick`
 ([disks.md](disks.md)). `pnpm dev` can use the same variable to try Google Drive without a Google
 account.
 
+`EVERYOS_E2E_HTTP_HOST=everyos.lan pnpm test:e2e foundation.spec.ts:9 plain-http.spec.ts` opens
+EveryOS by a host name over plain HTTP (mapped to the test server), like people who open it by
+the server's address. Such pages are not a secure context, so browser APIs like
+`crypto.randomUUID` are missing; web code uses `randomId()` instead, and ESLint refuses
+`crypto.randomUUID` there. CI runs this check after the main browser tests.
+
 After signing in, open System from the dock for real host information, or Settings for appearance,
 desktop/dock, account and security preferences. Files and folders on the desktop live in the
 home's Desktop folder (inside EveryOS's data directory, not the host's home directories). Keyboard
