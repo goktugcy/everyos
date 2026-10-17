@@ -1,3 +1,20 @@
+EveryOS 0.1.28 brings USB disks to the desktop, Google Drive into Files, and live progress for
+every transfer.
+
+- Plug in a disk and it appears on the desktop and in Files at once; the pulse in the middle of the
+  menu bar says "New disk connected" and a notification pops up. Mount it with one click, and
+  choose to have it mounted by itself whenever it is plugged in. Removing a disk is announced the
+  same way, with a warning when it was pulled out without ejecting. Remembered disks can be
+  forgotten in Settings › Disks.
+- Connect your own Google Drive in Settings › Connections (an administrator adds the server's own
+  Google client once, with a step-by-step guide). Browse My Drive and Shared with me in Files,
+  upload, download, rename and trash, and copy files and folders between Drive and EveryOS both
+  ways. Google Docs, Sheets and Slides are copied as Office files.
+- Uploads and copies show their speed (MB/s) and time left: in the pulse, which turns into a
+  progress bar and has a new Transfers tab, in a storage item in the menu bar, on a shelf at the
+  end of the dock, in Files and on phones. Every transfer can be stopped.
+- The pulse no longer covers menu bar items; it moves into the free space between them.
+
 EveryOS 0.1.27 brings the essentials of a home server: restart and shutdown, disks, notifications
 outside the app and settings for installed apps.
 
