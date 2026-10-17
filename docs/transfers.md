@@ -6,9 +6,9 @@ locations.
 
 ## Where it shows
 
-- **Pulse** ([pulse.md](pulse.md)): while files move, the dots become a progress bar filling from
-  the left with an arrow for the direction (up, down or both); a sweeping light marks transfers of
-  unknown size. The tooltip names the file (or the count), the speed and the time left. The
+- **Pulse** ([pulse.md](pulse.md)): while files move, the bottom two rows of dots become a
+  progress bar, with the direction, the amount moved, the total and the speed written above it; a
+  sweeping light marks transfers of unknown size. The tooltip names the file (or the count), the speed and the time left. The
   panel's **Transfers** tab lists everything. A disk that is plugged in or removed is named in the
   pill for five seconds.
 - **Menu bar:** the storage item (Settings › Desktop › menu bar modules, "Storage and transfers")

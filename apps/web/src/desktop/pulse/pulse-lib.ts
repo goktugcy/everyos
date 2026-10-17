@@ -135,85 +135,26 @@ export function arrowDots(cols = MATRIX_COLS, rows = MATRIX_ROWS): Set<string> {
   return dots;
 }
 
-/** What a dot shows while files move: the progress bar, its leading edge, or the arrow. */
-export type TransferDot = "fill" | "head" | "arrow";
+/** What a dot shows while files move: the progress bar or its leading edge. */
+export type TransferDot = "fill" | "head";
 
-/** Columns kept for the direction arrow at the right end. */
-const ARROW_COLS = 6;
+/** Rows of the progress bar, at the bottom; the rows above carry the amount as text. */
+export const PROGRESS_ROWS = 2;
 
 /**
- * Files on the move: a three-row progress bar filling from the left (or nothing when the total is
- * unknown; the sweep shows activity then) and an arrow for the direction at the right end.
+ * Files on the move: the bottom two rows fill from the left as the bytes arrive (nothing when the
+ * total is unknown; a sweep shows activity then). The leading column blinks.
  */
 export function transferDots(
   fraction: number | null,
-  direction: "upload" | "download" | "both",
   cols = MATRIX_COLS,
   rows = MATRIX_ROWS,
 ): Map<string, TransferDot> {
   const dots = new Map<string, TransferDot>();
-  const bar = cols - ARROW_COLS - 1;
-  const top = Math.max(0, Math.floor((rows - 3) / 2));
-  if (fraction !== null) {
-    const lit = Math.max(1, Math.min(bar, Math.round(fraction * bar)));
-    for (let col = 0; col < lit; col++)
-      for (let row = top; row < top + 3; row++)
-        dots.set(`${col}:${row}`, col === lit - 1 && lit < bar ? "head" : "fill");
-  }
-  const up = [
-    [2, 0],
-    [1, 1],
-    [2, 1],
-    [3, 1],
-    [0, 2],
-    [2, 2],
-    [4, 2],
-    [2, 3],
-    [2, 4],
-  ] as const;
-  const down = [
-    [2, 0],
-    [2, 1],
-    [0, 2],
-    [2, 2],
-    [4, 2],
-    [1, 3],
-    [2, 3],
-    [3, 3],
-    [2, 4],
-  ] as const;
-  const start = cols - ARROW_COLS;
-  const shapes =
-    direction === "both"
-      ? [
-          {
-            shape: [
-              [1, 0],
-              [0, 1],
-              [1, 1],
-              [2, 1],
-              [1, 2],
-              [1, 3],
-              [1, 4],
-            ] as const,
-            at: start,
-          },
-          {
-            shape: [
-              [1, 0],
-              [1, 1],
-              [1, 2],
-              [0, 3],
-              [1, 3],
-              [2, 3],
-              [1, 4],
-            ] as const,
-            at: start + 3,
-          },
-        ]
-      : [{ shape: direction === "upload" ? up : down, at: start + 1 }];
-  const arrowTop = Math.max(0, Math.floor((rows - 5) / 2));
-  for (const { shape, at } of shapes)
-    for (const [x, y] of shape) dots.set(`${at + x}:${arrowTop + y}`, "arrow");
+  if (fraction === null) return dots;
+  const lit = Math.max(1, Math.min(cols, Math.round(fraction * cols)));
+  for (let col = 0; col < lit; col++)
+    for (let row = rows - PROGRESS_ROWS; row < rows; row++)
+      dots.set(`${col}:${row}`, col === lit - 1 && lit < cols ? "head" : "fill");
   return dots;
 }

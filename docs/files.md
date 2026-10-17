@@ -194,7 +194,9 @@ Normal deletion in Files and on the desktop moves data by rename into
 relative path, name, type, size and deletion time. Directories are private, metadata is synced
 before moving, and symlinks move as links. Parent/child and duplicate selections are collapsed.
 A cross-device rename fails safely with the original intact; no copy-and-delete fallback is used.
-The trash consumes disk space until explicitly emptied.
+The trash consumes disk space until explicitly emptied. On filesystems without Unix permissions
+(FAT, exFAT and NTFS USB disks) every directory has the modes the mount gives it, so the trash
+there cannot be private by mode; it still belongs to the account, like every file on that disk.
 
 The **Trash** app (`everyos.trash`) opens from the launcher, the Files sidebar or desktop context
 menu. Each account sees only its own trash, including on shared roots. Restoring refuses an

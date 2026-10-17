@@ -25,11 +25,14 @@ What the dots show:
   visible and the user may see them).
 - **Unread notifications:** an accent dot at the right edge (live, no polling).
 - **Dragged files:** anywhere on the desktop, the dots turn into blinking arrows; dropping onto
-  the pulse opens the shelf.
-- **Files on the move** ([transfers.md](transfers.md)): a three-row progress bar fills from the
-  left, with a blinking arrow for the direction at the right end (up, down or both); transfers of
-  unknown size show the sweeping light instead of the bar. The tooltip names the file or the
-  count, the speed and the time left.
+  the pulse opens the shelf. The pulse follows drags while events capture, so a drop taken by a
+  Files window or the desktop ends the arrows too, and a drag that stops sending `dragover` for
+  0.4 s (Esc, leaving the window) ends them as well.
+- **Files on the move** ([transfers.md](transfers.md)): the bottom two rows become a progress bar
+  filling from the left (its leading column blinks); right above it the pill shows the direction,
+  how much has moved, the total and the speed ("↑ 12,4 MB / 48 MB · 3,2 MB/sn"). Transfers of
+  unknown size sweep a light through the bar instead. The tooltip names the file or the count,
+  the speed and the time left. When everything has finished, the heartbeat returns.
 - **Disks coming and going:** for five seconds the pill shows **New disk connected** or **Disk
   removed** with the disk's name (two lines, the pill keeps its size), whatever the dots were
   showing ([disks.md](disks.md)). Several disks at once are named as "first +n".

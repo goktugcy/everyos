@@ -210,6 +210,21 @@ export const transfers = {
 
 /* --------------------------------- formatting --------------------------------- */
 
+/** "12.4 MB": decimal units, matching the speed next to it. */
+export function formatAmount(bytes: number, language: string): string {
+  const units = ["B", "KB", "MB", "GB", "TB"] as const;
+  let value = Math.max(0, bytes);
+  let unit = 0;
+  while (value >= 1000 && unit < units.length - 1) {
+    value /= 1000;
+    unit++;
+  }
+  const number = new Intl.NumberFormat(language, {
+    maximumFractionDigits: value < 100 && unit > 0 ? 1 : 0,
+  }).format(value);
+  return `${number} ${units[unit]}`;
+}
+
 /** "12.4 MB/s": decimal units, as download managers show them. */
 export function formatRate(bytesPerSecond: number, language: string, t: TFunction): string {
   const units = ["B", "KB", "MB", "GB"] as const;

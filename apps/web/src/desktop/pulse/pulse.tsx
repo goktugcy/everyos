@@ -1,11 +1,22 @@
 import type { BackupJobView, UpdateJobView } from "@everyos/shared";
-import { ArrowDownUp, EyeOff, Inbox, LayoutDashboard, Settings2, Unplug, Usb } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowDownUp,
+  ArrowUp,
+  EyeOff,
+  Inbox,
+  LayoutDashboard,
+  Settings2,
+  Unplug,
+  Usb,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLiveMetrics, useLiveMetricsSubscription } from "../../features/metrics/live-metrics.ts";
 import { shownVolumes, useLiveDisks, volumeName } from "../../features/disks/disks.tsx";
 import { StoragePanel } from "../../features/transfers/storage-panel.tsx";
 import {
+  formatAmount,
   formatEta,
   formatRate,
   isActive,
@@ -182,11 +193,11 @@ export function Pulse() {
       dragging
         ? { kind: "drop" }
         : transfer.active > 0
-          ? { kind: "transfer", fraction, direction: transfer.direction ?? "download" }
+          ? { kind: "transfer", fraction }
           : canSystem && cpu.length > 0
             ? { kind: "graph", values: cpu }
             : { kind: "idle" },
-    [dragging, transfer.active, transfer.direction, fraction, canSystem, cpu],
+    [dragging, transfer.active, fraction, canSystem, cpu],
   );
 
   // The dots sit in the free middle of the menu bar: centred when they fit there, moved aside
@@ -257,33 +268,33 @@ export function Pulse() {
     };
   }, [open, close]);
 
-  // Dragging files anywhere turns the dots into a drop target.
+  // Dragging files anywhere turns the dots into a drop target. Listening while events capture
+  // keeps working when a Files window or the desktop takes the drop; and browsers repeat
+  // `dragover` while a drag lasts, so a pause in it ends the mode too (Esc, leaving the window).
   useEffect(() => {
     if (!canFiles) return;
-    let depth = 0;
-    const enter = (event: DragEvent) => {
-      if (!isFileDrag(event)) return;
-      depth++;
-      setDragging(true);
-    };
-    const leave = (event: DragEvent) => {
-      if (!isFileDrag(event)) return;
-      depth = Math.max(0, depth - 1);
-      if (depth === 0) setDragging(false);
-    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const end = () => {
-      depth = 0;
+      clearTimeout(timer);
       setDragging(false);
     };
-    window.addEventListener("dragenter", enter);
-    window.addEventListener("dragleave", leave);
-    window.addEventListener("drop", end);
-    window.addEventListener("dragend", end);
+    const over = (event: DragEvent) => {
+      if (!isFileDrag(event)) return;
+      setDragging(true);
+      clearTimeout(timer);
+      timer = setTimeout(end, 400);
+    };
+    const options = { capture: true } as const;
+    window.addEventListener("dragenter", over, options);
+    window.addEventListener("dragover", over, options);
+    window.addEventListener("drop", end, options);
+    window.addEventListener("dragend", end, options);
     return () => {
-      window.removeEventListener("dragenter", enter);
-      window.removeEventListener("dragleave", leave);
-      window.removeEventListener("drop", end);
-      window.removeEventListener("dragend", end);
+      clearTimeout(timer);
+      window.removeEventListener("dragenter", over, options);
+      window.removeEventListener("dragover", over, options);
+      window.removeEventListener("drop", end, options);
+      window.removeEventListener("dragend", end, options);
     };
   }, [canFiles]);
 
@@ -427,6 +438,32 @@ export function Pulse() {
               crowded && !open && !dragging && "pointer-events-none invisible",
             )}
           >
+            {/* While files move: the amount (and speed) above the two-row progress bar. */}
+            {mode.kind === "transfer" && !diskMessage ? (
+              <span
+                data-testid="pulse-amount"
+                className="pointer-events-none absolute inset-x-3 top-[3px] flex h-[15px] items-center justify-center gap-1 whitespace-nowrap text-[0.64rem] font-semibold leading-none tabular-nums"
+              >
+                {transfer.direction === "upload" ? (
+                  <ArrowUp className="size-2.5 shrink-0 text-accent" aria-hidden />
+                ) : transfer.direction === "both" ? (
+                  <ArrowDownUp className="size-2.5 shrink-0 text-accent" aria-hidden />
+                ) : (
+                  <ArrowDown className="size-2.5 shrink-0 text-accent" aria-hidden />
+                )}
+                {formatAmount(transfer.bytesDone, i18n.language)}
+                {transfer.bytesTotal ? (
+                  <span className="text-fg-muted">
+                    / {formatAmount(transfer.bytesTotal, i18n.language)}
+                  </span>
+                ) : null}
+                {transfer.speed > 0 ? (
+                  <span className="font-normal text-fg-muted">
+                    · {formatRate(transfer.speed, i18n.language, t)}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
             {/* A disk that came or went is named for a moment; the pill keeps its size. */}
             <span className={cn(diskMessage && !dragging && "invisible")}>
               <PulseMatrix mode={mode} busy={busy} />

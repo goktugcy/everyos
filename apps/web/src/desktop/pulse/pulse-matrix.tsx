@@ -1,5 +1,12 @@
 import { useId, useMemo } from "react";
-import { arrowDots, graphColumns, MATRIX_COLS, MATRIX_ROWS, transferDots } from "./pulse-lib.ts";
+import {
+  arrowDots,
+  graphColumns,
+  MATRIX_COLS,
+  MATRIX_ROWS,
+  PROGRESS_ROWS,
+  transferDots,
+} from "./pulse-lib.ts";
 
 const PITCH = 5.4;
 const RADIUS = 1.45;
@@ -14,7 +21,7 @@ export type MatrixMode =
   /** Files are being dragged: arrows pointing into the shelf. */
   | { kind: "drop" }
   /** Files are moving: progress (null when the total is unknown) and direction. */
-  | { kind: "transfer"; fraction: number | null; direction: "upload" | "download" | "both" };
+  | { kind: "transfer"; fraction: number | null };
 
 const cells = Array.from({ length: MATRIX_COLS * MATRIX_ROWS }, (_, index) => ({
   col: index % MATRIX_COLS,
@@ -31,7 +38,7 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
   const heights = useMemo(() => (mode.kind === "graph" ? graphColumns(mode.values) : null), [mode]);
   const arrows = useMemo(() => (mode.kind === "drop" ? arrowDots() : null), [mode.kind]);
   const moving = useMemo(
-    () => (mode.kind === "transfer" ? transferDots(mode.fraction, mode.direction) : null),
+    () => (mode.kind === "transfer" ? transferDots(mode.fraction) : null),
     [mode],
   );
 
@@ -78,6 +85,8 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
           );
         }
         if (mode.kind === "transfer") {
+          // The rows above the bar are left free for the amount, written over them.
+          if (row < MATRIX_ROWS - PROGRESS_ROWS) return null;
           const kind = moving?.get(key);
           return (
             <circle
@@ -85,16 +94,10 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
               cx={cx}
               cy={cy}
               r={RADIUS}
-              className={kind === "head" || kind === "arrow" ? "everyos-pulse-blink" : undefined}
+              className={kind === "head" ? "everyos-pulse-blink" : undefined}
               style={{
-                fill:
-                  kind === "fill" || kind === "head"
-                    ? "rgb(var(--everyos-accent))"
-                    : kind === "arrow"
-                      ? "rgb(var(--everyos-text) / 0.92)"
-                      : "rgb(var(--everyos-text) / 0.2)",
+                fill: kind ? "rgb(var(--everyos-accent))" : "rgb(var(--everyos-text) / 0.2)",
                 transition: "fill 300ms ease",
-                ...(kind === "arrow" ? { animationDelay: `${row * 120}ms` } : {}),
               }}
             />
           );
@@ -139,7 +142,9 @@ export function PulseMatrix({ mode, busy }: { mode: MatrixMode; busy: boolean })
           <rect
             className="everyos-pulse-sweep"
             width={WIDTH * 0.35}
-            height={HEIGHT}
+            {...(mode.kind === "transfer"
+              ? { y: (MATRIX_ROWS - PROGRESS_ROWS) * PITCH, height: PROGRESS_ROWS * PITCH }
+              : { height: HEIGHT })}
             fill={`url(#${id}-band)`}
           />
         </g>

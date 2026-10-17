@@ -206,6 +206,14 @@ test("a slow upload shows its speed and time left in the menu bar, the dock and 
   // The pulse turns into a progress bar with the speed in its tooltip, and lists the upload.
   const pulse = page.getByTestId("pulse-trigger");
   await expect(pulse).toHaveAttribute("data-mode", "transfer");
+  // Above the two-row progress bar: how much has moved, and how fast.
+  await expect(page.getByTestId("pulse-amount")).toContainText(
+    /\d+([.,]\d)? (KB|MB)\s*\/ 2[.,]5 MB/,
+  );
+  await pulse.screenshot({
+    path: test.info().outputPath("pulse-amount.png"),
+    animations: "disabled",
+  });
   await pulse.screenshot({
     path: test.info().outputPath("pulse-dots.png"),
     animations: "disabled",
@@ -231,10 +239,43 @@ test("a slow upload shows its speed and time left in the menu bar, the dock and 
   });
   await page.keyboard.press("Escape");
   await expect(indicator).toHaveAttribute("data-active", "false", { timeout: 30_000 });
+  // Finished: the dots return to the heartbeat.
+  await expect(pulse).not.toHaveAttribute("data-mode", "transfer");
+  await expect(page.getByTestId("pulse-amount")).toHaveCount(0);
   await cdp.send("Network.emulateNetworkConditions", {
     offline: false,
     latency: 0,
     downloadThroughput: -1,
     uploadThroughput: -1,
   });
+});
+
+test("dropping files from the computer on a Files window never leaves the pulse in drop mode", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.keyboard.press("Control+k");
+  await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
+  await page.keyboard.press("Enter");
+  const list = page.locator('[data-app-id="everyos.files"] [data-testid="file-list"]');
+  await expect(list).toBeVisible();
+  const transfer = await page.evaluateHandle(() => {
+    const data = new DataTransfer();
+    data.items.add(new File(["drop test"], "dropped.txt", { type: "text/plain" }));
+    return data;
+  });
+  const pulse = page.getByTestId("pulse-trigger");
+  await list.dispatchEvent("dragenter", { dataTransfer: transfer });
+  await list.dispatchEvent("dragover", { dataTransfer: transfer });
+  await expect(pulse).toHaveAttribute("data-mode", "drop");
+  // Files takes the drop (and stops it there); the pulse still notices.
+  await list.dispatchEvent("drop", { dataTransfer: transfer });
+  await expect(pulse).not.toHaveAttribute("data-mode", "drop");
+  await expect(
+    page.locator('[data-app-id="everyos.files"] [data-testid="file-row"][data-name="dropped.txt"]'),
+  ).toBeVisible();
+  // A drag that just stops (Esc, leaving the window) ends by itself too.
+  await list.dispatchEvent("dragenter", { dataTransfer: transfer });
+  await expect(pulse).toHaveAttribute("data-mode", "drop");
+  await expect(pulse).not.toHaveAttribute("data-mode", "drop", { timeout: 2_000 });
 });

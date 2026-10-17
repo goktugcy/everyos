@@ -102,18 +102,16 @@ describe("pulse dot matrix", () => {
 });
 
 describe("transfer frames", () => {
-  it("fills a three-row bar from the left and draws the direction at the right end", () => {
-    const half = transferDots(0.5, "upload");
-    const fill = [...half].filter(([, kind]) => kind !== "arrow");
-    // 27 bar columns: 14 lit, the last one the leading edge.
-    expect(fill.length).toBe(14 * 3);
-    expect(half.get("13:2")).toBe("head");
-    expect(half.get("0:0")).toBeUndefined();
-    expect([...half.values()].filter((kind) => kind === "arrow")).toHaveLength(9);
-    // Unknown totals show only the arrow; finished bars have no leading edge.
-    expect([...transferDots(null, "download").values()].every((kind) => kind === "arrow")).toBe(
-      true,
-    );
-    expect([...transferDots(1, "both").values()].includes("head")).toBe(false);
+  it("fills the bottom two rows from the left, with a blinking leading edge", () => {
+    const half = transferDots(0.5);
+    expect(half.size).toBe(17 * 2);
+    expect(half.get("16:3")).toBe("head");
+    expect(half.get("16:4")).toBe("head");
+    expect(half.get("0:2")).toBeUndefined();
+    expect(transferDots(0.001).size).toBe(2);
+    // Finished bars have no leading edge; unknown totals draw nothing (the sweep shows activity).
+    expect([...transferDots(1).values()].includes("head")).toBe(false);
+    expect(transferDots(1).size).toBe(34 * 2);
+    expect(transferDots(null).size).toBe(0);
   });
 });

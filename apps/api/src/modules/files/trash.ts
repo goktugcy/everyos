@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { constants } from "node:fs";
-import { lstat, mkdir, open, readdir, realpath, rename, rm } from "node:fs/promises";
+import { lstat, mkdir, open, readdir, realpath, rename, rm, statfs } from "node:fs/promises";
 import { join } from "node:path";
 import type { TrashEntry } from "@everyos/shared";
 import { TrashEntrySchema } from "@everyos/shared/schemas";
@@ -10,9 +10,30 @@ export const TRASH_DIRECTORY = ".otuken-trash";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const LIMIT = 5_000;
 
+/**
+ * Filesystems without Unix permissions (FAT, exFAT, NTFS on USB disks): every file has the modes
+ * the mount gives them, so a trash directory cannot be private by mode there, and nothing in it is
+ * more exposed than the files themselves.
+ */
+const MOUNT_WIDE_MODES = new Set([
+  0x4d44, // vfat
+  0x2011bab0, // exfat
+  0x7366746e, // ntfs3
+  0x5346544e, // ntfs
+]);
+
+async function modesApply(path: string): Promise<boolean> {
+  try {
+    return !MOUNT_WIDE_MODES.has(Number((await statfs(path)).type));
+  } catch {
+    return true;
+  }
+}
+
 /** Trash stays on the source filesystem: moving an item never copies or deletes its data. */
 export async function trashDirectory(root: string, owner: string, create = false): Promise<string> {
   if (!UUID.test(owner)) throw new ApiError(403, "FORBIDDEN", "No trash owner");
+  const privateByMode = await modesApply(root);
   let path = root;
   for (const name of [TRASH_DIRECTORY, owner]) {
     path = join(path, name);
@@ -24,7 +45,7 @@ export async function trashDirectory(root: string, owner: string, create = false
     if (
       !info.isDirectory() ||
       (await realpath(path)) !== path ||
-      (info.mode & 0o077) !== 0 ||
+      (privateByMode && (info.mode & 0o077) !== 0) ||
       (process.getuid && info.uid !== process.getuid())
     )
       throw new ApiError(403, "FORBIDDEN", "Unsafe trash directory");
