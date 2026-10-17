@@ -25,6 +25,19 @@ const artifact = (arch: string) => {
     path = join(values.directory, file);
   return { file, size: statSync(path).size, sha256: packageDigest(readFileSync(path)) };
 };
+/** This version's section of the notes file (each starts with "EveryOS <version> …"). */
+const versionNotes = (text: string, version: string): string => {
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => line.startsWith(`EveryOS ${version} `));
+  if (start < 0) throw new Error(`The notes file has no section for EveryOS ${version}`);
+  const end = lines.findIndex(
+    (line, index) => index > start && /^EveryOS \d+\.\d+\.\d+ /.test(line),
+  );
+  return lines
+    .slice(start, end < 0 ? undefined : end)
+    .join("\n")
+    .trim();
+};
 const now = Date.now();
 const manifest = ReleaseManifestSchema.parse({
   format: "everyos-release",
@@ -35,7 +48,9 @@ const manifest = ReleaseManifestSchema.parse({
     : Math.max(...EVERYOS_MIGRATIONS.map((migration) => migration.version)),
   publishedAt: now,
   expiresAt: now + 90 * 24 * 60 * 60_000,
-  notes: values["notes-file"] ? readFileSync(values["notes-file"], "utf8") : "",
+  notes: values["notes-file"]
+    ? versionNotes(readFileSync(values["notes-file"], "utf8"), values.version)
+    : "",
   artifacts: { arm64: artifact("arm64"), amd64: artifact("amd64") },
 });
 const payload = Buffer.from(JSON.stringify(manifest));
