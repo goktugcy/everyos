@@ -8,9 +8,11 @@ on:
 permissions:
   contents: read
 
+# Superseded branch runs are cancelled, but never main's: the release gate waits for the CI run of
+# the exact tagged commit, so a later push must not cancel it.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || 'latest' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   check:
