@@ -1,3 +1,25 @@
+EveryOS 0.1.31 adds encrypted off-site backups, HTTPS without editing files and required
+two-factor authentication.
+
+- Backups › Encryption and off-site: set a backup passphrase, and backups are copied, encrypted, to
+  another disk, to S3-compatible storage (AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO) or to
+  your Google Drive, after every backup or with one click. EveryOS keeps the newest copies there
+  and removes only its own older ones. A failed copy never fails the backup; it is shown on the
+  backup and notified.
+- An encrypted copy (.eosbak) carries the server's secret key, so a new machine restores everything
+  with the passphrase alone: finish setup, upload the file, enter the passphrase and restore the
+  whole database. Downloads are encrypted by default once a passphrase is set, and the secret key
+  can also be downloaded on its own after confirming your password.
+- Settings › Security › HTTPS: turn on HTTPS through Tailscale with one button (a real certificate
+  for your tailnet name, never published on the internet), or HTTPS on the local network on port
+  7443 with EveryOS's own certificate authority. Install its certificate once on each device and
+  browsers stop warning; the server certificate renews itself when the addresses change.
+- Settings › Security: require two-factor authentication for administrators or for everyone.
+  Accounts it covers set it up before they reach the desktop and cannot turn it off.
+- Large uploads to Google Drive no longer stop after two minutes; they are sent in parts.
+- Releases are published only from commits whose checks passed, and each one states the oldest
+  version that can update to it.
+
 EveryOS 0.1.30 fixes uploads when EveryOS is opened by the server's address over plain HTTP.
 
 - Dropping files on the pulse shelf or the desktop, uploading in Files and uploading to Google
