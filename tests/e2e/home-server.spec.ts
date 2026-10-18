@@ -119,6 +119,28 @@ test("an external webhook channel receives a test message and never shows its ad
     await channel.getByRole("button", { name: /Kanalı sil/ }).click();
     await page.getByRole("alertdialog").getByRole("button", { name: "Sil", exact: true }).click();
     await expect(channel).toHaveCount(0);
+
+    // An ntfy channel shows the exact server and topic to subscribe a phone to, on request.
+    await channels.getByRole("button", { name: "Kanal ekle" }).click();
+    await form.getByLabel("Ad", { exact: true }).fill("E2E ntfy");
+    await form.getByLabel("ntfy sunucusu", { exact: true }).fill(`http://127.0.0.1:${port}`);
+    await form.getByLabel("Konu (topic)", { exact: true }).fill("everyos-e2e-Topic");
+    await form.getByRole("button", { name: "Kaydet", exact: true }).click();
+    const ntfy = channels.getByTestId("notification-channel").filter({ hasText: "E2E ntfy" });
+    await ntfy.getByRole("button", { name: "Deneme mesajı gönder" }).click();
+    await expect(channels).toContainText("Deneme mesajı ntfy sunucusuna iletildi.");
+    expect(received.at(-1)).toMatchObject({ topic: "everyos-e2e-Topic" });
+    await ntfy.getByRole("button", { name: "Telefona ekle" }).click();
+    const subscribe = page.getByTestId("ntfy-subscribe");
+    await expect(subscribe.getByTestId("ntfy-topic")).toHaveText("everyos-e2e-Topic");
+    await expect(subscribe.getByRole("img", { name: "Abonelik QR kodu" })).toBeVisible();
+    await expect(
+      subscribe.getByRole("link", { name: "Gönderilen mesajları tarayıcıda aç" }),
+    ).toHaveAttribute("href", `http://127.0.0.1:${port}/everyos-e2e-Topic`);
+    await subscribe.getByRole("button", { name: "Kapat", exact: true }).click();
+    await ntfy.getByRole("button", { name: /Kanalı sil/ }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Sil", exact: true }).click();
+    await expect(ntfy).toHaveCount(0);
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));

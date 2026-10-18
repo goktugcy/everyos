@@ -42,6 +42,12 @@ export function notificationChannelRoutes(services: Services): Hono<AppEnv> {
     channels.remove(id, actor(c));
     return c.body(null, 204);
   });
+  /** The topic phones subscribe to (shown on request, audited). */
+  app.get("/:id/ntfy-topic", (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, Id);
+    return c.json(channels.ntfyTopic(id, actor(c)));
+  });
   app.post("/:id/test", async (c) => {
     parseQuery(c, Empty);
     const { id } = parseParams(c, Id);

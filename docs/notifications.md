@@ -85,6 +85,13 @@ omits a credential keeps the stored one; `clearToken`/`clearPassword` remove an 
 Webhook URLs may carry a query string but no user information. Audit entries name the channel and
 kind, never the secrets.
 
+Subscribing a phone needs the exact ntfy topic, so **Add to phone** asks for it separately
+(`GET /api/notification-channels/:id/ntfy-topic`, administrators only, audited as
+`notifications.channel.topic`) and shows the server, the topic and a QR code of
+`<server>/<topic>`, which the ntfy apps and web app open. After a test message the panel points
+there in case nothing arrived: topics are case-sensitive, and iPhones get instant notifications
+from a self-hosted server only when it sets `upstream-base-url: "https://ntfy.sh"`.
+
 Requests use the integrations HTTP client: DNS is resolved once and pinned (SMTP connects to the
 pinned address while TLS still checks the configured name), redirects are not followed, link-local
 and cloud metadata addresses are refused, and requests time out after 10 s. Private addresses are

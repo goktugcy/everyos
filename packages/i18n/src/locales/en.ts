@@ -2555,6 +2555,18 @@ export const en: Messages = {
       remove: "Delete channel",
       removeConfirm: "Delete the channel {{name}}? It will no longer receive notifications.",
       test: "Send a test message",
+      testSentNtfy:
+        "The test message reached the ntfy server. If your phone did not show it, use “Add to phone” to check that it is subscribed to exactly this channel's server and topic.",
+      subscribe: "Add to phone",
+      subscribeTitle: "{{name}}: add to phone",
+      subscribeHelp:
+        "Subscribe to this server and topic in the ntfy app on your phone, or scan the QR code with the phone's camera. This is exactly where EveryOS sends notifications.",
+      subscribeCase:
+        "Topic names are case-sensitive and the app must use the same server. Anyone who knows this topic can read the notifications; do not share it.",
+      subscribeOpen: "Open the sent messages in the browser",
+      subscribeQr: "Subscription QR code",
+      subscribeSelfHosted:
+        'For instant notifications on iPhone from your own ntfy server, its configuration needs upstream-base-url: "https://ntfy.sh"; otherwise they arrive when the app is opened.',
       testSent: "Test message sent.",
       testTitle: "EveryOS test message",
       testBody: "EveryOS on {{host}} can reach this channel.",

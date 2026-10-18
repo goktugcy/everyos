@@ -115,6 +115,18 @@ describe("notification channels", () => {
       );
       expect(JSON.stringify(ctx.db.all("SELECT * FROM audit_events"))).not.toContain(secret);
     }
+    // The topic is shown on request, for subscribing a phone, to administrators only and audited.
+    expect((await operator.get(`/api/notification-channels/${view.id}/ntfy-topic`)).status).toBe(
+      403,
+    );
+    expect(await json(await admin.get(`/api/notification-channels/${view.id}/ntfy-topic`))).toEqual(
+      { server: ntfy.url, topic: "everyos-private-topic" },
+    );
+    expect(
+      ctx.db.get<{ n: number }>(
+        "SELECT COUNT(*) AS n FROM audit_events WHERE action = 'notifications.channel.topic'",
+      )!.n,
+    ).toBe(1);
     // Test messages go out in the channel's language, as ntfy JSON with the token.
     expect((await admin.post(`/api/notification-channels/${view.id}/test`, {})).status).toBe(200);
     expect(ntfy.received[0]).toMatchObject({

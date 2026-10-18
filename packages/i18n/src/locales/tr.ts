@@ -2593,6 +2593,18 @@ export const tr = {
       remove: "Kanalı sil",
       removeConfirm: "{{name}} kanalı silinsin mi? Bu kanala artık bildirim gönderilmez.",
       test: "Deneme mesajı gönder",
+      testSentNtfy:
+        "Deneme mesajı ntfy sunucusuna iletildi. Telefona gelmediyse “Telefona ekle” ile aboneliğin bu kanalın sunucusu ve konusuyla birebir aynı olduğunu kontrol et.",
+      subscribe: "Telefona ekle",
+      subscribeTitle: "{{name}}: telefona ekle",
+      subscribeHelp:
+        "Telefondaki ntfy uygulamasında bu sunucu ve konuya abone ol ya da QR kodu telefonun kamerasıyla okut. EveryOS bildirimleri tam olarak buraya gönderiyor.",
+      subscribeCase:
+        "Konu adında büyük/küçük harf önemlidir; uygulamada aynı sunucu seçili olmalı. Bu konuyu bilen herkes bildirimleri okuyabilir, paylaşma.",
+      subscribeOpen: "Gönderilen mesajları tarayıcıda aç",
+      subscribeQr: "Abonelik QR kodu",
+      subscribeSelfHosted:
+        'Kendi ntfy sunucunda iPhone\'a anlık bildirim için sunucu yapılandırmasında upstream-base-url: "https://ntfy.sh" ayarlı olmalı; yoksa bildirimler uygulama açılınca gelir.',
       testSent: "Deneme mesajı gönderildi.",
       testTitle: "EveryOS deneme mesajı",
       testBody: "{{host}} sunucusundaki EveryOS bu kanala ulaşabiliyor.",

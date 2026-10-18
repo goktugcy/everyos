@@ -266,6 +266,18 @@ export class NotificationChannelService {
     this.#event("delete", actor, id, row.kind);
   }
 
+  /**
+   * An ntfy channel's server and topic, on request: listings keep the topic hidden because on
+   * public servers it works like a password, but phones must subscribe to exactly it.
+   */
+  ntfyTopic(id: string, actor: Actor): { server: string; topic: string } {
+    const row = this.#row(id);
+    const config = this.#open(row);
+    if (config.kind !== "ntfy") throw new ApiError(404, "NOT_FOUND", "Not an ntfy channel");
+    this.#event("topic", actor, id, row.kind);
+    return { server: config.server, topic: config.topic };
+  }
+
   /** Sends a test message now, ignoring filters and the burst limit; failures are reported. */
   async test(id: string, actor: Actor): Promise<void> {
     const row = this.#row(id);

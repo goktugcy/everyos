@@ -15,8 +15,20 @@ import {
   type WebhookFormat,
 } from "@everyos/shared";
 import type { TFunction } from "i18next";
-import { Bell, Check, Mail, Pencil, Plus, Send, Trash2, Webhook } from "lucide-react";
-import { useState, type FormEvent, type ReactNode } from "react";
+import {
+  Bell,
+  Check,
+  ExternalLink,
+  Mail,
+  Pencil,
+  Plus,
+  Send,
+  Smartphone,
+  Trash2,
+  Webhook,
+} from "lucide-react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { renderSVG } from "uqr";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
@@ -59,6 +71,7 @@ export function NotificationChannelsGroup() {
     revision,
   );
   const [editing, setEditing] = useState<NotificationChannelView | "new" | null>(null);
+  const [subscribing, setSubscribing] = useState<NotificationChannelView | null>(null);
   const [notice, setNotice] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const reload = () => setRevision((n) => n + 1);
@@ -67,7 +80,14 @@ export function NotificationChannelsGroup() {
     setNotice(null);
     try {
       await api(`/notification-channels/${channel.id}/test`, { method: "POST", body: {} });
-      setNotice({ tone: "success", text: t("notifications.channels.testSent") });
+      setNotice({
+        tone: "success",
+        text: t(
+          channel.settings.kind === "ntfy"
+            ? "notifications.channels.testSentNtfy"
+            : "notifications.channels.testSent",
+        ),
+      });
     } catch (error) {
       setNotice({ tone: "danger", text: errorMessage(t, error) });
     } finally {
@@ -134,6 +154,12 @@ export function NotificationChannelsGroup() {
                 </span>
               ) : null}
             </div>
+            {channel.settings.kind === "ntfy" ? (
+              <Button size="sm" variant="ghost" onClick={() => setSubscribing(channel)}>
+                <Smartphone className="size-4" aria-hidden />
+                {t("notifications.channels.subscribe")}
+              </Button>
+            ) : null}
             <Button
               size="sm"
               variant="secondary"
@@ -174,6 +200,9 @@ export function NotificationChannelsGroup() {
           </Button>
         </div>
       </div>
+      {subscribing ? (
+        <SubscribeDialog channel={subscribing} onClose={() => setSubscribing(null)} />
+      ) : null}
       {editing ? (
         <ChannelDialog
           channel={editing === "new" ? null : editing}
@@ -185,6 +214,87 @@ export function NotificationChannelsGroup() {
         />
       ) : null}
     </SettingsGroup>
+  );
+}
+
+/** Subscribing a phone to exactly the channel's ntfy topic: a QR code and the address. */
+function SubscribeDialog({
+  channel,
+  onClose,
+}: {
+  channel: NotificationChannelView;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [topic, setTopic] = useState<{ server: string; topic: string } | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  useEffect(() => {
+    let active = true;
+    api<{ server: string; topic: string }>(`/notification-channels/${channel.id}/ntfy-topic`).then(
+      (loaded) => active && setTopic(loaded),
+      (caught: unknown) => active && setError(caught),
+    );
+    return () => {
+      active = false;
+    };
+  }, [channel.id]);
+  const url = topic ? `${topic.server.replace(/\/+$/, "")}/${topic.topic}` : null;
+  const qr = url
+    ? `data:image/svg+xml;utf8,${encodeURIComponent(renderSVG(url, { border: 2 }))}`
+    : null;
+  const official = topic ? new URL(topic.server).host === "ntfy.sh" : true;
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => !open && onClose()}
+      title={t("notifications.channels.subscribeTitle", { name: channel.name })}
+    >
+      <div className="flex flex-col gap-4" data-testid="ntfy-subscribe">
+        {error ? <Alert tone="danger">{errorMessage(t, error)}</Alert> : null}
+        {topic && url && qr ? (
+          <>
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+              <img
+                src={qr}
+                alt={t("notifications.channels.subscribeQr")}
+                className="size-40 shrink-0 rounded-everyos-md bg-white p-1"
+              />
+              <div className="flex min-w-0 flex-col gap-3 text-sm">
+                <p className="text-fg-muted">{t("notifications.channels.subscribeHelp")}</p>
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+                  <dt className="text-fg-muted">{t("notifications.channels.fields.server")}</dt>
+                  <dd className="break-all font-mono">{topic.server}</dd>
+                  <dt className="text-fg-muted">{t("notifications.channels.fields.topic")}</dt>
+                  <dd className="break-all font-mono" data-testid="ntfy-topic">
+                    {topic.topic}
+                  </dd>
+                </dl>
+                <p className="text-xs text-fg-muted">{t("notifications.channels.subscribeCase")}</p>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-accent hover:underline"
+                >
+                  {t("notifications.channels.subscribeOpen")}
+                  <ExternalLink className="size-3.5" aria-hidden />
+                </a>
+              </div>
+            </div>
+            {!official ? (
+              <Alert tone="info">{t("notifications.channels.subscribeSelfHosted")}</Alert>
+            ) : null}
+          </>
+        ) : error ? null : (
+          <p className="text-sm text-fg-muted">{t("common.loading")}</p>
+        )}
+        <div className="flex justify-end">
+          <Button variant="ghost" onClick={onClose}>
+            {t("common.close")}
+          </Button>
+        </div>
+      </div>
+    </Dialog>
   );
 }
 
