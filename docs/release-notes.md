@@ -1,3 +1,12 @@
+EveryOS 0.1.33 helps get ntfy notifications onto your phone.
+
+- ntfy channels in Settings › Notifications have an "Add to phone" button. It shows the exact
+  server and topic EveryOS sends to, with a QR code to scan with your phone and a link that opens
+  the messages sent there, so the ntfy app can be subscribed to exactly the same topic.
+- When a test message reaches the ntfy server, the panel says so and suggests checking the phone's
+  subscription (topic names are case-sensitive). For your own ntfy server it notes the setting
+  iPhones need for instant notifications.
+
 EveryOS 0.1.32 tidies the dialog for adding a notification channel.
 
 - The chosen channel type (ntfy, Telegram, e-mail or webhook) is clearly highlighted, with a check
