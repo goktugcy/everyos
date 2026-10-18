@@ -120,6 +120,7 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "network.status": notUsed,
     "tailscale.status": notUsed,
     "tailscale.details": notUsed,
+    "tailscale.serve": notUsed,
     "tailscale.peers": notUsed,
     "processes.list": notUsed,
     "services.list": notUsed,
