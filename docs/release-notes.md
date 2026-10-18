@@ -1,3 +1,10 @@
+EveryOS 0.1.32 tidies the dialog for adding a notification channel.
+
+- The chosen channel type (ntfy, Telegram, e-mail or webhook) is clearly highlighted, with a check
+  mark.
+- The dialog is wider and lays its fields out in columns, so even e-mail fits without scrolling;
+  the extra scroll area inside it is gone.
+
 EveryOS 0.1.31 adds encrypted off-site backups, HTTPS without editing files and required
 two-factor authentication.
 
