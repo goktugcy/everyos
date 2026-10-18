@@ -21,6 +21,8 @@ import {
   getTailscaleDetails,
   getTailscalePeers,
   getTailscaleStatus,
+  setTailscaleServe,
+  TailscaleServeError,
   UnavailableError,
   LogSourceUnavailableError,
   REAL_HOST,
@@ -347,6 +349,18 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
 
     "tailscale.status": () => getTailscaleStatus(deps.tailscaleSockets),
     "tailscale.details": () => getTailscaleDetails(deps.tailscaleSockets),
+    "tailscale.serve": async ({ enabled, port }, { logger }) => {
+      try {
+        const result = await setTailscaleServe({ enabled, port }, deps.tailscaleSockets);
+        logger.info("Tailscale Serve changed", { enabled, url: result.url });
+        return result;
+      } catch (error) {
+        // "<reason>: …" lets the API explain the refusal.
+        if (error instanceof TailscaleServeError)
+          throw new OperationError("conflict", `${error.reason}: ${error.message}`);
+        throw error;
+      }
+    },
     "tailscale.peers": () => getTailscalePeers(deps.tailscaleSockets),
 
     "processes.list": async ({ sort, limit }, { actor }) => {

@@ -43,7 +43,10 @@ export async function startFakeGoogle(): Promise<FakeGoogle> {
   const codes = new Map<string, { challenge: string; redirectUri: string }>();
   const refreshTokens = new Set<string>();
   const accessTokens = new Set<string>();
-  const uploads = new Map<string, { name: string; parents: string[]; length: number }>();
+  const uploads = new Map<
+    string,
+    { name: string; parents: string[]; length: number; received: Buffer[]; size: number }
+  >();
   let next = 1;
   const newId = () => `fake${String(next++).padStart(12, "0")}xyz`;
   const add: FakeGoogle["add"] = (file) => {
@@ -157,6 +160,8 @@ export async function startFakeGoogle(): Promise<FakeGoogle> {
         name: metadata.name,
         parents: metadata.parents.map((parent) => (parent === "root" ? rootId : parent)),
         length: Number(request.headers["x-upload-content-length"]),
+        received: [],
+        size: 0,
       });
       response.writeHead(200, {
         Location: `${origin}/upload/drive/v3/files?upload_id=${uploadId}`,
@@ -166,8 +171,20 @@ export async function startFakeGoogle(): Promise<FakeGoogle> {
     }
     if (url.pathname === "/upload/drive/v3/files" && request.method === "PUT") {
       const pending = uploads.get(url.searchParams.get("upload_id") ?? "");
-      const content = await body(request);
-      if (!pending || content.length !== pending.length)
+      const chunk = await body(request);
+      const range = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(request.headers["content-range"] ?? "");
+      if (!pending || (range && Number(range[1]) !== pending.size))
+        return send(response, 400, { error: { errors: [{ reason: "badContent" }] } });
+      pending.received.push(chunk);
+      pending.size += chunk.length;
+      // Chunked uploads: Google confirms what it has until the last byte arrives.
+      if (pending.size < pending.length) {
+        response.writeHead(308, { Range: `bytes=0-${pending.size - 1}` });
+        response.end();
+        return;
+      }
+      const content = Buffer.concat(pending.received);
+      if (content.length !== pending.length)
         return send(response, 400, { error: { errors: [{ reason: "badContent" }] } });
       uploads.delete(url.searchParams.get("upload_id")!);
       const id = add({ name: pending.name, parent: pending.parents[0], content });
@@ -177,10 +194,14 @@ export async function startFakeGoogle(): Promise<FakeGoogle> {
       const q = url.searchParams.get("q") ?? "";
       const inParent = /^'([^']+)' in parents/.exec(q)?.[1];
       const parent = inParent === "root" ? rootId : inParent;
+      const named = /name = '((?:[^'\\]|\\.)*)'/.exec(q)?.[1]?.replace(/\\(.)/g, "$1");
+      const kind = /mimeType (!?=) '/.exec(q)?.[1];
       const list = [...files.values()].filter(
         (file) =>
           !file.trashed &&
-          (q.startsWith("sharedWithMe") ? file.shared : file.parents.includes(parent ?? "")),
+          (q.startsWith("sharedWithMe") ? file.shared : file.parents.includes(parent ?? "")) &&
+          (named === undefined || file.name === named) &&
+          (kind === undefined || (file.mimeType === DRIVE_FOLDER_MIME) === (kind === "=")),
       );
       list.sort(
         (a, b) =>
@@ -209,6 +230,12 @@ export async function startFakeGoogle(): Promise<FakeGoogle> {
       const file = files.get(id);
       if (!file || file.trashed)
         return send(response, 404, { error: { errors: [{ reason: "notFound" }] } });
+      if (request.method === "DELETE") {
+        files.delete(id);
+        response.writeHead(204);
+        response.end();
+        return;
+      }
       if (request.method === "PATCH") {
         const patch = JSON.parse((await body(request)).toString()) as {
           name?: string;

@@ -129,9 +129,10 @@ export function systemRoutes(services: Services): Hono<AppEnv> {
       ...analyzeTailscale({
         status,
         details,
-        server: services.config.server,
+        server: { port: services.config.server.port, publicOrigins: services.https.origins() },
         isTrustedProxy: services.isTrustedProxy,
         now: services.now(),
+        managed: services.https.settings().tailscale?.url ?? null,
       }),
       canSeePeers: requireAuth(c).permissions.has("system:manage"),
     };

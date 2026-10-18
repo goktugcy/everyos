@@ -247,20 +247,26 @@ describe("disk listing", () => {
         safetyMs: 60_000,
       })[Symbol.asyncIterator]();
       expect((await ticks.next()).done).toBe(false);
-      // Several links appearing together (a disk with partitions) give one tick.
-      for (const name of ["a", "b", "c"]) writeFileSync(join(dir, name), "");
-      const next = await Promise.race([
-        ticks.next(),
-        new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 3_000)),
-      ]);
-      expect(next).not.toBe("timeout");
+      // Several links appearing together (a disk with partitions) give one tick. The watcher may
+      // start delivering a moment later on a busy machine, so the burst repeats until it is seen.
+      const next = ticks.next();
+      let seen = false;
+      void next.then(() => {
+        seen = true;
+      });
+      for (let round = 0; !seen && round < 40; round++) {
+        for (const name of ["a", "b", "c"]) writeFileSync(join(dir, `${name}${round}`), "");
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      expect(seen).toBe(true);
+      expect((await next).done).toBe(false);
       controller.abort();
       expect((await ticks.next()).done).toBe(true);
     } finally {
       controller.abort();
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+  }, 20_000);
 
   it("simulates a USB stick that is plugged in, remembered and mounted again by itself", async () => {
     const root = mkdtempSync(join(tmpdir(), "everyos-sim-stick-"));

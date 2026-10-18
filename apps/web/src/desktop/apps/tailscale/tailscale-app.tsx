@@ -5,10 +5,15 @@ import type {
   TailscaleWarning,
 } from "@everyos/shared";
 import { CircleSlash, ExternalLink, Globe, Lock } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
+import { Button } from "../../../components/ui/button.tsx";
+import { SudoUnlock } from "../../../features/account/sudo-unlock.tsx";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
+import { api } from "../../../lib/api.ts";
+import { useHasPermission } from "../../../stores/session-store.ts";
+import { httpsError } from "../settings/https-group.tsx";
 import { formatBytes, formatDateTime, formatRelative } from "../../../lib/format.ts";
 import { TailscaleCard } from "../system/network-tab.tsx";
 import { DefinitionRows, LoadingBlock, ResourceError, SectionTitle } from "../system/parts.tsx";
@@ -227,15 +232,7 @@ export default function TailscaleApp() {
             <p className="text-sm text-fg-muted">{t("tailscale.notPublished")}</p>
           )}
           {remoteAccess.suggestion ? (
-            <div className="flex flex-col gap-2 rounded-everyos-md border border-line p-3 text-sm">
-              <p>{t("tailscale.suggestion", { url: remoteAccess.suggestion.url })}</p>
-              <code className="block overflow-x-auto rounded-everyos-sm bg-hover/8 px-2 py-1.5 font-mono text-xs">
-                {remoteAccess.suggestion.command}
-              </code>
-              <p className="text-xs text-fg-muted">
-                {t("tailscale.suggestionConfig", { url: remoteAccess.suggestion.url })}
-              </p>
-            </div>
+            <ServeSuggestion suggestion={remoteAccess.suggestion} onChanged={overview.reload} />
           ) : null}
           <p className="text-xs text-fg-muted">{t("tailscale.readOnly")}</p>
         </section>
@@ -264,6 +261,57 @@ export default function TailscaleApp() {
 
         {data.canSeePeers ? <Peers /> : null}
       </div>
+    </div>
+  );
+}
+
+/** Publishing EveryOS on the tailnet: one button for administrators, the command otherwise. */
+function ServeSuggestion({
+  suggestion,
+  onChanged,
+}: {
+  suggestion: { url: string; command: string };
+  onChanged: () => void;
+}) {
+  const { t } = useTranslation();
+  const canManage = useHasPermission("system:manage");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const turnOn = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api("/https/tailscale", { method: "PUT", body: { enabled: true } });
+      onChanged();
+    } catch (caught) {
+      setError(caught);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-2 rounded-everyos-md border border-line p-3 text-sm">
+      <p>{t("tailscale.suggestion", { url: suggestion.url })}</p>
+      {canManage ? (
+        <div>
+          <Button size="sm" loading={busy} onClick={() => void turnOn()}>
+            <Lock className="size-4" aria-hidden />
+            {t("settings.https.tailscaleTurnOn")}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-xs text-fg-muted">{t("tailscale.suggestionAdmin")}</p>
+      )}
+      {error ? (
+        <>
+          <Alert tone="danger">{httpsError(t, error)}</Alert>
+          <SudoUnlock error={error} />
+        </>
+      ) : null}
+      <p className="text-xs text-fg-muted">{t("tailscale.suggestionManual")}</p>
+      <code className="block overflow-x-auto rounded-everyos-sm bg-hover/8 px-2 py-1.5 font-mono text-xs">
+        {suggestion.command}
+      </code>
     </div>
   );
 }

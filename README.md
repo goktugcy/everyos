@@ -126,7 +126,9 @@ Unavailable host capabilities are explained in the interface.
 
 Backups include the database, configuration, wallpapers and personal home folders, including
 desktop files and trash. Choose app data separately, verify archives and restore through the
-authenticated workflow. EveryOS version updates are available from **Settings → About**,
+authenticated workflow. With a backup passphrase, copies are encrypted and sent off-site to another
+disk, S3-compatible storage or Google Drive; an encrypted copy carries the server secret, so a new
+machine restores it with the passphrase alone. EveryOS version updates are available from **Settings → About**,
 **Updates → EveryOS** and the CLI, with signed packages and supervised recovery.
 
 See [backups](docs/backups.md) and [updates](docs/updates.md) for the operating details.
@@ -160,7 +162,8 @@ For script inspection and independent publisher-key and signature verification, 
 2. Open one of the network addresses printed by the installer, such as `http://192.168.1.20:7470`
    or your host's Tailscale IPv4 address. The verified installer from 0.1.2 enables all IPv4 interfaces for a new installation,
    including loopback. A client using the Tailscale address must be connected to the same tailnet.
-   Use an HTTPS reverse proxy or [Tailscale Serve](docs/tailscale.md) for browser HTTPS access.
+   For HTTPS, turn on Tailscale Serve or local-network HTTPS in **Settings → Security → HTTPS**
+   (or use your own HTTPS reverse proxy).
 3. Complete the setup wizard, create your administrator account and make the desktop your own.
 
 For an existing EveryOS installation, use **Settings → About** to check for and install a version
@@ -168,8 +171,8 @@ update. The initial-installation command refuses an existing database.
 
 ## Built around your control
 
-- **Private accounts.** Personal home folders, server-side sessions, optional two-factor
-  authentication and recovery codes.
+- **Private accounts.** Personal home folders, server-side sessions, two-factor authentication
+  with recovery codes, which administrators can require for administrators or everyone.
 - **Explicit permissions.** Administrator, Operator and Viewer roles, with permissions enforced
   by the API and agent and security-relevant actions recorded in the audit log.
 - **A separate privilege boundary.** The API runs unprivileged; host-management operations pass
@@ -182,14 +185,16 @@ Read the [security model](docs/security-model.md) or use [SECURITY.md](SECURITY.
 
 ## Project status
 
-EveryOS is in its first public release cycle. This README describes the current source tree;
-installed packages contain the code and assets from their release tag. The 0.1.2 release includes
-automatic network access for new installations and the default mountain wallpaper.
+EveryOS publishes signed releases for arm64 and amd64 from GitHub; see the
+[release notes](docs/release-notes.md). This README describes the current source tree; installed
+packages contain the code and assets from their release tag.
 
-Linux installation, updates and recovery have recorded disposable-host acceptance results.
-Recorded CI runs contain outstanding browser-test failures covering folder icons,
-file-manager interactions and terminal themes. Validation and its limits are documented in
-[phase8-acceptance.json](docs/phase8-acceptance.json); planned work is in the [roadmap](docs/roadmap.md).
+Every release comes from a commit of `main` that passed CI: lint, type checks, unit tests and the
+browser tests (also over plain HTTP). Updates are verified from the oldest supported version
+(`packaging/release-policy.json`), and Linux installation, updates and recovery have recorded
+disposable-host acceptance results ([phase8-acceptance.json](docs/phase8-acceptance.json),
+[security-acceptance.json](docs/security-acceptance.json)). Planned
+work is in the [roadmap](docs/roadmap.md).
 
 ## Development
 
@@ -231,5 +236,4 @@ the [architecture guide](docs/architecture.md). See [development.md](docs/develo
 
 ## License
 
-The license has not been chosen yet. Until a `LICENSE` file is added, all rights are reserved by
-the author.
+EveryOS is released under the [MIT License](LICENSE).

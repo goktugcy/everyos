@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { PASSWORD_MAX_LENGTH } from "../api-types.ts";
 import { BACKUP_FORMAT, BACKUP_FORMAT_VERSION, BACKUP_ID_PATTERN } from "../backups.ts";
+import { DISK_UUID_PATTERN } from "../disks.ts";
 
 export const BackupIdSchema = z.string().regex(BACKUP_ID_PATTERN);
 
@@ -105,6 +106,69 @@ export const BackupSettingsSchema = z.strictObject({
 export const BackupPinRequestSchema = z.strictObject({ pinned: z.boolean() });
 
 export const BackupDownloadRequestSchema = z.strictObject({
+  password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+  /** Encrypt the download with the backup passphrase (it then includes the server secret). */
+  encrypted: z.boolean().default(false),
+});
+
+const PassphraseSchema = z.string().max(1024);
+
+export const BackupEncryptionRequestSchema = z.strictObject({
+  passphrase: PassphraseSchema.min(12),
+  password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+});
+
+export const BackupPassphraseRequestSchema = z.strictObject({ passphrase: PassphraseSchema });
+
+export const EncryptedUploadIdSchema = z.strictObject({
+  uploadId: z.string().regex(/^[a-f0-9]{32}$/),
+});
+
+/** A folder name directly below a disk or in My Drive. */
+const OffsiteFolderSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .refine(
+    (name) =>
+      !/[\\/]/.test(name) &&
+      ![...name].some((char) => char.charCodeAt(0) < 32) &&
+      name !== "." &&
+      name !== "..",
+    "folder",
+  );
+
+export const OffsiteTargetRequestSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("disk"),
+    uuid: z.string().regex(DISK_UUID_PATTERN),
+    folder: OffsiteFolderSchema.default("EveryOS Backups"),
+  }),
+  z.strictObject({
+    kind: z.literal("s3"),
+    endpoint: z.string().trim().url().max(512),
+    region: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9-]{1,32}$/),
+    bucket: z.string().trim().min(3).max(63),
+    prefix: z.string().trim().max(512).default(""),
+    pathStyle: z.boolean().default(true),
+    accessKeyId: z.string().trim().min(1).max(256),
+    /** Omitted to keep the stored secret. */
+    secretAccessKey: z.string().min(1).max(256).optional(),
+  }),
+  z.strictObject({
+    kind: z.literal("drive"),
+    folder: OffsiteFolderSchema.default("EveryOS Backups"),
+  }),
+]);
+
+export const OffsiteSettingsRequestSchema = z.strictObject({
+  target: OffsiteTargetRequestSchema.nullable(),
+  keep: z.number().int().min(1).max(100),
+  auto: z.boolean(),
   password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
 });
 

@@ -133,6 +133,17 @@ export class DiskService {
     }
   }
 
+  /** A volume by filesystem UUID, from a fresh listing when the last one is old. */
+  async volume(uuid: string): Promise<DiskVolume | null> {
+    const list =
+      this.#last && this.#now() - this.#last.at <= REFRESH_MS
+        ? this.#last.list
+        : await this.list(SYSTEM).catch(() => this.#last?.list ?? null);
+    for (const disk of list?.disks ?? [])
+      for (const volume of disk.volumes) if (volume.uuid === uuid) return volume;
+    return null;
+  }
+
   /** Mounted EveryOS disks as Files locations, from the last listing (refreshed in passing). */
   fileRoots(): FileRootConfig[] {
     if ((!this.#last || this.#now() - this.#last.at > REFRESH_MS) && !this.#refreshing)

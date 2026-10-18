@@ -28,6 +28,7 @@ export * from "./cron.ts";
 export * from "./tasks.ts";
 export * from "./backups.ts";
 export * from "./tailscale.ts";
+export * from "./https.ts";
 export * from "./widgets.ts";
 export type { CapabilityStatus, SystemInfo } from "./schemas/system.ts";
 export type {

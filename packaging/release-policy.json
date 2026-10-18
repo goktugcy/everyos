@@ -1,0 +1,11 @@
+{
+  "minVersion": "0.1.0",
+  "verifiedUpgrades": [
+    {
+      "from": "0.1.0",
+      "to": "0.1.30",
+      "date": "2026-10-18",
+      "path": "everyos update --apply --confirm with the 0.1.0 updater from the GitHub release channel; users, homes and password kept, schema 15"
+    }
+  ]
+}

@@ -157,6 +157,11 @@ export const tr = {
     verify: "Doğrula",
     startOver: "Baştan başla",
   },
+  twoFactorSetup: {
+    title: "İki adımlı doğrulamayı kur",
+    subtitle:
+      "Yöneticin bu hesap için iki adımlı doğrulamayı zorunlu tuttu. Masaüstüne geçmeden önce bir doğrulayıcı uygulamayla kur.",
+  },
   shell: {
     menu: {
       label: "EveryOS menüsü",
@@ -1489,6 +1494,55 @@ export const tr = {
         "Belirtilen süre boyunca etkileşim olmazsa oturum kilitlenir. Kilit sunucuda uygulanır.",
       autoLockOff: "Kapalı",
       autoLockAfter: "{{minutes}} dakika sonra",
+      twoFactorPolicy: "İki adımlı doğrulama zorunluluğu",
+      twoFactorPolicyHint:
+        "Seçilen hesaplar iki adımlı doğrulamayı kurmadan masaüstüne geçemez. Kural sunucuda uygulanır.",
+      twoFactorPolicies: {
+        nobody: "Kimse için zorunlu değil",
+        admins: "Yöneticiler için zorunlu",
+        everyone: "Herkes için zorunlu",
+      },
+      twoFactorPending_one: "Henüz kurmayan hesap: {{names}}",
+      twoFactorPending_other: "Henüz kurmayan {{count}} hesap: {{names}}",
+    },
+    https: {
+      title: "HTTPS",
+      description:
+        "Parolalar ve dosyalar ağda şifreli gitsin diye EveryOS'u HTTPS ile aç. Tailscale gerçek bir sertifika verir; yerel ağ için EveryOS kendi sertifika yetkilisini kullanır.",
+      tailscale: "Tailscale ile HTTPS",
+      tailscaleHint:
+        "Tailscale Serve'e yalnızca EveryOS için bir HTTPS kuralı ekler (443 → bu cihaz). Sadece kendi tailnet'indeki cihazlar erişir; internete (Funnel) asla açılmaz.",
+      tailscaleOn: "{{user}} {{date}} tarihinde açtı. Tailnet'teki cihazlardan bu adresi kullan:",
+      tailscaleTurnOn: "Tailscale ile aç",
+      turnOff: "Kapat",
+      lan: "Yerel ağda HTTPS",
+      lanHint:
+        "Aynı ağdaki cihazlar için ayrı bir HTTPS bağlantı noktası açar. Sertifikayı EveryOS'un kendi yetkilisi verir; tarayıcı uyarısı çıkmaması için yetkili sertifikasını her cihaza bir kez yükle.",
+      port: "HTTPS bağlantı noktası",
+      addresses: "Adresler",
+      authority: "Sertifika yetkilisi",
+      authorityHint:
+        "Bu dosyayı cihazına yükleyip güvenilir olarak işaretle (iPhone: Ayarlar › Genel › Hakkında › Sertifika Güven Ayarları; macOS: Anahtar Zinciri; Android: Ayarlar › Güvenlik › Sertifika yükle; Windows: Güvenilen Kök Sertifika Yetkilileri). Parmak izi:",
+      certificateUntil:
+        "Sunucu sertifikası {{date}} tarihine kadar geçerli; adresler değişince ve süresi dolmadan kendiliğinden yenilenir.",
+      downloadAuthority: "Yetkili sertifikasını indir",
+      loopbackOnly:
+        "EveryOS yalnızca bu cihazın içinden (127.0.0.1) dinliyor; diğer cihazlar bu bağlantı noktasına da ulaşamaz. Yapılandırmadaki server.host değerini değiştirmen gerekir.",
+      reasons: {
+        "not-running": "Tailscale bağlı değil. Önce bu cihazda Tailscale'e giriş yap.",
+        "https-disabled":
+          "Tailnet'inde HTTPS sertifikaları kapalı. Tailscale yönetim panelinde DNS › MagicDNS ve HTTPS Certificates'ı etkinleştirip tekrar dene.",
+        "port-in-use": "Bu bağlantı noktası başka bir şey tarafından kullanılıyor.",
+        funnel:
+          "Tailscale Funnel bu cihazın 443 bağlantı noktasını internete açmış; EveryOS'u oraya koymuyorum.",
+        "api-not-on-loopback":
+          "EveryOS 127.0.0.1 üzerinde dinlemiyor; Tailscale Serve ona ulaşamaz.",
+        "not-detected": "Bu cihazda Tailscale bulunamadı.",
+        "socket-missing": "Tailscale servisine ulaşılamadı.",
+        "permission-denied": "Tailscale ayarlarına erişim izni yok.",
+        "same-port": "HTTPS bağlantı noktası HTTP'ninkinden farklı olmalı.",
+        failed: "HTTPS dinleyicisi başlatılamadı.",
+      },
     },
     about: {
       description:
@@ -2682,6 +2736,10 @@ export const tr = {
       },
       "backup-succeeded": { title: "Yedekleme tamamlandı", body: "{{backup}} yedeği oluşturuldu." },
       "backup-failed": { title: "Yedekleme başarısız", body: "Yedek alınamadı: {{reason}}." },
+      "backup-offsite-failed": {
+        title: "Uzak yedek kopyası gönderilemedi",
+        body: "{{backup}} yedeği {{target}} hedefine kopyalanamadı: {{reason}}. Yedek bu cihazda duruyor.",
+      },
       "task-succeeded": { title: "Görev tamamlandı", body: "{{task}} başarıyla çalıştı." },
       "task-failed": { title: "Görev başarısız", body: "{{task}}: {{reason}}." },
       "login-locked": {
@@ -3193,13 +3251,13 @@ export const tr = {
     notPublished: "EveryOS, Tailscale Serve ile yayımlanmıyor.",
     public: "İnternete açık (Funnel)",
     tailnetOnly: "Yalnızca tailnet içinden",
-    originOk: "publicOrigins ayarlı",
-    originMissing: "publicOrigins ayarı eksik",
-    suggestion:
-      "EveryOS'i tailnet içinde {{url}} adresinden HTTPS ile açmak için sunucuda çalıştırın:",
-    suggestionConfig:
-      "Ardından /etc/everyos/config.yaml dosyasında server.trustedProxies listesine 127.0.0.1 ve server.publicOrigins listesine {{url}} ekleyin.",
-    readOnly: "EveryOS Tailscale yapılandırmasını değiştirmez; yalnızca okur ve açıklar.",
+    originOk: "kaynak izinli",
+    originMissing: "kaynak izinli değil (server.publicOrigins)",
+    suggestion: "EveryOS tailnet içinde {{url}} adresinden HTTPS ile açılabilir.",
+    suggestionAdmin: "Bir yönetici bunu tek düğmeyle açabilir (Ayarlar › Güvenlik › HTTPS).",
+    suggestionManual: "Elle yapmak istersen sunucuda:",
+    readOnly:
+      "EveryOS yalnızca kendi HTTPS kuralını ekler veya kaldırır; diğer Tailscale ayarlarına ve Funnel'a dokunmaz.",
     selfTitle: "Bu cihaz",
     serveTitle: "Serve ve Funnel",
     funnel: "Funnel: internete açık",
@@ -3264,6 +3322,107 @@ export const tr = {
     } satisfies Record<TailscaleWarningKind, string>,
   },
   backups: {
+    secure: {
+      open: "Şifreleme ve uzak kopya",
+      title: "Şifreleme ve uzak kopya",
+      intro:
+        "Yedekler bir parolayla şifrelenip başka bir diske, S3 uyumlu depolamaya veya Google Drive'a kopyalanabilir. Şifreli kopya sunucu anahtarını da taşır; başka bir cihazda yalnızca bu parolayla geri yüklenir.",
+      encryption: "Yedek parolası",
+      encryptionOff: "Henüz parola belirlenmedi. Şifreli indirme ve uzak kopya için gerekli.",
+      encryptionOn: "{{date}} tarihinde {{user}} belirledi.",
+      passphrase: "Yeni yedek parolası",
+      passphraseHint:
+        "En az 12 karakter. Kaybedersen şifreli kopyalar açılamaz; EveryOS bu parolayı geri getiremez. Güvenli bir yerde sakla.",
+      passphraseRepeat: "Parolayı tekrarla",
+      passphraseMismatch: "Parolalar aynı değil.",
+      passphraseChangeHint:
+        "Parolayı değiştirmek eski şifreli kopyaları değiştirmez; onlar eski parolayla açılmaya devam eder.",
+      remove: "Parolayı kaldır",
+      removeTitle: "Yedek parolası kaldırılsın mı?",
+      removeBody:
+        "Şifreli indirme ve uzak kopya, yeni bir parola belirlenene kadar durur. Daha önce alınmış şifreli kopyalar bu parolayla açılmaya devam eder.",
+      savePassphrase: "Parolayı kaydet",
+      changePassphrase: "Parolayı değiştir",
+      passphraseSaved: "Yedek parolası kaydedildi.",
+      check: "Parolayı sına",
+      checkHint: "Hatırladığın parolanın doğru olup olmadığını sınar; hiçbir şeyi değiştirmez.",
+      checkOk: "Parola doğru.",
+      checkWrong: "Bu parola kayıtlı yedek parolası değil.",
+      accountPassword: "Hesap parolan",
+      secretKey: "Sunucu anahtarı (secret.key)",
+      secretKeyHint:
+        "Kayıtlı şifreli ayarları, iki adımlı doğrulamayı ve uygulama tanımlarını çözen anahtar. Şifreli kopyalar onu zaten içerir; ayrıca güvenli bir yerde saklamak istersen indir. Bu dosyayı ele geçiren kişi yedeklerdeki gizli ayarları okuyabilir.",
+      secretKeyDownload: "secret.key'i indir",
+      target: "Uzak hedef",
+      targetHint:
+        "Her kopya şifrelenir ve bu hedefe everyos-backup-<tarih>.eosbak adıyla yazılır. EveryOS orada yalnızca kendi kopyalarını listeler ve siler.",
+      kinds: {
+        none: "Yok",
+        disk: "Bağlı disk",
+        s3: "S3 uyumlu depolama",
+        drive: "Google Drive",
+      },
+      disk: "Disk",
+      noDisks:
+        "EveryOS'un bağladığı yazılabilir bir disk yok. Önce Ayarlar › Diskler'den bir disk bağla.",
+      folder: "Klasör",
+      diskOwner: "Dosyalar {{user}} hesabının Linux kullanıcısıyla yazılır.",
+      endpoint: "Uç nokta (endpoint)",
+      endpointHint:
+        "Örnekler: https://s3.eu-central-1.amazonaws.com, https://<hesap>.r2.cloudflarestorage.com, http://192.168.1.10:9000 (MinIO).",
+      region: "Bölge",
+      bucket: "Kova (bucket)",
+      prefix: "Ön ek (isteğe bağlı)",
+      pathStyle: "Yol tarzı adresleme (MinIO ve çoğu S3 uyumlu hizmet için açık bırak)",
+      accessKeyId: "Erişim anahtarı kimliği",
+      secretAccessKey: "Gizli erişim anahtarı",
+      secretKept: "Kayıtlı; değiştirmek için yeni anahtarı yaz",
+      driveConnected: "Kopyalar {{user}} hesabının Google Drive'ındaki klasöre yüklenir.",
+      driveNotConnected:
+        "Google Drive bağlı değil. Önce Ayarlar › Bağlantılar'dan kendi Drive hesabını bağla.",
+      keep: "Hedefte saklanacak kopya",
+      auto: "Her elle ve zamanlanmış yedekten sonra otomatik gönder",
+      saveTarget: "Hedefi doğrula ve kaydet",
+      targetSaved: "Uzak hedef doğrulandı ve kaydedildi.",
+      test: "Bağlantıyı sına",
+      testOk: "Hedefe ulaşıldı.",
+      needsPassphrase: "Uzak kopya için önce bir yedek parolası belirle.",
+      encryptDownload: "Parolayla şifrele (.eosbak)",
+      encryptDownloadHint:
+        "Sunucu anahtarı da içine konur; başka bir cihazda yalnızca yedek parolasıyla geri yüklenir.",
+      encryptDownloadOff:
+        "Şifreli indirme için önce Şifreleme ve uzak kopya bölümünden bir yedek parolası belirle.",
+      decryptTitle: "Şifreli yedeği aç",
+      decryptIntro:
+        "{{host}} cihazında {{date}} tarihinde alınmış (EveryOS {{version}}) şifreli bir yedek yüklendi. Açmak için yedek parolasını gir.",
+      decryptKey:
+        "Yedek, alındığı kurulumun sunucu anahtarını içeriyor; tüm veritabanı geri yüklenebilecek.",
+      decryptNoKey:
+        "Yedek sunucu anahtarını içermiyor; yalnızca masaüstü ve dosyalar geri yüklenebilir.",
+      decrypt: "Aç ve içe aktar",
+      sendNow: "Uzak hedefe gönder",
+      sending: "Uzak hedefe gönderiliyor",
+      offsiteOk: "Uzak kopya: {{target}} · {{when}}",
+      offsiteFailed: "Uzak kopya başarısız: {{reason}}",
+      offsiteJobFailed: "Uzak kopya gönderilemedi: {{reason}}.",
+      keyMissing:
+        "Bu yedeğin sunucu anahtarı bu cihazda yok; tüm veritabanı geri yüklenemez. Şifreli (.eosbak) kopyasını yüklersen anahtar onunla gelir.",
+      reasons: {
+        "disk-not-mounted": "disk bağlı değil",
+        "disk-read-only": "disk salt okunur",
+        "drive-not-connected": "Google Drive bağlı değil",
+        "owner-unauthorized": "hedefi ayarlayan yöneticinin yetkisi yok",
+        LINUX_ACCOUNT_REQUIRED: "hedefi ayarlayan yöneticinin Linux hesabı bu cihazda bağlı değil",
+        "s3-network": "depolamaya ulaşılamadı",
+        "s3-timeout": "depolama zamanında yanıt vermedi",
+        "s3-AccessDenied": "erişim reddedildi",
+        "s3-NoSuchBucket": "kova bulunamadı",
+        "s3-InvalidAccessKeyId": "erişim anahtarı tanınmadı",
+        "s3-SignatureDoesNotMatch": "gizli erişim anahtarı yanlış",
+        cancelled: "iptal edildi",
+        network: "ağ hatası",
+      },
+    },
     restoreHomes: "Kişisel Ev klasörlerini geri yükle",
     restoreHomesHint:
       "{{users}} hesaplarının dosyaları ve çöp kutuları yedekteki içerikle değiştirilir. Önce mevcut içerik güvenlik yedeğine alınır. Diğer hesapların dosyaları korunur.",
@@ -3374,7 +3533,7 @@ export const tr = {
       invalid: "Yedek doğrulanamadığı için kullanılamaz.",
       "newer-schema": "Yedek daha yeni bir EveryOS sürümüyle alınmış; bu sürüme geri yüklenemez.",
       "different-key":
-        "Yedek başka bir kurulumun gizli anahtarıyla alınmış; şifreli ayarlar ve iki adımlı doğrulama okunamayacağı için veritabanı geri yüklenemez.",
+        "Yedek başka bir kurulumun gizli anahtarıyla alınmış ve o anahtar bu cihazda yok; şifreli ayarlar ve iki adımlı doğrulama okunamayacağı için veritabanı geri yüklenemez. Yedeğin parolayla şifrelenmiş (.eosbak) kopyasını yüklersen anahtar onunla gelir.",
     },
     diff: {
       users: "Kullanıcılar",
@@ -3411,6 +3570,7 @@ export const tr = {
       "restore-data": "Uygulama verisi geri yükleniyor",
       "restore-settings": "Masaüstü ayarları geri yükleniyor",
       "stage-database": "Veritabanı hazırlanıyor",
+      offsite: "Şifrelenip uzak hedefe gönderiliyor",
       done: "Tamamlandı",
     } satisfies Record<BackupJobStage, string>,
     jobErrors: {
@@ -3655,6 +3815,14 @@ export const tr = {
     DRIVE_NOT_DOWNLOADABLE: "Bu Google dosyası indirilemez (ör. Formlar).",
     TRANSFER_FAILED: "Aktarım tamamlanamadı.",
     CANCELLED: "İptal edildi.",
+    TWO_FACTOR_REQUIRED:
+      "Bu hesap için iki adımlı doğrulama zorunlu; devam etmek için önce onu kur.",
+    TWO_FACTOR_ENFORCED: "Bu hesap için iki adımlı doğrulama zorunlu tutulduğundan kapatılamaz.",
+    TWO_FACTOR_SELF_FIRST: "Bunu zorunlu tutmadan önce kendi hesabında iki adımlı doğrulamayı kur.",
+    BACKUP_ENCRYPTION_REQUIRED: "Önce Yedekler › Şifreleme bölümünden bir yedek parolası belirle.",
+    BACKUP_PASSPHRASE_INVALID: "Yedek parolası bu dosyayı açmıyor.",
+    BACKUP_OFFSITE_NOT_CONFIGURED: "Uzak yedek hedefi ayarlanmamış.",
+    BACKUP_OFFSITE_FAILED: "Uzak yedek hedefine ulaşılamadı.",
     NETWORK: "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edin.",
     UNKNOWN: "Bilinmeyen bir hata oluştu.",
   } satisfies Record<ErrorCode | "NETWORK" | "UNKNOWN", string>,

@@ -98,6 +98,9 @@ test("files drag between Files windows and the desktop, which is the Desktop fol
       ).json()) as { entries: { name: string }[] }
     ).entries.map((entry) => entry.name);
 
+  // Whatever earlier tests left in the Desktop folder stays out of the comparisons.
+  const before = await listing("Masaüstü");
+
   // A folder made on the desktop, and a file in Documents.
   await surface.click({ button: "right", position: { x: 550, y: 250 } });
   await page.getByRole("menuitem", { name: "Yeni klasör", exact: true }).click();
@@ -145,5 +148,5 @@ test("files drag between Files windows and the desktop, which is the Desktop fol
   await page.getByRole("menuitem", { name: "Çöp kutusuna taşı", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Çöp kutusuna taşı" }).click();
   await expect(onDesktop("Taşınacaklar")).toHaveCount(0);
-  await expect.poll(() => listing("Masaüstü")).toEqual([]);
+  await expect.poll(() => listing("Masaüstü")).toEqual(before);
 });

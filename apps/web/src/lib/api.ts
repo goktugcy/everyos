@@ -25,6 +25,7 @@ export class ApiRequestError extends Error {
 let csrfToken: string | null = null;
 let unauthenticatedHandler: (() => void) | null = null;
 let lockedHandler: (() => void) | null = null;
+let twoFactorHandler: (() => void) | null = null;
 
 export function setCsrfToken(token: string | null): void {
   csrfToken = token;
@@ -38,6 +39,11 @@ export function onUnauthenticated(handler: (() => void) | null): void {
 /** Called when the server reports that the session is locked (HTTP 423). */
 export function onSessionLocked(handler: (() => void) | null): void {
   lockedHandler = handler;
+}
+
+/** Called when the server requires a two-factor setup before anything else (HTTP 403). */
+export function onTwoFactorRequired(handler: (() => void) | null): void {
+  twoFactorHandler = handler;
 }
 
 export interface ApiOptions {
@@ -103,6 +109,7 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
   if (response.status === 401 && code === "UNAUTHENTICATED" && !options.quiet401)
     unauthenticatedHandler?.();
   if (response.status === 423 && code === "SESSION_LOCKED") lockedHandler?.();
+  if (response.status === 403 && code === "TWO_FACTOR_REQUIRED") twoFactorHandler?.();
   throw new ApiRequestError(
     response.status,
     code,
@@ -135,6 +142,7 @@ export async function postApiEvents(
     const code = isErrorCode(payload?.error?.code) ? payload.error.code : "UNKNOWN";
     if (response.status === 401 && code === "UNAUTHENTICATED") unauthenticatedHandler?.();
     if (response.status === 423 && code === "SESSION_LOCKED") lockedHandler?.();
+    if (response.status === 403 && code === "TWO_FACTOR_REQUIRED") twoFactorHandler?.();
     throw new ApiRequestError(
       response.status,
       code,
@@ -184,13 +192,13 @@ export async function postApiEvents(
  * Uploads a file as the raw request body with progress reports (fetch cannot
  * report upload progress). Errors map to `ApiRequestError` like `api()`.
  */
-export function uploadWithProgress(
+export function uploadWithProgress<T = unknown>(
   path: string,
   file: Blob,
   onProgress: (loaded: number, total: number) => void,
   signal?: AbortSignal,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const finish = traceApiRequest("POST", path, file.size);
     xhr.open("POST", `/api${path}`);
@@ -207,7 +215,13 @@ export function uploadWithProgress(
     xhr.onload = () => {
       finish(xhr.status, new TextEncoder().encode(xhr.responseText).length);
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
+        let body: unknown;
+        try {
+          body = xhr.responseText ? JSON.parse(xhr.responseText) : undefined;
+        } catch {
+          body = undefined;
+        }
+        resolve(body as T);
         return;
       }
       let error: ApiErrorBody["error"] | undefined;
@@ -219,6 +233,7 @@ export function uploadWithProgress(
       const code: ClientErrorCode = isErrorCode(error?.code) ? error.code : "UNKNOWN";
       if (xhr.status === 401 && code === "UNAUTHENTICATED") unauthenticatedHandler?.();
       if (xhr.status === 423 && code === "SESSION_LOCKED") lockedHandler?.();
+      if (xhr.status === 403 && code === "TWO_FACTOR_REQUIRED") twoFactorHandler?.();
       reject(
         new ApiRequestError(xhr.status, code, error?.message ?? xhr.statusText, error?.details),
       );

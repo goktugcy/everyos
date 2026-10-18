@@ -505,7 +505,9 @@ export async function createTestContext(
     configure?: (config: ApiConfig) => void;
     webDir?: string;
     /** Extra service test hooks (SMTP transports, the Telegram API origin). */
-    services?: Pick<ServiceDependencies, "smtp" | "telegramApi" | "google">;
+    services?: Pick<ServiceDependencies, "smtp" | "telegramApi" | "google" | "s3">;
+    /** The server secret (another value plays another installation). */
+    masterKey?: Buffer;
   } = {},
 ): Promise<TestContext> {
   const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));
@@ -524,7 +526,7 @@ export async function createTestContext(
     config,
     logger: silentLogger,
     db,
-    masterKey: Buffer.alloc(32, 5),
+    masterKey: options.masterKey ?? Buffer.alloc(32, 5),
     agent,
     scryptParams: { log2N: 10, r: 8, p: 1 },
     now: () => clock.now,

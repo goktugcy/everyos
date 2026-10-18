@@ -33,7 +33,7 @@ flowchart LR
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Network → API  | Loopback-only default bind, session cookies, CSRF defenses, rate limiting, strict input validation, security headers **[P1]**      |
 | API → Agent    | Socket file permissions + mutual HMAC handshake, operation allowlist, zod validation, per-operation permission and policy **[P1]** |
-| Catalogs → API | SSRF-safe fetch, size and time limits, no script execution, install policy checks **[planned, Phase 5]**                           |
+| Catalogs → API | SSRF-safe fetch, size and time limits, no script execution, install policy checks **[P5]**                                         |
 | Web client     | No privileged logic; strict CSP; untrusted text rendered as text, never as HTML **[P1]**                                           |
 
 ## Network exposure
@@ -43,25 +43,45 @@ flowchart LR
   this prevents dpkg upgrades from broadening an unchanged older configuration.
   Administrators can set `server.host: 127.0.0.1` for proxy-only access. The API logs a warning when it
   listens on a non-loopback address without TLS **[P1]**.
-- Recommended remote access is through Tailscale (`tailscale serve`) or a TLS reverse proxy. Direct
-  TLS is supported with `server.tls` **[P1]**.
+- Recommended remote access is through Tailscale Serve or a TLS reverse proxy. Direct TLS is
+  supported with `server.tls` **[P1]**. Two built-in options need no configuration file edits
+  (Settings › Security › HTTPS, `system:manage`, sudo-unlocked Linux account for Tailscale):
+  - **Tailscale Serve, one button.** The agent operation `tailscale.serve` adds exactly one
+    handler, `https://<node>.<tailnet>.ts.net/` → `http://127.0.0.1:<port>`, with the tailnet's
+    own certificate. It refuses when port 443 already serves something else, when Funnel is on for
+    that port, when the tailnet has HTTPS certificates off or when Tailscale is not connected; it
+    never enables Funnel and turning it off removes only its own handler. While it is on, EveryOS
+    accepts that origin and trusts the loopback peer's `X-Forwarded-*` headers (so the tailnet
+    client's address and HTTPS are seen). A development agent refuses the operation.
+  - **Local-network HTTPS.** A second, HTTPS-only listener (default port 7443, TLS 1.2+) on the
+    same address as the HTTP listener, started and stopped live. Its certificate comes from
+    EveryOS's own certificate authority (ECDSA P-256, CA limited to end-entity certificates,
+    ten years); the server certificate (≤ 397 days, `serverAuth`, every host name, `.local` name
+    and non-virtual address as SANs) is re-issued 30 days before expiry and whenever the
+    addresses change, and hot-swapped without dropping the listener. Both private keys are sealed
+    in the database with the server secret, so a restored database keeps the authority devices
+    already trust. Every signed-in person may download the authority certificate (never its key)
+    to install it on their devices.
 - `X-Forwarded-For`, `X-Forwarded-Proto` and `X-Forwarded-Host` are honoured only when the direct
-  peer is listed in `server.trustedProxies` (IPs or CIDRs). The client address is the first
-  untrusted hop from the right **[P1]**.
+  peer is listed in `server.trustedProxies` (IPs or CIDRs), or is loopback while EveryOS's own
+  Tailscale Serve handler is on. The client address is the first untrusted hop from the right
+  **[P1]**. Local processes can then claim a forwarded address; per-account login limits still
+  apply.
 - The UI warns when the connection is plain HTTP from a non-loopback address; plain HTTP is never
   silently treated like HTTPS **[P1]**.
 - EveryOS never opens firewall ports **[policy]**.
 
 ## Authentication
 
-| Mechanism                | Details                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| First-run setup **[P1]** | `POST /api/setup` works only while no user exists, and requires a one-time token. The token is written to `/var/lib/everyos/setup-token` (mode 0600) and is readable only by the `everyos` user and root. The token file is deleted after setup and the endpoint answers `409` from then on. Admin creation re-checks "no users" inside a write transaction. |
-| Passwords **[P1]**       | scrypt (N=2¹⁶, r=8, p=2, 16-byte salt, self-describing format with transparent rehash when parameters increase). Unicode NFKC normalization. The policy requires 10–256 characters, rejects passwords that contain the username or are common, and rejects repetitive ones.                                                                                  |
-| Timing **[P1]**          | Unknown usernames run a dummy verification so response time does not reveal which accounts exist. Unknown user and wrong password return the same error.                                                                                                                                                                                                     |
-| Sessions **[P1]**        | 256-bit random token in an `HttpOnly`, `SameSite=Strict` cookie (`__Host-` prefix and `Secure` over HTTPS). Only the SHA-256 of the token is stored. Sessions have a 12 h idle timeout and a 7-day absolute lifetime (both configurable). Logout, password change, account disabling and admin password resets revoke sessions server-side.                  |
-| Second factor **[P1]**   | Optional TOTP (RFC 6238, SHA-1, 30 s, 6 digits, ±1 step) with replay protection: the last accepted step is persisted. The challenge is bound to the client IP, valid for 5 minutes, and allows at most 5 attempts. Users get 10 single-use recovery codes, stored as hashes. Disabling 2FA requires the password and a valid code.                           |
-| Brute force **[P1]**     | In-memory progressive lockouts per IP (20 failures / 15 min) and per account (5 failures, lock starting at 1 min, doubling up to 15 min). Re-authentication inside a session is limited separately. Lockouts are temporary by design, so an attacker cannot permanently lock out the administrator.                                                          |
+| Mechanism                | Details                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First-run setup **[P1]** | `POST /api/setup` works only while no user exists, and requires a one-time token. The token is written to `/var/lib/everyos/setup-token` (mode 0600) and is readable only by the `everyos` user and root. The token file is deleted after setup and the endpoint answers `409` from then on. Admin creation re-checks "no users" inside a write transaction.                                                                                                                                                |
+| Passwords **[P1]**       | scrypt (N=2¹⁶, r=8, p=2, 16-byte salt, self-describing format with transparent rehash when parameters increase). Unicode NFKC normalization. The policy requires 10–256 characters, rejects passwords that contain the username or are common, and rejects repetitive ones.                                                                                                                                                                                                                                 |
+| Timing **[P1]**          | Unknown usernames run a dummy verification so response time does not reveal which accounts exist. Unknown user and wrong password return the same error.                                                                                                                                                                                                                                                                                                                                                    |
+| Sessions **[P1]**        | 256-bit random token in an `HttpOnly`, `SameSite=Strict` cookie (`__Host-` prefix and `Secure` over HTTPS). Only the SHA-256 of the token is stored. Sessions have a 12 h idle timeout and a 7-day absolute lifetime (both configurable). Logout, password change, account disabling and admin password resets revoke sessions server-side.                                                                                                                                                                 |
+| Second factor **[P1]**   | TOTP (RFC 6238, SHA-1, 30 s, 6 digits, ±1 step) with replay protection: the last accepted step is persisted. The challenge is bound to the client IP, valid for 5 minutes, and allows at most 5 attempts. Users get 10 single-use recovery codes, stored as hashes. Disabling 2FA requires the password and a valid code.                                                                                                                                                                                   |
+| Required 2FA             | Settings › Security: nobody (default), administrators or everyone (`users:manage`, audited as `security.two-factor`). Enforced by the API, not the UI: a covered account without a second factor can only read its session, bootstrap and preferences, set up TOTP, lock/unlock and sign out (`403 TWO_FACTOR_REQUIRED` otherwise), and cannot turn TOTP off. An administrator must have 2FA before requiring it from their own role. A reset by another administrator sends the account back to the setup. |
+| Brute force **[P1]**     | In-memory progressive lockouts per IP (20 failures / 15 min) and per account (5 failures, lock starting at 1 min, doubling up to 15 min). Re-authentication inside a session is limited separately. Lockouts are temporary by design, so an attacker cannot permanently lock out the administrator.                                                                                                                                                                                                         |
 
 ## Authorization
 
@@ -129,8 +149,19 @@ Every response carries a strict CSP (`script-src 'self'`, `object-src 'none'`,
   with AES-256-GCM. The ciphertext is bound to its row and purpose through additional
   authenticated data (for example `user:<id>:totp`), so it cannot be copied to another user.
 - Key files are refused if they are group-writable or accessible by "other".
-- **Backups:** a database backup without `secret.key` keeps encrypted secrets unreadable. The Phase 7
-  backup feature will handle the key explicitly (opt-in, encrypted export).
+- **Backups** ([backups.md](backups.md)): plain backups never contain `secret.key`, so a copied
+  archive keeps encrypted secrets unreadable. Passphrase-encrypted copies (`.eosbak`: scrypt
+  N=2¹⁷ key-encryption key, a random data key per file, AES-256-GCM in 1 MiB chunks whose nonces
+  carry the index and a final flag and which authenticate the header) do include it, so another
+  machine restores with the passphrase only. The derived key is stored sealed so scheduled
+  copies need nobody present; the passphrase itself is never stored.
+- **Keyring:** `<dataDir>/keys/<keyId>.key` keeps the secrets replaced by a database restore and
+  those that came inside encrypted backups (same protection as `secret.key`), so older backups
+  stay restorable. A full restore of another installation's backup stages its secret and installs
+  it on the next start, before the database is opened.
+- **Downloading `secret.key`** needs `backups:restore`, the current password and a one-minute
+  single-use link; it is audited (never with the key). Whoever holds it can read the secrets in
+  backups, which the UI says.
 
 ## The privileged agent
 
@@ -175,10 +206,14 @@ The agent is the only component with root privileges. Its interface is deliberat
   never leak internals.
 - **Configuration [P1]:** the agent reads only root-owned configuration (`/etc/everyos/agent.yaml`)
   and never trusts files that the `everyos` user can write.
-- **systemd hardening [planned, Phase 8]:** `ProtectSystem`, `ProtectHome`, `PrivateTmp`,
-  `NoNewPrivileges` (where compatible with the operation set), `RestrictAddressFamilies=AF_UNIX`,
-  `KillMode=control-group` (so no child process outlives the agent), plus `MemoryMax` and
-  `TasksMax`.
+- **systemd hardening [P8]:** the API runs as `everyos` with no capabilities,
+  `NoNewPrivileges`, `ProtectSystem=strict` with one writable data root, private devices and
+  `/tmp`, protected homes, kernel settings and control groups ([packaging.md](packaging.md)). The
+  agent runs as root because APT, PTYs for linked accounts, mounts and dpkg need it; it keeps
+  `ProtectHome=read-only`, protected kernel settings, modules and control groups, restricted
+  realtime scheduling and address families, and relies on its typed operation registry, policy and
+  audit as the primary boundary. Accounts' file and system work runs in per-account workers with
+  the account's own UID and groups.
 
 **Residual risk.** A fully compromised API process can ask the agent for any operation that an
 administrator could request. The agent's operation registry and policy bound the damage, but they
@@ -298,9 +333,10 @@ unprivileged and exposes a small attack surface.
   account homes and trash are also backed up, with bounded no-follow archives, drained file
   requests, fully validated extraction, account-id matching, safety backups and rollback on failed
   directory swaps. Restoring homes never creates accounts or changes arbitrary file roots.
-- **Tailscale** ([tailscale.md](tailscale.md)): read-only LocalAPI `GET` requests; only displayed
+- **Tailscale** ([tailscale.md](tailscale.md)): LocalAPI `GET` requests for status; only displayed
   fields leave the agent; the device list is administrator-only; exposure of EveryOS through Funnel
-  raises a security notification. EveryOS never changes the Tailscale configuration.
+  raises a security notification. The only write is EveryOS's own Serve handler (see Network
+  exposure), with the configuration's ETag so a concurrent change is not overwritten.
 - **Terminal** ([terminal.md](terminal.md)): the agent, API gateway and browser client use the
   administrator-only `terminal:access` permission. Disabled until an account is configured;
   root requires explicit agent configuration. Cookie-authenticated upgrades check Origin and

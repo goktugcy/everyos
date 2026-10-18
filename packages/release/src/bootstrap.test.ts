@@ -23,6 +23,8 @@ it("publishes a self-contained, syntax-valid bootstrap signed with the manifest 
       fileURLToPath(new URL("../../../scripts/sign-release.ts", import.meta.url)),
       "--version",
       "0.1.0",
+      "--min-version",
+      "0.1.0",
       "--key-file",
       keyFile,
       "--directory",

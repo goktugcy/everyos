@@ -120,6 +120,7 @@ export class AccountWorkers {
           (op.startsWith("apt.") && contract.mutating) ||
           op === "services.control" ||
           op === "power.control" ||
+          op === "tailscale.serve" ||
           (op.startsWith("disks.") && contract.mutating);
         if (
           privileged ||

@@ -1,5 +1,6 @@
 import { installedVersion } from "@everyos/release";
 import { mkdirSync, readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { createServer as createHttpsServer } from "node:https";
 import { serve } from "@hono/node-server";
 import { migrate, openDatabase, EVERYOS_MIGRATIONS } from "@everyos/database";
@@ -12,6 +13,7 @@ import { isExposedBinding, loadApiConfig } from "./config.ts";
 import { createServices } from "./services.ts";
 import { attachTerminalGateway } from "./modules/terminal/gateway.ts";
 import { applyPendingRestore } from "./modules/backups/snapshot.ts";
+import { createLanListener } from "./modules/security/lan-listener.ts";
 import type { Server } from "node:http";
 
 const MAINTENANCE_INTERVAL_MS = 60 * 60_000;
@@ -48,17 +50,19 @@ async function main(): Promise<void> {
   }
 
   mkdirSync(config.paths.dataDir, { recursive: true, mode: 0o750 });
-  const masterKey = loadKeyFile(config.paths.secretKeyFile, {
-    create: true,
-    enforcePermissions: true,
-  });
-
-  // A database restore staged from a backup is applied before the database is opened.
+  // A database restore staged from a backup is applied before the database is opened, and
+  // before the server secret is read: a backup from another machine brings its own.
   const restored = await applyPendingRestore({
     dataDir: config.paths.dataDir,
     databaseFile: config.paths.databaseFile,
     backupDir: config.paths.backupDir,
+    secretKeyFile: config.paths.secretKeyFile,
+    keysDir: join(config.paths.dataDir, "keys"),
     logger,
+  });
+  const masterKey = loadKeyFile(config.paths.secretKeyFile, {
+    create: true,
+    enforcePermissions: true,
   });
   const db = openDatabase(config.paths.databaseFile);
   const migration = await migrate(db, EVERYOS_MIGRATIONS, {
@@ -159,6 +163,17 @@ async function main(): Promise<void> {
     logger.fatal("HTTP server error", { error });
     process.exit(1);
   });
+  // Local-network HTTPS with EveryOS's own certificate authority, when an administrator turns it on.
+  const lan = createLanListener({
+    fetch: app.fetch,
+    hostname: config.server.host,
+    attach: (secure) => attachTerminalGateway(secure, services),
+    logger,
+  });
+  services.https.attach(lan);
+  await services.https.start().catch((error: unknown) => {
+    logger.error("Local-network HTTPS could not start", { error });
+  });
 
   let shuttingDown = false;
   shutdown = (signal: string, code = 0) => {
@@ -178,6 +193,8 @@ async function main(): Promise<void> {
     services.updates.stop();
     services.tasks.stop();
     services.backups.stop();
+    services.https.stop();
+    void lan.close();
     detachTerminals();
     services.catalogs.stop();
     services.apps.stop();

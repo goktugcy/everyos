@@ -121,6 +121,7 @@ describe("tailscale analysis", () => {
       port: 7470,
       urls: [],
       proxyTrusted: false,
+      managed: null,
       suggestion: {
         url: "https://pi.tail1234.ts.net",
         command: "tailscale serve --bg --https=443 http://127.0.0.1:7470",

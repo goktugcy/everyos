@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { join } from "node:path";
 import type { AgentClient } from "@everyos/agent-protocol";
 import {
   createDummyVerifier,
@@ -48,6 +48,15 @@ import {
   NotificationChannelService,
   type SmtpTransportFactory,
 } from "./modules/notifications/channels.ts";
+import { Keyring } from "./modules/backups/keyring.ts";
+import {
+  hostNamesFromNetwork,
+  HttpsService,
+  localHostNames,
+} from "./modules/security/https-service.ts";
+import { OffsiteService } from "./modules/backups/offsite/offsite-service.ts";
+import type { S3ClientOptions } from "./modules/backups/offsite/s3-client.ts";
+import { fileViewFor } from "./modules/files/file-view.ts";
 
 /** The subset of the agent client the HTTP layer depends on. */
 export type AgentGateway = Pick<AgentClient, "state" | "call" | "stream">;
@@ -100,6 +109,10 @@ export interface Services {
   updates: UpdateService;
   tasks: TaskService;
   backups: BackupService;
+  /** Tailscale Serve and the local-network HTTPS listener with its certificate authority. */
+  https: HttpsService;
+  /** Where encrypted backup copies go (a disk, S3-compatible storage or Google Drive). */
+  offsite: OffsiteService;
   /** Background host checks that raise and resolve notification conditions. */
   hostMonitor: HostMonitor;
   releaseMonitor: ReleaseMonitor;
@@ -132,7 +145,12 @@ export interface ServiceDependencies {
   telegramApi?: string;
   /** Test hook: Google's OAuth and Drive endpoints (a local fake). */
   google?: GoogleEndpoints;
+  /** Test hook: S3 client options for off-site backups. */
+  s3?: S3ClientOptions;
 }
+
+/** The HTTPS service asks the agent for the host's addresses. */
+const HTTPS_ACTOR = { kind: "system", component: "https" } as const;
 
 export function createPasswordHasher(params: ScryptParams = DEFAULT_SCRYPT_PARAMS): PasswordHasher {
   const dummy = createDummyVerifier(params);
@@ -271,10 +289,8 @@ export function createServices(deps: ServiceDependencies): Services {
     configFile: deps.config.configFile,
     reserveBytes: deps.config.backups.minFreeBytes,
     maxUploadBytes: deps.config.backups.maxUploadBytes,
-    keyId: createHash("sha256")
-      .update(deriveKey(deps.masterKey, "otuken/backup-key-id/v1"))
-      .digest("hex")
-      .slice(0, 32),
+    keyring: new Keyring(join(deps.config.paths.dataDir, "keys"), deps.masterKey),
+    secrets,
     supervised: deps.config.supervised,
     ...(deps.requestRestart ? { requestRestart: deps.requestRestart } : {}),
   });
@@ -287,7 +303,45 @@ export function createServices(deps: ServiceDependencies): Services {
     }, 500);
     dockerRefresh.unref();
   });
-  return {
+  const drive = new DriveService({
+    db: deps.db,
+    secrets,
+    http: new GoogleHttp(deps.google ? { endpoints: deps.google, allowPrivate: true } : {}),
+    logger: deps.logger,
+    audit,
+    now,
+  });
+  const https = new HttpsService({
+    db: deps.db,
+    secrets,
+    config: deps.config,
+    logger: deps.logger,
+    now,
+    names: async () => {
+      try {
+        return hostNamesFromNetwork(await deps.agent.call("network.status", {}, HTTPS_ACTOR));
+      } catch {
+        return localHostNames();
+      }
+    },
+  });
+  const configuredProxy = createProxyMatcher(deps.config.server.trustedProxies);
+  const isTrustedProxy = (address: string) =>
+    configuredProxy(address) || https.trustsLoopbackProxy(address);
+  // Disk copies are written like Files, as the administrator's Linux account.
+  const offsite = new OffsiteService({
+    db: deps.db,
+    secrets,
+    users,
+    drive,
+    disks,
+    fileView: (who, options) => fileViewFor(services, who, options),
+    logger: deps.logger,
+    now,
+    ...(deps.s3 ? { s3: deps.s3 } : {}),
+  });
+  backups.useOffsite(offsite);
+  const services: Services = {
     config: deps.config,
     logger: deps.logger,
     db: deps.db,
@@ -295,14 +349,7 @@ export function createServices(deps: ServiceDependencies): Services {
     notificationChannels,
     disks,
     transfers: new TransferService({ now, logger: deps.logger, notifications }),
-    drive: new DriveService({
-      db: deps.db,
-      secrets,
-      http: new GoogleHttp(deps.google ? { endpoints: deps.google, allowPrivate: true } : {}),
-      logger: deps.logger,
-      audit,
-      now,
-    }),
+    drive,
     preferences: new PreferenceRepository(deps.db, deps.logger, now),
     wallpapers: new WallpaperService(deps.db, deps.config.paths.dataDir, now),
     sessions: new SessionService(
@@ -355,6 +402,7 @@ export function createServices(deps: ServiceDependencies): Services {
       executors: taskExecutors({ agent: deps.agent, updates, apps, backups }),
     }),
     backups,
+    offsite,
     releaseMonitor: new ReleaseMonitor({
       agent: deps.agent,
       notifications,
@@ -366,8 +414,14 @@ export function createServices(deps: ServiceDependencies): Services {
       notifications,
       logger: deps.logger,
       tailscale: {
-        server: deps.config.server,
-        isTrustedProxy: createProxyMatcher(deps.config.server.trustedProxies),
+        server: {
+          port: deps.config.server.port,
+          get publicOrigins() {
+            return https.origins();
+          },
+        },
+        managed: () => https.settings().tailscale?.url ?? null,
+        isTrustedProxy,
         now,
       },
       appUpdates: () => apps.catalogUpdates(),
@@ -376,9 +430,11 @@ export function createServices(deps: ServiceDependencies): Services {
     limiters: createLimiters(now),
     challenges: new LoginChallengeStore(now),
     passwords: createPasswordHasher(deps.scryptParams),
-    isTrustedProxy: createProxyMatcher(deps.config.server.trustedProxies),
+    isTrustedProxy,
+    https,
     now,
   };
+  return services;
 }
 
 /** App installs, updates and other lifecycle results for people who can see apps. */

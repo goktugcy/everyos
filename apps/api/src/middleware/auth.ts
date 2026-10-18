@@ -4,6 +4,7 @@ import type { AppEnv, AuthState } from "../context.ts";
 import { ApiError, forbidden, unauthenticated } from "../http/errors.ts";
 import { readSessionToken } from "../modules/auth/session-cookie.ts";
 import type { Services } from "../services.ts";
+import { needsTwoFactorSetup } from "../modules/auth/two-factor-policy.ts";
 
 /**
  * Resolves the session cookie into an authenticated user. Permissions are
@@ -79,3 +80,34 @@ export const enforceUnlocked: MiddlewareHandler<AppEnv> = async (c, next) => {
   }
   await next();
 };
+
+/** Requests an account may make while the policy requires a two-factor setup it has not done. */
+const ALLOWED_BEFORE_TWO_FACTOR = new Set([
+  "GET /api/health",
+  "GET /api/bootstrap",
+  "GET /api/auth/session",
+  "POST /api/auth/logout",
+  "POST /api/auth/lock",
+  "POST /api/auth/unlock",
+  "GET /api/preferences",
+  "POST /api/account/totp/enroll",
+  "POST /api/account/totp/enable",
+]);
+
+/**
+ * Enforces the two-factor policy on the server: an account it covers without a second factor
+ * reaches only its two-factor setup (and sign-out) until it has one.
+ */
+export function enforceTwoFactor(services: Services): MiddlewareHandler<AppEnv> {
+  return async (c, next) => {
+    const auth = c.get("auth");
+    if (auth && needsTwoFactorSetup(services.db, auth.user)) {
+      const route = `${c.req.method} ${c.req.path}`;
+      const wallpaperImage =
+        c.req.method === "GET" && /^\/api\/wallpapers\/[^/]+\/image$/.test(c.req.path);
+      if (!ALLOWED_BEFORE_TWO_FACTOR.has(route) && !wallpaperImage)
+        throw new ApiError(403, "TWO_FACTOR_REQUIRED", "Two-factor authentication is required");
+    }
+    await next();
+  };
+}

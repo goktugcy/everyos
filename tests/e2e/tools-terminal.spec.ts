@@ -141,7 +141,7 @@ test("terminal supports multiple windows, seven themes and explicit restart afte
       .poll(async () =>
         second.locator("[data-terminal-input]").evaluate((element) => {
           const token = getComputedStyle(element)
-            .getPropertyValue("--otk-surface")
+            .getPropertyValue("--everyos-surface")
             .trim()
             .split(/\s+/)
             .join(", ");

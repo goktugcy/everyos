@@ -25,6 +25,7 @@ import { confirmPassword as confirmPasswordFor } from "../../http/reauth.ts";
 import { authenticated, requireAuth } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { assertPasswordPolicy, pendingTotpContext, totpContext } from "../auth/password-policy.ts";
+import { policyCovers, readTwoFactorPolicy } from "../auth/two-factor-policy.ts";
 import { toPublicUser } from "../users/user-repository.ts";
 
 export function accountRoutes(services: Services): Hono<AppEnv> {
@@ -187,6 +188,8 @@ export function accountRoutes(services: Services): Hono<AppEnv> {
     const auth = requireAuth(c);
     const body = await parseJsonBody(c, TotpDisableRequestSchema);
     if (!auth.user.totpEnabled) throw new ApiError(409, "TOTP_NOT_ENABLED", "TOTP is not enabled");
+    if (policyCovers(readTwoFactorPolicy(services.db), auth.user))
+      throw new ApiError(409, "TWO_FACTOR_ENFORCED", "Two-factor authentication is required");
     await confirmPassword(c, auth, body.password, "account.totp.disable");
     confirmTotp(c, auth, body.code, "account.totp.disable");
     users.disableTotp(auth.user.id);

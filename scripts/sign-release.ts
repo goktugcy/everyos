@@ -9,15 +9,16 @@ import { renderBootstrapInstaller } from "./bootstrap-installer.ts";
 const { values } = parseArgs({
   options: {
     version: { type: "string" },
-    "min-version": { type: "string", default: "0.1.0" },
+    /** The oldest installed version that may update to this one (packaging/release-policy.json). */
+    "min-version": { type: "string" },
     "schema-version": { type: "string" },
     "key-file": { type: "string" },
     "notes-file": { type: "string" },
     directory: { type: "string", default: "dist/packages" },
   },
 });
-if (!values.version || !values["key-file"])
-  throw new Error("--version and --key-file are required");
+if (!values.version || !values["key-file"] || !values["min-version"])
+  throw new Error("--version, --min-version and --key-file are required");
 const key = createPrivateKey(readFileSync(values["key-file"]));
 if (key.asymmetricKeyType !== "ed25519") throw new Error("An Ed25519 private key is required");
 const artifact = (arch: string) => {

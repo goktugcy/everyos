@@ -5,7 +5,7 @@ import { HTTPException } from "hono/http-exception";
 import type { AppEnv } from "./context.ts";
 import { ApiError, notFound } from "./http/errors.ts";
 import { serveWebClient } from "./http/static.ts";
-import { enforceUnlocked, loadSession } from "./middleware/auth.ts";
+import { enforceTwoFactor, enforceUnlocked, loadSession } from "./middleware/auth.ts";
 import { csrfProtection } from "./middleware/csrf.ts";
 import { requestContext } from "./middleware/request-context.ts";
 import { securityHeaders } from "./middleware/security-headers.ts";
@@ -34,6 +34,8 @@ import { preferenceRoutes } from "./modules/preferences/routes.ts";
 import { serviceRoutes } from "./modules/services/routes.ts";
 import { setupRoutes } from "./modules/setup/routes.ts";
 import { systemRoutes } from "./modules/system/routes.ts";
+import { httpsRoutes } from "./modules/security/https-routes.ts";
+import { securityRoutes } from "./modules/security/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
@@ -77,6 +79,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   app.use("/api/*", loadSession(services));
   app.use("/api/*", csrfProtection(services));
   app.use("/api/*", enforceUnlocked);
+  app.use("/api/*", enforceTwoFactor(services));
 
   const api = new Hono<AppEnv>();
   api.use("*", async (c, next) => {
@@ -94,6 +97,8 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/auth", authRoutes(services));
   api.route("/account", accountRoutes(services));
   api.route("/users", userRoutes(services));
+  api.route("/security", securityRoutes(services));
+  api.route("/https", httpsRoutes(services));
   api.route("/audit", auditRoutes(services));
   api.route("/system", systemRoutes(services));
   api.route("/services", serviceRoutes(services));

@@ -51,7 +51,7 @@ export function authorizeUpgrade(
   );
   const origin = header("origin");
   const expected = client.host ? `${client.secure ? "https" : "http"}://${client.host}` : null;
-  if (!origin || (origin !== expected && !services.config.server.publicOrigins.includes(origin))) {
+  if (!origin || (origin !== expected && !services.https.allowsOrigin(origin))) {
     services.logger.warn("Rejected terminal connection with foreign origin", { origin, expected });
     return { status: 403 };
   }

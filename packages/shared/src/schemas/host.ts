@@ -198,6 +198,16 @@ export type TailscaleStatus = z.infer<typeof TailscaleStatusSchema>;
 
 const tsText = (max = 256) => z.string().max(max).nullable();
 
+/** Turns EveryOS's own Tailscale Serve handler (HTTPS 443 → the API on loopback) on or off. */
+export const TailscaleServeSchema = z.strictObject({
+  enabled: z.boolean(),
+  port: z.number().int().min(1).max(65535),
+});
+export const TailscaleServeResultSchema = z.strictObject({
+  /** `https://<node>.<tailnet>.ts.net` while on. */
+  url: z.string().max(300).nullable(),
+});
+
 /** This node in more detail: key expiry, relay, routes, preferences and Serve/Funnel handlers. */
 export const TailscaleDetailsSchema = z.object({
   status: availability,

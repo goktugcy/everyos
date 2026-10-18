@@ -15,6 +15,11 @@ const SetupScreen = lazy(() =>
 const LoginScreen = lazy(() =>
   import("../features/auth/login-screen.tsx").then((m) => ({ default: m.LoginScreen })),
 );
+const TwoFactorSetupScreen = lazy(() =>
+  import("../features/auth/two-factor-setup-screen.tsx").then((m) => ({
+    default: m.TwoFactorSetupScreen,
+  })),
+);
 const DesktopShell = lazy(() =>
   import("../desktop/shell/desktop-shell.tsx").then((m) => ({ default: m.DesktopShell })),
 );
@@ -43,6 +48,7 @@ function Screen({ loading }: { loading: ReactNode }) {
   const { t } = useTranslation();
   const phase = useSessionStore((state) => state.phase);
   const boot = useSessionStore((state) => state.boot);
+  const setupTwoFactor = useSessionStore((state) => state.session?.twoFactorSetupRequired ?? false);
 
   useEffect(() => {
     void boot();
@@ -65,6 +71,6 @@ function Screen({ loading }: { loading: ReactNode }) {
     case "login":
       return <LoginScreen />;
     case "authenticated":
-      return <DesktopShell />;
+      return setupTwoFactor ? <TwoFactorSetupScreen /> : <DesktopShell />;
   }
 }

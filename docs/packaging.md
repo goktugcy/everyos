@@ -24,8 +24,8 @@ pnpm check
 pnpm build
 python3 scripts/package.py --arch arm64
 python3 scripts/package.py --arch amd64
-node scripts/sign-release.ts --version 0.1.0 --key-file /secure/release-private.pem \
-  --notes-file docs/release-notes.md
+node scripts/sign-release.ts --version 0.1.0 --min-version 0.1.0 \
+  --key-file /secure/release-private.pem --notes-file docs/release-notes.md
 ```
 
 `packaging/node-runtime.json` pins the official runtime version and SHA-256 for each architecture.
@@ -34,10 +34,20 @@ and the server bundle's dependency license notices. It builds POSIX tar/ar archi
 macOS; package creation does not require a host Node installation on the target. `--version`,
 `--dist` and `--output` support disposable acceptance fixtures, without changing source versions.
 
-The tag must match `package.json`. `.github/workflows/release.yml` checks, builds and uploads both
-packages, then signs in the protected GitHub `release` environment using
-`EVERYOS_RELEASE_PRIVATE_KEY` (Ed25519 PEM). Maintain release notes and minimum upgrade version
-when preparing a release. The signer derives the schema version from the ordered migration list;
+The tag must match `package.json`. `.github/workflows/release.yml` first waits for the release gate:
+the tagged commit must be on `main` and its CI run (lint, type checks, unit tests, browser tests,
+the plain-HTTP browser test) must have passed; otherwise nothing is built or signed. It then checks,
+builds and uploads both packages, and signs in the protected GitHub `release` environment using
+`EVERYOS_RELEASE_PRIVATE_KEY` (Ed25519 PEM). `main` is protected against force pushes and
+deletion, and pull requests need green CI.
+
+**Minimum supported version.** Each release's `minVersion` (the oldest installed version allowed
+to update to it) comes from `packaging/release-policy.json`, which also records the upgrades that
+were verified: install the old version in a disposable VM, create data, update with that version's
+own updater from the real release channel, and check sign-in, users, homes, version and schema.
+Raise `minVersion` instead of keeping it when such a test fails or cannot be run, for example after
+a migration that older data cannot take. Only the release notes section of the released version
+(the block starting with "EveryOS X.Y.Z") is signed into the manifest. The signer derives the schema version from the ordered migration list;
 `--schema-version` is an explicit override for controlled fixtures. The release job publishes `.deb` assets,
 `release.json`, `install.py`, `install.sh` and `install.sh.sig` to the public `goktugcy/everyos`
 repository, explicitly selecting

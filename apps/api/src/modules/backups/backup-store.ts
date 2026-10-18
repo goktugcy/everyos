@@ -15,6 +15,7 @@ import { join } from "node:path";
 import {
   BACKUP_ID_PATTERN,
   type BackupManifest,
+  type BackupOffsiteState,
   type BackupVerification,
   type BackupView,
 } from "@everyos/shared";
@@ -27,14 +28,22 @@ import {
   type TarWriteHeader,
 } from "@everyos/system/archive";
 import { ApiError, notFound } from "../../http/errors.ts";
+import { keyFileText, keyIdOf, parseKeyText } from "./keyring.ts";
 
 interface Info {
   pinned: boolean;
   uploaded: boolean;
   verification: BackupVerification | null;
+  offsite: BackupOffsiteState | null;
 }
 
-const DEFAULT_INFO: Info = { pinned: false, uploaded: false, verification: null };
+const DEFAULT_INFO: Info = { pinned: false, uploaded: false, verification: null, offsite: null };
+
+/** The server secrets a store can use (see Keyring). */
+export interface KnownKeys {
+  readonly currentId: string;
+  has(keyId: string): boolean;
+}
 
 export const invalidBackup = (reason: string) =>
   new ApiError(400, "BACKUP_INVALID", "The backup archive is invalid", { details: { reason } });
@@ -89,12 +98,12 @@ export class SpaceGuard {
  */
 export class BackupStore {
   readonly dir: string;
-  readonly #keyId: string;
+  readonly #keys: KnownKeys;
   readonly #reserve: number;
 
-  constructor(options: { dir: string; keyId: string; reserveBytes: number }) {
+  constructor(options: { dir: string; keys: KnownKeys; reserveBytes: number }) {
     this.dir = options.dir;
-    this.#keyId = options.keyId;
+    this.#keys = options.keys;
     this.#reserve = options.reserveBytes;
   }
 
@@ -116,7 +125,7 @@ export class BackupStore {
   /** Removes leftovers of interrupted work. */
   async cleanup(): Promise<void> {
     for (const name of await readdir(this.dir).catch(() => [])) {
-      if (/^\.(partial|upload|work)-/.test(name))
+      if (/^\.(partial|upload|work|encrypted)-/.test(name))
         await rm(join(this.dir, name), { recursive: true, force: true });
     }
   }
@@ -184,8 +193,10 @@ export class BackupStore {
       contents: manifest.contents,
       pinned: info.pinned,
       uploaded: info.uploaded,
-      sameKey: manifest.keyId === this.#keyId,
+      sameKey: manifest.keyId === this.#keys.currentId,
+      keyAvailable: this.#keys.has(manifest.keyId),
       verification: info.verification,
+      offsite: info.offsite,
     };
   }
 
@@ -247,6 +258,10 @@ export class BackupStore {
     await this.#writeInfo(id, { ...(await this.#info(id)), verification });
   }
 
+  async setOffsite(id: string, offsite: BackupOffsiteState): Promise<void> {
+    await this.#writeInfo(id, { ...(await this.#info(id)), offsite });
+  }
+
   /** Checks presence, sizes and SHA-256 of every file; returns the first problem or null. */
   async checkFiles(id: string): Promise<string | null> {
     const manifest = await this.manifest(id);
@@ -269,9 +284,13 @@ export class BackupStore {
 
   /* ------------------------------------------------------------ transfer */
 
-  #downloadEntries(manifest: BackupManifest): Array<TarWriteHeader & { path: string | null }> {
+  #downloadEntries(
+    manifest: BackupManifest,
+    key: Buffer | null,
+  ): Array<TarWriteHeader & { path: string | null; content?: Buffer }> {
     const top = `everyos-backup-${manifest.id}`;
     const manifestBytes = Buffer.byteLength(JSON.stringify(manifest, null, 2));
+    const keyText = key ? Buffer.from(keyFileText(key)) : null;
     return [
       { name: top, type: "directory", mode: 0o700, mtime: manifest.createdAt, path: null },
       {
@@ -290,24 +309,49 @@ export class BackupStore {
         mtime: manifest.createdAt,
         path: this.file(manifest.id, file.name),
       })),
+      // Only inside encrypted copies: the server secret the backup's stored secrets need.
+      ...(keyText
+        ? [
+            {
+              name: `${top}/secret.key`,
+              type: "file" as const,
+              size: keyText.length,
+              mode: 0o600,
+              mtime: manifest.createdAt,
+              path: null,
+              content: keyText,
+            },
+          ]
+        : []),
     ];
   }
 
-  /** The backup as one tar archive (its exact size and a writer for it). */
-  async download(id: string): Promise<{
+  /**
+   * The backup as one tar archive (its exact size and a writer for it). `key` adds the server
+   * secret it was made with, for passphrase-encrypted copies only.
+   */
+  async download(
+    id: string,
+    options: { key?: Buffer | null } = {},
+  ): Promise<{
     size: number;
     name: string;
+    manifest: BackupManifest;
     write: (sink: (chunk: Buffer) => Promise<void>) => Promise<void>;
   }> {
     const manifest = await this.manifest(id);
-    const entries = this.#downloadEntries(manifest);
+    const key = options.key ?? null;
+    if (key && keyIdOf(key) !== manifest.keyId) throw invalidBackup("key");
+    const entries = this.#downloadEntries(manifest, key);
     return {
       size: archiveSize(entries),
       name: `everyos-backup-${id}.tar`,
+      manifest,
       write: async (sink) => {
         const writer = new TarWriter(sink);
         for (const entry of entries) {
           if (entry.type === "directory") await writer.directory(entry);
+          else if (entry.type === "file" && entry.content) await writer.file(entry, entry.content);
           else if (entry.type === "file" && entry.path === null)
             await writer.file(entry, Buffer.from(JSON.stringify(manifest, null, 2)));
           else if (entry.type === "file") {
@@ -326,18 +370,21 @@ export class BackupStore {
 
   /**
    * Imports an archive produced by `download`: only the expected file names,
-   * every checksum verified, no overwriting of an existing backup.
+   * every checksum verified, no overwriting of an existing backup. `acceptKey` (decrypted
+   * archives only) takes the server secret that came along; it is returned, never stored here.
    */
   async importArchive(
     source: AsyncIterable<Buffer | Uint8Array>,
     maxBytes: number,
-  ): Promise<string> {
+    options: { acceptKey?: boolean } = {},
+  ): Promise<{ id: string; key: Buffer | null }> {
     const work = join(this.dir, `.upload-${randomBytes(6).toString("hex")}`);
     await mkdir(join(work, "apps"), { recursive: true, mode: 0o700 });
     const guard = this.guard();
     await guard.require(0);
     try {
       let top: string | null = null;
+      let key: Buffer | null = null;
       const written = new Map<string, { size: number; sha256: string }>();
       for await (const entry of readTar(source, { maxEntries: 200, maxBytes })) {
         const [first, ...rest] = entry.name.split("/");
@@ -347,6 +394,18 @@ export class BackupStore {
         if (first !== top) throw invalidBackup("layout");
         const name = rest.join("/");
         if (entry.type === "directory" && (name === "" || name === "apps")) continue;
+        if (options.acceptKey && entry.type === "file" && name === "secret.key" && !key) {
+          const chunks: Buffer[] = [];
+          let length = 0;
+          for await (const chunk of entry.content) {
+            length += chunk.length;
+            if (length > 256) throw invalidBackup("key");
+            chunks.push(Buffer.from(chunk));
+          }
+          key = parseKeyText(Buffer.concat(chunks).toString("utf8"));
+          if (!key) throw invalidBackup("key");
+          continue;
+        }
         if (entry.type !== "file" || !BACKUP_FILE_NAME.test(name) || written.has(name))
           throw invalidBackup("entry");
         const hash = createHash("sha256");
@@ -374,6 +433,7 @@ export class BackupStore {
       )
         throw invalidBackup("manifest");
       const manifest = parsed.data;
+      if (key && keyIdOf(key) !== manifest.keyId) throw invalidBackup("key");
       if (written.size !== manifest.files.length + 1) throw invalidBackup("files");
       for (const file of manifest.files) {
         const actual = written.get(file.name);
@@ -388,7 +448,7 @@ export class BackupStore {
         { mode: 0o600 },
       );
       await rename(work, this.#path(manifest.id));
-      return manifest.id;
+      return { id: manifest.id, key };
     } catch (error) {
       await rm(work, { recursive: true, force: true });
       if (error instanceof TarError) throw invalidBackup("archive");

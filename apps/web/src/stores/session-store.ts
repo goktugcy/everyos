@@ -5,6 +5,7 @@ import {
   api,
   ApiRequestError,
   onSessionLocked,
+  onTwoFactorRequired,
   onUnauthenticated,
   setCsrfToken,
 } from "../lib/api.ts";
@@ -31,6 +32,8 @@ interface SessionState {
   lock: () => Promise<void>;
   unlock: (password: string) => Promise<void>;
   markLocked: () => void;
+  /** Re-reads the session, e.g. after the server asked for a two-factor setup. */
+  refresh: () => Promise<void>;
   signOut: () => Promise<void>;
   sessionEnded: () => void;
 }
@@ -93,6 +96,11 @@ export const useSessionStore = create<SessionState>()((set, get) => ({
     if (get().phase === "authenticated") set({ locked: true });
   },
 
+  refresh: async () => {
+    if (get().phase !== "authenticated") return;
+    get().setSession(await api<SessionInfo>("/auth/session"));
+  },
+
   signOut: async () => {
     try {
       await Promise.allSettled([...beforeSignOut].map((hook) => hook()));
@@ -111,6 +119,13 @@ export const useSessionStore = create<SessionState>()((set, get) => ({
 
 onUnauthenticated(() => useSessionStore.getState().sessionEnded());
 onSessionLocked(() => useSessionStore.getState().markLocked());
+onTwoFactorRequired(
+  () =>
+    void useSessionStore
+      .getState()
+      .refresh()
+      .catch(() => undefined),
+);
 
 const NO_PERMISSIONS: readonly Permission[] = [];
 

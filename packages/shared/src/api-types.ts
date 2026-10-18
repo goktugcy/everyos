@@ -59,6 +59,21 @@ export interface SessionInfo {
     /** A locked session only accepts unlock, logout and session reads. */
     locked: boolean;
   };
+  /**
+   * The server requires two-factor authentication for this account's role and it is not set up
+   * yet: until it is, the session only reaches the two-factor setup.
+   */
+  twoFactorSetupRequired: boolean;
+}
+
+/** Who must use two-factor authentication (docs/security-model.md). */
+export const TWO_FACTOR_POLICIES = ["nobody", "admins", "everyone"] as const;
+export type TwoFactorPolicy = (typeof TWO_FACTOR_POLICIES)[number];
+
+export interface TwoFactorPolicyView {
+  required: TwoFactorPolicy;
+  /** Active accounts the policy covers that have not set up two-factor authentication yet. */
+  pending: Array<Pick<PublicUser, "id" | "username" | "displayName">>;
 }
 
 export interface SessionSummary {

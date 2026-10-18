@@ -13,7 +13,7 @@ that looks finished is not enough.
 | 5     | Multi-catalog App Store | Implemented   |
 | 6     | Widget platform         | Implemented   |
 | 7     | Advanced tools          | Implemented   |
-| 8     | Packaging and hardening | Planned       |
+| 8     | Packaging and hardening | Implemented   |
 
 ## Phase 1 — Foundation ✅
 

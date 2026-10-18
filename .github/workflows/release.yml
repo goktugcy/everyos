@@ -5,7 +5,38 @@ on:
 permissions:
   contents: read
 jobs:
+  # Only a commit of main that passed CI is released.
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: The tagged commit is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - name: Wait for green CI on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for attempt in $(seq 1 100); do
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" \
+              --event push --limit 1 --json status,conclusion,url --jq '.[0] // empty')
+            if [ -n "$run" ] && [ "$(jq -r .status <<<"$run")" = completed ]; then
+              echo "CI: $(jq -r '.conclusion + " " + .url' <<<"$run")"
+              [ "$(jq -r .conclusion <<<"$run")" = success ] && exit 0
+              echo "::error::CI did not pass for $GITHUB_SHA; nothing is released."
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "::error::CI did not finish for $GITHUB_SHA in time."
+          exit 1
   package:
+    needs: gate
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -51,7 +82,8 @@ jobs:
           key_file=$(mktemp)
           trap 'rm -f "$key_file"' EXIT
           printf '%s' "$EVERYOS_RELEASE_PRIVATE_KEY" > "$key_file"
-          node scripts/sign-release.ts --version "${GITHUB_REF_NAME#v}" --key-file "$key_file" --notes-file docs/release-notes.md
+          min_version=$(node -p 'JSON.parse(require("fs").readFileSync("packaging/release-policy.json")).minVersion')
+          node scripts/sign-release.ts --version "${GITHUB_REF_NAME#v}" --min-version "$min_version" --key-file "$key_file" --notes-file docs/release-notes.md
       - name: Publish verified release assets
         env:
           GH_TOKEN: ${{ github.token }}

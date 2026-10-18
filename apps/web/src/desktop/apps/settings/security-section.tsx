@@ -6,15 +6,19 @@ import {
   SessionsSection,
   TwoFactorSection,
 } from "../../../features/account/account-security.tsx";
-import { useSessionStore } from "../../../stores/session-store.ts";
+import { useHasPermission, useSessionStore } from "../../../stores/session-store.ts";
 import { updatePreference, usePreferences } from "../../state/preferences-store.ts";
 import { SettingsGroup } from "./group.tsx";
+import { HttpsGroup } from "./https-group.tsx";
+import { TwoFactorPolicyGroup } from "./two-factor-policy.tsx";
 
 export default function SecuritySection() {
   const { t } = useTranslation();
   const user = useSessionStore((state) => state.session?.user);
   const updateUser = useSessionStore((state) => state.updateUser);
   const autoLock = usePreferences((state) => state.security.autoLockMinutes);
+  const canManageUsers = useHasPermission("users:manage");
+  const canManageSystem = useHasPermission("system:manage");
   if (!user) return null;
   return (
     <div className="flex flex-col gap-6">
@@ -44,6 +48,8 @@ export default function SecuritySection() {
           }
         />
       </SettingsGroup>
+      {canManageUsers ? <TwoFactorPolicyGroup /> : null}
+      {canManageSystem ? <HttpsGroup /> : null}
       <SettingsGroup title={t("account.password.title")}>
         <PasswordSection />
       </SettingsGroup>

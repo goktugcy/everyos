@@ -13,12 +13,12 @@ const csrfFailed = (reason: string) =>
  * Defence in depth against cross-site request forgery for state-changing
  * requests:
  *  1. Fetch metadata: browsers label cross-site requests (Sec-Fetch-Site).
- *  2. Origin must match the origin the browser used (or a configured one).
+ *  2. Origin must match the origin the browser used (or a configured one, or
+ *     EveryOS's own Tailscale Serve address).
  *  3. Authenticated requests must echo the per-session CSRF token header.
  * The session cookie is additionally SameSite=Strict.
  */
 export function csrfProtection(services: Services): MiddlewareHandler<AppEnv> {
-  const allowedOrigins = new Set(services.config.server.publicOrigins);
   // Credential-submission endpoints do not act with an existing session's
   // authority, so they need no session token (origin checks still apply).
   const tokenExempt = new Set(["/api/setup", "/api/auth/login", "/api/auth/login/totp"]);
@@ -32,7 +32,7 @@ export function csrfProtection(services: Services): MiddlewareHandler<AppEnv> {
     const origin = c.req.header("origin");
     if (origin !== undefined) {
       const expected = c.get("client").expectedOrigin;
-      if (origin !== expected && !allowedOrigins.has(origin)) {
+      if (origin !== expected && !services.https.allowsOrigin(origin)) {
         c.get("logger").warn("Rejected request with foreign origin", { origin, expected });
         throw csrfFailed("origin mismatch");
       }

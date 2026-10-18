@@ -1,7 +1,9 @@
-import type { BackupOverview, BackupView } from "@everyos/shared";
+import type { BackupOverview, BackupView, EncryptedUpload, OffsiteView } from "@everyos/shared";
 import {
   CircleCheck,
+  CloudUpload,
   Download,
+  LockKeyhole,
   Loader2,
   Pin,
   PinOff,
@@ -27,12 +29,15 @@ import { requestConfirm } from "../../menus/confirm.tsx";
 import { localized } from "../store/parts.tsx";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { CreateDialog, DownloadDialog, RestoreDialog, SettingsDialog } from "./dialogs.tsx";
+import { DecryptDialog, SecureDialog } from "./secure-dialog.tsx";
 import { contentLabels, jobError, stageText, verificationText } from "./lib.ts";
 import { filesChanged } from "../files/lib.ts";
 
 type Open =
   | { kind: "create" }
   | { kind: "settings" }
+  | { kind: "secure" }
+  | { kind: "decrypt"; upload: EncryptedUpload }
   | { kind: "download"; backup: BackupView }
   | { kind: "restore"; backup: BackupView };
 
@@ -43,7 +48,13 @@ export default function BackupsApp() {
   const [revision, setRevision] = useState(0);
   const [running, setRunning] = useState(false);
   const overview = useApiResource<BackupOverview>("/backups", running ? 1_000 : 10_000, revision);
+  const offsite = useApiResource<OffsiteView>(
+    canRestore ? "/backups/offsite" : null,
+    null,
+    revision,
+  );
   const data = overview.data;
+  const offsiteReady = Boolean(offsite.data?.target && offsite.data.encryption.configured);
   const jobRunning = Boolean(data?.job);
   if (jobRunning !== running) setRunning(jobRunning);
   const [open, setOpen] = useState<Open | null>(null);
@@ -74,9 +85,12 @@ export default function BackupsApp() {
     setError(null);
     setUpload({ loaded: 0, total: file.size });
     try {
-      await uploadWithProgress("/backups/upload", file, (loaded, total) =>
-        setUpload({ loaded, total }),
+      const result = await uploadWithProgress<BackupView | EncryptedUpload>(
+        "/backups/upload",
+        file,
+        (loaded, total) => setUpload({ loaded, total }),
       );
+      if ("encrypted" in result) setOpen({ kind: "decrypt", upload: result });
       reload();
     } catch (caught) {
       setError(caught);
@@ -99,7 +113,7 @@ export default function BackupsApp() {
               <input
                 ref={uploadInput}
                 type="file"
-                accept=".tar,application/x-tar"
+                accept=".tar,.eosbak,application/x-tar,application/octet-stream"
                 className="hidden"
                 data-testid="backup-upload-input"
                 onChange={(event) => {
@@ -116,6 +130,10 @@ export default function BackupsApp() {
               >
                 <Upload className="size-4" aria-hidden />
                 {t("backups.upload")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setOpen({ kind: "secure" })}>
+                <LockKeyhole className="size-4" aria-hidden />
+                {t("backups.secure.open")}
               </Button>
             </>
           ) : null}
@@ -162,8 +180,14 @@ export default function BackupsApp() {
             >
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" aria-hidden />
-                {t(data.job.kind === "restore" ? "backups.restoring" : "backups.creating")} —{" "}
-                {stageText(t, data.job, appName)}
+                {t(
+                  data.job.kind === "restore"
+                    ? "backups.restoring"
+                    : data.job.kind === "offsite"
+                      ? "backups.secure.sending"
+                      : "backups.creating",
+                )}{" "}
+                — {stageText(t, data.job, appName)}
                 {data.job.bytes > 0 ? ` · ${formatBytes(data.job.bytes, i18n.language)}` : ""}
               </span>
               <Button
@@ -183,10 +207,17 @@ export default function BackupsApp() {
         {!data?.job && last && last.status !== "succeeded" ? (
           <Alert tone={last.status === "cancelled" ? "warning" : "danger"}>
             <span data-testid="backup-last-error">
-              {t(last.kind === "restore" ? "backups.restoreFailed" : "backups.createFailed", {
-                reason:
-                  last.status === "cancelled" ? t("backups.cancelled") : jobError(t, last.error),
-              })}
+              {t(
+                last.kind === "restore"
+                  ? "backups.restoreFailed"
+                  : last.kind === "offsite"
+                    ? "backups.secure.offsiteJobFailed"
+                    : "backups.createFailed",
+                {
+                  reason:
+                    last.status === "cancelled" ? t("backups.cancelled") : jobError(t, last.error),
+                },
+              )}
             </span>
           </Alert>
         ) : null}
@@ -266,7 +297,26 @@ export default function BackupsApp() {
                         <span className="text-xs">{backup.note}</span>
                       ) : null}
                       {!backup.sameKey ? (
-                        <span className="text-xs text-warning">{t("backups.otherKey")}</span>
+                        <span className="text-xs text-warning">
+                          {backup.keyAvailable
+                            ? t("backups.otherKey")
+                            : t("backups.secure.keyMissing")}
+                        </span>
+                      ) : null}
+                      {backup.offsite ? (
+                        <span
+                          className={`text-xs ${backup.offsite.ok ? "text-fg-muted" : "text-danger"}`}
+                          data-testid="backup-offsite"
+                        >
+                          {backup.offsite.ok
+                            ? t("backups.secure.offsiteOk", {
+                                target: backup.offsite.target,
+                                when: formatRelative(backup.offsite.at, i18n.language),
+                              })
+                            : t("backups.secure.offsiteFailed", {
+                                reason: jobError(t, backup.offsite.error),
+                              })}
+                        </span>
                       ) : null}
                     </div>
                   </td>
@@ -337,6 +387,26 @@ export default function BackupsApp() {
                           >
                             <Download className="size-4" aria-hidden />
                           </Button>
+                          {offsiteReady ? (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              aria-label={t("backups.secure.sendNow")}
+                              title={t("backups.secure.sendNow")}
+                              disabled={jobRunning}
+                              loading={busy === `offsite:${backup.id}`}
+                              onClick={() =>
+                                void act(`offsite:${backup.id}`, () =>
+                                  api(`/backups/${backup.id}/offsite`, {
+                                    method: "POST",
+                                    body: {},
+                                  }),
+                                )
+                              }
+                            >
+                              <CloudUpload className="size-4" aria-hidden />
+                            </Button>
+                          ) : null}
                           <Button
                             size="sm"
                             variant="ghost"
@@ -396,7 +466,17 @@ export default function BackupsApp() {
         />
       ) : null}
       {open?.kind === "download" ? (
-        <DownloadDialog backup={open.backup} onClose={() => setOpen(null)} />
+        <DownloadDialog
+          backup={open.backup}
+          encryption={offsite.data ? offsite.data.encryption.configured : null}
+          onClose={() => setOpen(null)}
+        />
+      ) : null}
+      {open?.kind === "secure" ? (
+        <SecureDialog onClose={() => setOpen(null)} onSaved={reload} />
+      ) : null}
+      {open?.kind === "decrypt" ? (
+        <DecryptDialog upload={open.upload} onClose={() => setOpen(null)} onImported={reload} />
       ) : null}
       {open?.kind === "restore" && data ? (
         <RestoreDialog

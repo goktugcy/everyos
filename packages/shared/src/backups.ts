@@ -98,10 +98,27 @@ export interface BackupView {
   uploaded: boolean;
   /** Made with this server's secret (encrypted settings can be read after a restore). */
   sameKey: boolean;
+  /**
+   * The server secret it was made with is known here (the current one, one replaced by a restore
+   * or one that came inside an encrypted backup), so the whole database can be restored.
+   */
+  keyAvailable: boolean;
   verification: BackupVerification | null;
+  /** The last off-site copy of this backup. */
+  offsite: BackupOffsiteState | null;
 }
 
-export type BackupJobKind = "backup" | "restore";
+export interface BackupOffsiteState {
+  at: number;
+  ok: boolean;
+  /** Where it went, for display ("S3: bucket/prefix", a disk label, "Google Drive"). */
+  target: string;
+  /** File name at the destination. */
+  name: string | null;
+  error: string | null;
+}
+
+export type BackupJobKind = "backup" | "restore" | "offsite";
 
 export type BackupJobStage =
   | "preparing"
@@ -115,6 +132,7 @@ export type BackupJobStage =
   | "restore-data"
   | "restore-settings"
   | "stage-database"
+  | "offsite"
   | "done";
 
 export type BackupJobStatus = "running" | "succeeded" | "failed" | "cancelled";
@@ -198,4 +216,66 @@ export interface RestorePreview {
     restorable: "ok" | "not-installed" | "unsupported";
     dataBytes: number;
   }>;
+}
+
+/* ------------------------------------------------- encryption and off-site */
+
+/** File extension of passphrase-encrypted backups. */
+export const ENCRYPTED_BACKUP_EXTENSION = ".eosbak";
+
+export interface BackupEncryptionView {
+  /** A passphrase is set: downloads can be encrypted and off-site copies are possible. */
+  configured: boolean;
+  setAt: number | null;
+  setBy: string | null;
+}
+
+export const OFFSITE_KINDS = ["disk", "s3", "drive"] as const;
+export type OffsiteKind = (typeof OFFSITE_KINDS)[number];
+
+export type OffsiteTargetView =
+  | {
+      kind: "disk";
+      uuid: string;
+      /** Null while the disk is not mounted. */
+      label: string | null;
+      folder: string;
+      /** The administrator whose Linux account writes there. */
+      username: string | null;
+    }
+  | {
+      kind: "s3";
+      endpoint: string;
+      region: string;
+      bucket: string;
+      prefix: string;
+      pathStyle: boolean;
+      accessKeyId: string;
+    }
+  | {
+      kind: "drive";
+      /** Whose Google Drive receives the copies. */
+      username: string | null;
+      folder: string;
+      connected: boolean;
+    };
+
+export interface OffsiteView {
+  target: OffsiteTargetView | null;
+  /** Copies kept at the destination (older EveryOS copies there are removed). */
+  keep: number;
+  /** Copy every manual and scheduled backup right after it is made. */
+  auto: boolean;
+  encryption: BackupEncryptionView;
+}
+
+/** Header details of an uploaded encrypted backup, before its passphrase is given. */
+export interface EncryptedUpload {
+  encrypted: true;
+  uploadId: string;
+  backupId: string;
+  createdAt: number;
+  hostname: string;
+  everyosVersion: string;
+  includesKey: boolean;
 }

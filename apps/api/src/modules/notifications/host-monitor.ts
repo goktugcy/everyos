@@ -10,6 +10,8 @@ import { analyzeTailscale } from "../system/tailscale.ts";
 export interface TailscaleContext {
   server: { port: number; publicOrigins: readonly string[] };
   isTrustedProxy: (address: string) => boolean;
+  /** EveryOS's own Serve address, when turned on from EveryOS. */
+  managed?: () => string | null;
   now: () => number;
 }
 
@@ -205,6 +207,7 @@ export class HostMonitor {
       server: this.#tailscale.server,
       isTrustedProxy: this.#tailscale.isTrustedProxy,
       now: this.#tailscale.now(),
+      managed: this.#tailscale.managed?.() ?? null,
     });
     const key = warnings.find((w) => w.kind === "key-expired" || w.kind === "key-expiring");
     if (key)

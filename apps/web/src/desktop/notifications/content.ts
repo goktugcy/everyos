@@ -15,6 +15,11 @@ import type { AppId } from "../apps/types.ts";
 export function reasonText(t: TFunction, reason: string): string {
   const known = t(`notifications.reasons.${reason as "compose-failed"}`, { defaultValue: "" });
   if (known) return known;
+  // Off-site copy reasons such as "s3:AccessDenied" (":" separates i18n namespaces).
+  const offsite = t(`backups.secure.reasons.${reason.replace(/:/g, "-") as "network"}`, {
+    defaultValue: "",
+  });
+  if (offsite) return offsite;
   const code = reason.split(":")[0]!;
   const job = t(`backups.jobErrors.${code as "app-busy"}`, { defaultValue: "" });
   if (job) return job;
@@ -72,6 +77,7 @@ const ACTIONS: Partial<
   "everyos-update-available": { appId: "everyos.settings", appState: { section: "about" } },
   "backup-succeeded": { appId: "everyos.backups" },
   "backup-failed": { appId: "everyos.backups" },
+  "backup-offsite-failed": { appId: "everyos.backups" },
   "task-succeeded": { appId: "everyos.tasks" },
   "task-failed": { appId: "everyos.tasks" },
   "updates-installed": { appId: "everyos.updates", appState: { tab: "history" } },

@@ -59,6 +59,8 @@ import {
   SystemInfoSchema,
   TailscaleStatusSchema,
   TailscaleDetailsSchema,
+  TailscaleServeResultSchema,
+  TailscaleServeSchema,
   TailscalePeersSchema,
   UnitNameSchema,
   AptUpdatesSchema,
@@ -401,6 +403,18 @@ export const AGENT_OPERATIONS = {
     allowSystemActor: true,
     mutating: false,
     timeoutMs: 12_000,
+  }),
+  /**
+   * EveryOS's own Serve handler: HTTPS on 443 with the tailnet certificate, proxied to the API
+   * on loopback. Never Funnel; other handlers are left alone and a taken port is refused.
+   */
+  "tailscale.serve": unary({
+    params: TailscaleServeSchema,
+    result: TailscaleServeResultSchema,
+    permission: "system:manage",
+    allowSystemActor: false,
+    mutating: true,
+    timeoutMs: 15_000,
   }),
   /** The tailnet's other devices: names, addresses and connection paths. */
   "tailscale.peers": unary({

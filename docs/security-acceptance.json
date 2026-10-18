@@ -1,0 +1,163 @@
+{
+  "date": "2026-10-18",
+  "scope": "Required two-factor authentication, HTTPS (Tailscale Serve and local-network listener), passphrase-encrypted off-site backups and restoring on a new machine with the passphrase only",
+  "version": "0.1.30 working tree (released as the next version)",
+  "disposableLinuxHosts": [
+    {
+      "platform": "Ubuntu 26.04.1 LTS",
+      "architecture": "arm64",
+      "source": "locally built package installed with apt; Tailscale 1.104.1 installed and logged out; a fake path-style S3 server on loopback",
+      "environment": "Lima VZ; native ARM64 guest; extra raw disk with ext4 and exFAT partitions",
+      "scenarios": [
+        {
+          "scenario": "required-2fa-self-first-refused",
+          "passed": true
+        },
+        {
+          "scenario": "required-2fa-everyone-enforced-by-api",
+          "passed": true,
+          "details": {
+            "blocked": "403 TWO_FACTOR_REQUIRED",
+            "pending": ["family"]
+          }
+        },
+        {
+          "scenario": "required-2fa-admins-only-frees-viewer",
+          "passed": true
+        },
+        {
+          "scenario": "lan-https-listens-under-packaged-hardening",
+          "passed": true,
+          "details": {
+            "port": 7443,
+            "process": "API user (node)"
+          }
+        },
+        {
+          "scenario": "lan-https-trusted-handshake-with-local-authority",
+          "passed": true,
+          "details": {
+            "names": [
+              "<hostname>",
+              "<hostname>.local",
+              "localhost",
+              "127.0.0.1",
+              "::1",
+              "<lan address>"
+            ]
+          }
+        },
+        {
+          "scenario": "lan-https-untrusted-without-authority",
+          "passed": true,
+          "details": {
+            "error": "CERTIFICATE_VERIFY_FAILED"
+          }
+        },
+        {
+          "scenario": "tailscale-serve-refused-while-logged-out",
+          "passed": true,
+          "details": {
+            "reason": "not-running",
+            "serveConfig": "unchanged"
+          }
+        },
+        {
+          "scenario": "passphrase-set-and-sealed",
+          "passed": true
+        },
+        {
+          "scenario": "offsite-exfat-disk-copy-written-as-linked-linux-account",
+          "passed": true,
+          "details": {
+            "owner": "acceptadmin",
+            "partialFilesLeft": 0
+          }
+        },
+        {
+          "scenario": "offsite-ext4-root-owned-by-root-refused",
+          "passed": true,
+          "details": {
+            "reason": "LINUX_FILE_DENIED"
+          }
+        },
+        {
+          "scenario": "offsite-s3-copy-and-secret-sealed-at-rest",
+          "passed": true
+        },
+        {
+          "scenario": "encrypted-download-and-secret-key-download",
+          "passed": true
+        },
+        {
+          "scenario": "new-machine-upload-waits-for-passphrase",
+          "passed": true,
+          "details": {
+            "includesKey": true
+          }
+        },
+        {
+          "scenario": "wrong-passphrase-refused",
+          "passed": true,
+          "details": {
+            "code": "BACKUP_PASSPHRASE_INVALID"
+          }
+        },
+        {
+          "scenario": "decrypted-import-with-key-in-keyring",
+          "passed": true,
+          "details": {
+            "sameKey": false,
+            "keyAvailable": true
+          }
+        },
+        {
+          "scenario": "whole-database-restore-with-automatic-restart",
+          "passed": true
+        },
+        {
+          "scenario": "old-secret-installed-replaced-one-kept",
+          "passed": true,
+          "details": {
+            "secretKeyMode": "0600",
+            "owner": "everyos"
+          }
+        },
+        {
+          "scenario": "old-administrator-totp-works-after-restore",
+          "passed": true
+        },
+        {
+          "scenario": "accounts-2fa-policy-and-https-authority-restored",
+          "passed": true
+        },
+        {
+          "scenario": "restored-disk-destination-explains-missing-linux-account",
+          "passed": true,
+          "details": {
+            "reason": "LINUX_ACCOUNT_REQUIRED"
+          }
+        },
+        {
+          "scenario": "relinked-account-copies-again-with-retention",
+          "passed": true,
+          "details": {
+            "keep": 3
+          }
+        }
+      ],
+      "passed": true,
+      "notes": "Found and fixed during this run: the packaged API's RestrictAddressFamilies forbids the netlink socket os.networkInterfaces() needs, so certificate addresses now come from the agent's network status; a disk destination restored on a machine without the owner's linked Linux account now reports LINUX_ACCOUNT_REQUIRED. A new machine was simulated by wiping /var/lib/everyos and the agent's identity bindings, which gives a new server secret. Real Tailscale Serve changes were not exercised (no tailnet login in the VM); the LocalAPI writer is covered by tests against a stand-in socket."
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "everyos_0.1.30_arm64.deb",
+      "architecture": "arm64",
+      "bytes": 58196772,
+      "sha256": "0a22c28c3ad92abfc2ba9070ede17d48b5cf461cdff64280ce8bf59110085324",
+      "note": "final build of the run (phase three); phases one and two used the build before the LINUX_ACCOUNT_REQUIRED change"
+    }
+  ],
+  "verification": ["unit", "browser", "disposableVm"]
+}

@@ -610,6 +610,8 @@ describe("backups", () => {
       dataDir: ctx.config.paths.dataDir,
       databaseFile: ctx.config.paths.databaseFile,
       backupDir: ctx.config.paths.backupDir,
+      secretKeyFile: ctx.config.paths.secretKeyFile,
+      keysDir: join(ctx.config.paths.dataDir, "keys"),
       logger: silentLogger,
     });
     expect(applied).toMatchObject({ backupId: id });

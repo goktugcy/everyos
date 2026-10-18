@@ -1,3 +1,4 @@
+import { needsTwoFactorSetup } from "./two-factor-policy.ts";
 import { permissionsForRole, type SessionInfo } from "@everyos/shared";
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -65,6 +66,7 @@ export function buildSessionInfo(services: Services, user: User, session: Sessio
       expiresAt: services.sessions.effectiveExpiry(session),
       locked: session.lockedAt !== null,
     },
+    twoFactorSetupRequired: needsTwoFactorSetup(services.db, user),
   };
 }
 

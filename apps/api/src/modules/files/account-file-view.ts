@@ -43,6 +43,11 @@ export class AccountFileView {
       throw error;
     });
 
+  /** Host locations need a linked Linux account; without one only the EveryOS home is there. */
+  async hasLinuxAccount(): Promise<boolean> {
+    return (await this.#call("identity.status", {})).account !== null;
+  }
+
   async roots(canWrite: boolean) {
     const personal = (await this.personal.roots(canWrite)).filter((r) => r.id === "home");
     const status = await this.#call("identity.status", {});

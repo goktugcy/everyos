@@ -132,6 +132,11 @@ export const en: Messages = {
     verify: "Verify",
     startOver: "Start over",
   },
+  twoFactorSetup: {
+    title: "Set up two-factor authentication",
+    subtitle:
+      "Your administrator requires two-factor authentication for this account. Set it up with an authenticator app before you continue to the desktop.",
+  },
   shell: {
     menu: {
       label: "EveryOS menu",
@@ -1459,6 +1464,55 @@ export const en: Messages = {
         "The session locks after this long without interaction. The lock is enforced by the server.",
       autoLockOff: "Off",
       autoLockAfter: "After {{minutes}} minutes",
+      twoFactorPolicy: "Required two-factor authentication",
+      twoFactorPolicyHint:
+        "The chosen accounts cannot reach the desktop until they set up two-factor authentication. The server enforces it.",
+      twoFactorPolicies: {
+        nobody: "Not required",
+        admins: "Required for administrators",
+        everyone: "Required for everyone",
+      },
+      twoFactorPending_one: "Not set up yet: {{names}}",
+      twoFactorPending_other: "{{count}} accounts have not set it up yet: {{names}}",
+    },
+    https: {
+      title: "HTTPS",
+      description:
+        "Open EveryOS over HTTPS so passwords and files travel encrypted. Tailscale provides a real certificate; on the local network EveryOS uses its own certificate authority.",
+      tailscale: "HTTPS through Tailscale",
+      tailscaleHint:
+        "Adds one HTTPS rule for EveryOS to Tailscale Serve (443 → this device). Only devices in your tailnet can reach it; it is never published on the internet (Funnel).",
+      tailscaleOn: "Turned on by {{user}} on {{date}}. From devices in your tailnet, use:",
+      tailscaleTurnOn: "Turn on with Tailscale",
+      turnOff: "Turn off",
+      lan: "HTTPS on the local network",
+      lanHint:
+        "Opens a separate HTTPS port for devices on the same network. EveryOS's own authority issues its certificate; install the authority certificate once on each device so browsers do not warn.",
+      port: "HTTPS port",
+      addresses: "Addresses",
+      authority: "Certificate authority",
+      authorityHint:
+        "Install this file on your device and mark it trusted (iPhone: Settings › General › About › Certificate Trust Settings; macOS: Keychain Access; Android: Settings › Security › Install certificate; Windows: Trusted Root Certification Authorities). Fingerprint:",
+      certificateUntil:
+        "The server certificate is valid until {{date}}; it renews itself before then and whenever the addresses change.",
+      downloadAuthority: "Download authority certificate",
+      loopbackOnly:
+        "EveryOS listens only inside this device (127.0.0.1), so other devices cannot reach this port either. Change server.host in the configuration.",
+      reasons: {
+        "not-running": "Tailscale is not connected. Sign in to Tailscale on this device first.",
+        "https-disabled":
+          "HTTPS certificates are off for your tailnet. Turn on DNS › MagicDNS and HTTPS Certificates in the Tailscale admin console, then try again.",
+        "port-in-use": "Something else already uses this port.",
+        funnel:
+          "Tailscale Funnel publishes this device's port 443 on the internet; EveryOS will not go there.",
+        "api-not-on-loopback":
+          "EveryOS does not listen on 127.0.0.1, so Tailscale Serve cannot reach it.",
+        "not-detected": "Tailscale was not found on this device.",
+        "socket-missing": "The Tailscale service could not be reached.",
+        "permission-denied": "No permission to change Tailscale settings.",
+        "same-port": "The HTTPS port must differ from the HTTP port.",
+        failed: "The HTTPS listener could not start.",
+      },
     },
     about: {
       description:
@@ -2641,6 +2695,10 @@ export const en: Messages = {
       },
       "backup-succeeded": { title: "Backup finished", body: "Backup {{backup}} was created." },
       "backup-failed": { title: "Backup failed", body: "The backup failed: {{reason}}." },
+      "backup-offsite-failed": {
+        title: "Off-site backup copy failed",
+        body: "Backup {{backup}} could not be copied to {{target}}: {{reason}}. The backup is still on this device.",
+      },
       "task-succeeded": { title: "Task finished", body: "{{task}} ran successfully." },
       "task-failed": { title: "Task failed", body: "{{task}}: {{reason}}." },
       "login-locked": {
@@ -3159,12 +3217,14 @@ export const en: Messages = {
     notPublished: "EveryOS is not published with Tailscale Serve.",
     public: "Public on the internet (Funnel)",
     tailnetOnly: "Only from within the tailnet",
-    originOk: "publicOrigins set",
-    originMissing: "publicOrigins entry missing",
-    suggestion: "To open EveryOS over HTTPS at {{url}} within your tailnet, run on the server:",
-    suggestionConfig:
-      "Then add 127.0.0.1 to server.trustedProxies and {{url}} to server.publicOrigins in /etc/everyos/config.yaml.",
-    readOnly: "EveryOS never changes the Tailscale configuration; it only reads and explains it.",
+    originOk: "origin allowed",
+    originMissing: "origin not allowed (server.publicOrigins)",
+    suggestion: "EveryOS can be opened over HTTPS at {{url}} inside your tailnet.",
+    suggestionAdmin:
+      "An administrator can turn this on with one button (Settings › Security › HTTPS).",
+    suggestionManual: "To do it by hand, run on the server:",
+    readOnly:
+      "EveryOS only adds or removes its own HTTPS rule; it leaves other Tailscale settings and Funnel alone.",
     selfTitle: "This device",
     serveTitle: "Serve and Funnel",
     funnel: "Funnel: public on the internet",
@@ -3228,6 +3288,107 @@ export const en: Messages = {
     },
   },
   backups: {
+    secure: {
+      open: "Encryption and off-site",
+      title: "Encryption and off-site copies",
+      intro:
+        "Backups can be encrypted with a passphrase and copied to another disk, S3-compatible storage or Google Drive. An encrypted copy carries the server secret too, so another device restores it with the passphrase only.",
+      encryption: "Backup passphrase",
+      encryptionOff: "No passphrase yet. Encrypted downloads and off-site copies need one.",
+      encryptionOn: "Set by {{user}} on {{date}}.",
+      passphrase: "New backup passphrase",
+      passphraseHint:
+        "At least 12 characters. If you lose it, encrypted copies cannot be opened; EveryOS cannot recover it. Keep it somewhere safe.",
+      passphraseRepeat: "Repeat the passphrase",
+      passphraseMismatch: "The passphrases differ.",
+      passphraseChangeHint:
+        "Changing the passphrase does not change older encrypted copies; they keep opening with the old one.",
+      remove: "Remove passphrase",
+      removeTitle: "Remove the backup passphrase?",
+      removeBody:
+        "Encrypted downloads and off-site copies stop until a new passphrase is set. Encrypted copies made earlier keep opening with this passphrase.",
+      savePassphrase: "Save passphrase",
+      changePassphrase: "Change passphrase",
+      passphraseSaved: "Backup passphrase saved.",
+      check: "Test the passphrase",
+      checkHint: "Checks whether the passphrase you remember is right; changes nothing.",
+      checkOk: "The passphrase is right.",
+      checkWrong: "That is not the saved backup passphrase.",
+      accountPassword: "Your account password",
+      secretKey: "Server secret (secret.key)",
+      secretKeyHint:
+        "The key that opens stored settings, two-factor secrets and app definitions. Encrypted copies already contain it; download it if you also want it kept somewhere safe. Whoever holds this file can read the secrets in backups.",
+      secretKeyDownload: "Download secret.key",
+      target: "Off-site destination",
+      targetHint:
+        "Every copy is encrypted and written there as everyos-backup-<date>.eosbak. EveryOS lists and removes only its own copies there.",
+      kinds: {
+        none: "None",
+        disk: "Mounted disk",
+        s3: "S3-compatible storage",
+        drive: "Google Drive",
+      },
+      disk: "Disk",
+      noDisks: "No writable disk is mounted by EveryOS. Mount one in Settings › Disks first.",
+      folder: "Folder",
+      diskOwner: "Files are written as {{user}}'s Linux account.",
+      endpoint: "Endpoint",
+      endpointHint:
+        "For example https://s3.eu-central-1.amazonaws.com, https://<account>.r2.cloudflarestorage.com, http://192.168.1.10:9000 (MinIO).",
+      region: "Region",
+      bucket: "Bucket",
+      prefix: "Prefix (optional)",
+      pathStyle: "Path-style addressing (keep on for MinIO and most S3-compatible services)",
+      accessKeyId: "Access key ID",
+      secretAccessKey: "Secret access key",
+      secretKept: "Saved; type a new key to replace it",
+      driveConnected: "Copies are uploaded to a folder in {{user}}'s Google Drive.",
+      driveNotConnected:
+        "Google Drive is not connected. Connect your own Drive in Settings › Connections first.",
+      keep: "Copies kept there",
+      auto: "Send automatically after every manual and scheduled backup",
+      saveTarget: "Verify and save destination",
+      targetSaved: "The destination was verified and saved.",
+      test: "Test connection",
+      testOk: "The destination answered.",
+      needsPassphrase: "Set a backup passphrase before copying off-site.",
+      encryptDownload: "Encrypt with the passphrase (.eosbak)",
+      encryptDownloadHint:
+        "The server secret goes inside, so another device restores it with the backup passphrase only.",
+      encryptDownloadOff:
+        "To download encrypted, set a backup passphrase in Encryption and off-site first.",
+      decryptTitle: "Open encrypted backup",
+      decryptIntro:
+        "An encrypted backup made on {{host}} on {{date}} (EveryOS {{version}}) was uploaded. Enter the backup passphrase to open it.",
+      decryptKey:
+        "It contains the server secret of the installation that made it, so the whole database can be restored.",
+      decryptNoKey:
+        "It does not contain the server secret; only desktops and files can be restored.",
+      decrypt: "Open and import",
+      sendNow: "Send off-site",
+      sending: "Sending off-site",
+      offsiteOk: "Off-site copy: {{target}} · {{when}}",
+      offsiteFailed: "Off-site copy failed: {{reason}}",
+      offsiteJobFailed: "The off-site copy failed: {{reason}}.",
+      keyMissing:
+        "This backup's server secret is not on this device, so the whole database cannot be restored. Upload its encrypted (.eosbak) copy and the secret comes with it.",
+      reasons: {
+        "disk-not-mounted": "the disk is not mounted",
+        "disk-read-only": "the disk is read-only",
+        "drive-not-connected": "Google Drive is not connected",
+        "owner-unauthorized": "the administrator who set it up no longer may",
+        LINUX_ACCOUNT_REQUIRED:
+          "the administrator who set it up has no linked Linux account on this device",
+        "s3-network": "the storage could not be reached",
+        "s3-timeout": "the storage did not answer in time",
+        "s3-AccessDenied": "access denied",
+        "s3-NoSuchBucket": "the bucket does not exist",
+        "s3-InvalidAccessKeyId": "the access key is not recognised",
+        "s3-SignatureDoesNotMatch": "the secret access key is wrong",
+        cancelled: "cancelled",
+        network: "network error",
+      },
+    },
     restoreHomes: "Restore personal home folders",
     restoreHomesHint:
       "Files and trash belonging to {{users}} are replaced with the backed-up contents. Current contents are backed up first for safety. Other accounts' files are kept.",
@@ -3338,7 +3499,7 @@ export const en: Messages = {
       invalid: "The backup failed verification and cannot be used.",
       "newer-schema": "The backup was made by a newer EveryOS version and cannot be restored here.",
       "different-key":
-        "The backup was made with another installation's secret key; encrypted settings and two-factor authentication could not be read, so the database cannot be restored.",
+        "The backup was made with another installation's secret key, which this device does not have; encrypted settings and two-factor authentication could not be read, so the database cannot be restored. Upload the backup's passphrase-encrypted (.eosbak) copy and the key comes with it.",
     },
     diff: {
       users: "Users",
@@ -3376,6 +3537,7 @@ export const en: Messages = {
       "restore-data": "Restoring app data",
       "restore-settings": "Restoring desktop settings",
       "stage-database": "Preparing the database",
+      offsite: "Encrypting and sending off-site",
       done: "Done",
     },
     jobErrors: {
@@ -3617,6 +3779,16 @@ export const en: Messages = {
     DRIVE_NOT_DOWNLOADABLE: "This Google file cannot be downloaded (for example, Forms).",
     TRANSFER_FAILED: "The transfer could not be completed.",
     CANCELLED: "Cancelled.",
+    TWO_FACTOR_REQUIRED:
+      "Two-factor authentication is required for this account; set it up to continue.",
+    TWO_FACTOR_ENFORCED:
+      "Two-factor authentication is required for this account, so it cannot be turned off.",
+    TWO_FACTOR_SELF_FIRST:
+      "Set up two-factor authentication on your own account before requiring it.",
+    BACKUP_ENCRYPTION_REQUIRED: "Set a backup passphrase in Backups › Encryption first.",
+    BACKUP_PASSPHRASE_INVALID: "The backup passphrase does not open this file.",
+    BACKUP_OFFSITE_NOT_CONFIGURED: "No off-site backup destination is set.",
+    BACKUP_OFFSITE_FAILED: "The off-site backup destination could not be reached.",
     NETWORK: "The server cannot be reached. Check your connection.",
     UNKNOWN: "An unknown error occurred.",
   },

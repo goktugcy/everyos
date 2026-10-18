@@ -1,4 +1,4 @@
-# Backup and restore (Phase 7)
+# Backup and restore
 
 The **Backups** app (`everyos.backups`) creates, verifies, downloads, uploads and restores
 backups of EveryOS itself and of the data of apps installed through the App Store. Backups run
@@ -131,14 +131,78 @@ current data of the apps being restored). The scopes are:
 - **Personal homes** (live, opt-in): as described above, for current account ids only.
 - **App data**: per app, as described above. The app must still be installed with the same id.
 
-Database restores are refused for backups made with another installation's secret key
-(`keyId`, a fingerprint of the server secret, differs): sealed Compose files, integration
-tokens and two-factor secrets could not be decrypted, which could lock administrators out.
+Every backup records `keyId`, a fingerprint of the server secret that seals Compose files,
+integration tokens and two-factor secrets. A database restore needs that secret: the current one,
+one in the keyring (`<dataDir>/keys/<keyId>.key`: secrets replaced by earlier restores and
+secrets that came inside encrypted backups), or it is refused (`different-key`), because those
+secrets could not be decrypted and administrators could be locked out. When the backup's secret
+is not the current one, it is staged with the database and installed on the next start before
+anything is opened; the replaced secret goes into the keyring, so this machine's own older
+backups stay restorable.
+
+## Encryption and the server secret
+
+An administrator sets a **backup passphrase** in Backups › Encryption and off-site (at least 12
+characters, account password required). EveryOS derives a key-encryption key with scrypt
+(N=2¹⁷, r=8, p=1, random salt) and stores that key sealed with the server secret, never the
+passphrase, so scheduled copies need nobody present. "Test the passphrase" checks a remembered
+passphrase without changing anything; changing or removing it does not touch copies made
+earlier, which keep opening with their own passphrase.
+
+An encrypted copy (`everyos-backup-<id>.eosbak`) is the downloadable tar archive plus the
+`secret.key` the backup was made with, encrypted:
+
+| Part     | Contents                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Header   | `EOSENC01`, length, JSON: backup id, time, version, host, whether the secret is inside, plaintext size, scrypt parameters and salt |
+| Data key | A random 256-bit key per file, wrapped with the key-encryption key (AES-256-GCM)                                                   |
+| Chunks   | 1 MiB AES-256-GCM chunks; each nonce holds the chunk index and a final-chunk flag, each tag authenticates the header               |
+
+Reordered, dropped, truncated, appended or modified chunks, and a modified header, fail the
+whole file; a wrong passphrase is reported as such. Its size is known before writing, which
+off-site uploads and downloads use. Downloads are encrypted by default once a passphrase is set.
+
+The current `secret.key` can also be downloaded on its own (password and a one-minute link,
+audited). Whoever holds it can read the secrets stored in backups made with it.
+
+## Off-site copies
+
+One destination receives encrypted copies, after every manual and scheduled backup ("send
+automatically") or on demand per backup. Saving a destination proves it works first (it is
+listed and its folder created); the account password is required.
+
+- **A mounted EveryOS disk** (Settings › Disks): written into a folder (default
+  `EveryOS Backups`) like Files writes, as the saving administrator's linked Linux account, under
+  a hidden `.partial` name renamed when complete.
+- **S3-compatible storage** (AWS S3, Cloudflare R2, Backblaze B2, Wasabi, MinIO): Signature V4 with
+  each request's real payload hash, multipart uploads above 16 MiB (parts grow so a file stays
+  under 9,000 parts; failed uploads are aborted), retries for network errors and 5xx/429. The
+  secret access key is sealed and never returned.
+- **Google Drive**: a folder in the saving administrator's own connected Drive (see
+  [drive.md](drive.md) for the Google client), uploaded in 16 MiB resumable chunks.
+
+Retention keeps the newest `keep` copies there (default 7) and removes older
+`everyos-backup-<id>.eosbak` files only; nothing else at the destination is listed or changed.
+Disk copies are deleted for good rather than moved to the disk's trash. A failed copy never
+fails the backup: it is shown on the backup, audited (`backups.offsite`) and notified
+(`backup-offsite-failed`). Disk and Drive copies stop if the administrator who set them up loses
+`backups:restore`.
+
+## Restoring on another machine
+
+1. Install EveryOS and finish first-run setup with any temporary account.
+2. Backups › Upload backup: choose the `.eosbak` file and enter the backup passphrase. The
+   encrypted file waits on the backup disk until the passphrase is right (attempts are
+   rate-limited, one at a time); it is then decrypted, verified and imported, and its secret
+   goes into the keyring.
+3. Restore it with **The entire EveryOS database**. After the restart the accounts, settings and
+   secrets are those of the old machine; sign in with the old accounts.
 
 ## Sensitive data
 
-- Backups never contain sessions, the server secret (`secret.key`) or the agent key. Stored
-  secrets stay encrypted with the server secret, so a copied archive alone does not reveal them.
+- Backups never contain sessions or the agent key. Plain archives never contain the server secret
+  (`secret.key`) either, so stored secrets stay encrypted in a copied archive; encrypted copies
+  contain it and are protected by the passphrase instead.
 - Archives still contain password hashes and other accounts' data. Downloading needs
   `backups:restore`, the current password and a single-use link valid for one minute; it is
   audited. Uploading needs the same permission and accepts only the expected file names with
@@ -153,21 +217,32 @@ every task.
 
 ## API
 
-| Method   | Path                        | Permission        | Notes                                                       |
-| -------- | --------------------------- | ----------------- | ----------------------------------------------------------- |
-| `GET`    | `/api/backups`              | `backups:manage`  | Backups, running and last job, settings, apps, space        |
-| `POST`   | `/api/backups`              | `backups:manage`  | `{ apps, note? }` → `202` job                               |
-| `POST`   | `/api/backups/cancel`       | `backups:manage`  | Cancels the running job                                     |
-| `PUT`    | `/api/backups/settings`     | `backups:manage`  | `{ keep, appData }`                                         |
-| `GET`    | `/api/backups/:id`          | `backups:manage`  |                                                             |
-| `POST`   | `/api/backups/:id/verify`   | `backups:manage`  |                                                             |
-| `PUT`    | `/api/backups/:id/pin`      | `backups:manage`  | `{ pinned }`                                                |
-| `DELETE` | `/api/backups/:id`          | `backups:manage`  |                                                             |
-| `GET`    | `/api/backups/:id/preview`  | `backups:restore` | Verifies, then describes the restore                        |
-| `POST`   | `/api/backups/:id/restore`  | `backups:restore` | `{ settings, apps, homes?, password, confirm: true }` → job |
-| `POST`   | `/api/backups/:id/download` | `backups:restore` | `{ password }` → `{ url }` (single use, 60 s)               |
-| `GET`    | `/api/backups/:id/download` | `backups:restore` | `?ticket=` → `application/x-tar`                            |
-| `POST`   | `/api/backups/upload`       | `backups:restore` | Raw tar body, `Content-Length` required                     |
+| Method   | Path                                    | Permission        | Notes                                                                                                  |
+| -------- | --------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `GET`    | `/api/backups`                          | `backups:manage`  | Backups, running and last job, settings, apps, space                                                   |
+| `POST`   | `/api/backups`                          | `backups:manage`  | `{ apps, note? }` → `202` job                                                                          |
+| `POST`   | `/api/backups/cancel`                   | `backups:manage`  | Cancels the running job                                                                                |
+| `PUT`    | `/api/backups/settings`                 | `backups:manage`  | `{ keep, appData }`                                                                                    |
+| `GET`    | `/api/backups/:id`                      | `backups:manage`  |                                                                                                        |
+| `POST`   | `/api/backups/:id/verify`               | `backups:manage`  |                                                                                                        |
+| `PUT`    | `/api/backups/:id/pin`                  | `backups:manage`  | `{ pinned }`                                                                                           |
+| `DELETE` | `/api/backups/:id`                      | `backups:manage`  |                                                                                                        |
+| `GET`    | `/api/backups/:id/preview`              | `backups:restore` | Verifies, then describes the restore                                                                   |
+| `POST`   | `/api/backups/:id/restore`              | `backups:restore` | `{ settings, apps, homes?, password, confirm: true }` → job                                            |
+| `POST`   | `/api/backups/:id/download`             | `backups:restore` | `{ password, encrypted? }` → `{ url }` (single use, 60 s)                                              |
+| `GET`    | `/api/backups/:id/download`             | `backups:restore` | `?ticket=` → `application/x-tar`                                                                       |
+| `POST`   | `/api/backups/upload`                   | `backups:restore` | Raw tar or `.eosbak` body, `Content-Length` required; an encrypted one answers `202` with an upload id |
+| `POST`   | `/api/backups/upload/:uploadId/decrypt` | `backups:restore` | `{ passphrase }` → imported backup                                                                     |
+| `DELETE` | `/api/backups/upload/:uploadId`         | `backups:restore` | Discards an encrypted upload                                                                           |
+| `GET`    | `/api/backups/encryption`               | `backups:restore` | Whether a passphrase is set, when and by whom                                                          |
+| `PUT`    | `/api/backups/encryption`               | `backups:restore` | `{ passphrase, password }`                                                                             |
+| `DELETE` | `/api/backups/encryption`               | `backups:restore` | `{ password }`                                                                                         |
+| `POST`   | `/api/backups/encryption/check`         | `backups:restore` | `{ passphrase }` → `{ ok }`                                                                            |
+| `GET`    | `/api/backups/offsite`                  | `backups:restore` | Destination (never its secret), `keep`, `auto`                                                         |
+| `PUT`    | `/api/backups/offsite`                  | `backups:restore` | `{ target, keep, auto, password }`; verified before saving                                             |
+| `POST`   | `/api/backups/offsite/test`             | `backups:restore` | Lists the destination                                                                                  |
+| `POST`   | `/api/backups/:id/offsite`              | `backups:restore` | Sends one backup now → `202` job                                                                       |
+| `POST`   | `/api/backups/secret-key`               | `backups:restore` | `{ password }` → `{ url }` (single use, 60 s)                                                          |
 
 The downloaded archive is a plain tar with one top-level directory `everyos-backup-<id>/`; it can
 be inspected with standard tools (`tar -tf`).
@@ -176,9 +251,9 @@ be inspected with standard tools (`tar -tf`).
 
 - Volume-based app data is not backed up (no volume-aware strategy yet). Arbitrary file roots and
   host OS homes are not captured; only EveryOS-managed personal homes are included.
-- Restoring onto a different host requires copying `secret.key` first; restoring app data
-  needs the app to be installed with the same id. A full disaster-recovery flow (re-deploying
-  apps from restored records) is not implemented.
+- Restoring app data needs the app to be installed with the same id; re-deploying apps from
+  restored records on a new machine is not automatic. Restoring onto another machine starts from
+  a finished first-run setup (see above).
 - `config.yaml` is never written by EveryOS; compare and restore it manually.
-- Backups are not encrypted at rest beyond file permissions; put the backup location on an
-  encrypted disk if the host's threat model requires it.
+- Local backups are not encrypted at rest beyond file permissions (only copies and downloads
+  are); put the backup location on an encrypted disk if the host's threat model requires it.

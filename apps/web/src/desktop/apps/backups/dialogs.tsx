@@ -192,9 +192,19 @@ export function SettingsDialog({
   );
 }
 
-export function DownloadDialog({ backup, onClose }: { backup: BackupView; onClose: () => void }) {
+export function DownloadDialog({
+  backup,
+  encryption,
+  onClose,
+}: {
+  backup: BackupView;
+  /** A backup passphrase is set (null while unknown). */
+  encryption: boolean | null;
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const [password, setPassword] = useState("");
+  const [encrypted, setEncrypted] = useState(encryption === true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const submit = async (event: FormEvent) => {
@@ -204,11 +214,11 @@ export function DownloadDialog({ backup, onClose }: { backup: BackupView; onClos
     try {
       const { url } = await api<{ url: string }>(`/backups/${backup.id}/download`, {
         method: "POST",
-        body: { password },
+        body: { password, encrypted },
       });
       const link = document.createElement("a");
       link.href = url;
-      link.download = `everyos-backup-${backup.id}.tar`;
+      link.download = `everyos-backup-${backup.id}.${encrypted ? "eosbak" : "tar"}`;
       link.rel = "noopener";
       document.body.append(link);
       link.click();
@@ -228,7 +238,25 @@ export function DownloadDialog({ backup, onClose }: { backup: BackupView; onClos
       description={t("backups.downloadIntro")}
     >
       <form className="flex flex-col gap-4" onSubmit={(event) => void submit(event)}>
-        <Alert tone="warning">{t("backups.downloadWarning")}</Alert>
+        {encrypted ? null : <Alert tone="warning">{t("backups.downloadWarning")}</Alert>}
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 shrink-0"
+            checked={encrypted}
+            disabled={encryption !== true}
+            onChange={(event) => setEncrypted(event.target.checked)}
+            data-testid="backup-download-encrypted"
+          />
+          <span className="flex flex-col">
+            <span>{t("backups.secure.encryptDownload")}</span>
+            <span className="text-xs text-fg-muted">
+              {encryption === true
+                ? t("backups.secure.encryptDownloadHint")
+                : t("backups.secure.encryptDownloadOff")}
+            </span>
+          </span>
+        </label>
         <Field
           label={t("backups.password")}
           type="password"

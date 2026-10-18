@@ -55,6 +55,11 @@ export const NOTIFICATION_KINDS = {
   "updates-failed": { category: "updates", permission: "system:read", condition: false },
   "backup-succeeded": { category: "backups", permission: "backups:manage", condition: false },
   "backup-failed": { category: "backups", permission: "backups:manage", condition: false },
+  "backup-offsite-failed": {
+    category: "backups",
+    permission: "backups:manage",
+    condition: false,
+  },
   "task-succeeded": { category: "tasks", permission: "tasks:manage", condition: false },
   "task-failed": { category: "tasks", permission: "tasks:manage", condition: false },
   "login-locked": { category: "security", permission: "audit:read", condition: false },

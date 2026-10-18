@@ -67,6 +67,14 @@ export function createPolicy(options: PolicyOptions): OperationPolicy {
             reason: `${POLICY_REASONS.developmentMode}: mounting host disks is disabled in development mode`,
           }
         : { allowed: true };
+    // A development agent may read the developer's Tailscale but never changes it.
+    if (op === "tailscale.serve")
+      return options.mode === "development"
+        ? {
+            allowed: false,
+            reason: `${POLICY_REASONS.developmentMode}: changing Tailscale Serve is disabled in development mode`,
+          }
+        : { allowed: true };
     if (op === "power.control")
       return options.mode === "development" && options.servicesSource === "host"
         ? {

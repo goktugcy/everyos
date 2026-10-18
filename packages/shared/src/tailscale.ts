@@ -2,9 +2,20 @@ import type { TailscaleDetails, TailscaleStatus } from "./schemas/host.ts";
 
 /*
  * Tailscale overview (docs/tailscale.md): this node, remote access to EveryOS
- * through Tailscale Serve/Funnel, and warnings worth acting on. EveryOS never
- * changes the Tailscale configuration; it only reads and explains it.
+ * through Tailscale Serve/Funnel, and warnings worth acting on. The only change
+ * EveryOS makes is its own HTTPS Serve handler, when an administrator turns it on
+ * (never Funnel, never other handlers).
  */
+
+/** Why Tailscale Serve could not be turned on for EveryOS. */
+export const TAILSCALE_SERVE_REFUSALS = [
+  "not-running",
+  "https-disabled",
+  "port-in-use",
+  "funnel",
+  "api-not-on-loopback",
+] as const;
+export type TailscaleServeRefusal = (typeof TAILSCALE_SERVE_REFUSALS)[number];
 
 export const TAILSCALE_WARNING_KINDS = [
   "not-running",
@@ -35,6 +46,8 @@ export interface TailscaleRemoteAccess {
   proxyTrusted: boolean;
   /** How to publish EveryOS on the tailnet when it is not yet published. */
   suggestion: { url: string; command: string } | null;
+  /** EveryOS's own Serve handler (turned on from EveryOS) answers at this address. */
+  managed: string | null;
 }
 
 export interface TailscaleOverview {

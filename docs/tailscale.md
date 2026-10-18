@@ -1,9 +1,9 @@
-# Tailscale integration (Phase 7)
+# Tailscale integration
 
 Tailscale is optional. EveryOS works fully without it; when it is not installed or its LocalAPI is
 not reachable, the Tailscale app shows why ("not detected", "permission denied") and the menu bar
-hides its Tailscale link. EveryOS **never changes the Tailscale configuration**: it reads
-tailscaled's LocalAPI and explains what it finds.
+hides its Tailscale link. EveryOS reads tailscaled's LocalAPI and explains what it finds. The only
+change it ever makes is **its own HTTPS Serve handler**, when an administrator turns it on.
 
 ## Data sources
 
@@ -50,8 +50,15 @@ server:
   publicOrigins: ["https://<machine>.<tailnet>.ts.net"]
 ```
 
-When Tailscale runs but EveryOS is not published, the app suggests exactly this command for the
-node's MagicDNS name. It does not run it.
+An administrator can do all of it with one button instead (Settings › Security › HTTPS, or the
+suggestion in the Tailscale app). The agent operation `tailscale.serve` (`system:manage`, a
+sudo-unlocked linked Linux account, refused by a development agent) reads the Serve configuration
+with its ETag and adds only `https://<node>.<tailnet>.ts.net/` → `http://127.0.0.1:<port>`; it
+refuses when port 443 serves something else or is published with Funnel, when the tailnet has
+HTTPS certificates off (MagicDNS and HTTPS Certificates in the admin console) or when Tailscale
+is not connected, and it never turns Funnel on. EveryOS then allows that origin and trusts the
+loopback proxy's forwarded headers without editing `config.yaml`. Turning it off removes only its
+own handler (other handlers on the same name stay). Changes are audited as `https.tailscale`.
 
 ## Warnings
 
@@ -85,7 +92,7 @@ monitor) and `tailscale.peers` (`system:manage`, users only).
 
 ## Limitations
 
-- Read-only by design: connecting, logging in, choosing an exit node, or changing Serve and Funnel
-  stay in the Tailscale CLI or admin console.
-- Which forwarding headers `tailscale serve` sends (and so whether HTTPS is detected without
-  `cookieSecure: always`) is verified with production packaging in Phase 8.
+- Connecting, logging in, choosing an exit node, Funnel and any Serve handler other than
+  EveryOS's own stay in the Tailscale CLI or admin console.
+- Detecting HTTPS behind Serve relies on the `X-Forwarded-Proto` header Serve sends; the origin is
+  allowed either way.

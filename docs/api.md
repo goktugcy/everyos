@@ -74,19 +74,23 @@ for logs; clients show the localized text for `code`. A `429` response carries `
 
 ## Session (authenticated)
 
-| Method & path               | Description                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------- |
-| `GET /auth/session`         | `SessionInfo`: `{ user, permissions, csrfToken, session: { id, createdAt, expiresAt, locked } }`. |
-| `POST /auth/logout`         | Revokes the current session and clears the cookie. Returns `204`.                                 |
-| `GET /auth/sessions`        | `{ sessions: SessionSummary[] }` for the current user.                                            |
-| `DELETE /auth/sessions/:id` | Revokes one of your own sessions. Returns `204`.                                                  |
-| `POST /auth/lock`           | Locks only the current session on the server. Returns `204` and records an audit event.           |
-| `POST /auth/unlock`         | `{ password }` → `SessionInfo`. Re-authentication is rate-limited and audited.                    |
+| Method & path               | Description                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `GET /auth/session`         | `SessionInfo`: `{ user, permissions, csrfToken, session: { id, createdAt, expiresAt, locked }, twoFactorSetupRequired }`. |
+| `POST /auth/logout`         | Revokes the current session and clears the cookie. Returns `204`.                                                         |
+| `GET /auth/sessions`        | `{ sessions: SessionSummary[] }` for the current user.                                                                    |
+| `DELETE /auth/sessions/:id` | Revokes one of your own sessions. Returns `204`.                                                                          |
+| `POST /auth/lock`           | Locks only the current session on the server. Returns `204` and records an audit event.                                   |
+| `POST /auth/unlock`         | `{ password }` → `SessionInfo`. Re-authentication is rate-limited and audited.                                            |
 
 Locked sessions receive `423 SESSION_LOCKED` for host/account reads and all mutations except
 unlock and logout. Public health/bootstrap, session probing, preference reads and owned wallpaper
 images remain readable so the lock screen can render across reloads. UI auto-lock is an inactivity
 convenience; server idle/absolute session expiry remains the authentication boundary.
+
+When the two-factor policy covers an account that has no second factor (`twoFactorSetupRequired`),
+every request except health, bootstrap, session reads, preference reads, wallpaper images, lock,
+unlock, logout and `POST /account/totp/{enroll,enable}` answers `403 TWO_FACTOR_REQUIRED`.
 
 ## Personal desktop preferences (`preferences:manage`)
 
@@ -134,7 +138,7 @@ Appearance documents can set a default `folderIcon` and up to 500 unique `folder
 | `POST /account/password`       | `{ currentPassword, newPassword }` → `204`. Revokes all other sessions.                                 |
 | `POST /account/totp/enroll`    | → `{ secret, otpauthUri }` (pending until confirmed).                                                   |
 | `POST /account/totp/enable`    | `{ code }` → `{ recoveryCodes: string[] }` (shown once).                                                |
-| `POST /account/totp/disable`   | `{ password, code }` → `204`.                                                                           |
+| `POST /account/totp/disable`   | `{ password, code }` → `204`. `409 TWO_FACTOR_ENFORCED` while the policy covers the account.            |
 | `POST /account/recovery-codes` | `{ password }` → `{ recoveryCodes }`. Invalidates all previous codes.                                   |
 | `GET /account/linux`           | Caller-linked Linux identity and explicit privilege state; see [Linux accounts](linux-accounts.md#api). |
 | `POST /account/linux/unlock`   | `{ linuxPassword, duration? }` → `LinuxAccountStatus`. Explicit durations are account-wide.             |
@@ -150,6 +154,22 @@ Appearance documents can set a default `folderIcon` and up to 500 unique `folder
 | `POST /users/:id/password`   | `{ newPassword }` → `204`. Revokes the user's sessions.                                                                                    |
 | `POST /users/:id/totp/reset` | Removes another user's 2FA (lost device) → `204`.                                                                                          |
 | `DELETE /users/:id`          | → `204`. You cannot delete yourself or the last active administrator.                                                                      |
+
+## Security policy (`users:manage`)
+
+| Method & path              | Description                                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /security/two-factor` | `{ required: "nobody" \| "admins" \| "everyone", pending }`: who must use 2FA and the active accounts it covers that have not set it up. |
+| `PUT /security/two-factor` | `{ required }` → the same view; audited. `409 TWO_FACTOR_SELF_FIRST` when it would cover your own role while you have no second factor.  |
+
+## HTTPS (`system:manage`)
+
+| Method & path              | Description                                                                                                                                                                                                                       |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /https`               | `HttpsView`: EveryOS's Tailscale Serve address, and the local-network listener (port, listening, error, addresses, authority and certificate fingerprints).                                                                       |
+| `PUT /https/tailscale`     | `{ enabled }`: adds or removes EveryOS's own Serve handler (sudo-unlocked Linux account). Refusals are `409 CONFLICT` with `details.reason` (`not-running`, `https-disabled`, `port-in-use`, `funnel`, `api-not-on-loopback`, …). |
+| `PUT /https/lan`           | `{ enabled, port }`: starts, moves or stops the HTTPS listener; a taken port is reported in `lan.error`.                                                                                                                          |
+| `GET /https/authority.crt` | Any signed-in person: the local certificate authority (PEM) to install on devices.                                                                                                                                                |
 
 ## Audit (`audit:read`)
 
@@ -314,7 +334,7 @@ fields, require CSRF for changes, and audit every change.
 | Files         | `GET /files/{roots,list,properties,search,text,download}`, `PUT /files/text`, `POST /files/{upload,mkdir,rename,copy,move,delete}`                                                                                                                    | `files:read`, changes `files:write`                                                        | [files.md](files.md)                                   |
 | Updates       | `GET /updates`, `GET /updates/packages/:name`, `GET /updates/jobs[/:id[/events]]`, `POST /updates/{refresh,upgrade}`                                                                                                                                  | `system:read`, changes `system:manage`                                                     | [updates.md](updates.md)                               |
 | Tasks         | `GET/POST /tasks`, `PATCH/DELETE /tasks/:id`, `GET /tasks/:id/runs`, `POST /tasks/:id/{run,cancel}`                                                                                                                                                   | `tasks:manage` plus the task type's permission                                             | [tasks.md](tasks.md)                                   |
-| Backups       | `GET/POST /backups`, `POST /backups/cancel`, `PUT /backups/settings`, `/backups/:id/{verify,pin,preview,restore,download}`, `POST /backups/upload`                                                                                                    | `backups:manage`; restore, download and upload `backups:restore` with the current password | [backups.md](backups.md)                               |
+| Backups       | `GET/POST /backups`, `POST /backups/cancel`, `PUT /backups/settings`, `/backups/:id/{verify,pin,preview,restore,download,offsite}`, `POST /backups/upload` (+ `/upload/:id/decrypt`), `/backups/{encryption,offsite,secret-key}`                      | `backups:manage`; restore, download and upload `backups:restore` with the current password | [backups.md](backups.md)                               |
 | Tailscale     | `GET /system/tailscale/overview`, `GET /system/tailscale/peers`                                                                                                                                                                                       | `system:read`; devices `system:manage`                                                     | [tailscale.md](tailscale.md)                           |
 | Disks         | `GET /system/disks`, `POST /system/disks/{mount,unmount}`                                                                                                                                                                                             | `system:read`, changes `system:manage` and sudo                                            | [disks.md](disks.md)                                   |
 | Power         | `GET /system/power/{reboot,blockers}`, `POST /system/power`                                                                                                                                                                                           | `system:read`, blockers and actions `system:manage` and sudo                               | [updates.md](updates.md#restart-and-shutdown)          |

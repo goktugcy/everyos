@@ -8,6 +8,7 @@ import { openDatabase, type Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
 import type { LocalizedText } from "@everyos/shared";
 import { readTar, safeRelativePath, TarWriter, sinkTo } from "@everyos/system/archive";
+import { Keyring, parseKeyText, writeKeyFile } from "./keyring.ts";
 
 /*
  * Database snapshots and the EveryOS-side parts of a restore (docs/backups.md).
@@ -343,6 +344,8 @@ export async function stageDatabaseRestore(options: {
   dataDir: string;
   snapshotGz: string;
   wallpapersArchive: string | null;
+  /** The backup's server secret, when it is not the current one. */
+  secretKey?: Buffer | null;
   pending: PendingRestore;
 }): Promise<void> {
   const dir = restoreDir(options.dataDir);
@@ -355,6 +358,7 @@ export async function stageDatabaseRestore(options: {
         createReadStream(options.wallpapersArchive),
         createWriteStream(join(dir, "wallpapers.tar.gz"), { flags: "wx", mode: 0o600 }),
       );
+    if (options.secretKey) writeKeyFile(join(dir, "secret.key"), options.secretKey);
     // The marker last: a half-staged restore is never applied.
     await writeFile(join(dir, "pending.json"), JSON.stringify(options.pending), { mode: 0o600 });
   } catch (error) {
@@ -378,14 +382,16 @@ export async function cancelPendingRestore(dataDir: string): Promise<void> {
 }
 
 /**
- * Applies a staged restore before the database is opened. The replaced
- * database is kept as `<backupDir>/pre-restore-<time>.db`. A staged restore
- * that fails its checks is set aside and the current database is kept.
+ * Applies a staged restore before the database and the server secret are opened. The replaced
+ * database is kept as `<backupDir>/pre-restore-<time>.db`, a replaced secret in the keyring. A
+ * staged restore that fails its checks is set aside and the current database is kept.
  */
 export async function applyPendingRestore(options: {
   dataDir: string;
   databaseFile: string;
   backupDir: string;
+  secretKeyFile: string;
+  keysDir: string;
   logger: Logger;
   now?: number;
 }): Promise<(PendingRestore & { previous: string | null }) | null> {
@@ -409,6 +415,23 @@ export async function applyPendingRestore(options: {
       rm(dir, { recursive: true, force: true }),
     );
     return null;
+  }
+  // The backup's secret first: its database is unreadable with any other. The secret it replaces
+  // stays usable for restoring the backups made with it.
+  const stagedKey = await readFile(join(dir, "secret.key"), "utf8").catch(() => null);
+  if (stagedKey !== null) {
+    const key = parseKeyText(stagedKey);
+    const current = await readFile(options.secretKeyFile, "utf8").catch(() => null);
+    const currentKey = current === null ? null : parseKeyText(current);
+    if (!key || (current !== null && !currentKey)) {
+      options.logger.error("Staged restore has an unusable secret; keeping the current database");
+      await rename(dir, `${dir}.failed-${stamp}`).catch(() =>
+        rm(dir, { recursive: true, force: true }),
+      );
+      return null;
+    }
+    if (currentKey) new Keyring(options.keysDir, currentKey).add(currentKey);
+    writeKeyFile(options.secretKeyFile, key);
   }
   let previous: string | null = null;
   if (await lstat(options.databaseFile).catch(() => null)) {

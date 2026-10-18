@@ -39,6 +39,8 @@ export function analyzeTailscale(input: {
   server: { port: number; publicOrigins: readonly string[] };
   isTrustedProxy: (address: string) => boolean;
   now: number;
+  /** The address of EveryOS's own Serve handler, when an administrator turned it on. */
+  managed?: string | null;
 }): TailscaleAnalysis {
   const { status, details, server, now } = input;
   const warnings: TailscaleWarning[] = [];
@@ -108,6 +110,7 @@ export function analyzeTailscale(input: {
       port: server.port,
       urls,
       proxyTrusted,
+      managed: input.managed ?? null,
       suggestion:
         urls.length === 0 && status.backendState === "Running" && status.dnsName
           ? {

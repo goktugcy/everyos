@@ -18,6 +18,7 @@ import {
   type DriveListing,
 } from "@everyos/shared";
 import { ApiError } from "../../http/errors.ts";
+import { rechunk } from "../../http/streams.ts";
 import type { AuditLog } from "../audit/audit-log.ts";
 import { GoogleHttpError, readText, statusError, type GoogleHttp } from "./google-http.ts";
 
@@ -61,13 +62,16 @@ interface RawRequest {
   path: string;
   json?: unknown;
   headers?: Record<string, string>;
-  body?: Readable;
+  body?: Readable | Buffer;
   signal?: AbortSignal;
   timeoutMs?: number;
   url?: string;
 }
 
 /** A Drive file as a transfer reads it. */
+/** Resumable upload chunks (Google requires multiples of 256 KiB). */
+const UPLOAD_CHUNK_BYTES = 16 * 1024 * 1024;
+
 export interface DriveDownload {
   name: string;
   /** Null for exported Google Docs files until they are read. */
@@ -626,14 +630,18 @@ export class DriveService {
     };
   }
 
-  /** Streams bytes into a new file of a Drive folder with a resumable upload session. */
+  /**
+   * Streams bytes into a new file of a Drive folder through a resumable upload session, sent in
+   * chunks with their own deadline so large files are not bound by one request's timeout.
+   */
   async upload(
     userId: string,
     parent: string,
     name: string,
-    body: Readable,
+    body: AsyncIterable<Uint8Array>,
     sizeBytes: number,
     signal?: AbortSignal,
+    onProgress?: (bytes: number) => void,
   ): Promise<DriveEntry> {
     if (parent === DRIVE_SHARED)
       throw new ApiError(400, "VALIDATION_FAILED", "Files are uploaded to My Drive");
@@ -653,24 +661,97 @@ export class DriveService {
       throw driveError(statusError(session.statusCode ?? 0, sessionText));
     if (new URL(location).origin !== new URL(this.#http.endpoints.api).origin)
       throw new ApiError(503, "DRIVE_UNAVAILABLE", "Unexpected upload session");
+
+    /** Sends bytes from `offset`; Google answers 308 with what it has until the last byte. */
+    const send = async (chunk: Buffer, offset: number) => {
+      const response = await this.#raw(userId, {
+        method: "PUT",
+        path: "",
+        url: location,
+        body: chunk,
+        headers: {
+          "Content-Length": String(chunk.length),
+          "Content-Type": "application/octet-stream",
+          ...(sizeBytes > 0
+            ? { "Content-Range": `bytes ${offset}-${offset + chunk.length - 1}/${sizeBytes}` }
+            : {}),
+        },
+        ...(signal ? { signal } : {}),
+        timeoutMs: 300_000,
+      });
+      const status = response.statusCode ?? 0;
+      const text = await readText(response, 1024 * 1024).catch((error: unknown) => {
+        throw driveError(error);
+      });
+      if (status === 308) {
+        const range = /^bytes=0-(\d+)$/.exec(String(response.headers.range ?? ""));
+        return { received: range ? Number(range[1]) + 1 : 0, entry: null };
+      }
+      if (status !== 200 && status !== 201) throw driveError(statusError(status, text));
+      return { received: sizeBytes, entry: entryOf(JSON.parse(text) as RawFile) };
+    };
+
+    let offset = 0;
+    for await (const chunk of rechunk(body, UPLOAD_CHUNK_BYTES)) {
+      if (offset + chunk.length > sizeBytes)
+        throw new ApiError(400, "VALIDATION_FAILED", "More bytes than announced");
+      let sent = 0;
+      while (sent < chunk.length) {
+        const result = await send(chunk.subarray(sent), offset + sent);
+        if (result.entry) {
+          if (offset + chunk.length !== sizeBytes)
+            throw new ApiError(503, "DRIVE_UNAVAILABLE", "Upload ended early");
+          onProgress?.(chunk.length - sent);
+          return result.entry;
+        }
+        if (result.received < offset + sent || result.received > offset + chunk.length)
+          throw new ApiError(503, "DRIVE_UNAVAILABLE", "Unexpected upload state");
+        onProgress?.(result.received - (offset + sent));
+        sent = result.received - offset;
+      }
+      offset += chunk.length;
+    }
+    if (offset !== sizeBytes)
+      throw new ApiError(400, "VALIDATION_FAILED", "Fewer bytes than announced");
+    // Only an empty file gets here: its single request carries no bytes.
+    const result = await send(Buffer.alloc(0), 0);
+    if (!result.entry) throw new ApiError(503, "DRIVE_UNAVAILABLE", "Upload did not finish");
+    return result.entry;
+  }
+
+  /** A file or folder directly inside `parent` with exactly this name. */
+  async findChild(
+    userId: string,
+    parent: string,
+    name: string,
+    folder: boolean,
+  ): Promise<DriveEntry | null> {
+    const quote = (value: string) => `'${value.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+    const params = new URLSearchParams({
+      q: `${quote(parent)} in parents and name = ${quote(name)} and trashed = false and mimeType ${folder ? "=" : "!="} '${DRIVE_FOLDER_MIME}'`,
+      fields: `files(${ENTRY_FIELDS})`,
+      pageSize: "10",
+      supportsAllDrives: "true",
+      includeItemsFromAllDrives: "true",
+    });
+    const page = await this.#api<{ files?: RawFile[] }>(userId, {
+      method: "GET",
+      path: `/drive/v3/files?${params.toString()}`,
+    });
+    const file = page.files?.[0];
+    return file ? entryOf(file) : null;
+  }
+
+  /** Deletes a file for good (EveryOS's own backup copies, not the person's files). */
+  async remove(userId: string, id: string): Promise<void> {
     const response = await this.#raw(userId, {
-      method: "PUT",
-      path: "",
-      url: location,
-      body,
-      headers: {
-        "Content-Length": String(sizeBytes),
-        "Content-Type": "application/octet-stream",
-      },
-      ...(signal ? { signal } : {}),
-      timeoutMs: 120_000,
+      method: "DELETE",
+      path: `/drive/v3/files/${encodeURIComponent(id)}?supportsAllDrives=true`,
     });
-    const text = await readText(response, 1024 * 1024).catch((error: unknown) => {
-      throw driveError(error);
-    });
+    const text = await readText(response, 64 * 1024).catch(() => "");
     const status = response.statusCode ?? 0;
-    if (status !== 200 && status !== 201) throw driveError(statusError(status, text));
-    return entryOf(JSON.parse(text) as RawFile);
+    if (status !== 204 && status !== 200 && status !== 404)
+      throw driveError(statusError(status, text));
   }
 
   /** Every file below a Drive folder, for copying it out (bounded like local copies). */

@@ -1,16 +1,19 @@
 import { installedVersion } from "@everyos/release";
 import { createHash, randomBytes } from "node:crypto";
 import { constants, createReadStream } from "node:fs";
-import { copyFile, lstat, open, readFile, stat } from "node:fs/promises";
+import { copyFile, lstat, open, readFile, rm, stat } from "node:fs/promises";
 import { hostname } from "node:os";
 import { join } from "node:path";
+import { PassThrough } from "node:stream";
 import type { Actor } from "@everyos/agent-protocol";
 import type { Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
+import type { SecretBox } from "@everyos/security";
 import {
   BACKUP_FORMAT,
   BACKUP_FORMAT_VERSION,
   type BackupAppContent,
+  type BackupEncryptionView,
   type BackupJobStage,
   type BackupJobView,
   type BackupManifest,
@@ -19,10 +22,12 @@ import {
   type BackupTrigger,
   type BackupVerification,
   type BackupView,
+  type EncryptedUpload,
   type RestorePreview,
   type RestoreScope,
 } from "@everyos/shared";
 import { APP_DATA_CHUNK_BYTES, BackupSettingsSchema } from "@everyos/shared/schemas";
+import { sinkTo } from "@everyos/system/archive";
 import { toApiError } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import type { AgentGateway } from "../../services.ts";
@@ -31,6 +36,30 @@ import type { AuditLog } from "../audit/audit-log.ts";
 import type { NotificationService } from "../notifications/notification-service.ts";
 import type { FileService } from "../files/file-service.ts";
 import { archiveHomes, restoreHomes, validateHomes } from "./homes.ts";
+import {
+  clearPassphraseKey,
+  decryptBackup,
+  derivePassphraseKey,
+  encryptBackup,
+  encryptedFileSize,
+  encryptionView,
+  looksEncrypted,
+  passphraseMatches,
+  PassphraseError,
+  readEncryptedHeader,
+  readPassphraseKey,
+  unwrapDataKey,
+  writePassphraseKey,
+  type EncryptedHeader,
+  type PassphraseKey,
+} from "./encryption.ts";
+import type { Keyring } from "./keyring.ts";
+import {
+  OFFSITE_FILE,
+  offsiteName,
+  offsiteReason,
+  type OffsiteService,
+} from "./offsite/offsite-service.ts";
 import {
   BackupStore,
   invalidBackup,
@@ -105,8 +134,9 @@ export interface BackupServiceDependencies {
   configFile: string | null;
   reserveBytes: number;
   maxUploadBytes: number;
-  /** Fingerprint of the server secret (see BackupManifest.keyId). */
-  keyId: string;
+  /** The server secret and the earlier ones restores can use (BackupManifest.keyId). */
+  keyring: Keyring;
+  secrets: SecretBox;
   supervised: boolean;
   /** Restarts EveryOS (only when supervised) so a staged database restore is applied. */
   requestRestart?: () => void;
@@ -125,16 +155,31 @@ export class BackupService {
   #job: { view: BackupJobView; controller: AbortController; done: Promise<void> } | null = null;
   #lastJob: BackupJobView | null = null;
   #unavailable: string | null = null;
-  readonly #tickets = new Map<string, { userId: string; backupId: string; expires: number }>();
+  readonly #tickets = new Map<
+    string,
+    { userId: string; backupId: string; encrypted: boolean; expires: number }
+  >();
+  /** Encrypted uploads waiting for their passphrase. */
+  readonly #encryptedUploads = new Map<
+    string,
+    { path: string; header: EncryptedHeader; prefix: Buffer; at: number }
+  >();
+  #decrypting = false;
+  #offsite: OffsiteService | null = null;
 
   constructor(deps: BackupServiceDependencies) {
     this.#deps = deps;
     this.#logger = deps.logger.child({ component: "backups" });
     this.#store = new BackupStore({
       dir: deps.dir,
-      keyId: deps.keyId,
+      keys: deps.keyring,
       reserveBytes: deps.reserveBytes,
     });
+  }
+
+  /** Off-site destinations (set once the services that reach them exist). */
+  useOffsite(offsite: OffsiteService): void {
+    this.#offsite = offsite;
   }
 
   /** Prepares the backup directory; problems disable backups with a reason instead of failing startup. */
@@ -325,6 +370,13 @@ export class BackupService {
       });
       job.backupId = id;
       await this.prune();
+      if (this.#offsiteReady() && this.#offsite?.settings().auto) {
+        job.stage = "offsite";
+        // The backup itself succeeded; a failed copy is recorded, notified and retried later.
+        await this.#copyOffsite(id, job, signal, actor).catch((error: unknown) => {
+          if (signal.aborted) throw error;
+        });
+      }
     });
   }
 
@@ -413,7 +465,7 @@ export class BackupService {
         everyosVersion: installedVersion(),
         schemaVersion,
         hostname: hostname().slice(0, 255),
-        keyId: this.#deps.keyId,
+        keyId: this.#deps.keyring.currentId,
         contents: { database: true, config, wallpapers, apps, homes },
         files,
       };
@@ -678,7 +730,7 @@ export class BackupService {
         ? "invalid"
         : summary!.schemaVersion > currentSchema
           ? "newer-schema"
-          : !backup.sameKey
+          : !backup.keyAvailable
             ? "different-key"
             : null,
       database: {
@@ -835,10 +887,13 @@ export class BackupService {
           );
         } else if (request.settings === "database") {
           stage("stage-database");
+          const { keyId } = await this.#store.manifest(id);
           await stageDatabaseRestore({
             dataDir: this.#deps.dataDir,
             snapshotGz: await this.#store.databaseFile(id),
             wallpapersArchive: wallpapers,
+            secretKey:
+              keyId === this.#deps.keyring.currentId ? null : this.#deps.keyring.get(keyId),
             pending: { backupId: id, requestedBy: actor.username, requestedAt: this.#deps.now() },
           });
           job.restart = this.#deps.supervised ? "automatic" : "manual";
@@ -929,39 +984,324 @@ export class BackupService {
   }
 
   /** A single-use, short-lived download link for an already re-authenticated user. */
-  async issueTicket(id: string, userId: string): Promise<string> {
+  async issueTicket(id: string, userId: string, encrypted = false): Promise<string> {
     this.#available();
     await this.#store.manifest(id);
+    if (encrypted) this.#passphraseKey();
     const now = this.#deps.now();
     for (const [key, ticket] of this.#tickets) if (ticket.expires < now) this.#tickets.delete(key);
     const ticket = randomBytes(24).toString("base64url");
-    this.#tickets.set(ticket, { userId, backupId: id, expires: now + 60_000 });
+    this.#tickets.set(ticket, { userId, backupId: id, encrypted, expires: now + 60_000 });
     return ticket;
   }
 
-  redeemTicket(ticket: string, id: string, userId: string): boolean {
+  /** The ticket's download, or null when it is not valid for this backup and user. */
+  redeemTicket(ticket: string, id: string, userId: string): { encrypted: boolean } | null {
     const entry = this.#tickets.get(ticket);
     this.#tickets.delete(ticket);
-    return Boolean(
-      entry &&
+    return entry &&
       entry.userId === userId &&
       entry.backupId === id &&
-      entry.expires >= this.#deps.now(),
-    );
+      entry.expires >= this.#deps.now()
+      ? { encrypted: entry.encrypted }
+      : null;
   }
 
-  download(id: string): ReturnType<BackupStore["download"]> {
+  /** The backup as a tar archive, or encrypted with the passphrase (then with its secret). */
+  async download(
+    id: string,
+    options: { encrypted?: boolean } = {},
+  ): Promise<{
+    size: number;
+    name: string;
+    write: (sink: (chunk: Buffer) => Promise<void>) => Promise<void>;
+  }> {
     this.#available();
-    return this.#store.download(id);
+    if (!options.encrypted) return this.#store.download(id);
+    const encrypted = await this.#encrypted(id, this.#passphraseKey());
+    return {
+      size: encrypted.size,
+      name: offsiteName(id),
+      write: async (sink) => {
+        for await (const chunk of encrypted.stream()) await sink(chunk);
+      },
+    };
   }
 
-  async upload(source: AsyncIterable<Buffer | Uint8Array>, length: number): Promise<BackupView> {
+  /**
+   * Imports an uploaded archive. An encrypted one is kept aside until its passphrase is given
+   * (`decryptUpload`), so a mistyped passphrase does not mean uploading it again.
+   */
+  async upload(
+    source: AsyncIterable<Buffer | Uint8Array>,
+    length: number,
+  ): Promise<BackupView | EncryptedUpload> {
     this.#available();
     if (length > this.#deps.maxUploadBytes)
       throw new ApiError(413, "PAYLOAD_TOO_LARGE", "The backup is larger than allowed");
     await this.#store.guard().require(length);
-    const id = await this.#store.importArchive(source, length);
+    const iterator = source[Symbol.asyncIterator]();
+    let head = Buffer.alloc(0);
+    while (head.length < 8) {
+      const next = await iterator.next();
+      if (next.done) break;
+      head = Buffer.concat([head, Buffer.from(next.value)]);
+    }
+    const rest = (async function* () {
+      if (head.length) yield head;
+      for (;;) {
+        const next = await iterator.next();
+        if (next.done) return;
+        yield Buffer.from(next.value);
+      }
+    })();
+    if (looksEncrypted(head)) return this.#stageEncrypted(rest, length);
+    const { id } = await this.#store.importArchive(rest, length);
     await this.#check(id);
     return this.#store.view(id);
+  }
+
+  async #stageEncrypted(source: AsyncIterable<Buffer>, length: number): Promise<EncryptedUpload> {
+    const now = this.#deps.now();
+    for (const [uploadId, pending] of this.#encryptedUploads)
+      if (now - pending.at > 6 * 60 * 60_000) await this.discardUpload(uploadId);
+    const uploadId = randomBytes(16).toString("hex");
+    const path = join(this.#store.dir, `.encrypted-${uploadId}`);
+    const guard = this.#store.guard();
+    const handle = await open(path, "wx", 0o600);
+    let size = 0;
+    let head = Buffer.alloc(0);
+    try {
+      for await (const chunk of source) {
+        size += chunk.length;
+        if (size > length) throw invalidBackup("encrypted-length");
+        if (head.length < 64 * 1024 + 12)
+          head = Buffer.concat([head, chunk.subarray(0, 64 * 1024 + 12 - head.length)]);
+        await handle.write(chunk);
+        await guard.wrote(chunk.length);
+      }
+      if (size !== length) throw invalidBackup("encrypted-length");
+      const parsed = readEncryptedHeader(head);
+      if (!parsed || encryptedFileSize(parsed.header, parsed.prefix) !== size)
+        throw invalidBackup("encrypted-length");
+      this.#encryptedUploads.set(uploadId, { path, ...parsed, at: now });
+      return {
+        encrypted: true,
+        uploadId,
+        backupId: parsed.header.backupId,
+        createdAt: parsed.header.createdAt,
+        hostname: parsed.header.hostname,
+        everyosVersion: parsed.header.everyosVersion,
+        includesKey: parsed.header.includesKey,
+      };
+    } catch (error) {
+      await rm(path, { force: true });
+      throw error;
+    } finally {
+      await handle.close();
+    }
+  }
+
+  /** Opens an encrypted upload with its passphrase and imports it (with its server secret). */
+  async decryptUpload(uploadId: string, passphrase: string): Promise<BackupView> {
+    this.#available();
+    const pending = this.#encryptedUploads.get(uploadId);
+    if (!pending) throw new ApiError(404, "NOT_FOUND", "Upload not found");
+    // One at a time: each attempt costs a scrypt derivation of about 128 MiB.
+    if (this.#decrypting) throw new ApiError(409, "BACKUP_BUSY", "Another upload is being opened");
+    this.#decrypting = true;
+    try {
+      let dataKey: Buffer;
+      try {
+        dataKey = await unwrapDataKey(pending.header, passphrase);
+      } catch (error) {
+        if (error instanceof PassphraseError)
+          throw new ApiError(400, "BACKUP_PASSPHRASE_INVALID", "The passphrase is wrong");
+        throw error;
+      }
+      const { id, key } = await this.#store.importArchive(
+        decryptBackup(
+          createReadStream(pending.path, { start: pending.prefix.length }),
+          pending.header,
+          pending.prefix,
+          dataKey,
+        ),
+        pending.header.plaintextSize,
+        { acceptKey: true },
+      );
+      if (id !== pending.header.backupId) {
+        await this.#store.remove(id);
+        throw invalidBackup("encrypted-header");
+      }
+      if (key) this.#deps.keyring.add(key);
+      await this.discardUpload(uploadId);
+      await this.#check(id);
+      return this.#store.view(id);
+    } finally {
+      this.#decrypting = false;
+    }
+  }
+
+  async discardUpload(uploadId: string): Promise<void> {
+    const pending = this.#encryptedUploads.get(uploadId);
+    this.#encryptedUploads.delete(uploadId);
+    if (pending) await rm(pending.path, { force: true });
+  }
+
+  /* ------------------------------------------------- encryption and off-site */
+
+  encryption(): BackupEncryptionView {
+    return encryptionView(this.#deps.db);
+  }
+
+  /** Sets (or replaces) the passphrase; earlier encrypted copies keep needing the old one. */
+  async setPassphrase(passphrase: string, actor: UserActor): Promise<BackupEncryptionView> {
+    const key = await derivePassphraseKey(passphrase);
+    writePassphraseKey(this.#deps.db, this.#deps.secrets, key, actor.username, this.#deps.now());
+    return this.encryption();
+  }
+
+  /** Removes the passphrase; copies already made keep opening with it. */
+  clearPassphrase(): BackupEncryptionView {
+    clearPassphraseKey(this.#deps.db);
+    return this.encryption();
+  }
+
+  async checkPassphrase(passphrase: string): Promise<boolean> {
+    return passphraseMatches(this.#passphraseKey(), passphrase);
+  }
+
+  /** The current server secret, for an administrator keeping it somewhere safe. */
+  secretKey(): Buffer {
+    return this.#deps.keyring.current;
+  }
+
+  #passphraseKey(): PassphraseKey {
+    const key = readPassphraseKey(this.#deps.db, this.#deps.secrets);
+    if (!key) throw new ApiError(409, "BACKUP_ENCRYPTION_REQUIRED", "No backup passphrase is set");
+    return key;
+  }
+
+  #offsiteReady(): boolean {
+    return Boolean(
+      this.#offsite?.settings().target && readPassphraseKey(this.#deps.db, this.#deps.secrets),
+    );
+  }
+
+  /** An encrypted copy of a backup: its exact size and a fresh stream of it. */
+  async #encrypted(id: string, key: PassphraseKey) {
+    const manifest = await this.#store.manifest(id);
+    const backupKey = this.#deps.keyring.get(manifest.keyId);
+    const plain = await this.#store.download(id, { key: backupKey });
+    const encrypted = encryptBackup(
+      key,
+      {
+        backupId: id,
+        createdAt: manifest.createdAt,
+        everyosVersion: manifest.everyosVersion,
+        hostname: manifest.hostname,
+        includesKey: backupKey !== null,
+      },
+      plain.size,
+    );
+    return {
+      size: encrypted.size,
+      async *stream(): AsyncGenerator<Buffer> {
+        const pass = new PassThrough();
+        plain.write(sinkTo(pass)).then(
+          () => pass.end(),
+          (error: unknown) => pass.destroy(error as Error),
+        );
+        try {
+          yield* encrypted.encrypt(pass);
+        } finally {
+          pass.destroy();
+        }
+      },
+    };
+  }
+
+  /** Sends a backup off-site now. */
+  offsiteCopy(id: string, actor: UserActor): BackupJobView {
+    if (!this.#offsite?.settings().target)
+      throw new ApiError(409, "BACKUP_OFFSITE_NOT_CONFIGURED", "No off-site destination is set");
+    this.#passphraseKey();
+    return this.#startJob("offsite", "manual", actor, id, async (job, signal) => {
+      await this.#store.manifest(id);
+      job.stage = "offsite";
+      await this.#copyOffsite(id, job, signal, actor);
+    });
+  }
+
+  /** Encrypts and uploads one backup, then keeps the newest copies there (see `keep`). */
+  async #copyOffsite(
+    id: string,
+    job: BackupJobView,
+    signal: AbortSignal,
+    actor: UserActor,
+  ): Promise<void> {
+    const offsite = this.#offsite!;
+    const name = offsiteName(id);
+    let label = "";
+    try {
+      const destination = await offsite.open(signal);
+      label = destination.label;
+      const encrypted = await this.#encrypted(id, this.#passphraseKey());
+      await destination.put(name, encrypted.stream(), encrypted.size, signal, (bytes) => {
+        job.bytes += bytes;
+      });
+      await this.#store.setOffsite(id, {
+        at: this.#deps.now(),
+        ok: true,
+        target: label,
+        name,
+        error: null,
+      });
+      this.#deps.audit.record({
+        action: "backups.offsite",
+        outcome: "success",
+        actor: { userId: actor.userId, username: actor.username },
+        ip: actor.ip ?? null,
+        target: id,
+        details: { destination: label, size: encrypted.size },
+      });
+      // Retention there: the newest copies by backup id (which sorts by time).
+      const { keep } = offsite.settings();
+      const copies = (await destination.list(signal))
+        .filter((candidate) => OFFSITE_FILE.test(candidate))
+        .sort()
+        .reverse();
+      for (const old of copies.slice(keep)) {
+        if (old === name) continue;
+        await destination
+          .remove(old, signal)
+          .catch((error: unknown) =>
+            this.#logger.warn("Old off-site copy not removed", { name: old, error }),
+          );
+      }
+    } catch (error) {
+      const reason = signal.aborted ? "cancelled" : offsiteReason(error);
+      await this.#store
+        .setOffsite(id, { at: this.#deps.now(), ok: false, target: label, name, error: reason })
+        .catch(() => undefined);
+      this.#deps.audit.record({
+        action: "backups.offsite",
+        outcome: "failure",
+        actor: { userId: actor.userId, username: actor.username },
+        ip: actor.ip ?? null,
+        target: id,
+        details: { destination: label, reason },
+      });
+      if (!signal.aborted) {
+        this.#logger.warn("Off-site backup copy failed", { backupId: id, reason });
+        this.#deps.notifications.publish({
+          kind: "backup-offsite-failed",
+          severity: "warning",
+          key: "offsite",
+          params: { backup: id, target: label || "-", reason },
+        });
+      }
+      throw error;
+    }
   }
 }

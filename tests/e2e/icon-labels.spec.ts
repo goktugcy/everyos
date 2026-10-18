@@ -69,4 +69,13 @@ test("selection covers icons and names while long unbroken names fit or expand c
     path: test.info().outputPath("whole-item-selection.png"),
     animations: "disabled",
   });
+  // Leave the Desktop folder as it was for the tests that follow.
+  expect(
+    (
+      await page.request.post("/api/files/delete", {
+        headers,
+        data: { root: "home", paths: names.map((name) => `${desktopPath}/${name}`), confirm: true },
+      })
+    ).status(),
+  ).toBe(204);
 });
