@@ -15,7 +15,7 @@ import {
   type WebhookFormat,
 } from "@everyos/shared";
 import type { TFunction } from "i18next";
-import { Bell, Mail, Pencil, Plus, Send, Trash2, Webhook } from "lucide-react";
+import { Bell, Check, Mail, Pencil, Plus, Send, Trash2, Webhook } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -317,7 +317,7 @@ function ChannelDialog({
     }
   };
   const secretField = (label: string, hint?: string, required = false) => (
-    <>
+    <div className="flex flex-col gap-2">
       <Field
         label={label}
         type="password"
@@ -339,91 +339,108 @@ function ChannelDialog({
           {t("notifications.channels.clearSecret")}
         </label>
       ) : null}
-    </>
+    </div>
   );
   return (
     <Dialog
       open
       onOpenChange={(open) => !open && onClose()}
       title={t(channel ? "notifications.channels.edit" : "notifications.channels.add")}
-      className="w-[min(96vw,560px)]"
+      // Wide enough for three columns, so even e-mail fits without scrolling on common screens.
+      className="max-h-[min(94dvh,900px)] w-[min(96vw,880px)]"
     >
       <form
-        className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1"
+        className="flex flex-col gap-3"
         onSubmit={(event) => void submit(event)}
         data-testid="notification-channel-form"
       >
         {!channel ? (
-          <div role="radiogroup" aria-label={f("kind")} className="grid gap-2 sm:grid-cols-2">
-            {NOTIFICATION_CHANNEL_KINDS.map((kind) => (
-              <button
-                key={kind}
-                type="button"
-                role="radio"
-                aria-checked={form.kind === kind}
-                onClick={() => set({ kind, secret: "", clearSecret: false })}
-                className={cn(
-                  "glass-inset flex flex-col gap-1 rounded-everyos-md p-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                  form.kind === kind && "ring-2 ring-accent",
-                )}
-              >
-                <span className="flex items-center gap-2 text-sm font-semibold">
-                  {ICONS[kind]}
-                  {t(`notifications.channels.kinds.${kind}`)}
-                </span>
-                <span className="text-xs text-fg-muted">
-                  {t(`notifications.channels.kindHints.${kind}`)}
-                </span>
-              </button>
-            ))}
+          <div className="flex flex-col gap-2">
+            <div
+              role="radiogroup"
+              aria-label={f("kind")}
+              className="grid grid-cols-2 gap-2 md:grid-cols-4"
+            >
+              {NOTIFICATION_CHANNEL_KINDS.map((kind) => {
+                const selected = form.kind === kind;
+                return (
+                  <button
+                    key={kind}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => set({ kind, secret: "", clearSecret: false })}
+                    className={cn(
+                      "flex h-12 items-center gap-2 rounded-everyos-md px-3 text-left text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent",
+                      // glass-inset sets the background and border shorthands, so the chosen card
+                      // gets its own surface instead of utilities on top of it.
+                      selected
+                        ? "border border-[rgb(var(--everyos-accent)/0.85)] bg-[rgb(var(--everyos-accent)/0.18)] text-fg shadow-[0_0_0_1px_rgb(var(--everyos-accent)/0.35)]"
+                        : "glass-inset text-fg-muted hover:text-fg",
+                    )}
+                  >
+                    <span className={selected ? "text-accent" : undefined}>{ICONS[kind]}</span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {t(`notifications.channels.kinds.${kind}`)}
+                    </span>
+                    {selected ? (
+                      <Check className="size-4 shrink-0 text-accent" aria-hidden />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-fg-muted">
+              {t(`notifications.channels.kindHints.${form.kind}`)}
+            </p>
           </div>
         ) : null}
-        <Field
-          label={f("name")}
-          value={form.name}
-          maxLength={64}
-          required
-          onChange={(event) => set({ name: event.target.value })}
-        />
-        {form.kind === "ntfy" ? (
-          <>
-            <Field
-              label={f("server")}
-              type="url"
-              value={form.server}
-              required
-              onChange={(event) => set({ server: event.target.value })}
-            />
-            <Field
-              label={f("topic")}
-              value={form.topic}
-              pattern="[A-Za-z0-9_\-]{1,64}"
-              required={!channel}
-              hint={
-                channel?.settings.kind === "ntfy"
-                  ? t("notifications.channels.stored")
-                  : f("topicHint")
-              }
-              onChange={(event) => set({ topic: event.target.value })}
-            />
-            {secretField(f("token"))}
-          </>
-        ) : null}
-        {form.kind === "telegram" ? (
-          <>
-            {secretField(f("botToken"), f("botTokenHint"), true)}
-            <Field
-              label={f("chatId")}
-              value={form.chatId}
-              required
-              hint={f("chatIdHint")}
-              onChange={(event) => set({ chatId: event.target.value })}
-            />
-          </>
-        ) : null}
-        {form.kind === "email" ? (
-          <>
-            <div className="grid gap-3 sm:grid-cols-[1fr_7rem]">
+        <div className="grid gap-3 md:grid-cols-3">
+          <Field
+            label={f("name")}
+            value={form.name}
+            maxLength={64}
+            required
+            onChange={(event) => set({ name: event.target.value })}
+          />
+          {form.kind === "ntfy" ? (
+            <>
+              <Field
+                label={f("server")}
+                type="url"
+                value={form.server}
+                required
+                onChange={(event) => set({ server: event.target.value })}
+              />
+              <Field
+                label={f("topic")}
+                value={form.topic}
+                pattern="[A-Za-z0-9_\-]{1,64}"
+                required={!channel}
+                hint={
+                  channel?.settings.kind === "ntfy"
+                    ? t("notifications.channels.stored")
+                    : f("topicHint")
+                }
+                onChange={(event) => set({ topic: event.target.value })}
+              />
+              {secretField(f("token"))}
+            </>
+          ) : null}
+          {form.kind === "telegram" ? (
+            <>
+              {secretField(f("botToken"), f("botTokenHint"), true)}
+              <Field
+                label={f("chatId")}
+                value={form.chatId}
+                required
+                hint={f("chatIdHint")}
+                onChange={(event) => set({ chatId: event.target.value })}
+              />
+            </>
+          ) : null}
+          {form.kind === "email" ? (
+            <>
               <Field
                 label={f("host")}
                 value={form.host}
@@ -439,66 +456,68 @@ function ChannelDialog({
                 required
                 onChange={(event) => set({ port: event.target.value })}
               />
-            </div>
-            <Select
-              label={f("security")}
-              value={form.security}
-              options={EMAIL_SECURITY.map((value) => ({
-                value,
-                label: t(`notifications.channels.security.${value}`),
-              }))}
-              onChange={(security) => set({ security })}
-            />
-            <Field
-              label={f("username")}
-              value={form.username}
-              autoComplete="off"
-              onChange={(event) => set({ username: event.target.value })}
-            />
-            {secretField(f("password"))}
-            <Field
-              label={f("from")}
-              type="email"
-              value={form.from}
-              required
-              onChange={(event) => set({ from: event.target.value })}
-            />
-            <Field
-              label={f("to")}
-              value={form.to}
-              required
-              hint={f("toHint")}
-              onChange={(event) => set({ to: event.target.value })}
-            />
-          </>
-        ) : null}
-        {form.kind === "webhook" ? (
-          <>
-            <Select
-              label={f("format")}
-              value={form.format}
-              options={WEBHOOK_FORMATS.map((value) => ({
-                value,
-                label: t(`notifications.channels.formats.${value}`),
-              }))}
-              onChange={(format) => set({ format })}
-            />
-            <Field
-              label={f("url")}
-              type="url"
-              value={form.url}
-              required={!channel}
-              hint={
-                channel?.settings.kind === "webhook"
-                  ? `${channel.settings.origin} · ${t("notifications.channels.stored")}`
-                  : f("urlHint")
-              }
-              onChange={(event) => set({ url: event.target.value })}
-            />
-            {form.format === "json" ? secretField(f("bearer")) : null}
-          </>
-        ) : null}
-        <div className="grid gap-3 sm:grid-cols-2">
+              <Select
+                label={f("security")}
+                value={form.security}
+                options={EMAIL_SECURITY.map((value) => ({
+                  value,
+                  label: t(`notifications.channels.security.${value}`),
+                }))}
+                onChange={(security) => set({ security })}
+              />
+              <Field
+                label={f("username")}
+                value={form.username}
+                autoComplete="off"
+                onChange={(event) => set({ username: event.target.value })}
+              />
+              {secretField(f("password"))}
+              <Field
+                label={f("from")}
+                type="email"
+                value={form.from}
+                required
+                onChange={(event) => set({ from: event.target.value })}
+              />
+              <div className="md:col-span-2">
+                <Field
+                  label={f("to")}
+                  value={form.to}
+                  required
+                  hint={f("toHint")}
+                  onChange={(event) => set({ to: event.target.value })}
+                />
+              </div>
+            </>
+          ) : null}
+          {form.kind === "webhook" ? (
+            <>
+              <Select
+                label={f("format")}
+                value={form.format}
+                options={WEBHOOK_FORMATS.map((value) => ({
+                  value,
+                  label: t(`notifications.channels.formats.${value}`),
+                }))}
+                onChange={(format) => set({ format })}
+              />
+              <Field
+                label={f("url")}
+                type="url"
+                value={form.url}
+                required={!channel}
+                hint={
+                  channel?.settings.kind === "webhook"
+                    ? `${channel.settings.origin} · ${t("notifications.channels.stored")}`
+                    : f("urlHint")
+                }
+                onChange={(event) => set({ url: event.target.value })}
+              />
+              {form.format === "json" ? secretField(f("bearer")) : null}
+            </>
+          ) : null}
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
           <Select
             label={f("minSeverity")}
             value={form.minSeverity}
@@ -517,10 +536,21 @@ function ChannelDialog({
             }))}
             onChange={(language) => set({ language })}
           />
+          <label className="flex items-center justify-between gap-3 text-sm md:self-end md:pb-2.5">
+            {t("notifications.channels.enabled")}
+            <Toggle
+              label={t("notifications.channels.enabled")}
+              checked={form.enabled}
+              onCheckedChange={(enabled) => set({ enabled })}
+            />
+          </label>
         </div>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-[0.8rem] font-medium text-fg-muted">
             {f("categories")}
+            {form.categories.length === 0 ? (
+              <span className="font-normal text-fg-subtle"> · {f("allCategories")}</span>
+            ) : null}
           </legend>
           <div className="flex flex-wrap gap-1.5">
             {NOTIFICATION_CATEGORIES.map((category) => {
@@ -547,18 +577,7 @@ function ChannelDialog({
               );
             })}
           </div>
-          {form.categories.length === 0 ? (
-            <span className="text-xs text-fg-subtle">{f("allCategories")}</span>
-          ) : null}
         </fieldset>
-        <label className="flex items-center justify-between gap-3 text-sm">
-          {t("notifications.channels.enabled")}
-          <Toggle
-            label={t("notifications.channels.enabled")}
-            checked={form.enabled}
-            onCheckedChange={(enabled) => set({ enabled })}
-          />
-        </label>
         {error ? <Alert tone="danger">{errorMessage(t, error)}</Alert> : null}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

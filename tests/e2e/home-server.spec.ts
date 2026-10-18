@@ -82,6 +82,25 @@ test("an external webhook channel receives a test message and never shows its ad
     const channels = settings.getByTestId("notification-channels");
     await channels.getByRole("button", { name: "Kanal ekle" }).click();
     const form = page.getByTestId("notification-channel-form");
+    // E-mail has the most fields: its card shows as chosen and the dialog still does not scroll.
+    const email = form.getByRole("radio", { name: /E-posta/ });
+    await email.click();
+    await expect(email).toHaveAttribute("aria-checked", "true");
+    await expect(form.getByRole("radio", { name: /ntfy/ })).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
+    await page.screenshot({
+      path: test.info().outputPath("channel-email.png"),
+      animations: "disabled",
+    });
+    expect(
+      await form.evaluate(
+        (element) =>
+          element.scrollHeight > element.clientHeight + 1 ||
+          element.parentElement!.scrollHeight > element.parentElement!.clientHeight + 1,
+      ),
+    ).toBe(false);
     await form.getByRole("radio", { name: /Webhook/ }).click();
     await form.getByLabel("Ad", { exact: true }).fill("E2E webhook");
     await form.getByLabel("Biçim", { exact: true }).selectOption("json");
