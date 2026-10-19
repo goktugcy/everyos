@@ -1,3 +1,14 @@
+EveryOS 0.1.34 adds eight interface languages and makes English the default.
+
+- EveryOS is now available in ten languages: English (the default), Turkish, German, Spanish,
+  French, Italian, Japanese, Korean, Russian and Simplified Chinese. Pick a language during setup,
+  on the sign-in screen or in Settings › Account; external notification channels can also send
+  messages in any of them.
+- Only English is bundled with the initial page; every other language loads on demand when chosen,
+  and Japanese, Korean and Chinese use dedicated system font stacks.
+- In Settings › Account, selecting a language other than Turkish or English shows a brief notice
+  above the language picker inviting feedback if any translation issue is spotted.
+
 EveryOS 0.1.33 helps get ntfy notifications onto your phone.
 
 - ntfy channels in Settings › Notifications have an "Add to phone" button. It shows the exact
