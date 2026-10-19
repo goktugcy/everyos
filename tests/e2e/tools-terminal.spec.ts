@@ -233,9 +233,9 @@ test("a viewer cannot discover or open the terminal, including the WebSocket", a
     ).status(),
   ).toBe(204);
   await page.goto("/");
-  await page.getByLabel("Kullanıcı adı", { exact: true }).fill("terminalviewer");
-  await page.getByLabel("Parola", { exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await page.getByLabel(/Kullanıcı adı|Username/).fill("terminalviewer");
+  await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
+  await page.getByRole("button", { name: /Giriş yap|Sign in/ }).click();
   await expect(page.getByTestId("desktop")).toBeVisible();
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("terminal");

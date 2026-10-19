@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Permission } from "@everyos/shared";
+import { SUPPORTED_LOCALES, type Permission } from "@everyos/shared";
 import {
   FileLocationQuerySchema,
   FileListQuerySchema,
@@ -39,7 +39,7 @@ const text = z.strictObject({
   size: number,
   modifiedAt: number,
 });
-const context = { locale: z.enum(["tr", "en"]), systemRoots: z.boolean() };
+const context = { locale: z.enum(SUPPORTED_LOCALES), systemRoots: z.boolean() };
 function file<S extends z.ZodRawShape, R extends z.ZodType>(
   params: z.ZodObject<S>,
   result: R,

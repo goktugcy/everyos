@@ -1,4 +1,5 @@
 import { resources } from "@everyos/i18n";
+import { SUPPORTED_LOCALES } from "@everyos/shared";
 import type { TopicMessage, WidgetInstance } from "@everyos/shared";
 import { BUILT_IN_WIDGETS, widgetKey } from "@everyos/widget-sdk";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -31,7 +32,7 @@ describe("built-in widget catalogue", () => {
 
   it("has a title and description in every locale", () => {
     for (const manifest of BUILT_IN_WIDGETS) {
-      for (const locale of ["tr", "en"] as const) {
+      for (const locale of SUPPORTED_LOCALES) {
         const items = resources[locale].widgets.items as Record<
           string,
           { title: string; description: string }

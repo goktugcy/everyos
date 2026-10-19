@@ -1,9 +1,21 @@
-export const SUPPORTED_LOCALES = ["tr", "en"] as const;
+/** Interface languages, in the order language pickers list them (`zh` is Simplified Chinese). */
+export const SUPPORTED_LOCALES = [
+  "tr",
+  "en",
+  "de",
+  "es",
+  "fr",
+  "it",
+  "ja",
+  "ko",
+  "ru",
+  "zh",
+] as const;
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
-/** Turkish is the product default. */
-export const DEFAULT_LOCALE: Locale = "tr";
+/** English is the product default. */
+export const DEFAULT_LOCALE: Locale = "en";
 
 export function isLocale(value: unknown): value is Locale {
   return typeof value === "string" && (SUPPORTED_LOCALES as readonly string[]).includes(value);

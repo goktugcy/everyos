@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   negotiateLocale,
+  isLocale,
+  SUPPORTED_LOCALES,
   PERMISSIONS,
   permissionsForRole,
   roleHasPermission,
@@ -40,9 +42,16 @@ describe("roles", () => {
 });
 
 describe("locale negotiation", () => {
-  it("picks the first supported language and defaults to Turkish", () => {
-    expect(negotiateLocale(["de-DE", "en-US"])).toBe("en");
+  it("picks the first supported language and defaults to English", () => {
+    expect(negotiateLocale(["de-DE", "en-US"])).toBe("de");
     expect(negotiateLocale(["tr"])).toBe("tr");
-    expect(negotiateLocale(["fr"])).toBe("tr");
+    expect(negotiateLocale(["fr"])).toBe("fr");
+    expect(negotiateLocale(["ar", "en-US"])).toBe("en");
+    expect(negotiateLocale(["ar"])).toBe("en");
+  });
+
+  it.each(SUPPORTED_LOCALES)("accepts %s and its regional browser tag", (locale) => {
+    expect(isLocale(locale)).toBe(true);
+    expect(negotiateLocale([`${locale.toUpperCase()}-XX`])).toBe(locale);
   });
 });

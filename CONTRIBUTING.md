@@ -27,9 +27,11 @@ Add TOTP replay protection to the login flow
 
 ## Translations
 
-Turkish (`packages/i18n/src/locales/tr.ts`) is the source locale. When you add a key, add it to
-every locale; the type checker and the i18n test enforce this. Keep technical terms understandable
-rather than translating them literally.
+Turkish (`packages/i18n/src/locales/tr.ts`) is the source locale; the interface also ships in
+English, German, Spanish, French, Italian, Japanese, Korean, Russian and Simplified Chinese. When you
+add a key, add it to every locale; the type checker and the i18n test enforce this, including each
+language's plural forms (Russian needs `_few` and `_many`; Spanish, French and Italian `_many`).
+Keep technical terms understandable rather than translating them literally.
 
 ## Reporting security issues
 

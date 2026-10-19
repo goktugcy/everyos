@@ -49,7 +49,7 @@ The 45 built-in widgets cover the following:
 - **AI:** a chat with the local model, Hermes or OpenClaw, with its model menu (see
   [AI assistants](ai-agents.md#ai-chat-widget)).
 
-A unit test checks that every manifest has a renderer and Turkish and English texts.
+A unit test checks that every manifest has a renderer and texts in every interface language.
 
 ## 2. Layout document
 

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Database } from "@everyos/database";
 import {
+  DEFAULT_LOCALE,
   isLocale,
   type AdminUserView,
   type Locale,
@@ -51,7 +52,7 @@ function toUser(row: UserRow): User {
     displayName: row.display_name,
     passwordHash: row.password_hash,
     role: row.role,
-    locale: isLocale(row.locale) ? row.locale : "tr",
+    locale: isLocale(row.locale) ? row.locale : DEFAULT_LOCALE,
     disabled: row.disabled === 1,
     totpEnabled: row.totp_enabled === 1,
     totpSecretEnc: row.totp_secret_enc,

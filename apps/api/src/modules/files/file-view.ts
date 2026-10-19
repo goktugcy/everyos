@@ -1,5 +1,5 @@
 import type { Logger } from "@everyos/logger";
-import type { Permission } from "@everyos/shared";
+import { DEFAULT_LOCALE, isLocale, type Permission } from "@everyos/shared";
 import type { UserActor } from "../../http/agent.ts";
 import type { Services } from "../../services.ts";
 import { AccountFileView } from "./account-file-view.ts";
@@ -34,7 +34,7 @@ export function fileViewFor(
   return services.config.mode === "production"
     ? new AccountFileView(services, personal, {
         actor: who.actor,
-        locale: who.user.locale === "en" ? "en" : "tr",
+        locale: isLocale(who.user.locale) ? who.user.locale : DEFAULT_LOCALE,
         systemRoots,
         signal: options.signal,
         logger: options.logger,

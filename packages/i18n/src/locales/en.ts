@@ -41,6 +41,14 @@ export const en: Messages = {
   languages: {
     tr: "Türkçe",
     en: "English",
+    de: "Deutsch",
+    es: "Español",
+    fr: "Français",
+    it: "Italiano",
+    ja: "日本語",
+    ko: "한국어",
+    ru: "Русский",
+    zh: "简体中文",
   },
   brand: {
     name: "EveryOS",
@@ -1457,6 +1465,8 @@ export const en: Messages = {
       username: "Username",
       role: "Role",
       language: "Interface language",
+      translationNotice:
+        "This translation may contain errors; feel free to send feedback if you spot any.",
     },
     security: {
       autoLock: "Automatic lock",

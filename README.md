@@ -35,7 +35,8 @@ Keep documents in your personal home, organize your desktop, install self-hosted
 what your machine is doing. Open the same workspace from a laptop or use the mobile interface
 from your phone. Your data lives on the machine you choose to host it on.
 
-The interface is available in **Turkish and English**, with Turkish as the default.
+The interface is available in **English** (the default), **Turkish, German, Spanish, French,
+Italian, Japanese, Korean, Russian and Simplified Chinese**. Each person picks their own language.
 
 ## Explore EveryOS
 

@@ -120,7 +120,9 @@ browser (Origin header, CSRF token).
 - **An error code:** add it to `ERROR_CODES` and translate it in every locale. The i18n test fails
   otherwise.
 - **UI text:** add the key to `packages/i18n/src/locales/tr.ts` first (Turkish is the source
-  locale), then to `en.ts`. The type checker reports missing keys.
+  locale), then to every other locale file. The type checker reports missing keys and the i18n
+  test checks placeholders and plural forms. The browser loads each language as its own chunk
+  (`@everyos/i18n/client`); only English (the default) is bundled.
 - **An agent operation:** see [contracts.md §5](contracts.md#5-implemented-contracts-phase-1).
 - **A migration:** append `NNNN-name.ts` to `packages/database/src/migrations` and register it.
   Never edit a released migration.

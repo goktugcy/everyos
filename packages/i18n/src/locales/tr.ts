@@ -8,6 +8,7 @@ import type {
   ErrorCode,
   FileEntryType,
   IntegrationAdapter,
+  Locale,
   NotificationCategory,
   NotificationKind,
   NotificationSeverity,
@@ -65,7 +66,15 @@ export const tr = {
   languages: {
     tr: "Türkçe",
     en: "English",
-  },
+    de: "Deutsch",
+    es: "Español",
+    fr: "Français",
+    it: "Italiano",
+    ja: "日本語",
+    ko: "한국어",
+    ru: "Русский",
+    zh: "简体中文",
+  } satisfies Record<Locale, string>,
   brand: {
     name: "EveryOS",
     tagline: "Kişisel OS deneyimin. Dosyaların, uygulamaların ve masaüstün bir arada.",
@@ -1487,6 +1496,8 @@ export const tr = {
       username: "Kullanıcı adı",
       role: "Rol",
       language: "Arayüz dili",
+      translationNotice:
+        "Bu dildeki çevirilerde hatalar olabilir; karşılaştığınız sorunlar için geri bildirim gönderebilirsiniz.",
     },
     security: {
       autoLock: "Otomatik kilit",
@@ -3844,3 +3855,18 @@ type Widen<T> = T extends string ? string : { [K in keyof T]: Widen<T[K]> };
 
 /** Shape every locale must implement. */
 export type Messages = Widen<typeof tr>;
+
+/**
+ * A locale file: the same keys, plus the CLDR plural forms some languages need next to each
+ * `_other` key (Russian `_few` and `_many`; Spanish, French and Italian `_many`).
+ */
+type PluralForms<T> = T extends string
+  ? string
+  : { [K in keyof T]: PluralForms<T[K]> } & {
+      [
+        K in keyof T as K extends `${infer Base}_other`
+          ? `${Base}_${"zero" | "two" | "few" | "many"}`
+          : never
+      ]?: string;
+    };
+export type LocaleMessages = PluralForms<Messages>;

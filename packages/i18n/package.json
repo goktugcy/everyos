@@ -2,10 +2,11 @@
   "name": "@everyos/i18n",
   "version": "0.1.0",
   "private": true,
-  "description": "Translation resources for EveryOS (Turkish default, English). Locale files are typed so missing keys fail type checking.",
+  "description": "Translation resources for EveryOS (English default, Turkish source; German, Spanish, French, Italian, Japanese, Korean, Russian and Simplified Chinese). Locale files are typed so missing keys fail type checking.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"

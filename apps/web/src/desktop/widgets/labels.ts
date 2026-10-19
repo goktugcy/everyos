@@ -1,4 +1,4 @@
-import type { Messages } from "@everyos/i18n";
+import type { Messages } from "@everyos/i18n/client";
 import { widgetKey } from "@everyos/widget-sdk";
 import type { TFunction } from "i18next";
 import type { LayoutError } from "@everyos/widget-sdk";

@@ -32,7 +32,7 @@ apps/
   web/        React + Vite web client
 packages/
   shared/         zod-free contracts (types, permissions, error codes) + "/schemas" (zod)
-  i18n/           translation resources (tr default, en); typed so missing keys fail typecheck
+  i18n/           translation resources (tr source, en default + 8 languages); typed so missing keys fail typecheck
   logger/         dependency-free structured JSON logger with secret redaction
   database/       node:sqlite wrapper, transactions, migrations with pre-migration backups
   auth/           scrypt password hashing, password policy, RFC 6238 TOTP, recovery codes

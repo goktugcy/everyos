@@ -47,7 +47,7 @@ export function userRoutes(services: Services): Hono<AppEnv> {
       displayName: body.displayName,
       passwordHash: await services.passwords.hash(body.password),
       role: body.role,
-      locale: body.locale ?? DEFAULT_LOCALE,
+      locale: body.locale ?? auth.user.locale ?? DEFAULT_LOCALE,
     });
     audit.record({
       action: "users.create",

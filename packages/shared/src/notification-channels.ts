@@ -1,3 +1,4 @@
+import { SUPPORTED_LOCALES } from "./locale.ts";
 import type { NotificationCategory, NotificationSeverity } from "./notifications.ts";
 
 /*
@@ -16,7 +17,8 @@ export type WebhookFormat = (typeof WEBHOOK_FORMATS)[number];
 export const EMAIL_SECURITY = ["tls", "starttls", "none"] as const;
 export type EmailSecurity = (typeof EMAIL_SECURITY)[number];
 
-export const NOTIFICATION_CHANNEL_LANGUAGES = ["tr", "en"] as const;
+/** Channel messages can be written in any interface language. */
+export const NOTIFICATION_CHANNEL_LANGUAGES = SUPPORTED_LOCALES;
 export type NotificationChannelLanguage = (typeof NOTIFICATION_CHANNEL_LANGUAGES)[number];
 
 export const DEFAULT_NTFY_SERVER = "https://ntfy.sh";

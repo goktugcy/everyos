@@ -169,9 +169,9 @@ test("a mobile viewer can inspect Docker without management or log access", asyn
   page.on("pageerror", (error) => errors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.getByLabel("Kullanıcı adı", { exact: true }).fill("izleyici");
-  await page.getByLabel("Parola", { exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Giriş yap", exact: true }).click();
+  await page.getByLabel(/Kullanıcı adı|Username/).fill("izleyici");
+  await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
+  await page.getByRole("button", { name: /Giriş yap|Sign in/ }).click();
   const shell = page.getByTestId("mobile-shell");
   await shell.getByRole("button", { name: "Docker", exact: true }).click();
   const list = shell.getByTestId("container-list");

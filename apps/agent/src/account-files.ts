@@ -4,7 +4,7 @@ import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { PassThrough, Readable } from "node:stream";
 import { once } from "node:events";
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
-import { diskRootId, roleHasPermission } from "@everyos/shared";
+import { diskRootId, roleHasPermission, type Locale } from "@everyos/shared";
 import type { Logger } from "@everyos/logger";
 import { readMountedDisks } from "@everyos/system";
 import {
@@ -44,7 +44,7 @@ export function accountFiles(options: {
   }, 15_000);
   timer.unref();
   const service = (
-    params: { locale: "tr" | "en"; systemRoots: boolean },
+    params: { locale: Locale; systemRoots: boolean },
     actor: Parameters<OperationHandlers["files.roots"]>[1]["actor"],
   ) => {
     const roots = [

@@ -168,7 +168,7 @@ export function SetupScreen() {
           <div
             role="radiogroup"
             aria-label={t("common.language")}
-            className="grid grid-cols-2 gap-3"
+            className="grid grid-cols-2 gap-2"
           >
             {SUPPORTED_LOCALES.map((locale) => {
               const selected = i18n.language === locale;
@@ -181,10 +181,12 @@ export function SetupScreen() {
                   lang={locale}
                   onClick={() => applyLocale(locale)}
                   className={cn(
-                    "glass-inset flex h-16 items-center justify-between rounded-everyos-md px-4 text-left text-sm font-medium transition-colors",
+                    "flex h-11 items-center justify-between rounded-everyos-md px-4 text-left text-sm font-medium transition-colors",
+                    // glass-inset sets the background and border shorthands, so the chosen
+                    // language gets its own surface.
                     selected
-                      ? "border-accent/70 bg-accent/12 text-fg"
-                      : "text-fg-muted hover:text-fg",
+                      ? "border border-[rgb(var(--everyos-accent)/0.85)] bg-[rgb(var(--everyos-accent)/0.18)] text-fg"
+                      : "glass-inset text-fg-muted hover:text-fg",
                   )}
                 >
                   {t(`languages.${locale}`)}

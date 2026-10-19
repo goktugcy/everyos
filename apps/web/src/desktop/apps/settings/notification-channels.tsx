@@ -1,4 +1,5 @@
 import {
+  DEFAULT_LOCALE,
   DEFAULT_NTFY_SERVER,
   EMAIL_SECURITY,
   NOTIFICATION_CATEGORIES,
@@ -6,6 +7,7 @@ import {
   NOTIFICATION_CHANNEL_LANGUAGES,
   NOTIFICATION_SEVERITIES,
   WEBHOOK_FORMATS,
+  isLocale,
   type EmailSecurity,
   type NotificationCategory,
   type NotificationChannelKind,
@@ -329,7 +331,7 @@ function initial(channel: NotificationChannelView | null, language: string): For
     enabled: channel?.enabled ?? true,
     minSeverity: channel?.minSeverity ?? "warning",
     categories: channel?.categories ?? [],
-    language: channel?.language ?? (language === "en" ? "en" : "tr"),
+    language: channel?.language ?? (isLocale(language) ? language : DEFAULT_LOCALE),
     server: settings?.kind === "ntfy" ? settings.server : DEFAULT_NTFY_SERVER,
     topic: "",
     chatId: settings?.kind === "telegram" ? settings.chatId : "",

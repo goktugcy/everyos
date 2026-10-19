@@ -42,6 +42,7 @@ async function setup(configure?: (config: ApiConfig) => void) {
       displayName: role,
       password: STRONG_PASSWORD,
       role,
+      locale: "tr",
     });
   const viewer = new TestClient(ctx, "192.0.2.11");
   await viewer.login("viewer", STRONG_PASSWORD);

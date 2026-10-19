@@ -1,4 +1,4 @@
-import type { Messages } from "@everyos/i18n";
+import type { Messages } from "@everyos/i18n/client";
 import type { CapabilityId, InstalledAppView, Permission } from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import type { LucideIcon } from "lucide-react";

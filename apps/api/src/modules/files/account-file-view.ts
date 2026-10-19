@@ -1,6 +1,7 @@
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import type { Logger } from "@everyos/logger";
+import type { Locale } from "@everyos/shared";
 import type { Services } from "../../services.ts";
 import { callAgentAs, type UserActor } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
@@ -9,7 +10,7 @@ import type { FileService } from "./file-service.ts";
 /** Who uses a file view, and what their Linux-side requests carry. */
 export interface FileViewIdentity {
   actor: UserActor;
-  locale: "tr" | "en";
+  locale: Locale;
   systemRoots: boolean;
   signal?: AbortSignal | undefined;
   logger: Logger;

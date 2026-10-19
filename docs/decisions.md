@@ -697,3 +697,22 @@ and time left, streamed per person on a `transfers` topic; browser uploads repor
 client store. The menu bar, dock shelf, pulse, Files and the phone header are views of that store,
 so they never disagree. The pulse moves into the free middle of the menu bar instead of covering
 modules, and a storage item with nothing to show takes no room.
+
+### D51 — Complete locales with on-demand browser resources
+
+Turkish remains the typed source; English is the product default and fallback. English, German,
+Spanish, French, Italian, Japanese, Korean, Russian and Simplified Chinese implement the complete
+source tree. Locale identifiers come from `SUPPORTED_LOCALES`, including API validation, agent file
+operations and external notification channels. Regional catalog keys and Intl tags are explicit
+mappings.
+
+The server imports all resources through `@everyos/i18n`; browser runtime imports use
+`@everyos/i18n/client`. Only English is bundled eagerly. Each other locale is a separate dynamic
+import, and initial rendering waits for the stored language. Concurrent requests for the same
+resource share one download. A later choice supersedes earlier requests, and a failed download
+keeps the current language and stored preference so choosing it again can retry.
+
+Translation types require every source key and permit extra CLDR plural categories. Tests check
+required plural forms, interpolation names, nonempty strings, language names and browser loaders.
+Home folder names are selected at creation; a later locale change preserves existing names.
+See [Internationalization](i18n.md) for editing and verification.

@@ -13,14 +13,19 @@ test("first-run setup creates the administrator and opens the shell", async ({ p
     expect(await page.evaluate(() => typeof crypto.randomUUID)).toBe("undefined");
   }
   await expect(page).toHaveTitle("EveryOS");
-  await expect(page.getByRole("heading", { name: "EveryOS'e hoş geldiniz" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to EveryOS" })).toBeVisible();
   const wallpaper = page.locator('img[src="/wallpapers/everyos-mountains.png"]');
   await expect(wallpaper).toBeVisible();
   await expect
     .poll(() => wallpaper.evaluate((image: HTMLImageElement) => image.naturalWidth))
     .toBe(4717);
 
-  // Turkish is preselected; continue to token verification.
+  // English is preselected; switch to Turkish and continue to token verification.
+  await expect(page.getByRole("radio", { name: "English" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByRole("radio", { name: "Türkçe" }).click();
   await expect(page.getByRole("radio", { name: "Türkçe" })).toHaveAttribute("aria-checked", "true");
   await page.getByRole("button", { name: "Devam et" }).click();
 
@@ -62,6 +67,9 @@ test("first-run setup creates the administrator and opens the shell", async ({ p
 
 test("sign out and sign back in, switching the language", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await page.getByRole("button", { name: "Language" }).click();
+  await page.getByRole("menuitemradio", { name: "Türkçe" }).click();
   await expect(page.getByRole("heading", { name: "Oturum açın" })).toBeVisible();
 
   await page.getByLabel("Kullanıcı adı").fill("goktug");

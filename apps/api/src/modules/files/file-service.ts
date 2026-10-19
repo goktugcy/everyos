@@ -39,6 +39,9 @@ import {
   type StandardFolder,
   type TextFile,
   type TrashListing,
+  DEFAULT_LOCALE,
+  isLocale,
+  type Locale,
 } from "@everyos/shared";
 import { ApiError, notFound } from "../../http/errors.ts";
 import {
@@ -79,7 +82,8 @@ export const SYSTEM_ROOTS = [
 /** Kernel pseudo file systems are never browsed through "/" (reads can block or leak). */
 const PSEUDO = new Set(["proc", "sys", "dev"]);
 
-const FOLDER_NAMES: Record<"tr" | "en", Record<StandardFolder, string>> = {
+/** Standard folder names as each language's desktops (xdg-user-dirs) name them. */
+const FOLDER_NAMES: Record<Locale, Record<StandardFolder, string>> = {
   tr: {
     desktop: "Masaüstü",
     documents: "Belgeler",
@@ -95,6 +99,70 @@ const FOLDER_NAMES: Record<"tr" | "en", Record<StandardFolder, string>> = {
     pictures: "Pictures",
     music: "Music",
     videos: "Videos",
+  },
+  de: {
+    desktop: "Schreibtisch",
+    documents: "Dokumente",
+    downloads: "Downloads",
+    pictures: "Bilder",
+    music: "Musik",
+    videos: "Videos",
+  },
+  es: {
+    desktop: "Escritorio",
+    documents: "Documentos",
+    downloads: "Descargas",
+    pictures: "Imágenes",
+    music: "Música",
+    videos: "Vídeos",
+  },
+  fr: {
+    desktop: "Bureau",
+    documents: "Documents",
+    downloads: "Téléchargements",
+    pictures: "Images",
+    music: "Musique",
+    videos: "Vidéos",
+  },
+  it: {
+    desktop: "Scrivania",
+    documents: "Documenti",
+    downloads: "Scaricati",
+    pictures: "Immagini",
+    music: "Musica",
+    videos: "Video",
+  },
+  ja: {
+    desktop: "デスクトップ",
+    documents: "ドキュメント",
+    downloads: "ダウンロード",
+    pictures: "画像",
+    music: "音楽",
+    videos: "ビデオ",
+  },
+  ko: {
+    desktop: "바탕화면",
+    documents: "문서",
+    downloads: "다운로드",
+    pictures: "사진",
+    music: "음악",
+    videos: "비디오",
+  },
+  ru: {
+    desktop: "Рабочий стол",
+    documents: "Документы",
+    downloads: "Загрузки",
+    pictures: "Изображения",
+    music: "Музыка",
+    videos: "Видео",
+  },
+  zh: {
+    desktop: "桌面",
+    documents: "文档",
+    downloads: "下载",
+    pictures: "图片",
+    music: "音乐",
+    videos: "视频",
   },
 };
 
@@ -428,7 +496,7 @@ export class FileService {
       // First use (or a damaged manifest): name the folders in the owner's language.
     }
     // Names already given stay; folders added in a later version get the owner's language.
-    const fresh = FOLDER_NAMES[root.locale === "en" ? "en" : "tr"];
+    const fresh = FOLDER_NAMES[isLocale(root.locale) ? root.locale : DEFAULT_LOCALE];
     const used = new Set<string>();
     const names = Object.fromEntries(
       STANDARD_FOLDERS.map((kind) => {

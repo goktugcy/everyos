@@ -17,7 +17,7 @@ test("required two-factor authentication keeps covered accounts on its setup unt
   const create = async (username: string, role: "admin" | "viewer") => {
     const response = await page.request.post("/api/users", {
       headers,
-      data: { username, displayName: username, password: PASSWORD, role },
+      data: { username, displayName: username, password: PASSWORD, role, locale: "tr" },
     });
     expect(response.status()).toBe(201);
     return (await response.json()) as AdminUserView;

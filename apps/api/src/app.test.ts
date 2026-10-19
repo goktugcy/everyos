@@ -59,7 +59,7 @@ describe("first-run setup", () => {
     const bootstrap = await json<BootstrapResponse>(await client.get("/api/bootstrap"));
     expect(bootstrap).toMatchObject({
       setupRequired: true,
-      defaultLocale: "tr",
+      defaultLocale: "en",
       transport: { secure: false, loopback: true },
     });
     expect(ctx.readSetupToken()).toMatch(/^[A-Za-z0-9_-]{32}$/);

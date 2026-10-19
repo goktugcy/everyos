@@ -1,4 +1,4 @@
-import { intlLocaleTag } from "@everyos/i18n";
+import { intlLocaleTag } from "@everyos/i18n/client";
 import { isLocale } from "@everyos/shared";
 
 export function localeTag(language: string): string {

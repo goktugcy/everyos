@@ -75,16 +75,21 @@ export default function AccountSection() {
         <LinuxAccountSection />
       </SettingsGroup>
       <SettingsGroup title={t("settings.account.language")}>
-        <Select
-          label={t("settings.account.language")}
-          hideLabel
-          value={user.locale}
-          options={SUPPORTED_LOCALES.map((locale) => ({
-            value: locale,
-            label: t(`languages.${locale}`),
-          }))}
-          onChange={(locale) => void save({ locale })}
-        />
+        <div className="flex flex-col gap-3">
+          {user.locale !== "tr" && user.locale !== "en" ? (
+            <Alert tone="info">{t("settings.account.translationNotice")}</Alert>
+          ) : null}
+          <Select
+            label={t("settings.account.language")}
+            hideLabel
+            value={user.locale}
+            options={SUPPORTED_LOCALES.map((locale) => ({
+              value: locale,
+              label: t(`languages.${locale}`),
+            }))}
+            onChange={(locale) => void save({ locale })}
+          />
+        </div>
       </SettingsGroup>
     </div>
   );
