@@ -82,6 +82,14 @@ export const SYSTEM_ROOTS = [
 /** Kernel pseudo file systems are never browsed through "/" (reads can block or leak). */
 const PSEUDO = new Set(["proc", "sys", "dev"]);
 
+/**
+ * Case-insensitive name matching for every language: Turkish lower-casing keeps "HARİTA" equal to
+ * "harita", and folding dotless ı lets "img" find "IMG_1234.jpg" ("I" lower-cases to "ı").
+ */
+function searchKey(text: string): string {
+  return text.normalize("NFC").toLocaleLowerCase("tr").replaceAll("ı", "i");
+}
+
 /** Standard folder names as each language's desktops (xdg-user-dirs) name them. */
 const FOLDER_NAMES: Record<Locale, Record<StandardFolder, string>> = {
   tr: {
@@ -638,7 +646,7 @@ export class FileService {
 
   async search(rootId: string, path: string, query: string): Promise<FileSearchResult> {
     const { real, rootReal } = await this.#follow(rootId, path);
-    const needle = query.normalize("NFC").toLocaleLowerCase("tr");
+    const needle = searchKey(query);
     const base = segmentsOf(path);
     const results: FileSearchResult["results"] = [];
     const deadline = Date.now() + SEARCH_LIMITS.ms;
@@ -672,7 +680,7 @@ export class FileService {
             : dirent.isSymbolicLink()
               ? "symlink"
               : "other";
-        if (dirent.name.normalize("NFC").toLocaleLowerCase("tr").includes(needle))
+        if (searchKey(dirent.name).includes(needle))
           results.push({ path: [...rel, dirent.name].join("/"), name: dirent.name, type });
         // Symlinked folders are never descended into.
         if (type === "directory" && depth < SEARCH_LIMITS.depth) {

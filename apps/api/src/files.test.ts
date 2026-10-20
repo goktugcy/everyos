@@ -597,6 +597,27 @@ describe("file manager", () => {
     ]);
   });
 
+  it("matches a capital I in searches whatever language the query is typed in", async () => {
+    const { admin, root } = await setup();
+    // Turkish lower-casing turns "I" into dotless "ı"; "img" must still find a camera photo.
+    writeFileSync(join(root, "IMG_1234.jpg"), "photo");
+    writeFileSync(join(root, "Işık.txt"), "light");
+    for (const [query, name] of [
+      ["img", "IMG_1234.jpg"],
+      ["IMG", "IMG_1234.jpg"],
+      ["işık", "Işık.txt"],
+      ["IŞIK", "Işık.txt"],
+    ] as const) {
+      const found = await json<FileSearchResult>(
+        await admin.get(`/api/files/search?${q({ root: "dev", path: "", q: query })}`),
+      );
+      expect(
+        found.results.map((r) => r.name),
+        query,
+      ).toEqual([name]);
+    }
+  });
+
   it("respects read-only roots and a missing configuration", async () => {
     const readOnly = await setup((config) => {
       config.files.roots = config.files.roots.map((r) => ({ ...r, readOnly: true }));
