@@ -7,7 +7,13 @@
   "entry": "index.html",
   "icon": "icon.png",
   "category": "developer",
-  "permissions": ["storage:app", "clipboard:write", "files:pick", "files:save"],
+  "permissions": [
+    "storage:app",
+    "clipboard:write",
+    "files:pick",
+    "files:save",
+    "storage:usage.read"
+  ],
   "window": {
     "defaultWidth": 640,
     "defaultHeight": 480,

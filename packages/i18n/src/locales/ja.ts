@@ -3948,6 +3948,159 @@ export const ja: LocaleMessages = {
     unlinked: "未リンク",
   },
   desktopApps: {
+    store: {
+      typeFilter: "種類",
+      types: {
+        all: "すべてのアプリ",
+        docker: "Docker アプリ",
+        desktop: "デスクトップアプリ",
+        hybrid: "ハイブリッドアプリ",
+      },
+      sourceFilter: "提供元",
+      allSources: "すべての提供元",
+      sources: {
+        official: "公式",
+        community: "コミュニティ",
+        private: "プライベート",
+      },
+      updatesOnly: "アップデートのみ",
+      desktopBadge: "デスクトップアプリ",
+      by: "提供: {{publisher}}",
+      version: "バージョン {{version}}",
+      installed: "インストール済み",
+      installedSection: "デスクトップアプリ",
+      updateTo: "{{version}} にアップデート",
+      install: "インストール",
+      open: "開く",
+      enable: "オンにする",
+      disable: "オフにする",
+      uninstall: "アンインストール",
+      uninstallTitle: "{{name}} をアンインストールしますか？",
+      uninstallBody: "このサーバーでアプリを使っていた全員のデータが削除されます。",
+      permissions: "このアプリができること",
+      noPermissions: "このアプリは権限を要求しません。",
+      notGranted: "あなたには許可されていません",
+      approve:
+        "許可する権限にチェックを入れてください。すべて許可されたときにのみインストールされます。",
+      approveUpdate:
+        "このアップデートは追加の権限を求めています。許可する新しい権限にチェックを入れてください。",
+      elevatedAdmins: "強調表示された権限は管理者だけが許可できます。",
+      risk: {
+        standard: "標準",
+        sensitive: "要注意",
+        elevated: "高権限",
+      },
+      state: {
+        active: "オン",
+        disabled: "オフ",
+        revoked: "取り下げ済み",
+      },
+      conflict:
+        "別の提供元が、同じ識別子で別の公開者のアプリを提供しています。信頼できる提供元からのみインストールしてください。",
+      incompatible: {
+        "everyos-too-old": "このアプリには新しいバージョンの EveryOS が必要です。",
+        "sdk-unsupported":
+          "このアプリは、この EveryOS が対応していないアプリ SDK 向けに作られています。",
+      },
+      revoked: "提供元により取り下げられました: {{reason}}",
+      languages_one: "{{count}} 言語",
+      languages_other: "{{count}} 言語",
+      widgets_one: "ウィジェット {{count}} 個",
+      widgets_other: "ウィジェット {{count}} 個",
+      license: "ライセンス: {{license}}",
+      homepage: "Web サイト",
+      source: "ソースコード",
+      versions: "バージョンと変更点",
+      notifications: "このアプリからの通知",
+    },
+    registries: {
+      title: "デスクトップアプリの提供元",
+      add: "提供元を追加",
+      kind: "種類",
+      name: "名前",
+      url: "インデックスのアドレス",
+      publicKey: "公開鍵",
+      fingerprint: "鍵のフィンガープリント",
+      fingerprintHint:
+        "提供元が公開しているフィンガープリントと照合してください。一致した場合にのみ鍵が受け入れられます。",
+      token: "アクセストークン（任意）",
+      allowPrivate: "提供元はローカルネットワーク上にあります",
+      synced: "{{time}} に同期",
+      never: "まだ同期されていません",
+      apps_one: "{{count}} 個のアプリ",
+      apps_other: "{{count}} 個のアプリ",
+      failed: "前回の同期に失敗しました（{{reason}}）。",
+      sync: "今すぐ同期",
+      remove: "削除",
+      removeTitle: "{{name}} を削除しますか？",
+      removeBody:
+        "ここからインストールしたアプリは残りますが、今後ここからアップデートを受け取りません。",
+    },
+    capabilities: {
+      storage_app: {
+        title: "自分のデータを保存する",
+        description: "設定や文書を、人ごとに分けて専用の領域に保存します。",
+      },
+      files_pick: {
+        title: "選んだファイルを開く",
+        description: "あなたが選んだファイルとフォルダーだけを読み取ります。",
+      },
+      files_save: {
+        title: "選んだ場所に保存する",
+        description: "あなたが選んだファイルとフォルダーにだけ書き込みます。",
+      },
+      notifications_send: {
+        title: "通知を送る",
+        description: "アプリを使っている人に通知を表示します。",
+      },
+      clipboard_write: {
+        title: "クリップボードにコピーする",
+        description: "あなたが求めたときにテキストをコピーします。",
+      },
+      widgets_register: {
+        title: "ウィジェットを提供する",
+        description: "デスクトップとサイドバー用のウィジェットを提供します。",
+      },
+      appearance_manage: {
+        title: "外観を変更する",
+        description: "壁紙とフォルダーアイコンを変更します。",
+      },
+      system_metrics_read: {
+        title: "システムの状態を読み取る",
+        description: "プロセッサー、メモリ、ディスク、稼働時間の情報を読み取ります。",
+      },
+      system_sockets_read: {
+        title: "待ち受けポートを見る",
+        description:
+          "サーバーが待ち受けているネットワークポートと、その背後のプログラムを一覧表示します。",
+      },
+      system_network_read: {
+        title: "ネットワーク設定を見る",
+        description: "ネットワークインターフェイス、アドレス、経路、ネームサーバーを読み取ります。",
+      },
+      logs_read: { title: "システムログを読む", description: "システムジャーナルを読み取ります。" },
+      storage_usage_read: {
+        title: "フォルダーのサイズを測る",
+        description: "共有したフォルダーのサイズを測ります。",
+      },
+      network_outbound: {
+        title: "許可されたアドレスに接続する",
+        description: "管理者が許可したネットワークアドレスに、サーバーから接続します。",
+      },
+      database_connect: {
+        title: "データベースに接続する",
+        description:
+          "管理者が設定したデータベースを照会します。書き込みが許可されない限り読み取り専用です。",
+      },
+      secrets_ssh: {
+        title: "SSH 鍵を管理する",
+        description: "SSH 鍵を作成、インポートし、保存します。",
+      },
+      integration: {
+        title: "{{adapter}} を使う",
+        description: "このサーバーに設定された {{adapter}} 連携と通信します。",
+      },
+    },
     picker: {
       openTitle: "ファイルを開く",
       folderTitle: "フォルダーを選択",

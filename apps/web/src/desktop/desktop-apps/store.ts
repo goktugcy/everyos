@@ -87,3 +87,8 @@ i18next.on("languageChanged", (locale: string) => {
       useDesktopApps.setState({ names: Object.fromEntries(entries) });
   });
 });
+
+/** Reloads the installed apps after an install, update or removal (dock and launcher follow). */
+export function refreshDesktopApps(): Promise<void> {
+  return loadDesktopApps(i18next.language).catch(() => undefined);
+}

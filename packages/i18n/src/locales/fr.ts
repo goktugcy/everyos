@@ -3995,6 +3995,166 @@ export const fr: LocaleMessages = {
     unlinked: "Non associé",
   },
   desktopApps: {
+    store: {
+      typeFilter: "Type",
+      types: {
+        all: "Toutes les applications",
+        docker: "Applications Docker",
+        desktop: "Applications de bureau",
+        hybrid: "Applications hybrides",
+      },
+      sourceFilter: "Source",
+      allSources: "Toutes les sources",
+      sources: {
+        official: "Officielle",
+        community: "Communauté",
+        private: "Privée",
+      },
+      updatesOnly: "Mises à jour seulement",
+      desktopBadge: "Application de bureau",
+      by: "par {{publisher}}",
+      version: "Version {{version}}",
+      installed: "Installée",
+      installedSection: "Applications de bureau",
+      updateTo: "Mettre à jour vers {{version}}",
+      install: "Installer",
+      open: "Ouvrir",
+      enable: "Activer",
+      disable: "Désactiver",
+      uninstall: "Désinstaller",
+      uninstallTitle: "Désinstaller {{name}} ?",
+      uninstallBody:
+        "Ses données sont supprimées pour toutes les personnes qui l’ont utilisée sur ce serveur.",
+      permissions: "Ce que cette application peut faire",
+      noPermissions: "Cette application ne demande aucune autorisation.",
+      notGranted: "Non autorisée pour vous",
+      approve:
+        "Cochez chaque autorisation que vous accordez. L’application n’est installée que lorsque toutes sont accordées.",
+      approveUpdate:
+        "Cette mise à jour demande davantage. Cochez chaque nouvelle autorisation que vous accordez.",
+      elevatedAdmins: "Seul un administrateur peut accorder les autorisations mises en évidence.",
+      risk: {
+        standard: "Standard",
+        sensitive: "Sensible",
+        elevated: "Élevée",
+      },
+      state: {
+        active: "Activée",
+        disabled: "Désactivée",
+        revoked: "Retirée",
+      },
+      conflict:
+        "Une autre source propose une application ayant la même identité, d’un autre éditeur. Ne l’installez que depuis une source de confiance.",
+      incompatible: {
+        "everyos-too-old": "Cette application nécessite une version plus récente d’EveryOS.",
+        "sdk-unsupported":
+          "Cette application a été conçue pour un SDK d’applications que cet EveryOS ne prend pas en charge.",
+      },
+      revoked: "Retirée par sa source : {{reason}}",
+      languages_one: "{{count}} langue",
+      languages_many: "{{count}} langues",
+      languages_other: "{{count}} langues",
+      widgets_one: "{{count}} widget",
+      widgets_many: "{{count}} widgets",
+      widgets_other: "{{count}} widgets",
+      license: "Licence : {{license}}",
+      homepage: "Site web",
+      source: "Code source",
+      versions: "Versions et changements",
+      notifications: "Notifications de cette application",
+    },
+    registries: {
+      title: "Sources d’applications de bureau",
+      add: "Ajouter une source",
+      kind: "Type",
+      name: "Nom",
+      url: "Adresse de l’index",
+      publicKey: "Clé publique",
+      fingerprint: "Empreinte de la clé",
+      fingerprintHint:
+        "Comparez-la avec l’empreinte publiée par la source ; la clé n’est acceptée que si elles correspondent.",
+      token: "Jeton d’accès (facultatif)",
+      allowPrivate: "La source est sur mon réseau local",
+      synced: "Synchronisée {{time}}",
+      never: "Pas encore synchronisée",
+      apps_one: "{{count}} application",
+      apps_many: "{{count}} applications",
+      apps_other: "{{count}} applications",
+      failed: "La dernière synchronisation a échoué ({{reason}}).",
+      sync: "Synchroniser maintenant",
+      remove: "Retirer",
+      removeTitle: "Retirer {{name}} ?",
+      removeBody:
+        "Les applications installées depuis cette source restent, mais n’en reçoivent plus de mises à jour.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Conserver ses propres données",
+        description:
+          "Conserve ses réglages et documents dans son propre espace, séparément pour chaque personne.",
+      },
+      files_pick: {
+        title: "Ouvrir les fichiers que vous choisissez",
+        description: "Lit uniquement les fichiers et dossiers que vous choisissez pour elle.",
+      },
+      files_save: {
+        title: "Enregistrer là où vous le choisissez",
+        description:
+          "Écrit uniquement dans les fichiers et dossiers que vous choisissez pour elle.",
+      },
+      notifications_send: {
+        title: "Vous envoyer des notifications",
+        description: "Affiche des notifications à la personne qui l’utilise.",
+      },
+      clipboard_write: {
+        title: "Copier dans le presse-papiers",
+        description: "Copie du texte quand vous le lui demandez.",
+      },
+      widgets_register: {
+        title: "Proposer des widgets",
+        description: "Fournit des widgets pour le bureau et la barre latérale.",
+      },
+      appearance_manage: {
+        title: "Modifier votre apparence",
+        description: "Modifie votre fond d’écran et les icônes de vos dossiers.",
+      },
+      system_metrics_read: {
+        title: "Lire l’état du système",
+        description:
+          "Lit les données du processeur, de la mémoire, des disques et la durée de fonctionnement.",
+      },
+      system_sockets_read: {
+        title: "Voir les ports à l’écoute",
+        description: "Liste les ports réseau à l’écoute du serveur et les programmes associés.",
+      },
+      system_network_read: {
+        title: "Voir les réglages réseau",
+        description: "Lit les interfaces réseau, les adresses, les routes et les serveurs de noms.",
+      },
+      logs_read: { title: "Lire les journaux système", description: "Lit le journal du système." },
+      storage_usage_read: {
+        title: "Mesurer la taille des dossiers",
+        description: "Mesure la taille des dossiers que vous partagez avec elle.",
+      },
+      network_outbound: {
+        title: "Se connecter aux adresses autorisées",
+        description:
+          "Se connecte depuis le serveur aux adresses réseau autorisées par un administrateur.",
+      },
+      database_connect: {
+        title: "Se connecter à des bases de données",
+        description:
+          "Interroge les bases de données configurées par un administrateur, en lecture seule sauf si l’écriture est autorisée.",
+      },
+      secrets_ssh: {
+        title: "Gérer vos clés SSH",
+        description: "Crée, importe et conserve des clés SSH pour vous.",
+      },
+      integration: {
+        title: "Utiliser {{adapter}}",
+        description: "Communique avec l’intégration {{adapter}} configurée sur ce serveur.",
+      },
+    },
     picker: {
       openTitle: "Ouvrir un fichier",
       folderTitle: "Choisir un dossier",

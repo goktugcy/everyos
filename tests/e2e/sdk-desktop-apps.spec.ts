@@ -43,17 +43,28 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     !process.env.EVERYOS_E2E_HTTP_HOST,
   );
   expect(await call(page, "POST", "/api/desktop-apps/registries/official/sync", {})).toBe(200);
-  expect(
-    await call(page, "POST", "/api/desktop-apps/installed", {
-      registryId: "official",
-      appId: "dev.everyos.probe",
-    }),
-  ).toBe(201);
   try {
-    await page.reload();
-    await expect(page.getByTestId("desktop")).toBeVisible();
-    // The launcher knows the app by its own Turkish name.
-    await openFromLauncher(page);
+    // Installed from the store: its sensitive permission has to be ticked before Install works.
+    await page.keyboard.press("Control+k");
+    await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("mağaza");
+    await page.keyboard.press("Enter");
+    const store = page.locator('[data-app-id="everyos.store"]');
+    await expect(store).toBeVisible();
+    await store.getByLabel("Tür", { exact: true }).selectOption("desktop");
+    await store
+      .locator('[data-testid="desktop-app-listing"][data-app-id="dev.everyos.probe"]')
+      .click();
+    const details = page.getByTestId("desktop-app-dialog");
+    await expect(details).toContainText("Masaüstü uygulaması");
+    await expect(details.getByTestId("desktop-app-permissions")).toContainText(
+      "Seçtiğiniz dosyaları açma",
+    );
+    const install = details.getByRole("button", { name: "Kur", exact: true });
+    await expect(install).toBeDisabled();
+    await details.getByRole("checkbox", { name: "Klasör boyutlarını ölçme" }).check();
+    await install.click();
+    await details.getByRole("button", { name: "Aç", exact: true }).click();
+    await expect(details).toHaveCount(0);
     const window = page.locator('[data-app-id="everyos.desktop.dev.everyos.probe"]');
     await expect(window).toBeVisible();
     const frame = window.frameLocator('[data-testid="desktop-app-frame"]');
@@ -104,21 +115,38 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
       }),
     ).toBe("written by the probe");
 
-    // Its data survives closing the window.
+    // Its data survives closing the window, and the launcher knows it by its Turkish name.
     await window.getByRole("button", { name: "Kapat" }).first().click();
     await expect(window).toHaveCount(0);
     await openFromLauncher(page);
     await expect(probe("runs")).toHaveText("2");
+
+    // Uninstalled from the store, after a confirmation; the launcher no longer offers it.
+    await window.getByRole("button", { name: "Kapat" }).first().click();
+    await expect(window).toHaveCount(0);
+    await store
+      .locator('[data-testid="desktop-app-listing"][data-app-id="dev.everyos.probe"]')
+      .click();
+    await expect(details).toContainText("Klasör boyutlarını ölçme");
+    await details.getByRole("button", { name: "Kaldır", exact: true }).click();
+    const confirm = page.getByRole("alertdialog");
+    await expect(confirm).toContainText("Sonda kaldırılsın mı?");
+    await confirm.getByRole("button", { name: "Kaldır", exact: true }).click();
+    await expect(details).toHaveCount(0);
+    expect(await call(page, "GET", "/api/desktop-apps/installed/dev.everyos.probe/settings")).toBe(
+      404,
+    );
+    await page.keyboard.press("Control+k");
+    await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("Sonda");
+    await expect(page.getByRole("option", { name: /Sonda/ })).toHaveCount(0);
+    await page.keyboard.press("Escape");
   } finally {
+    // Leaves nothing behind when a step above failed.
     await call(page, "POST", "/api/files/delete", {
       root: "home",
       paths: ["Belgeler/probe-input.txt", "Belgeler/probe-output.txt"],
       confirm: true,
     });
-    expect(
-      await call(page, "DELETE", "/api/desktop-apps/installed/dev.everyos.probe", {
-        confirm: true,
-      }),
-    ).toBe(204);
+    await call(page, "DELETE", "/api/desktop-apps/installed/dev.everyos.probe", { confirm: true });
   }
 });

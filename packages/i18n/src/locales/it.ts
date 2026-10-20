@@ -3980,6 +3980,164 @@ export const it: LocaleMessages = {
     unlinked: "Non collegato",
   },
   desktopApps: {
+    store: {
+      typeFilter: "Tipo",
+      types: {
+        all: "Tutte le app",
+        docker: "App Docker",
+        desktop: "App desktop",
+        hybrid: "App ibride",
+      },
+      sourceFilter: "Fonte",
+      allSources: "Tutte le fonti",
+      sources: {
+        official: "Ufficiale",
+        community: "Community",
+        private: "Privata",
+      },
+      updatesOnly: "Solo aggiornamenti",
+      desktopBadge: "App desktop",
+      by: "di {{publisher}}",
+      version: "Versione {{version}}",
+      installed: "Installata",
+      installedSection: "App desktop",
+      updateTo: "Aggiorna a {{version}}",
+      install: "Installa",
+      open: "Apri",
+      enable: "Attiva",
+      disable: "Disattiva",
+      uninstall: "Disinstalla",
+      uninstallTitle: "Disinstallare {{name}}?",
+      uninstallBody:
+        "I suoi dati vengono eliminati per tutte le persone che l'hanno usata su questo server.",
+      permissions: "Cosa può fare questa app",
+      noPermissions: "Questa app non chiede alcuna autorizzazione.",
+      notGranted: "Non consentita per te",
+      approve:
+        "Spunta ogni autorizzazione che concedi. L'app viene installata solo quando sono tutte concesse.",
+      approveUpdate:
+        "Questo aggiornamento chiede di più. Spunta ogni nuova autorizzazione che concedi.",
+      elevatedAdmins: "Solo un amministratore può concedere le autorizzazioni evidenziate.",
+      risk: {
+        standard: "Standard",
+        sensitive: "Sensibile",
+        elevated: "Elevata",
+      },
+      state: {
+        active: "Attiva",
+        disabled: "Disattivata",
+        revoked: "Ritirata",
+      },
+      conflict:
+        "Un'altra fonte offre un'app con la stessa identità di un editore diverso. Installala solo da una fonte di cui ti fidi.",
+      incompatible: {
+        "everyos-too-old": "Questa app richiede una versione più recente di EveryOS.",
+        "sdk-unsupported":
+          "Questa app è stata creata per un SDK delle app che questo EveryOS non supporta.",
+      },
+      revoked: "Ritirata dalla sua fonte: {{reason}}",
+      languages_one: "{{count}} lingua",
+      languages_many: "{{count}} lingue",
+      languages_other: "{{count}} lingue",
+      widgets_one: "{{count}} widget",
+      widgets_many: "{{count}} widget",
+      widgets_other: "{{count}} widget",
+      license: "Licenza: {{license}}",
+      homepage: "Sito web",
+      source: "Codice sorgente",
+      versions: "Versioni e modifiche",
+      notifications: "Notifiche di questa app",
+    },
+    registries: {
+      title: "Fonti di app desktop",
+      add: "Aggiungi fonte",
+      kind: "Tipo",
+      name: "Nome",
+      url: "Indirizzo dell'indice",
+      publicKey: "Chiave pubblica",
+      fingerprint: "Impronta della chiave",
+      fingerprintHint:
+        "Confrontala con l'impronta pubblicata dalla fonte; la chiave viene accettata solo se coincidono.",
+      token: "Token di accesso (facoltativo)",
+      allowPrivate: "La fonte è nella mia rete locale",
+      synced: "Sincronizzata {{time}}",
+      never: "Non ancora sincronizzata",
+      apps_one: "{{count}} app",
+      apps_many: "{{count}} app",
+      apps_other: "{{count}} app",
+      failed: "L'ultima sincronizzazione non è riuscita ({{reason}}).",
+      sync: "Sincronizza ora",
+      remove: "Rimuovi",
+      removeTitle: "Rimuovere {{name}}?",
+      removeBody:
+        "Le app installate da questa fonte restano, ma non ne ricevono più aggiornamenti.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Conservare i propri dati",
+        description:
+          "Conserva impostazioni e documenti nel proprio spazio, separatamente per ogni persona.",
+      },
+      files_pick: {
+        title: "Aprire i file che scegli",
+        description: "Legge solo i file e le cartelle che scegli per lei.",
+      },
+      files_save: {
+        title: "Salvare dove scegli",
+        description: "Scrive solo nei file e nelle cartelle che scegli per lei.",
+      },
+      notifications_send: {
+        title: "Inviarti notifiche",
+        description: "Mostra notifiche alla persona che la usa.",
+      },
+      clipboard_write: {
+        title: "Copiare negli appunti",
+        description: "Copia testo quando glielo chiedi.",
+      },
+      widgets_register: {
+        title: "Offrire widget",
+        description: "Fornisce widget per la scrivania e la barra laterale.",
+      },
+      appearance_manage: {
+        title: "Cambiare il tuo aspetto",
+        description: "Cambia lo sfondo e le icone delle tue cartelle.",
+      },
+      system_metrics_read: {
+        title: "Leggere lo stato del sistema",
+        description: "Legge i dati di processore, memoria, dischi e tempo di attività.",
+      },
+      system_sockets_read: {
+        title: "Vedere le porte in ascolto",
+        description: "Elenca le porte di rete in ascolto del server e i programmi che le usano.",
+      },
+      system_network_read: {
+        title: "Vedere le impostazioni di rete",
+        description: "Legge interfacce di rete, indirizzi, instradamenti e server dei nomi.",
+      },
+      logs_read: { title: "Leggere i log di sistema", description: "Legge il journal di sistema." },
+      storage_usage_read: {
+        title: "Misurare le dimensioni delle cartelle",
+        description: "Misura le dimensioni delle cartelle che condividi con lei.",
+      },
+      network_outbound: {
+        title: "Connettersi agli indirizzi consentiti",
+        description:
+          "Si connette dal server agli indirizzi di rete consentiti da un amministratore.",
+      },
+      database_connect: {
+        title: "Connettersi ai database",
+        description:
+          "Interroga i database configurati da un amministratore, in sola lettura salvo che la scrittura sia consentita.",
+      },
+      secrets_ssh: {
+        title: "Gestire le tue chiavi SSH",
+        description: "Crea, importa e conserva chiavi SSH per te.",
+      },
+      integration: {
+        title: "Usare {{adapter}}",
+        description: "Comunica con l'integrazione {{adapter}} configurata su questo server.",
+      },
+    },
     picker: {
       openTitle: "Apri file",
       folderTitle: "Scegli cartella",

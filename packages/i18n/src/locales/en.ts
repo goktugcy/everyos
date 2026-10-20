@@ -3749,6 +3749,156 @@ export const en: Messages = {
     unlinked: "Not linked",
   },
   desktopApps: {
+    store: {
+      typeFilter: "Type",
+      types: {
+        all: "All apps",
+        docker: "Docker apps",
+        desktop: "Desktop apps",
+        hybrid: "Hybrid apps",
+      },
+      sourceFilter: "Source",
+      allSources: "All sources",
+      sources: {
+        official: "Official",
+        community: "Community",
+        private: "Private",
+      },
+      updatesOnly: "Updates only",
+      desktopBadge: "Desktop app",
+      by: "by {{publisher}}",
+      version: "Version {{version}}",
+      installed: "Installed",
+      installedSection: "Desktop apps",
+      updateTo: "Update to {{version}}",
+      install: "Install",
+      open: "Open",
+      enable: "Turn on",
+      disable: "Turn off",
+      uninstall: "Uninstall",
+      uninstallTitle: "Uninstall {{name}}?",
+      uninstallBody: "Its data is deleted for everyone who used it on this server.",
+      permissions: "What this app may do",
+      noPermissions: "This app asks for no permissions.",
+      notGranted: "Not allowed for you",
+      approve:
+        "Tick each permission you allow. The app is installed only when all of them are allowed.",
+      approveUpdate: "This update asks for more. Tick each new permission you allow.",
+      elevatedAdmins: "Only an administrator can allow the highlighted permissions.",
+      risk: {
+        standard: "Standard",
+        sensitive: "Sensitive",
+        elevated: "Elevated",
+      },
+      state: {
+        active: "On",
+        disabled: "Turned off",
+        revoked: "Withdrawn",
+      },
+      conflict:
+        "Another source offers an app with the same identity from a different publisher. Install it only from a source you trust.",
+      incompatible: {
+        "everyos-too-old": "This app needs a newer version of EveryOS.",
+        "sdk-unsupported": "This app was built for an app SDK this EveryOS does not support.",
+      },
+      revoked: "Withdrawn by its source: {{reason}}",
+      languages_one: "{{count}} language",
+      languages_other: "{{count}} languages",
+      widgets_one: "{{count}} widget",
+      widgets_other: "{{count}} widgets",
+      license: "License: {{license}}",
+      homepage: "Website",
+      source: "Source code",
+      versions: "Versions and changes",
+      notifications: "Notifications from this app",
+    },
+    registries: {
+      title: "Desktop app sources",
+      add: "Add source",
+      kind: "Kind",
+      name: "Name",
+      url: "Index address",
+      publicKey: "Public key",
+      fingerprint: "Key fingerprint",
+      fingerprintHint:
+        "Compare it with the fingerprint the source publishes; the key is accepted only when they match.",
+      token: "Access token (optional)",
+      allowPrivate: "The source is on my local network",
+      synced: "Synced {{time}}",
+      never: "Not synced yet",
+      apps_one: "{{count}} app",
+      apps_other: "{{count}} apps",
+      failed: "The last sync failed ({{reason}}).",
+      sync: "Sync now",
+      remove: "Remove",
+      removeTitle: "Remove {{name}}?",
+      removeBody: "Apps installed from it stay, but they no longer get updates from it.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Keep its own data",
+        description:
+          "Stores its settings and documents in its own space, separately for each person.",
+      },
+      files_pick: {
+        title: "Open files you choose",
+        description: "Reads only the files and folders you pick for it.",
+      },
+      files_save: {
+        title: "Save files where you choose",
+        description: "Writes only to the files and folders you pick for it.",
+      },
+      notifications_send: {
+        title: "Send you notifications",
+        description: "Shows notifications to the person using it.",
+      },
+      clipboard_write: {
+        title: "Copy to the clipboard",
+        description: "Copies text when you ask it to.",
+      },
+      widgets_register: {
+        title: "Offer widgets",
+        description: "Provides widgets for the desktop and the sidebar.",
+      },
+      appearance_manage: {
+        title: "Change your appearance",
+        description: "Changes your wallpaper and folder icons.",
+      },
+      system_metrics_read: {
+        title: "Read the system status",
+        description: "Reads processor, memory, disk and uptime figures.",
+      },
+      system_sockets_read: {
+        title: "See listening ports",
+        description: "Lists the server's listening network ports and the programs behind them.",
+      },
+      system_network_read: {
+        title: "See network settings",
+        description: "Reads network interfaces, addresses, routes and name servers.",
+      },
+      logs_read: { title: "Read system logs", description: "Reads the system journal." },
+      storage_usage_read: {
+        title: "Measure folder sizes",
+        description: "Measures the size of folders you share with it.",
+      },
+      network_outbound: {
+        title: "Connect to allowed addresses",
+        description: "Connects from the server to network addresses an administrator allows.",
+      },
+      database_connect: {
+        title: "Connect to databases",
+        description:
+          "Queries databases an administrator sets up, read-only unless writing is allowed.",
+      },
+      secrets_ssh: {
+        title: "Manage your SSH keys",
+        description: "Creates, imports and stores SSH keys for you.",
+      },
+      integration: {
+        title: "Use {{adapter}}",
+        description: "Talks to the {{adapter}} integration configured on this server.",
+      },
+    },
     picker: {
       openTitle: "Open file",
       folderTitle: "Choose folder",

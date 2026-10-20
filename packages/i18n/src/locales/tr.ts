@@ -3786,6 +3786,158 @@ export const tr = {
     unlinked: "İlişkilendirilmemiş",
   },
   desktopApps: {
+    store: {
+      typeFilter: "Tür",
+      types: {
+        all: "Tüm uygulamalar",
+        docker: "Docker uygulamaları",
+        desktop: "Masaüstü uygulamaları",
+        hybrid: "Hibrit uygulamalar",
+      },
+      sourceFilter: "Kaynak",
+      allSources: "Tüm kaynaklar",
+      sources: {
+        official: "Resmi",
+        community: "Topluluk",
+        private: "Özel",
+      },
+      updatesOnly: "Yalnızca güncellemeler",
+      desktopBadge: "Masaüstü uygulaması",
+      by: "Yayıncı: {{publisher}}",
+      version: "Sürüm {{version}}",
+      installed: "Kurulu",
+      installedSection: "Masaüstü uygulamaları",
+      updateTo: "{{version}} sürümüne güncelle",
+      install: "Kur",
+      open: "Aç",
+      enable: "Aç",
+      disable: "Kapat",
+      uninstall: "Kaldır",
+      uninstallTitle: "{{name}} kaldırılsın mı?",
+      uninstallBody: "Bu sunucuda onu kullanan herkesin verileri silinir.",
+      permissions: "Bu uygulamanın yapabilecekleri",
+      noPermissions: "Bu uygulama hiçbir izin istemiyor.",
+      notGranted: "Sizin için izinli değil",
+      approve:
+        "İzin verdiğiniz her yetkiyi işaretleyin. Uygulama ancak hepsine izin verildiğinde kurulur.",
+      approveUpdate:
+        "Bu güncelleme daha fazlasını istiyor. İzin verdiğiniz her yeni yetkiyi işaretleyin.",
+      elevatedAdmins: "Vurgulanan izinleri yalnızca bir yönetici verebilir.",
+      risk: {
+        standard: "Standart",
+        sensitive: "Hassas",
+        elevated: "Yükseltilmiş",
+      },
+      state: {
+        active: "Açık",
+        disabled: "Kapalı",
+        revoked: "Geri çekildi",
+      },
+      conflict:
+        "Başka bir kaynak, farklı bir yayıncıdan aynı kimliğe sahip bir uygulama sunuyor. Yalnızca güvendiğiniz kaynaktan kurun.",
+      incompatible: {
+        "everyos-too-old": "Bu uygulama EveryOS'un daha yeni bir sürümünü gerektiriyor.",
+        "sdk-unsupported":
+          "Bu uygulama, bu EveryOS'un desteklemediği bir uygulama SDK'sı için yapılmış.",
+      },
+      revoked: "Kaynağı tarafından geri çekildi: {{reason}}",
+      languages_one: "{{count}} dil",
+      languages_other: "{{count}} dil",
+      widgets_one: "{{count}} widget",
+      widgets_other: "{{count}} widget",
+      license: "Lisans: {{license}}",
+      homepage: "Web sitesi",
+      source: "Kaynak kodu",
+      versions: "Sürümler ve değişiklikler",
+      notifications: "Bu uygulamanın bildirimleri",
+    },
+    registries: {
+      title: "Masaüstü uygulama kaynakları",
+      add: "Kaynak ekle",
+      kind: "Tür",
+      name: "Ad",
+      url: "İndeks adresi",
+      publicKey: "Açık anahtar",
+      fingerprint: "Anahtar parmak izi",
+      fingerprintHint:
+        "Kaynağın yayımladığı parmak iziyle karşılaştırın; anahtar yalnızca eşleşirse kabul edilir.",
+      token: "Erişim belirteci (isteğe bağlı)",
+      allowPrivate: "Kaynak yerel ağımda",
+      synced: "{{time}} eşitlendi",
+      never: "Henüz eşitlenmedi",
+      apps_one: "{{count}} uygulama",
+      apps_other: "{{count}} uygulama",
+      failed: "Son eşitleme başarısız oldu ({{reason}}).",
+      sync: "Şimdi eşitle",
+      remove: "Kaldır",
+      removeTitle: "{{name}} kaldırılsın mı?",
+      removeBody: "Bu kaynaktan kurulan uygulamalar kalır ama artık ondan güncelleme almaz.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Kendi verilerini saklama",
+        description:
+          "Ayarlarını ve belgelerini, her kişi için ayrı olmak üzere kendi alanında saklar.",
+      },
+      files_pick: {
+        title: "Seçtiğiniz dosyaları açma",
+        description: "Yalnızca onun için seçtiğiniz dosya ve klasörleri okur.",
+      },
+      files_save: {
+        title: "Seçtiğiniz yere kaydetme",
+        description: "Yalnızca onun için seçtiğiniz dosya ve klasörlere yazar.",
+      },
+      notifications_send: {
+        title: "Size bildirim gönderme",
+        description: "Onu kullanan kişiye bildirim gösterir.",
+      },
+      clipboard_write: {
+        title: "Panoya kopyalama",
+        description: "Siz istediğinizde metni kopyalar.",
+      },
+      widgets_register: {
+        title: "Widget sunma",
+        description: "Masaüstü ve kenar çubuğu için widget'lar sağlar.",
+      },
+      appearance_manage: {
+        title: "Görünümünüzü değiştirme",
+        description: "Duvar kağıdınızı ve klasör simgelerinizi değiştirir.",
+      },
+      system_metrics_read: {
+        title: "Sistem durumunu okuma",
+        description: "İşlemci, bellek, disk ve çalışma süresi bilgilerini okur.",
+      },
+      system_sockets_read: {
+        title: "Dinlenen portları görme",
+        description: "Sunucunun dinlediği ağ portlarını ve arkasındaki programları listeler.",
+      },
+      system_network_read: {
+        title: "Ağ ayarlarını görme",
+        description: "Ağ arayüzlerini, adresleri, yönlendirmeleri ve ad sunucularını okur.",
+      },
+      logs_read: { title: "Sistem günlüklerini okuma", description: "Sistem günlüğünü okur." },
+      storage_usage_read: {
+        title: "Klasör boyutlarını ölçme",
+        description: "Onunla paylaştığınız klasörlerin boyutunu ölçer.",
+      },
+      network_outbound: {
+        title: "İzin verilen adreslere bağlanma",
+        description: "Sunucudan, bir yöneticinin izin verdiği ağ adreslerine bağlanır.",
+      },
+      database_connect: {
+        title: "Veritabanlarına bağlanma",
+        description:
+          "Bir yöneticinin tanımladığı veritabanlarını sorgular; yazmaya izin verilmedikçe salt okunur.",
+      },
+      secrets_ssh: {
+        title: "SSH anahtarlarınızı yönetme",
+        description: "Sizin için SSH anahtarları oluşturur, içe aktarır ve saklar.",
+      },
+      integration: {
+        title: "{{adapter}} kullanma",
+        description: "Bu sunucuda yapılandırılmış {{adapter}} entegrasyonuyla konuşur.",
+      },
+    },
     picker: {
       openTitle: "Dosya aç",
       folderTitle: "Klasör seç",

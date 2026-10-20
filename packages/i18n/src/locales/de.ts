@@ -3981,6 +3981,163 @@ export const de: LocaleMessages = {
     unlinked: "Nicht verknüpft",
   },
   desktopApps: {
+    store: {
+      typeFilter: "Art",
+      types: {
+        all: "Alle Apps",
+        docker: "Docker-Apps",
+        desktop: "Desktop-Apps",
+        hybrid: "Hybrid-Apps",
+      },
+      sourceFilter: "Quelle",
+      allSources: "Alle Quellen",
+      sources: {
+        official: "Offiziell",
+        community: "Community",
+        private: "Privat",
+      },
+      updatesOnly: "Nur Aktualisierungen",
+      desktopBadge: "Desktop-App",
+      by: "von {{publisher}}",
+      version: "Version {{version}}",
+      installed: "Installiert",
+      installedSection: "Desktop-Apps",
+      updateTo: "Auf {{version}} aktualisieren",
+      install: "Installieren",
+      open: "Öffnen",
+      enable: "Einschalten",
+      disable: "Ausschalten",
+      uninstall: "Deinstallieren",
+      uninstallTitle: "{{name}} deinstallieren?",
+      uninstallBody:
+        "Ihre Daten werden für alle gelöscht, die die App auf diesem Server genutzt haben.",
+      permissions: "Was diese App darf",
+      noPermissions: "Diese App fordert keine Berechtigungen an.",
+      notGranted: "Für dich nicht erlaubt",
+      approve:
+        "Hake jede Berechtigung an, die du erlaubst. Die App wird erst installiert, wenn alle erlaubt sind.",
+      approveUpdate:
+        "Diese Aktualisierung fordert mehr an. Hake jede neue Berechtigung an, die du erlaubst.",
+      elevatedAdmins: "Nur Administratoren können die hervorgehobenen Berechtigungen erlauben.",
+      risk: {
+        standard: "Standard",
+        sensitive: "Sensibel",
+        elevated: "Erweitert",
+      },
+      state: {
+        active: "Ein",
+        disabled: "Ausgeschaltet",
+        revoked: "Zurückgezogen",
+      },
+      conflict:
+        "Eine andere Quelle bietet eine App mit derselben Kennung von einem anderen Herausgeber an. Installiere sie nur aus einer Quelle, der du vertraust.",
+      incompatible: {
+        "everyos-too-old": "Diese App benötigt eine neuere EveryOS-Version.",
+        "sdk-unsupported":
+          "Diese App wurde für ein App-SDK entwickelt, das dieses EveryOS nicht unterstützt.",
+      },
+      revoked: "Von der Quelle zurückgezogen: {{reason}}",
+      languages_one: "{{count}} Sprache",
+      languages_other: "{{count}} Sprachen",
+      widgets_one: "{{count}} Widget",
+      widgets_other: "{{count}} Widgets",
+      license: "Lizenz: {{license}}",
+      homepage: "Website",
+      source: "Quellcode",
+      versions: "Versionen und Änderungen",
+      notifications: "Benachrichtigungen dieser App",
+    },
+    registries: {
+      title: "Quellen für Desktop-Apps",
+      add: "Quelle hinzufügen",
+      kind: "Art",
+      name: "Name",
+      url: "Index-Adresse",
+      publicKey: "Öffentlicher Schlüssel",
+      fingerprint: "Schlüssel-Fingerabdruck",
+      fingerprintHint:
+        "Vergleiche ihn mit dem Fingerabdruck, den die Quelle veröffentlicht; der Schlüssel wird nur bei Übereinstimmung angenommen.",
+      token: "Zugangstoken (optional)",
+      allowPrivate: "Die Quelle ist in meinem lokalen Netzwerk",
+      synced: "Synchronisiert {{time}}",
+      never: "Noch nicht synchronisiert",
+      apps_one: "{{count}} App",
+      apps_other: "{{count}} Apps",
+      failed: "Die letzte Synchronisierung ist fehlgeschlagen ({{reason}}).",
+      sync: "Jetzt synchronisieren",
+      remove: "Entfernen",
+      removeTitle: "{{name}} entfernen?",
+      removeBody:
+        "Daraus installierte Apps bleiben erhalten, erhalten aber keine Aktualisierungen mehr von dort.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Eigene Daten speichern",
+        description:
+          "Speichert Einstellungen und Dokumente in einem eigenen Bereich, für jede Person getrennt.",
+      },
+      files_pick: {
+        title: "Von dir gewählte Dateien öffnen",
+        description: "Liest nur die Dateien und Ordner, die du für sie auswählst.",
+      },
+      files_save: {
+        title: "Dort speichern, wo du es wählst",
+        description: "Schreibt nur in die Dateien und Ordner, die du für sie auswählst.",
+      },
+      notifications_send: {
+        title: "Dir Benachrichtigungen senden",
+        description: "Zeigt der Person, die sie nutzt, Benachrichtigungen an.",
+      },
+      clipboard_write: {
+        title: "In die Zwischenablage kopieren",
+        description: "Kopiert Text, wenn du sie darum bittest.",
+      },
+      widgets_register: {
+        title: "Widgets anbieten",
+        description: "Stellt Widgets für den Schreibtisch und die Seitenleiste bereit.",
+      },
+      appearance_manage: {
+        title: "Dein Erscheinungsbild ändern",
+        description: "Ändert dein Hintergrundbild und deine Ordnersymbole.",
+      },
+      system_metrics_read: {
+        title: "Systemzustand lesen",
+        description: "Liest Werte zu Prozessor, Arbeitsspeicher, Datenträgern und Laufzeit.",
+      },
+      system_sockets_read: {
+        title: "Offene Ports sehen",
+        description:
+          "Listet die lauschenden Netzwerkports des Servers und die Programme dahinter auf.",
+      },
+      system_network_read: {
+        title: "Netzwerkeinstellungen sehen",
+        description: "Liest Netzwerkschnittstellen, Adressen, Routen und Namensserver.",
+      },
+      logs_read: { title: "Systemprotokolle lesen", description: "Liest das Systemjournal." },
+      storage_usage_read: {
+        title: "Ordnergrößen messen",
+        description: "Misst die Größe der Ordner, die du mit ihr teilst.",
+      },
+      network_outbound: {
+        title: "Mit erlaubten Adressen verbinden",
+        description:
+          "Verbindet sich vom Server aus mit Netzwerkadressen, die ein Administrator erlaubt.",
+      },
+      database_connect: {
+        title: "Mit Datenbanken verbinden",
+        description:
+          "Fragt von einem Administrator eingerichtete Datenbanken ab, nur lesend, sofern Schreiben nicht erlaubt ist.",
+      },
+      secrets_ssh: {
+        title: "Deine SSH-Schlüssel verwalten",
+        description: "Erstellt, importiert und speichert SSH-Schlüssel für dich.",
+      },
+      integration: {
+        title: "{{adapter}} verwenden",
+        description:
+          "Kommuniziert mit der auf diesem Server eingerichteten {{adapter}}-Integration.",
+      },
+    },
     picker: {
       openTitle: "Datei öffnen",
       folderTitle: "Ordner auswählen",
