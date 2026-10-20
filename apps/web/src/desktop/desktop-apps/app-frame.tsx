@@ -14,6 +14,7 @@ import { windowManager } from "../state/window-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { setCloseGuard } from "../windows/close-guards.ts";
 import { AppDialog, type PendingDialog } from "./app-dialog.tsx";
+import { FilePicker, type PickerRequest, type PickerResult } from "./file-picker.tsx";
 import { useAppBadges } from "./badges.ts";
 import { AppBridge } from "./bridge.ts";
 import { createHandlers, INSTANCE_HEADER, windowState } from "./handlers.ts";
@@ -54,6 +55,10 @@ export function AppFrame({
   const [phase, setPhase] = useState<Phase>("connecting");
   const [attempt, setAttempt] = useState(0);
   const [dialogs, setDialogs] = useState<PendingDialog[]>([]);
+  const [picker, setPicker] = useState<{
+    request: PickerRequest;
+    resolve: (result: PickerResult | null) => void;
+  } | null>(null);
   const bridgeRef = useRef<AppBridge | null>(null);
   const hostRef = useRef(host);
   // Declared before the frame effect, so it runs first in every commit.
@@ -70,6 +75,24 @@ export function AppFrame({
           resolve(value);
         };
         setDialogs((list) => [...list, { ...request, id, resolve: done }]);
+      }),
+    [],
+  );
+
+  const showPicker = useCallback(
+    (request: PickerRequest) =>
+      new Promise<PickerResult | null>((resolve) => {
+        // One picker at a time: a second request cancels the first.
+        setPicker((current) => {
+          current?.resolve(null);
+          return {
+            request,
+            resolve: (result) => {
+              setPicker(null);
+              resolve(result);
+            },
+          };
+        });
       }),
     [],
   );
@@ -99,6 +122,7 @@ export function AppFrame({
           granted: new Set(granted),
           host: hostRef.current,
           showDialog,
+          showPicker,
           markReady,
           guardClose: (enabled) => {
             if (!windowId) return;
@@ -224,7 +248,7 @@ export function AppFrame({
         }).catch(() => undefined);
     };
     // A new version (runtime URL) or a retry starts a fresh instance.
-  }, [app, kind, widgetId, entry, attempt, showDialog]);
+  }, [app, kind, widgetId, entry, attempt, showDialog, showPicker]);
 
   return (
     <div className={className ?? "relative h-full w-full overflow-hidden"}>
@@ -264,6 +288,9 @@ export function AppFrame({
         </div>
       ) : null}
       {dialogs[0] ? <AppDialog dialog={dialogs[0]} appName={name} /> : null}
+      {picker ? (
+        <FilePicker request={picker.request} appName={name} onDone={picker.resolve} />
+      ) : null}
     </div>
   );
 }

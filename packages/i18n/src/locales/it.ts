@@ -3979,6 +3979,18 @@ export const it: LocaleMessages = {
     unlinked: "Non collegato",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Apri file",
+      folderTitle: "Scegli cartella",
+      saveTitle: "Salva con nome",
+      for: "Per {{name}}",
+      locations: "Posizioni",
+      empty: "Qui non c'è nulla di adatto.",
+      name: "Nome",
+      replace: '"{{name}}" esiste già. Sostituirlo?',
+      replaceConfirm: "Sostituisci",
+      chooseFolder: "Scegli questa cartella",
+    },
     frame: {
       opening: "Apertura di {{name}}…",
       failed: "Impossibile aprire {{name}}.",

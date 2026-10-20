@@ -57,4 +57,18 @@ document.querySelector('[data-action="ask"]')?.addEventListener("click", () => {
     .confirm(i18n.t("ask"), "", { destructive: true })
     .then((answer) => show("answer", answer ? "confirmed" : "cancelled"));
 });
+document.querySelector('[data-action="open"]')?.addEventListener("click", () => {
+  void app.files.open({ accept: [".txt"] }).then(async (handles) => {
+    const [handle] = handles;
+    show("opened", handle ? await app.files.readText(handle) : "cancelled");
+  });
+});
+document.querySelector('[data-action="save"]')?.addEventListener("click", () => {
+  void app.files.save({ suggestedName: "probe-output.txt" }).then(async (handle) => {
+    show(
+      "saved",
+      handle ? String(await app.files.write(handle, "written by the probe")) : "cancelled",
+    );
+  });
+});
 await app.lifecycle.ready();

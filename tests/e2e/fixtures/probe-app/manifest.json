@@ -7,7 +7,7 @@
   "entry": "index.html",
   "icon": "icon.png",
   "category": "developer",
-  "permissions": ["storage:app", "clipboard:write"],
+  "permissions": ["storage:app", "clipboard:write", "files:pick", "files:save"],
   "window": {
     "defaultWidth": 640,
     "defaultHeight": 480,
@@ -16,9 +16,16 @@
     "instances": "single"
   },
   "widgets": [],
-  "locales": { "default": "en", "supported": ["en", "tr"], "path": "locales" },
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr"],
+    "path": "locales"
+  },
   "minEveryOS": "0.1.0",
   "sdk": "^1.0.0",
-  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
   "license": "MIT"
 }

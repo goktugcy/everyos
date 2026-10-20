@@ -3947,6 +3947,18 @@ export const ja: LocaleMessages = {
     unlinked: "未リンク",
   },
   desktopApps: {
+    picker: {
+      openTitle: "ファイルを開く",
+      folderTitle: "フォルダーを選択",
+      saveTitle: "名前を付けて保存",
+      for: "{{name}} 用",
+      locations: "場所",
+      empty: "ここには該当する項目がありません。",
+      name: "名前",
+      replace: "「{{name}}」はすでに存在します。置き換えますか？",
+      replaceConfirm: "置き換える",
+      chooseFolder: "このフォルダーを選択",
+    },
     frame: {
       opening: "{{name}} を開いています…",
       failed: "{{name}} を開けませんでした。",

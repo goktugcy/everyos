@@ -103,7 +103,7 @@ export const VALIDATORS: Readonly<Record<Method, Check>> = {
   "storage.usage": none,
   "storage.clear": none,
 
-  "files.open": shape({ accept, multiple: bool, directory: bool, persist: bool }),
+  "files.open": shape({ accept, multiple: bool, directory: bool, persist: bool, write: bool }),
   "files.save": shape({ suggestedName: fileName, accept, persist: bool }),
   "files.read": shape({
     handle,

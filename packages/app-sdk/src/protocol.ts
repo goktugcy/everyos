@@ -108,8 +108,15 @@ export interface Methods {
   "storage.usage": { params: null; result: { used: number; quota: number; keys: number } };
   "storage.clear": { params: null; result: null };
 
+  /** `write` asks for read-write access (needs files:save), e.g. an editor's workspace folder. */
   "files.open": {
-    params: { accept: string[]; multiple: boolean; directory: boolean; persist: boolean };
+    params: {
+      accept: string[];
+      multiple: boolean;
+      directory: boolean;
+      persist: boolean;
+      write: boolean;
+    };
     result: FileHandle[];
   };
   "files.save": {

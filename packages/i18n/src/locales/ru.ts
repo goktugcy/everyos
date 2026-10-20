@@ -3960,6 +3960,18 @@ export const ru: LocaleMessages = {
     unlinked: "Не привязана",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Открыть файл",
+      folderTitle: "Выбрать папку",
+      saveTitle: "Сохранить как",
+      for: "Для {{name}}",
+      locations: "Расположения",
+      empty: "Здесь нет подходящих элементов.",
+      name: "Имя",
+      replace: "«{{name}}» уже существует. Заменить?",
+      replaceConfirm: "Заменить",
+      chooseFolder: "Выбрать эту папку",
+    },
     frame: {
       opening: "Открытие {{name}}…",
       failed: "Не удалось открыть {{name}}.",

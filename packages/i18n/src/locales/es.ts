@@ -3980,6 +3980,18 @@ export const es: LocaleMessages = {
     unlinked: "Sin vincular",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Abrir archivo",
+      folderTitle: "Elegir carpeta",
+      saveTitle: "Guardar como",
+      for: "Para {{name}}",
+      locations: "Ubicaciones",
+      empty: "Aquí no hay nada adecuado.",
+      name: "Nombre",
+      replace: "«{{name}}» ya existe. ¿Reemplazarlo?",
+      replaceConfirm: "Reemplazar",
+      chooseFolder: "Elegir esta carpeta",
+    },
     frame: {
       opening: "Abriendo {{name}}…",
       failed: "No se pudo abrir {{name}}.",

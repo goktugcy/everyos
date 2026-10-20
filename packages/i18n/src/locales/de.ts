@@ -3980,6 +3980,18 @@ export const de: LocaleMessages = {
     unlinked: "Nicht verknüpft",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Datei öffnen",
+      folderTitle: "Ordner auswählen",
+      saveTitle: "Speichern unter",
+      for: "Für {{name}}",
+      locations: "Orte",
+      empty: "Hier gibt es nichts Passendes.",
+      name: "Name",
+      replace: "„{{name}}“ existiert bereits. Ersetzen?",
+      replaceConfirm: "Ersetzen",
+      chooseFolder: "Diesen Ordner wählen",
+    },
     frame: {
       opening: "{{name}} wird geöffnet…",
       failed: "{{name}} konnte nicht geöffnet werden.",

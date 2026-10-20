@@ -3994,6 +3994,18 @@ export const fr: LocaleMessages = {
     unlinked: "Non associé",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Ouvrir un fichier",
+      folderTitle: "Choisir un dossier",
+      saveTitle: "Enregistrer sous",
+      for: "Pour {{name}}",
+      locations: "Emplacements",
+      empty: "Rien d’adapté ici.",
+      name: "Nom",
+      replace: "« {{name}} » existe déjà. Le remplacer ?",
+      replaceConfirm: "Remplacer",
+      chooseFolder: "Choisir ce dossier",
+    },
     frame: {
       opening: "Ouverture de {{name}}…",
       failed: "Impossible d’ouvrir {{name}}.",

@@ -3777,6 +3777,18 @@ export const zh: LocaleMessages = {
     unlinked: "未关联",
   },
   desktopApps: {
+    picker: {
+      openTitle: "打开文件",
+      folderTitle: "选择文件夹",
+      saveTitle: "另存为",
+      for: "用于 {{name}}",
+      locations: "位置",
+      empty: "这里没有合适的项目。",
+      name: "名称",
+      replace: "“{{name}}”已存在。要替换吗？",
+      replaceConfirm: "替换",
+      chooseFolder: "选择此文件夹",
+    },
     frame: {
       opening: "正在打开 {{name}}…",
       failed: "无法打开 {{name}}。",

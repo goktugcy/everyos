@@ -66,6 +66,7 @@ export interface EveryOSApp {
       multiple?: boolean;
       directory?: boolean;
       persist?: boolean;
+      write?: boolean;
     }): Promise<FileHandle[]>;
     save(options: {
       suggestedName: string;
@@ -220,6 +221,7 @@ function build(connection: Connection): EveryOSApp {
         multiple: options.multiple ?? false,
         directory: options.directory ?? false,
         persist: options.persist ?? false,
+        write: options.write ?? false,
       }),
     save: (options) =>
       request("files.save", {

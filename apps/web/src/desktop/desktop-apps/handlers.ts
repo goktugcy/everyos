@@ -1,14 +1,20 @@
-import { BRIDGE_ERRORS, type WindowState } from "@everyos/app-sdk/protocol";
-import type { DesktopAppInstallationView } from "@everyos/shared";
+import {
+  BRIDGE_ERRORS,
+  type DirectoryEntry,
+  type FileHandle,
+  type WindowState,
+} from "@everyos/app-sdk/protocol";
+import { isErrorCode, type DesktopAppInstallationView } from "@everyos/shared";
 import { effectiveRect } from "@everyos/window-manager";
 import { i18next } from "../../app/i18n.ts";
-import { api } from "../../lib/api.ts";
+import { api, ApiRequestError } from "../../lib/api.ts";
 import { copyText } from "../../lib/clipboard.ts";
 import type { AppHost } from "../apps/app-context.ts";
 import { desktop } from "../state/controller.ts";
 import { wm } from "../state/window-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
 import type { PendingDialog } from "./app-dialog.tsx";
+import type { PickerRequest, PickerResult } from "./file-picker.tsx";
 import { useAppBadges } from "./badges.ts";
 import { BridgeRefusal, type Handlers } from "./bridge.ts";
 import { desktopAppWindowId } from "./store.ts";
@@ -29,6 +35,7 @@ export interface InstanceContext {
   /** The window the frame lives in (null for widgets). */
   host: AppHost | null;
   showDialog(request: DialogRequest): Promise<boolean | string | null>;
+  showPicker(request: PickerRequest): Promise<PickerResult | null>;
   markReady(): void;
   guardClose(enabled: boolean): void;
   decideClose(requestId: string, close: boolean): void;
@@ -65,9 +72,35 @@ const refuse = (capability: string) =>
 export function createHandlers(context: InstanceContext): Handlers {
   const { app, host, token } = context;
   const windowId = host?.windowId ?? null;
-  const sdk = <T>(path: string, init: { method?: "GET" | "POST"; body?: unknown } = {}) =>
-    api<T>(`/app-sdk${path}`, { ...init, headers: { [INSTANCE_HEADER]: token } });
+  const sdk = <T>(
+    path: string,
+    init: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
+  ) => api<T>(`/app-sdk${path}`, { ...init, headers: { [INSTANCE_HEADER]: token } });
   const managed = () => (windowId && wm().windows[windowId] ? windowId : null);
+  const file = (id: string) => `/files/${encodeURIComponent(id)}`;
+  /** Binary reads skip the JSON helper; errors still arrive as API errors. */
+  const readBytes = async (path: string): Promise<{ data: ArrayBuffer; eof: boolean }> => {
+    const response = await fetch(`/api/app-sdk${path}`, {
+      credentials: "same-origin",
+      headers: { [INSTANCE_HEADER]: token },
+    });
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        error?: { code?: unknown; message?: string; details?: unknown };
+      } | null;
+      const code = isErrorCode(body?.error?.code) ? body.error.code : "UNKNOWN";
+      throw new ApiRequestError(
+        response.status,
+        code,
+        body?.error?.message ?? "",
+        body?.error?.details,
+      );
+    }
+    return {
+      data: await response.arrayBuffer(),
+      eof: response.headers.get("x-everyos-eof") === "1",
+    };
+  };
 
   const shared: Handlers = {
     "storage.get": async ({ key }) =>
@@ -184,6 +217,54 @@ export function createHandlers(context: InstanceContext): Handlers {
         placeholder,
       });
       return typeof answer === "string" ? answer : null;
+    },
+    "files.open": async ({ accept, multiple, directory, persist, write }) => {
+      const picked = await context.showPicker({ mode: "open", accept, multiple, directory, write });
+      if (!picked || picked.mode !== "open") return [];
+      return (
+        await sdk<{ handles: FileHandle[] }>("/files/grants", {
+          method: "POST",
+          body: { items: picked.items, write, persist },
+        })
+      ).handles;
+    },
+    "files.save": async ({ suggestedName, accept, persist }) => {
+      const picked = await context.showPicker({ mode: "save", accept, suggestedName });
+      if (!picked || picked.mode !== "save") return null;
+      return (
+        await sdk<{ handle: FileHandle }>("/files/grants/save", {
+          method: "POST",
+          body: { root: picked.root, path: picked.path, name: picked.name, persist },
+        })
+      ).handle;
+    },
+    "files.read": ({ handle, offset, length }) =>
+      readBytes(`${file(handle)}/read?offset=${offset}&length=${length}`),
+    "files.write": ({ handle, offset, data, done }) =>
+      api<{ size: number }>(`/app-sdk${file(handle)}/write?offset=${offset}&done=${done}`, {
+        method: "POST",
+        raw: { body: data, contentType: "application/octet-stream" },
+        headers: { [INSTANCE_HEADER]: token },
+      }),
+    "files.list": async ({ handle, path }) =>
+      (
+        await sdk<{ entries: DirectoryEntry[] }>(
+          `${file(handle)}/list?path=${encodeURIComponent(path)}`,
+        )
+      ).entries,
+    "files.child": async ({ handle, path, create }) =>
+      (
+        await sdk<{ handle: FileHandle }>(`${file(handle)}/child`, {
+          method: "POST",
+          body: { path, create },
+        })
+      ).handle,
+    "files.url": ({ handle }) =>
+      sdk<{ url: string; expiresAt: number }>(`${file(handle)}/url`, { method: "POST", body: {} }),
+    "files.handles": async () => (await sdk<{ handles: FileHandle[] }>("/files")).handles,
+    "files.revoke": async ({ handle }) => {
+      await sdk(file(handle), { method: "DELETE", body: {} });
+      return null;
     },
     "lifecycle.guardClose": ({ enabled }) => {
       context.guardClose(enabled);

@@ -123,3 +123,16 @@ describe("request validation", () => {
     expect(VALIDATORS["window.setTitle"]({ title: "x".repeat(121) })).toBe(false);
   });
 });
+
+describe("file picker filters", () => {
+  it("matches extensions, exact types and type families", async () => {
+    const { matchesAccept } = await import("./file-picker.tsx");
+    expect(matchesAccept("notes.md", [])).toBe(true);
+    expect(matchesAccept("notes.MD", [".md"])).toBe(true);
+    expect(matchesAccept("notes.txt", [".md"])).toBe(false);
+    expect(matchesAccept("photo.jpeg", ["image/*"])).toBe(true);
+    expect(matchesAccept("song.flac", ["audio/*", ".pdf"])).toBe(true);
+    expect(matchesAccept("doc.pdf", ["application/pdf"])).toBe(true);
+    expect(matchesAccept("Makefile", ["text/plain"])).toBe(false);
+  });
+});

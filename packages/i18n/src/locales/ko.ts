@@ -3889,6 +3889,18 @@ export const ko: LocaleMessages = {
     unlinked: "연결되지 않음",
   },
   desktopApps: {
+    picker: {
+      openTitle: "파일 열기",
+      folderTitle: "폴더 선택",
+      saveTitle: "다른 이름으로 저장",
+      for: "{{name}}용",
+      locations: "위치",
+      empty: "여기에 해당하는 항목이 없습니다.",
+      name: "이름",
+      replace: '"{{name}}"이(가) 이미 있습니다. 바꿀까요?',
+      replaceConfirm: "바꾸기",
+      chooseFolder: "이 폴더 선택",
+    },
     frame: {
       opening: "{{name}} 여는 중…",
       failed: "{{name}}을(를) 열 수 없습니다.",

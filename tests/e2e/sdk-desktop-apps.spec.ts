@@ -33,6 +33,7 @@ async function openFromLauncher(page: Page) {
 test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop", async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   await page.goto("/");
   await page.getByLabel(/Kullanıcı adı|Username/).fill("goktug");
   await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
@@ -74,12 +75,45 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     await dialog.getByRole("button", { name: "Onayla" }).click();
     await expect(probe("answer")).toHaveText("confirmed");
 
+    // Files: only what the person picks in the desktop's picker reaches the app.
+    expect(
+      await page.evaluate(async (header) => {
+        const session = (await (await fetch("/api/auth/session")).json()) as { csrfToken: string };
+        const response = await fetch(
+          "/api/files/upload?root=home&path=Belgeler&name=probe-input.txt",
+          { method: "POST", headers: { [header]: session.csrfToken }, body: "picked by a person" },
+        );
+        return response.status;
+      }, CSRF_HEADER),
+    ).toBe(201);
+    await frame.getByRole("button", { name: "Open file" }).click();
+    const picker = window.getByTestId("desktop-app-file-picker");
+    await expect(picker).toContainText("Dosya aç");
+    await picker.getByRole("option", { name: "probe-input.txt" }).click();
+    await picker.getByRole("button", { name: "Aç" }).click();
+    await expect(probe("opened")).toHaveText("picked by a person");
+    await frame.getByRole("button", { name: "Save file" }).click();
+    await expect(picker).toContainText("Farklı kaydet");
+    await picker.getByRole("button", { name: "Kaydet" }).click();
+    await expect(probe("saved")).toHaveText("20");
+    expect(
+      await page.evaluate(async () => {
+        const response = await fetch("/api/files/text?root=home&path=Belgeler/probe-output.txt");
+        return ((await response.json()) as { content: string }).content;
+      }),
+    ).toBe("written by the probe");
+
     // Its data survives closing the window.
     await window.getByRole("button", { name: "Kapat" }).first().click();
     await expect(window).toHaveCount(0);
     await openFromLauncher(page);
     await expect(probe("runs")).toHaveText("2");
   } finally {
+    await call(page, "POST", "/api/files/delete", {
+      root: "home",
+      paths: ["Belgeler/probe-input.txt", "Belgeler/probe-output.txt"],
+      confirm: true,
+    });
     expect(
       await call(page, "DELETE", "/api/desktop-apps/installed/dev.everyos.probe", {
         confirm: true,

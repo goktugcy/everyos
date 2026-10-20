@@ -3748,6 +3748,18 @@ export const en: Messages = {
     unlinked: "Not linked",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Open file",
+      folderTitle: "Choose folder",
+      saveTitle: "Save as",
+      for: "For {{name}}",
+      locations: "Locations",
+      empty: "Nothing suitable here.",
+      name: "Name",
+      replace: '"{{name}}" already exists. Replace it?',
+      replaceConfirm: "Replace",
+      chooseFolder: "Choose this folder",
+    },
     frame: {
       opening: "Opening {{name}}…",
       failed: "{{name}} could not be opened.",

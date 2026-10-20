@@ -3785,6 +3785,18 @@ export const tr = {
     unlinked: "İlişkilendirilmemiş",
   },
   desktopApps: {
+    picker: {
+      openTitle: "Dosya aç",
+      folderTitle: "Klasör seç",
+      saveTitle: "Farklı kaydet",
+      for: "{{name}} için",
+      locations: "Konumlar",
+      empty: "Burada uygun öğe yok.",
+      name: "Ad",
+      replace: '"{{name}}" zaten var. Değiştirilsin mi?',
+      replaceConfirm: "Değiştir",
+      chooseFolder: "Bu klasörü seç",
+    },
     frame: {
       opening: "{{name}} açılıyor…",
       failed: "{{name}} açılamadı.",
