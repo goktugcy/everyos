@@ -730,3 +730,17 @@ session cookie is SameSite=Strict, so other sites cannot trigger that GET. Files
 has not listed for an hour are tidied away, and the folder is left out of search and home backups.
 Files referenced from Files windows are never deleted by the shelf. The old upload destination
 stays in the `pulse` schema, unused, so stored preferences remain valid.
+
+### D53 — Desktop apps run in an opaque-origin sandbox, authorized per call by the server
+
+Third-party and official desktop apps are static bundles that run in `<iframe sandbox>` frames
+without `allow-same-origin`, loaded from per-version capability URLs (`/app-runtime/<key>/…`) with a
+`sandbox` CSP and no remote code. The owner reaches EveryOS by IP over plain HTTP, where neither a
+second port (cookies are not port-isolated) nor a subdomain gives a separate site, so the opaque
+origin is the isolation boundary. Apps talk to the desktop over a versioned `MessageChannel`
+protocol; the desktop forwards privileged calls with a per-instance token and the server authorizes
+every call against the installation's granted capabilities and the user's role. Packages are signed
+`.eosapp` archives verified on the server against registry-signed publisher keys; `dev.everyos.*`
+belongs to the pinned official registry. Official apps live in this repository; the community
+registry is a Cloudflare service. The feature ships in one release (see
+[App SDK architecture](app-sdk/architecture.md) and [acceptance](sdk-release-acceptance.md)).
