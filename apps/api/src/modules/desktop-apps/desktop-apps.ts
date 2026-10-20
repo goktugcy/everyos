@@ -1,8 +1,11 @@
 import type { Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
 import type { SecretBox } from "@everyos/security";
+import type { NotificationService } from "../notifications/notification-service.ts";
 import type { RegistryAnchor } from "./anchors.ts";
 import { AppFiles } from "./app-files.ts";
+import { AppMonitors } from "./app-monitors.ts";
+import { AppNetwork } from "./app-network.ts";
 import { AppUserSettings } from "./app-settings.ts";
 import { AppStorage } from "./app-storage.ts";
 import { RegistryAssets } from "./assets.ts";
@@ -24,6 +27,9 @@ export class DesktopAppsService {
   /** Files people picked for their apps. */
   readonly files: AppFiles;
   readonly settings: AppUserSettings;
+  /** The network policy and the network operations behind network:outbound. */
+  readonly network: AppNetwork;
+  readonly monitors: AppMonitors;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
@@ -36,6 +42,9 @@ export class DesktopAppsService {
     dir: string;
     anchors: { official: RegistryAnchor | null; community: RegistryAnchor | null };
     fetcher?: FetcherFactory;
+    notifications: NotificationService;
+    /** DNS for the network policy (tests). */
+    resolve?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
   }) {
     this.#logger = options.logger;
     this.registries = new DesktopAppRegistries({
@@ -61,6 +70,20 @@ export class DesktopAppsService {
     );
     this.storage = new AppStorage(options.db, options.now);
     this.settings = new AppUserSettings(options.db, options.now);
+    this.network = new AppNetwork({
+      db: options.db,
+      now: options.now,
+      ...(options.resolve ? { resolve: options.resolve } : {}),
+    });
+    this.monitors = new AppMonitors({
+      db: options.db,
+      now: options.now,
+      network: this.network,
+      installer: this.installer,
+      settings: this.settings,
+      notifications: options.notifications,
+      logger: options.logger,
+    });
   }
 
   /** Syncs every enabled registry and applies their revocations to installed apps. */
@@ -76,10 +99,12 @@ export class DesktopAppsService {
     const run = () => void this.refresh().catch(() => undefined);
     this.#timers = [setTimeout(run, FIRST_REFRESH_MS), setInterval(run, REFRESH_INTERVAL_MS)];
     for (const timer of this.#timers) timer.unref();
+    this.monitors.start();
   }
 
   stop(): void {
     for (const timer of this.#timers) clearTimeout(timer);
+    this.monitors.stop();
     this.#controller.abort();
   }
 }

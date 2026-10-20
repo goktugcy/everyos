@@ -2,6 +2,8 @@ import { isAppCapability } from "@everyos/app-manifest";
 import {
   DesktopAppIdParamSchema,
   DesktopAppInstallSchema,
+  DesktopAppNetworkRuleCreateSchema,
+  DesktopAppNetworkRuleIdSchema,
   DesktopAppRegistryCreateSchema,
   DesktopAppRegistryIdSchema,
   DesktopAppRegistryUpdateSchema,
@@ -25,7 +27,7 @@ const ListingParam = DesktopAppIdParamSchema.extend({ registryId: DesktopAppRegi
 /** `/api/desktop-apps`: registries (administrators), the store, and installations. */
 export function desktopAppRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const { registries, installer, assets, instances } = services.desktopApps;
+  const { registries, installer, assets, instances, network } = services.desktopApps;
   const manageRegistries = requirePermission("catalogs:manage");
   const read = requirePermission("apps:read");
   const manage = requirePermission("apps:manage");
@@ -102,6 +104,38 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
     const view = await audited(c, "registry.sync", id, () => registries.sync(id));
     for (const appId of installer.applyRevocations()) instances.closeApp(appId);
     return c.json(view);
+  });
+
+  /* -------------------------------------------------------- network policy */
+
+  /** What apps holding network:outbound may reach; only administrators change it. */
+  app.get("/network-rules", requirePermission("apps:manage"), (c) => {
+    const { appId } = parseQuery(
+      c,
+      z.strictObject({ appId: DesktopAppIdParamSchema.shape.appId.optional() }),
+    );
+    return c.json({ rules: network.rules(appId) });
+  });
+  app.post("/network-rules", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, DesktopAppNetworkRuleCreateSchema);
+    const rule = await audited(
+      c,
+      "network-rule.create",
+      input.pattern,
+      () => network.addRule(input, requireAuth(c).user.id),
+      { kind: input.kind, ports: input.ports, appId: input.appId },
+    );
+    return c.json(rule, 201);
+  });
+  app.delete("/network-rules/:id", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppNetworkRuleIdSchema);
+    await parseJsonBody(c, Empty);
+    await audited(c, "network-rule.delete", id, () => {
+      if (!network.removeRule(id)) throw notFound("Rule");
+    });
+    return c.body(null, 204);
   });
 
   /* ----------------------------------------------------------------- store */

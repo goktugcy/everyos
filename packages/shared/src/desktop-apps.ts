@@ -112,3 +112,22 @@ export interface DesktopAppApprovalRequired {
   sensitive: string[];
   elevated: string[];
 }
+
+/**
+ * A rule of the desktop apps' network policy: what apps holding `network:outbound` may reach.
+ * Host rules allow public addresses only; private and loopback addresses need a CIDR rule.
+ */
+export interface DesktopAppNetworkRuleView {
+  id: string;
+  kind: "host" | "cidr";
+  /** `api.example.com`, `*.example.com` (any subdomain) or `192.168.1.0/24`. */
+  pattern: string;
+  ports: number[];
+  /** Null: every app holding network:outbound. */
+  appId: string | null;
+  note: string | null;
+  createdAt: number;
+  createdBy: string | null;
+  /** The rule reaches this server itself (a loopback range). */
+  includesThisServer: boolean;
+}

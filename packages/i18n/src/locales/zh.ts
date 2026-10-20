@@ -2807,6 +2807,14 @@ export const zh: LocaleMessages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} 无法访问",
+        body: "{{app}} · {{target}} 未按预期响应。",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} 已恢复",
+        body: "{{app}} · {{target}} 再次响应。",
+      },
       "disk-detached": {
         title: "磁盘已移除：{{disk}}",
         body: "{{unsafe}}",
@@ -3778,6 +3786,34 @@ export const zh: LocaleMessages = {
     unlinked: "未关联",
   },
   desktopApps: {
+    network: {
+      title: "应用的网络访问",
+      description:
+        "获准连接地址的应用只能访问此处列出的地址。主机名规则只涵盖公网地址；本地网络地址和本服务器需要地址范围。",
+      empty: "尚未允许任何地址。",
+      add: "允许",
+      kind: "类型",
+      kinds: {
+        host: "主机名",
+        cidr: "地址范围",
+      },
+      pattern: "地址",
+      patternHostHint: "api.example.com，或用 *.example.com 表示其所有子域名",
+      patternRangeHint: "例如 192.168.1.0/24，单个设备用 192.168.1.20/32",
+      ports: "端口",
+      portsHint: "用逗号分隔，例如 80, 443",
+      portList: "端口 {{ports}}",
+      note: "备注（可选）",
+      scope: "适用于",
+      thisApp: "此应用",
+      allApps: "所有应用",
+      onlyApp: "仅 {{name}}",
+      thisServer: "包含本服务器",
+      remove: "移除",
+      removeTitle: "要移除 {{pattern}} 的规则吗？",
+      removeBody: "应用将无法再访问这些地址，使用它们的监控会停止并给出提示。",
+      adminsOnly: "只有管理员可以更改网络访问。",
+    },
     store: {
       typeFilter: "类型",
       types: {
@@ -3988,6 +4024,8 @@ export const zh: LocaleMessages = {
     DESKTOP_APP_PACKAGE_INVALID: "无法验证应用包，因此未安装。",
     DESKTOP_APP_BUSY: "此应用的另一项操作正在进行中。",
     DESKTOP_APP_STORAGE_FULL: "此应用的存储空间已满。",
+    DESKTOP_APP_NETWORK_BLOCKED: "应用的网络访问不允许此地址。管理员可以在应用商店中允许它。",
+    DESKTOP_APP_NETWORK_FAILED: "连接失败。",
     NETWORK: "无法连接到服务器。请检查你的网络连接。",
     UNKNOWN: "发生了未知错误。",
   },

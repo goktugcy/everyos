@@ -2799,6 +2799,14 @@ export const tr = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} erişilemiyor",
+        body: "{{app}} · {{target}} beklendiği gibi yanıt vermiyor.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} yeniden çalışıyor",
+        body: "{{app}} · {{target}} yeniden yanıt veriyor.",
+      },
       "disk-detached": {
         title: "Disk çıkarıldı: {{disk}}",
         body: "{{unsafe}}",
@@ -3786,6 +3794,35 @@ export const tr = {
     unlinked: "İlişkilendirilmemiş",
   },
   desktopApps: {
+    network: {
+      title: "Uygulamalar için ağ erişimi",
+      description:
+        "Adreslere bağlanma izni olan uygulamalar yalnızca burada listelenenlere ulaşabilir. Ana bilgisayar adı kuralı yalnızca genel adresleri kapsar; yerel ağ adresleri ve bu sunucu için adres aralığı gerekir.",
+      empty: "Henüz izin verilen bir adres yok.",
+      add: "İzin ver",
+      kind: "Tür",
+      kinds: {
+        host: "Ana bilgisayar adı",
+        cidr: "Adres aralığı",
+      },
+      pattern: "Adres",
+      patternHostHint: "api.example.com veya tüm alt alan adları için *.example.com",
+      patternRangeHint: "Örneğin 192.168.1.0/24 veya tek bir cihaz için 192.168.1.20/32",
+      ports: "Portlar",
+      portsHint: "Virgülle ayırın, örneğin 80, 443",
+      portList: "Portlar {{ports}}",
+      note: "Not (isteğe bağlı)",
+      scope: "Geçerli olduğu",
+      thisApp: "Bu uygulama",
+      allApps: "Tüm uygulamalar",
+      onlyApp: "Yalnızca {{name}}",
+      thisServer: "Bu sunucuyu içerir",
+      remove: "Kaldır",
+      removeTitle: "{{pattern}} kuralı kaldırılsın mı?",
+      removeBody:
+        "Uygulamalar artık bu adreslere ulaşamaz; bunları kullanan izleyiciler bir uyarıyla durur.",
+      adminsOnly: "Ağ erişimini yalnızca bir yönetici değiştirebilir.",
+    },
     store: {
       typeFilter: "Tür",
       types: {
@@ -4033,6 +4070,9 @@ export const tr = {
     DESKTOP_APP_PACKAGE_INVALID: "Uygulama paketi doğrulanamadığı için kurulmadı.",
     DESKTOP_APP_BUSY: "Bu uygulama için başka bir işlem sürüyor.",
     DESKTOP_APP_STORAGE_FULL: "Bu uygulamanın depolama alanı dolu.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "Uygulamalar için ağ erişimi bu adrese izin vermiyor. Bir yönetici Uygulama Mağazası'ndan izin verebilir.",
+    DESKTOP_APP_NETWORK_FAILED: "Bağlantı kurulamadı.",
     NETWORK: "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edin.",
     UNKNOWN: "Bilinmeyen bir hata oluştu.",
   } satisfies Record<ErrorCode | "NETWORK" | "UNKNOWN", string>,

@@ -2929,6 +2929,14 @@ export const de: LocaleMessages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} ist nicht erreichbar",
+        body: "{{app}} · {{target}} antwortet nicht wie erwartet.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} ist wieder erreichbar",
+        body: "{{app}} · {{target}} antwortet wieder.",
+      },
       "disk-detached": {
         title: "Datenträger entfernt: {{disk}}",
         body: "{{unsafe}}",
@@ -3981,6 +3989,35 @@ export const de: LocaleMessages = {
     unlinked: "Nicht verknüpft",
   },
   desktopApps: {
+    network: {
+      title: "Netzwerkzugriff für Apps",
+      description:
+        "Apps, die sich mit Adressen verbinden dürfen, erreichen nur, was hier aufgeführt ist. Eine Hostnamen-Regel deckt nur öffentliche Adressen ab; Adressen im lokalen Netzwerk und dieser Server brauchen einen Adressbereich.",
+      empty: "Noch ist keine Adresse erlaubt.",
+      add: "Erlauben",
+      kind: "Art",
+      kinds: {
+        host: "Hostname",
+        cidr: "Adressbereich",
+      },
+      pattern: "Adresse",
+      patternHostHint: "api.example.com oder *.example.com für alle Subdomains",
+      patternRangeHint: "Zum Beispiel 192.168.1.0/24 oder 192.168.1.20/32 für ein Gerät",
+      ports: "Ports",
+      portsHint: "Durch Kommas getrennt, zum Beispiel 80, 443",
+      portList: "Ports {{ports}}",
+      note: "Notiz (optional)",
+      scope: "Gilt für",
+      thisApp: "Diese App",
+      allApps: "Alle Apps",
+      onlyApp: "Nur {{name}}",
+      thisServer: "Umfasst diesen Server",
+      remove: "Entfernen",
+      removeTitle: "Regel für {{pattern}} entfernen?",
+      removeBody:
+        "Apps erreichen diese Adressen nicht mehr, und Monitore, die sie nutzen, halten mit einem Hinweis an.",
+      adminsOnly: "Nur Administratoren können den Netzwerkzugriff ändern.",
+    },
     store: {
       typeFilter: "Art",
       types: {
@@ -4243,6 +4280,9 @@ export const de: LocaleMessages = {
       "Das App-Paket konnte nicht überprüft werden und wurde daher nicht installiert.",
     DESKTOP_APP_BUSY: "Für diese App läuft bereits ein anderer Vorgang.",
     DESKTOP_APP_STORAGE_FULL: "Der Speicher dieser App ist voll.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "Der Netzwerkzugriff für Apps erlaubt diese Adresse nicht. Ein Administrator kann sie im App Store erlauben.",
+    DESKTOP_APP_NETWORK_FAILED: "Die Verbindung ist fehlgeschlagen.",
     NETWORK: "Der Server ist nicht erreichbar. Prüfe deine Netzwerkverbindung.",
     UNKNOWN: "Ein unbekannter Fehler ist aufgetreten.",
   },

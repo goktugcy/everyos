@@ -507,7 +507,7 @@ export async function createTestContext(
     /** Extra service test hooks (SMTP transports, the Telegram API origin). */
     services?: Pick<
       ServiceDependencies,
-      "smtp" | "telegramApi" | "google" | "s3" | "desktopAppFetcher"
+      "smtp" | "telegramApi" | "google" | "s3" | "desktopAppFetcher" | "desktopAppResolve"
     >;
     /** The server secret (another value plays another installation). */
     masterKey?: Buffer;

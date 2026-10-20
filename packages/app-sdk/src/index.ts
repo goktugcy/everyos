@@ -4,7 +4,9 @@ import {
   type DirectoryEntry,
   type Events,
   type FileHandle,
+  type HostInput,
   type HostOperation,
+  type HostResult,
   type NotificationLevel,
   type ThemeSnapshot,
   type WindowState,
@@ -13,12 +15,32 @@ import {
 export { BridgeError } from "./client.ts";
 export type {
   DirectoryEntry,
+  DnsRecord,
+  DnsRecordType,
   FileHandle,
+  HostInput,
   HostOperation,
+  HostOperations,
+  HostResult,
+  HttpHeader,
+  HttpMethod,
+  NetDnsQuery,
+  NetDnsResult,
+  NetFailure,
+  NetHttpRequest,
+  NetHttpResponse,
+  NetMonitor,
+  NetMonitorCheck,
+  NetMonitorInput,
+  NetMonitorState,
+  NetTlsResult,
+  NetTlsTarget,
   NotificationLevel,
   ThemeSnapshot,
+  TlsCertificate,
   WindowState,
 } from "./protocol.ts";
+export { DNS_RECORD_TYPES, HTTP_METHODS, NET_LIMITS } from "./protocol.ts";
 export { createI18n, type I18n, type Messages } from "./i18n.ts";
 
 type Unsubscribe = () => void;
@@ -146,7 +168,7 @@ export interface EveryOSApp {
 
   host: {
     /** Server-backed data behind a capability (docs/app-sdk/permissions.md). */
-    call<T = unknown>(operation: HostOperation, input?: unknown): Promise<T>;
+    call<O extends HostOperation>(operation: O, input?: HostInput<O>): Promise<HostResult<O>>;
   };
 }
 
@@ -368,8 +390,8 @@ function build(connection: Connection): EveryOSApp {
       onChange: (listener) => on("permissions.changed", () => listener(granted)),
     },
     host: {
-      call: async <T>(operation: HostOperation, input: unknown = null) =>
-        (await request("host.call", { operation, input })) as T,
+      call: <O extends HostOperation>(operation: O, input: HostInput<O> | null = null) =>
+        request("host.call", { operation, input }),
     },
   };
 }

@@ -74,6 +74,10 @@ export const NOTIFICATION_KINDS = {
   "transfer-failed": { category: "storage", permission: "files:read", condition: false },
   /** A message a desktop app sent to the person using it (personal notification). */
   "app-message": { category: "apps", permission: "apps:read", condition: false },
+  /** An HTTP monitor a desktop app keeps for the person went down (personal notification). */
+  "app-monitor-down": { category: "apps", permission: "apps:read", condition: false },
+  /** It answers again. */
+  "app-monitor-recovered": { category: "apps", permission: "apps:read", condition: false },
 } as const satisfies Record<
   string,
   { category: NotificationCategory; permission: Permission; condition: boolean }

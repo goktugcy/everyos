@@ -21,6 +21,7 @@ import {
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { desktop } from "../../state/controller.ts";
 import { ResourceError } from "../system/parts.tsx";
+import { NetworkRules } from "./network-rules.tsx";
 
 /** i18next reads `:` and `.` as separators: capability names become safe keys. */
 export function capabilityKey(capability: string): string {
@@ -312,6 +313,14 @@ export function DesktopAppDialog({
             <p className="text-xs text-danger">{t("desktopApps.store.elevatedAdmins")}</p>
           ) : null}
         </section>
+
+        {installation &&
+        canManage &&
+        installation.permissions.some(
+          (permission) => permission.capability === "network:outbound" && permission.granted,
+        ) ? (
+          <NetworkRules appId={appId} />
+        ) : null}
 
         {listing ? (
           <section className="grid gap-x-4 gap-y-1 text-xs text-fg-muted sm:grid-cols-2">

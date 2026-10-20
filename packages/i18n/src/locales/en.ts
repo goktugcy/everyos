@@ -2756,6 +2756,14 @@ export const en: Messages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} is down",
+        body: "{{app}} · {{target}} does not answer as expected.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} is up again",
+        body: "{{app}} · {{target}} answers again.",
+      },
       "disk-detached": {
         title: "Disk removed: {{disk}}",
         body: "{{unsafe}}",
@@ -3749,6 +3757,35 @@ export const en: Messages = {
     unlinked: "Not linked",
   },
   desktopApps: {
+    network: {
+      title: "Network access for apps",
+      description:
+        "Apps allowed to connect to addresses reach only what is listed here. A host name rule covers public addresses only; local network addresses and this server need an address range.",
+      empty: "No address is allowed yet.",
+      add: "Allow",
+      kind: "Type",
+      kinds: {
+        host: "Host name",
+        cidr: "Address range",
+      },
+      pattern: "Address",
+      patternHostHint: "api.example.com, or *.example.com for all of its subdomains",
+      patternRangeHint: "For example 192.168.1.0/24, or 192.168.1.20/32 for one device",
+      ports: "Ports",
+      portsHint: "Separate with commas, for example 80, 443",
+      portList: "Ports {{ports}}",
+      note: "Note (optional)",
+      scope: "Applies to",
+      thisApp: "This app",
+      allApps: "All apps",
+      onlyApp: "Only {{name}}",
+      thisServer: "Includes this server",
+      remove: "Remove",
+      removeTitle: "Remove the rule for {{pattern}}?",
+      removeBody:
+        "Apps can no longer reach these addresses, and monitors that use them stop with a notice.",
+      adminsOnly: "Only an administrator can change network access.",
+    },
     store: {
       typeFilter: "Type",
       types: {
@@ -3995,6 +4032,9 @@ export const en: Messages = {
     DESKTOP_APP_PACKAGE_INVALID: "The app package could not be verified, so it was not installed.",
     DESKTOP_APP_BUSY: "Another operation is in progress for this app.",
     DESKTOP_APP_STORAGE_FULL: "This app's storage is full.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "Network access for apps does not allow this address. An administrator can allow it in the App Store.",
+    DESKTOP_APP_NETWORK_FAILED: "The connection failed.",
     NETWORK: "The server cannot be reached. Check your connection.",
     UNKNOWN: "An unknown error occurred.",
   },

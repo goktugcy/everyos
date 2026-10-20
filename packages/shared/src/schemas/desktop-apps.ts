@@ -160,3 +160,134 @@ export const AppDiskUsageInputSchema = z.strictObject({
     .refine((value) => !value.split("/").some((part) => part === ".."))
     .default(""),
 });
+
+/* ------------------------------------------------------------------ network */
+
+const ports = z
+  .array(z.int().min(1).max(65_535))
+  .min(1)
+  .max(32)
+  .refine((list) => new Set(list).size === list.length, "Ports repeat");
+
+/** A host name with at least two labels and a non-numeric top label (IPs belong in CIDR rules). */
+const hostName =
+  /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$/;
+
+export const DesktopAppNetworkRuleCreateSchema = z.discriminatedUnion("kind", [
+  z.strictObject({
+    kind: z.literal("host"),
+    pattern: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .refine((value) => hostName.test(value.replace(/^\*\./, "")), "Not a host name"),
+    ports,
+    appId: appId.nullable().default(null),
+    note: z.string().trim().max(200).nullable().default(null),
+  }),
+  z.strictObject({
+    kind: z.literal("cidr"),
+    /** Checked precisely by the API (address family and prefix length). */
+    pattern: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[0-9a-f:.]{2,45}\/\d{1,3}$/),
+    ports,
+    appId: appId.nullable().default(null),
+    note: z.string().trim().max(200).nullable().default(null),
+  }),
+]);
+
+export const DesktopAppNetworkRuleIdSchema = z.strictObject({ id: z.uuid() });
+
+const target = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(253)
+  .refine(
+    (value) =>
+      hostName.test(value) ||
+      z.ipv4().safeParse(value).success ||
+      z.ipv6().safeParse(value).success,
+    "Not a host",
+  );
+
+const httpHeader = z.tuple([
+  z.string().regex(/^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,256}$/),
+  z
+    .string()
+    .max(8192)
+    .regex(/^[^\r\n\0]*$/),
+]);
+
+/** Bounds mirror NET_LIMITS in @everyos/app-sdk. */
+export const AppNetHttpInputSchema = z.strictObject({
+  method: z.enum(["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]),
+  url: z.string().min(8).max(8192),
+  headers: z.array(httpHeader).max(64).default([]),
+  body: z
+    .union([
+      z.strictObject({ text: z.string().max(192 * 1024) }),
+      z.strictObject({ base64: z.base64().max(Math.ceil((192 * 1024) / 3) * 4) }),
+    ])
+    .nullable()
+    .default(null),
+  followRedirects: z.boolean().default(false),
+  verifyTls: z.boolean().default(true),
+  timeoutMs: z.int().min(1000).max(60_000).default(30_000),
+});
+
+export const AppNetDnsInputSchema = z.strictObject({
+  name: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(253)
+    .refine(
+      (value) =>
+        /^(?=.{1,253}$)(_?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*_?[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.?$/.test(
+          value,
+        ) ||
+        z.ipv4().safeParse(value).success ||
+        z.ipv6().safeParse(value).success,
+      "Not a DNS name",
+    ),
+  type: z.enum(["A", "AAAA", "CNAME", "MX", "NS", "TXT", "SOA", "CAA", "SRV", "PTR"]),
+  server: z.union([z.ipv4(), z.ipv6()]).nullable().default(null),
+  serverPort: z.int().min(1).max(65_535).default(53),
+  timeoutMs: z.int().min(1000).max(15_000).default(5000),
+});
+
+export const AppNetTlsInputSchema = z.strictObject({
+  host: target,
+  port: z.int().min(1).max(65_535).default(443),
+  servername: z.string().trim().toLowerCase().regex(hostName).nullable().default(null),
+  timeoutMs: z.int().min(1000).max(30_000).default(10_000),
+});
+
+export const AppMonitorSaveSchema = z.strictObject({
+  id: z.uuid().nullable().default(null),
+  name: z.string().trim().min(1).max(80),
+  url: z.string().min(8).max(2048),
+  method: z.enum(["GET", "HEAD"]),
+  intervalSeconds: z.int().min(60).max(86_400),
+  timeoutMs: z.int().min(1000).max(30_000),
+  expectStatus: z
+    .strictObject({ min: z.int().min(100).max(599), max: z.int().min(100).max(599) })
+    .refine((range) => range.min <= range.max, "Empty range"),
+  keyword: z.string().min(1).max(200).nullable().default(null),
+  downAfter: z.int().min(1).max(5),
+  verifyTls: z.boolean(),
+  notify: z.boolean(),
+  enabled: z.boolean(),
+});
+
+export const AppMonitorIdSchema = z.strictObject({ id: z.uuid() });
+
+export const AppMonitorHistorySchema = z.strictObject({
+  id: z.uuid(),
+  since: z.int().min(0).optional(),
+  limit: z.int().min(1).max(5000).default(1000),
+});

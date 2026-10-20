@@ -150,3 +150,39 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     await call(page, "DELETE", "/api/desktop-apps/installed/dev.everyos.probe", { confirm: true });
   }
 });
+
+test("administrators scope the network access of apps in the store", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel(/Kullanıcı adı|Username/).fill("goktug");
+  await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
+  await page.getByRole("button", { name: /Giriş yap|Sign in/ }).click();
+  await expect(page.getByTestId("desktop")).toBeVisible();
+  await page.keyboard.press("Control+k");
+  await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("mağaza");
+  await page.keyboard.press("Enter");
+  const store = page.locator('[data-app-id="everyos.store"]');
+  await store.getByRole("tab", { name: "Katalog kaynakları", exact: true }).click();
+  const rules = store.getByTestId("desktop-app-network-rules");
+  await expect(rules).toContainText("Henüz izin verilen bir adres yok.");
+
+  await rules.getByLabel("Tür", { exact: true }).selectOption("cidr");
+  await rules.getByLabel("Adres", { exact: true }).fill("192.168.1.0/24");
+  await rules.getByLabel("Portlar", { exact: true }).fill("80, 8123");
+  await rules.getByLabel("Not (isteğe bağlı)").fill("Home Assistant");
+  await rules.getByRole("button", { name: "İzin ver", exact: true }).click();
+  await expect(rules.getByRole("listitem")).toHaveCount(1);
+  await expect(rules.getByRole("listitem")).toContainText("192.168.1.0/24");
+  await expect(rules.getByRole("listitem")).toContainText("Portlar 80, 8123");
+  await expect(rules.getByRole("listitem")).toContainText("Tüm uygulamalar");
+  // An unusable range is refused by the server with a readable reason.
+  await rules.getByLabel("Adres", { exact: true }).fill("0.0.0.0/0");
+  await rules.getByRole("button", { name: "İzin ver", exact: true }).click();
+  await expect(rules.getByRole("alert")).toBeVisible();
+  await expect(rules.getByRole("listitem")).toHaveCount(1);
+
+  await rules.getByRole("button", { name: "Kaldır", exact: true }).click();
+  const confirm = page.getByRole("alertdialog");
+  await expect(confirm).toContainText("192.168.1.0/24 kuralı kaldırılsın mı?");
+  await confirm.getByRole("button", { name: "Kaldır", exact: true }).click();
+  await expect(rules).toContainText("Henüz izin verilen bir adres yok.");
+});

@@ -2941,6 +2941,14 @@ export const fr: LocaleMessages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} ne répond plus",
+        body: "{{app}} · {{target}} ne répond pas comme prévu.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} fonctionne de nouveau",
+        body: "{{app}} · {{target}} répond de nouveau.",
+      },
       "disk-detached": {
         title: "Disque retiré : {{disk}}",
         body: "{{unsafe}}",
@@ -3995,6 +4003,35 @@ export const fr: LocaleMessages = {
     unlinked: "Non associé",
   },
   desktopApps: {
+    network: {
+      title: "Accès réseau des applications",
+      description:
+        "Les applications autorisées à se connecter à des adresses n’atteignent que ce qui figure ici. Une règle de nom d’hôte ne couvre que les adresses publiques ; les adresses du réseau local et ce serveur nécessitent une plage d’adresses.",
+      empty: "Aucune adresse n’est encore autorisée.",
+      add: "Autoriser",
+      kind: "Type",
+      kinds: {
+        host: "Nom d’hôte",
+        cidr: "Plage d’adresses",
+      },
+      pattern: "Adresse",
+      patternHostHint: "api.example.com, ou *.example.com pour tous ses sous-domaines",
+      patternRangeHint: "Par exemple 192.168.1.0/24, ou 192.168.1.20/32 pour un appareil",
+      ports: "Ports",
+      portsHint: "Séparés par des virgules, par exemple 80, 443",
+      portList: "Ports {{ports}}",
+      note: "Note (facultatif)",
+      scope: "S’applique à",
+      thisApp: "Cette application",
+      allApps: "Toutes les applications",
+      onlyApp: "Seulement {{name}}",
+      thisServer: "Inclut ce serveur",
+      remove: "Retirer",
+      removeTitle: "Retirer la règle pour {{pattern}} ?",
+      removeBody:
+        "Les applications ne peuvent plus atteindre ces adresses, et les moniteurs qui les utilisent s’arrêtent avec un avertissement.",
+      adminsOnly: "Seul un administrateur peut modifier l’accès réseau.",
+    },
     store: {
       typeFilter: "Type",
       types: {
@@ -4258,6 +4295,9 @@ export const fr: LocaleMessages = {
       "Le paquet de l’application n’a pas pu être vérifié ; il n’a pas été installé.",
     DESKTOP_APP_BUSY: "Une autre opération est en cours pour cette application.",
     DESKTOP_APP_STORAGE_FULL: "Le stockage de cette application est plein.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "L’accès réseau des applications n’autorise pas cette adresse. Un administrateur peut l’autoriser dans la Boutique d’applications.",
+    DESKTOP_APP_NETWORK_FAILED: "La connexion a échoué.",
     NETWORK: "Le serveur est injoignable. Vérifiez votre connexion.",
     UNKNOWN: "Une erreur inconnue s’est produite.",
   },

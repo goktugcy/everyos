@@ -27,6 +27,7 @@ import { widgetUi } from "../../widgets/ui-store.ts";
 import { api } from "../../../lib/api.ts";
 import { DesktopAppDialog } from "./desktop-app-dialog.tsx";
 import { AddRegistryDialog, RegistryCard } from "./desktop-registries.tsx";
+import { NetworkRules } from "./network-rules.tsx";
 import { useDesktopApps } from "../../desktop-apps/store.ts";
 
 const TABS = ["browse", "installed", "catalogs"] as const;
@@ -405,6 +406,9 @@ export default function StoreApp() {
             {registries.data?.registries.map((registry) => (
               <RegistryCard key={registry.id} registry={registry} onChanged={reload} />
             ))}
+            <div className="mt-4">
+              <NetworkRules />
+            </div>
           </Tabs.Content>
         ) : null}
       </div>

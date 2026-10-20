@@ -2912,6 +2912,14 @@ export const ja: LocaleMessages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} が応答しません",
+        body: "{{app}} · {{target}} が想定どおりに応答しません。",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} が復旧しました",
+        body: "{{app}} · {{target}} が再び応答しています。",
+      },
       "disk-detached": {
         title: "ディスクが取り外されました：{{disk}}",
         body: "{{unsafe}}",
@@ -3948,6 +3956,35 @@ export const ja: LocaleMessages = {
     unlinked: "未リンク",
   },
   desktopApps: {
+    network: {
+      title: "アプリのネットワークアクセス",
+      description:
+        "アドレスへの接続を許可されたアプリは、ここに一覧されたものにだけ接続できます。ホスト名のルールは公開アドレスのみが対象です。ローカルネットワークのアドレスとこのサーバーにはアドレス範囲が必要です。",
+      empty: "許可されたアドレスはまだありません。",
+      add: "許可",
+      kind: "種類",
+      kinds: {
+        host: "ホスト名",
+        cidr: "アドレス範囲",
+      },
+      pattern: "アドレス",
+      patternHostHint: "api.example.com、またはすべてのサブドメインなら *.example.com",
+      patternRangeHint: "例: 192.168.1.0/24、1 台のデバイスなら 192.168.1.20/32",
+      ports: "ポート",
+      portsHint: "カンマで区切ります。例: 80, 443",
+      portList: "ポート {{ports}}",
+      note: "メモ（任意）",
+      scope: "適用対象",
+      thisApp: "このアプリ",
+      allApps: "すべてのアプリ",
+      onlyApp: "{{name}} のみ",
+      thisServer: "このサーバーを含む",
+      remove: "削除",
+      removeTitle: "{{pattern}} のルールを削除しますか？",
+      removeBody:
+        "アプリはこれらのアドレスに接続できなくなり、それを使うモニターは通知を出して停止します。",
+      adminsOnly: "ネットワークアクセスを変更できるのは管理者だけです。",
+    },
     store: {
       typeFilter: "種類",
       types: {
@@ -4200,6 +4237,9 @@ export const ja: LocaleMessages = {
       "アプリのパッケージを検証できなかったため、インストールしませんでした。",
     DESKTOP_APP_BUSY: "このアプリでは別の処理が実行中です。",
     DESKTOP_APP_STORAGE_FULL: "このアプリのストレージがいっぱいです。",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "アプリのネットワークアクセスでこのアドレスは許可されていません。管理者が アプリストアで許可できます。",
+    DESKTOP_APP_NETWORK_FAILED: "接続に失敗しました。",
     NETWORK: "サーバーに接続できません。接続を確認してください。",
     UNKNOWN: "不明なエラーが発生しました。",
   },

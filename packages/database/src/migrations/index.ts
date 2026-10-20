@@ -16,6 +16,7 @@ import { migration0014 } from "./0014-notification-channels.ts";
 import { migration0015 } from "./0015-drive-accounts.ts";
 import { migration0016 } from "./0016-desktop-apps.ts";
 import { migration0017 } from "./0017-desktop-app-file-grant-instances.ts";
+import { migration0018 } from "./0018-desktop-app-network.ts";
 
 /** Ordered list of all EveryOS schema migrations. Append only. */
 export const EVERYOS_MIGRATIONS: readonly Migration[] = [
@@ -36,4 +37,5 @@ export const EVERYOS_MIGRATIONS: readonly Migration[] = [
   migration0015,
   migration0016,
   migration0017,
+  migration0018,
 ];

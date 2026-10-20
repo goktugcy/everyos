@@ -2929,6 +2929,14 @@ export const es: LocaleMessages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} no responde",
+        body: "{{app}} · {{target}} no responde como se esperaba.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} vuelve a funcionar",
+        body: "{{app}} · {{target}} vuelve a responder.",
+      },
       "disk-detached": {
         title: "Disco desconectado: {{disk}}",
         body: "{{unsafe}}",
@@ -3981,6 +3989,35 @@ export const es: LocaleMessages = {
     unlinked: "Sin vincular",
   },
   desktopApps: {
+    network: {
+      title: "Acceso a la red de las aplicaciones",
+      description:
+        "Las aplicaciones autorizadas a conectarse a direcciones solo llegan a lo que aparece aquí. Una regla de nombre de host cubre solo direcciones públicas; las direcciones de la red local y este servidor necesitan un rango de direcciones.",
+      empty: "Aún no se permite ninguna dirección.",
+      add: "Permitir",
+      kind: "Tipo",
+      kinds: {
+        host: "Nombre de host",
+        cidr: "Rango de direcciones",
+      },
+      pattern: "Dirección",
+      patternHostHint: "api.example.com, o *.example.com para todos sus subdominios",
+      patternRangeHint: "Por ejemplo 192.168.1.0/24, o 192.168.1.20/32 para un dispositivo",
+      ports: "Puertos",
+      portsHint: "Separados por comas, por ejemplo 80, 443",
+      portList: "Puertos {{ports}}",
+      note: "Nota (opcional)",
+      scope: "Se aplica a",
+      thisApp: "Esta aplicación",
+      allApps: "Todas las aplicaciones",
+      onlyApp: "Solo {{name}}",
+      thisServer: "Incluye este servidor",
+      remove: "Quitar",
+      removeTitle: "¿Quitar la regla de {{pattern}}?",
+      removeBody:
+        "Las aplicaciones ya no podrán llegar a estas direcciones, y los monitores que las usan se detendrán con un aviso.",
+      adminsOnly: "Solo un administrador puede cambiar el acceso a la red.",
+    },
     store: {
       typeFilter: "Tipo",
       types: {
@@ -4246,6 +4283,9 @@ export const es: LocaleMessages = {
       "No se pudo verificar el paquete de la aplicación, así que no se instaló.",
     DESKTOP_APP_BUSY: "Ya hay otra operación en curso para esta aplicación.",
     DESKTOP_APP_STORAGE_FULL: "El almacenamiento de esta aplicación está lleno.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "El acceso a la red de las aplicaciones no permite esta dirección. Un administrador puede permitirla en la Tienda de aplicaciones.",
+    DESKTOP_APP_NETWORK_FAILED: "La conexión falló.",
     NETWORK: "No se puede conectar con el servidor. Comprueba tu conexión.",
     UNKNOWN: "Se produjo un error desconocido.",
   },

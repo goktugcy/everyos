@@ -5,6 +5,8 @@
  * validates every incoming message at run time, because an app may send anything.
  */
 
+import type { HostOperation } from "./host-operations.ts";
+
 export const PROTOCOL = 1;
 export const INIT_TYPE = "everyos:init";
 
@@ -179,38 +181,7 @@ export interface Methods {
   };
 }
 
-/**
- * Server operations an app reaches through `host.call` (each maps to one `/api/app-sdk` route and
- * one capability; docs/app-sdk/permissions.md).
- */
-export const HOST_OPERATIONS = [
-  "system.metrics",
-  "system.info",
-  "system.sockets",
-  "system.network",
-  "logs.query",
-  "disk.usage",
-  "net.http",
-  "net.dns",
-  "net.tls",
-  "net.monitors.list",
-  "net.monitors.save",
-  "net.monitors.delete",
-  "db.connections",
-  "db.query",
-  "db.tables",
-  "ssh.keys.list",
-  "ssh.keys.generate",
-  "ssh.keys.import",
-  "ssh.keys.export",
-  "ssh.keys.delete",
-  "appearance.wallpapers",
-  "appearance.setWallpaper",
-  "appearance.uploadWallpaper",
-  "appearance.folderIcons",
-  "appearance.uploadFolderIcon",
-] as const;
-export type HostOperation = (typeof HOST_OPERATIONS)[number];
+export * from "./host-operations.ts";
 
 export type Method = keyof Methods;
 export type Params<M extends Method> = Methods[M]["params"];

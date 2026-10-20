@@ -346,6 +346,9 @@ importers:
       '@everyos/app-registry':
         specifier: workspace:*
         version: link:../../packages/app-registry
+      '@everyos/app-sdk':
+        specifier: workspace:*
+        version: link:../../packages/app-sdk
       '@everyos/auth':
         specifier: workspace:*
         version: link:../../packages/auth

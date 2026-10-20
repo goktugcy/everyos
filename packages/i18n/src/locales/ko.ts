@@ -2876,6 +2876,14 @@ export const ko: LocaleMessages = {
         body: "{{reason}}",
       },
       "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} 응답 없음",
+        body: "{{app}} · {{target}}이(가) 예상대로 응답하지 않습니다.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} 복구됨",
+        body: "{{app}} · {{target}}이(가) 다시 응답합니다.",
+      },
       "disk-detached": {
         title: "디스크 분리됨: {{disk}}",
         body: "{{unsafe}}",
@@ -3890,6 +3898,35 @@ export const ko: LocaleMessages = {
     unlinked: "연결되지 않음",
   },
   desktopApps: {
+    network: {
+      title: "앱의 네트워크 접근",
+      description:
+        "주소에 연결하도록 허용된 앱은 여기에 나열된 곳에만 연결할 수 있습니다. 호스트 이름 규칙은 공용 주소만 포함하며, 로컬 네트워크 주소와 이 서버에는 주소 범위가 필요합니다.",
+      empty: "아직 허용된 주소가 없습니다.",
+      add: "허용",
+      kind: "유형",
+      kinds: {
+        host: "호스트 이름",
+        cidr: "주소 범위",
+      },
+      pattern: "주소",
+      patternHostHint: "api.example.com 또는 모든 하위 도메인이면 *.example.com",
+      patternRangeHint: "예: 192.168.1.0/24, 기기 하나는 192.168.1.20/32",
+      ports: "포트",
+      portsHint: "쉼표로 구분합니다. 예: 80, 443",
+      portList: "포트 {{ports}}",
+      note: "메모(선택 사항)",
+      scope: "적용 대상",
+      thisApp: "이 앱",
+      allApps: "모든 앱",
+      onlyApp: "{{name}}만",
+      thisServer: "이 서버 포함",
+      remove: "제거",
+      removeTitle: "{{pattern}} 규칙을 제거할까요?",
+      removeBody:
+        "앱이 더 이상 이 주소에 연결할 수 없으며, 이를 사용하는 모니터는 알림과 함께 중지됩니다.",
+      adminsOnly: "네트워크 접근은 관리자만 변경할 수 있습니다.",
+    },
     store: {
       typeFilter: "유형",
       types: {
@@ -4125,6 +4162,9 @@ export const ko: LocaleMessages = {
     DESKTOP_APP_PACKAGE_INVALID: "앱 패키지를 확인할 수 없어 설치하지 않았습니다.",
     DESKTOP_APP_BUSY: "이 앱에 대해 다른 작업이 진행 중입니다.",
     DESKTOP_APP_STORAGE_FULL: "이 앱의 저장 공간이 가득 찼습니다.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "앱의 네트워크 접근에서 이 주소를 허용하지 않습니다. 관리자가 앱 스토어에서 허용할 수 있습니다.",
+    DESKTOP_APP_NETWORK_FAILED: "연결에 실패했습니다.",
     NETWORK: "서버에 연결할 수 없습니다. 네트워크 연결을 확인하세요.",
     UNKNOWN: "알 수 없는 오류가 발생했습니다.",
   },

@@ -28,7 +28,8 @@
     "@everyos/widget-sdk": "workspace:*",
     "@everyos/system": "workspace:*",
     "@everyos/release": "workspace:*",
-    "nodemailer": "catalog:"
+    "nodemailer": "catalog:",
+    "@everyos/app-sdk": "workspace:*"
   },
   "devDependencies": {
     "@types/ws": "catalog:"

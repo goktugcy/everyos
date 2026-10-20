@@ -123,10 +123,11 @@ Risky capabilities (`network:outbound`, `database:connect`) need an explicit adm
 install and on every update that adds them; an update that requests a new capability stays pending
 until approved. No capability exposes Docker, systemd control, shells or arbitrary paths.
 
-The **network allowlist** is an administrator setting (hosts, CIDRs, ports, schemes). Requests run
-on the server through the SSRF-safe fetcher used for catalogs (DNS pinned per hop, private ranges
-blocked unless an allowlist entry names them), with size, time and rate limits; EveryOS cookies and
-credentials are never forwarded.
+The **network access policy** is an administrator setting: host-name rules (public addresses only)
+and address-range rules (private networks, this server), each with its ports, for all apps or one
+app. HTTP, TLS inspection, DNS and HTTP monitors run on the server; every target and redirect hop is
+resolved, checked and pinned, link-local and metadata addresses are always refused, and EveryOS
+cookies and credentials are never sent. See [network access](network.md).
 
 ## Manifest
 
@@ -187,12 +188,14 @@ deployed to the owner's Cloudflare account only with the owner's explicit approv
 `/api/desktop-apps/*` (store and management: registries, catalog, install, update, permission
 approvals, uninstall, per-user settings) and `/api/app-sdk/*` (instance calls: storage, files,
 notifications, metrics, logs, network, database, SSH keys, widgets). Every route validates with zod
-and checks a permission; installs, updates, grants, revocations, uninstalls and risky calls are
-audited without secrets.
+and checks a permission; installs, updates, grants, revocations, uninstalls, network rules, monitors
+and refused network targets are audited without secrets (individual requests are not, so an app
+cannot flood the audit log).
 
 Tables (migration 0016, append-only): `desktop_app_registries`, `desktop_app_catalog`,
 `desktop_app_installations`, `desktop_app_storage`, `desktop_app_file_grants`,
-`desktop_app_user_settings`, `desktop_app_network_rules`, `desktop_app_connections`,
+`desktop_app_user_settings`, `desktop_app_network_rules` (0018: per-app rules),
+`desktop_app_monitors`, `desktop_app_monitor_checks`, `desktop_app_connections`,
 `desktop_app_ssh_keys`, with foreign keys, unique constraints and per-user isolation.
 
 ## Desktop integration

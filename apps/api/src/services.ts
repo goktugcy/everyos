@@ -151,6 +151,8 @@ export interface ServiceDependencies {
   google?: GoogleEndpoints;
   /** Test hook: how desktop app registries and packages are fetched. */
   desktopAppFetcher?: FetcherFactory;
+  /** Test hook: DNS of the desktop apps' network policy. */
+  desktopAppResolve?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
   /** Test hook: S3 client options for off-site backups. */
   s3?: S3ClientOptions;
 }
@@ -392,6 +394,8 @@ export function createServices(deps: ServiceDependencies): Services {
         community: deps.config.desktopApps.communityRegistry,
       },
       ...(deps.desktopAppFetcher ? { fetcher: deps.desktopAppFetcher } : {}),
+      ...(deps.desktopAppResolve ? { resolve: deps.desktopAppResolve } : {}),
+      notifications,
     }),
     integrations,
     aiAgents: new AiAgentService({

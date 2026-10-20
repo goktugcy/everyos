@@ -1,10 +1,20 @@
 import { existsSync } from "node:fs";
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, writeFile } from "node:fs/promises";
-import { createServer, type Server } from "node:http";
+import { execFileSync } from "node:child_process";
+import { createSocket } from "node:dgram";
+import {
+  createServer,
+  type IncomingHttpHeaders,
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+} from "node:http";
+import { createServer as createHttpsServer } from "node:https";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { gzipSync } from "node:zlib";
 import { once } from "node:events";
 import {
   generatePublisherKeys,
@@ -13,12 +23,20 @@ import {
   sha256Hex,
   signPackage,
 } from "@everyos/app-package";
+import type {
+  NetDnsResult,
+  NetHttpResponse,
+  NetMonitor,
+  NetMonitorCheck,
+  NetTlsResult,
+} from "@everyos/app-sdk/protocol";
 import { signRegistryIndex, type RegistryIndex } from "@everyos/app-registry";
 import { createCatalogFetcher } from "@everyos/catalogs";
 import type {
   ApiErrorBody,
   DesktopAppInstallationView,
   DesktopAppListing,
+  DesktopAppNetworkRuleView,
   DesktopAppRegistryView,
 } from "@everyos/shared";
 import { afterEach, describe, expect, it } from "vitest";
@@ -172,7 +190,11 @@ function publish(target: TestRegistry, value: RegistryIndex, builds: Built[], of
   for (const built of builds) target.files.set(`/${built.version.package.url}`, built.bytes);
 }
 
-async function setup(): Promise<{
+async function setup(
+  hooks: {
+    resolve?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
+  } = {},
+): Promise<{
   ctx: TestContext;
   admin: TestClient;
   operator: TestClient;
@@ -192,6 +214,7 @@ async function setup(): Promise<{
     // The test registry listens on loopback, which production fetches refuse.
     services: {
       desktopAppFetcher: (options) => createCatalogFetcher({ ...options, allowPrivate: true }),
+      ...(hooks.resolve ? { desktopAppResolve: hooks.resolve } : {}),
     },
   });
   await ctx.services.files.ensureRoots();
@@ -1096,4 +1119,652 @@ describe("app notifications and host data", () => {
     expect(usage.result.largest[0]!.path).toBe("films/big.mkv");
     expect(usage.result.types.map((type) => type.extension)).toEqual(["mkv", "mp3"]);
   });
+});
+
+/** A local upstream for network tests: records what reached it. */
+class Upstream {
+  readonly seen: Array<{
+    url: string;
+    method: string;
+    headers: IncomingHttpHeaders;
+    body: string;
+  }> = [];
+  failing = false;
+  closedPort = 0;
+  readonly server: Server;
+  port = 0;
+  constructor(tls?: { key: Buffer; cert: Buffer }) {
+    const handler = (req: IncomingMessage, res: ServerResponse) => {
+      const chunks: Buffer[] = [];
+      req.on("data", (chunk: Buffer) => chunks.push(chunk));
+      req.on("end", () => {
+        const body = Buffer.concat(chunks).toString("utf8");
+        this.seen.push({
+          url: req.url ?? "",
+          method: req.method ?? "",
+          headers: req.headers,
+          body,
+        });
+        switch (req.url ?? "") {
+          case "/hello":
+            res.writeHead(this.failing ? 500 : 200, {
+              "Content-Type": "application/json",
+              "X-Test": "yes",
+            });
+            res.end(JSON.stringify({ hello: "world" }));
+            return;
+          case "/echo":
+            res.writeHead(201, { "Content-Type": "application/json; charset=utf-8" });
+            res.end(JSON.stringify({ method: req.method, body, headers: req.headers }));
+            return;
+          case "/redirect":
+            res.writeHead(302, { Location: "/hello" });
+            res.end();
+            return;
+          case "/away":
+            res.writeHead(302, { Location: `http://127.0.0.1:${this.closedPort}/hello` });
+            res.end();
+            return;
+          case "/gzip":
+            res.writeHead(200, { "Content-Type": "text/plain", "Content-Encoding": "gzip" });
+            res.end(gzipSync("compressed text ".repeat(100)));
+            return;
+          case "/big":
+            res.writeHead(200, { "Content-Type": "application/octet-stream" });
+            res.end(Buffer.alloc(3 * 1024 * 1024, 7));
+            return;
+          case "/slow":
+            res.writeHead(200, { "Content-Type": "text/plain" });
+            res.write("started");
+            return;
+          default:
+            res.writeHead(404);
+            res.end();
+        }
+      });
+    };
+    this.server = tls ? createHttpsServer(tls, handler) : createServer(handler);
+  }
+  async start() {
+    this.server.listen(0, "127.0.0.1");
+    await once(this.server, "listening");
+    this.port = (this.server.address() as AddressInfo).port;
+    const probe = createServer();
+    probe.listen(0, "127.0.0.1");
+    await once(probe, "listening");
+    this.closedPort = (probe.address() as AddressInfo).port;
+    probe.close();
+    await once(probe, "close");
+  }
+  async stop() {
+    this.server.closeAllConnections();
+    this.server.close();
+    await once(this.server, "close");
+  }
+}
+
+/** A DNS server over UDP answering A queries for the given names (NXDOMAIN otherwise). */
+async function dnsServer(records: Record<string, string>) {
+  const socket = createSocket("udp4");
+  const u16 = (value: number) => Buffer.from([value >> 8, value & 255]);
+  socket.on("message", (message, peer) => {
+    let offset = 12;
+    const labels: string[] = [];
+    while (message[offset]) {
+      const length = message[offset]!;
+      labels.push(message.subarray(offset + 1, offset + 1 + length).toString());
+      offset += length + 1;
+    }
+    offset += 1;
+    const type = message.readUInt16BE(offset);
+    const question = message.subarray(12, offset + 4);
+    const address = records[labels.join(".").toLowerCase()];
+    const answer =
+      address && type === 1
+        ? Buffer.concat([
+            Buffer.from([0xc0, 0x0c]),
+            u16(1),
+            u16(1),
+            Buffer.from([0, 0, 1, 44]),
+            u16(4),
+            Buffer.from(address.split(".").map(Number)),
+          ])
+        : null;
+    const header = Buffer.concat([
+      message.subarray(0, 2),
+      u16(address ? 0x8180 : 0x8183),
+      u16(1),
+      u16(answer ? 1 : 0),
+      u16(0),
+      u16(0),
+    ]);
+    socket.send(
+      Buffer.concat([header, question, answer ?? Buffer.alloc(0)]),
+      peer.port,
+      peer.address,
+    );
+  });
+  socket.bind(0, "127.0.0.1");
+  await once(socket, "listening");
+  return { port: socket.address().port, close: () => socket.close() };
+}
+
+describe("app network access", () => {
+  const upstreams: Upstream[] = [];
+  afterEach(async () => {
+    for (const upstream of upstreams.splice(0)) await upstream.stop();
+  });
+  const names: Record<string, Array<{ address: string; family: number }>> = {
+    "api.example.com": [{ address: "93.184.216.34", family: 4 }],
+    "deep.api.example.com": [{ address: "93.184.216.35", family: 4 }],
+    "example.com": [{ address: "93.184.216.36", family: 4 }],
+    "intranet.example.com": [{ address: "10.1.2.3", family: 4 }],
+    "mixed.example.com": [
+      { address: "93.184.216.34", family: 4 },
+      { address: "127.0.0.1", family: 4 },
+    ],
+  };
+  const resolve = (hostname: string) => {
+    const found = names[hostname];
+    return found
+      ? Promise.resolve(found)
+      : Promise.reject(Object.assign(new Error("not found"), { code: "ENOTFOUND" }));
+  };
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+
+  async function withNetworkApp(
+    permissions = ["network:outbound", "notifications:send"],
+    approve = ["network:outbound"],
+  ) {
+    const context = await setup({ resolve });
+    const build = await buildApp(
+      "dev.everyos.netprobe",
+      "1.0.0",
+      permissions,
+      officialKeys.privateKey,
+    );
+    const other = await buildApp(
+      "dev.everyos.other",
+      "1.0.0",
+      ["storage:app"],
+      officialKeys.privateKey,
+    );
+    publish(
+      context.registry,
+      index([
+        { id: "dev.everyos.netprobe", versions: [build] },
+        { id: "dev.everyos.other", versions: [other] },
+      ]),
+      [build, other],
+    );
+    await sync(context.admin);
+    for (const [appId, approved] of [
+      ["dev.everyos.netprobe", approve],
+      ["dev.everyos.other", []],
+    ] as const)
+      expect(
+        (
+          await context.admin.post("/api/desktop-apps/installed", {
+            registryId: "official",
+            appId,
+            approve: approved,
+          })
+        ).status,
+      ).toBe(201);
+    const open = async (client: TestClient, appId = "dev.everyos.netprobe") =>
+      (
+        await json<{ token: string }>(
+          await client.post("/api/app-sdk/instances", { appId, kind: "window" }),
+        )
+      ).token;
+    const host = (client: TestClient, token: string, operation: string, input: unknown = null) =>
+      client.request("POST", `/api/app-sdk/host/${operation}`, { body: { input }, ...as(token) });
+    const rule = (body: Record<string, unknown>, client = context.admin) =>
+      client.post("/api/desktop-apps/network-rules", body);
+    return { ...context, open, host, rule };
+  }
+
+  it("lets administrators scope what apps may reach, and refuses everything else", async () => {
+    const { ctx, admin, operator, viewer, rule } = await withNetworkApp();
+    const network = ctx.services.desktopApps.network;
+    const refusal = async (host: string, port: number, appId = "dev.everyos.netprobe") =>
+      network.target(appId, host, port).then(
+        () => null,
+        (error: { code: string; details: { reason: string } }) => [
+          error.code,
+          error.details.reason,
+        ],
+      );
+    // Nothing is reachable until an administrator allows it.
+    expect(await refusal("api.example.com", 443)).toEqual([
+      "DESKTOP_APP_NETWORK_BLOCKED",
+      "policy",
+    ]);
+    expect(
+      (await rule({ kind: "host", pattern: "*.example.com", ports: [443] }, operator)).status,
+    ).toBe(403);
+    expect((await rule({ kind: "host", pattern: "*.Example.com", ports: [443] })).status).toBe(201);
+    expect((await rule({ kind: "host", pattern: "*.example.com", ports: [443] })).status).toBe(409);
+    expect((await operator.get("/api/desktop-apps/network-rules")).status).toBe(200);
+    expect((await viewer.get("/api/desktop-apps/network-rules")).status).toBe(403);
+
+    expect(await network.target("dev.everyos.netprobe", "api.example.com", 443)).toEqual({
+      host: "api.example.com",
+      address: "93.184.216.34",
+      family: 4,
+    });
+    expect(await refusal("deep.api.example.com", 443)).toBeNull();
+    // The wildcard covers subdomains only, on the listed ports only.
+    expect(await refusal("example.com", 443)).toEqual(["DESKTOP_APP_NETWORK_BLOCKED", "policy"]);
+    expect(await refusal("evilexample.com", 443)).toEqual([
+      "DESKTOP_APP_NETWORK_BLOCKED",
+      "policy",
+    ]);
+    expect(await refusal("api.example.com", 80)).toEqual(["DESKTOP_APP_NETWORK_BLOCKED", "policy"]);
+    // A host rule never reaches private addresses, even partly (DNS rebinding).
+    expect(await refusal("intranet.example.com", 443)).toEqual([
+      "DESKTOP_APP_NETWORK_BLOCKED",
+      "address",
+    ]);
+    expect(await refusal("mixed.example.com", 443)).toEqual([
+      "DESKTOP_APP_NETWORK_BLOCKED",
+      "address",
+    ]);
+    expect(await refusal("93.184.216.34", 443)).toEqual(["DESKTOP_APP_NETWORK_BLOCKED", "policy"]);
+
+    // Private ranges need a CIDR rule, which may belong to one app only.
+    expect(
+      (
+        await rule({
+          kind: "cidr",
+          pattern: "10.1.2.0/24",
+          ports: [443],
+          appId: "dev.everyos.other",
+        })
+      ).status,
+    ).toBe(201);
+    expect(await refusal("intranet.example.com", 443)).toEqual([
+      "DESKTOP_APP_NETWORK_BLOCKED",
+      "address",
+    ]);
+    expect(await refusal("10.1.2.3", 443, "dev.everyos.other")).toBeNull();
+    expect(
+      (
+        await rule({
+          kind: "cidr",
+          pattern: "10.1.2.0/24",
+          ports: [443],
+          appId: "dev.everyos.netprobe",
+        })
+      ).status,
+    ).toBe(201);
+    expect(await refusal("intranet.example.com", 443)).toBeNull();
+
+    // Never: cloud metadata and link-local, whatever the rules say; no "everything" ranges.
+    expect((await rule({ kind: "cidr", pattern: "169.254.0.0/16", ports: [80] })).status).toBe(201);
+    expect(await refusal("169.254.169.254", 80)).toEqual([
+      "DESKTOP_APP_NETWORK_BLOCKED",
+      "address",
+    ]);
+    for (const pattern of ["0.0.0.0/0", "10.0.0.0/4", "::/0", "300.1.1.1/24"])
+      expect((await rule({ kind: "cidr", pattern, ports: [80] })).status, pattern).toBe(400);
+    expect((await rule({ kind: "host", pattern: "*", ports: [80] })).status).toBe(400);
+    expect((await rule({ kind: "host", pattern: "10.0.0.1", ports: [80] })).status).toBe(400);
+
+    const loopback = await json<DesktopAppNetworkRuleView>(
+      await rule({ kind: "cidr", pattern: "127.0.0.1/32", ports: [8080], note: "Local service" }),
+    );
+    expect(loopback).toMatchObject({ includesThisServer: true, createdBy: "admin" });
+    const scoped = await json<{ rules: DesktopAppNetworkRuleView[] }>(
+      await admin.get("/api/desktop-apps/network-rules?appId=dev.everyos.other"),
+    );
+    expect(scoped.rules.map((entry) => entry.appId)).not.toContain("dev.everyos.netprobe");
+    expect(
+      (await admin.delete(`/api/desktop-apps/network-rules/${loopback.id}`, { body: {} })).status,
+    ).toBe(204);
+    // Uninstalling an app takes its own rules with it.
+    expect(
+      (
+        await admin.delete("/api/desktop-apps/installed/dev.everyos.other", {
+          body: { confirm: true },
+        })
+      ).status,
+    ).toBe(204);
+    const left = await json<{ rules: DesktopAppNetworkRuleView[] }>(
+      await admin.get("/api/desktop-apps/network-rules"),
+    );
+    expect(left.rules.some((entry) => entry.appId === "dev.everyos.other")).toBe(false);
+  });
+
+  it("makes HTTP requests only to allowed targets, without EveryOS credentials", async () => {
+    const { ctx, admin, open, host, rule } = await withNetworkApp();
+    const upstream = new Upstream();
+    upstreams.push(upstream);
+    await upstream.start();
+    const token = await open(admin);
+    const base = `http://127.0.0.1:${upstream.port}`;
+    const http = (input: Record<string, unknown>) => host(admin, token, "net.http", input);
+
+    const blocked = await http({ method: "GET", url: `${base}/hello` });
+    expect(blocked.status).toBe(403);
+    expect(await code(blocked)).toMatchObject({
+      code: "DESKTOP_APP_NETWORK_BLOCKED",
+      details: { host: "127.0.0.1", port: upstream.port, reason: "policy" },
+    });
+    expect((await http({ method: "GET", url: `${base}/hello` })).status).toBe(403);
+    const refusals = ctx.db.all<{ details: string }>(
+      "SELECT details FROM audit_events WHERE action = 'desktop-apps.network.blocked'",
+    );
+    expect(refusals).toHaveLength(1);
+    expect(upstream.seen).toHaveLength(0);
+
+    expect(
+      (
+        await rule({
+          kind: "cidr",
+          pattern: "127.0.0.1/32",
+          ports: [upstream.port, upstream.closedPort],
+        })
+      ).status,
+    ).toBe(201);
+    const hello = await json<{ result: NetHttpResponse }>(
+      await http({ method: "GET", url: `${base}/hello` }),
+    );
+    expect(hello.result).toMatchObject({
+      url: `${base}/hello`,
+      status: 200,
+      remoteAddress: "127.0.0.1",
+      body: { encoding: "text", data: '{"hello":"world"}', truncated: false, size: 17 },
+      redirects: [],
+    });
+    expect(hello.result.headers).toContainEqual(["X-Test", "yes"]);
+    expect(hello.result.timing.total).toBeGreaterThanOrEqual(hello.result.timing.firstByte);
+
+    const echo = await json<{ result: NetHttpResponse }>(
+      await http({
+        method: "POST",
+        url: `${base}/echo`,
+        headers: [
+          ["X-Custom", "1"],
+          ["Authorization", "Bearer app-token"],
+        ],
+        body: { text: "payload" },
+      }),
+    );
+    expect(echo.result.status).toBe(201);
+    const received = upstream.seen.at(-1)!;
+    expect(received.body).toBe("payload");
+    expect(received.headers).toMatchObject({
+      "x-custom": "1",
+      authorization: "Bearer app-token",
+      "content-type": "text/plain; charset=utf-8",
+      "user-agent": "EveryOS-App/1 (dev.everyos.netprobe)",
+    });
+    // Nothing of the person's EveryOS session travels with an app's request.
+    expect(received.headers.cookie).toBeUndefined();
+    expect(JSON.stringify(received.headers)).not.toContain(admin.csrfToken!);
+    expect(
+      (await http({ method: "GET", url: `${base}/echo`, headers: [["Host", "evil"]] })).status,
+    ).toBe(400);
+    expect((await http({ method: "GET", url: `file:///etc/passwd` })).status).toBe(400);
+    expect(
+      (await http({ method: "GET", url: `http://user:pw@127.0.0.1:${upstream.port}/` })).status,
+    ).toBe(400);
+
+    const redirect = await json<{ result: NetHttpResponse }>(
+      await http({ method: "GET", url: `${base}/redirect` }),
+    );
+    expect(redirect.result.status).toBe(302);
+    const followed = await json<{ result: NetHttpResponse }>(
+      await http({ method: "GET", url: `${base}/redirect`, followRedirects: true }),
+    );
+    expect(followed.result).toMatchObject({
+      status: 200,
+      url: `${base}/hello`,
+      redirects: [{ url: `${base}/redirect`, status: 302 }],
+    });
+    // Each hop is checked: a redirect cannot lead to a port the policy does not allow.
+    await rule({ kind: "cidr", pattern: "127.0.0.1/32", ports: [upstream.port] });
+    ctx.db.run(
+      "DELETE FROM desktop_app_network_rules WHERE ports = ?",
+      JSON.stringify([upstream.port, upstream.closedPort].sort((a, b) => a - b)),
+    );
+    const away = await http({ method: "GET", url: `${base}/away`, followRedirects: true });
+    expect(away.status).toBe(403);
+    expect((await code(away)).details).toMatchObject({ port: upstream.closedPort });
+
+    const gzip = await json<{ result: NetHttpResponse }>(
+      await http({ method: "GET", url: `${base}/gzip` }),
+    );
+    expect(gzip.result.body.data).toBe("compressed text ".repeat(100));
+    const big = await json<{ result: NetHttpResponse }>(
+      await http({ method: "GET", url: `${base}/big` }),
+    );
+    expect(big.result.body).toMatchObject({ encoding: "base64", truncated: true });
+    expect(Buffer.from(big.result.body.data, "base64").length).toBe(2 * 1024 * 1024);
+
+    const slow = await http({ method: "GET", url: `${base}/slow`, timeoutMs: 1000 });
+    expect(slow.status).toBe(502);
+    expect((await code(slow)).details).toMatchObject({ reason: "timeout" });
+    await rule({ kind: "cidr", pattern: "127.0.0.1/32", ports: [upstream.closedPort] });
+    const refused = await http({ method: "GET", url: `http://127.0.0.1:${upstream.closedPort}/` });
+    expect((await code(refused)).details).toMatchObject({ reason: "refused" });
+  }, 30_000);
+
+  it("needs network:outbound granted, and inspects TLS and DNS within the policy", async () => {
+    const { admin, open, host, rule } = await withNetworkApp();
+    const otherToken = await open(admin, "dev.everyos.other");
+    expect(
+      (
+        await host(admin, otherToken, "net.http", {
+          method: "GET",
+          url: "https://api.example.com/",
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (await code(await host(admin, otherToken, "net.dns", { name: "example.com", type: "A" })))
+        .code,
+    ).toBe("FORBIDDEN");
+
+    const dir = await mkdtemp(join(tmpdir(), "everyos-tls-"));
+    execFileSync(
+      "openssl",
+      [
+        "req",
+        "-x509",
+        "-newkey",
+        "ec",
+        "-pkeyopt",
+        "ec_paramgen_curve:prime256v1",
+        "-nodes",
+        "-keyout",
+        join(dir, "key.pem"),
+        "-out",
+        join(dir, "cert.pem"),
+        "-days",
+        "2",
+        "-subj",
+        "/CN=everyos-test",
+        "-addext",
+        "subjectAltName=IP:127.0.0.1,DNS:everyos-test",
+      ],
+      { stdio: "ignore" },
+    );
+    const upstream = new Upstream({
+      key: readFileSync(join(dir, "key.pem")),
+      cert: readFileSync(join(dir, "cert.pem")),
+    });
+    upstreams.push(upstream);
+    await upstream.start();
+    const token = await open(admin);
+    expect(
+      (await host(admin, token, "net.tls", { host: "127.0.0.1", port: upstream.port })).status,
+    ).toBe(403);
+    await rule({ kind: "cidr", pattern: "127.0.0.1/32", ports: [upstream.port] });
+    const tls = await json<{ result: NetTlsResult }>(
+      await host(admin, token, "net.tls", { host: "127.0.0.1", port: upstream.port }),
+    );
+    expect(tls.result).toMatchObject({
+      host: "127.0.0.1",
+      authorized: false,
+      hostnameMatches: true,
+      chain: [
+        { subject: "CN=everyos-test", issuer: "CN=everyos-test", selfSigned: true, keyType: "ec" },
+      ],
+    });
+    expect(tls.result.chain[0]!.subjectAltNames).toContain("DNS:everyos-test");
+    expect(tls.result.chain[0]!.validTo).toBeGreaterThan(Date.now());
+    expect(tls.result.protocol).toMatch(/^TLSv1\.[23]$/);
+    // The same certificate fails an HTTPS request unless the app explicitly accepts it.
+    const strict = await host(admin, token, "net.http", {
+      method: "GET",
+      url: `https://127.0.0.1:${upstream.port}/hello`,
+    });
+    expect((await code(strict)).details).toMatchObject({ reason: "tls" });
+    const lenient = await json<{ result: NetHttpResponse }>(
+      await host(admin, token, "net.http", {
+        method: "GET",
+        url: `https://127.0.0.1:${upstream.port}/hello`,
+        verifyTls: false,
+      }),
+    );
+    expect(lenient.result.status).toBe(200);
+    expect(lenient.result.timing.tls).not.toBeNull();
+
+    const dns = await dnsServer({ "printer.home.arpa": "192.168.1.40" });
+    try {
+      const query = (input: Record<string, unknown>) => host(admin, token, "net.dns", input);
+      const server = { server: "127.0.0.1", serverPort: dns.port };
+      expect((await query({ name: "printer.home.arpa", type: "A", ...server })).status).toBe(403);
+      await rule({ kind: "cidr", pattern: "127.0.0.1/32", ports: [dns.port] });
+      const found = await json<{ result: NetDnsResult }>(
+        await query({ name: "printer.home.arpa", type: "A", ...server }),
+      );
+      expect(found.result).toMatchObject({
+        status: "ok",
+        servers: [`127.0.0.1:${dns.port}`],
+        records: [{ type: "A", address: "192.168.1.40", ttl: 300 }],
+      });
+      const missing = await json<{ result: NetDnsResult }>(
+        await query({ name: "nothing.home.arpa", type: "A", ...server }),
+      );
+      expect(missing.result).toMatchObject({ status: "not-found", records: [] });
+      expect((await query({ name: "bad name!", type: "A", ...server })).status).toBe(400);
+      expect((await query({ name: "printer.home.arpa", type: "ANY", ...server })).status).toBe(400);
+    } finally {
+      dns.close();
+    }
+  }, 30_000);
+
+  it("monitors endpoints on its own schedule and tells only their owner when they fail", async () => {
+    const { ctx, admin, operator, open, host, rule } = await withNetworkApp(
+      ["network:outbound", "notifications:send"],
+      ["network:outbound"],
+    );
+    const upstream = new Upstream();
+    upstreams.push(upstream);
+    await upstream.start();
+    const token = await open(admin);
+    const monitors = ctx.services.desktopApps.monitors;
+    const monitor = {
+      name: "Home page",
+      url: `http://127.0.0.1:${upstream.port}/hello`,
+      method: "GET",
+      intervalSeconds: 60,
+      timeoutMs: 5000,
+      expectStatus: { min: 200, max: 299 },
+      keyword: "world",
+      downAfter: 1,
+      verifyTls: true,
+      notify: true,
+      enabled: true,
+    };
+    const save = (input: Record<string, unknown>, as = token) =>
+      host(admin, as, "net.monitors.save", input);
+    expect(await code(await save(monitor))).toMatchObject({ code: "DESKTOP_APP_NETWORK_BLOCKED" });
+    await rule({ kind: "cidr", pattern: "127.0.0.1/32", ports: [upstream.port] });
+    const created = (await json<{ result: NetMonitor }>(await save(monitor))).result;
+    expect(created).toMatchObject({ state: "pending", checkedAt: null, uptime24h: null });
+
+    await monitors.tick();
+    const list = async () =>
+      (
+        await json<{ result: { monitors: NetMonitor[] } }>(
+          await host(admin, token, "net.monitors.list"),
+        )
+      ).result.monitors;
+    expect((await list())[0]).toMatchObject({ state: "up", lastStatus: 200, uptime24h: 1 });
+    // Not due yet: no second check.
+    await monitors.tick();
+    expect(upstream.seen).toHaveLength(1);
+
+    const events = async (client: TestClient) =>
+      (
+        await json<{
+          notifications: Array<{ kind: string; severity: string; params: Record<string, unknown> }>;
+        }>(await client.get("/api/notifications"))
+      ).notifications.filter((n) => n.kind.startsWith("app-monitor"));
+    upstream.failing = true;
+    ctx.clock.now += 61_000;
+    await monitors.tick();
+    expect((await list())[0]).toMatchObject({
+      state: "down",
+      lastStatus: 500,
+      lastError: "status",
+      uptime24h: 0.5,
+    });
+    expect(await events(admin)).toMatchObject([
+      {
+        kind: "app-monitor-down",
+        severity: "warning",
+        params: { name: "Home page", target: `127.0.0.1:${upstream.port}` },
+      },
+    ]);
+    expect(await events(operator)).toEqual([]);
+
+    upstream.failing = false;
+    // Checking by hand is allowed, at most once every ten seconds.
+    expect((await host(admin, token, "net.monitors.check", { id: created.id })).status).toBe(429);
+    ctx.clock.now += 11_000;
+    const checked = await host(admin, token, "net.monitors.check", { id: created.id });
+    expect((await json<{ result: NetMonitor }>(checked)).result.state).toBe("up");
+    expect((await host(admin, token, "net.monitors.check", { id: created.id })).status).toBe(429);
+    expect((await events(admin)).map((event) => event.kind)).toEqual([
+      "app-monitor-recovered",
+      "app-monitor-down",
+    ]);
+    const history = await json<{ result: { checks: NetMonitorCheck[] } }>(
+      await host(admin, token, "net.monitors.history", { id: created.id }),
+    );
+    expect(history.result.checks.map((check) => check.ok)).toEqual([true, false, true]);
+
+    // Another person's app window sees none of it.
+    const operatorToken = await open(operator);
+    expect(
+      (
+        await json<{ result: { monitors: NetMonitor[] } }>(
+          await host(operator, operatorToken, "net.monitors.list"),
+        )
+      ).result.monitors,
+    ).toEqual([]);
+    expect(
+      (await host(operator, operatorToken, "net.monitors.delete", { id: created.id })).status,
+    ).toBe(404);
+
+    // When the policy no longer allows the target, the monitor says so instead of failing.
+    ctx.db.run("DELETE FROM desktop_app_network_rules");
+    ctx.clock.now += 61_000;
+    await monitors.tick();
+    expect((await list())[0]).toMatchObject({ state: "blocked", lastError: "blocked" });
+    expect(await events(admin)).toHaveLength(2);
+
+    expect((await host(admin, token, "net.monitors.delete", { id: created.id })).status).toBe(200);
+    expect(await list()).toEqual([]);
+    expect(
+      ctx.db.get<{ count: number }>("SELECT COUNT(*) AS count FROM desktop_app_monitor_checks"),
+    ).toEqual({
+      count: 0,
+    });
+  }, 30_000);
 });
