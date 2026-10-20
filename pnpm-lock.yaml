@@ -337,6 +337,15 @@ importers:
       '@everyos/agent-protocol':
         specifier: workspace:*
         version: link:../../packages/agent-protocol
+      '@everyos/app-manifest':
+        specifier: workspace:*
+        version: link:../../packages/app-manifest
+      '@everyos/app-package':
+        specifier: workspace:*
+        version: link:../../packages/app-package
+      '@everyos/app-registry':
+        specifier: workspace:*
+        version: link:../../packages/app-registry
       '@everyos/auth':
         specifier: workspace:*
         version: link:../../packages/auth

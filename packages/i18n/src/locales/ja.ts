@@ -4017,6 +4017,14 @@ export const ja: LocaleMessages = {
     BACKUP_PASSPHRASE_INVALID: "このバックアップパスフレーズではファイルを開けません。",
     BACKUP_OFFSITE_NOT_CONFIGURED: "外部のバックアップ保存先が設定されていません。",
     BACKUP_OFFSITE_FAILED: "外部のバックアップ保存先に接続できませんでした。",
+    DESKTOP_APP_APPROVAL_REQUIRED: "このアプリが要求する権限の承認が必要です。",
+    DESKTOP_APP_INCOMPATIBLE: "このアプリはこのバージョンの EveryOS と互換性がありません。",
+    DESKTOP_APP_REVOKED:
+      "このアプリのバージョンは、公開者またはレジストリによって取り下げられました。",
+    DESKTOP_APP_REGISTRY_FAILED: "アプリのレジストリを読み込めないか、検証できませんでした。",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "アプリのパッケージを検証できなかったため、インストールしませんでした。",
+    DESKTOP_APP_BUSY: "このアプリでは別の処理が実行中です。",
     NETWORK: "サーバーに接続できません。接続を確認してください。",
     UNKNOWN: "不明なエラーが発生しました。",
   },

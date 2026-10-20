@@ -16,6 +16,8 @@ const CONTENT_SECURITY_POLICY = [
   "font-src 'self'",
   "connect-src 'self'",
   "worker-src 'self' blob:",
+  // Desktop app frames (docs/app-sdk/architecture.md) may only ever show EveryOS URLs.
+  "frame-src 'self'",
   "object-src 'none'",
   "base-uri 'none'",
   "form-action 'self'",
@@ -30,10 +32,13 @@ export function securityHeaders(services: Services): MiddlewareHandler<AppEnv> {
     if (!headers.has("Content-Security-Policy"))
       headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
     headers.set("X-Content-Type-Options", "nosniff");
-    headers.set("X-Frame-Options", "DENY");
+    // Only desktop app runtime files set their own framing and resource policy (to be framed by
+    // the desktop and loaded from their opaque origin); everything else is never framed.
+    if (!headers.has("X-Frame-Options")) headers.set("X-Frame-Options", "DENY");
     headers.set("Referrer-Policy", "no-referrer");
     headers.set("Cross-Origin-Opener-Policy", "same-origin");
-    headers.set("Cross-Origin-Resource-Policy", "same-origin");
+    if (!headers.has("Cross-Origin-Resource-Policy"))
+      headers.set("Cross-Origin-Resource-Policy", "same-origin");
     headers.set(
       "Permissions-Policy",
       "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=()",

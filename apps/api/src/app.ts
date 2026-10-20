@@ -37,6 +37,8 @@ import { systemRoutes } from "./modules/system/routes.ts";
 import { httpsRoutes } from "./modules/security/https-routes.ts";
 import { securityRoutes } from "./modules/security/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
+import { desktopAppRoutes } from "./modules/desktop-apps/routes.ts";
+import { appRuntimeRoutes } from "./modules/desktop-apps/runtime-routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
 import type { Services } from "./services.ts";
@@ -116,6 +118,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/backups", backupRoutes(services));
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
+  api.route("/desktop-apps", desktopAppRoutes(services));
   api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
@@ -125,6 +128,7 @@ export function createApp(services: Services): Hono<AppEnv> {
     throw notFound("Endpoint");
   });
   app.route("/api", api);
+  app.route("/app-runtime", appRuntimeRoutes(services.desktopApps.installer));
 
   if (services.config.paths.webDir) app.use("*", serveWebClient(services.config.paths.webDir));
 

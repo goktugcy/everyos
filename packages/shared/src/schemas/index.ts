@@ -27,3 +27,4 @@ export * from "./self-update.ts";
 export * from "./linux-accounts.ts";
 export * from "./ai-agents.ts";
 export * from "./security.ts";
+export * from "./desktop-apps.ts";

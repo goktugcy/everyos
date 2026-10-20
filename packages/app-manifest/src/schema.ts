@@ -153,7 +153,7 @@ export function parseManifest(value: unknown): AppManifest {
         message: issue.message,
       })),
     );
-  return result.data as AppManifest;
+  return result.data;
 }
 
 /** Elevated capabilities in the manifest, which need an explicit administrator grant. */

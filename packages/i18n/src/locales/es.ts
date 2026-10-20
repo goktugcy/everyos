@@ -4056,6 +4056,13 @@ export const es: LocaleMessages = {
     BACKUP_OFFSITE_NOT_CONFIGURED:
       "No se ha configurado ningún destino externo para las copias de seguridad.",
     BACKUP_OFFSITE_FAILED: "No se pudo conectar con el destino externo de la copia de seguridad.",
+    DESKTOP_APP_APPROVAL_REQUIRED: "Hay que aprobar los permisos de esta aplicación.",
+    DESKTOP_APP_INCOMPATIBLE: "Esta aplicación no es compatible con esta versión de EveryOS.",
+    DESKTOP_APP_REVOKED: "El editor o el registro ha retirado esta versión de la aplicación.",
+    DESKTOP_APP_REGISTRY_FAILED: "No se pudo leer ni verificar el registro de aplicaciones.",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "No se pudo verificar el paquete de la aplicación, así que no se instaló.",
+    DESKTOP_APP_BUSY: "Ya hay otra operación en curso para esta aplicación.",
     NETWORK: "No se puede conectar con el servidor. Comprueba tu conexión.",
     UNKNOWN: "Se produjo un error desconocido.",
   },

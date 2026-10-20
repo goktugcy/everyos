@@ -62,7 +62,7 @@ export interface AppPublisher {
   /** Reverse-DNS namespace that contains the app id. */
   id: string;
   name: string;
-  url?: string;
+  url?: string | undefined;
 }
 
 export interface AppIntegration {
@@ -85,15 +85,15 @@ export interface AppManifest {
   permissions: AppCapability[];
   window: AppWindowSpec;
   widgets: AppWidgetManifest[];
-  locales?: AppLocales;
+  locales?: AppLocales | undefined;
   /** Oldest EveryOS release that runs the app. */
-  minEveryOS?: string;
+  minEveryOS?: string | undefined;
   /** SDK range the app was built against (e.g. `^1.0.0`). */
   sdk: string;
   publisher: AppPublisher;
-  license?: string;
-  homepage?: string;
+  license?: string | undefined;
+  homepage?: string | undefined;
   /** Where the source can be read, when the publisher shares it. */
-  source?: string;
-  integration?: AppIntegration;
+  source?: string | undefined;
+  integration?: AppIntegration | undefined;
 }

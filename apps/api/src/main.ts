@@ -110,6 +110,7 @@ async function main(): Promise<void> {
   services.metrics.start();
   services.hostMonitor.start();
   services.disks.start();
+  services.desktopApps.start();
   if (config.mode === "production") services.releaseMonitor.start();
   const startTasks = () => {
     if (config.mode === "production" && existsSync("/run/everyos-update-maintenance")) return;
@@ -187,6 +188,7 @@ async function main(): Promise<void> {
     services.widgetData.stop();
     services.hostMonitor.stop();
     services.disks.stop();
+    services.desktopApps.stop();
     services.transfers.stop();
     services.releaseMonitor.stop();
     services.terminals.stop();

@@ -4056,6 +4056,14 @@ export const de: LocaleMessages = {
       "Diese Datei lässt sich mit der angegebenen Backup-Passphrase nicht öffnen.",
     BACKUP_OFFSITE_NOT_CONFIGURED: "Es ist kein externes Backup-Ziel eingerichtet.",
     BACKUP_OFFSITE_FAILED: "Das externe Backup-Ziel war nicht erreichbar.",
+    DESKTOP_APP_APPROVAL_REQUIRED: "Die Berechtigungen dieser App müssen bestätigt werden.",
+    DESKTOP_APP_INCOMPATIBLE: "Diese App ist mit dieser EveryOS-Version nicht kompatibel.",
+    DESKTOP_APP_REVOKED:
+      "Diese App-Version wurde vom Herausgeber oder vom Verzeichnis zurückgezogen.",
+    DESKTOP_APP_REGISTRY_FAILED: "Das App-Verzeichnis konnte nicht gelesen oder überprüft werden.",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "Das App-Paket konnte nicht überprüft werden und wurde daher nicht installiert.",
+    DESKTOP_APP_BUSY: "Für diese App läuft bereits ein anderer Vorgang.",
     NETWORK: "Der Server ist nicht erreichbar. Prüfe deine Netzwerkverbindung.",
     UNKNOWN: "Ein unbekannter Fehler ist aufgetreten.",
   },

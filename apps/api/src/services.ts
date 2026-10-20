@@ -21,6 +21,8 @@ import { DataHub } from "./modules/widgets/data-hub.ts";
 import { systemProviders } from "./modules/widgets/providers.ts";
 import { DockerProjectRepository } from "./modules/docker/project-repository.ts";
 import { MetricsHub } from "./modules/metrics/metrics-hub.ts";
+import { DesktopAppsService } from "./modules/desktop-apps/desktop-apps.ts";
+import type { FetcherFactory } from "./modules/desktop-apps/registries.ts";
 import { PreferenceRepository } from "./modules/preferences/preference-repository.ts";
 import { FailureLimiter } from "./modules/auth/rate-limiter.ts";
 import { SessionService } from "./modules/auth/session-service.ts";
@@ -92,6 +94,8 @@ export interface Services {
   dockerProjects: DockerProjectRepository;
   catalogs: CatalogService;
   apps: AppService;
+  /** Desktop apps: registries, installations and the store (docs/app-sdk/architecture.md). */
+  desktopApps: DesktopAppsService;
   aiAgents: AiAgentService;
   localModels: LocalModelService;
   integrations: IntegrationService;
@@ -145,6 +149,8 @@ export interface ServiceDependencies {
   telegramApi?: string;
   /** Test hook: Google's OAuth and Drive endpoints (a local fake). */
   google?: GoogleEndpoints;
+  /** Test hook: how desktop app registries and packages are fetched. */
+  desktopAppFetcher?: FetcherFactory;
   /** Test hook: S3 client options for off-site backups. */
   s3?: S3ClientOptions;
 }
@@ -375,6 +381,18 @@ export function createServices(deps: ServiceDependencies): Services {
     dockerProjects: new DockerProjectRepository(deps.db, now),
     catalogs,
     apps,
+    desktopApps: new DesktopAppsService({
+      db: deps.db,
+      secrets,
+      logger: deps.logger,
+      now,
+      dir: deps.config.desktopApps.dir,
+      anchors: {
+        official: deps.config.desktopApps.officialRegistry,
+        community: deps.config.desktopApps.communityRegistry,
+      },
+      ...(deps.desktopAppFetcher ? { fetcher: deps.desktopAppFetcher } : {}),
+    }),
     integrations,
     aiAgents: new AiAgentService({
       db: deps.db,

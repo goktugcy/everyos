@@ -4050,6 +4050,14 @@ export const it: LocaleMessages = {
     BACKUP_PASSPHRASE_INVALID: "La passphrase di backup non apre questo file.",
     BACKUP_OFFSITE_NOT_CONFIGURED: "Non è impostata alcuna destinazione esterna per i backup.",
     BACKUP_OFFSITE_FAILED: "Impossibile raggiungere la destinazione esterna per i backup.",
+    DESKTOP_APP_APPROVAL_REQUIRED: "È necessario approvare le autorizzazioni di questa app.",
+    DESKTOP_APP_INCOMPATIBLE: "Questa app non è compatibile con questa versione di EveryOS.",
+    DESKTOP_APP_REVOKED: "Questa versione dell'app è stata ritirata dall'editore o dal registro.",
+    DESKTOP_APP_REGISTRY_FAILED:
+      "Non è stato possibile leggere o verificare il registro delle app.",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "Non è stato possibile verificare il pacchetto dell'app, quindi non è stata installata.",
+    DESKTOP_APP_BUSY: "È già in corso un'altra operazione per questa app.",
     NETWORK: "Impossibile raggiungere il server. Controlla la connessione.",
     UNKNOWN: "Si è verificato un errore sconosciuto.",
   },

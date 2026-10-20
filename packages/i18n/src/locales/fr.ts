@@ -4066,6 +4066,16 @@ export const fr: LocaleMessages = {
     BACKUP_PASSPHRASE_INVALID: "La phrase secrète de sauvegarde ne permet pas d’ouvrir ce fichier.",
     BACKUP_OFFSITE_NOT_CONFIGURED: "Aucune destination de sauvegarde hors site n’est configurée.",
     BACKUP_OFFSITE_FAILED: "La destination de sauvegarde hors site est injoignable.",
+    DESKTOP_APP_APPROVAL_REQUIRED:
+      "Les autorisations de cette application doivent être approuvées.",
+    DESKTOP_APP_INCOMPATIBLE:
+      "Cette application n’est pas compatible avec cette version d’EveryOS.",
+    DESKTOP_APP_REVOKED:
+      "Cette version de l’application a été retirée par son éditeur ou par le registre.",
+    DESKTOP_APP_REGISTRY_FAILED: "Le registre d’applications n’a pas pu être lu ni vérifié.",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "Le paquet de l’application n’a pas pu être vérifié ; il n’a pas été installé.",
+    DESKTOP_APP_BUSY: "Une autre opération est en cours pour cette application.",
     NETWORK: "Le serveur est injoignable. Vérifiez votre connexion.",
     UNKNOWN: "Une erreur inconnue s’est produite.",
   },

@@ -11,6 +11,9 @@
   "dependencies": {
     "@hono/node-server": "catalog:",
     "@everyos/agent-protocol": "workspace:*",
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/app-package": "workspace:*",
+    "@everyos/app-registry": "workspace:*",
     "@everyos/auth": "workspace:*",
     "@everyos/catalogs": "workspace:*",
     "@everyos/database": "workspace:*",
