@@ -1,4 +1,4 @@
-import { DEFAULT_LOCAL_BEHAVIOR, type LocalBehavior } from "@everyos/shared";
+import { DEFAULT_LOCAL_BEHAVIOR, type LocalBehavior, type Locale } from "@everyos/shared";
 
 /**
  * Instructions when the user wrote none. Small local models answer far more sensibly with a role,
@@ -6,11 +6,25 @@ import { DEFAULT_LOCAL_BEHAVIOR, type LocalBehavior } from "@everyos/shared";
  */
 export const DEFAULT_INSTRUCTIONS =
   "You are a helpful and honest assistant. Answer clearly and to the point. If you are not sure about something, say so instead of guessing, and never invent facts, names or numbers.";
-const LANGUAGE: Record<LocalBehavior["language"], string> = {
-  auto: "Reply in the same language as the user's latest message.",
-  tr: "Always reply in Turkish, even if the user writes in another language.",
-  en: "Always reply in English, even if the user writes in another language.",
+/** Each interface language by its English name, the language of the instructions themselves. */
+const LANGUAGE_NAMES: Record<Locale, string> = {
+  tr: "Turkish",
+  en: "English",
+  de: "German",
+  es: "Spanish",
+  fr: "French",
+  it: "Italian",
+  ja: "Japanese",
+  ko: "Korean",
+  ru: "Russian",
+  zh: "Simplified Chinese",
 };
+
+function languageRule(language: LocalBehavior["language"]): string {
+  return language === "auto"
+    ? "Reply in the same language as the user's latest message."
+    : `Always reply in ${LANGUAGE_NAMES[language]}, even if the user writes in another language.`;
+}
 const LENGTH: Record<LocalBehavior["length"], { tokens: number; hint: string }> = {
   short: { tokens: 300, hint: "Keep every answer short: a few sentences at most." },
   normal: { tokens: 1200, hint: "" },
@@ -33,7 +47,7 @@ export function localRequest(
   const system = [
     settings.instructions.trim() || DEFAULT_INSTRUCTIONS,
     length.hint,
-    LANGUAGE[settings.language],
+    languageRule(settings.language),
   ]
     .filter(Boolean)
     .join("\n\n");

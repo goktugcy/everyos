@@ -1,4 +1,5 @@
 import type { AppJobView, InstalledAppView } from "./catalogs.ts";
+import { SUPPORTED_LOCALES } from "./locale.ts";
 
 /** `local` is a direct chat with a local model server; the others are agent runtimes. */
 export const AI_AGENT_KINDS = ["local", "hermes", "openclaw"] as const;
@@ -19,7 +20,8 @@ export const AI_PROVIDER_URLS: Record<Exclude<AiProvider, "custom">, string> = {
 };
 export const LOCAL_PRESETS = ["assistant", "concise", "teacher", "coder", "custom"] as const;
 export type LocalPreset = (typeof LOCAL_PRESETS)[number];
-export const LOCAL_LANGUAGES = ["auto", "tr", "en"] as const;
+/** `auto` answers in the language of the latest message; the others always use that language. */
+export const LOCAL_LANGUAGES = ["auto", ...SUPPORTED_LOCALES] as const;
 export const LOCAL_LENGTHS = ["short", "normal", "long"] as const;
 /** Conversation memory (context window); applied by Ollama servers only. */
 export const LOCAL_MEMORY = ["auto", "2k", "4k", "8k", "16k"] as const;

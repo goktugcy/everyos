@@ -43,7 +43,8 @@ terms in its **Behavior** section (also offered, optionally, in the wizard):
   instructions in the interface language; editing them makes them custom (at most 4,000
   characters). Settings saved before this existed use built-in instructions that ask for honest,
   clear answers and no invented facts.
-- **Answer language**: the user's language, always Turkish or always English.
+- **Answer language**: the language of the user's latest message, or always one of the ten
+  interface languages.
 - **Creativity** (temperature 0.1–1.2), **answer length** (300/1,200/4,000 tokens) and **avoid
   repetition** (Ollama `repeat_penalty` 1.0–1.3, otherwise `frequency_penalty` 0–0.8).
 - **Conversation memory**: the context window (2K–16K tokens), applied by Ollama servers only.
