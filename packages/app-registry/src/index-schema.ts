@@ -46,6 +46,8 @@ export const RegistryVersionSchema = z.strictObject({
 export const RegistryAppSchema = z.strictObject({
   id: z.string().refine(isAppId, { message: "invalid-app-id" }),
   publisher: z.string().refine(isPublisherId, { message: "invalid-publisher-id" }),
+  /** PNG, WebP or SVG shown in the store before the app is installed. */
+  icon: resource,
   screenshots: z.array(resource).max(8).default([]),
   versions: z.array(RegistryVersionSchema).min(1).max(50),
 });

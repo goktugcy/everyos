@@ -179,6 +179,38 @@ describe("catalog transport", () => {
       await once(server, "close");
     }
   });
+
+  it("sends a registry credential to its origin only, never after a redirect elsewhere", async () => {
+    const seen: Array<[string, string | undefined]> = [];
+    const server = createServer((req, res) => {
+      seen.push([`${req.headers.host}${req.url}`, req.headers.authorization]);
+      if (req.url === "/index.json") {
+        // Like GitHub release assets: the content lives on another host.
+        res.writeHead(302, { Location: `http://localhost:${port}/object` });
+        res.end();
+      } else res.end("signed-index");
+    });
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    const port = (server.address() as AddressInfo).port;
+    try {
+      const fetcher = createCatalogFetcher({
+        allowPrivate: true,
+        authorization: { origin: `http://127.0.0.1:${port}`, value: "Bearer registry-token" },
+        resolve: () => Promise.resolve([{ address: "127.0.0.1", family: 4 }]),
+      });
+      expect((await fetcher.get(`http://127.0.0.1:${port}/index.json`)).toString()).toBe(
+        "signed-index",
+      );
+      expect(seen).toEqual([
+        [`127.0.0.1:${port}/index.json`, "Bearer registry-token"],
+        [`localhost:${port}/object`, undefined],
+      ]);
+    } finally {
+      server.close();
+      await once(server, "close");
+    }
+  });
 });
 
 describe("catalog archives and policies", () => {

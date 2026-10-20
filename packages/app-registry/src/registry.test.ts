@@ -68,6 +68,7 @@ function index(overrides: Partial<RegistryIndex> = {}): RegistryIndex {
       {
         id: "io.github.alice.todo",
         publisher: "io.github.alice",
+        icon: "icons/todo.png",
         screenshots: [],
         versions: [
           version("io.github.alice.todo", "1.0.0"),
@@ -154,6 +155,7 @@ describe("registry indexes", () => {
         {
           id: "dev.everyos.notes",
           publisher: "dev.everyos",
+          icon: "icons/notes.png",
           screenshots: [],
           versions: [version("dev.everyos.notes", "1.0.0", "dev.everyos")],
         },
