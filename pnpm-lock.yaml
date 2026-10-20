@@ -512,6 +512,18 @@ importers:
         specifier: workspace:*
         version: link:../system
 
+  packages/app-registry:
+    dependencies:
+      '@everyos/app-manifest':
+        specifier: workspace:*
+        version: link:../app-manifest
+      '@everyos/app-package':
+        specifier: workspace:*
+        version: link:../app-package
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+
   packages/auth:
     dependencies:
       '@everyos/security':
