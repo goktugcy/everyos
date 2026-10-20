@@ -957,3 +957,143 @@ describe("app file access", () => {
     expect((await anonymous.request("GET", url)).status).toBe(404);
   });
 });
+
+describe("app notifications and host data", () => {
+  async function withApp(permissions: string[], approve: string[] = []) {
+    const context = await setup();
+    const build = await buildApp(
+      "dev.everyos.monitor",
+      "1.0.0",
+      permissions,
+      officialKeys.privateKey,
+    );
+    publish(context.registry, index([{ id: "dev.everyos.monitor", versions: [build] }]), [build]);
+    await sync(context.admin);
+    expect(
+      (
+        await context.admin.post("/api/desktop-apps/installed", {
+          registryId: "official",
+          appId: "dev.everyos.monitor",
+          approve,
+        })
+      ).status,
+    ).toBe(201);
+    const open = async (client: TestClient) =>
+      (
+        await json<{ token: string }>(
+          await client.post("/api/app-sdk/instances", {
+            appId: "dev.everyos.monitor",
+            kind: "window",
+          }),
+        )
+      ).token;
+    return { ...context, open };
+  }
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+  const appMessages = async (client: TestClient) =>
+    (
+      await json<{
+        notifications: Array<{ kind: string; severity: string; params: Record<string, unknown> }>;
+      }>(await client.get("/api/notifications"))
+    ).notifications.filter((n) => n.kind === "app-message");
+
+  it("notifies only the person using the app, bounded and switchable off", async () => {
+    const { admin, operator, open } = await withApp(["notifications:send"]);
+    const token = await open(admin);
+    const notify = (level: string, tag: string | null = null) =>
+      admin.request("POST", "/api/app-sdk/notifications", {
+        body: { title: "Timer done", body: "Take a break", level, tag },
+        ...as(token),
+      });
+    expect((await notify("critical", "focus")).status).toBe(204);
+    const [message] = await appMessages(admin);
+    expect(message).toMatchObject({
+      severity: "warning",
+      params: { app: "Notes", title: "Timer done", body: "Take a break" },
+    });
+    expect(await appMessages(operator)).toEqual([]);
+    for (let i = 0; i < 9; i++) expect((await notify("info")).status).toBe(204);
+    expect((await notify("info")).status).toBe(429);
+    expect(
+      (
+        await admin.request("PUT", "/api/desktop-apps/installed/dev.everyos.monitor/settings", {
+          body: { notifications: false },
+        })
+      ).status,
+    ).toBe(200);
+    const before = (await appMessages(admin)).length;
+    expect((await notify("info", "silenced")).status).toBe(204);
+    expect((await appMessages(admin)).length).toBe(before);
+  });
+
+  it("serves host data only behind granted capabilities the person's role allows", async () => {
+    const {
+      ctx,
+      admin,
+      viewer,
+      open,
+      registry: _registry,
+    } = await withApp(["system:metrics.read", "logs:read"], ["system:metrics.read", "logs:read"]);
+    const token = await open(admin);
+    const host = (client: TestClient, instance: string, operation: string, input: unknown = null) =>
+      client.request("POST", `/api/app-sdk/host/${operation}`, {
+        body: { input },
+        ...as(instance),
+      });
+    const metrics = await host(admin, token, "system.metrics");
+    expect(metrics.status).toBe(200);
+    expect(await json(metrics)).toHaveProperty("result.point.at");
+    expect((await host(admin, token, "logs.query", { limit: 5 })).status).toBe(200);
+    expect((await host(admin, token, "logs.query", { limit: 5000 })).status).toBe(400);
+    // Granted to the app, but sockets were never asked for.
+    expect((await host(admin, token, "system.sockets")).status).toBe(403);
+    expect((await host(admin, token, "shell.exec")).status).toBe(404);
+    // A viewer may not read logs, so the app may not for them either.
+    const viewerToken = await open(viewer);
+    expect((await host(viewer, viewerToken, "logs.query", { limit: 5 })).status).toBe(403);
+    expect((await host(viewer, viewerToken, "system.metrics")).status).toBe(200);
+    expect(ctx).toBeDefined();
+  });
+
+  it("sizes a shared folder without following links", async () => {
+    const { ctx, admin, open } = await withApp(
+      ["files:pick", "storage:usage.read"],
+      ["storage:usage.read"],
+    );
+    const token = await open(admin);
+    const root = ctx.config.files.roots[0]!.path;
+    mkdirSync(join(root, "media", "films"), { recursive: true });
+    writeFileSync(join(root, "media", "films", "big.mkv"), Buffer.alloc(5000));
+    writeFileSync(join(root, "media", "song.mp3"), Buffer.alloc(300));
+    writeFileSync(join(root, "outside.bin"), Buffer.alloc(9999));
+    symlinkSync(root, join(root, "media", "loop"));
+    const handle = (
+      await json<{ handles: Array<{ id: string }> }>(
+        await admin.request("POST", "/api/app-sdk/files/grants", {
+          body: { items: [{ root: "dev", path: "media" }], write: false, persist: false },
+          ...as(token),
+        }),
+      )
+    ).handles[0]!.id;
+    const usage = await json<{
+      result: {
+        total: number;
+        children: Array<{ name: string; size: number }>;
+        largest: Array<{ path: string }>;
+        types: Array<{ extension: string }>;
+      };
+    }>(
+      await admin.request("POST", "/api/app-sdk/host/disk.usage", {
+        body: { input: { handle } },
+        ...as(token),
+      }),
+    );
+    expect(usage.result.total).toBe(5300);
+    expect(usage.result.children.map((child) => [child.name, child.size])).toEqual([
+      ["films", 5000],
+      ["song.mp3", 300],
+    ]);
+    expect(usage.result.largest[0]!.path).toBe("films/big.mkv");
+    expect(usage.result.types.map((type) => type.extension)).toEqual(["mkv", "mp3"]);
+  });
+});

@@ -137,3 +137,26 @@ export const AppFileChildSchema = z.strictObject({
   path: grantPath.refine((value) => value.length > 0),
   create: z.enum(["file", "directory"]).nullable(),
 });
+
+export const AppNotificationSchema = z.strictObject({
+  title: z.string().trim().min(1).max(120),
+  body: z.string().max(200),
+  level: z.enum(["info", "success", "warning", "critical"]),
+  tag: z
+    .string()
+    .regex(/^[\w.:-]{1,64}$/)
+    .nullable(),
+});
+
+export const AppHostCallSchema = z.strictObject({ input: z.json() });
+
+export const DesktopAppUserSettingsSchema = z.strictObject({ notifications: z.boolean() });
+
+export const AppDiskUsageInputSchema = z.strictObject({
+  handle: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/),
+  path: z
+    .string()
+    .max(4096)
+    .refine((value) => !value.split("/").some((part) => part === ".."))
+    .default(""),
+});

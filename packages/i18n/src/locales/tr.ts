@@ -2798,6 +2798,7 @@ export const tr = {
         title: "Aktarım başarısız: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Disk çıkarıldı: {{disk}}",
         body: "{{unsafe}}",

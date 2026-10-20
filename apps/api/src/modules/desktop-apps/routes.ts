@@ -8,6 +8,7 @@ import {
   DesktopAppStateSchema,
   DesktopAppUninstallSchema,
   DesktopAppUpdateSchema,
+  DesktopAppUserSettingsSchema,
 } from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
 import { z } from "zod";
@@ -182,6 +183,21 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
         { approved: input.approve },
       ).finally(() => instances.closeApp(appId)),
     );
+  });
+  /** Each person's own choices for an installed app. */
+  app.get("/installed/:appId/settings", read, (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    if (!installer.installation(appId)) throw notFound("App");
+    return c.json(services.desktopApps.settings.get(appId, requireAuth(c).user.id));
+  });
+  app.put("/installed/:appId/settings", read, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    const settings = await parseJsonBody(c, DesktopAppUserSettingsSchema);
+    if (!installer.installation(appId)) throw notFound("App");
+    services.desktopApps.settings.set(appId, requireAuth(c).user.id, settings);
+    return c.json(settings);
   });
   app.patch("/installed/:appId", manage, async (c) => {
     parseQuery(c, Empty);

@@ -66,7 +66,8 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     // The sandbox: no parent DOM, no cookies, no storage of the origin, no API.
     for (const name of ["parentDom", "cookie", "localStorage", "api"])
       await expect(probe(name), name).toHaveText("blocked");
-    await expect(probe("forbidden")).toHaveText(/^(EVERYOS_|FORBIDDEN)/);
+    // Refused by the server itself: the probe was never granted system metrics.
+    await expect(probe("forbidden")).toHaveText("FORBIDDEN");
 
     // A dialog the desktop draws for the app, over the app's window only.
     await frame.getByRole("button", { name: "Ask" }).click();

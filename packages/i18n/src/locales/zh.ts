@@ -2806,6 +2806,7 @@ export const zh: LocaleMessages = {
         title: "传输失败：{{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "磁盘已移除：{{disk}}",
         body: "{{unsafe}}",

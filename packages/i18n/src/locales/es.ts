@@ -2928,6 +2928,7 @@ export const es: LocaleMessages = {
         title: "Transferencia fallida: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Disco desconectado: {{disk}}",
         body: "{{unsafe}}",

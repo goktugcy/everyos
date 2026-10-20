@@ -130,6 +130,13 @@ export function createHandlers(context: InstanceContext): Handlers {
       await sdk("/storage/clear", { method: "POST", body: {} });
       return null;
     },
+    "notifications.send": async ({ title, body, level, tag }) => {
+      await sdk("/notifications", { method: "POST", body: { title, body, level, tag } });
+      return null;
+    },
+    "host.call": async ({ operation, input }) =>
+      (await sdk<{ result: unknown }>(`/host/${operation}`, { method: "POST", body: { input } }))
+        .result,
     "theme.get": () => themeSnapshot(useThemeStore.getState().theme),
     "locale.get": () => ({ locale: i18next.language }),
     "lifecycle.ready": () => {

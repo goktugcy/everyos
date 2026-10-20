@@ -2875,6 +2875,7 @@ export const ko: LocaleMessages = {
         title: "전송 실패: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "디스크 분리됨: {{disk}}",
         body: "{{unsafe}}",

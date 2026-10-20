@@ -3,6 +3,7 @@ import type { Logger } from "@everyos/logger";
 import type { SecretBox } from "@everyos/security";
 import type { RegistryAnchor } from "./anchors.ts";
 import { AppFiles } from "./app-files.ts";
+import { AppUserSettings } from "./app-settings.ts";
 import { AppStorage } from "./app-storage.ts";
 import { RegistryAssets } from "./assets.ts";
 import { DesktopAppInstaller } from "./installer.ts";
@@ -22,6 +23,7 @@ export class DesktopAppsService {
   readonly storage: AppStorage;
   /** Files people picked for their apps. */
   readonly files: AppFiles;
+  readonly settings: AppUserSettings;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
@@ -58,6 +60,7 @@ export class DesktopAppsService {
       this.files.endInstance(instance.id),
     );
     this.storage = new AppStorage(options.db, options.now);
+    this.settings = new AppUserSettings(options.db, options.now);
   }
 
   /** Syncs every enabled registry and applies their revocations to installed apps. */

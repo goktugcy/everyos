@@ -2928,6 +2928,7 @@ export const de: LocaleMessages = {
         title: "Übertragung fehlgeschlagen: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Datenträger entfernt: {{disk}}",
         body: "{{unsafe}}",

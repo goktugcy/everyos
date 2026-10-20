@@ -2911,6 +2911,7 @@ export const ja: LocaleMessages = {
         title: "転送に失敗しました：{{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "ディスクが取り外されました：{{disk}}",
         body: "{{unsafe}}",

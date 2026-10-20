@@ -2918,6 +2918,7 @@ export const ru: LocaleMessages = {
         title: "Сбой передачи: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Диск отключён: {{disk}}",
         body: "{{unsafe}}",

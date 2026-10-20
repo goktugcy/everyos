@@ -72,6 +72,8 @@ export const NOTIFICATION_KINDS = {
   /** A long transfer of the person's own files finished (personal notification). */
   "transfer-succeeded": { category: "storage", permission: "files:read", condition: false },
   "transfer-failed": { category: "storage", permission: "files:read", condition: false },
+  /** A message a desktop app sent to the person using it (personal notification). */
+  "app-message": { category: "apps", permission: "apps:read", condition: false },
 } as const satisfies Record<
   string,
   { category: NotificationCategory; permission: Permission; condition: boolean }

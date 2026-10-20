@@ -2755,6 +2755,7 @@ export const en: Messages = {
         title: "Transfer failed: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Disk removed: {{disk}}",
         body: "{{unsafe}}",

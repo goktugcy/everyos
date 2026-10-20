@@ -128,7 +128,7 @@ export const VALIDATORS: Readonly<Record<Method, Check>> = {
 
   "notifications.send": shape({
     title: plainText(120, 1),
-    body: text(1000),
+    body: text(200),
     level: oneOf("info", "success", "warning", "critical"),
     tag: nullable(plainText(64, 1)),
   }),

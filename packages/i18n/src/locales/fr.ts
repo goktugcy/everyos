@@ -2940,6 +2940,7 @@ export const fr: LocaleMessages = {
         title: "Échec du transfert : {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Disque retiré : {{disk}}",
         body: "{{unsafe}}",

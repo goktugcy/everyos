@@ -40,6 +40,7 @@ import { userRoutes } from "./modules/users/routes.ts";
 import { desktopAppRoutes } from "./modules/desktop-apps/routes.ts";
 import { appSdkRoutes } from "./modules/desktop-apps/sdk-routes.ts";
 import { appMediaRoutes, appSdkFileRoutes } from "./modules/desktop-apps/sdk-files-routes.ts";
+import { appSdkHostRoutes } from "./modules/desktop-apps/sdk-host-routes.ts";
 import { appRuntimeRoutes } from "./modules/desktop-apps/runtime-routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
@@ -128,6 +129,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/apps", appRoutes(services));
   api.route("/desktop-apps", desktopAppRoutes(services));
   api.route("/app-sdk/files", appSdkFileRoutes(services));
+  api.route("/app-sdk", appSdkHostRoutes(services));
   api.route("/app-sdk", appSdkRoutes(services));
   api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));

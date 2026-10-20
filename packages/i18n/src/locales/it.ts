@@ -2929,6 +2929,7 @@ export const it: LocaleMessages = {
         title: "Trasferimento non riuscito: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
       "disk-detached": {
         title: "Disco rimosso: {{disk}}",
         body: "{{unsafe}}",
