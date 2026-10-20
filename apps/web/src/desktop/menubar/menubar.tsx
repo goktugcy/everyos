@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import { LogoMark } from "../../components/brand/logo.tsx";
 import { Dialog } from "../../components/ui/dialog.tsx";
 import { cn } from "../../lib/cn.ts";
+import { initials } from "../../lib/format.ts";
 import { usePermissions, useSessionStore } from "../../stores/session-store.ts";
 import { Clock } from "../../features/shell/clock.tsx";
 import { getApp } from "../apps/registry.ts";
@@ -119,17 +120,6 @@ function DesktopSwitcher() {
         </button>
       ) : null}
     </div>
-  );
-}
-
-function initials(name: string): string {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toLocaleUpperCase("tr"))
-      .join("") || "?"
   );
 }
 
@@ -427,7 +417,7 @@ export function Menubar() {
                     type="button"
                     className="ml-1 grid size-[22px] place-items-center rounded-full button-accent text-[0.6rem] font-bold [text-shadow:none] outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
-                    {initials(user.displayName)}
+                    {initials(user.displayName, user.locale)}
                   </button>
                 }
               />

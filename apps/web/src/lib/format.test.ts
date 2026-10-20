@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatBytes, formatDuration } from "./format.ts";
+import { formatBytes, formatDuration, initials } from "./format.ts";
 
 describe("format helpers", () => {
   it("formats bytes with binary units", () => {
@@ -13,5 +13,12 @@ describe("format helpers", () => {
     expect(formatDuration(3 * 86_400 + 4 * 3_600 + 5 * 60, "en")).toMatch(/^3 days? 4 hr/);
     expect(formatDuration(3 * 86_400 + 4 * 3_600, "tr")).toBe("3 gün 4 sa.");
     expect(formatDuration(30, "en")).toMatch(/^0 min/);
+  });
+
+  it("capitalizes initials by the name owner's language", () => {
+    expect(initials("irmak yılmaz", "tr")).toBe("İY");
+    expect(initials("ivan ivanov", "en")).toBe("II");
+    expect(initials("  ingrid  ", "de", 1)).toBe("I");
+    expect(initials("", "en")).toBe("?");
   });
 });

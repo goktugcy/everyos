@@ -5,6 +5,21 @@ export function localeTag(language: string): string {
   return isLocale(language) ? intlLocaleTag[language] : language;
 }
 
+/**
+ * Up to `count` initials of a name, capitalized the way its owner's language does: a Turkish
+ * "irmak" starts with "İ", an English "ivan" with "I".
+ */
+export function initials(name: string, language: string, count = 2): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, count)
+      .map((part) => [...part][0]!.toLocaleUpperCase(localeTag(language)))
+      .join("") || "?"
+  );
+}
+
 /** Binary units (KiB, MiB, GiB…), the convention used by Linux tools. */
 export function formatBytes(bytes: number, language: string): string {
   const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"];

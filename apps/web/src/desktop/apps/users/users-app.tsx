@@ -27,7 +27,7 @@ import { Spinner } from "../../../components/ui/spinner.tsx";
 import { api } from "../../../lib/api.ts";
 import { cn } from "../../../lib/cn.ts";
 import { errorMessage, passwordViolations } from "../../../lib/errors.ts";
-import { formatDateTime } from "../../../lib/format.ts";
+import { formatDateTime, initials } from "../../../lib/format.ts";
 import { useSessionStore } from "../../../stores/session-store.ts";
 import type { MenuEntry } from "../../menus/menu-model.ts";
 import { MenuDropdown } from "../../menus/menus.tsx";
@@ -359,7 +359,7 @@ export default function UsersApp() {
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-3">
                         <span className="grid size-8 shrink-0 place-items-center rounded-full button-accent text-xs font-bold">
-                          {user.displayName.slice(0, 1).toLocaleUpperCase("tr")}
+                          {initials(user.displayName, user.locale, 1)}
                         </span>
                         <div className="min-w-0">
                           <p className="truncate font-medium">

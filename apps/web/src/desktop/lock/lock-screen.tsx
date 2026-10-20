@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button.tsx";
 import { PasswordField } from "../../components/ui/field.tsx";
 import { Clock } from "../../features/shell/clock.tsx";
 import { errorMessage } from "../../lib/errors.ts";
+import { initials } from "../../lib/format.ts";
 import { useSessionStore } from "../../stores/session-store.ts";
 import { retryPendingSaves, usePreferences } from "../state/preferences-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
@@ -63,7 +64,7 @@ export function LockScreen() {
         >
           <div className="flex flex-col items-center gap-2 text-center">
             <span className="grid size-14 place-items-center rounded-full button-accent text-lg font-bold">
-              {user?.displayName.slice(0, 1).toLocaleUpperCase("tr")}
+              {user ? initials(user.displayName, user.locale, 1) : null}
             </span>
             <h1 id="lock-title" className="text-lg font-semibold">
               {user?.displayName}
