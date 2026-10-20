@@ -3430,19 +3430,17 @@ export const it: LocaleMessages = {
       drop: "Trascina qui i file",
       readOnly:
         "Non hai il permesso di caricare file; puoi comunque aggiungere al ripiano file trascinati da una finestra di File.",
-      uploadTo: "I file trascinati dal computer vengono caricati in: {{target}}",
-      noTarget: "Non è disponibile alcuna posizione in cui caricare i file.",
-      change: "Cambia destinazione",
-      location: "Posizione",
-      folder: "Cartella",
-      folderPlaceholder: "Cartella (lascia vuoto per il livello principale)",
+      temporary:
+        "I file dal computer restano qui temporaneamente. Trascinali in una cartella per conservarli; se li rimuovi dal ripiano o li trascini fuori da EveryOS, vengono eliminati.",
+      noTarget: "Per rilasciare file dal computer serve una cartella home.",
       items: "Sul ripiano: {{count}}",
       clear: "Svuota ripiano",
       empty:
-        "Il ripiano è vuoto. Trascina qui i file dal computer o da una finestra di File; potrai poi trascinarli nuovamente in qualsiasi cartella.",
+        "Il ripiano è vuoto. Trascina qui i file dal computer o da una finestra di File; potrai poi trascinarli in qualsiasi cartella.",
       show: "Mostra {{name}} in File",
       download: "Scarica {{name}}",
       remove: "Rimuovi {{name}} dal ripiano",
+      delete: "Elimina {{name}}",
     },
   },
   tailscale: {

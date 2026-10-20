@@ -3259,19 +3259,17 @@ export const tr = {
       drop: "Dosyaları buraya bırakın",
       readOnly:
         "Dosya yükleme yetkiniz yok; Dosyalar penceresinden sürüklediklerinizi rafa ekleyebilirsiniz.",
-      uploadTo: "Bilgisayardan bırakılanlar şuraya yüklenir: {{target}}",
-      noTarget: "Yüklenebilecek bir dosya konumu yok.",
-      change: "Hedefi değiştir",
-      location: "Konum",
-      folder: "Klasör",
-      folderPlaceholder: "Klasör (boşsa kök dizin)",
+      temporary:
+        "Bilgisayardan bırakılan dosyalar burada geçici olarak durur. Saklamak için bir klasöre sürükleyin; raftan kaldırılınca ya da EveryOS dışına sürüklenince silinirler.",
+      noTarget: "Bilgisayardan dosya bırakmak için bir Ev klasörü gerekir.",
       items: "Raftaki öğeler: {{count}}",
       clear: "Rafı temizle",
       empty:
-        "Raf boş. Dosyaları bilgisayarınızdan ya da Dosyalar penceresinden buraya sürükleyin; raftakileri istediğiniz klasöre geri sürükleyebilirsiniz.",
+        "Raf boş. Dosyaları bilgisayarınızdan ya da Dosyalar penceresinden buraya sürükleyin; raftakileri istediğiniz klasöre sürükleyebilirsiniz.",
       show: "{{name}} konumunu Dosyalar'da aç",
       download: "{{name}} dosyasını indir",
       remove: "{{name}} öğesini raftan kaldır",
+      delete: "{{name}} dosyasını sil",
     },
   },
   tailscale: {

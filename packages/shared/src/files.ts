@@ -107,6 +107,11 @@ export interface TrashEntry {
   deletedAt: number;
 }
 
+/** `POST /api/files/shelf/tidy`: the shelf files still in the home after tidying. */
+export interface ShelfTidyResponse {
+  paths: string[];
+}
+
 export interface TrashListing {
   entries: TrashEntry[];
   truncated: boolean;

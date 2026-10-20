@@ -6,6 +6,7 @@ import type {
   FileProperties,
   FileRootsResponse,
   FileSearchResult,
+  ShelfTidyResponse,
   TextFile,
   TrashListing,
 } from "@everyos/shared";
@@ -85,8 +86,17 @@ export const filesApi = {
     api<void>("/files/trash/delete", { method: "POST", body: { root, ids, confirm: true } }),
   uploadPath: (location: FileLocation, name: string, overwrite: boolean) =>
     `/files/upload?${query({ ...location, name, overwrite: overwrite ? "true" : undefined })}`,
-  downloadUrl: (location: FileLocation, inline = false) =>
-    `/api/files/download?${query({ ...location, inline: inline ? "true" : undefined })}`,
+  /** `discard`: a shelf file dragged onto the computer, deleted once the browser has it. */
+  downloadUrl: (location: FileLocation, inline = false, discard = false) =>
+    `/api/files/download?${query({
+      ...location,
+      inline: inline ? "true" : undefined,
+      discard: discard ? "true" : undefined,
+    })}`,
+  /** Files the pulse shelf holds itself, deleted for good (docs/pulse.md). */
+  discardShelf: (paths: string[]) =>
+    api<void>("/files/shelf/discard", { method: "POST", body: { paths } }),
+  tidyShelf: () => api<ShelfTidyResponse>("/files/shelf/tidy", { method: "POST", body: {} }),
 };
 
 /**
@@ -108,13 +118,15 @@ export async function uploadUnique(
   into: FileLocation,
   file: File,
   progress: (loaded: number, total: number) => void,
+  /** Where the transfer list says it goes, when not the folder itself (e.g. the pulse shelf). */
+  label?: string,
 ): Promise<string> {
   // Listed with speed and time left in the menu bar and the dock shelf, where it can be stopped.
   const controller = new AbortController();
   const transfer = localTransfers.start({
     id: randomId(),
     name: file.name,
-    to: into.path || into.root,
+    to: label ?? (into.path || into.root),
     total: file.size,
     abort: () => controller.abort(),
   });

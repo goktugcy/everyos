@@ -3440,12 +3440,9 @@ export const fr: LocaleMessages = {
       drop: "Déposez vos fichiers ici",
       readOnly:
         "Vous n’êtes pas autorisé à téléverser des fichiers ; vous pouvez toutefois ajouter des fichiers glissés depuis une fenêtre Fichiers.",
-      uploadTo: "Les fichiers provenant de votre ordinateur sont téléversés vers : {{target}}",
-      noTarget: "Aucun emplacement de fichiers n’est disponible pour le téléversement.",
-      change: "Changer de destination",
-      location: "Emplacement",
-      folder: "Dossier",
-      folderPlaceholder: "Dossier (laisser vide pour le dossier racine)",
+      temporary:
+        "Les fichiers de votre ordinateur attendent ici temporairement. Faites-les glisser dans un dossier pour les conserver ; les retirer de l’étagère ou les faire glisser hors d’EveryOS les supprime.",
+      noTarget: "Déposer des fichiers depuis votre ordinateur nécessite un dossier personnel.",
       items: "Sur l’étagère : {{count}}",
       clear: "Vider l’étagère",
       empty:
@@ -3453,6 +3450,7 @@ export const fr: LocaleMessages = {
       show: "Afficher « {{name}} » dans Fichiers",
       download: "Télécharger « {{name}} »",
       remove: "Retirer « {{name}} » de l’étagère",
+      delete: "Supprimer « {{name}} »",
     },
   },
   tailscale: {

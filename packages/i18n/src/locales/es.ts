@@ -3425,19 +3425,17 @@ export const es: LocaleMessages = {
       drop: "Suelta archivos aquí",
       readOnly:
         "No tienes permiso para subir archivos, pero puedes añadir a la bandeja archivos arrastrados desde una ventana de Archivos.",
-      uploadTo: "Los archivos de tu equipo se suben a: {{target}}",
-      noTarget: "No hay ninguna ubicación de archivos a la que subir.",
-      change: "Cambiar destino",
-      location: "Ubicación",
-      folder: "Carpeta",
-      folderPlaceholder: "Carpeta (vacío para la raíz)",
+      temporary:
+        "Los archivos de tu equipo esperan aquí temporalmente. Arrástralos a una carpeta para conservarlos; si los quitas de la bandeja o los arrastras fuera de EveryOS, se eliminan.",
+      noTarget: "Para soltar archivos desde tu equipo hace falta una carpeta personal.",
       items: "En la bandeja: {{count}}",
       clear: "Vaciar bandeja",
       empty:
-        "La bandeja está vacía. Arrastra archivos aquí desde tu equipo o desde una ventana de Archivos; después podrás arrastrarlos de vuelta a cualquier carpeta.",
+        "La bandeja está vacía. Arrastra archivos aquí desde tu equipo o desde una ventana de Archivos; después podrás arrastrarlos a cualquier carpeta.",
       show: "Mostrar {{name}} en Archivos",
       download: "Descargar {{name}}",
       remove: "Quitar {{name}} de la bandeja",
+      delete: "Eliminar {{name}}",
     },
   },
   tailscale: {

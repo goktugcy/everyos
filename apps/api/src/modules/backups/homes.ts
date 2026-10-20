@@ -17,7 +17,7 @@ import {
 import { basename, dirname, join, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createGunzip, createGzip } from "node:zlib";
-import type { BackupHomeContent } from "@everyos/shared";
+import { SHELF_DIRECTORY, type BackupHomeContent } from "@everyos/shared";
 import { decodeMountField } from "@everyos/system";
 import {
   readTar,
@@ -112,6 +112,8 @@ export async function archiveHomes(options: {
     const visit = async (path: string, name: string, depth: number): Promise<void> => {
       signal.throwIfAborted();
       if (depth > 128) throw invalidBackup("home-depth");
+      // Files waiting on the pulse shelf are temporary: deleted ones must not live on in backups.
+      if (depth === 1 && basename(path) === SHELF_DIRECTORY) return;
       const stats = await lstat(path);
       if (stats.dev !== info.dev) {
         home.skipped++;

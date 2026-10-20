@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import type { FileRootsResponse } from "@everyos/shared";
+import { isShelfTemporary, type FileRootsResponse, type ShelfTidyResponse } from "@everyos/shared";
 import {
   DeleteRequestSchema,
   FileSettingsSchema,
@@ -11,6 +11,7 @@ import {
   FileUploadQuerySchema,
   MkdirRequestSchema,
   RenameRequestSchema,
+  ShelfDiscardRequestSchema,
   TextWriteRequestSchema,
   TransferRequestSchema,
   TrashItemRequestSchema,
@@ -147,8 +148,9 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
   });
 
   app.get("/download", async (c) => {
-    const { root, path, inline } = parseQuery(c, FileDownloadQuerySchema);
-    const file = await files(c).openFile(root, path);
+    const { root, path, inline, discard } = parseQuery(c, FileDownloadQuerySchema);
+    const view = files(c);
+    const file = await view.openFile(root, path);
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
     const inlineType = inline ? INLINE_TYPES[extension] : undefined;
     const range = parseRange(c.req.header("range"), file.size);
@@ -163,6 +165,27 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
         ? Readable.from([])
         : file.handle.createReadStream({ start, end, autoClose: true });
     if (file.size === 0) await file.handle.close();
+    // Dragged off the shelf onto the computer: the shelf's file goes once the browser has all of it.
+    // (The session cookie is SameSite=Strict, so another site cannot trigger this.)
+    const auth = requireAuth(c);
+    if (
+      discard === "true" &&
+      !range &&
+      isShelfTemporary({ root, path }) &&
+      auth.permissions.has("files:write")
+    ) {
+      const logger = c.get("logger");
+      stream.once("end", () => {
+        void services.files
+          .withAccess(auth.user.id, () => view.discardShelf([path]))
+          .then(() =>
+            audit(c, "shelf.discard", `${root}:${path}`, { count: 1, reason: "download" }),
+          )
+          .catch((error: unknown) =>
+            logger.warn("Could not delete a shelf file after its download", { error }),
+          );
+      });
+    }
     const headers: Record<string, string> = {
       "Content-Type": inlineType ?? "application/octet-stream",
       "Content-Disposition": disposition(inlineType ? "inline" : "attachment", file.name),
@@ -257,6 +280,28 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
       });
     }
     return c.body(null, 204);
+  });
+
+  /** Files the shelf holds itself (docs/pulse.md): removed from the shelf, deleted for good. */
+  app.post("/shelf/discard", write, async (c) => {
+    const { paths } = await parseJsonBody(c, ShelfDiscardRequestSchema);
+    await files(c).discardShelf(paths);
+    audit(c, "shelf.discard", `home:${paths.join(", ")}`, { count: paths.length });
+    return c.body(null, 204);
+  });
+
+  /** Deletes shelf files the stored shelf has not listed for an hour; returns the ones left. */
+  app.post("/shelf/tidy", write, async (c) => {
+    const auth = requireAuth(c);
+    const listed = new Set(
+      (services.preferences.getAll(auth.user.id).pulse?.shelf ?? [])
+        .filter(isShelfTemporary)
+        .map((item) => item.path),
+    );
+    const { paths, removed } = await files(c).tidyShelf(listed, services.now());
+    if (removed) audit(c, "shelf.tidy", "home", { count: removed });
+    const body: ShelfTidyResponse = { paths };
+    return c.json(body);
   });
 
   app.get("/trash", async (c) => c.json(await files(c).trash()));

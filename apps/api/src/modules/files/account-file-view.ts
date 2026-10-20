@@ -1,7 +1,7 @@
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import type { Logger } from "@everyos/logger";
-import type { Locale } from "@everyos/shared";
+import { isShelfTemporary, type Locale } from "@everyos/shared";
 import type { Services } from "../../services.ts";
 import { callAgentAs, type UserActor } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
@@ -120,6 +120,13 @@ export class AccountFileView {
     return root === "home"
       ? this.personal.deleteTrash(root, ids)
       : this.#call("files.trash.delete", { ...this.#params(), root, ids, confirm: true });
+  }
+  /** The shelf's own files live in the EveryOS home. */
+  discardShelf(paths: readonly string[]) {
+    return this.personal.discardShelf(paths);
+  }
+  tidyShelf(listed: ReadonlySet<string>, now: number) {
+    return this.personal.tidyShelf(listed, now);
   }
 
   async openFile(root: string, path: string) {
@@ -298,6 +305,10 @@ export class AccountFileView {
         throw new ApiError(403, "FILES_PROTECTED", "Standard folders cannot be moved");
     }
     await this.copy(root, paths, destination);
-    await this.remove(root, paths);
+    // A file that waited on the shelf has its place now; no copy of it stays in the trash.
+    const shelf = paths.filter((path) => isShelfTemporary({ root, path }));
+    if (shelf.length) await this.personal.discardShelf(shelf);
+    const rest = paths.filter((path) => !shelf.includes(path));
+    if (rest.length) await this.remove(root, rest);
   }
 }

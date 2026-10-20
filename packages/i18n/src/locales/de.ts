@@ -3427,19 +3427,17 @@ export const de: LocaleMessages = {
       drop: "Dateien hier ablegen",
       readOnly:
         "Du kannst keine Dateien hochladen; du kannst aber weiterhin Dateien aus einem Dateien-Fenster hierher ziehen.",
-      uploadTo: "Dateien von deinem Computer werden hochgeladen nach: {{target}}",
-      noTarget: "Kein Speicherort für Uploads vorhanden.",
-      change: "Ziel ändern",
-      location: "Ort",
-      folder: "Ordner",
-      folderPlaceholder: "Ordner (leer lassen für oberste Ebene)",
+      temporary:
+        "Dateien von deinem Computer liegen hier nur vorübergehend. Ziehe sie in einen Ordner, um sie zu behalten; entfernst du sie aus der Ablage oder ziehst du sie aus EveryOS heraus, werden sie gelöscht.",
+      noTarget: "Zum Ablegen von Dateien vom Computer wird ein Home-Ordner benötigt.",
       items: "In der Ablage: {{count}}",
       clear: "Ablage leeren",
       empty:
-        "Die Ablage ist leer. Ziehe Dateien von deinem Computer oder aus einem Dateien-Fenster hierher und lege sie später in einem beliebigen Ordner wieder ab.",
+        "Die Ablage ist leer. Ziehe Dateien von deinem Computer oder aus einem Dateien-Fenster hierher und lege sie später in einem beliebigen Ordner ab.",
       show: "„{{name}}“ in Dateien anzeigen",
       download: "„{{name}}“ herunterladen",
       remove: "„{{name}}“ aus der Ablage entfernen",
+      delete: "„{{name}}“ löschen",
     },
   },
   tailscale: {

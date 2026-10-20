@@ -41,7 +41,9 @@ import {
   type TrashListing,
   DEFAULT_LOCALE,
   isLocale,
+  isShelfTemporary,
   type Locale,
+  SHELF_DIRECTORY,
 } from "@everyos/shared";
 import { ApiError, notFound } from "../../http/errors.ts";
 import {
@@ -81,6 +83,9 @@ export const SYSTEM_ROOTS = [
 
 /** Kernel pseudo file systems are never browsed through "/" (reads can block or leak). */
 const PSEUDO = new Set(["proc", "sys", "dev"]);
+
+/** Shelf files the shelf no longer lists (a failed removal, a tab closed mid-drag) go after this. */
+export const SHELF_ORPHAN_AGE_MS = 60 * 60_000;
 
 /**
  * Case-insensitive name matching for every language: Turkish lower-casing keeps "HARİTA" equal to
@@ -664,7 +669,7 @@ export class FileService {
         continue; // Unreadable folders are skipped, not errors.
       }
       for (const dirent of dirents) {
-        if (dirent.name === TRASH_DIRECTORY) continue;
+        if (dirent.name === TRASH_DIRECTORY || dirent.name === SHELF_DIRECTORY) continue;
         if (
           ++visited > SEARCH_LIMITS.visited ||
           Date.now() > deadline ||
@@ -1007,6 +1012,58 @@ export class FileService {
       await readTrashItem(base, rootId, id).catch(fsError);
       await discardTrashItem(base, id).catch(fsError);
     }
+  }
+
+  /** The shelf's own folder in the home: a real folder there, never a link to somewhere else. */
+  async #shelfDirectory(): Promise<string | null> {
+    this.#writable("home");
+    const directory = join(await this.#rootReal("home"), SHELF_DIRECTORY);
+    const info = await lstat(directory).catch(() => null);
+    if (!info) return null;
+    if (!info.isDirectory()) throw invalid("The shelf folder is not a folder");
+    return directory;
+  }
+
+  /** Files the shelf holds itself are deleted for good: they never go to the trash. */
+  async discardShelf(paths: readonly string[]): Promise<void> {
+    for (const path of paths)
+      if (!isShelfTemporary({ root: "home", path }) || segmentsOf(path).length !== 2)
+        throw invalid("Not a shelf file");
+    const directory = await this.#shelfDirectory();
+    if (!directory) return;
+    // A link is removed itself; rm never follows one.
+    for (const path of new Set(paths))
+      await rm(join(directory, checkName(segmentsOf(path)[1]!)), {
+        recursive: true,
+        force: true,
+      }).catch(fsError);
+  }
+
+  /**
+   * Deletes shelf files that `listed` (the stored shelf) no longer names once they are
+   * SHELF_ORPHAN_AGE_MS old, so uploads still running or not saved yet stay. Returns the shelf
+   * paths left and how many went.
+   */
+  async tidyShelf(
+    listed: ReadonlySet<string>,
+    now: number,
+  ): Promise<{ paths: string[]; removed: number }> {
+    const directory = await this.#shelfDirectory();
+    if (!directory) return { paths: [], removed: 0 };
+    const paths: string[] = [];
+    let removed = 0;
+    for (const name of (await readdir(directory).catch(fsError)).sort()) {
+      const path = `${SHELF_DIRECTORY}/${name}`;
+      const info = await lstat(join(directory, name)).catch(() => null);
+      if (!info) continue;
+      if (listed.has(path) || now - info.mtimeMs < SHELF_ORPHAN_AGE_MS) {
+        paths.push(path);
+        continue;
+      }
+      await rm(join(directory, name), { recursive: true, force: true }).catch(fsError);
+      removed++;
+    }
+    return { paths, removed };
   }
 
   async #trash(rootId: string, create = false): Promise<string> {

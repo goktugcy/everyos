@@ -19,8 +19,29 @@ export const PREFERENCE_KEYS = [
 
 export type PreferenceKey = (typeof PREFERENCE_KEYS)[number];
 
-/** Most items the pulse shelf keeps (references to files; nothing is copied). */
+/** Most items the pulse shelf keeps. */
 export const MAX_SHELF_ITEMS = 48;
+
+/**
+ * Hidden folder at the top of the home where files dropped on the shelf from a computer wait. They
+ * leave it when moved into a folder; removing them from the shelf or dragging them out of EveryOS
+ * deletes them for good (docs/pulse.md).
+ */
+export const SHELF_DIRECTORY = ".everyos-shelf";
+
+/** A file the shelf holds itself (directly in SHELF_DIRECTORY of the home), not a reference. */
+export function isShelfTemporary(item: { root: string; path: string }): boolean {
+  const [folder, name, ...rest] = item.path.split("/");
+  return (
+    item.root === "home" &&
+    folder === SHELF_DIRECTORY &&
+    name !== undefined &&
+    name !== "" &&
+    name !== "." &&
+    name !== ".." &&
+    rest.length === 0
+  );
+}
 
 export const THEME_PRESET_IDS = [
   "liquid-dark",

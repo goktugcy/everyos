@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MAX_TEXT_FILE_BYTES } from "../files.ts";
+import { isShelfTemporary, MAX_SHELF_ITEMS } from "../preferences.ts";
 
 /** UTF-8 byte length (file names are limited to 255 bytes, not characters). */
 function utf8Length(value: string): number {
@@ -55,6 +56,11 @@ export const FileDownloadQuerySchema = z.strictObject({
   ...location,
   /** Preview raster images in place (never HTML or SVG). */
   inline: z.enum(["true"]).optional(),
+  /**
+   * A shelf file dragged out onto the computer: deleted for good once it was downloaded whole.
+   * Ignored for anything that is not a shelf file (isShelfTemporary).
+   */
+  discard: z.enum(["true"]).optional(),
 });
 
 export const FileSearchQuerySchema = z.strictObject({
@@ -112,6 +118,19 @@ export const TrashItemRequestSchema = z.strictObject({
 });
 
 export const TrashDeleteRequestSchema = TrashItemRequestSchema.extend({ confirm: z.literal(true) });
+
+/** `POST /api/files/shelf/discard`: files the shelf holds itself, deleted for good. */
+export const ShelfDiscardRequestSchema = z.strictObject({
+  paths: z
+    .array(
+      RelativePathSchema.refine(
+        (path) => isShelfTemporary({ root: "home", path }),
+        "not-a-shelf-file",
+      ),
+    )
+    .min(1)
+    .max(MAX_SHELF_ITEMS),
+});
 
 /** `PUT /api/files/settings` (administrators). */
 export const FileSettingsSchema = z.strictObject({ systemRoots: z.boolean() });

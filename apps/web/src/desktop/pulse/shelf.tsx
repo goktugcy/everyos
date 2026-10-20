@@ -1,4 +1,10 @@
-import type { FileProperties, FileRootView, ShelfItem } from "@everyos/shared";
+import {
+  isShelfTemporary,
+  SHELF_DIRECTORY,
+  type FileProperties,
+  type FileRootView,
+  type ShelfItem,
+} from "@everyos/shared";
 import {
   Download,
   File,
@@ -7,12 +13,14 @@ import {
   FileText,
   Folder,
   FolderOpen,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
-import { useState, type DragEvent } from "react";
+import { useEffect, useState, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useApiResource } from "../../features/system/use-api-resource.ts";
+import { ApiRequestError } from "../../lib/api.ts";
 import { cn } from "../../lib/cn.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { formatBytes } from "../../lib/format.ts";
@@ -24,6 +32,7 @@ import {
   filesChanged,
   parentOf,
   uploadUnique,
+  useFilesRevision,
 } from "../apps/files/lib.ts";
 import { desktop } from "../state/controller.ts";
 import { updatePreference, usePreferences } from "../state/preferences-store.ts";
@@ -40,6 +49,9 @@ interface Upload {
 const IMAGE = /\.(png|jpe?g|gif|webp|avif|bmp|svg|heic)$/i;
 const ARCHIVE = /\.(zip|tar|gz|tgz|xz|bz2|7z|rar|zst)$/i;
 const TEXT = /\.(txt|md|json|ya?ml|toml|ini|conf|log|csv|xml|html?|css|js|ts|sh|py|env)$/i;
+
+/** After a drag that may have left the page, the shelf looks whether the server deleted the file. */
+const RECHECK_AFTER_DRAG_MS = [2_000, 10_000, 60_000];
 
 function ItemIcon({ item }: { item: ShelfItem }) {
   const name = shelfName(item);
@@ -59,42 +71,75 @@ function ItemIcon({ item }: { item: ShelfItem }) {
 const setShelf = (update: (shelf: ShelfItem[]) => ShelfItem[]) =>
   updatePreference("pulse", (doc) => ({ ...doc, shelf: update(doc.shelf) }));
 
+const sameItem = (a: ShelfItem, b: ShelfItem) => a.root === b.root && a.path === b.path;
+
+// Whether the item being dragged landed on a drop target in this page (a Files window, the desktop,
+// the shelf). One drag runs at a time, so a single flag is enough.
+let droppedInside = false;
+const markDroppedInside = () => {
+  droppedInside = true;
+};
+
 /**
- * The shelf: references to files in EveryOS's file locations. Files dropped
- * from the computer are uploaded to the chosen destination first; files
- * dragged from a Files window are only referenced. Items can be dragged back
- * into any Files window (move, or copy with Alt/Ctrl) or onto the computer.
+ * The shelf. Files dropped from the computer wait in the home's hidden shelf folder: moved into a
+ * folder they become ordinary files, removed from the shelf or dragged out of EveryOS they are
+ * deleted for good. Files dragged from a Files window are only referenced and always stay.
  */
 export function PulseShelf() {
   const { t, i18n } = useTranslation();
   const canWrite = usePermissions().includes("files:write");
   const shelf = usePreferences((state) => state.pulse.shelf);
-  const destination = usePreferences((state) => state.pulse.destination);
   const roots = useApiResource<{ roots: FileRootView[] }>("/files/roots", null);
+  const revision = useFilesRevision();
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [over, setOver] = useState(false);
   const [error, setError] = useState<unknown>(null);
-  const [choosing, setChoosing] = useState(false);
+  const [recheck, setRecheck] = useState(0);
 
-  const writable = (roots.data?.roots ?? []).filter((root) => root.available && !root.readOnly);
-  // Like a browser's downloads: by default into the user's own Downloads folder.
-  const home = writable.find((root) => root.kind === "home");
-  const target =
-    destination && writable.some((root) => root.id === destination.root)
-      ? destination
-      : home
-        ? { root: home.id, path: home.folders?.downloads ?? "" }
-        : writable[0]
-          ? { root: writable[0].id, path: "" }
-          : null;
-  const targetName = target
-    ? [writable.find((root) => root.id === target.root)?.name ?? target.root, target.path]
-        .filter(Boolean)
-        .join(" / ")
-    : null;
+  const hasHome = (roots.data?.roots ?? []).some(
+    (root) => root.id === "home" && root.available && !root.readOnly,
+  );
+  const target = hasHome ? { root: "home", path: SHELF_DIRECTORY } : null;
+
+  // Files the shelf holds that are gone from the server (taken by a drag out, moved in Files) leave
+  // it; files it no longer lists are deleted there after a while.
+  useEffect(() => {
+    if (!canWrite || !hasHome) return;
+    const started = Date.now();
+    let stale = false;
+    filesApi
+      .tidyShelf()
+      .then(({ paths }) => {
+        if (stale) return;
+        const present = new Set(paths);
+        const gone = (item: ShelfItem) =>
+          isShelfTemporary(item) && item.addedAt < started && !present.has(item.path);
+        if (usePreferences.getState().pulse.shelf.some(gone))
+          setShelf((current) => current.filter((item) => !gone(item)));
+      })
+      .catch(() => undefined); // Housekeeping; the next look tries again.
+    return () => {
+      stale = true;
+    };
+  }, [canWrite, hasHome, revision, recheck]);
+
+  /** Takes items off the shelf; files it holds itself are deleted for good. */
+  const removeItems = (items: readonly ShelfItem[]) => {
+    setShelf((current) => current.filter((item) => !items.some((other) => sameItem(item, other))));
+    const paths = items.filter(isShelfTemporary).map((item) => item.path);
+    if (paths.length) filesApi.discardShelf(paths).catch(setError);
+  };
 
   const uploadAll = async (files: File[]) => {
     if (!target) return;
+    try {
+      await filesApi.mkdir({ root: target.root, path: "" }, SHELF_DIRECTORY);
+    } catch (caught) {
+      if (!(caught instanceof ApiRequestError && caught.code === "CONFLICT")) {
+        setError(caught);
+        return;
+      }
+    }
     const added: ShelfItem[] = [];
     for (const file of files) {
       const id = randomId();
@@ -105,7 +150,7 @@ export function PulseShelf() {
       const progress = (loaded: number, total: number) =>
         setUploads((list) => list.map((u) => (u.id === id ? { ...u, loaded, total } : u)));
       try {
-        const name = await uploadUnique(target, file, progress);
+        const name = await uploadUnique(target, file, progress, t("pulse.tabs.shelf"));
         added.push({
           root: target.root,
           path: [target.path, name].filter(Boolean).join("/"),
@@ -199,71 +244,10 @@ export function PulseShelf() {
             {!canWrite
               ? t("pulse.shelf.readOnly")
               : target
-                ? t("pulse.shelf.uploadTo", { target: targetName })
+                ? t("pulse.shelf.temporary")
                 : t("pulse.shelf.noTarget")}
           </p>
-          {canWrite && writable.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => setChoosing((value) => !value)}
-              className="text-[0.68rem] font-medium text-[rgb(var(--everyos-accent))] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {t("pulse.shelf.change")}
-            </button>
-          ) : null}
         </div>
-        {choosing && target ? (
-          <form
-            className="flex flex-col gap-1.5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const form = new FormData(event.currentTarget);
-              const rawPath = form.get("path");
-              const root = form.get("root");
-              if (typeof root !== "string") return;
-              const path = (typeof rawPath === "string" ? rawPath : "")
-                .trim()
-                .replace(/^\/+|\/+$/g, "");
-              updatePreference("pulse", (doc) => ({
-                ...doc,
-                destination: { root, path },
-              }));
-              setChoosing(false);
-            }}
-          >
-            <label className="sr-only" htmlFor="pulse-root">
-              {t("pulse.shelf.location")}
-            </label>
-            <select
-              id="pulse-root"
-              name="root"
-              defaultValue={target.root}
-              className="h-7 rounded-md bg-hover/10 px-2 text-[0.72rem] text-fg outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {writable.map((root) => (
-                <option key={root.id} value={root.id}>
-                  {root.name}
-                </option>
-              ))}
-            </select>
-            <label className="sr-only" htmlFor="pulse-path">
-              {t("pulse.shelf.folder")}
-            </label>
-            <input
-              id="pulse-path"
-              name="path"
-              defaultValue={target.path}
-              placeholder={t("pulse.shelf.folderPlaceholder")}
-              className="h-7 rounded-md bg-hover/10 px-2 text-[0.72rem] text-fg outline-none placeholder:text-fg-subtle focus-visible:ring-2 focus-visible:ring-accent"
-            />
-            <button
-              type="submit"
-              className="h-7 rounded-md bg-hover/20 text-[0.72rem] font-medium outline-none hover:bg-hover/25 focus-visible:ring-2 focus-visible:ring-accent"
-            >
-              {t("common.save")}
-            </button>
-          </form>
-        ) : null}
         {uploads.length > 0 ? (
           <ul className="flex flex-col gap-1" data-testid="pulse-uploads">
             {uploads.map((upload) => (
@@ -306,7 +290,7 @@ export function PulseShelf() {
           {shelf.length > 0 ? (
             <button
               type="button"
-              onClick={() => setShelf(() => [])}
+              onClick={() => removeItems(shelf)}
               className="text-[0.7rem] text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
             >
               {t("pulse.shelf.clear")}
@@ -328,31 +312,47 @@ export function PulseShelf() {
             {shelf.map((item) => {
               const name = shelfName(item);
               const location = { root: item.root, path: item.path };
+              const temporary = isShelfTemporary(item);
               const url = filesApi.downloadUrl(location);
+              const removeLabel = temporary
+                ? t("pulse.shelf.delete", { name })
+                : t("pulse.shelf.remove", { name });
               return (
                 <li
                   key={`${item.root}:${item.path}`}
                   className="group relative flex flex-col items-center gap-1 rounded-xl p-2 text-center hover:bg-hover/8"
                   draggable
                   data-testid="pulse-shelf-item"
+                  data-temporary={temporary}
                   title={`${name}${item.size !== null ? ` · ${formatBytes(item.size, i18n.language)}` : ""}`}
                   onDragStart={(event) => {
                     event.dataTransfer.setData(
                       FILES_DRAG_TYPE,
                       JSON.stringify({ root: item.root, paths: [item.path] }),
                     );
-                    // Chrome and Edge save it to the computer when dropped outside the browser.
-                    if (item.kind === "file")
+                    // Chrome and Edge save it to the computer when dropped outside the browser; a
+                    // file the shelf holds itself is deleted once the browser has all of it.
+                    if (item.kind === "file") {
+                      const out = filesApi.downloadUrl(location, false, temporary);
                       event.dataTransfer.setData(
                         "DownloadURL",
-                        `application/octet-stream:${name}:${new URL(url, window.location.href).href}`,
+                        `application/octet-stream:${name}:${new URL(out, window.location.href).href}`,
                       );
+                    }
                     event.dataTransfer.effectAllowed = "copyMove";
+                    droppedInside = false;
+                    window.addEventListener("drop", markDroppedInside, { capture: true });
                   }}
                   onDragEnd={(event) => {
+                    window.removeEventListener("drop", markDroppedInside, { capture: true });
                     // Moved into a folder: it is no longer where the shelf points.
                     if (event.dataTransfer.dropEffect === "move")
                       setShelf((current) => shelfRemove(current, item));
+                    // Maybe dropped outside EveryOS. Only the server knows whether the browser
+                    // downloaded it (and deleted it then); the shelf drops it once it is gone.
+                    else if (temporary && !droppedInside)
+                      for (const delay of RECHECK_AFTER_DRAG_MS)
+                        window.setTimeout(() => setRecheck((n) => n + 1), delay);
                   }}
                 >
                   <ItemIcon item={item} />
@@ -360,23 +360,25 @@ export function PulseShelf() {
                     {name}
                   </span>
                   <span className="absolute right-1 top-1 hidden gap-0.5 group-focus-within:flex group-hover:flex">
-                    <button
-                      type="button"
-                      aria-label={t("pulse.shelf.show", { name })}
-                      title={t("pulse.shelf.show", { name })}
-                      onClick={() =>
-                        desktop.openApp("everyos.files", {
-                          newInstance: true,
-                          appState: {
-                            root: item.root,
-                            path: item.kind === "directory" ? item.path : parentOf(item.path),
-                          },
-                        })
-                      }
-                      className="grid size-5 place-items-center rounded-full bg-[rgb(var(--everyos-surface)/0.9)] text-fg hover:text-fg"
-                    >
-                      <FolderOpen className="size-3" aria-hidden />
-                    </button>
+                    {temporary ? null : (
+                      <button
+                        type="button"
+                        aria-label={t("pulse.shelf.show", { name })}
+                        title={t("pulse.shelf.show", { name })}
+                        onClick={() =>
+                          desktop.openApp("everyos.files", {
+                            newInstance: true,
+                            appState: {
+                              root: item.root,
+                              path: item.kind === "directory" ? item.path : parentOf(item.path),
+                            },
+                          })
+                        }
+                        className="grid size-5 place-items-center rounded-full bg-[rgb(var(--everyos-surface)/0.9)] text-fg hover:text-fg"
+                      >
+                        <FolderOpen className="size-3" aria-hidden />
+                      </button>
+                    )}
                     {item.kind === "file" ? (
                       <a
                         href={url}
@@ -390,12 +392,16 @@ export function PulseShelf() {
                     ) : null}
                     <button
                       type="button"
-                      aria-label={t("pulse.shelf.remove", { name })}
-                      title={t("pulse.shelf.remove", { name })}
-                      onClick={() => setShelf((current) => shelfRemove(current, item))}
+                      aria-label={removeLabel}
+                      title={removeLabel}
+                      onClick={() => removeItems([item])}
                       className="grid size-5 place-items-center rounded-full bg-[rgb(var(--everyos-surface)/0.9)] text-fg hover:text-fg"
                     >
-                      <X className="size-3" aria-hidden />
+                      {temporary ? (
+                        <Trash2 className="size-3" aria-hidden />
+                      ) : (
+                        <X className="size-3" aria-hidden />
+                      )}
                     </button>
                   </span>
                 </li>

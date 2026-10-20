@@ -11,14 +11,14 @@ or the encryption key identity.
 
 ## What a backup contains
 
-| File                       | Contents                                                                                                                                                           |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `everyos.db.gz`            | A consistent snapshot of the EveryOS database, taken with SQLite's online backup API (never a file copy), with the `sessions` table emptied and the file vacuumed. |
-| `config.yaml`              | The configuration file, when it exists and is readable. For reference only; it is never restored automatically.                                                    |
-| `wallpapers.tar.gz`        | Uploaded wallpapers (`<dataDir>/wallpapers/<userId>/<file>`).                                                                                                      |
-| `apps/<appId>.data.tar.gz` | The app data directory of each selected app (see below).                                                                                                           |
-| `homes.tar.gz`             | Existing EveryOS account homes, including standard folders, Desktop files, folder-name metadata and private trash.                                                 |
-| `manifest.json`            | Format version, creation time and trigger, EveryOS and schema versions, contents, and the size and SHA-256 of every file. Written last.                            |
+| File                       | Contents                                                                                                                                                                             |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `everyos.db.gz`            | A consistent snapshot of the EveryOS database, taken with SQLite's online backup API (never a file copy), with the `sessions` table emptied and the file vacuumed.                   |
+| `config.yaml`              | The configuration file, when it exists and is readable. For reference only; it is never restored automatically.                                                                      |
+| `wallpapers.tar.gz`        | Uploaded wallpapers (`<dataDir>/wallpapers/<userId>/<file>`).                                                                                                                        |
+| `apps/<appId>.data.tar.gz` | The app data directory of each selected app (see below).                                                                                                                             |
+| `homes.tar.gz`             | Existing EveryOS account homes, including standard folders, Desktop files, folder-name metadata and private trash; files waiting on the pulse shelf (`.everyos-shelf`) are left out. |
+| `manifest.json`            | Format version, creation time and trigger, EveryOS and schema versions, contents, and the size and SHA-256 of every file. Written last.                                              |
 
 The database holds accounts, desktop layouts, widgets, preferences, catalogs, managed app
 records (including their sealed Compose files), scheduled tasks, notifications and the audit

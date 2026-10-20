@@ -3279,18 +3279,16 @@ export const zh: LocaleMessages = {
     shelf: {
       drop: "将文件拖放到此处",
       readOnly: "你没有上传文件的权限；但仍可从“文件”窗口拖入文件。",
-      uploadTo: "从电脑拖入的文件将上传至：{{target}}",
-      noTarget: "没有可用于上传的文件位置。",
-      change: "更改目标位置",
-      location: "位置",
-      folder: "文件夹",
-      folderPlaceholder: "文件夹（留空表示顶层目录）",
+      temporary:
+        "从电脑拖入的文件会临时存放在这里。要保留它们，请拖到某个文件夹；从文件架移除或拖出 EveryOS 后，文件会被删除。",
+      noTarget: "从电脑拖入文件需要个人主目录。",
       items: "文件架中：{{count}}",
       clear: "清空文件架",
-      empty: "文件架为空。可从电脑或“文件”窗口将文件拖到此处，稍后再拖回任意文件夹。",
+      empty: "文件架为空。可从电脑或“文件”窗口将文件拖到此处，稍后再拖到任意文件夹。",
       show: "在“文件”中显示 {{name}}",
       download: "下载 {{name}}",
       remove: "从文件架移除 {{name}}",
+      delete: "删除 {{name}}",
     },
   },
   tailscale: {

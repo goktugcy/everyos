@@ -717,3 +717,16 @@ Translation types require every source key and permit extra CLDR plural categori
 required plural forms, interpolation names, nonempty strings, language names and browser loaders.
 Home folder names are selected at creation; a later locale change preserves existing names.
 See [Internationalization](i18n.md) for editing and verification.
+
+### D52 — Files dropped on the shelf are temporary
+
+Files dropped on the pulse shelf from a computer used to land in Downloads and stayed there when
+they left the shelf. They now wait in a hidden `.everyos-shelf` folder of the EveryOS home, which
+the API serves directly in production too, so no agent operation is involved. Moving one into a
+folder keeps it; removing it from the shelf, clearing the shelf or dragging it out of the browser
+deletes it for good instead of putting it in the trash. A drag out deletes on the server after the
+download completed (`discard=true`), because the page cannot know when the browser fetched it; the
+session cookie is SameSite=Strict, so other sites cannot trigger that GET. Files the stored shelf
+has not listed for an hour are tidied away, and the folder is left out of search and home backups.
+Files referenced from Files windows are never deleted by the shelf. The old upload destination
+stays in the `pulse` schema, unused, so stored preferences remain valid.

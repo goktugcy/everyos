@@ -3223,19 +3223,17 @@ export const en: Messages = {
     shelf: {
       drop: "Drop files here",
       readOnly: "You cannot upload files; you can still add files dragged from a Files window.",
-      uploadTo: "Files from your computer are uploaded to: {{target}}",
-      noTarget: "There is no file location to upload to.",
-      change: "Change destination",
-      location: "Location",
-      folder: "Folder",
-      folderPlaceholder: "Folder (empty for the top level)",
+      temporary:
+        "Files from your computer wait here temporarily. Drag them into a folder to keep them; removing them from the shelf or dragging them out of EveryOS deletes them.",
+      noTarget: "Dropping files from your computer needs a home folder.",
       items: "On the shelf: {{count}}",
       clear: "Clear shelf",
       empty:
-        "The shelf is empty. Drag files here from your computer or a Files window; drag them back into any folder later.",
+        "The shelf is empty. Drag files here from your computer or a Files window; drag them into any folder later.",
       show: "Show {{name}} in Files",
       download: "Download {{name}}",
       remove: "Remove {{name}} from the shelf",
+      delete: "Delete {{name}}",
     },
   },
   tailscale: {

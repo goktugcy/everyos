@@ -102,17 +102,17 @@ to time-of-use). The impact is limited to what the API user can reach anyway.
 
 ## Operations
 
-| Endpoint                                      | Permission    | Notes                                                                                                                                                                  |
-| --------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /files/roots`                            | `files:read`  | Roots, availability, read-only state.                                                                                                                                  |
-| `GET /files/list?root&path&hidden`            | `files:read`  | Up to 5,000 entries (`truncated` otherwise); hidden files on request.                                                                                                  |
-| `GET /files/properties`                       | `files:read`  | Type, size, times, permissions, owner/group names, child count, link status.                                                                                           |
-| `GET /files/search?root&path&q`               | `files:read`  | Case-insensitive name search (I, İ, ı and i all match); 300 results, 50,000 entries, depth 16, 8 s.                                                                    |
-| `GET /files/text`                             | `files:read`  | UTF-8 text up to 1 MiB with an `etag`; binary or invalid UTF-8 → `FILES_NOT_TEXT`.                                                                                     |
-| `GET /files/download?root&path&inline`        | `files:read`  | Streamed, `Range` support. Always `attachment` with `application/octet-stream`, except raster images with `inline=true`. Sandbox CSP.                                  |
-| `PUT /files/text`                             | `files:write` | `etag: null` creates (fails if it exists). A stale `etag` returns `409`. Own files are replaced atomically; others' files are written in place to keep owner and mode. |
-| `POST /files/upload?root&path&name&overwrite` | `files:write` | Raw body, `Content-Length` required, streamed to a temporary file and linked into place (no silent overwrite). Checks size limit and free space.                       |
-| `POST /files/{mkdir,rename,copy,move,delete}` | `files:write` | Copy keeps symlinks as symlinks. Moves across file systems copy then delete. Delete needs `confirm: true`, moves to private trash and never targets a root.            |
+| Endpoint                                       | Permission    | Notes                                                                                                                                                                                                                             |
+| ---------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /files/roots`                             | `files:read`  | Roots, availability, read-only state.                                                                                                                                                                                             |
+| `GET /files/list?root&path&hidden`             | `files:read`  | Up to 5,000 entries (`truncated` otherwise); hidden files on request.                                                                                                                                                             |
+| `GET /files/properties`                        | `files:read`  | Type, size, times, permissions, owner/group names, child count, link status.                                                                                                                                                      |
+| `GET /files/search?root&path&q`                | `files:read`  | Case-insensitive name search (I, İ, ı and i all match); 300 results, 50,000 entries, depth 16, 8 s.                                                                                                                               |
+| `GET /files/text`                              | `files:read`  | UTF-8 text up to 1 MiB with an `etag`; binary or invalid UTF-8 → `FILES_NOT_TEXT`.                                                                                                                                                |
+| `GET /files/download?root&path&inline&discard` | `files:read`  | Streamed, `Range` support. Always `attachment` with `application/octet-stream`, except raster images with `inline=true`. Sandbox CSP. `discard=true` on a pulse shelf file (with `files:write`) deletes it once downloaded whole. |
+| `PUT /files/text`                              | `files:write` | `etag: null` creates (fails if it exists). A stale `etag` returns `409`. Own files are replaced atomically; others' files are written in place to keep owner and mode.                                                            |
+| `POST /files/upload?root&path&name&overwrite`  | `files:write` | Raw body, `Content-Length` required, streamed to a temporary file and linked into place (no silent overwrite). Checks size limit and free space.                                                                                  |
+| `POST /files/{mkdir,rename,copy,move,delete}`  | `files:write` | Copy keeps symlinks as symlinks. Moves across file systems copy then delete. Delete needs `confirm: true`, moves to private trash and never targets a root.                                                                       |
 
 Read-only roots refuse writes with `FILES_READ_ONLY`. A full disk returns
 `FILES_INSUFFICIENT_SPACE` (507). Every change is audited (`files.mkdir`, `files.upload`,
@@ -223,11 +223,13 @@ that cannot advance are reported rather than treated as empty. A known-empty bin
 routes even when hidden files are shown, including symlink aliases. It is storage owned by
 EveryOS, not an implementation of the host OS's Trash or the freedesktop Trash specification.
 
-| Endpoint                    | Permission    | Input / result                                                     |
-| --------------------------- | ------------- | ------------------------------------------------------------------ |
-| `GET /files/trash`          | `files:read`  | `{ entries, truncated }`; private entries across configured roots  |
-| `POST /files/trash/restore` | `files:write` | `{ root, ids }`, at most 500 UUIDs                                 |
-| `POST /files/trash/delete`  | `files:write` | `{ root, ids, confirm: true }`, permanently deletes selected items |
+| Endpoint                    | Permission    | Input / result                                                                                                 |
+| --------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
+| `GET /files/trash`          | `files:read`  | `{ entries, truncated }`; private entries across configured roots                                              |
+| `POST /files/trash/restore` | `files:write` | `{ root, ids }`, at most 500 UUIDs                                                                             |
+| `POST /files/trash/delete`  | `files:write` | `{ root, ids, confirm: true }`, permanently deletes selected items                                             |
+| `POST /files/shelf/discard` | `files:write` | `{ paths }` (only `.everyos-shelf/<name>` in the home): deletes pulse shelf files for good, never to the trash |
+| `POST /files/shelf/tidy`    | `files:write` | Deletes shelf files the stored shelf has not listed for an hour; returns `{ paths }` left (docs/pulse.md)      |
 
 Audit actions are `files.delete` with `mode: "trash"`, `files.trash.restore` and
 `files.trash.delete`; contents are never written into audit details. Validated requests are

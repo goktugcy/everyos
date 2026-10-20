@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, realpath, symlink, writeFile } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync, gunzipSync } from "node:zlib";
-import type { BackupHomeContent } from "@everyos/shared";
+import { SHELF_DIRECTORY, type BackupHomeContent } from "@everyos/shared";
 import { TarWriter, type TarWriteHeader } from "@everyos/system/archive";
 import { describe, expect, it } from "vitest";
 import { SpaceGuard } from "./backup-store.ts";
@@ -64,6 +64,9 @@ describe("home backup archive", () => {
     const user = randomUUID();
     await mkdir(join(root, user));
     await writeFile(join(root, user, "note.txt"), "inside");
+    // Files waiting on the pulse shelf are temporary and never archived.
+    await mkdir(join(root, user, SHELF_DIRECTORY));
+    await writeFile(join(root, user, SHELF_DIRECTORY, "dropped.txt"), "NEVER_ARCHIVE_SHELF_FILE");
     const outside = await mkdtemp(join(tmpdir(), "everyos-home-outside-"));
     await writeFile(join(outside, "secret.txt"), "NEVER_ARCHIVE_THIS_TARGET");
     await symlink(outside, join(root, user, "escape"));
@@ -86,6 +89,7 @@ describe("home backup archive", () => {
     expect(bytes.includes(Buffer.from("inside"))).toBe(true);
     expect(bytes.includes(Buffer.from("NEVER_ARCHIVE_THIS_TARGET"))).toBe(false);
     expect(bytes.includes(Buffer.from("NEVER_ARCHIVE_UNKNOWN_ACCOUNT"))).toBe(false);
+    expect(bytes.includes(Buffer.from("NEVER_ARCHIVE_SHELF_FILE"))).toBe(false);
     await expect(validateHomes(target, homes)).resolves.toBeUndefined();
   });
 

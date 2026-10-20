@@ -69,20 +69,34 @@ shows the number of running transfers; the dots' context menu opens it.
 
 **Shelf**
 
-The shelf keeps **references** to files in EveryOS's file locations (at most 48, stored in the
-`pulse` preference so they follow the user to other browsers). Nothing is copied by the shelf
-itself.
+The shelf lists up to 48 items in the `pulse` preference, so it follows the user to other
+browsers. It holds two kinds of item:
 
 - **From the computer:** dropped files are uploaded through the normal file API (`files:write`)
-  to the chosen destination (default: the home's Downloads folder, else the top of the first
-  writable location). A taken name is never overwritten; the file gets a number instead
-  ("rapor (2).pdf"). Folders cannot be uploaded from a browser.
+  into a hidden folder of the user's home, `.everyos-shelf`, where they wait temporarily. A taken
+  name is never overwritten; the file gets a number instead ("rapor (2).pdf"). Folders cannot be
+  uploaded from a browser, and without a home folder nothing can be dropped from the computer.
 - **From a Files window:** dragged items are only referenced (their type and size are read with
-  `files/properties`).
-- **Out of the shelf:** items drag into any Files window folder; that window's rules apply
-  (move by default, copy with Alt/Ctrl), and a moved item leaves the shelf. In Chrome and Edge,
-  dragging a file out of the browser saves it to the computer. Each item can also be shown in
-  Files, downloaded, or removed from the shelf (the file stays).
+  `files/properties`); removing them from the shelf never touches the file.
+- **Out of the shelf:** items drag into any Files window folder or the desktop; that place's rules
+  apply (move by default, copy with Alt/Ctrl), and a moved item leaves the shelf. A waiting file
+  that is moved becomes an ordinary file there. In Chrome and Edge, dragging a file out of the
+  browser saves it to the computer. Each item can also be downloaded, and referenced items can be
+  shown in Files.
+- **Deleting waiting files:** removing a waiting file from the shelf (or clearing the shelf)
+  deletes it for good with `POST /files/shelf/discard`; it never goes to the trash. Dragged out of
+  the browser, its download URL carries `discard=true`: the server deletes the file once the
+  browser has downloaded all of it. Only the server knows whether that happened (browsers report
+  drops outside the page differently, and Firefox and Safari save nothing), so the shelf looks
+  again 2, 10 and 60 seconds after such a drag and drops the item once its file is gone. A waiting
+  file moved to a Linux location leaves no copy in the trash either.
+- **Tidying:** whenever the shelf is shown and after file changes in the tab it calls
+  `POST /files/shelf/tidy`. The server deletes files in `.everyos-shelf` that the stored shelf has
+  not listed for an hour (a failed removal, a tab closed mid-upload) and returns the files left;
+  the shelf drops waiting items whose file is gone.
+
+`.everyos-shelf` is left out of file search and of home backups, so deleted waiting files do not
+live on there.
 
 Every file operation goes through the same API and permission checks as the Files app; the
 shelf needs `files:read` to appear.
