@@ -1,3 +1,14 @@
+EveryOS 0.1.36 makes files dropped on the pulse shelf temporary.
+
+- Files dropped on the shelf from your computer no longer land in Downloads. They wait on the
+  shelf until you drag them into a folder, where they become ordinary files.
+- Removing a waiting file from the shelf, clearing the shelf or dragging the file out of the
+  browser onto your computer (Chrome and Edge) deletes it from EveryOS for good, without a copy in
+  the trash. Files added to the shelf from a Files window stay where they are when removed.
+- Waiting files left behind (for example by a tab closed during an upload) are cleaned up after an
+  hour, and they are not included in file search or home backups.
+- The shelf's "Change destination" setting is gone, since dropped files no longer go to a folder.
+
 EveryOS 0.1.35 fixes searching for files and rounds out the new languages.
 
 - Searching in Files finds names with a capital I in every language: "img" now finds
