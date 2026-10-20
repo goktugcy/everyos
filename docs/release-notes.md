@@ -1,3 +1,15 @@
+EveryOS 0.1.35 fixes searching for files and rounds out the new languages.
+
+- Searching in Files finds names with a capital I in every language: "img" now finds
+  IMG_1234.jpg and "invoice" finds Invoice.pdf.
+- On a first visit EveryOS opens in the browser's own language when it is one of the ten it
+  offers, and in English otherwise. A language chosen on the device or saved to the account still
+  wins.
+- Local AI chats can be set to always answer in any of the ten interface languages, not only
+  Turkish or English.
+- Avatar initials are capitalized in the account's own language, so "ivan" no longer shows a
+  Turkish dotted "İ".
+
 EveryOS 0.1.34 adds eight interface languages and makes English the default.
 
 - EveryOS is now available in ten languages: English (the default), Turkish, German, Spanish,
