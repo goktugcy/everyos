@@ -39,6 +39,7 @@ import { securityRoutes } from "./modules/security/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
 import { desktopAppRoutes } from "./modules/desktop-apps/routes.ts";
 import { appSdkRoutes } from "./modules/desktop-apps/sdk-routes.ts";
+import { appMediaRoutes, appSdkFileRoutes } from "./modules/desktop-apps/sdk-files-routes.ts";
 import { appRuntimeRoutes } from "./modules/desktop-apps/runtime-routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
@@ -76,6 +77,9 @@ export function createApp(services: Services): Hono<AppEnv> {
     )
       return next();
     if (c.req.method === "PUT" && c.req.path === "/api/files/text") return textBodyLimit(c, next);
+    // App file chunks are raw bytes with their own 512 KiB limit (checked by the route).
+    if (c.req.method === "POST" && /^\/api\/app-sdk\/files\/[^/]+\/write$/.test(c.req.path))
+      return next();
     // App storage values reach 256 KiB of JSON.
     if (c.req.method === "POST" && c.req.path === "/api/app-sdk/storage/set")
       return textBodyLimit(c, next);
@@ -123,6 +127,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
   api.route("/desktop-apps", desktopAppRoutes(services));
+  api.route("/app-sdk/files", appSdkFileRoutes(services));
   api.route("/app-sdk", appSdkRoutes(services));
   api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));
@@ -134,6 +139,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   });
   app.route("/api", api);
   app.route("/app-runtime", appRuntimeRoutes(services.desktopApps.installer));
+  app.route("/app-files", appMediaRoutes(services));
 
   if (services.config.paths.webDir) app.use("*", serveWebClient(services.config.paths.webDir));
 

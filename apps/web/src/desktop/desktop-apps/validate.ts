@@ -114,7 +114,7 @@ export const VALIDATORS: Readonly<Record<Method, Check>> = {
     handle,
     offset: int(0, Number.MAX_SAFE_INTEGER),
     data: buffer(MAX_CHUNK_BYTES),
-    truncate: bool,
+    done: bool,
   }),
   "files.list": shape({ handle, path: relativePath }),
   "files.child": shape({

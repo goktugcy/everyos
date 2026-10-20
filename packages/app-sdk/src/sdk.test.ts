@@ -185,6 +185,7 @@ describe("the app bridge", () => {
   it("reads and writes files in chunks", async () => {
     const file = new Uint8Array(MAX_CHUNK_BYTES * 2 + 10).map((_, i) => i % 251);
     let written = new Uint8Array(0);
+    let committed = false;
     const host = desktop((request) => {
       if (request.method === "files.read") {
         const { offset, length } = request.params as { offset: number; length: number };
@@ -192,17 +193,16 @@ describe("the app bridge", () => {
         return { data: data.buffer, eof: offset + data.length >= file.length };
       }
       if (request.method === "files.write") {
-        const { offset, data, truncate } = request.params as {
+        const { offset, data, done } = request.params as {
           offset: number;
           data: ArrayBuffer;
-          truncate: boolean;
+          done: boolean;
         };
-        const next = new Uint8Array(
-          truncate ? offset + data.byteLength : Math.max(written.length, offset + data.byteLength),
-        );
-        if (!truncate) next.set(written);
+        const next = new Uint8Array(offset + data.byteLength);
+        if (offset > 0) next.set(written.subarray(0, offset));
         next.set(new Uint8Array(data), offset);
         written = next;
+        if (done) committed = true;
         return { size: written.length };
       }
       return null;
@@ -215,6 +215,7 @@ describe("the app bridge", () => {
     expect(host.requests.filter((r) => r.method === "files.read")).toHaveLength(3);
     expect(await app.files.write("h1", file)).toBe(file.length);
     expect(Buffer.from(written).equals(Buffer.from(file))).toBe(true);
+    expect(committed).toBe(true);
     expect(host.requests.filter((r) => r.method === "files.write")).toHaveLength(3);
     host.close();
   });

@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, writeFile } from "node:fs/promises";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -193,6 +194,7 @@ async function setup(): Promise<{
       desktopAppFetcher: (options) => createCatalogFetcher({ ...options, allowPrivate: true }),
     },
   });
+  await ctx.services.files.ensureRoots();
   const admin = new TestClient(ctx);
   await completeSetup(ctx, admin);
   const clients: Record<string, TestClient> = {};
@@ -768,5 +770,190 @@ describe("app SDK calls", () => {
       ).status,
     ).toBe(204);
     expect((await admin.request("GET", "/api/app-sdk/storage/usage", as(token))).status).toBe(404);
+  });
+});
+
+describe("app file access", () => {
+  async function withApp(permissions: string[]) {
+    const context = await setup();
+    const build = await buildApp(
+      "dev.everyos.files",
+      "1.0.0",
+      permissions,
+      officialKeys.privateKey,
+    );
+    publish(context.registry, index([{ id: "dev.everyos.files", versions: [build] }]), [build]);
+    await sync(context.admin);
+    expect(
+      (
+        await context.admin.post("/api/desktop-apps/installed", {
+          registryId: "official",
+          appId: "dev.everyos.files",
+        })
+      ).status,
+    ).toBe(201);
+    const open = async () =>
+      (
+        await json<{ token: string }>(
+          await context.admin.post("/api/app-sdk/instances", {
+            appId: "dev.everyos.files",
+            kind: "window",
+          }),
+        )
+      ).token;
+    const root = context.ctx.config.files.roots[0]!.path;
+    return { ...context, open, root };
+  }
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+
+  it("reads only what the person picked, in chunks, and never past a link", async () => {
+    const { admin, open, root } = await withApp(["files:pick"]);
+    const token = await open();
+    mkdirSync(join(root, "music"), { recursive: true });
+    writeFileSync(join(root, "music", "song.txt"), "x".repeat(700 * 1024));
+    writeFileSync(join(root, "secret.txt"), "not shared");
+    symlinkSync(join(root, "secret.txt"), join(root, "music", "escape.txt"));
+    symlinkSync(root, join(root, "music", "up"));
+    const grant = await json<{ handles: Array<{ id: string; kind: string }> }>(
+      await admin.request("POST", "/api/app-sdk/files/grants", {
+        body: { items: [{ root: "dev", path: "music" }], write: false, persist: false },
+        ...as(token),
+      }),
+    );
+    const folder = grant.handles[0]!;
+    expect(folder.kind).toBe("directory");
+    const list = await json<{ entries: Array<{ name: string }> }>(
+      await admin.request("GET", `/api/app-sdk/files/${folder.id}/list?path=`, as(token)),
+    );
+    // Links are not listed, and cannot be opened by name either.
+    expect(list.entries.map((entry) => entry.name)).toEqual(["song.txt"]);
+    for (const path of ["escape.txt", "up/secret.txt"])
+      expect(
+        (
+          await admin.request("POST", `/api/app-sdk/files/${folder.id}/child`, {
+            body: { path, create: null },
+            ...as(token),
+          })
+        ).status,
+        path,
+      ).toBe(404);
+    const song = await json<{ handle: { id: string; size: number } }>(
+      await admin.request("POST", `/api/app-sdk/files/${folder.id}/child`, {
+        body: { path: "song.txt", create: null },
+        ...as(token),
+      }),
+    );
+    expect(song.handle.size).toBe(700 * 1024);
+    const first = await admin.request(
+      "GET",
+      `/api/app-sdk/files/${song.handle.id}/read?offset=0&length=524288`,
+      as(token),
+    );
+    expect(first.headers.get("x-everyos-eof")).toBe("0");
+    expect((await first.arrayBuffer()).byteLength).toBe(524288);
+    const second = await admin.request(
+      "GET",
+      `/api/app-sdk/files/${song.handle.id}/read?offset=524288&length=524288`,
+      as(token),
+    );
+    expect(second.headers.get("x-everyos-eof")).toBe("1");
+    expect((await second.arrayBuffer()).byteLength).toBe(700 * 1024 - 524288);
+    // Reading is not writing.
+    const write = await admin.request(
+      "POST",
+      `/api/app-sdk/files/${song.handle.id}/write?offset=0&done=true`,
+      {
+        rawBody: "changed",
+        ...as(token),
+      },
+    );
+    expect(write.status).toBe(403);
+    expect(
+      (
+        await admin.request("POST", "/api/app-sdk/files/grants", {
+          body: { items: [{ root: "dev", path: "../etc" }], write: false, persist: false },
+          ...as(token),
+        })
+      ).status,
+    ).toBe(400);
+  });
+
+  it("saves in ordered chunks that land atomically", async () => {
+    const { admin, open, root } = await withApp(["files:pick", "files:save"]);
+    const token = await open();
+    mkdirSync(join(root, "docs"), { recursive: true });
+    const saved = await json<{ handle: { id: string; writable: boolean } }>(
+      await admin.request("POST", "/api/app-sdk/files/grants/save", {
+        body: { root: "dev", path: "docs", name: "note.md", persist: false },
+        ...as(token),
+      }),
+    );
+    expect(saved.handle.writable).toBe(true);
+    const write = (offset: number, body: string, done: boolean) =>
+      admin.request(
+        "POST",
+        `/api/app-sdk/files/${saved.handle.id}/write?offset=${offset}&done=${done}`,
+        {
+          rawBody: body,
+          ...as(token),
+        },
+      );
+    expect((await write(0, "# Title\n", false)).status).toBe(200);
+    // Nothing changes on disk until the last chunk.
+    expect(readFileSync(join(root, "docs", "note.md"), "utf8")).toBe("");
+    expect((await write(3, "late", false)).status).toBe(409);
+    expect((await write(0, "# Title\n", false)).status).toBe(200);
+    expect(await json<{ size: number }>(await write(8, "Body\n", true))).toEqual({ size: 13 });
+    expect(readFileSync(join(root, "docs", "note.md"), "utf8")).toBe("# Title\nBody\n");
+  });
+
+  it("ends temporary grants with their window and keeps persistent ones", async () => {
+    const { admin, open, root } = await withApp(["files:pick"]);
+    writeFileSync(join(root, "a.txt"), "a");
+    const first = await open();
+    const grant = (persist: boolean) =>
+      admin.request("POST", "/api/app-sdk/files/grants", {
+        body: { items: [{ root: "dev", path: "a.txt" }], write: false, persist },
+        ...as(first),
+      });
+    const temporary = (await json<{ handles: Array<{ id: string }> }>(await grant(false)))
+      .handles[0]!.id;
+    const kept = (await json<{ handles: Array<{ id: string }> }>(await grant(true))).handles[0]!.id;
+    const second = await open();
+    // Another window of the app does not get the first one's temporary grant.
+    expect((await admin.request("GET", `/api/app-sdk/files/${temporary}`, as(second))).status).toBe(
+      404,
+    );
+    expect((await admin.request("GET", `/api/app-sdk/files/${kept}`, as(second))).status).toBe(200);
+    await admin.request("DELETE", "/api/app-sdk/instances/current", { body: {}, ...as(first) });
+    const remaining = await json<{ handles: Array<{ id: string }> }>(
+      await admin.request("GET", "/api/app-sdk/files", as(second)),
+    );
+    expect(remaining.handles.map((h) => h.id)).toEqual([kept]);
+  });
+
+  it("serves media URLs with ranges, without cookies, until the grant goes", async () => {
+    const { ctx, admin, open, root } = await withApp(["files:pick"]);
+    const token = await open();
+    writeFileSync(join(root, "clip.mp4"), "0123456789");
+    const handle = (
+      await json<{ handles: Array<{ id: string }> }>(
+        await admin.request("POST", "/api/app-sdk/files/grants", {
+          body: { items: [{ root: "dev", path: "clip.mp4" }], write: false, persist: false },
+          ...as(token),
+        }),
+      )
+    ).handles[0]!.id;
+    const { url } = await json<{ url: string }>(
+      await admin.request("POST", `/api/app-sdk/files/${handle}/url`, { body: {}, ...as(token) }),
+    );
+    const anonymous = new TestClient(ctx);
+    const ranged = await anonymous.request("GET", url, { headers: { range: "bytes=2-5" } });
+    expect(ranged.status).toBe(206);
+    expect(await ranged.text()).toBe("2345");
+    expect(ranged.headers.get("content-type")).toBe("video/mp4");
+    expect(ranged.headers.get("access-control-allow-origin")).toBe("*");
+    await admin.request("DELETE", `/api/app-sdk/files/${handle}`, { body: {}, ...as(token) });
+    expect((await anonymous.request("GET", url)).status).toBe(404);
   });
 });

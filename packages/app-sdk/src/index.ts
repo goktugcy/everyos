@@ -260,7 +260,12 @@ function build(connection: Connection): EveryOSApp {
         const length = chunk.length;
         ({ size } = await request(
           "files.write",
-          { handle: id(handle), offset, data: chunk.buffer, truncate: offset === 0 },
+          {
+            handle: id(handle),
+            offset,
+            data: chunk.buffer,
+            done: offset + length >= bytes.length,
+          },
           { transfer: [chunk.buffer], timeoutMs: 120_000 },
         ));
         offset += length;

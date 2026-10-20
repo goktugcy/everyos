@@ -2,6 +2,7 @@ import type { Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
 import type { SecretBox } from "@everyos/security";
 import type { RegistryAnchor } from "./anchors.ts";
+import { AppFiles } from "./app-files.ts";
 import { AppStorage } from "./app-storage.ts";
 import { RegistryAssets } from "./assets.ts";
 import { DesktopAppInstaller } from "./installer.ts";
@@ -19,6 +20,8 @@ export class DesktopAppsService {
   /** Running app windows and widgets (their tokens). */
   readonly instances: AppInstances;
   readonly storage: AppStorage;
+  /** Files people picked for their apps. */
+  readonly files: AppFiles;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
@@ -50,7 +53,10 @@ export class DesktopAppsService {
       logger: options.logger,
     });
     this.assets = new RegistryAssets(this.registries);
-    this.instances = new AppInstances(options.now);
+    this.files = new AppFiles({ db: options.db, now: options.now, dir: options.dir });
+    this.instances = new AppInstances(options.now, (instance) =>
+      this.files.endInstance(instance.id),
+    );
     this.storage = new AppStorage(options.db, options.now);
   }
 

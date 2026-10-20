@@ -115,7 +115,7 @@ describe("request validation", () => {
         handle: "h",
         offset: 0,
         data: new ArrayBuffer(600 * 1024),
-        truncate: true,
+        done: true,
       }),
     ).toBe(false);
     expect(VALIDATORS["host.call"]({ operation: "system.metrics", input: null })).toBe(true);

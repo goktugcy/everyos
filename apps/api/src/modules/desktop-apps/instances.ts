@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 
 /** One running app window or widget frame, bound to the session that opened it. */
 export interface AppInstance {
+  /** Stable id (stored with temporary file grants); the token itself is never stored. */
+  id: string;
   token: string;
   appId: string;
   userId: string;
@@ -26,9 +28,16 @@ const BURST = 200;
 export class AppInstances {
   readonly #byToken = new Map<string, AppInstance>();
   readonly #now: () => number;
+  readonly #onClose: (instance: AppInstance) => void;
 
-  constructor(now: () => number) {
+  constructor(now: () => number, onClose: (instance: AppInstance) => void = () => undefined) {
     this.#now = now;
+    this.#onClose = onClose;
+  }
+
+  #end(instance: AppInstance): void {
+    this.#byToken.delete(instance.token);
+    this.#onClose(instance);
   }
 
   open(
@@ -40,10 +49,11 @@ export class AppInstances {
       .sort((a, b) => a.lastUsedAt - b.lastUsedAt);
     // A tab that leaks instances (or crashes repeatedly) loses its oldest ones first.
     for (const stale of mine.slice(0, Math.max(0, mine.length - MAX_PER_SESSION + 1)))
-      this.#byToken.delete(stale.token);
+      this.#end(stale);
     const now = this.#now();
     const instance: AppInstance = {
       ...input,
+      id: randomBytes(12).toString("hex"),
       token: randomBytes(24).toString("base64url"),
       createdAt: now,
       lastUsedAt: now,
@@ -59,7 +69,7 @@ export class AppInstances {
     const instance = this.#byToken.get(token);
     if (!instance || instance.sessionId !== sessionId) return null;
     if (this.#now() - instance.lastUsedAt > IDLE_MS) {
-      this.#byToken.delete(token);
+      this.#end(instance);
       return null;
     }
     return instance;
@@ -79,18 +89,19 @@ export class AppInstances {
   }
 
   close(token: string): void {
-    this.#byToken.delete(token);
+    const instance = this.#byToken.get(token);
+    if (instance) this.#end(instance);
   }
 
   /** Ends every instance of an app (uninstalled, disabled, revoked or updated). */
   closeApp(appId: string): void {
-    for (const [token, instance] of this.#byToken)
-      if (instance.appId === appId) this.#byToken.delete(token);
+    for (const instance of [...this.#byToken.values()])
+      if (instance.appId === appId) this.#end(instance);
   }
 
   #sweep(): void {
     const now = this.#now();
-    for (const [token, instance] of this.#byToken)
-      if (now - instance.lastUsedAt > IDLE_MS) this.#byToken.delete(token);
+    for (const instance of [...this.#byToken.values()])
+      if (now - instance.lastUsedAt > IDLE_MS) this.#end(instance);
   }
 }

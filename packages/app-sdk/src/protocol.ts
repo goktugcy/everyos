@@ -120,8 +120,12 @@ export interface Methods {
     params: { handle: string; offset: number; length: number };
     result: { data: ArrayBuffer; eof: boolean };
   };
+  /**
+   * Replaces a file's content in sequential chunks: offset 0 starts a new write, `done` commits it
+   * (the file changes atomically, never half-written).
+   */
   "files.write": {
-    params: { handle: string; offset: number; data: ArrayBuffer; truncate: boolean };
+    params: { handle: string; offset: number; data: ArrayBuffer; done: boolean };
     result: { size: number };
   };
   "files.list": { params: { handle: string; path: string }; result: DirectoryEntry[] };

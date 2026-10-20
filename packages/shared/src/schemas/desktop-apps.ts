@@ -87,3 +87,53 @@ const storageKey = z
 export const AppStorageKeySchema = z.strictObject({ key: storageKey });
 export const AppStorageSetSchema = z.strictObject({ key: storageKey, value: z.json() });
 export const AppStorageKeysSchema = z.strictObject({ prefix: z.string().max(256) });
+
+const grantPath = z
+  .string()
+  .max(4096)
+  .refine((value) => !value.includes("\0") && !value.split("/").some((part) => part === ".."));
+
+export const AppFileGrantSchema = z.strictObject({
+  items: z
+    .array(z.strictObject({ root: z.string().regex(/^[a-z0-9][a-z0-9-]{0,31}$/), path: grantPath }))
+    .min(1)
+    .max(64),
+  write: z.boolean(),
+  persist: z.boolean(),
+});
+
+export const AppFileSaveSchema = z.strictObject({
+  root: z.string().regex(/^[a-z0-9][a-z0-9-]{0,31}$/),
+  path: grantPath,
+  name: z
+    .string()
+    .min(1)
+    .max(255)
+    .refine((value) => !/[/\\\0]/.test(value) && value !== "." && value !== ".."),
+  persist: z.boolean(),
+});
+
+export const AppFileHandleParamSchema = z.strictObject({
+  id: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/),
+});
+
+export const AppFileReadQuerySchema = z.strictObject({
+  offset: z.coerce.number().int().min(0),
+  length: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(512 * 1024),
+});
+
+export const AppFileWriteQuerySchema = z.strictObject({
+  offset: z.coerce.number().int().min(0),
+  done: z.enum(["true", "false"]),
+});
+
+export const AppFileListQuerySchema = z.strictObject({ path: grantPath.default("") });
+
+export const AppFileChildSchema = z.strictObject({
+  path: grantPath.refine((value) => value.length > 0),
+  create: z.enum(["file", "directory"]).nullable(),
+});
