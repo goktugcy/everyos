@@ -503,6 +503,15 @@ importers:
         specifier: workspace:*
         version: link:../shared
 
+  packages/app-package:
+    dependencies:
+      '@everyos/app-manifest':
+        specifier: workspace:*
+        version: link:../app-manifest
+      '@everyos/system':
+        specifier: workspace:*
+        version: link:../system
+
   packages/auth:
     dependencies:
       '@everyos/security':
