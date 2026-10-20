@@ -533,6 +533,12 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
+  packages/app-sdk:
+    devDependencies:
+      '@everyos/app-manifest':
+        specifier: workspace:*
+        version: link:../app-manifest
+
   packages/auth:
     dependencies:
       '@everyos/security':
