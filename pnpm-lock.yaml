@@ -493,6 +493,16 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
 
+  packages/app-manifest:
+    dependencies:
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@everyos/shared':
+        specifier: workspace:*
+        version: link:../shared
+
   packages/auth:
     dependencies:
       '@everyos/security':
