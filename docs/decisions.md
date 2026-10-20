@@ -708,9 +708,10 @@ mappings.
 
 The server imports all resources through `@everyos/i18n`; browser runtime imports use
 `@everyos/i18n/client`. Only English is bundled eagerly. Each other locale is a separate dynamic
-import, and initial rendering waits for the stored language. Concurrent requests for the same
-resource share one download. A later choice supersedes earlier requests, and a failed download
-keeps the current language and stored preference so choosing it again can retry.
+import, and initial rendering waits for the stored language, or the browser's language when nothing
+is stored. Concurrent requests for the same resource share one download. A later choice supersedes
+earlier requests, and a failed download keeps the current language and stored preference so choosing
+it again can retry.
 
 Translation types require every source key and permit extra CLDR plural categories. Tests check
 required plural forms, interpolation names, nonempty strings, language names and browser loaders.

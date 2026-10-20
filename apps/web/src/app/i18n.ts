@@ -1,5 +1,5 @@
 import { en, loadMessages, type Messages } from "@everyos/i18n/client";
-import { DEFAULT_LOCALE, isLocale, type Locale } from "@everyos/shared";
+import { DEFAULT_LOCALE, isLocale, negotiateLocale, type Locale } from "@everyos/shared";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -21,11 +21,21 @@ function readStoredLocale(): Locale | null {
   }
 }
 
+function browserLocale(): Locale {
+  try {
+    const { languages, language } = navigator;
+    return negotiateLocale(languages.length > 0 ? languages : [language]);
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
 /**
- * English is the product default. Before sign-in the last language chosen on
- * this device is used; after sign-in the user's saved preference wins.
+ * Before sign-in the last language chosen on this device is used, else the browser's own language
+ * when EveryOS has it, else English (the product default); after sign-in the user's saved
+ * preference wins.
  */
-export const initialLocale: Locale = readStoredLocale() ?? DEFAULT_LOCALE;
+export const initialLocale: Locale = readStoredLocale() ?? browserLocale();
 
 const initialized = i18next.use(initReactI18next).init({
   // English ships with the page (it is also the fallback); other languages load on demand.

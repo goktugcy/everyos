@@ -19,7 +19,8 @@ export default defineConfig({
         : [],
     },
     trace: "retain-on-failure",
-    locale: "tr-TR",
+    // English, the product default: a fresh browser opens EveryOS in its own language when it has it.
+    locale: "en-US",
   },
   projects: [{ name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

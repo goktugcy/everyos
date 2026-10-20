@@ -53,3 +53,13 @@ test("a saved account language opens the desktop in that language", async ({ pag
     await page.request.patch("/api/account", { headers, data: { locale: "tr" } });
   }
 });
+
+test.describe("a browser set to German", () => {
+  test.use({ locale: "de-DE" });
+
+  test("opens EveryOS in German on its first visit", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: resources.de.login.title })).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "de");
+  });
+});
