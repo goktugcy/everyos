@@ -4076,6 +4076,7 @@ export const fr: LocaleMessages = {
     DESKTOP_APP_PACKAGE_INVALID:
       "Le paquet de l’application n’a pas pu être vérifié ; il n’a pas été installé.",
     DESKTOP_APP_BUSY: "Une autre opération est en cours pour cette application.",
+    DESKTOP_APP_STORAGE_FULL: "Le stockage de cette application est plein.",
     NETWORK: "Le serveur est injoignable. Vérifiez votre connexion.",
     UNKNOWN: "Une erreur inconnue s’est produite.",
   },

@@ -106,6 +106,7 @@ async function buildApp(
     "manifest.json": JSON.stringify(manifest),
     "index.html": `<!doctype html><title>${version}</title><script type="module" src="app.js"></script>`,
     "app.js": `export const version = "${version}";`,
+    "widget.html": "<!doctype html><title>widget</title>",
     "icon.png": PNG,
   };
   for (const [path, content] of Object.entries(files)) {
@@ -596,5 +597,176 @@ describe("desktop app installation", () => {
       appId: "dev.everyos.notes",
     });
     expect(await code(install)).toMatchObject({ code: "DESKTOP_APP_INCOMPATIBLE" });
+  });
+});
+
+describe("app SDK calls", () => {
+  async function installed(
+    admin: TestClient,
+    target: TestRegistry,
+    apps: Array<{ id: string; permissions: string[]; overrides?: Record<string, unknown> }>,
+  ) {
+    const builds = await Promise.all(
+      apps.map((app) =>
+        buildApp(app.id, "1.0.0", app.permissions, officialKeys.privateKey, app.overrides),
+      ),
+    );
+    publish(target, index(apps.map((app, i) => ({ id: app.id, versions: [builds[i]!] }))), builds);
+    await sync(admin);
+    for (const app of apps)
+      expect(
+        (
+          await admin.post("/api/desktop-apps/installed", {
+            registryId: "official",
+            appId: app.id,
+            approve: app.permissions.filter((p) => p !== "storage:app" && p !== "widgets:register"),
+          })
+        ).status,
+      ).toBe(201);
+  }
+  const open = async (client: TestClient, appId: string, kind = "window", widgetId?: string) => {
+    const response = await client.post("/api/app-sdk/instances", {
+      appId,
+      kind,
+      ...(widgetId ? { widgetId } : {}),
+    });
+    return {
+      status: response.status,
+      body: (await response.json()) as { token: string; granted: string[] },
+    };
+  };
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+
+  it("keeps each app's data to itself and to each person", async () => {
+    const { admin, operator, registry } = await setup();
+    await installed(admin, registry, [
+      { id: "dev.everyos.notes", permissions: ["storage:app"] },
+      { id: "dev.everyos.todo", permissions: ["storage:app"] },
+      { id: "dev.everyos.calculator", permissions: [] },
+    ]);
+    const notes = (await open(admin, "dev.everyos.notes")).body.token;
+    const todo = (await open(admin, "dev.everyos.todo")).body.token;
+    const operatorNotes = (await open(operator, "dev.everyos.notes")).body.token;
+    const set = (client: TestClient, token: string, key: string, value: unknown) =>
+      client.request("POST", "/api/app-sdk/storage/set", { body: { key, value }, ...as(token) });
+    const get = async (client: TestClient, token: string, key: string) =>
+      (
+        await json<{ entry: { value: unknown } | null }>(
+          await client.request("POST", "/api/app-sdk/storage/get", { body: { key }, ...as(token) }),
+        )
+      ).entry;
+    expect((await set(admin, notes, "draft", { text: "admin's note" })).status).toBe(204);
+    expect(await get(admin, notes, "draft")).toEqual({ value: { text: "admin's note" } });
+    expect(await get(admin, todo, "draft")).toBeNull();
+    expect(await get(operator, operatorNotes, "draft")).toBeNull();
+    // A token belongs to its session: another person's session cannot use it.
+    expect(
+      (
+        await operator.request("POST", "/api/app-sdk/storage/get", {
+          body: { key: "draft" },
+          ...as(notes),
+        })
+      ).status,
+    ).toBe(401);
+    const keys = await json<{ keys: Array<{ key: string }> }>(
+      await admin.request("POST", "/api/app-sdk/storage/keys", {
+        body: { prefix: "dr" },
+        ...as(notes),
+      }),
+    );
+    expect(keys.keys.map((k) => k.key)).toEqual(["draft"]);
+    // An app without the capability gets nothing.
+    const calculator = (await open(admin, "dev.everyos.calculator")).body.token;
+    const refused = await admin.request("POST", "/api/app-sdk/storage/get", {
+      body: { key: "draft" },
+      ...as(calculator),
+    });
+    expect(refused.status).toBe(403);
+    expect((await json<ApiErrorBody>(refused)).error.details).toEqual({
+      capability: "storage:app",
+    });
+  });
+
+  it("limits a person to what their role allows and a widget to its declared capabilities", async () => {
+    const { admin, viewer, registry } = await setup();
+    await installed(admin, registry, [
+      {
+        id: "dev.everyos.logs",
+        permissions: ["storage:app", "logs:read", "widgets:register"],
+        overrides: {
+          widgets: [
+            {
+              id: "tail",
+              name: "Tail",
+              description: "Latest lines",
+              entry: "widget.html",
+              sizes: ["small"],
+              defaultSize: "small",
+              placements: ["desktop"],
+              permissions: ["logs:read"],
+            },
+          ],
+        },
+      },
+    ]);
+    expect((await open(admin, "dev.everyos.logs")).body.granted.sort()).toEqual([
+      "logs:read",
+      "storage:app",
+      "widgets:register",
+    ]);
+    // Viewers cannot read logs, so the app cannot read them for a viewer either.
+    expect((await open(viewer, "dev.everyos.logs")).body.granted.sort()).toEqual([
+      "storage:app",
+      "widgets:register",
+    ]);
+    const widget = await open(admin, "dev.everyos.logs", "widget", "tail");
+    expect(widget.status).toBe(201);
+    expect(
+      (
+        await admin.request("POST", "/api/app-sdk/storage/get", {
+          body: { key: "x" },
+          ...as(widget.body.token),
+        })
+      ).status,
+    ).toBe(403);
+    expect((await open(admin, "dev.everyos.logs", "widget", "missing")).status).toBe(404);
+  });
+
+  it("ends instances when the app goes, and bounds storage", async () => {
+    const { admin, registry } = await setup();
+    await installed(admin, registry, [{ id: "dev.everyos.notes", permissions: ["storage:app"] }]);
+    const token = (await open(admin, "dev.everyos.notes")).body.token;
+    const big = "x".repeat(200 * 1024);
+    let full: number | null = null;
+    for (let i = 0; i < 100 && full === null; i++) {
+      const response = await admin.request("POST", "/api/app-sdk/storage/set", {
+        body: { key: `k${i}`, value: big },
+        ...as(token),
+      });
+      if (response.status !== 204) {
+        expect((await json<ApiErrorBody>(response)).error.code).toBe("DESKTOP_APP_STORAGE_FULL");
+        full = i;
+      }
+    }
+    // 16 MiB holds 81 values of ~200 KiB; the 82nd does not fit.
+    expect(full).toBe(81);
+    const usage = await json<{ used: number; quota: number; keys: number }>(
+      await admin.request("GET", "/api/app-sdk/storage/usage", as(token)),
+    );
+    expect(usage.keys).toBe(81);
+    expect(usage.used).toBeLessThanOrEqual(usage.quota);
+    const tooBig = await admin.request("POST", "/api/app-sdk/storage/set", {
+      body: { key: "huge", value: "x".repeat(300 * 1024) },
+      ...as(token),
+    });
+    expect(tooBig.status).toBe(413);
+    expect(
+      (
+        await admin.request("DELETE", "/api/desktop-apps/installed/dev.everyos.notes", {
+          body: { confirm: true },
+        })
+      ).status,
+    ).toBe(204);
+    expect((await admin.request("GET", "/api/app-sdk/storage/usage", as(token))).status).toBe(401);
   });
 });

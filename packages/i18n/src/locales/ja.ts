@@ -4025,6 +4025,7 @@ export const ja: LocaleMessages = {
     DESKTOP_APP_PACKAGE_INVALID:
       "アプリのパッケージを検証できなかったため、インストールしませんでした。",
     DESKTOP_APP_BUSY: "このアプリでは別の処理が実行中です。",
+    DESKTOP_APP_STORAGE_FULL: "このアプリのストレージがいっぱいです。",
     NETWORK: "サーバーに接続できません。接続を確認してください。",
     UNKNOWN: "不明なエラーが発生しました。",
   },

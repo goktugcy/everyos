@@ -3859,6 +3859,7 @@ export const tr = {
     DESKTOP_APP_REGISTRY_FAILED: "Uygulama kaydı okunamadı ya da doğrulanamadı.",
     DESKTOP_APP_PACKAGE_INVALID: "Uygulama paketi doğrulanamadığı için kurulmadı.",
     DESKTOP_APP_BUSY: "Bu uygulama için başka bir işlem sürüyor.",
+    DESKTOP_APP_STORAGE_FULL: "Bu uygulamanın depolama alanı dolu.",
     NETWORK: "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edin.",
     UNKNOWN: "Bilinmeyen bir hata oluştu.",
   } satisfies Record<ErrorCode | "NETWORK" | "UNKNOWN", string>,

@@ -3845,6 +3845,7 @@ export const zh: LocaleMessages = {
     DESKTOP_APP_REGISTRY_FAILED: "无法读取或验证应用源。",
     DESKTOP_APP_PACKAGE_INVALID: "无法验证应用包，因此未安装。",
     DESKTOP_APP_BUSY: "此应用的另一项操作正在进行中。",
+    DESKTOP_APP_STORAGE_FULL: "此应用的存储空间已满。",
     NETWORK: "无法连接到服务器。请检查你的网络连接。",
     UNKNOWN: "发生了未知错误。",
   },

@@ -2,8 +2,10 @@ import type { Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
 import type { SecretBox } from "@everyos/security";
 import type { RegistryAnchor } from "./anchors.ts";
+import { AppStorage } from "./app-storage.ts";
 import { RegistryAssets } from "./assets.ts";
 import { DesktopAppInstaller } from "./installer.ts";
+import { AppInstances } from "./instances.ts";
 import { DesktopAppRegistries, type FetcherFactory } from "./registries.ts";
 
 const REFRESH_INTERVAL_MS = 6 * 3_600_000;
@@ -14,6 +16,9 @@ export class DesktopAppsService {
   readonly registries: DesktopAppRegistries;
   readonly installer: DesktopAppInstaller;
   readonly assets: RegistryAssets;
+  /** Running app windows and widgets (their tokens). */
+  readonly instances: AppInstances;
+  readonly storage: AppStorage;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
@@ -45,12 +50,15 @@ export class DesktopAppsService {
       logger: options.logger,
     });
     this.assets = new RegistryAssets(this.registries);
+    this.instances = new AppInstances(options.now);
+    this.storage = new AppStorage(options.db, options.now);
   }
 
   /** Syncs every enabled registry and applies their revocations to installed apps. */
   async refresh(): Promise<void> {
     await this.registries.syncAll(this.#controller.signal);
     const changed = this.installer.applyRevocations();
+    for (const appId of changed) this.instances.closeApp(appId);
     if (changed.length)
       this.#logger.warn("Registries changed installed apps' state", { apps: changed });
   }

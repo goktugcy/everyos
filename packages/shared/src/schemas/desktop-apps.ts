@@ -66,3 +66,24 @@ export const DesktopAppIdParamSchema = z.strictObject({ appId });
 export const DesktopAppStateSchema = z.strictObject({ enabled: z.boolean() });
 
 export const DesktopAppUninstallSchema = z.strictObject({ confirm: z.literal(true) });
+
+/* `/api/app-sdk`: calls made for a running app instance (docs/app-sdk/architecture.md). */
+
+export const AppInstanceOpenSchema = z.strictObject({
+  appId,
+  kind: z.enum(["window", "widget"]),
+  widgetId: z
+    .string()
+    .regex(/^[a-z][a-z0-9-]{0,31}$/)
+    .optional(),
+});
+
+const storageKey = z
+  .string()
+  .min(1)
+  .max(256)
+  .refine((value) => [...value].every((char) => char.charCodeAt(0) >= 0x20));
+
+export const AppStorageKeySchema = z.strictObject({ key: storageKey });
+export const AppStorageSetSchema = z.strictObject({ key: storageKey, value: z.json() });
+export const AppStorageKeysSchema = z.strictObject({ prefix: z.string().max(256) });

@@ -72,6 +72,7 @@ export const ERROR_CODES = [
   "DESKTOP_APP_REGISTRY_FAILED",
   "DESKTOP_APP_PACKAGE_INVALID",
   "DESKTOP_APP_BUSY",
+  "DESKTOP_APP_STORAGE_FULL",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

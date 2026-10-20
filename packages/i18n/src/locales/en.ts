@@ -3823,6 +3823,7 @@ export const en: Messages = {
     DESKTOP_APP_REGISTRY_FAILED: "The app registry could not be read or verified.",
     DESKTOP_APP_PACKAGE_INVALID: "The app package could not be verified, so it was not installed.",
     DESKTOP_APP_BUSY: "Another operation is in progress for this app.",
+    DESKTOP_APP_STORAGE_FULL: "This app's storage is full.",
     NETWORK: "The server cannot be reached. Check your connection.",
     UNKNOWN: "An unknown error occurred.",
   },

@@ -4058,6 +4058,7 @@ export const it: LocaleMessages = {
     DESKTOP_APP_PACKAGE_INVALID:
       "Non è stato possibile verificare il pacchetto dell'app, quindi non è stata installata.",
     DESKTOP_APP_BUSY: "È già in corso un'altra operazione per questa app.",
+    DESKTOP_APP_STORAGE_FULL: "Lo spazio di archiviazione di questa app è pieno.",
     NETWORK: "Impossibile raggiungere il server. Controlla la connessione.",
     UNKNOWN: "Si è verificato un errore sconosciuto.",
   },

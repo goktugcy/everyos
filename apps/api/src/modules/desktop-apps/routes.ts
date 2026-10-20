@@ -24,7 +24,7 @@ const ListingParam = DesktopAppIdParamSchema.extend({ registryId: DesktopAppRegi
 /** `/api/desktop-apps`: registries (administrators), the store, and installations. */
 export function desktopAppRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const { registries, installer, assets } = services.desktopApps;
+  const { registries, installer, assets, instances } = services.desktopApps;
   const manageRegistries = requirePermission("catalogs:manage");
   const read = requirePermission("apps:read");
   const manage = requirePermission("apps:manage");
@@ -99,7 +99,7 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
     const { id } = parseParams(c, RegistryParam);
     await parseJsonBody(c, Empty);
     const view = await audited(c, "registry.sync", id, () => registries.sync(id));
-    installer.applyRevocations();
+    for (const appId of installer.applyRevocations()) instances.closeApp(appId);
     return c.json(view);
   });
 
@@ -180,7 +180,7 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
             { userId: auth.user.id, permissions: auth.permissions },
           ),
         { approved: input.approve },
-      ),
+      ).finally(() => instances.closeApp(appId)),
     );
   });
   app.patch("/installed/:appId", manage, async (c) => {
@@ -188,9 +188,11 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
     const { appId } = parseParams(c, DesktopAppIdParamSchema);
     const { enabled } = await parseJsonBody(c, DesktopAppStateSchema);
     return c.json(
-      await audited(c, enabled ? "enable" : "disable", appId, () =>
-        installer.setEnabled(appId, enabled),
-      ),
+      await audited(c, enabled ? "enable" : "disable", appId, () => {
+        const view = installer.setEnabled(appId, enabled);
+        if (!enabled) instances.closeApp(appId);
+        return view;
+      }),
     );
   });
   app.delete("/installed/:appId", manage, async (c) => {
@@ -198,6 +200,7 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
     const { appId } = parseParams(c, DesktopAppIdParamSchema);
     await parseJsonBody(c, DesktopAppUninstallSchema);
     await audited(c, "uninstall", appId, () => installer.uninstall(appId));
+    instances.closeApp(appId);
     return c.body(null, 204);
   });
 

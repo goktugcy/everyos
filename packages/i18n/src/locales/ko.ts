@@ -3962,6 +3962,7 @@ export const ko: LocaleMessages = {
     DESKTOP_APP_REGISTRY_FAILED: "앱 레지스트리를 읽거나 확인할 수 없습니다.",
     DESKTOP_APP_PACKAGE_INVALID: "앱 패키지를 확인할 수 없어 설치하지 않았습니다.",
     DESKTOP_APP_BUSY: "이 앱에 대해 다른 작업이 진행 중입니다.",
+    DESKTOP_APP_STORAGE_FULL: "이 앱의 저장 공간이 가득 찼습니다.",
     NETWORK: "서버에 연결할 수 없습니다. 네트워크 연결을 확인하세요.",
     UNKNOWN: "알 수 없는 오류가 발생했습니다.",
   },

@@ -38,6 +38,7 @@ import { httpsRoutes } from "./modules/security/https-routes.ts";
 import { securityRoutes } from "./modules/security/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
 import { desktopAppRoutes } from "./modules/desktop-apps/routes.ts";
+import { appSdkRoutes } from "./modules/desktop-apps/sdk-routes.ts";
 import { appRuntimeRoutes } from "./modules/desktop-apps/runtime-routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
@@ -75,6 +76,9 @@ export function createApp(services: Services): Hono<AppEnv> {
     )
       return next();
     if (c.req.method === "PUT" && c.req.path === "/api/files/text") return textBodyLimit(c, next);
+    // App storage values reach 256 KiB of JSON.
+    if (c.req.method === "POST" && c.req.path === "/api/app-sdk/storage/set")
+      return textBodyLimit(c, next);
     return jsonBodyLimit(c, next);
   };
   app.use("/api/*", enforceBodyLimit);
@@ -119,6 +123,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
   api.route("/desktop-apps", desktopAppRoutes(services));
+  api.route("/app-sdk", appSdkRoutes(services));
   api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
