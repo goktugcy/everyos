@@ -3979,6 +3979,14 @@ export const es: LocaleMessages = {
       "Demasiados intentos de autenticación de Linux. Vuelve a intentarlo dentro de un minuto.",
     unlinked: "Sin vincular",
   },
+  desktopApps: {
+    frame: {
+      opening: "Abriendo {{name}}…",
+      failed: "No se pudo abrir {{name}}.",
+      stopped: "{{name}} se ha detenido porque envió solicitudes no válidas.",
+      unavailable: "Esta aplicación no está instalada o se ha desactivado.",
+    },
+  },
   errors: {
     BAD_REQUEST: "No se pudo entender la solicitud.",
     VALIDATION_FAILED: "Parte de la información introducida no es válida.",

@@ -3888,6 +3888,14 @@ export const ko: LocaleMessages = {
     rateLimited: "Linux 인증 시도 횟수가 너무 많습니다. 1분 후에 다시 시도하세요.",
     unlinked: "연결되지 않음",
   },
+  desktopApps: {
+    frame: {
+      opening: "{{name}} 여는 중…",
+      failed: "{{name}}을(를) 열 수 없습니다.",
+      stopped: "{{name}}이(가) 잘못된 요청을 보내서 중지되었습니다.",
+      unavailable: "이 앱은 설치되지 않았거나 꺼져 있습니다.",
+    },
+  },
   errors: {
     BAD_REQUEST: "요청을 이해할 수 없습니다.",
     VALIDATION_FAILED: "입력한 정보 중 일부가 올바르지 않습니다.",

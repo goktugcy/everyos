@@ -1,7 +1,9 @@
-import type { Permission } from "@everyos/shared";
+import type { DesktopAppInstallationView, Permission } from "@everyos/shared";
+import { desktopAppIdOf, desktopAppWindowId, useDesktopApps } from "../desktop-apps/store.ts";
 import { installationId, installedAppId, useInstalledApps } from "./store/installed-apps-store.ts";
 import {
   Activity,
+  AppWindow,
   Bot,
   Boxes,
   ArchiveRestore,
@@ -409,9 +411,42 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
 
 const BY_ID = new Map(APP_MANIFESTS.map((manifest) => [manifest.id, manifest]));
 
+/** A window manifest for an installed desktop app (its frame loads the app's own files). */
+function desktopAppManifest(app: DesktopAppInstallationView): DesktopAppManifest {
+  return {
+    id: desktopAppWindowId(app.appId),
+    desktopApp: app,
+    titleKey: "apps.applications",
+    icon: AppWindow,
+    tint: "from-slate-500 to-slate-700",
+    category: "tools",
+    requiredPermission: "apps:read",
+    window: {
+      defaultSize: { width: app.window.defaultWidth, height: app.window.defaultHeight },
+      minSize: { width: app.window.minWidth, height: app.window.minHeight },
+      instancing: app.window.instances,
+    },
+    load: () => import("../desktop-apps/app-window.tsx"),
+  };
+}
+
+function desktopApps(): DesktopAppManifest[] {
+  return useDesktopApps
+    .getState()
+    .apps.filter((app) => app.state === "active")
+    .map(desktopAppManifest);
+}
+
 export function getApp(id: string): DesktopAppManifest | undefined {
   const builtin = BY_ID.get(id as AppId);
   if (builtin) return builtin;
+  const desktopId = desktopAppIdOf(id);
+  if (desktopId) {
+    const app = useDesktopApps
+      .getState()
+      .apps.find((entry) => entry.appId === desktopId && entry.state === "active");
+    return app ? desktopAppManifest(app) : undefined;
+  }
   const installedId = installationId(id);
   const app =
     installedId && useInstalledApps.getState().apps.find((entry) => entry.id === installedId);
@@ -431,7 +466,7 @@ export function allowedApps(
   permissions: readonly Permission[],
   options: { includeHidden?: boolean } = {},
 ): DesktopAppManifest[] {
-  return APP_MANIFESTS.filter(
+  return [...APP_MANIFESTS, ...desktopApps()].filter(
     (manifest) =>
       isAppAllowed(manifest, permissions) && (options.includeHidden || !manifest.hidden),
   );

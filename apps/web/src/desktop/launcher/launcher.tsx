@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { appTitle } from "../apps/app-title.ts";
 import { Dialog } from "radix-ui";
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,7 +36,7 @@ export function Launcher() {
     if (!isOpen) return [];
     const apps: Result[] = allowedApps(permissions).map((app) => ({
       id: `app:${app.id}`,
-      title: t(app.titleKey),
+      title: appTitle(app, t),
       keywords: app.keywords ?? [],
       section: "apps",
       icon: <AppIcon manifest={app} size={28} />,

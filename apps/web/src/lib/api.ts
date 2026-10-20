@@ -55,12 +55,14 @@ export interface ApiOptions {
   /** Let the request outlive the page (used to flush unsaved state on unload). */
   keepalive?: boolean;
   /** Raw request body (e.g. an uploaded file) sent with its own content type. */
-  raw?: { body: Blob; contentType: string };
+  raw?: { body: Blob | ArrayBuffer; contentType: string };
+  /** Extra request headers (e.g. a desktop app instance token). */
+  headers?: Record<string, string>;
 }
 
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const method = options.method ?? "GET";
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = { ...options.headers, Accept: "application/json" };
   if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (options.raw) headers["Content-Type"] = options.raw.contentType;
   if (method !== "GET" && csrfToken) headers[CSRF_HEADER] = csrfToken;
@@ -68,7 +70,13 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
   const finish = traceApiRequest(
     method,
     path,
-    options.raw?.body.size ?? (body ? new TextEncoder().encode(body).length : 0),
+    options.raw
+      ? options.raw.body instanceof Blob
+        ? options.raw.body.size
+        : options.raw.body.byteLength
+      : body
+        ? new TextEncoder().encode(body).length
+        : 0,
   );
 
   let response: Response;

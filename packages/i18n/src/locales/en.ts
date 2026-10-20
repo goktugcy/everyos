@@ -3747,6 +3747,14 @@ export const en: Messages = {
     rateLimited: "Too many Linux authentication attempts. Try again in a minute.",
     unlinked: "Not linked",
   },
+  desktopApps: {
+    frame: {
+      opening: "Opening {{name}}…",
+      failed: "{{name}} could not be opened.",
+      stopped: "{{name}} was stopped because it sent invalid requests.",
+      unavailable: "This app is not installed or has been turned off.",
+    },
+  },
   errors: {
     BAD_REQUEST: "The request could not be understood.",
     VALIDATION_FAILED: "Some of the entered information is invalid.",

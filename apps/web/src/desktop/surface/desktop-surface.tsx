@@ -949,7 +949,7 @@ export function DesktopSurface() {
             ? addable.map((app) => ({
                 kind: "item" as const,
                 id: app.id,
-                label: t(app.titleKey),
+                label: appTitle(app, t),
                 onSelect: () =>
                   updatePreference("desktop", (doc) =>
                     addShortcut(doc, app.id, activeDesktopId, metrics),

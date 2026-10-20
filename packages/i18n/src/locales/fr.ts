@@ -3993,6 +3993,14 @@ export const fr: LocaleMessages = {
     rateLimited: "Trop de tentatives d’authentification Linux. Réessayez dans une minute.",
     unlinked: "Non associé",
   },
+  desktopApps: {
+    frame: {
+      opening: "Ouverture de {{name}}…",
+      failed: "Impossible d’ouvrir {{name}}.",
+      stopped: "{{name}} a été arrêtée, car elle a envoyé des requêtes non valides.",
+      unavailable: "Cette application n’est pas installée ou a été désactivée.",
+    },
+  },
   errors: {
     BAD_REQUEST: "La requête n’a pas pu être comprise.",
     VALIDATION_FAILED: "Certaines des informations saisies ne sont pas valides.",

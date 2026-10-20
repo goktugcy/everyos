@@ -3978,6 +3978,14 @@ export const it: LocaleMessages = {
     rateLimited: "Troppi tentativi di autenticazione Linux. Riprova tra un minuto.",
     unlinked: "Non collegato",
   },
+  desktopApps: {
+    frame: {
+      opening: "Apertura di {{name}}…",
+      failed: "Impossibile aprire {{name}}.",
+      stopped: "{{name}} è stata fermata perché ha inviato richieste non valide.",
+      unavailable: "Questa app non è installata o è stata disattivata.",
+    },
+  },
   errors: {
     BAD_REQUEST: "Impossibile interpretare la richiesta.",
     VALIDATION_FAILED: "Alcune delle informazioni inserite non sono valide.",

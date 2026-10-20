@@ -667,7 +667,7 @@ describe("app SDK calls", () => {
           ...as(notes),
         })
       ).status,
-    ).toBe(401);
+    ).toBe(404);
     const keys = await json<{ keys: Array<{ key: string }> }>(
       await admin.request("POST", "/api/app-sdk/storage/keys", {
         body: { prefix: "dr" },
@@ -767,6 +767,6 @@ describe("app SDK calls", () => {
         })
       ).status,
     ).toBe(204);
-    expect((await admin.request("GET", "/api/app-sdk/storage/usage", as(token))).status).toBe(401);
+    expect((await admin.request("GET", "/api/app-sdk/storage/usage", as(token))).status).toBe(404);
   });
 });

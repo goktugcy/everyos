@@ -3979,6 +3979,14 @@ export const de: LocaleMessages = {
     rateLimited: "Zu viele Linux-Authentifizierungsversuche. Versuche es in einer Minute erneut.",
     unlinked: "Nicht verknüpft",
   },
+  desktopApps: {
+    frame: {
+      opening: "{{name}} wird geöffnet…",
+      failed: "{{name}} konnte nicht geöffnet werden.",
+      stopped: "{{name}} wurde angehalten, weil die App ungültige Anfragen gesendet hat.",
+      unavailable: "Diese App ist nicht installiert oder wurde deaktiviert.",
+    },
+  },
   errors: {
     BAD_REQUEST: "Die Anfrage konnte nicht verarbeitet werden.",
     VALIDATION_FAILED: "Einige der eingegebenen Angaben sind ungültig.",

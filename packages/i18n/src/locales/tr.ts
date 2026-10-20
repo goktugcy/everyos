@@ -3784,6 +3784,14 @@ export const tr = {
     rateLimited: "Çok fazla Linux hesabı doğrulaması yapıldı. Bir dakika sonra tekrar dene.",
     unlinked: "İlişkilendirilmemiş",
   },
+  desktopApps: {
+    frame: {
+      opening: "{{name}} açılıyor…",
+      failed: "{{name}} açılamadı.",
+      stopped: "{{name}} geçersiz istekler gönderdiği için durduruldu.",
+      unavailable: "Bu uygulama kurulu değil ya da kapatılmış.",
+    },
+  },
   errors: {
     BAD_REQUEST: "İstek anlaşılamadı.",
     VALIDATION_FAILED: "Girilen bilgiler geçersiz.",

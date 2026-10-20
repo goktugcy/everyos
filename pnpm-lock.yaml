@@ -410,6 +410,12 @@ importers:
       '@dnd-kit/utilities':
         specifier: 'catalog:'
         version: 3.2.2(react@19.3.0)
+      '@everyos/app-manifest':
+        specifier: workspace:*
+        version: link:../../packages/app-manifest
+      '@everyos/app-sdk':
+        specifier: workspace:*
+        version: link:../../packages/app-sdk
       '@everyos/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n

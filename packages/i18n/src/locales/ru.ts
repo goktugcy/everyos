@@ -3959,6 +3959,14 @@ export const ru: LocaleMessages = {
     rateLimited: "Слишком много попыток аутентификации Linux. Повторите попытку через минуту.",
     unlinked: "Не привязана",
   },
+  desktopApps: {
+    frame: {
+      opening: "Открытие {{name}}…",
+      failed: "Не удалось открыть {{name}}.",
+      stopped: "{{name}} остановлено, так как отправляло недопустимые запросы.",
+      unavailable: "Это приложение не установлено или отключено.",
+    },
+  },
   errors: {
     BAD_REQUEST: "Некорректный запрос.",
     VALIDATION_FAILED: "Часть введённых данных некорректна.",

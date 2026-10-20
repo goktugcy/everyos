@@ -1,0 +1,197 @@
+import { BRIDGE_ERRORS, type WindowState } from "@everyos/app-sdk/protocol";
+import type { DesktopAppInstallationView } from "@everyos/shared";
+import { effectiveRect } from "@everyos/window-manager";
+import { i18next } from "../../app/i18n.ts";
+import { api } from "../../lib/api.ts";
+import { copyText } from "../../lib/clipboard.ts";
+import type { AppHost } from "../apps/app-context.ts";
+import { desktop } from "../state/controller.ts";
+import { wm } from "../state/window-store.ts";
+import { useThemeStore } from "../theme/theme-store.ts";
+import type { PendingDialog } from "./app-dialog.tsx";
+import { useAppBadges } from "./badges.ts";
+import { BridgeRefusal, type Handlers } from "./bridge.ts";
+import { desktopAppWindowId } from "./store.ts";
+import { themeSnapshot } from "./theme-snapshot.ts";
+
+export const INSTANCE_HEADER = "x-everyos-app-instance";
+
+type DialogRequest =
+  | Omit<Extract<PendingDialog, { kind: "alert" }>, "id" | "resolve">
+  | Omit<Extract<PendingDialog, { kind: "confirm" }>, "id" | "resolve">
+  | Omit<Extract<PendingDialog, { kind: "prompt" }>, "id" | "resolve">;
+
+export interface InstanceContext {
+  app: DesktopAppInstallationView;
+  kind: "window" | "widget";
+  token: string;
+  granted: ReadonlySet<string>;
+  /** The window the frame lives in (null for widgets). */
+  host: AppHost | null;
+  showDialog(request: DialogRequest): Promise<boolean | string | null>;
+  markReady(): void;
+  guardClose(enabled: boolean): void;
+  decideClose(requestId: string, close: boolean): void;
+}
+
+/** The current state of a window frame, as the app sees it. */
+export function windowState(windowId: string | null): WindowState {
+  const state = windowId ? wm().windows[windowId] : undefined;
+  const pageVisible = document.visibilityState === "visible";
+  if (!state)
+    return {
+      visible: pageVisible,
+      focused: document.hasFocus(),
+      maximized: true,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  const rect = effectiveRect(state, wm().viewport);
+  return {
+    visible: pageVisible && !state.minimized && state.desktopId === wm().activeDesktopId,
+    focused: wm().focusedId === state.id,
+    maximized: state.layout === "maximized" || state.layout === "fullscreen",
+    width: Math.round(rect.width),
+    height: Math.round(rect.height),
+  };
+}
+
+const refuse = (capability: string) =>
+  new BridgeRefusal(BRIDGE_ERRORS.permission, `The app may not use ${capability}`, {
+    capability,
+  });
+
+/** What one app instance may ask the desktop for, implemented for that instance. */
+export function createHandlers(context: InstanceContext): Handlers {
+  const { app, host, token } = context;
+  const windowId = host?.windowId ?? null;
+  const sdk = <T>(path: string, init: { method?: "GET" | "POST"; body?: unknown } = {}) =>
+    api<T>(`/app-sdk${path}`, { ...init, headers: { [INSTANCE_HEADER]: token } });
+  const managed = () => (windowId && wm().windows[windowId] ? windowId : null);
+
+  const shared: Handlers = {
+    "storage.get": async ({ key }) =>
+      (
+        await sdk<{ entry: { value: unknown } | null }>("/storage/get", {
+          method: "POST",
+          body: { key },
+        })
+      ).entry,
+    "storage.set": async ({ key, value }) => {
+      await sdk("/storage/set", { method: "POST", body: { key, value } });
+      return null;
+    },
+    "storage.delete": async ({ key }) => {
+      await sdk("/storage/delete", { method: "POST", body: { key } });
+      return null;
+    },
+    "storage.keys": async ({ prefix }) =>
+      (
+        await sdk<{ keys: Array<{ key: string; size: number }> }>("/storage/keys", {
+          method: "POST",
+          body: { prefix },
+        })
+      ).keys,
+    "storage.usage": () => sdk<{ used: number; quota: number; keys: number }>("/storage/usage"),
+    "storage.clear": async () => {
+      await sdk("/storage/clear", { method: "POST", body: {} });
+      return null;
+    },
+    "theme.get": () => themeSnapshot(useThemeStore.getState().theme),
+    "locale.get": () => ({ locale: i18next.language }),
+    "lifecycle.ready": () => {
+      context.markReady();
+      return null;
+    },
+    "clipboard.writeText": async ({ text }) => {
+      if (!context.granted.has("clipboard:write")) throw refuse("clipboard:write");
+      if (!(await copyText(text)))
+        throw new BridgeRefusal(BRIDGE_ERRORS.cancelled, "The browser did not allow copying");
+      return null;
+    },
+    "window.open": ({ state }) => {
+      const id = desktopAppWindowId(app.appId);
+      if (app.window.instances === "multiple") desktop.openWindow(id, state);
+      else desktop.openApp(id, { appState: state });
+      return null;
+    },
+  };
+  if (context.kind === "widget") return shared;
+
+  return {
+    ...shared,
+    "window.setTitle": ({ title }) => {
+      host?.setTitle(title);
+      return null;
+    },
+    "window.setBadge": ({ count }) => {
+      useAppBadges.getState().setBadge(app.appId, windowId, count);
+      return null;
+    },
+    "window.focus": () => {
+      const id = managed();
+      if (id) wm().focus(id);
+      return null;
+    },
+    "window.requestAttention": () => {
+      useAppBadges.getState().requestAttention(app.appId, windowId);
+      return null;
+    },
+    "window.minimize": () => {
+      const id = managed();
+      if (id) wm().minimize(id);
+      return null;
+    },
+    "window.maximize": ({ maximized }) => {
+      const id = managed();
+      const current = id ? wm().windows[id] : undefined;
+      if (id && current && (current.layout === "maximized") !== maximized) wm().toggleMaximize(id);
+      return null;
+    },
+    "window.resize": ({ width, height }) => {
+      const id = managed();
+      const current = id ? wm().windows[id] : undefined;
+      if (id && current)
+        wm().setBounds(id, {
+          ...current.bounds,
+          width: Math.max(width, app.window.minWidth),
+          height: Math.max(height, app.window.minHeight),
+        });
+      return windowState(windowId);
+    },
+    "window.close": () => {
+      host?.close();
+      return null;
+    },
+    "window.getState": () => windowState(windowId),
+    "window.setState": ({ state }) => {
+      host?.setAppState(state);
+      return null;
+    },
+    "dialog.alert": async ({ title, message }) => {
+      await context.showDialog({ kind: "alert", title, message });
+      return null;
+    },
+    "dialog.confirm": async ({ title, message, confirm, destructive }) =>
+      (await context.showDialog({ kind: "confirm", title, message, confirm, destructive })) ===
+      true,
+    "dialog.prompt": async ({ title, message, value, placeholder }) => {
+      const answer = await context.showDialog({
+        kind: "prompt",
+        title,
+        message,
+        value,
+        placeholder,
+      });
+      return typeof answer === "string" ? answer : null;
+    },
+    "lifecycle.guardClose": ({ enabled }) => {
+      context.guardClose(enabled);
+      return null;
+    },
+    "lifecycle.closeDecision": ({ requestId, close }) => {
+      context.decideClose(requestId, close);
+      return null;
+    },
+  };
+}

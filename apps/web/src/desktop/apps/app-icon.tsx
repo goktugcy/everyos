@@ -9,11 +9,22 @@ export function AppIcon({
   size = 40,
   className,
 }: {
-  manifest: Pick<DesktopAppManifest, "id" | "icon" | "tint" | "installedApp">;
+  manifest: Pick<DesktopAppManifest, "id" | "icon" | "tint" | "installedApp" | "desktopApp">;
   size?: number;
   className?: string;
 }) {
   if (manifest.installedApp) return <InstalledAppIcon app={manifest.installedApp} size={size} />;
+  if (manifest.desktopApp)
+    return (
+      <img
+        aria-hidden
+        alt=""
+        draggable={false}
+        src={`${manifest.desktopApp.runtimeUrl}${manifest.desktopApp.icon}`}
+        className={cn("shrink-0 object-contain", className)}
+        style={{ width: size, height: size, borderRadius: Math.round(size * 0.22) }}
+      />
+    );
   if (manifest.id === "everyos.trash")
     return (
       <span

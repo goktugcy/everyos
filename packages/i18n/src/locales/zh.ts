@@ -3776,6 +3776,14 @@ export const zh: LocaleMessages = {
     rateLimited: "Linux 身份验证尝试次数过多。请一分钟后再试。",
     unlinked: "未关联",
   },
+  desktopApps: {
+    frame: {
+      opening: "正在打开 {{name}}…",
+      failed: "无法打开 {{name}}。",
+      stopped: "{{name}} 因发送无效请求已被停止。",
+      unavailable: "此应用未安装或已被关闭。",
+    },
+  },
   errors: {
     BAD_REQUEST: "无法理解该请求。",
     VALIDATION_FAILED: "输入的部分信息无效。",

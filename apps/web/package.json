@@ -11,16 +11,19 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@xterm/xterm": "catalog:",
-    "@xterm/addon-fit": "catalog:",
     "@dnd-kit/core": "catalog:",
     "@dnd-kit/sortable": "catalog:",
     "@dnd-kit/utilities": "catalog:",
-    "@fontsource-variable/inter": "catalog:",
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/app-sdk": "workspace:*",
     "@everyos/i18n": "workspace:*",
     "@everyos/shared": "workspace:*",
     "@everyos/theme": "workspace:*",
+    "@everyos/widget-sdk": "workspace:*",
     "@everyos/window-manager": "workspace:*",
+    "@fontsource-variable/inter": "catalog:",
+    "@xterm/addon-fit": "catalog:",
+    "@xterm/xterm": "catalog:",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "i18next": "catalog:",
@@ -31,8 +34,7 @@
     "react-i18next": "catalog:",
     "tailwind-merge": "catalog:",
     "uqr": "catalog:",
-    "zustand": "catalog:",
-    "@everyos/widget-sdk": "workspace:*"
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",

@@ -48,8 +48,8 @@ export function instanceCall(services: Services, c: Context<AppEnv>): InstanceCa
   const auth = requireAuth(c);
   const { instances, installer } = services.desktopApps;
   const instance = instances.resolve(c.req.header(INSTANCE_HEADER), auth.session.id);
-  if (!instance || instance.userId !== auth.user.id)
-    throw new ApiError(401, "UNAUTHENTICATED", "Unknown app instance");
+  // Not 401: that would read as "signed out" to the desktop, which an app must never cause.
+  if (!instance || instance.userId !== auth.user.id) throw notFound("App instance");
   const active = installer.active(instance.appId);
   if (!active) {
     instances.close(instance.token);

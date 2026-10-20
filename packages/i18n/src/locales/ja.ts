@@ -3946,6 +3946,14 @@ export const ja: LocaleMessages = {
     rateLimited: "Linux認証の試行回数が多すぎます。1分後にもう一度お試しください。",
     unlinked: "未リンク",
   },
+  desktopApps: {
+    frame: {
+      opening: "{{name}} を開いています…",
+      failed: "{{name}} を開けませんでした。",
+      stopped: "{{name}} は無効な要求を送信したため停止されました。",
+      unavailable: "このアプリはインストールされていないか、無効になっています。",
+    },
+  },
   errors: {
     BAD_REQUEST: "リクエストを処理できませんでした。",
     VALIDATION_FAILED: "入力された情報の一部が無効です。",
