@@ -110,25 +110,34 @@ export class DesktopAppRegistries {
       const now = this.#now();
       if (!row)
         this.#db.run(
-          `INSERT INTO desktop_app_registries(id, kind, name, url, public_key, fingerprint, enabled, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO desktop_app_registries(id, kind, name, url, public_key, fingerprint, allow_private, enabled, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           id,
           kind,
           name,
           anchor.url,
           anchor.publicKey,
           fingerprint,
+          anchor.allowPrivate ? 1 : 0,
           enabled ? 1 : 0,
           now,
           now,
         );
       else if (row.url !== anchor.url || row.fingerprint !== fingerprint)
         this.#db.run(
-          `UPDATE desktop_app_registries SET url = ?, public_key = ?, fingerprint = ?, sequence = -1,
+          `UPDATE desktop_app_registries SET url = ?, public_key = ?, fingerprint = ?, allow_private = ?, sequence = -1,
            index_json = NULL, synced_at = NULL, last_error = NULL, updated_at = ? WHERE id = ?`,
           anchor.url,
           anchor.publicKey,
           fingerprint,
+          anchor.allowPrivate ? 1 : 0,
+          now,
+          id,
+        );
+      else if (row.allow_private !== (anchor.allowPrivate ? 1 : 0))
+        this.#db.run(
+          "UPDATE desktop_app_registries SET allow_private = ?, updated_at = ? WHERE id = ?",
+          anchor.allowPrivate ? 1 : 0,
           now,
           id,
         );

@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer, type ServerResponse } from "node:http";
+import { startAppRegistry } from "./app-registry-fixture.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../..");
@@ -23,7 +24,13 @@ rmSync(E2E_STATE_DIR, { recursive: true, force: true });
 mkdirSync(E2E_STATE_DIR, { recursive: true });
 const apiConfig = join(E2E_STATE_DIR, "api.yaml");
 // These disposable fixtures need a reserve, but not the production 1 GiB allowance.
-writeFileSync(apiConfig, "files:\n  minFreeMiB: 64\nbackups:\n  minFreeMiB: 64\n");
+// The official desktop app registry is a local fixture with throwaway keys (a LAN "mirror").
+const appRegistry = await startAppRegistry(E2E_PORT + 2);
+writeFileSync(
+  apiConfig,
+  "files:\n  minFreeMiB: 64\nbackups:\n  minFreeMiB: 64\n" +
+    `desktopApps:\n  officialRegistry:\n    url: ${appRegistry.url}\n    publicKey: ${JSON.stringify(appRegistry.publicKey)}\n    allowPrivate: true\n`,
+);
 
 const env = {
   ...process.env,
@@ -182,6 +189,7 @@ function fakeJellyfin(
 const stop = () => {
   catalog.close();
   tailscaled.close();
+  appRegistry.close();
   for (const child of children) child.kill("SIGTERM");
   process.exit(0);
 };

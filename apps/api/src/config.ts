@@ -28,6 +28,8 @@ const OriginSchema = z.url().refine((value) => {
 const RegistryAnchorSchema = z.strictObject({
   url: z.url().max(2048),
   publicKey: z.string().min(40).max(512),
+  /** A mirror on the local network (never needed for the public registries). */
+  allowPrivate: z.boolean().optional(),
 });
 
 const ConfigFileSchema = z.strictObject({
@@ -163,8 +165,12 @@ export interface ApiConfig {
   desktopApps: {
     /** Installed packages and their unpacked files. */
     dir: string;
-    officialRegistry: { url: string; publicKey: string } | null;
-    communityRegistry: { url: string; publicKey: string } | null;
+    officialRegistry: { url: string; publicKey: string; allowPrivate?: boolean | undefined } | null;
+    communityRegistry: {
+      url: string;
+      publicKey: string;
+      allowPrivate?: boolean | undefined;
+    } | null;
   };
   /**
    * Running as a systemd service in production: the API may exit after

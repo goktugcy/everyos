@@ -9,6 +9,8 @@
 export interface RegistryAnchor {
   url: string;
   publicKey: string;
+  /** Set only by root-owned configuration, for a mirror on the local network. */
+  allowPrivate?: boolean | undefined;
 }
 
 export const OFFICIAL_APP_REGISTRY: RegistryAnchor | null = null;

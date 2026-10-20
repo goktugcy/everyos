@@ -5,44 +5,44 @@ tracks every gate with its evidence (test names, CI runs, measured numbers). An 
 when the implementation exists and the evidence is linked; until every item is checked, the
 `feature/app-sdk` branch is not released.
 
-Status: **in development** — architecture specified ([App SDK architecture](app-sdk/architecture.md));
-implementation has not started.
+Status: **in development** — see [App SDK architecture](app-sdk/architecture.md). Nothing below is
+checked yet; the evidence column records what already passes, so the remaining work stays visible.
 
 ## Gates
 
-| Gate                                                             | Status | Evidence |
-| ---------------------------------------------------------------- | ------ | -------- |
-| EveryOS core builds                                              | open   |          |
-| Existing Docker App Store still works                            | open   |          |
-| Desktop App Store works                                          | open   |          |
-| `create-everyos-app` creates a working app                       | open   |          |
-| `.eosapp` build and validation                                   | open   |          |
-| Package signing and verification                                 | open   |          |
-| Third-party apps run isolated (opaque-origin sandbox)            | open   |          |
-| No unauthorized host access through documented capabilities      | open   |          |
-| All SDK permission checks enforced server-side                   | open   |          |
-| App install and removal                                          | open   |          |
-| App updates and compatibility checks                             | open   |          |
-| All 33 official apps implemented with working primary features   | open   |          |
-| All 33 packages build, validate and are signed                   | open   |          |
-| All 33 apps pass their acceptance tests                          | open   |          |
-| All official apps appear in the store                            | open   |          |
-| App widgets integrate with the desktop                           | open   |          |
-| App settings and data persist                                    | open   |          |
-| Backup and restore compatibility                                 | open   |          |
-| Mobile and desktop interfaces                                    | open   |          |
-| Localization validation (10 languages)                           | open   |          |
-| Developer CLI                                                    | open   |          |
-| Community registry (service + client)                            | open   |          |
-| Private registry support                                         | open   |          |
-| Documentation complete                                           | open   |          |
-| No existing EveryOS functionality broken (full regression suite) | open   |          |
-| ARM64 acceptance                                                 | open   |          |
-| AMD64 acceptance                                                 | open   |          |
-| Security regression tests                                        | open   |          |
-| CI green                                                         | open   |          |
-| Release artifacts verified                                       | open   |          |
-| Release candidate prepared                                       | open   |          |
+| Gate                                                             | Status      | Evidence                                                                                                                    |
+| ---------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- |
+| EveryOS core builds                                              | open        |                                                                                                                             |
+| Existing Docker App Store still works                            | open        |                                                                                                                             |
+| Desktop App Store works                                          | open        |                                                                                                                             |
+| `create-everyos-app` creates a working app                       | open        |                                                                                                                             |
+| `.eosapp` build and validation                                   | in progress | `packages/app-package/src/package.test.ts`                                                                                  |
+| Package signing and verification                                 | in progress | `package.test.ts`, `packages/app-registry/src/registry.test.ts`, `apps/api/src/desktop-apps.test.ts`                        |
+| Third-party apps run isolated (opaque-origin sandbox)            | in progress | `tests/e2e/sdk-desktop-apps.spec.ts` (Chromium, also over plain HTTP): no parent DOM, cookies, origin storage or API access |
+| No unauthorized host access through documented capabilities      | open        |                                                                                                                             |
+| All SDK permission checks enforced server-side                   | in progress | `desktop-apps.test.ts` › app SDK calls (storage); files, notifications and host data still to come                          |
+| App install and removal                                          | in progress | `desktop-apps.test.ts` › installation (API); store UI still to come                                                         |
+| App updates and compatibility checks                             | in progress | `desktop-apps.test.ts` › updates, revocations, incompatible SDK                                                             |
+| All 33 official apps implemented with working primary features   | open        |                                                                                                                             |
+| All 33 packages build, validate and are signed                   | open        |                                                                                                                             |
+| All 33 apps pass their acceptance tests                          | open        |                                                                                                                             |
+| All official apps appear in the store                            | open        |                                                                                                                             |
+| App widgets integrate with the desktop                           | open        |                                                                                                                             |
+| App settings and data persist                                    | open        |                                                                                                                             |
+| Backup and restore compatibility                                 | open        |                                                                                                                             |
+| Mobile and desktop interfaces                                    | open        |                                                                                                                             |
+| Localization validation (10 languages)                           | open        |                                                                                                                             |
+| Developer CLI                                                    | open        |                                                                                                                             |
+| Community registry (service + client)                            | open        |                                                                                                                             |
+| Private registry support                                         | open        |                                                                                                                             |
+| Documentation complete                                           | open        |                                                                                                                             |
+| No existing EveryOS functionality broken (full regression suite) | open        |                                                                                                                             |
+| ARM64 acceptance                                                 | open        |                                                                                                                             |
+| AMD64 acceptance                                                 | open        |                                                                                                                             |
+| Security regression tests                                        | open        |                                                                                                                             |
+| CI green                                                         | open        |                                                                                                                             |
+| Release artifacts verified                                       | open        |                                                                                                                             |
+| Release candidate prepared                                       | open        |                                                                                                                             |
 
 ## Official apps
 
