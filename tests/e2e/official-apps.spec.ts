@@ -446,3 +446,67 @@ test.describe("Calendar", () => {
     expect(await block.evaluate((element) => (element as HTMLElement).style.top)).toBe("864px");
   });
 });
+
+test.describe("Whiteboard", () => {
+  const whiteboard = OFFICIAL.find((app) => app.slug === "whiteboard")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${whiteboard.id}`, { confirm: true });
+  });
+
+  test("draws, keeps the board, and exports it as SVG and PNG", async ({ page }) => {
+    test.setTimeout(120_000);
+    const problems: string[] = [];
+    page.on("console", (message) => {
+      // Excalidraw's in-browser glyph subsetting needs eval, which apps may not use: it embeds
+      // the whole font files instead (and says so). Anything else the policy blocks is a problem.
+      if (
+        /Content Security Policy|Refused to/.test(message.text()) &&
+        !message.text().startsWith("Skipped glyph subsetting")
+      )
+        problems.push(message.text());
+    });
+    page.on("requestfailed", (request) =>
+      problems.push(`${request.url()} ${request.failure()?.errorText}`),
+    );
+    await install(page, whiteboard);
+    let { window, frame } = await open(page, whiteboard.name, whiteboard.id);
+    const canvas = frame.locator("canvas.interactive");
+    await expect(canvas).toBeVisible();
+    const box = (await canvas.boundingBox())!;
+    // A rectangle with the keyboard tool and a drag, then text.
+    await canvas.click({ position: { x: 20, y: 20 } });
+    await page.keyboard.press("r");
+    await page.mouse.move(box.x + 200, box.y + 200);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 360, box.y + 300, { steps: 6 });
+    await page.mouse.up();
+    await page.keyboard.press("t");
+    await page.mouse.click(box.x + 420, box.y + 240);
+    await page.keyboard.type("Merhaba");
+    await page.keyboard.press("Escape");
+
+    // Closed at once, before the pause that saves: the drawing is stashed as the window closes.
+    // Reopened: the same drawing, exported as SVG through the desktop's save dialog.
+    await window.getByRole("button", { name: "Kapat" }).first().click();
+    ({ window, frame } = await open(page, whiteboard.name, whiteboard.id));
+    await expect(frame.locator("canvas.interactive")).toBeVisible();
+    await frame.getByRole("button", { name: "SVG" }).click();
+    const picker = window.getByTestId("desktop-app-file-picker");
+    await picker.getByRole("button", { name: "Kaydet" }).click();
+    await expect(frame.getByText("Tahtam.svg kaydedildi")).toBeVisible({ timeout: 20_000 });
+    const svg = await page.evaluate(async () => {
+      const response = await fetch("/api/files/text?root=home&path=Belgeler/Tahtam.svg");
+      return ((await response.json()) as { content: string }).content;
+    });
+    expect(svg).toContain("<svg");
+    expect(svg).toContain("Merhaba");
+    expect(svg).toMatch(/<path|<rect/);
+    // The handwriting font travels inside the SVG.
+    expect(svg).toContain("@font-face");
+
+    await frame.getByRole("button", { name: "PNG" }).click();
+    await picker.getByRole("button", { name: "Kaydet" }).click();
+    await expect(frame.getByText("Tahtam.png kaydedildi")).toBeVisible({ timeout: 20_000 });
+    expect(problems).toEqual([]);
+  });
+});

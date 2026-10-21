@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Whiteboard",
+    "description": "Sketch on an infinite canvas: pen, shapes, text, connecting arrows, undo and zoom. Boards are kept for you and export to PNG and SVG."
+  },
+  "boards": {
+    "label": "Boards",
+    "show": "Show boards",
+    "hide": "Hide boards",
+    "new": "New board",
+    "first": "My board",
+    "untitled": "Board {{number}}",
+    "imported": "Imported board",
+    "copyName": "{{name}} (copy)",
+    "rename": "Rename {{name}}",
+    "renameTitle": "Rename board",
+    "duplicate": "Duplicate {{name}}",
+    "delete": "Delete {{name}}",
+    "deleteTitle": "Delete “{{name}}”?",
+    "none": "No board open"
+  },
+  "canvas": {
+    "label": "Drawing of {{name}}",
+    "welcome": "Draw, write and connect your ideas"
+  },
+  "status": {
+    "saved": "Saved",
+    "saving": "Saving…",
+    "tooLarge": "Too large to keep: export it as a board file",
+    "failed": "Not saved: try again in a moment"
+  },
+  "import": {
+    "action": "Import a board…",
+    "done": "Imported {{name}} as a new board",
+    "invalid": "“{{name}}” is not a board file this app can read."
+  },
+  "export": {
+    "board": "Save as a board file (.excalidraw)…",
+    "done": "Saved {{name}}",
+    "empty": "There is nothing on this board to export yet."
+  },
+  "library": {
+    "tooLarge": "Your shape library is too large to keep."
+  },
+  "errors": {
+    "load": "The whiteboard could not start"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Whiteboard",
+    "description": "Skizzieren auf einer unendlichen Fläche: Stift, Formen, Text, verbindende Pfeile, Rückgängig und Zoom. Boards werden gespeichert und als PNG und SVG exportiert."
+  },
+  "boards": {
+    "label": "Boards",
+    "show": "Boards einblenden",
+    "hide": "Boards ausblenden",
+    "new": "Neues Board",
+    "first": "Mein Board",
+    "untitled": "Board {{number}}",
+    "imported": "Importiertes Board",
+    "copyName": "{{name}} (Kopie)",
+    "rename": "{{name}} umbenennen",
+    "renameTitle": "Board umbenennen",
+    "duplicate": "{{name}} duplizieren",
+    "delete": "{{name}} löschen",
+    "deleteTitle": "„{{name}}“ löschen?",
+    "none": "Kein Board geöffnet"
+  },
+  "canvas": {
+    "label": "Zeichnung „{{name}}“",
+    "welcome": "Zeichnen, schreiben und Ideen verbinden"
+  },
+  "status": {
+    "saved": "Gespeichert",
+    "saving": "Wird gespeichert…",
+    "tooLarge": "Zu groß zum Speichern: als Board-Datei exportieren",
+    "failed": "Nicht gespeichert: gleich erneut versuchen"
+  },
+  "import": {
+    "action": "Board importieren…",
+    "done": "{{name}} als neues Board importiert",
+    "invalid": "„{{name}}“ ist keine lesbare Board-Datei."
+  },
+  "export": {
+    "board": "Als Board-Datei speichern (.excalidraw)…",
+    "done": "{{name}} gespeichert",
+    "empty": "Auf diesem Board gibt es noch nichts zu exportieren."
+  },
+  "library": {
+    "tooLarge": "Ihre Formbibliothek ist zu groß zum Speichern."
+  },
+  "errors": {
+    "load": "Das Whiteboard konnte nicht starten"
+  }
+}
