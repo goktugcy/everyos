@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Editor de texto",
+    "description": "Archivos de texto en pestañas, con buscar y reemplazar, codificaciones, finales de línea y recuperación del trabajo sin guardar."
+  },
+  "actions": {
+    "new": "Nuevo documento",
+    "open": "Abrir…",
+    "recent": "Archivos recientes",
+    "save": "Guardar",
+    "saveAs": "Guardar como…",
+    "find": "Buscar y reemplazar"
+  },
+  "close": {
+    "title_one": "¿Cerrar con {{count}} archivo sin guardar?",
+    "title_other": "¿Cerrar con {{count}} archivos sin guardar?",
+    "body": "Tus cambios se podrán recuperar aquí, pero no están en los archivos.",
+    "confirm": "Cerrar",
+    "tabTitle": "¿Cerrar «{{name}}» sin guardar?",
+    "tabBody": "Se perderán los cambios sin guardar.",
+    "discard": "Descartar cambios"
+  },
+  "doc": {
+    "untitled": "Sin título {{number}}"
+  },
+  "editor": {
+    "label": "Texto de {{name}}"
+  },
+  "encoding": {
+    "change": "Cambiar la codificación",
+    "title": "Volver a abrir con codificación",
+    "hint": "Si los caracteres se ven mal, el archivo puede usar otra codificación.",
+    "reopen": "Volver a abrir",
+    "reopenTitle": "¿Volver a abrir y perder los cambios sin guardar?",
+    "reopenBody": "El archivo se lee de nuevo.",
+    "saveTitle": "Guardar con codificación",
+    "saveHint": "Unicode conserva todos los caracteres.",
+    "saveWith": "Guardar con otra codificación…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16, little-endian)",
+      "utf-16be": "Unicode (UTF-16, big-endian)",
+      "windows-1252": "Europeo occidental (Windows)",
+      "iso-8859-1": "Europeo occidental (ISO)",
+      "windows-1254": "Turco (Windows)",
+      "iso-8859-9": "Turco (ISO)",
+      "windows-1250": "Centroeuropeo (Windows)",
+      "iso-8859-2": "Centroeuropeo (ISO)",
+      "windows-1251": "Cirílico (Windows)",
+      "koi8-r": "Cirílico (KOI8-R)",
+      "shift_jis": "Japonés (Shift_JIS, solo lectura)",
+      "euc-kr": "Coreano (EUC-KR, solo lectura)",
+      "gb18030": "Chino (GB18030, solo lectura)"
+    }
+  },
+  "eol": {
+    "label": "Finales de línea"
+  },
+  "open": {
+    "binary": "{{name}} no es un archivo de texto."
+  },
+  "recent": {
+    "empty": "No hay archivos recientes"
+  },
+  "recovery": {
+    "lost": "No se pudo recuperar el texto sin guardar de: {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} se puede leer pero no escribir: guardado como UTF-8.",
+    "saved": "{{name}} guardado",
+    "unencodable": "«{{char}}» en la línea {{line}} no se puede escribir en {{encoding}}. Elige otra codificación."
+  },
+  "status": {
+    "label": "Estado",
+    "lineNumbers": "Números de línea",
+    "position": "Lín {{line}}, Col {{column}}",
+    "selected_one": "{{count}} seleccionado",
+    "selected_other": "{{count}} seleccionados",
+    "words_one": "{{count}} palabra",
+    "words_other": "{{count}} palabras",
+    "wrap": "Ajuste de línea"
+  },
+  "tabs": {
+    "close": "Cerrar {{name}}",
+    "label": "Documentos abiertos",
+    "unsaved": "Cambios sin guardar"
+  }
+}

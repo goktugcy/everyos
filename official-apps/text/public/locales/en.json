@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Text Editor",
+    "description": "Plain text files in tabs, with find and replace, encodings, line endings and recovery of unsaved work."
+  },
+  "actions": {
+    "new": "New document",
+    "open": "Open…",
+    "recent": "Recent files",
+    "save": "Save",
+    "saveAs": "Save as…",
+    "find": "Find and replace"
+  },
+  "close": {
+    "title_one": "Close with {{count}} unsaved file?",
+    "title_other": "Close with {{count}} unsaved files?",
+    "body": "Your changes stay recoverable here, but they are not in the files.",
+    "confirm": "Close",
+    "tabTitle": "Close “{{name}}” without saving?",
+    "tabBody": "Its unsaved changes will be lost.",
+    "discard": "Discard changes"
+  },
+  "doc": {
+    "untitled": "Untitled {{number}}"
+  },
+  "editor": {
+    "label": "Text of {{name}}"
+  },
+  "encoding": {
+    "change": "Change the encoding",
+    "title": "Reopen with encoding",
+    "hint": "If characters look wrong, the file may use another encoding.",
+    "reopen": "Reopen",
+    "reopenTitle": "Reopen and lose unsaved changes?",
+    "reopenBody": "The file is read again from disk.",
+    "saveTitle": "Save with encoding",
+    "saveHint": "Unicode keeps every character.",
+    "saveWith": "Save with another encoding…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16, little-endian)",
+      "utf-16be": "Unicode (UTF-16, big-endian)",
+      "windows-1252": "Western European (Windows)",
+      "iso-8859-1": "Western European (ISO)",
+      "windows-1254": "Turkish (Windows)",
+      "iso-8859-9": "Turkish (ISO)",
+      "windows-1250": "Central European (Windows)",
+      "iso-8859-2": "Central European (ISO)",
+      "windows-1251": "Cyrillic (Windows)",
+      "koi8-r": "Cyrillic (KOI8-R)",
+      "shift_jis": "Japanese (Shift_JIS, read only)",
+      "euc-kr": "Korean (EUC-KR, read only)",
+      "gb18030": "Chinese (GB18030, read only)"
+    }
+  },
+  "eol": {
+    "label": "Line endings"
+  },
+  "open": {
+    "binary": "{{name}} is not a text file."
+  },
+  "recent": {
+    "empty": "No recent files"
+  },
+  "recovery": {
+    "lost": "Unsaved text could not be recovered for: {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} can be read but not written: saved as UTF-8.",
+    "saved": "Saved {{name}}",
+    "unencodable": "“{{char}}” on line {{line}} cannot be written in {{encoding}}. Choose another encoding."
+  },
+  "status": {
+    "label": "Status",
+    "lineNumbers": "Line numbers",
+    "position": "Ln {{line}}, Col {{column}}",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "words_one": "{{count}} word",
+    "words_other": "{{count}} words",
+    "wrap": "Word wrap"
+  },
+  "tabs": {
+    "close": "Close {{name}}",
+    "label": "Open documents",
+    "unsaved": "Unsaved changes"
+  }
+}
