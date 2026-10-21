@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Cron Builder",
+    "description": "Build and check cron schedules: a visual builder, plain-language descriptions, next runs in any time zone, and systemd and EveryOS forms."
+  },
+  "seconds": {
+    "label": "Seconds field"
+  },
+  "expression": {
+    "section": "Expression",
+    "label": "Cron expression",
+    "copy": "Copy the expression"
+  },
+  "fields": {
+    "second": "Second",
+    "minute": "Minute",
+    "hour": "Hour",
+    "day": "Day of month",
+    "month": "Month",
+    "weekday": "Day of week"
+  },
+  "problems": {
+    "field-count": "A cron expression has {{count}} fields separated by spaces (found {{token}}).",
+    "empty": "{{field}} is empty.",
+    "bad-token": "{{field}}: “{{token}}” is not a number, a name, * or a list.",
+    "out-of-range": "{{field}}: {{token}} is out of range.",
+    "bad-range": "{{field}}: the range “{{token}}” goes backwards.",
+    "bad-step": "{{field}}: the step in “{{token}}” must be a number above 0.",
+    "reboot": "@reboot runs at startup, not at a time: there are no run times to show."
+  },
+  "builder": {
+    "custom": "Edit this field in the expression (it uses a form the builder does not show).",
+    "mode": "How {{field}} is set",
+    "modes": {
+      "every": "Every",
+      "specific": "Specific values",
+      "range": "Range",
+      "step": "Every n"
+    },
+    "from": "From",
+    "to": "To",
+    "every": "Every",
+    "interval": "Interval",
+    "startingAt": "starting at",
+    "start": "Start"
+  },
+  "presets": {
+    "title": "Presets",
+    "everyMinute": "Every minute",
+    "every5Minutes": "Every 5 minutes",
+    "every15Minutes": "Every 15 minutes",
+    "hourly": "Hourly",
+    "every6Hours": "Every 6 hours",
+    "daily3am": "Daily at 03:00",
+    "weekdays9am": "Weekdays at 09:00",
+    "weeklySunday": "Weekly on Sunday",
+    "monthlyFirst": "Monthly on the 1st",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly"
+  },
+  "runs": {
+    "section": "Run times",
+    "timeZone": "Time zone",
+    "next": "Next runs",
+    "previous": "Previous runs",
+    "none": "This schedule never runs (for example 30 February).",
+    "invalid": "Fix the expression to see run times."
+  },
+  "export": {
+    "title": "Use it",
+    "command": "Command",
+    "commandPlaceholder": "/path/to/command",
+    "crontab": "crontab line",
+    "onCalendar": "systemd timer (OnCalendar=)",
+    "twoLines": "Cron runs when either day field matches; systemd needs both, so the timer gets two lines.",
+    "timezone": "In the time zone {{zone}}.",
+    "everyos": "EveryOS Scheduled Tasks",
+    "compatible": "Compatible",
+    "problems": {
+      "seconds": "Scheduled Tasks have no seconds field.",
+      "too-frequent": "Scheduled Tasks run at most every 5 minutes (12 times an hour)."
+    },
+    "timerFile": "Save a .timer file…",
+    "defaultDescription": "Scheduled job",
+    "notScheduled": "Cron Builder only builds expressions: it never schedules anything on this server."
+  },
+  "saved": {
+    "title": "Saved",
+    "name": "Name",
+    "save": "Save the expression",
+    "done": "Saved",
+    "delete": "Delete {{name}}"
+  }
+}

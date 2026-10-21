@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Cron-Baukasten",
+    "description": "Cron-Zeitpläne erstellen und prüfen: visueller Baukasten, verständliche Beschreibungen, nächste Läufe in jeder Zeitzone, systemd- und EveryOS-Formen."
+  },
+  "seconds": {
+    "label": "Sekundenfeld"
+  },
+  "expression": {
+    "section": "Ausdruck",
+    "label": "Cron-Ausdruck",
+    "copy": "Ausdruck kopieren"
+  },
+  "fields": {
+    "second": "Sekunde",
+    "minute": "Minute",
+    "hour": "Stunde",
+    "day": "Tag im Monat",
+    "month": "Monat",
+    "weekday": "Wochentag"
+  },
+  "problems": {
+    "field-count": "Ein Cron-Ausdruck hat {{count}} durch Leerzeichen getrennte Felder (gefunden: {{token}}).",
+    "empty": "{{field}} ist leer.",
+    "bad-token": "{{field}}: „{{token}}“ ist keine Zahl, kein Name, kein * und keine Liste.",
+    "out-of-range": "{{field}}: {{token}} liegt außerhalb des Bereichs.",
+    "bad-range": "{{field}}: Der Bereich „{{token}}“ läuft rückwärts.",
+    "bad-step": "{{field}}: Die Schrittweite in „{{token}}“ muss eine Zahl über 0 sein.",
+    "reboot": "@reboot läuft beim Start, nicht zu einer Uhrzeit: keine Zeiten anzuzeigen."
+  },
+  "builder": {
+    "custom": "Dieses Feld im Ausdruck bearbeiten (es nutzt eine Form, die der Baukasten nicht zeigt).",
+    "mode": "Wie {{field}} festgelegt wird",
+    "modes": {
+      "every": "Jede/n",
+      "specific": "Bestimmte Werte",
+      "range": "Bereich",
+      "step": "Alle n"
+    },
+    "from": "Von",
+    "to": "Bis",
+    "every": "Alle",
+    "interval": "Intervall",
+    "startingAt": "ab",
+    "start": "Beginn"
+  },
+  "presets": {
+    "title": "Vorlagen",
+    "everyMinute": "Jede Minute",
+    "every5Minutes": "Alle 5 Minuten",
+    "every15Minutes": "Alle 15 Minuten",
+    "hourly": "Stündlich",
+    "every6Hours": "Alle 6 Stunden",
+    "daily3am": "Täglich um 03:00",
+    "weekdays9am": "Werktags um 09:00",
+    "weeklySunday": "Wöchentlich am Sonntag",
+    "monthlyFirst": "Monatlich am 1.",
+    "quarterly": "Vierteljährlich",
+    "yearly": "Jährlich"
+  },
+  "runs": {
+    "section": "Laufzeiten",
+    "timeZone": "Zeitzone",
+    "next": "Nächste Läufe",
+    "previous": "Vorherige Läufe",
+    "none": "Dieser Zeitplan läuft nie (etwa am 30. Februar).",
+    "invalid": "Ausdruck korrigieren, um Laufzeiten zu sehen."
+  },
+  "export": {
+    "title": "Verwenden",
+    "command": "Befehl",
+    "commandPlaceholder": "/pfad/zum/befehl",
+    "crontab": "crontab-Zeile",
+    "onCalendar": "systemd-Timer (OnCalendar=)",
+    "twoLines": "Cron läuft, wenn eines der Tagesfelder passt; systemd verlangt beide, daher zwei Zeilen.",
+    "timezone": "In der Zeitzone {{zone}}.",
+    "everyos": "EveryOS Geplante Aufgaben",
+    "compatible": "Kompatibel",
+    "problems": {
+      "seconds": "Geplante Aufgaben haben kein Sekundenfeld.",
+      "too-frequent": "Geplante Aufgaben laufen höchstens alle 5 Minuten (12-mal pro Stunde)."
+    },
+    "timerFile": ".timer-Datei speichern…",
+    "defaultDescription": "Geplanter Auftrag",
+    "notScheduled": "Der Cron-Baukasten erstellt nur Ausdrücke: Er plant auf diesem Server nichts ein."
+  },
+  "saved": {
+    "title": "Gespeichert",
+    "name": "Name",
+    "save": "Ausdruck speichern",
+    "done": "Gespeichert",
+    "delete": "{{name}} löschen"
+  }
+}
