@@ -54,6 +54,8 @@ async function bundle(entry: string, outfile: string): Promise<void> {
     sourcemap: "linked",
     legalComments: "linked",
     banner: { js: banner },
+    // pg's optional native binding: never installed or loaded (EveryOS uses the JavaScript client).
+    external: ["pg-native"],
     metafile: true,
     logLevel: "warning",
   });

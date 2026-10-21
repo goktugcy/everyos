@@ -37,6 +37,11 @@ catalog:
   "@xterm/addon-fit": 0.11.0
   # Zero-dependency SMTP client for e-mail notifications (released 2026-10-03).
   nodemailer: 10.0.14
+  # Database drivers behind the desktop apps' database:connect capability.
+  pg: 8.23.1
+  pg-cursor: 2.22.1
+  "@types/pg": 8.23.1
+  mysql2: 3.24.5
 
 saveExact: true
 engineStrict: true

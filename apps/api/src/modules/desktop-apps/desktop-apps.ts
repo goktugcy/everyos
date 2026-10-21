@@ -3,6 +3,7 @@ import type { Logger } from "@everyos/logger";
 import type { SecretBox } from "@everyos/security";
 import type { NotificationService } from "../notifications/notification-service.ts";
 import type { RegistryAnchor } from "./anchors.ts";
+import { AppDatabases } from "./app-databases.ts";
 import { AppFiles } from "./app-files.ts";
 import { AppMonitors } from "./app-monitors.ts";
 import { AppNetwork } from "./app-network.ts";
@@ -30,6 +31,8 @@ export class DesktopAppsService {
   /** The network policy and the network operations behind network:outbound. */
   readonly network: AppNetwork;
   readonly monitors: AppMonitors;
+  /** Databases administrators connected for apps holding database:connect. */
+  readonly databases: AppDatabases;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
@@ -74,6 +77,11 @@ export class DesktopAppsService {
       db: options.db,
       now: options.now,
       ...(options.resolve ? { resolve: options.resolve } : {}),
+    });
+    this.databases = new AppDatabases({
+      db: options.db,
+      secrets: options.secrets,
+      now: options.now,
     });
     this.monitors = new AppMonitors({
       db: options.db,

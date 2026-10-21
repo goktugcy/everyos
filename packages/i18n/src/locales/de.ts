@@ -3989,6 +3989,62 @@ export const de: LocaleMessages = {
     unlinked: "Nicht verknüpft",
   },
   desktopApps: {
+    database: {
+      title: "Datenbanken für Apps",
+      description:
+        "Apps, die sich mit Datenbanken verbinden dürfen, nutzen nur die hier aufgeführten Verbindungen und sehen deren Passwörter nie.",
+      empty: "Noch ist keine Datenbank verbunden.",
+      add: "Datenbank verbinden",
+      edit: "Bearbeiten",
+      editTitle: "Datenbankverbindung bearbeiten",
+      remove: "Entfernen",
+      removeTitle: "{{name}} entfernen?",
+      removeBody:
+        "Apps können diese Datenbank nicht mehr nutzen. Die Datenbank selbst bleibt unverändert.",
+      test: "Testen",
+      testOk: "Verbunden: {{version}} ({{ms}} ms)",
+      adminsOnly: "Nur Administratoren können Datenbanken verbinden.",
+      name: "Name",
+      engine: "Datenbank",
+      host: "Host",
+      port: "Port",
+      database: "Datenbankname",
+      username: "Benutzername",
+      password: "Passwort",
+      passwordHint: "Wird verschlüsselt auf diesem Server gespeichert; Apps sehen es nie.",
+      passwordKept: "Leer lassen, um das gespeicherte Passwort zu behalten.",
+      tls: "Verschlüsselung",
+      accessLabel: "Zugriff",
+      audienceLabel: "Wer sie nutzen darf",
+      readHint:
+        "Jede Anweisung läuft in einer schreibgeschützten Transaktion. Für eine feste Garantie einen Datenbankbenutzer verwenden, der nur lesen kann.",
+      writeHint:
+        "Apps dürfen Daten ändern, und jede Änderung braucht die Bestätigung der Person in einem Dialog, den EveryOS zeichnet.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Verschlüsselt",
+        verify: "Verschlüsselt, Zertifikat geprüft",
+        disable: "Unverschlüsselt",
+      },
+      access: {
+        read: "Nur lesen",
+        write: "Lesen und ändern",
+      },
+      audience: {
+        admins: "Administratoren",
+        everyone: "Alle, die die App nutzen können",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS fragt für {{app}}",
+      writeTitle: "Daten in {{connection}} ändern?",
+      writeBody:
+        "{{app}} möchte diese Anweisung auf {{database}} ausführen. Änderungen lassen sich hier nicht rückgängig machen.",
+      writeConfirm: "Änderung ausführen",
+    },
     network: {
       title: "Netzwerkzugriff für Apps",
       description:
@@ -4283,6 +4339,8 @@ export const de: LocaleMessages = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "Der Netzwerkzugriff für Apps erlaubt diese Adresse nicht. Ein Administrator kann sie im App Store erlauben.",
     DESKTOP_APP_NETWORK_FAILED: "Die Verbindung ist fehlgeschlagen.",
+    DESKTOP_APP_DB_READ_ONLY: "Diese Datenbankverbindung kann nur lesen.",
+    DESKTOP_APP_DB_FAILED: "Der Datenbankvorgang ist fehlgeschlagen.",
     NETWORK: "Der Server ist nicht erreichbar. Prüfe deine Netzwerkverbindung.",
     UNKNOWN: "Ein unbekannter Fehler ist aufgetreten.",
   },

@@ -3794,6 +3794,61 @@ export const tr = {
     unlinked: "İlişkilendirilmemiş",
   },
   desktopApps: {
+    database: {
+      title: "Uygulamalar için veritabanları",
+      description:
+        "Veritabanlarına bağlanma izni olan uygulamalar yalnızca burada listelenen bağlantıları kullanır ve parolalarını hiçbir zaman görmez.",
+      empty: "Henüz bağlı bir veritabanı yok.",
+      add: "Veritabanı bağla",
+      edit: "Düzenle",
+      editTitle: "Veritabanı bağlantısını düzenle",
+      remove: "Kaldır",
+      removeTitle: "{{name}} kaldırılsın mı?",
+      removeBody: "Uygulamalar artık bu veritabanını kullanamaz. Veritabanının kendisi değişmez.",
+      test: "Dene",
+      testOk: "Bağlandı: {{version}} ({{ms}} ms)",
+      adminsOnly: "Veritabanlarını yalnızca bir yönetici bağlayabilir.",
+      name: "Ad",
+      engine: "Veritabanı",
+      host: "Sunucu",
+      port: "Port",
+      database: "Veritabanı adı",
+      username: "Kullanıcı adı",
+      password: "Parola",
+      passwordHint: "Bu sunucuda şifrelenmiş olarak saklanır; uygulamalar hiçbir zaman göremez.",
+      passwordKept: "Kayıtlı parolayı korumak için boş bırakın.",
+      tls: "Şifreleme",
+      accessLabel: "Erişim",
+      audienceLabel: "Kimler kullanabilir",
+      readHint:
+        "Her ifade salt okunur bir işlemde çalışır. Kesin güvence için yalnızca okuyabilen bir veritabanı kullanıcısı kullanın.",
+      writeHint:
+        "Uygulamalar verileri değiştirebilir; her değişiklik için kişinin EveryOS'in çizdiği bir pencerede onay vermesi gerekir.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Şifreli",
+        verify: "Şifreli, sertifika denetlenir",
+        disable: "Şifresiz",
+      },
+      access: {
+        read: "Yalnızca okuma",
+        write: "Okuma ve değiştirme",
+      },
+      audience: {
+        admins: "Yöneticiler",
+        everyone: "Uygulamayı kullanabilen herkes",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS, {{app}} için soruyor",
+      writeTitle: "{{connection}} içindeki veriler değiştirilsin mi?",
+      writeBody:
+        "{{app}}, {{database}} üzerinde bu ifadeyi çalıştırmak istiyor. Değişiklikler buradan geri alınamaz.",
+      writeConfirm: "Değişikliği çalıştır",
+    },
     network: {
       title: "Uygulamalar için ağ erişimi",
       description:
@@ -4073,6 +4128,8 @@ export const tr = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "Uygulamalar için ağ erişimi bu adrese izin vermiyor. Bir yönetici Uygulama Mağazası'ndan izin verebilir.",
     DESKTOP_APP_NETWORK_FAILED: "Bağlantı kurulamadı.",
+    DESKTOP_APP_DB_READ_ONLY: "Bu veritabanı bağlantısı yalnızca okuyabilir.",
+    DESKTOP_APP_DB_FAILED: "Veritabanı işlemi başarısız oldu.",
     NETWORK: "Sunucuya ulaşılamıyor. Bağlantınızı kontrol edin.",
     UNKNOWN: "Bilinmeyen bir hata oluştu.",
   } satisfies Record<ErrorCode | "NETWORK" | "UNKNOWN", string>,

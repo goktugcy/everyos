@@ -4003,6 +4003,62 @@ export const fr: LocaleMessages = {
     unlinked: "Non associé",
   },
   desktopApps: {
+    database: {
+      title: "Bases de données des applications",
+      description:
+        "Les applications autorisées à se connecter à des bases de données n’utilisent que les connexions listées ici, sans jamais voir leurs mots de passe.",
+      empty: "Aucune base de données n’est encore connectée.",
+      add: "Connecter une base de données",
+      edit: "Modifier",
+      editTitle: "Modifier la connexion",
+      remove: "Retirer",
+      removeTitle: "Retirer {{name}} ?",
+      removeBody:
+        "Les applications ne peuvent plus utiliser cette base de données. La base elle-même n’est pas modifiée.",
+      test: "Tester",
+      testOk: "Connecté : {{version}} ({{ms}} ms)",
+      adminsOnly: "Seul un administrateur peut connecter des bases de données.",
+      name: "Nom",
+      engine: "Base de données",
+      host: "Hôte",
+      port: "Port",
+      database: "Nom de la base",
+      username: "Nom d’utilisateur",
+      password: "Mot de passe",
+      passwordHint: "Conservé chiffré sur ce serveur ; les applications ne le voient jamais.",
+      passwordKept: "Laissez vide pour garder le mot de passe enregistré.",
+      tls: "Chiffrement",
+      accessLabel: "Accès",
+      audienceLabel: "Qui peut l’utiliser",
+      readHint:
+        "Chaque instruction s’exécute dans une transaction en lecture seule. Pour une garantie ferme, utilisez un utilisateur de base de données qui ne peut que lire.",
+      writeHint:
+        "Les applications peuvent modifier des données, et chaque modification demande la confirmation de la personne dans une fenêtre dessinée par EveryOS.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Chiffré",
+        verify: "Chiffré, certificat vérifié",
+        disable: "Non chiffré",
+      },
+      access: {
+        read: "Lecture seule",
+        write: "Lecture et modification",
+      },
+      audience: {
+        admins: "Administrateurs",
+        everyone: "Toutes les personnes qui peuvent utiliser l’application",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS demande pour {{app}}",
+      writeTitle: "Modifier des données dans {{connection}} ?",
+      writeBody:
+        "{{app}} veut exécuter cette instruction sur {{database}}. Les modifications ne peuvent pas être annulées d’ici.",
+      writeConfirm: "Exécuter la modification",
+    },
     network: {
       title: "Accès réseau des applications",
       description:
@@ -4298,6 +4354,8 @@ export const fr: LocaleMessages = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "L’accès réseau des applications n’autorise pas cette adresse. Un administrateur peut l’autoriser dans la Boutique d’applications.",
     DESKTOP_APP_NETWORK_FAILED: "La connexion a échoué.",
+    DESKTOP_APP_DB_READ_ONLY: "Cette connexion de base de données est en lecture seule.",
+    DESKTOP_APP_DB_FAILED: "L’opération sur la base de données a échoué.",
     NETWORK: "Le serveur est injoignable. Vérifiez votre connexion.",
     UNKNOWN: "Une erreur inconnue s’est produite.",
   },

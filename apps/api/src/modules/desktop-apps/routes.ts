@@ -1,6 +1,9 @@
 import { isAppCapability } from "@everyos/app-manifest";
 import {
   DesktopAppIdParamSchema,
+  DesktopAppDbConnectionCreateSchema,
+  DesktopAppDbConnectionIdSchema,
+  DesktopAppDbConnectionUpdateSchema,
   DesktopAppInstallSchema,
   DesktopAppNetworkRuleCreateSchema,
   DesktopAppNetworkRuleIdSchema,
@@ -27,7 +30,7 @@ const ListingParam = DesktopAppIdParamSchema.extend({ registryId: DesktopAppRegi
 /** `/api/desktop-apps`: registries (administrators), the store, and installations. */
 export function desktopAppRoutes(services: Services): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
-  const { registries, installer, assets, instances, network } = services.desktopApps;
+  const { registries, installer, assets, instances, network, databases } = services.desktopApps;
   const manageRegistries = requirePermission("catalogs:manage");
   const read = requirePermission("apps:read");
   const manage = requirePermission("apps:manage");
@@ -136,6 +139,56 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
       if (!network.removeRule(id)) throw notFound("Rule");
     });
     return c.body(null, 204);
+  });
+
+  /* ---------------------------------------------------- database connections */
+
+  /** Databases apps holding database:connect may use; passwords never leave the server. */
+  app.get("/db-connections", requirePermission("apps:manage"), (c) => {
+    const { appId } = parseQuery(
+      c,
+      z.strictObject({ appId: DesktopAppIdParamSchema.shape.appId.optional() }),
+    );
+    return c.json({ connections: databases.list(appId) });
+  });
+  app.post("/db-connections", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, DesktopAppDbConnectionCreateSchema);
+    const created = await audited(
+      c,
+      "db-connection.create",
+      input.name,
+      () => databases.create(input, requireAuth(c).user.id),
+      { engine: input.engine, host: input.host, access: input.access, appId: input.appId },
+    );
+    return c.json(created, 201);
+  });
+  app.put("/db-connections/:id", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppDbConnectionIdSchema);
+    const input = await parseJsonBody(c, DesktopAppDbConnectionUpdateSchema);
+    return c.json(
+      await audited(c, "db-connection.update", id, () => databases.update(id, input), {
+        host: input.host,
+        access: input.access,
+        password: input.password === undefined ? "kept" : input.password ? "set" : "removed",
+      }),
+    );
+  });
+  app.delete("/db-connections/:id", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppDbConnectionIdSchema);
+    await parseJsonBody(c, Empty);
+    await audited(c, "db-connection.delete", id, () => {
+      if (!databases.remove(id)) throw notFound("Connection");
+    });
+    return c.body(null, 204);
+  });
+  app.post("/db-connections/:id/test", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppDbConnectionIdSchema);
+    await parseJsonBody(c, Empty);
+    return c.json(await databases.testById(id));
   });
 
   /* ----------------------------------------------------------------- store */

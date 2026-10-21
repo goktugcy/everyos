@@ -3988,6 +3988,61 @@ export const it: LocaleMessages = {
     unlinked: "Non collegato",
   },
   desktopApps: {
+    database: {
+      title: "Database per le app",
+      description:
+        "Le app autorizzate a connettersi ai database usano solo le connessioni elencate qui, senza mai vederne le password.",
+      empty: "Nessun database è ancora connesso.",
+      add: "Connetti un database",
+      edit: "Modifica",
+      editTitle: "Modifica la connessione",
+      remove: "Rimuovi",
+      removeTitle: "Rimuovere {{name}}?",
+      removeBody: "Le app non possono più usare questo database. Il database in sé non cambia.",
+      test: "Prova",
+      testOk: "Connesso: {{version}} ({{ms}} ms)",
+      adminsOnly: "Solo un amministratore può connettere database.",
+      name: "Nome",
+      engine: "Database",
+      host: "Host",
+      port: "Porta",
+      database: "Nome del database",
+      username: "Nome utente",
+      password: "Password",
+      passwordHint: "Conservata cifrata su questo server; le app non la vedono mai.",
+      passwordKept: "Lascia vuoto per mantenere la password salvata.",
+      tls: "Cifratura",
+      accessLabel: "Accesso",
+      audienceLabel: "Chi può usarla",
+      readHint:
+        "Ogni istruzione viene eseguita in una transazione di sola lettura. Per una garanzia certa, usa un utente del database che può solo leggere.",
+      writeHint:
+        "Le app possono modificare i dati, e ogni modifica richiede la conferma della persona in una finestra disegnata da EveryOS.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Cifrata",
+        verify: "Cifrata, certificato verificato",
+        disable: "Non cifrata",
+      },
+      access: {
+        read: "Sola lettura",
+        write: "Lettura e modifica",
+      },
+      audience: {
+        admins: "Amministratori",
+        everyone: "Tutti quelli che possono usare l'app",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS chiede per {{app}}",
+      writeTitle: "Modificare i dati in {{connection}}?",
+      writeBody:
+        "{{app}} vuole eseguire questa istruzione su {{database}}. Le modifiche non si possono annullare da qui.",
+      writeConfirm: "Esegui la modifica",
+    },
     network: {
       title: "Accesso alla rete delle app",
       description:
@@ -4278,6 +4333,8 @@ export const it: LocaleMessages = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "L'accesso alla rete delle app non consente questo indirizzo. Un amministratore può consentirlo nell'App Store.",
     DESKTOP_APP_NETWORK_FAILED: "La connessione non è riuscita.",
+    DESKTOP_APP_DB_READ_ONLY: "Questa connessione al database può solo leggere.",
+    DESKTOP_APP_DB_FAILED: "L'operazione sul database non è riuscita.",
     NETWORK: "Impossibile raggiungere il server. Controlla la connessione.",
     UNKNOWN: "Si è verificato un errore sconosciuto.",
   },

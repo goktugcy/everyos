@@ -148,7 +148,11 @@ export const AppNotificationSchema = z.strictObject({
     .nullable(),
 });
 
-export const AppHostCallSchema = z.strictObject({ input: z.json() });
+export const AppHostCallSchema = z.strictObject({
+  input: z.json(),
+  /** Set by the desktop only after the person confirmed in a dialog it drew (app writes). */
+  confirmed: z.literal(true).optional(),
+});
 
 export const DesktopAppUserSettingsSchema = z.strictObject({ notifications: z.boolean() });
 
@@ -290,4 +294,60 @@ export const AppMonitorHistorySchema = z.strictObject({
   id: z.uuid(),
   since: z.int().min(0).optional(),
   limit: z.int().min(1).max(5000).default(1000),
+});
+
+/* ------------------------------------------------------------------ databases */
+
+const dbConnectionFields = {
+  name: z.string().trim().min(1).max(80),
+  engine: z.enum(["postgres", "mysql"]),
+  host: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(253)
+    .refine(
+      (value) =>
+        /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(
+          value,
+        ) ||
+        z.ipv4().safeParse(value).success ||
+        z.ipv6().safeParse(value).success,
+      "Not a host",
+    ),
+  port: z.int().min(1).max(65_535),
+  database: z.string().trim().min(1).max(128),
+  username: z.string().trim().min(1).max(128),
+  tls: z.enum(["disable", "require", "verify"]),
+  access: z.enum(["read", "write"]),
+  audience: z.enum(["admins", "everyone"]),
+  appId: appId.nullable(),
+};
+
+export const DesktopAppDbConnectionCreateSchema = z.strictObject({
+  ...dbConnectionFields,
+  password: z.string().max(1024).nullable(),
+});
+
+/** Leaving `password` out keeps the stored one; null removes it. */
+export const DesktopAppDbConnectionUpdateSchema = z.strictObject({
+  ...dbConnectionFields,
+  password: z.string().max(1024).nullable().optional(),
+});
+
+export const DesktopAppDbConnectionIdSchema = z.strictObject({ id: z.uuid() });
+
+export const AppDbConnectionInputSchema = z.strictObject({ connection: z.uuid() });
+
+/** Bounds mirror DB_LIMITS in @everyos/app-sdk. */
+export const AppDbQueryInputSchema = z.strictObject({
+  connection: z.uuid(),
+  sql: z.string().trim().min(1).max(100_000),
+  params: z
+    .array(z.union([z.string().max(65_536), z.number(), z.boolean(), z.null()]))
+    .max(100)
+    .default([]),
+  maxRows: z.int().min(1).max(1000).default(500),
+  timeoutMs: z.int().min(1000).max(120_000).default(30_000),
+  write: z.boolean().default(false),
 });

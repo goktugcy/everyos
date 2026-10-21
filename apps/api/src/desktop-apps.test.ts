@@ -24,6 +24,8 @@ import {
   signPackage,
 } from "@everyos/app-package";
 import type {
+  DbQueryResult,
+  DbTable,
   NetDnsResult,
   NetHttpResponse,
   NetMonitor,
@@ -35,10 +37,12 @@ import { createCatalogFetcher } from "@everyos/catalogs";
 import type {
   ApiErrorBody,
   DesktopAppInstallationView,
+  DesktopAppDbConnectionView,
   DesktopAppListing,
   DesktopAppNetworkRuleView,
   DesktopAppRegistryView,
 } from "@everyos/shared";
+import pg from "pg";
 import { afterEach, describe, expect, it } from "vitest";
 import { RUNTIME_CSP } from "./modules/desktop-apps/runtime-routes.ts";
 import {
@@ -49,6 +53,7 @@ import {
   TestClient,
   type TestContext,
 } from "./test-support.ts";
+import { REQUIRE_DB_TESTS, startMysql, startPostgres } from "./test-databases.ts";
 
 const PNG = Buffer.from(
   "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f0005fe02fea7d6a5d30000000049454e44ae426082",
@@ -1767,4 +1772,407 @@ describe("app network access", () => {
       count: 0,
     });
   }, 30_000);
+});
+
+describe("app databases", () => {
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+  const servers: Array<{ stop(): Promise<void> }> = [];
+  afterEach(async () => {
+    for (const server of servers.splice(0)) await server.stop();
+  });
+
+  async function withDatabaseApp() {
+    const context = await setup();
+    const build = await buildApp(
+      "dev.everyos.sql",
+      "1.0.0",
+      ["database:connect"],
+      officialKeys.privateKey,
+    );
+    const other = await buildApp(
+      "dev.everyos.other",
+      "1.0.0",
+      ["database:connect"],
+      officialKeys.privateKey,
+    );
+    publish(
+      context.registry,
+      index([
+        { id: "dev.everyos.sql", versions: [build] },
+        { id: "dev.everyos.other", versions: [other] },
+      ]),
+      [build, other],
+    );
+    await sync(context.admin);
+    for (const appId of ["dev.everyos.sql", "dev.everyos.other"])
+      expect(
+        (
+          await context.admin.post("/api/desktop-apps/installed", {
+            registryId: "official",
+            appId,
+            approve: ["database:connect"],
+          })
+        ).status,
+      ).toBe(201);
+    const open = async (client: TestClient, appId = "dev.everyos.sql") =>
+      (
+        await json<{ token: string }>(
+          await client.post("/api/app-sdk/instances", { appId, kind: "window" }),
+        )
+      ).token;
+    /** As the desktop calls it: `confirmed` only after the person confirmed in its dialog. */
+    const host = (
+      client: TestClient,
+      token: string,
+      operation: string,
+      input: unknown = null,
+      confirmed = false,
+    ) =>
+      client.request("POST", `/api/app-sdk/host/${operation}`, {
+        body: { input, ...(confirmed ? { confirmed: true } : {}) },
+        ...as(token),
+      });
+    return { ...context, open, host };
+  }
+
+  it("runs PostgreSQL statements one at a time, read-only unless a confirmed write is allowed", async (test) => {
+    const server = await startPostgres();
+    if (!server) {
+      if (REQUIRE_DB_TESTS) throw new Error("PostgreSQL is required for this test");
+      test.skip();
+      return;
+    }
+    servers.push(server);
+    const seed = new pg.Client({
+      host: "127.0.0.1",
+      port: server.port,
+      user: server.user,
+      password: server.password,
+      database: "postgres",
+    });
+    await seed.connect();
+    // A shared server (CI) may hold an earlier run's database.
+    await seed.query("DROP DATABASE IF EXISTS shop");
+    await seed.query("DROP ROLE IF EXISTS reader");
+    await seed.query("CREATE DATABASE shop");
+    await seed.end();
+    const shop = new pg.Client({
+      host: "127.0.0.1",
+      port: server.port,
+      user: server.user,
+      password: server.password,
+      database: "shop",
+    });
+    await shop.connect();
+    await shop.query(`
+      CREATE TABLE people (id serial PRIMARY KEY, name text NOT NULL, born date, score bigint,
+        data jsonb, photo bytea);
+      INSERT INTO people (name, born, score, data, photo) VALUES
+        ('Ada', '1815-12-10', 9007199254740993, '{"likes": ["maths"]}', '\\xcafe'),
+        ('Alan', '1912-06-23', 1, null, null),
+        ('Grace', '1906-12-09', 2, null, null);
+      CREATE VIEW names AS SELECT name FROM people;
+      CREATE ROLE reader LOGIN PASSWORD 'reader-secret';
+      GRANT SELECT ON people TO reader;
+    `);
+
+    const { ctx, admin, operator, viewer, open, host } = await withDatabaseApp();
+    const connection = {
+      name: "Shop",
+      engine: "postgres",
+      host: "127.0.0.1",
+      port: server.port,
+      database: "shop",
+      username: server.user,
+      password: server.password,
+      tls: "disable",
+      access: "read",
+      audience: "admins",
+      appId: null,
+    };
+    expect((await operator.post("/api/desktop-apps/db-connections", connection)).status).toBe(403);
+    const created = await json<DesktopAppDbConnectionView>(
+      await admin.post("/api/desktop-apps/db-connections", connection),
+    );
+    expect(created).toMatchObject({ name: "Shop", hasPassword: true, access: "read" });
+    expect(JSON.stringify(created)).not.toContain(server.password);
+    // The password is sealed at rest and never listed.
+    const stored = ctx.db.get<{ sealed_password: string }>(
+      "SELECT sealed_password FROM desktop_app_db_connections WHERE id = ?",
+      created.id,
+    )!;
+    expect(stored.sealed_password).not.toContain(server.password);
+    const listed = await operator.get("/api/desktop-apps/db-connections");
+    expect(listed.status).toBe(200);
+    expect(await listed.text()).not.toContain(server.password);
+    expect((await viewer.get("/api/desktop-apps/db-connections")).status).toBe(403);
+    const tested = await json<{ version: string }>(
+      await admin.post(`/api/desktop-apps/db-connections/${created.id}/test`, {}),
+    );
+    expect(tested.version).toContain("PostgreSQL");
+
+    const token = await open(admin);
+    const connections = await json<{ result: { connections: Array<Record<string, unknown>> } }>(
+      await host(admin, token, "db.connections"),
+    );
+    expect(connections.result.connections).toEqual([
+      {
+        id: created.id,
+        name: "Shop",
+        engine: "postgres",
+        host: "127.0.0.1",
+        port: server.port,
+        database: "shop",
+        access: "read",
+      },
+    ]);
+    // Administrators only: the operator's window sees no connection and cannot name it.
+    const operatorToken = await open(operator);
+    expect(
+      (
+        await json<{ result: { connections: unknown[] } }>(
+          await host(operator, operatorToken, "db.connections"),
+        )
+      ).result.connections,
+    ).toEqual([]);
+    expect(
+      (
+        await host(operator, operatorToken, "db.query", {
+          connection: created.id,
+          sql: "SELECT 1",
+        })
+      ).status,
+    ).toBe(404);
+
+    const tables = await json<{ result: { tables: DbTable[] } }>(
+      await host(admin, token, "db.tables", { connection: created.id }),
+    );
+    expect(tables.result.tables.map((table) => [table.schema, table.name, table.kind])).toEqual([
+      ["public", "names", "view"],
+      ["public", "people", "table"],
+    ]);
+    expect(tables.result.tables[1]!.columns[0]).toEqual({
+      name: "id",
+      type: "integer",
+      nullable: false,
+    });
+
+    const query = (input: Record<string, unknown>, confirmed = false) =>
+      host(admin, token, "db.query", { connection: created.id, ...input }, confirmed);
+    const people = await json<{ result: DbQueryResult }>(
+      await query({
+        sql: "SELECT id, name, born, score, data, photo FROM people WHERE id = $1",
+        params: [1],
+      }),
+    );
+    expect(people.result).toMatchObject({
+      command: "SELECT",
+      rowCount: 1,
+      truncated: false,
+      readOnly: true,
+      rows: [[1, "Ada", "1815-12-10", "9007199254740993", { likes: ["maths"] }, "\\xcafe"]],
+    });
+    expect(people.result.columns.map((column) => column.type)).toEqual([
+      "int4",
+      "text",
+      "date",
+      "int8",
+      "jsonb",
+      "bytea",
+    ]);
+
+    // Read-only: changes, mode switches and statement batches are all refused.
+    const remove = await query({ sql: "DELETE FROM people" });
+    expect((await code(remove)).code).toBe("DESKTOP_APP_DB_READ_ONLY");
+    expect((await code(await query({ sql: "SET TRANSACTION READ WRITE" }))).details).toMatchObject({
+      code: "25001",
+    });
+    expect(
+      (await code(await query({ sql: "SELECT 1; DELETE FROM people" }))).details,
+    ).toMatchObject({
+      code: "42601",
+    });
+    // Ending the transaction early ends the read: nothing else runs in that call.
+    expect((await query({ sql: "COMMIT" })).status).toBe(200);
+    expect((await code(await query({ sql: "DELETE FROM people", write: true }))).code).toBe(
+      "DESKTOP_APP_DB_READ_ONLY",
+    );
+    expect((await shop.query("SELECT count(*)::int AS n FROM people")).rows[0]).toEqual({ n: 3 });
+
+    // Bounded: rows, size and time.
+    const many = await json<{ result: DbQueryResult }>(
+      await query({ sql: "SELECT g FROM generate_series(1, 2000) g", maxRows: 10 }),
+    );
+    expect(many.result).toMatchObject({ truncated: true, rowCount: null });
+    expect(many.result.rows).toHaveLength(10);
+    const slow = await query({ sql: "SELECT pg_sleep(5)", timeoutMs: 1000 });
+    expect((await code(slow)).details).toMatchObject({ code: "57014" });
+
+    // A writable connection still needs the person's confirmation for each change.
+    const writable = { ...connection, access: "write" };
+    delete (writable as { password?: string }).password;
+    expect(
+      (
+        await admin.request("PUT", `/api/desktop-apps/db-connections/${created.id}`, {
+          body: writable,
+        })
+      ).status,
+    ).toBe(200);
+    const unconfirmed = await query({
+      sql: "INSERT INTO people (name) VALUES ('Linus')",
+      write: true,
+    });
+    expect(unconfirmed.status).toBe(403);
+    expect((await code(unconfirmed)).details).toMatchObject({ confirmation: "required" });
+    const inserted = await json<{ result: DbQueryResult }>(
+      await query(
+        { sql: "INSERT INTO people (name) VALUES ($1)", params: ["Linus"], write: true },
+        true,
+      ),
+    );
+    expect(inserted.result).toMatchObject({ command: "INSERT", rowCount: 1, readOnly: false });
+    expect((await shop.query("SELECT count(*)::int AS n FROM people")).rows[0]).toEqual({ n: 4 });
+    const audits = ctx.db.all<{ outcome: string; details: string }>(
+      "SELECT outcome, details FROM audit_events WHERE action = 'desktop-apps.database.write' ORDER BY id",
+    );
+    // Refused on the read-only connection, refused unconfirmed, then done.
+    expect(audits.map((entry) => entry.outcome)).toEqual(["failure", "failure", "success"]);
+    expect(audits[2]!.details).not.toContain("Linus");
+    expect(JSON.parse(audits[2]!.details)).toMatchObject({ command: "INSERT", rowCount: 1 });
+    // Reads on a writable connection stay read-only.
+    expect((await code(await query({ sql: "DELETE FROM people" }))).code).toBe(
+      "DESKTOP_APP_DB_READ_ONLY",
+    );
+
+    // The database's own privileges still apply, and a wrong password says so.
+    const reader = await json<DesktopAppDbConnectionView>(
+      await admin.post("/api/desktop-apps/db-connections", {
+        ...connection,
+        name: "Shop (reader)",
+        username: "reader",
+        password: "reader-secret",
+        access: "write",
+        appId: "dev.everyos.sql",
+      }),
+    );
+    const denied = await host(
+      admin,
+      token,
+      "db.query",
+      { connection: reader.id, sql: "DELETE FROM people", write: true },
+      true,
+    );
+    expect((await code(denied)).details).toMatchObject({ code: "42501" });
+    expect(
+      (
+        await admin.request("PUT", `/api/desktop-apps/db-connections/${reader.id}`, {
+          body: {
+            ...connection,
+            name: "Shop (reader)",
+            username: "reader",
+            password: "wrong",
+            appId: "dev.everyos.sql",
+          },
+        })
+      ).status,
+    ).toBe(200);
+    const wrong = await host(admin, token, "db.test", { connection: reader.id });
+    expect((await code(wrong)).details).toMatchObject({ code: "28P01" });
+
+    // A connection for one app is invisible to another, and goes with its app.
+    const otherToken = await open(admin, "dev.everyos.other");
+    const otherList = await json<{ result: { connections: Array<{ id: string }> } }>(
+      await host(admin, otherToken, "db.connections"),
+    );
+    expect(otherList.result.connections.map((entry) => entry.id)).toEqual([created.id]);
+    expect(
+      (
+        await admin.delete("/api/desktop-apps/installed/dev.everyos.sql", {
+          body: { confirm: true },
+        })
+      ).status,
+    ).toBe(204);
+    expect(
+      ctx.db.get<{ count: number }>("SELECT COUNT(*) AS count FROM desktop_app_db_connections"),
+    ).toEqual({ count: 1 });
+    await shop.end();
+  }, 60_000);
+
+  it("keeps MariaDB sessions read-only, single-statement and away from local files", async (test) => {
+    const server = await startMysql();
+    if (!server) {
+      if (REQUIRE_DB_TESTS) throw new Error("MariaDB or MySQL is required for this test");
+      test.skip();
+      return;
+    }
+    servers.push(server);
+    const mysql = await import("mysql2/promise");
+    const seed = await mysql.createConnection({
+      host: server.host,
+      port: server.port,
+      user: server.user,
+      password: server.password,
+      multipleStatements: true,
+    });
+    await seed.query(`
+      DROP DATABASE IF EXISTS shop;
+      CREATE DATABASE shop;
+      CREATE TABLE shop.people (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(80) NOT NULL,
+        born DATE, score BIGINT);
+      INSERT INTO shop.people (name, born, score) VALUES ('Ada', '1815-12-10', 9007199254740993),
+        ('Alan', '1912-06-23', 1);
+    `);
+    const { admin, open, host } = await withDatabaseApp();
+    const created = await json<DesktopAppDbConnectionView>(
+      await admin.post("/api/desktop-apps/db-connections", {
+        name: "Shop",
+        engine: "mysql",
+        host: server.host,
+        port: server.port,
+        database: "shop",
+        username: server.user,
+        password: server.password,
+        tls: "disable",
+        access: "read",
+        audience: "everyone",
+        appId: null,
+      }),
+    );
+    const token = await open(admin);
+    const query = (input: Record<string, unknown>, confirmed = false) =>
+      host(admin, token, "db.query", { connection: created.id, ...input }, confirmed);
+    const people = await json<{ result: DbQueryResult }>(
+      await query({ sql: "SELECT id, name, born, score FROM people WHERE id = ?", params: [1] }),
+    );
+    expect(people.result.rows).toEqual([[1, "Ada", "1815-12-10", "9007199254740993"]]);
+    const tables = await json<{ result: { tables: DbTable[] } }>(
+      await host(admin, token, "db.tables", { connection: created.id }),
+    );
+    expect(tables.result.tables.map((table) => table.name)).toEqual(["people"]);
+
+    for (const sql of ["DELETE FROM people", "CREATE TABLE intruder (a INT)", "DROP TABLE people"])
+      expect((await code(await query({ sql }))).code, sql).toBe("DESKTOP_APP_DB_READ_ONLY");
+    expect((await code(await query({ sql: "SELECT 1; DELETE FROM people" }))).code).toBe(
+      "DESKTOP_APP_DB_FAILED",
+    );
+    // A server cannot make EveryOS read its own files.
+    const infile = await query({
+      sql: "LOAD DATA LOCAL INFILE '/etc/hosts' INTO TABLE people",
+      write: true,
+    });
+    expect(infile.status).toBe(403);
+    const [count] = (await seed.query("SELECT COUNT(*) AS n FROM shop.people")) as unknown as [
+      Array<{ n: number }>,
+    ];
+    expect(count[0]!.n).toBe(2);
+    const many = await json<{ result: DbQueryResult }>(
+      await query({
+        sql: "SELECT seq FROM (SELECT a.id * 1000 + b.id AS seq FROM people a, people b, people c, people d) x",
+        maxRows: 3,
+      }),
+    );
+    expect(many.result).toMatchObject({ truncated: true });
+    expect(many.result.rows).toHaveLength(3);
+    await seed.end();
+  }, 60_000);
 });

@@ -3956,6 +3956,61 @@ export const ja: LocaleMessages = {
     unlinked: "未リンク",
   },
   desktopApps: {
+    database: {
+      title: "アプリ用のデータベース",
+      description:
+        "データベースへの接続を許可されたアプリは、ここにある接続だけを使い、そのパスワードを見ることはありません。",
+      empty: "接続されたデータベースはまだありません。",
+      add: "データベースを接続",
+      edit: "編集",
+      editTitle: "データベース接続を編集",
+      remove: "削除",
+      removeTitle: "{{name}} を削除しますか？",
+      removeBody: "アプリはこのデータベースを使えなくなります。データベース自体は変更されません。",
+      test: "テスト",
+      testOk: "接続しました: {{version}}（{{ms}} ms）",
+      adminsOnly: "データベースを接続できるのは管理者だけです。",
+      name: "名前",
+      engine: "データベース",
+      host: "ホスト",
+      port: "ポート",
+      database: "データベース名",
+      username: "ユーザー名",
+      password: "パスワード",
+      passwordHint: "このサーバーに暗号化して保存され、アプリが見ることはありません。",
+      passwordKept: "保存済みのパスワードを使う場合は空欄のままにします。",
+      tls: "暗号化",
+      accessLabel: "アクセス",
+      audienceLabel: "使用できる人",
+      readHint:
+        "すべての文は読み取り専用のトランザクションで実行されます。確実に守るには、読み取りしかできないデータベースユーザーを使ってください。",
+      writeHint:
+        "アプリはデータを変更でき、変更のたびに EveryOS が表示するダイアログで本人の確認が必要です。",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "暗号化する",
+        verify: "暗号化して証明書を確認",
+        disable: "暗号化しない",
+      },
+      access: {
+        read: "読み取りのみ",
+        write: "読み取りと変更",
+      },
+      audience: {
+        admins: "管理者",
+        everyone: "アプリを使えるすべての人",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS から {{app}} についての確認",
+      writeTitle: "{{connection}} のデータを変更しますか？",
+      writeBody:
+        "{{app}} が {{database}} でこの文を実行しようとしています。ここから変更を元に戻すことはできません。",
+      writeConfirm: "変更を実行",
+    },
     network: {
       title: "アプリのネットワークアクセス",
       description:
@@ -4240,6 +4295,8 @@ export const ja: LocaleMessages = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "アプリのネットワークアクセスでこのアドレスは許可されていません。管理者が アプリストアで許可できます。",
     DESKTOP_APP_NETWORK_FAILED: "接続に失敗しました。",
+    DESKTOP_APP_DB_READ_ONLY: "このデータベース接続は読み取り専用です。",
+    DESKTOP_APP_DB_FAILED: "データベースの操作に失敗しました。",
     NETWORK: "サーバーに接続できません。接続を確認してください。",
     UNKNOWN: "不明なエラーが発生しました。",
   },

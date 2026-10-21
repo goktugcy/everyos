@@ -3898,6 +3898,62 @@ export const ko: LocaleMessages = {
     unlinked: "연결되지 않음",
   },
   desktopApps: {
+    database: {
+      title: "앱용 데이터베이스",
+      description:
+        "데이터베이스에 연결하도록 허용된 앱은 여기에 있는 연결만 사용하며 비밀번호는 절대 볼 수 없습니다.",
+      empty: "아직 연결된 데이터베이스가 없습니다.",
+      add: "데이터베이스 연결",
+      edit: "편집",
+      editTitle: "데이터베이스 연결 편집",
+      remove: "제거",
+      removeTitle: "{{name}}을(를) 제거할까요?",
+      removeBody:
+        "앱이 더 이상 이 데이터베이스를 사용할 수 없습니다. 데이터베이스 자체는 변경되지 않습니다.",
+      test: "테스트",
+      testOk: "연결됨: {{version}} ({{ms}}ms)",
+      adminsOnly: "데이터베이스는 관리자만 연결할 수 있습니다.",
+      name: "이름",
+      engine: "데이터베이스",
+      host: "호스트",
+      port: "포트",
+      database: "데이터베이스 이름",
+      username: "사용자 이름",
+      password: "비밀번호",
+      passwordHint: "이 서버에 암호화되어 저장되며 앱은 볼 수 없습니다.",
+      passwordKept: "저장된 비밀번호를 유지하려면 비워 두세요.",
+      tls: "암호화",
+      accessLabel: "접근",
+      audienceLabel: "사용할 수 있는 사람",
+      readHint:
+        "모든 문은 읽기 전용 트랜잭션에서 실행됩니다. 확실히 보장하려면 읽기만 가능한 데이터베이스 사용자를 사용하세요.",
+      writeHint:
+        "앱이 데이터를 변경할 수 있으며, 변경할 때마다 EveryOS가 표시하는 대화 상자에서 사용자의 확인이 필요합니다.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "암호화",
+        verify: "암호화 및 인증서 확인",
+        disable: "암호화 안 함",
+      },
+      access: {
+        read: "읽기 전용",
+        write: "읽기 및 변경",
+      },
+      audience: {
+        admins: "관리자",
+        everyone: "앱을 사용할 수 있는 모든 사람",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS가 {{app}}에 대해 묻습니다",
+      writeTitle: "{{connection}}의 데이터를 변경할까요?",
+      writeBody:
+        "{{app}}이(가) {{database}}에서 이 문을 실행하려고 합니다. 여기에서 변경을 되돌릴 수 없습니다.",
+      writeConfirm: "변경 실행",
+    },
     network: {
       title: "앱의 네트워크 접근",
       description:
@@ -4165,6 +4221,8 @@ export const ko: LocaleMessages = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "앱의 네트워크 접근에서 이 주소를 허용하지 않습니다. 관리자가 앱 스토어에서 허용할 수 있습니다.",
     DESKTOP_APP_NETWORK_FAILED: "연결에 실패했습니다.",
+    DESKTOP_APP_DB_READ_ONLY: "이 데이터베이스 연결은 읽기 전용입니다.",
+    DESKTOP_APP_DB_FAILED: "데이터베이스 작업에 실패했습니다.",
     NETWORK: "서버에 연결할 수 없습니다. 네트워크 연결을 확인하세요.",
     UNKNOWN: "알 수 없는 오류가 발생했습니다.",
   },

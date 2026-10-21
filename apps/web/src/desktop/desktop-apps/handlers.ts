@@ -1,5 +1,6 @@
 import {
   BRIDGE_ERRORS,
+  type DbConnection,
   type DirectoryEntry,
   type FileHandle,
   type WindowState,
@@ -77,6 +78,38 @@ export function createHandlers(context: InstanceContext): Handlers {
     init: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
   ) => api<T>(`/app-sdk${path}`, { ...init, headers: { [INSTANCE_HEADER]: token } });
   const managed = () => (windowId && wm().windows[windowId] ? windowId : null);
+  /**
+   * For a database write: false when there is nothing to confirm (a read, or a connection that
+   * only reads, which the server refuses), true once the person confirmed; refuses otherwise.
+   */
+  const confirmWrite = async (input: unknown): Promise<boolean> => {
+    const query = input as { write?: unknown; sql?: unknown; connection?: unknown } | null;
+    if (!query || query.write !== true || typeof query.sql !== "string") return false;
+    const { connections } = (
+      await sdk<{ result: { connections: DbConnection[] } }>("/host/db.connections", {
+        method: "POST",
+        body: { input: null },
+      })
+    ).result;
+    const connection = connections.find((entry) => entry.id === query.connection);
+    if (!connection || connection.access !== "write") return false;
+    if (context.kind !== "window")
+      throw new BridgeRefusal(BRIDGE_ERRORS.permission, "Widgets cannot change databases");
+    const confirmed = await context.showDialog({
+      kind: "confirm",
+      title: i18next.t("desktopApps.dialog.writeTitle", { connection: connection.name }),
+      message: i18next.t("desktopApps.dialog.writeBody", {
+        app: app.name,
+        database: `${connection.database} · ${connection.host}`,
+      }),
+      confirm: i18next.t("desktopApps.dialog.writeConfirm"),
+      destructive: true,
+      host: { code: query.sql.slice(0, 20_000) },
+    });
+    if (confirmed !== true)
+      throw new BridgeRefusal(BRIDGE_ERRORS.cancelled, "The person did not confirm the change");
+    return true;
+  };
   const file = (id: string) => `/files/${encodeURIComponent(id)}`;
   /** Binary reads skip the JSON helper; errors still arrive as API errors. */
   const readBytes = async (path: string): Promise<{ data: ArrayBuffer; eof: boolean }> => {
@@ -134,9 +167,16 @@ export function createHandlers(context: InstanceContext): Handlers {
       await sdk("/notifications", { method: "POST", body: { title, body, level, tag } });
       return null;
     },
-    "host.call": async ({ operation, input }) =>
-      (await sdk<{ result: unknown }>(`/host/${operation}`, { method: "POST", body: { input } }))
-        .result,
+    "host.call": async ({ operation, input }) => {
+      // An app changes a database only after the person confirms the statement here.
+      const confirmed = operation === "db.query" && (await confirmWrite(input));
+      return (
+        await sdk<{ result: unknown }>(`/host/${operation}`, {
+          method: "POST",
+          body: { input, ...(confirmed ? { confirmed: true } : {}) },
+        })
+      ).result;
+    },
     "theme.get": () => themeSnapshot(useThemeStore.getState().theme),
     "locale.get": () => ({ locale: i18next.language }),
     "lifecycle.ready": () => {

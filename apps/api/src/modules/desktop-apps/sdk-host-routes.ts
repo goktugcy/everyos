@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import type { HostOperation, HostResult } from "@everyos/app-sdk/protocol";
 import {
+  AppDbConnectionInputSchema,
+  AppDbQueryInputSchema,
   AppDiskUsageInputSchema,
   AppHostCallSchema,
   AppMonitorHistorySchema,
@@ -22,6 +24,7 @@ import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { fileViewFor } from "../files/file-view.ts";
 import type { FileView } from "../files/file-view.ts";
+import { AppDatabases } from "./app-databases.ts";
 import { instanceCall, requireCapability, type InstanceCall } from "./sdk-routes.ts";
 
 const Empty = z.strictObject({});
@@ -188,13 +191,19 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     return c.body(null, 204);
   });
 
-  const { network, monitors } = services.desktopApps;
+  const { network, monitors, databases } = services.desktopApps;
+  const person = (call: InstanceCall) => ({
+    id: call.auth.user.id,
+    permissions: call.auth.permissions,
+  });
   const owner = (call: InstanceCall) => [call.instance.appId, call.auth.user.id] as const;
   const operations: {
     [O in HostOperation]?: (
       c: Context<AppEnv>,
       call: InstanceCall,
       input: unknown,
+      /** Set only by the desktop, after the person confirmed (database writes). */
+      confirmed: boolean,
     ) => Promise<HostResult<O>> | HostResult<O>;
   } = {
     "system.metrics": async () => {
@@ -258,6 +267,45 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     },
     "net.monitors.check": (_c, call, input) =>
       monitors.checkNow(...owner(call), AppMonitorIdSchema.parse(input).id),
+    "db.connections": (_c, call) => ({
+      connections: databases.usable(call.instance.appId, call.auth.permissions),
+    }),
+    "db.test": (_c, call, input) =>
+      databases.test(
+        call.instance.appId,
+        person(call),
+        AppDbConnectionInputSchema.parse(input).connection,
+      ),
+    "db.tables": (_c, call, input) =>
+      databases.tables(
+        call.instance.appId,
+        person(call),
+        AppDbConnectionInputSchema.parse(input).connection,
+      ),
+    "db.query": async (c, call, input, confirmed) => {
+      const parsed = AppDbQueryInputSchema.parse(input);
+      if (!parsed.write) return databases.query(call.instance.appId, person(call), parsed, false);
+      // Changes are audited by their fingerprint: statements may hold personal data.
+      const details = {
+        connection: parsed.connection,
+        statement: AppDatabases.fingerprint(parsed.sql),
+      };
+      try {
+        const result = await databases.query(call.instance.appId, person(call), parsed, confirmed);
+        audit(c, call, "database.write", "success", {
+          ...details,
+          command: result.command,
+          rowCount: result.rowCount,
+        });
+        return result;
+      } catch (error) {
+        audit(c, call, "database.write", "failure", {
+          ...details,
+          code: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        });
+        throw error;
+      }
+    },
   };
   const audit = (
     c: Context<AppEnv>,
@@ -285,6 +333,10 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     "net.monitors.save": "network:outbound",
     "net.monitors.delete": "network:outbound",
     "net.monitors.check": "network:outbound",
+    "db.connections": "database:connect",
+    "db.test": "database:connect",
+    "db.tables": "database:connect",
+    "db.query": "database:connect",
     "system.metrics": "system:metrics.read",
     "system.info": "system:metrics.read",
     "system.sockets": "system:sockets.read",
@@ -299,14 +351,14 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
       c,
       z.strictObject({ operation: z.string().regex(/^[a-z]+(\.[a-z]+){1,2}$/) }),
     );
-    const { input } = await parseJsonBody(c, AppHostCallSchema);
+    const { input, confirmed } = await parseJsonBody(c, AppHostCallSchema);
     const run = operations[operation as HostOperation];
     const capability = capabilityOf[operation as HostOperation];
     if (!run || !capability) throw notFound("Operation");
     const call = instanceCall(services, c);
     requireCapability(call, capability);
     try {
-      return c.json({ result: await run(c, call, input) });
+      return c.json({ result: await run(c, call, input, confirmed === true) });
     } catch (error) {
       if (error instanceof ApiError && error.code === "DESKTOP_APP_NETWORK_BLOCKED") {
         const { host, port } = error.details as { host: string; port: number };

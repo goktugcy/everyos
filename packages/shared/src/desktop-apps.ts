@@ -131,3 +131,25 @@ export interface DesktopAppNetworkRuleView {
   /** The rule reaches this server itself (a loopback range). */
   includesThisServer: boolean;
 }
+
+/** A database administrators connected for desktop apps (never its password). */
+export interface DesktopAppDbConnectionView {
+  id: string;
+  name: string;
+  engine: "postgres" | "mysql";
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  hasPassword: boolean;
+  /** `require` encrypts; `verify` also checks the certificate and its name. */
+  tls: "disable" | "require" | "verify";
+  access: "read" | "write";
+  /** Who may use it through an app: administrators only, or everyone who can use the app. */
+  audience: "admins" | "everyone";
+  /** Null: every app holding database:connect. */
+  appId: string | null;
+  createdBy: string | null;
+  createdAt: number;
+  updatedAt: number;
+}

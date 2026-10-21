@@ -27,6 +27,25 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 20
+    # Real database servers for the desktop apps' database connector tests.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin-secret-1
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U admin" --health-interval 2s --health-timeout 5s
+          --health-retries 30
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: admin-secret-1
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized" --health-interval 2s
+          --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@v5
 
@@ -51,6 +70,11 @@ jobs:
 
       - name: Unit and integration tests
         run: pnpm test
+        env:
+          # The database connector tests must run here, never skip.
+          EVERYOS_REQUIRE_DB_TESTS: "1"
+          EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
+          EVERYOS_TEST_MYSQL: 127.0.0.1:3306:root:admin-secret-1
 
       - name: Build
         run: pnpm build

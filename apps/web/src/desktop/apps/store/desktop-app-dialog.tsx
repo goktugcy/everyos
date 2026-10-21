@@ -21,6 +21,7 @@ import {
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { desktop } from "../../state/controller.ts";
 import { ResourceError } from "../system/parts.tsx";
+import { DbConnections } from "./db-connections.tsx";
 import { NetworkRules } from "./network-rules.tsx";
 
 /** i18next reads `:` and `.` as separators: capability names become safe keys. */
@@ -320,6 +321,13 @@ export function DesktopAppDialog({
           (permission) => permission.capability === "network:outbound" && permission.granted,
         ) ? (
           <NetworkRules appId={appId} />
+        ) : null}
+        {installation &&
+        canManage &&
+        installation.permissions.some(
+          (permission) => permission.capability === "database:connect" && permission.granted,
+        ) ? (
+          <DbConnections appId={appId} />
         ) : null}
 
         {listing ? (

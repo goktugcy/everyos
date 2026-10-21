@@ -129,6 +129,10 @@ app. HTTP, TLS inspection, DNS and HTTP monitors run on the server; every target
 resolved, checked and pinned, link-local and metadata addresses are always refused, and EveryOS
 cookies and credentials are never sent. See [network access](network.md).
 
+**Databases** are connected by administrators in EveryOS (credentials sealed, never given to an app);
+apps run one statement at a time, read-only unless the connection allows changes and the person
+confirms each change in a dialog the desktop draws. See [databases](databases.md).
+
 ## Manifest
 
 `manifest.json` (`manifestVersion: 1`), validated with zod on the server and in the CLI
@@ -195,7 +199,7 @@ cannot flood the audit log).
 Tables (migration 0016, append-only): `desktop_app_registries`, `desktop_app_catalog`,
 `desktop_app_installations`, `desktop_app_storage`, `desktop_app_file_grants`,
 `desktop_app_user_settings`, `desktop_app_network_rules` (0018: per-app rules),
-`desktop_app_monitors`, `desktop_app_monitor_checks`, `desktop_app_connections`,
+`desktop_app_monitors`, `desktop_app_monitor_checks`, `desktop_app_db_connections` (0019),
 `desktop_app_ssh_keys`, with foreign keys, unique constraints and per-user isolation.
 
 ## Desktop integration

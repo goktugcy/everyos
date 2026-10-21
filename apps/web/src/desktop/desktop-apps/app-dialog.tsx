@@ -1,3 +1,4 @@
+import { ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui/button.tsx";
@@ -11,6 +12,8 @@ export type PendingDialog =
       message: string;
       confirm: string | null;
       destructive: boolean;
+      /** Asked by EveryOS itself (e.g. before an app changes a database), with what it concerns. */
+      host?: { code: string } | undefined;
       resolve: (value: boolean) => void;
     }
   | {
@@ -25,7 +28,8 @@ export type PendingDialog =
 
 /**
  * A dialog an app asked for, drawn by the desktop over the app's own window (never over other
- * windows). Its texts come from the app and are shown as text only.
+ * windows). Its texts come from the app and are shown as text only. EveryOS's own questions about
+ * the app (`host`) carry EveryOS's texts and say so.
  */
 export function AppDialog({ dialog, appName }: { dialog: PendingDialog; appName: string }) {
   const { t } = useTranslation();
@@ -56,20 +60,32 @@ export function AppDialog({ dialog, appName }: { dialog: PendingDialog; appName:
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={`app-dialog-${dialog.id}`}
-        className="glass-strong flex w-full max-w-sm flex-col gap-3 rounded-everyos-lg p-5"
+        className={`glass-strong flex w-full ${dialog.kind === "confirm" && dialog.host ? "max-w-lg" : "max-w-sm"} flex-col gap-3 rounded-everyos-lg p-5`}
         onSubmit={(event) => {
           event.preventDefault();
           accept();
         }}
       >
-        <p className="text-[0.7rem] font-medium uppercase tracking-wider text-fg-subtle">
-          {appName}
+        <p className="flex items-center gap-1.5 text-[0.7rem] font-medium uppercase tracking-wider text-fg-subtle">
+          {dialog.kind === "confirm" && dialog.host ? (
+            <>
+              <ShieldCheck className="size-3.5 text-[rgb(var(--everyos-accent))]" aria-hidden />
+              {t("desktopApps.dialog.hostLabel", { app: appName })}
+            </>
+          ) : (
+            appName
+          )}
         </p>
         <h2 id={`app-dialog-${dialog.id}`} className="text-base font-semibold text-fg">
           {dialog.title}
         </h2>
         {dialog.message ? (
           <p className="whitespace-pre-wrap text-sm text-fg-muted">{dialog.message}</p>
+        ) : null}
+        {dialog.kind === "confirm" && dialog.host ? (
+          <pre className="glass-inset max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-everyos-md p-2 font-mono text-xs text-fg">
+            {dialog.host.code}
+          </pre>
         ) : null}
         {dialog.kind === "prompt" ? (
           <input

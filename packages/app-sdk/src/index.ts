@@ -14,6 +14,13 @@ import {
 
 export { BridgeError } from "./client.ts";
 export type {
+  DbColumn,
+  DbConnection,
+  DbEngine,
+  DbParam,
+  DbQueryInput,
+  DbQueryResult,
+  DbTable,
   DirectoryEntry,
   DnsRecord,
   DnsRecordType,
@@ -40,7 +47,7 @@ export type {
   TlsCertificate,
   WindowState,
 } from "./protocol.ts";
-export { DNS_RECORD_TYPES, HTTP_METHODS, NET_LIMITS } from "./protocol.ts";
+export { DB_LIMITS, DNS_RECORD_TYPES, HTTP_METHODS, NET_LIMITS } from "./protocol.ts";
 export { createI18n, type I18n, type Messages } from "./i18n.ts";
 
 type Unsubscribe = () => void;

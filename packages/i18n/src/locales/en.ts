@@ -3757,6 +3757,61 @@ export const en: Messages = {
     unlinked: "Not linked",
   },
   desktopApps: {
+    database: {
+      title: "Databases for apps",
+      description:
+        "Apps allowed to connect to databases use only the connections listed here, without ever seeing their passwords.",
+      empty: "No database is connected yet.",
+      add: "Connect a database",
+      edit: "Edit",
+      editTitle: "Edit database connection",
+      remove: "Remove",
+      removeTitle: "Remove {{name}}?",
+      removeBody: "Apps can no longer use this database. The database itself is not changed.",
+      test: "Test",
+      testOk: "Connected: {{version}} ({{ms}} ms)",
+      adminsOnly: "Only an administrator can connect databases.",
+      name: "Name",
+      engine: "Database",
+      host: "Host",
+      port: "Port",
+      database: "Database name",
+      username: "User name",
+      password: "Password",
+      passwordHint: "Stored encrypted on this server; apps never see it.",
+      passwordKept: "Leave empty to keep the stored password.",
+      tls: "Encryption",
+      accessLabel: "Access",
+      audienceLabel: "Who may use it",
+      readHint:
+        "Every statement runs in a read-only transaction. For a firm guarantee, use a database user that can only read.",
+      writeHint:
+        "Apps may change data, and each change needs the person's confirmation in a dialog EveryOS draws.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Encrypted",
+        verify: "Encrypted, certificate checked",
+        disable: "Not encrypted",
+      },
+      access: {
+        read: "Read only",
+        write: "Read and change",
+      },
+      audience: {
+        admins: "Administrators",
+        everyone: "Everyone who can use the app",
+      },
+    },
+    dialog: {
+      hostLabel: "EveryOS asks for {{app}}",
+      writeTitle: "Change data in {{connection}}?",
+      writeBody:
+        "{{app}} wants to run this statement on {{database}}. Changes cannot be undone from here.",
+      writeConfirm: "Run the change",
+    },
     network: {
       title: "Network access for apps",
       description:
@@ -4035,6 +4090,8 @@ export const en: Messages = {
     DESKTOP_APP_NETWORK_BLOCKED:
       "Network access for apps does not allow this address. An administrator can allow it in the App Store.",
     DESKTOP_APP_NETWORK_FAILED: "The connection failed.",
+    DESKTOP_APP_DB_READ_ONLY: "This database connection only reads.",
+    DESKTOP_APP_DB_FAILED: "The database operation failed.",
     NETWORK: "The server cannot be reached. Check your connection.",
     UNKNOWN: "An unknown error occurred.",
   },

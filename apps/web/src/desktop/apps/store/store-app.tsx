@@ -27,6 +27,7 @@ import { widgetUi } from "../../widgets/ui-store.ts";
 import { api } from "../../../lib/api.ts";
 import { DesktopAppDialog } from "./desktop-app-dialog.tsx";
 import { AddRegistryDialog, RegistryCard } from "./desktop-registries.tsx";
+import { DbConnections } from "./db-connections.tsx";
 import { NetworkRules } from "./network-rules.tsx";
 import { useDesktopApps } from "../../desktop-apps/store.ts";
 
@@ -408,6 +409,9 @@ export default function StoreApp() {
             ))}
             <div className="mt-4">
               <NetworkRules />
+            </div>
+            <div className="mt-4">
+              <DbConnections />
             </div>
           </Tabs.Content>
         ) : null}

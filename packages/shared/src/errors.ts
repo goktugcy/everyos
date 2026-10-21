@@ -75,6 +75,8 @@ export const ERROR_CODES = [
   "DESKTOP_APP_STORAGE_FULL",
   "DESKTOP_APP_NETWORK_BLOCKED",
   "DESKTOP_APP_NETWORK_FAILED",
+  "DESKTOP_APP_DB_READ_ONLY",
+  "DESKTOP_APP_DB_FAILED",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

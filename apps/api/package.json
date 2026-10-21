@@ -29,9 +29,13 @@
     "@everyos/system": "workspace:*",
     "@everyos/release": "workspace:*",
     "nodemailer": "catalog:",
-    "@everyos/app-sdk": "workspace:*"
+    "@everyos/app-sdk": "workspace:*",
+    "pg": "catalog:",
+    "mysql2": "catalog:",
+    "pg-cursor": "catalog:"
   },
   "devDependencies": {
-    "@types/ws": "catalog:"
+    "@types/ws": "catalog:",
+    "@types/pg": "catalog:"
   }
 }

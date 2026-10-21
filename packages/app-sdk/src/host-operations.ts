@@ -19,8 +19,9 @@ export const HOST_OPERATIONS = [
   "net.monitors.delete",
   "net.monitors.check",
   "db.connections",
-  "db.query",
+  "db.test",
   "db.tables",
+  "db.query",
   "ssh.keys.list",
   "ssh.keys.generate",
   "ssh.keys.import",
@@ -254,6 +255,80 @@ export interface NetMonitorCheck {
   error: string | null;
 }
 
+/* ------------------------------------------------------------------ databases (database:connect) */
+
+/**
+ * Databases an administrator connected in EveryOS. The app never sees credentials: it names a
+ * connection, and EveryOS connects. Queries run read-only unless the connection allows writing and
+ * the person confirms the statement in a dialog EveryOS draws.
+ */
+export const DB_LIMITS = {
+  sqlChars: 100_000,
+  params: 100,
+  rows: { max: 1000, default: 500 },
+  /** Longer text values are cut (ending with "…"). */
+  cellChars: 65_536,
+  /** The result is cut (`truncated`) once it grows past this, in JSON. */
+  resultBytes: 4 * 1024 * 1024,
+  timeoutMs: { min: 1000, max: 120_000, default: 30_000 },
+} as const;
+
+export type DbEngine = "postgres" | "mysql";
+
+export interface DbConnection {
+  id: string;
+  name: string;
+  /** `mysql` also covers MariaDB. */
+  engine: DbEngine;
+  host: string;
+  port: number;
+  database: string;
+  /** `read`: every statement runs in a read-only transaction. */
+  access: "read" | "write";
+}
+
+export interface DbColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
+}
+
+export interface DbTable {
+  schema: string | null;
+  name: string;
+  kind: "table" | "view";
+  columns: DbColumn[];
+}
+
+export type DbParam = string | number | boolean | null;
+
+export interface DbQueryInput {
+  connection: string;
+  /** One statement; parameters as `$1` (PostgreSQL) or `?` (MySQL). */
+  sql: string;
+  params?: DbParam[];
+  maxRows?: number;
+  timeoutMs?: number;
+  /** Asks to change data: needs a writable connection and the person's confirmation. */
+  write?: boolean;
+}
+
+export interface DbQueryResult {
+  /** `SELECT`, `INSERT`, … when the database says. */
+  command: string | null;
+  columns: Array<{ name: string; type: string }>;
+  /**
+   * One array per row. Values are JSON: numbers, text (big numbers, dates and times as text),
+   * booleans, null, JSON values; binary data as `\x` and hex.
+   */
+  rows: unknown[][];
+  /** Rows returned or changed, when the database says. */
+  rowCount: number | null;
+  truncated: boolean;
+  ms: number;
+  readOnly: boolean;
+}
+
 /* ------------------------------------------------------------------ typed operations */
 
 /** Input and result of each operation (unknown where the app reads EveryOS's own shapes). */
@@ -276,9 +351,11 @@ export interface HostOperations {
   "net.monitors.delete": { input: { id: string }; result: null };
   /** Checks now (at most once every 10 seconds per monitor). */
   "net.monitors.check": { input: { id: string }; result: NetMonitor };
-  "db.connections": { input: unknown; result: unknown };
-  "db.query": { input: unknown; result: unknown };
-  "db.tables": { input: unknown; result: unknown };
+  "db.connections": { input: null; result: { connections: DbConnection[] } };
+  /** Connects and asks the server's version. */
+  "db.test": { input: { connection: string }; result: { version: string; ms: number } };
+  "db.tables": { input: { connection: string }; result: { tables: DbTable[]; truncated: boolean } };
+  "db.query": { input: DbQueryInput; result: DbQueryResult };
   "ssh.keys.list": { input: unknown; result: unknown };
   "ssh.keys.generate": { input: unknown; result: unknown };
   "ssh.keys.import": { input: unknown; result: unknown };
