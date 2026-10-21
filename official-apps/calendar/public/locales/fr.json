@@ -1,0 +1,194 @@
+{
+  "app": {
+    "name": "Calendrier",
+    "description": "Planifiez vos journées : vues jour, semaine et mois, événements récurrents, rappels, recherche, plusieurs calendriers, import et export iCalendar (.ics)."
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "Événements à venir",
+      "description": "Vos prochains événements de la semaine ; ouvrez-en un dans le Calendrier."
+    }
+  },
+  "calendars": {
+    "label": "Calendriers",
+    "personal": "Personnel",
+    "imported": "Importé",
+    "add": "Nouveau calendrier",
+    "edit": "Modifier {{name}}",
+    "editTitle": "Modifier le calendrier",
+    "export": "Exporter {{name}} en .ics",
+    "deleteNamed": "Supprimer {{name}}",
+    "delete": "Supprimer le calendrier",
+    "deleteTitle": "Supprimer « {{name}} » ?",
+    "deleteBody_one": "Son {{count}} événement est supprimé aussi. Action irréversible.",
+    "deleteBody_other": "Ses {{count}} événements sont supprimés aussi. Action irréversible.",
+    "name": "Nom",
+    "color": "Couleur",
+    "colorNumber": "Couleur {{number}}"
+  },
+  "event": {
+    "new": "Nouvel événement",
+    "newTitle": "Nouvel événement",
+    "editTitle": "Modifier l’événement",
+    "title": "Titre",
+    "titlePlaceholder": "Que se passe-t-il ?",
+    "untitled": "(Sans titre)",
+    "allDay": "Toute la journée",
+    "startDate": "Début",
+    "startTime": "à",
+    "endDate": "Fin",
+    "endTime": "à",
+    "lastDay": "Dernier jour",
+    "zoneNote": "Les heures sont celles de {{zone}}, où l’événement a été créé.",
+    "location": "Lieu",
+    "notes": "Notes",
+    "calendar": "Calendrier",
+    "repeats": "Récurrent",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer « {{title}} » ?"
+  },
+  "problems": {
+    "endBeforeStart": "La fin est avant le début.",
+    "untilBeforeStart": "La récurrence se termine avant le début."
+  },
+  "repeat": {
+    "label": "Répéter",
+    "none": "Ne se répète pas",
+    "daily": "Tous les jours",
+    "weekdays": "Chaque jour de semaine (lundi au vendredi)",
+    "weekly": "Chaque semaine le {{day}}",
+    "monthly": "Chaque mois le {{day}}",
+    "monthlyWeekday": "Chaque mois le {{nth}} {{day}}",
+    "yearly": "Chaque année le {{date}}",
+    "custom": "Personnalisé…",
+    "imported": "Comme défini dans un autre calendrier",
+    "nth": {
+      "1": "premier",
+      "2": "deuxième",
+      "3": "troisième",
+      "4": "quatrième",
+      "-1": "dernier"
+    },
+    "every": "Tous les",
+    "unit": "Unité",
+    "units": {
+      "daily_one": "jour",
+      "daily_other": "jours",
+      "weekly_one": "semaine",
+      "weekly_other": "semaines",
+      "monthly_one": "mois",
+      "monthly_other": "mois",
+      "yearly_one": "an",
+      "yearly_other": "ans"
+    },
+    "onDays": "Les",
+    "monthlyOn": "Le",
+    "onDay": "Le {{day}}",
+    "onWeekday": "Le {{nth}} {{day}}",
+    "ends": "Se termine",
+    "never": "Jamais",
+    "until": "À une date",
+    "after": "Après un nombre de fois",
+    "untilDate": "Dernière date",
+    "times": "Fois"
+  },
+  "reminders": {
+    "label": "Rappels",
+    "add": "Ajouter un rappel",
+    "remove": "Retirer le rappel « {{label}} »",
+    "atStart": "Au début",
+    "minutes_one": "{{count}} minute avant",
+    "minutes_other": "{{count}} minutes avant",
+    "hours_one": "{{count}} heure avant",
+    "hours_other": "{{count}} heures avant",
+    "days_one": "{{count}} jour avant",
+    "days_other": "{{count}} jours avant",
+    "weeks_one": "{{count}} semaine avant",
+    "weeks_other": "{{count}} semaines avant",
+    "onDay": "Le jour même à 09:00",
+    "daysBeforeAt_one": "La veille à 09:00",
+    "daysBeforeAt_other": "{{count}} jours avant à 09:00",
+    "weeksBeforeAt_one": "Une semaine avant à 09:00",
+    "weeksBeforeAt_other": "{{count}} semaines avant à 09:00",
+    "body": "{{date}}, {{time}}",
+    "allDayBody": "{{date}}, toute la journée"
+  },
+  "scope": {
+    "label": "Quels événements",
+    "saveTitle": "Modifier un événement récurrent",
+    "deleteTitle": "Supprimer un événement récurrent",
+    "one": "Cet événement",
+    "following": "Celui-ci et les suivants",
+    "all": "Tous les événements"
+  },
+  "views": {
+    "label": "Affichage",
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois"
+  },
+  "nav": {
+    "today": "Aujourd’hui",
+    "previous": {
+      "day": "Jour précédent",
+      "week": "Semaine précédente",
+      "month": "Mois précédent"
+    },
+    "next": {
+      "day": "Jour suivant",
+      "week": "Semaine suivante",
+      "month": "Mois suivant"
+    },
+    "goTo": "Aller à la date",
+    "keys": "Touches : T aujourd’hui, D/W/M vues, N nouvel événement, ← → naviguer, / rechercher."
+  },
+  "month": {
+    "more_one": "{{count}} de plus",
+    "more_other": "{{count}} de plus"
+  },
+  "grid": {
+    "now": "Maintenant, {{time}}"
+  },
+  "search": {
+    "label": "Rechercher des événements",
+    "placeholder": "Rechercher",
+    "title": "Résultats pour « {{query}} »",
+    "none": "Aucun résultat pour « {{query}} »",
+    "noneText": "La recherche porte sur les titres, lieux et notes de tous les calendriers.",
+    "results_one": "{{count}} événement trouvé",
+    "results_other": "{{count}} événements trouvés"
+  },
+  "ics": {
+    "import": "Importer un .ics…",
+    "importTitle": "Importer des événements",
+    "found_one": "Le fichier contient {{count}} événement.",
+    "found_other": "Le fichier contient {{count}} événements.",
+    "skipped_one": "{{count}} événement annulé ou illisible est ignoré.",
+    "skipped_other": "{{count}} événements annulés ou illisibles sont ignorés.",
+    "into": "Importer dans",
+    "newCalendar": "Un nouveau calendrier « {{name}} »",
+    "importAction_one": "Importer {{count}} événement",
+    "importAction_other": "Importer {{count}} événements",
+    "imported_one": "{{count}} événement importé dans {{name}}",
+    "imported_other": "{{count}} événements importés dans {{name}}",
+    "unknownZones_one": "{{count}} événement utilise un fuseau inconnu ; il est affiché dans le vôtre.",
+    "unknownZones_other": "{{count}} événements utilisent un fuseau inconnu ; ils sont affichés dans le vôtre.",
+    "invalid": "Ce fichier n’est pas un fichier iCalendar (.ics)."
+  },
+  "settings": {
+    "title": "Réglages",
+    "weekStart": "La semaine commence le",
+    "weekStartAuto": "Selon votre langue ({{day}})",
+    "zone": "Les heures s’affichent dans votre fuseau, {{zone}}."
+  },
+  "sidebar": {
+    "show": "Afficher les calendriers",
+    "hide": "Masquer les calendriers"
+  },
+  "widget": {
+    "today": "Aujourd’hui",
+    "tomorrow": "Demain",
+    "empty": "Rien de prévu cette semaine",
+    "open": "Ouvrir le Calendrier"
+  }
+}

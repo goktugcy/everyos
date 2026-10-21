@@ -63,7 +63,7 @@ describe("reading and writing files", () => {
     expect(toDisk({ ...crlf, text: "one\ntwo\nthree\n" })).toBe("one\r\ntwo\r\nthree\r\n");
     const withBom = decodeFile(new Uint8Array([0xef, 0xbb, 0xbf, ...bytes("ğ\n")]));
     expect(withBom).toEqual({ text: "ğ\n", eol: "lf", bom: true });
-    expect(toDisk(withBom)).toBe("﻿ğ\n");
+    expect(toDisk(withBom)).toBe("\uFEFFğ\n");
     expect(decodeFile(bytes("old\rmac")).text).toBe("old\nmac");
   });
 

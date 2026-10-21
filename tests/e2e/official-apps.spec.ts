@@ -415,3 +415,34 @@ test.describe("PDF Viewer", () => {
       .toBe(true);
   });
 });
+
+test.describe("Calendar", () => {
+  const calendar = OFFICIAL.find((app) => app.slug === "calendar")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${calendar.id}`, { confirm: true });
+  });
+
+  test("adds a repeating event and shows it in the month and week views", async ({ page }) => {
+    test.setTimeout(60_000);
+    await install(page, calendar);
+    const { frame } = await open(page, calendar.name, calendar.id);
+    await frame.getByRole("button", { name: "Yeni etkinlik" }).first().click();
+    const dialog = frame.getByRole("dialog", { name: "Yeni etkinlik" });
+    await dialog.getByRole("textbox", { name: "Başlık" }).fill("Spor");
+    await dialog.locator('input[type="time"]').first().fill("18:00");
+    await dialog.getByRole("combobox", { name: "Yinele" }).selectOption("daily");
+    await dialog.getByRole("button", { name: "Kaydet" }).click();
+    await expect(dialog).toHaveCount(0);
+    // Every day from today on: a chip in each remaining day of the month grid.
+    await expect(frame.locator(".cal-chip-title", { hasText: "Spor" }).first()).toBeVisible();
+    expect(await frame.locator(".cal-chip-title", { hasText: "Spor" }).count()).toBeGreaterThan(5);
+
+    await frame.getByRole("tab", { name: "Hafta" }).click();
+    const block = frame.locator(".cal-block", { hasText: "Spor" }).first();
+    await expect(block).toBeVisible();
+    // 18:00 → 19:00: an hour tall in the time grid, below the 17:00 line.
+    const box = (await block.boundingBox())!;
+    expect(box.height).toBeGreaterThan(40);
+    expect(await block.evaluate((element) => (element as HTMLElement).style.top)).toBe("864px");
+  });
+});

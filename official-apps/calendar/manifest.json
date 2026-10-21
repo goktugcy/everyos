@@ -1,0 +1,49 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.calendar",
+  "name": "Calendar",
+  "version": "1.0.0",
+  "description": "Plan your days: day, week and month views, repeating events, reminders, search, several calendars and iCalendar (.ics) import and export.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "productivity",
+  "permissions": [
+    "storage:app",
+    "notifications:send",
+    "widgets:register",
+    "files:pick",
+    "files:save"
+  ],
+  "window": {
+    "defaultWidth": 1180,
+    "defaultHeight": 780,
+    "minWidth": 360,
+    "minHeight": 460,
+    "instances": "single"
+  },
+  "widgets": [
+    {
+      "id": "upcoming",
+      "name": "Upcoming events",
+      "description": "Your next events this week; open one in the Calendar.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium", "large"],
+      "defaultSize": "medium",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["storage:app", "notifications:send"]
+    }
+  ],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/calendar"
+}

@@ -1,0 +1,230 @@
+{
+  "app": {
+    "name": "Календарь",
+    "description": "Планируйте дни: виды «день», «неделя» и «месяц», повторяющиеся события, напоминания, поиск, несколько календарей, импорт и экспорт iCalendar (.ics)."
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "Ближайшие события",
+      "description": "Ваши ближайшие события на неделе; откройте любое в Календаре."
+    }
+  },
+  "calendars": {
+    "label": "Календари",
+    "personal": "Личный",
+    "imported": "Импортированный",
+    "add": "Новый календарь",
+    "edit": "Изменить «{{name}}»",
+    "editTitle": "Изменить календарь",
+    "export": "Экспортировать «{{name}}» в .ics",
+    "deleteNamed": "Удалить «{{name}}»",
+    "delete": "Удалить календарь",
+    "deleteTitle": "Удалить «{{name}}»?",
+    "deleteBody_one": "Его {{count}} событие тоже будет удалено. Это нельзя отменить.",
+    "deleteBody_few": "Его {{count}} события тоже будут удалены. Это нельзя отменить.",
+    "deleteBody_many": "Его {{count}} событий тоже будут удалены. Это нельзя отменить.",
+    "deleteBody_other": "Его {{count}} события тоже будут удалены. Это нельзя отменить.",
+    "name": "Название",
+    "color": "Цвет",
+    "colorNumber": "Цвет {{number}}"
+  },
+  "event": {
+    "new": "Новое событие",
+    "newTitle": "Новое событие",
+    "editTitle": "Изменить событие",
+    "title": "Название",
+    "titlePlaceholder": "Что запланировано?",
+    "untitled": "(Без названия)",
+    "allDay": "Весь день",
+    "startDate": "Начало",
+    "startTime": "в",
+    "endDate": "Окончание",
+    "endTime": "в",
+    "lastDay": "Последний день",
+    "zoneNote": "Время указано для {{zone}}, где создано событие.",
+    "location": "Место",
+    "notes": "Заметки",
+    "calendar": "Календарь",
+    "repeats": "Повторяется",
+    "delete": "Удалить",
+    "deleteTitle": "Удалить «{{title}}»?"
+  },
+  "problems": {
+    "endBeforeStart": "Окончание раньше начала.",
+    "untilBeforeStart": "Повторение заканчивается до начала события."
+  },
+  "repeat": {
+    "label": "Повторять",
+    "none": "Не повторять",
+    "daily": "Каждый день",
+    "weekdays": "По будням (пн–пт)",
+    "weekly": "Каждую неделю: {{day}}",
+    "monthly": "Каждый месяц {{day}}-го числа",
+    "monthlyWeekday": "Каждый месяц: {{nth}} {{day}}",
+    "yearly": "Каждый год {{date}}",
+    "custom": "Настроить…",
+    "imported": "Как задано в другом календаре",
+    "nth": {
+      "1": "первый",
+      "2": "второй",
+      "3": "третий",
+      "4": "четвёртый",
+      "-1": "последний"
+    },
+    "every": "Каждые",
+    "unit": "Единица",
+    "units": {
+      "daily_one": "день",
+      "daily_few": "дня",
+      "daily_many": "дней",
+      "daily_other": "дня",
+      "weekly_one": "неделю",
+      "weekly_few": "недели",
+      "weekly_many": "недель",
+      "weekly_other": "недели",
+      "monthly_one": "месяц",
+      "monthly_few": "месяца",
+      "monthly_many": "месяцев",
+      "monthly_other": "месяца",
+      "yearly_one": "год",
+      "yearly_few": "года",
+      "yearly_many": "лет",
+      "yearly_other": "года"
+    },
+    "onDays": "Дни",
+    "monthlyOn": "В",
+    "onDay": "{{day}}-го числа",
+    "onWeekday": "{{nth}} {{day}}",
+    "ends": "Окончание",
+    "never": "Никогда",
+    "until": "В дату",
+    "after": "После нескольких раз",
+    "untilDate": "Последняя дата",
+    "times": "Раз"
+  },
+  "reminders": {
+    "label": "Напоминания",
+    "add": "Добавить напоминание",
+    "remove": "Удалить напоминание «{{label}}»",
+    "atStart": "В момент начала",
+    "minutes_one": "за {{count}} минуту",
+    "minutes_few": "за {{count}} минуты",
+    "minutes_many": "за {{count}} минут",
+    "minutes_other": "за {{count}} минуты",
+    "hours_one": "за {{count}} час",
+    "hours_few": "за {{count}} часа",
+    "hours_many": "за {{count}} часов",
+    "hours_other": "за {{count}} часа",
+    "days_one": "за {{count}} день",
+    "days_few": "за {{count}} дня",
+    "days_many": "за {{count}} дней",
+    "days_other": "за {{count}} дня",
+    "weeks_one": "за {{count}} неделю",
+    "weeks_few": "за {{count}} недели",
+    "weeks_many": "за {{count}} недель",
+    "weeks_other": "за {{count}} недели",
+    "onDay": "В тот же день в 09:00",
+    "daysBeforeAt_one": "За {{count}} день в 09:00",
+    "daysBeforeAt_few": "За {{count}} дня в 09:00",
+    "daysBeforeAt_many": "За {{count}} дней в 09:00",
+    "daysBeforeAt_other": "За {{count}} дня в 09:00",
+    "weeksBeforeAt_one": "За {{count}} неделю в 09:00",
+    "weeksBeforeAt_few": "За {{count}} недели в 09:00",
+    "weeksBeforeAt_many": "За {{count}} недель в 09:00",
+    "weeksBeforeAt_other": "За {{count}} недели в 09:00",
+    "body": "{{date}}, {{time}}",
+    "allDayBody": "{{date}}, весь день"
+  },
+  "scope": {
+    "label": "Какие события",
+    "saveTitle": "Изменить повторяющееся событие",
+    "deleteTitle": "Удалить повторяющееся событие",
+    "one": "Это событие",
+    "following": "Это и последующие",
+    "all": "Все события"
+  },
+  "views": {
+    "label": "Вид",
+    "day": "День",
+    "week": "Неделя",
+    "month": "Месяц"
+  },
+  "nav": {
+    "today": "Сегодня",
+    "previous": {
+      "day": "Предыдущий день",
+      "week": "Предыдущая неделя",
+      "month": "Предыдущий месяц"
+    },
+    "next": {
+      "day": "Следующий день",
+      "week": "Следующая неделя",
+      "month": "Следующий месяц"
+    },
+    "goTo": "Перейти к дате",
+    "keys": "Клавиши: T — сегодня, D/W/M — виды, N — новое событие, ← → — листать, / — поиск."
+  },
+  "month": {
+    "more_one": "ещё {{count}}",
+    "more_few": "ещё {{count}}",
+    "more_many": "ещё {{count}}",
+    "more_other": "ещё {{count}}"
+  },
+  "grid": {
+    "now": "Сейчас, {{time}}"
+  },
+  "search": {
+    "label": "Поиск событий",
+    "placeholder": "Поиск",
+    "title": "Результаты по запросу «{{query}}»",
+    "none": "По запросу «{{query}}» ничего не найдено",
+    "noneText": "Поиск идёт по названиям, местам и заметкам всех календарей.",
+    "results_one": "Найдено {{count}} событие",
+    "results_few": "Найдено {{count}} события",
+    "results_many": "Найдено {{count}} событий",
+    "results_other": "Найдено {{count}} события"
+  },
+  "ics": {
+    "import": "Импорт .ics…",
+    "importTitle": "Импорт событий",
+    "found_one": "В файле {{count}} событие.",
+    "found_few": "В файле {{count}} события.",
+    "found_many": "В файле {{count}} событий.",
+    "found_other": "В файле {{count}} события.",
+    "skipped_one": "Пропущено {{count}} отменённое или нечитаемое событие.",
+    "skipped_few": "Пропущено {{count}} отменённых или нечитаемых события.",
+    "skipped_many": "Пропущено {{count}} отменённых или нечитаемых событий.",
+    "skipped_other": "Пропущено {{count}} отменённого или нечитаемого события.",
+    "into": "Импортировать в",
+    "newCalendar": "Новый календарь «{{name}}»",
+    "importAction_one": "Импортировать {{count}} событие",
+    "importAction_few": "Импортировать {{count}} события",
+    "importAction_many": "Импортировать {{count}} событий",
+    "importAction_other": "Импортировать {{count}} события",
+    "imported_one": "В «{{name}}» импортировано {{count}} событие",
+    "imported_few": "В «{{name}}» импортировано {{count}} события",
+    "imported_many": "В «{{name}}» импортировано {{count}} событий",
+    "imported_other": "В «{{name}}» импортировано {{count}} события",
+    "unknownZones_one": "{{count}} событие использует неизвестный часовой пояс и показано в вашем.",
+    "unknownZones_few": "{{count}} события используют неизвестный часовой пояс и показаны в вашем.",
+    "unknownZones_many": "{{count}} событий используют неизвестный часовой пояс и показаны в вашем.",
+    "unknownZones_other": "{{count}} события используют неизвестный часовой пояс и показаны в вашем.",
+    "invalid": "Это не файл iCalendar (.ics)."
+  },
+  "settings": {
+    "title": "Настройки",
+    "weekStart": "Неделя начинается с",
+    "weekStartAuto": "Как в вашем языке ({{day}})",
+    "zone": "Время показано в вашем часовом поясе: {{zone}}."
+  },
+  "sidebar": {
+    "show": "Показать календари",
+    "hide": "Скрыть календари"
+  },
+  "widget": {
+    "today": "Сегодня",
+    "tomorrow": "Завтра",
+    "empty": "На этой неделе ничего не запланировано",
+    "open": "Открыть Календарь"
+  }
+}

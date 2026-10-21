@@ -1,0 +1,194 @@
+{
+  "app": {
+    "name": "Takvim",
+    "description": "Günlerinizi planlayın: gün, hafta ve ay görünümleri, yinelenen etkinlikler, hatırlatıcılar, arama, birden çok takvim ve iCalendar (.ics) içe/dışa aktarma."
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "Yaklaşan etkinlikler",
+      "description": "Bu haftaki sıradaki etkinlikleriniz; birini Takvim'de açın."
+    }
+  },
+  "calendars": {
+    "label": "Takvimler",
+    "personal": "Kişisel",
+    "imported": "İçe aktarılan",
+    "add": "Yeni takvim",
+    "edit": "{{name}} düzenle",
+    "editTitle": "Takvimi düzenle",
+    "export": "{{name}} .ics olarak dışa aktar",
+    "deleteNamed": "{{name}} sil",
+    "delete": "Takvimi sil",
+    "deleteTitle": "“{{name}}” silinsin mi?",
+    "deleteBody_one": "İçindeki {{count}} etkinlik de silinir. Bu geri alınamaz.",
+    "deleteBody_other": "İçindeki {{count}} etkinlik de silinir. Bu geri alınamaz.",
+    "name": "Ad",
+    "color": "Renk",
+    "colorNumber": "Renk {{number}}"
+  },
+  "event": {
+    "new": "Yeni etkinlik",
+    "newTitle": "Yeni etkinlik",
+    "editTitle": "Etkinliği düzenle",
+    "title": "Başlık",
+    "titlePlaceholder": "Ne var?",
+    "untitled": "(Başlıksız)",
+    "allDay": "Tüm gün",
+    "startDate": "Başlangıç",
+    "startTime": "saat",
+    "endDate": "Bitiş",
+    "endTime": "saat",
+    "lastDay": "Son gün",
+    "zoneNote": "Saatler bu etkinliğin oluşturulduğu {{zone}} saatine göredir.",
+    "location": "Konum",
+    "notes": "Notlar",
+    "calendar": "Takvim",
+    "repeats": "Yinelenir",
+    "delete": "Sil",
+    "deleteTitle": "“{{title}}” silinsin mi?"
+  },
+  "problems": {
+    "endBeforeStart": "Bitiş, başlangıçtan önce.",
+    "untilBeforeStart": "Yineleme, etkinlik başlamadan bitiyor."
+  },
+  "repeat": {
+    "label": "Yinele",
+    "none": "Yinelenmez",
+    "daily": "Her gün",
+    "weekdays": "Her hafta içi (Pazartesi–Cuma)",
+    "weekly": "Her hafta {{day}}",
+    "monthly": "Her ay ayın {{day}}. günü",
+    "monthlyWeekday": "Her ay {{nth}} {{day}}",
+    "yearly": "Her yıl {{date}}",
+    "custom": "Özel…",
+    "imported": "Başka bir takvimde ayarlandığı gibi",
+    "nth": {
+      "1": "ilk",
+      "2": "ikinci",
+      "3": "üçüncü",
+      "4": "dördüncü",
+      "-1": "son"
+    },
+    "every": "Her",
+    "unit": "Birim",
+    "units": {
+      "daily_one": "gün",
+      "daily_other": "gün",
+      "weekly_one": "hafta",
+      "weekly_other": "hafta",
+      "monthly_one": "ay",
+      "monthly_other": "ay",
+      "yearly_one": "yıl",
+      "yearly_other": "yıl"
+    },
+    "onDays": "Günler",
+    "monthlyOn": "Gün",
+    "onDay": "Ayın {{day}}. günü",
+    "onWeekday": "{{nth}} {{day}}",
+    "ends": "Biter",
+    "never": "Hiç",
+    "until": "Bir tarihte",
+    "after": "Belirli sayıda sonra",
+    "untilDate": "Son tarih",
+    "times": "Kez"
+  },
+  "reminders": {
+    "label": "Hatırlatıcılar",
+    "add": "Hatırlatıcı ekle",
+    "remove": "“{{label}}” hatırlatıcısını kaldır",
+    "atStart": "Başladığında",
+    "minutes_one": "{{count}} dakika önce",
+    "minutes_other": "{{count}} dakika önce",
+    "hours_one": "{{count}} saat önce",
+    "hours_other": "{{count}} saat önce",
+    "days_one": "{{count}} gün önce",
+    "days_other": "{{count}} gün önce",
+    "weeks_one": "{{count}} hafta önce",
+    "weeks_other": "{{count}} hafta önce",
+    "onDay": "Gününde 09:00'da",
+    "daysBeforeAt_one": "Bir gün önce 09:00'da",
+    "daysBeforeAt_other": "{{count}} gün önce 09:00'da",
+    "weeksBeforeAt_one": "Bir hafta önce 09:00'da",
+    "weeksBeforeAt_other": "{{count}} hafta önce 09:00'da",
+    "body": "{{date}}, {{time}}",
+    "allDayBody": "{{date}}, tüm gün"
+  },
+  "scope": {
+    "label": "Hangi etkinlikler",
+    "saveTitle": "Yinelenen etkinliği değiştir",
+    "deleteTitle": "Yinelenen etkinliği sil",
+    "one": "Bu etkinlik",
+    "following": "Bu ve sonraki etkinlikler",
+    "all": "Tüm etkinlikler"
+  },
+  "views": {
+    "label": "Görünüm",
+    "day": "Gün",
+    "week": "Hafta",
+    "month": "Ay"
+  },
+  "nav": {
+    "today": "Bugün",
+    "previous": {
+      "day": "Önceki gün",
+      "week": "Önceki hafta",
+      "month": "Önceki ay"
+    },
+    "next": {
+      "day": "Sonraki gün",
+      "week": "Sonraki hafta",
+      "month": "Sonraki ay"
+    },
+    "goTo": "Tarihe git",
+    "keys": "Kısayollar: T bugün, D/W/M görünümler, N yeni etkinlik, ← → gezin, / ara."
+  },
+  "month": {
+    "more_one": "{{count}} tane daha",
+    "more_other": "{{count}} tane daha"
+  },
+  "grid": {
+    "now": "Şimdi, {{time}}"
+  },
+  "search": {
+    "label": "Etkinliklerde ara",
+    "placeholder": "Ara",
+    "title": "“{{query}}” sonuçları",
+    "none": "“{{query}}” için bir şey bulunamadı",
+    "noneText": "Tüm takvimlerdeki başlık, konum ve notlarda aranır.",
+    "results_one": "{{count}} etkinlik bulundu",
+    "results_other": "{{count}} etkinlik bulundu"
+  },
+  "ics": {
+    "import": ".ics içe aktar…",
+    "importTitle": "Etkinlikleri içe aktar",
+    "found_one": "Dosyada {{count}} etkinlik var.",
+    "found_other": "Dosyada {{count}} etkinlik var.",
+    "skipped_one": "İptal edilmiş ya da okunamayan {{count}} etkinlik alınmadı.",
+    "skipped_other": "İptal edilmiş ya da okunamayan {{count}} etkinlik alınmadı.",
+    "into": "İçe aktarılacak yer",
+    "newCalendar": "Yeni bir takvim: “{{name}}”",
+    "importAction_one": "{{count}} etkinliği içe aktar",
+    "importAction_other": "{{count}} etkinliği içe aktar",
+    "imported_one": "{{count}} etkinlik {{name}} takvimine aktarıldı",
+    "imported_other": "{{count}} etkinlik {{name}} takvimine aktarıldı",
+    "unknownZones_one": "{{count}} etkinlik bu cihazın bilmediği bir saat dilimi kullanıyor; sizinkinde gösterilir.",
+    "unknownZones_other": "{{count}} etkinlik bu cihazın bilmediği bir saat dilimi kullanıyor; sizinkinde gösterilir.",
+    "invalid": "Bu dosya bir iCalendar (.ics) dosyası değil."
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "weekStart": "Hafta başlangıcı",
+    "weekStartAuto": "Dilinize göre ({{day}})",
+    "zone": "Saatler sizin saat diliminizde gösterilir: {{zone}}."
+  },
+  "sidebar": {
+    "show": "Takvimleri göster",
+    "hide": "Takvimleri gizle"
+  },
+  "widget": {
+    "today": "Bugün",
+    "tomorrow": "Yarın",
+    "empty": "Bu hafta planlanmış bir şey yok",
+    "open": "Takvimi aç"
+  }
+}
