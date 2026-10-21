@@ -1,0 +1,13 @@
+{
+  "app": {
+    "name": "%%APP_NAME%%"
+  },
+  "notes": {
+    "title": "Notlar",
+    "placeholder": "Bir şeyler yazın…",
+    "saving": "Kaydediliyor…",
+    "saved_one": "Kaydedildi · {{count}} karakter",
+    "saved_other": "Kaydedildi · {{count}} karakter",
+    "copy": "Kopyala"
+  }
+}

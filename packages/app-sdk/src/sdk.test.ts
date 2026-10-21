@@ -258,3 +258,16 @@ describe("app translations", () => {
     expect(i18n.t("notes.count", { count: 1 })).toBe("1 note");
   });
 });
+
+describe("versions", () => {
+  it("the SDK says the version the manifest package and its package file say", async () => {
+    const { SDK_VERSION } = await import("./protocol.ts");
+    const { APP_SDK_VERSION } = await import("@everyos/app-manifest");
+    const { readFile } = await import("node:fs/promises");
+    const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8")) as {
+      version: string;
+    };
+    expect(SDK_VERSION).toBe(APP_SDK_VERSION);
+    expect(pkg.version).toBe(SDK_VERSION);
+  });
+});

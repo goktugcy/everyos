@@ -1,0 +1,42 @@
+{
+  "manifestVersion": 1,
+  "id": "%%APP_ID%%",
+  "name": "%%APP_NAME%%",
+  "version": "1.0.0",
+  "description": "A note that is always where you left it.",
+  "entry": "index.html",
+  "icon": "icon.png",
+  "category": "productivity",
+  "permissions": ["storage:app", "clipboard:write", "widgets:register"],
+  "window": {
+    "defaultWidth": 720,
+    "defaultHeight": 520,
+    "minWidth": 360,
+    "minHeight": 280,
+    "instances": "single"
+  },
+  "widgets": [
+    {
+      "id": "summary",
+      "name": "Note",
+      "description": "The beginning of your note.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium"],
+      "defaultSize": "small",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["storage:app"]
+    }
+  ],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr"],
+    "path": "locales"
+  },
+  "minEveryOS": "%%MIN_EVERYOS%%",
+  "sdk": "^%%SDK_VERSION%%",
+  "publisher": {
+    "id": "%%PUBLISHER_ID%%",
+    "name": "%%PUBLISHER_NAME%%"
+  },
+  "license": "MIT"
+}

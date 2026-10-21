@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.everyos/
+*.eosapp
+*.eosapp.sig.json
+# Private keys never leave your machine.
+keys/*.key

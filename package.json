@@ -2,7 +2,7 @@
   "name": "everyos-monorepo",
   "version": "0.1.36",
   "private": true,
-  "description": "EveryOS — a self-hosted personal OS for your files, apps and Linux workspace.",
+  "description": "EveryOS \u2014 a self-hosted personal OS for your files, apps and Linux workspace.",
   "type": "module",
   "packageManager": "pnpm@12.6.0",
   "engines": {
@@ -34,6 +34,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
+    "happy-dom": "20.14.5",
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.1",

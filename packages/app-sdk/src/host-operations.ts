@@ -10,6 +10,8 @@ export const HOST_OPERATIONS = [
   "system.network",
   "logs.query",
   "disk.usage",
+  "integration.list",
+  "integration.data",
   "net.http",
   "net.dns",
   "net.tls",
@@ -30,6 +32,37 @@ export const HOST_OPERATIONS = [
   "ssh.keys.delete",
 ] as const;
 export type HostOperation = (typeof HOST_OPERATIONS)[number];
+
+/** The capability each operation needs (the server checks it, with the person's role, every call). */
+export const HOST_OPERATION_CAPABILITY: Readonly<Record<HostOperation, string>> = {
+  "system.metrics": "system:metrics.read",
+  "system.info": "system:metrics.read",
+  "system.sockets": "system:sockets.read",
+  "system.network": "system:network.read",
+  "logs.query": "logs:read",
+  "disk.usage": "storage:usage.read",
+  // Any `integration:<adapter>` the app holds; the server checks each integration's adapter.
+  "integration.list": "integration:*",
+  "integration.data": "integration:*",
+  "net.http": "network:outbound",
+  "net.dns": "network:outbound",
+  "net.tls": "network:outbound",
+  "net.monitors.list": "network:outbound",
+  "net.monitors.history": "network:outbound",
+  "net.monitors.save": "network:outbound",
+  "net.monitors.delete": "network:outbound",
+  "net.monitors.check": "network:outbound",
+  "db.connections": "database:connect",
+  "db.test": "database:connect",
+  "db.tables": "database:connect",
+  "db.query": "database:connect",
+  "ssh.keys.list": "secrets:ssh",
+  "ssh.keys.generate": "secrets:ssh",
+  "ssh.keys.import": "secrets:ssh",
+  "ssh.keys.update": "secrets:ssh",
+  "ssh.keys.export": "secrets:ssh",
+  "ssh.keys.delete": "secrets:ssh",
+};
 
 /* ------------------------------------------------------------------ network (network:outbound) */
 
@@ -358,6 +391,25 @@ export interface SshKey {
   updatedAt: number;
 }
 
+/* ------------------------------------------------------------------ hybrid apps (integration:<adapter>) */
+
+/**
+ * An EveryOS integration (configured by an administrator: a Docker app or a service elsewhere) of
+ * an adapter the app declares. Apps read its data feeds, never its address or credentials.
+ */
+export interface IntegrationInfo {
+  id: string;
+  name: string;
+  adapter: string;
+  /** Data feeds the adapter provides (the same ones built-in widgets show). */
+  feeds: string[];
+}
+
+export type IntegrationData =
+  | { status: "ok"; data: unknown; at: number }
+  | { status: "unavailable"; reason: string; at: number }
+  | { status: "error"; code: string; at: number };
+
 /* ------------------------------------------------------------------ typed operations */
 
 /** Input and result of each operation (unknown where the app reads EveryOS's own shapes). */
@@ -368,6 +420,8 @@ export interface HostOperations {
   "system.network": { input: null; result: unknown };
   "logs.query": { input: unknown; result: unknown };
   "disk.usage": { input: { handle: string; path?: string }; result: unknown };
+  "integration.list": { input: null; result: { integrations: IntegrationInfo[] } };
+  "integration.data": { input: { integration: string; feed: string }; result: IntegrationData };
   "net.http": { input: NetHttpRequest; result: NetHttpResponse };
   "net.dns": { input: NetDnsQuery; result: NetDnsResult };
   "net.tls": { input: NetTlsTarget; result: NetTlsResult };

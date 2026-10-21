@@ -1,0 +1,24 @@
+{
+  "name": "@everyos/app-cli",
+  "version": "1.0.0",
+  "description": "everyos-app: build, validate, pack, sign, test and publish EveryOS desktop apps, with a development server that runs the app in the same sandbox as EveryOS against a clearly labelled mock desktop, or as a signed development registry for a real EveryOS.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "everyos-app": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/app-package": "workspace:*",
+    "@everyos/app-registry": "workspace:*",
+    "@everyos/app-sdk": "workspace:*",
+    "@everyos/app-testing": "workspace:*",
+    "esbuild": "0.28.2"
+  }
+}

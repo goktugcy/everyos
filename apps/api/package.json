@@ -37,6 +37,8 @@
   "devDependencies": {
     "@types/ws": "catalog:",
     "@types/pg": "catalog:",
-    "@everyos/theme": "workspace:*"
+    "@everyos/theme": "workspace:*",
+    "@everyos/app-cli": "workspace:*",
+    "create-everyos-app": "workspace:*"
   }
 }

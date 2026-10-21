@@ -1,0 +1,26 @@
+{
+  "name": "%%PACKAGE_NAME%%",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "everyos-app dev",
+    "build": "everyos-app build",
+    "validate": "everyos-app validate",
+    "pack": "everyos-app pack",
+    "test": "everyos-app test",
+    "typecheck": "tsc",
+    "publish:registry": "everyos-app publish"
+  },
+  "dependencies": {
+    "@everyos/app-sdk": "%%SDK%%"
+  },
+  "devDependencies": {
+    "@everyos/app-cli": "%%CLI%%",
+    "@everyos/app-testing": "%%TESTING%%",
+    "@types/node": "26.6.4",
+    "happy-dom": "20.14.5",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3"
+  }
+}

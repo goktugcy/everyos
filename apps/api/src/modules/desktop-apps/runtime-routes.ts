@@ -1,3 +1,4 @@
+import { APP_RUNTIME_CSP } from "@everyos/app-manifest";
 import { createReadStream } from "node:fs";
 import { lstat } from "node:fs/promises";
 import { join } from "node:path";
@@ -12,20 +13,8 @@ import type { DesktopAppInstaller } from "./installer.ts";
  * What an app document may do. `sandbox` keeps it in an opaque origin even when opened on its own;
  * nothing remote can be loaded, and only the desktop may frame it.
  */
-export const RUNTIME_CSP = [
-  "sandbox allow-scripts allow-forms allow-modals allow-popups allow-downloads",
-  "default-src 'none'",
-  "script-src 'self' 'wasm-unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "media-src 'self' blob:",
-  "font-src 'self' data:",
-  "worker-src 'self' blob:",
-  "connect-src 'self'",
-  "form-action 'none'",
-  "base-uri 'none'",
-  "frame-ancestors 'self'",
-].join("; ");
+/** The policy every app file is served with (shared with the desktop and the developer tools). */
+export const RUNTIME_CSP = APP_RUNTIME_CSP;
 
 const notFound = () =>
   new Response("Not Found", {

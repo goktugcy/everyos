@@ -386,3 +386,8 @@ export const AppSshExportSchema = z.strictObject({
 });
 
 export const AppSshKeyIdSchema = z.strictObject({ id: z.uuid() });
+
+export const AppIntegrationDataSchema = z.strictObject({
+  integration: z.uuid(),
+  feed: z.string().regex(/^[a-z]{2,24}$/),
+});

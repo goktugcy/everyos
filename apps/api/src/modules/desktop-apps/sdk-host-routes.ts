@@ -1,9 +1,14 @@
 import { randomBytes } from "node:crypto";
-import type { HostOperation, HostResult } from "@everyos/app-sdk/protocol";
+import {
+  HOST_OPERATION_CAPABILITY,
+  type HostOperation,
+  type HostResult,
+} from "@everyos/app-sdk/protocol";
 import {
   AppDbConnectionInputSchema,
   AppDbQueryInputSchema,
   AppDiskUsageInputSchema,
+  AppIntegrationDataSchema,
   AppHostCallSchema,
   AppMonitorHistorySchema,
   AppMonitorIdSchema,
@@ -28,6 +33,7 @@ import { parseJsonBody, parseParams, parseQuery } from "../../http/validation.ts
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { fileViewFor } from "../files/file-view.ts";
+import { ADAPTERS } from "../integrations/adapters.ts";
 import type { FileView } from "../files/file-view.ts";
 import { AppDatabases } from "./app-databases.ts";
 import { instanceCall, requireCapability, type InstanceCall } from "./sdk-routes.ts";
@@ -246,6 +252,44 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
       const folder = await services.desktopApps.files.resolve(view, grant, path, "directory");
       return diskUsage(view, grant.root, folder.path);
     },
+    "integration.list": (_c, call) => {
+      const adapters = new Set(
+        [...call.granted]
+          .filter((capability) => capability.startsWith("integration:"))
+          .map((capability) => capability.slice("integration:".length)),
+      );
+      return {
+        integrations: services.integrations
+          .list(call.auth.permissions)
+          .filter((integration) => adapters.has(integration.adapter))
+          .map((integration) => ({
+            id: integration.id,
+            name: integration.name,
+            adapter: integration.adapter,
+            feeds: Object.keys(ADAPTERS[integration.adapter].feeds),
+          })),
+      };
+    },
+    "integration.data": async (c, call, input) => {
+      const { integration, feed } = AppIntegrationDataSchema.parse(input);
+      const view = services.integrations.get(integration);
+      if (!view) throw notFound("Integration");
+      requireCapability(call, `integration:${view.adapter}`);
+      const provider = services.widgetData.provider(`data.integration.${integration}.${feed}`);
+      // An integration the person may not see does not exist for their apps either.
+      if (!provider || !provider.permissions.every((p) => call.auth.permissions.has(p)))
+        throw notFound("Integration");
+      const now = services.now();
+      const key = `${call.instance.appId}:${call.auth.user.id}`;
+      const recent = (integrationReads.get(key) ?? []).filter((at) => now - at < 60_000);
+      if (recent.length >= 60) throw rateLimited(60_000 - (now - recent[0]!));
+      recent.push(now);
+      integrationReads.set(key, recent);
+      const result = await provider.collect(
+        AbortSignal.any([c.req.raw.signal, AbortSignal.timeout(15_000)]),
+      );
+      return { ...result, at: services.now() };
+    },
     "net.http": (c, call, input) =>
       network.http(...owner(call), AppNetHttpInputSchema.parse(input), c.req.raw.signal),
     "net.dns": (_c, call, input) => network.dns(...owner(call), AppNetDnsInputSchema.parse(input)),
@@ -375,33 +419,10 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
       details,
     });
   const refusals = new Map<string, number>();
+  const integrationReads = new Map<string, number[]>();
   /** The capability each operation needs (checked on the server, every call). */
-  const capabilityOf: Partial<Record<HostOperation, string>> = {
-    "net.http": "network:outbound",
-    "net.dns": "network:outbound",
-    "net.tls": "network:outbound",
-    "net.monitors.list": "network:outbound",
-    "net.monitors.history": "network:outbound",
-    "net.monitors.save": "network:outbound",
-    "net.monitors.delete": "network:outbound",
-    "net.monitors.check": "network:outbound",
-    "ssh.keys.list": "secrets:ssh",
-    "ssh.keys.generate": "secrets:ssh",
-    "ssh.keys.import": "secrets:ssh",
-    "ssh.keys.update": "secrets:ssh",
-    "ssh.keys.export": "secrets:ssh",
-    "ssh.keys.delete": "secrets:ssh",
-    "db.connections": "database:connect",
-    "db.test": "database:connect",
-    "db.tables": "database:connect",
-    "db.query": "database:connect",
-    "system.metrics": "system:metrics.read",
-    "system.info": "system:metrics.read",
-    "system.sockets": "system:sockets.read",
-    "system.network": "system:network.read",
-    "logs.query": "logs:read",
-    "disk.usage": "storage:usage.read",
-  };
+  /** The capability of each operation: the SDK's own table (one source for both sides). */
+  const capabilityOf: Partial<Record<HostOperation, string>> = HOST_OPERATION_CAPABILITY;
 
   app.post("/host/:operation", async (c) => {
     parseQuery(c, Empty);
@@ -414,7 +435,13 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     const capability = capabilityOf[operation as HostOperation];
     if (!run || !capability) throw notFound("Operation");
     const call = instanceCall(services, c);
-    requireCapability(call, capability);
+    // `integration:*`: one of the app's integrations (each read checks its own adapter).
+    requireCapability(
+      call,
+      capability === "integration:*"
+        ? ([...call.granted].find((granted) => granted.startsWith("integration:")) ?? capability)
+        : capability,
+    );
     try {
       return c.json({ result: await run(c, call, input, confirmed === true) });
     } catch (error) {

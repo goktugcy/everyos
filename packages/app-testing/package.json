@@ -1,0 +1,19 @@
+{
+  "name": "@everyos/app-testing",
+  "version": "1.0.0",
+  "description": "A clearly labelled MOCK EveryOS desktop for developing and testing desktop apps: it answers the app bridge from memory (storage, files, permissions, dialogs, notifications, host data) and never talks to EveryOS. Real integration testing uses a developer EveryOS instance.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@everyos/app-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@everyos/app-sdk": "workspace:*"
+  }
+}

@@ -35,7 +35,9 @@ import type {
   SshKey,
 } from "@everyos/app-sdk/protocol";
 import { signRegistryIndex, type RegistryIndex } from "@everyos/app-registry";
+import { initRegistry, loadProject, pack, publishPackage } from "@everyos/app-cli";
 import { silentLogger } from "@everyos/logger";
+import { createProject } from "create-everyos-app";
 import { createCatalogFetcher } from "@everyos/catalogs";
 import { ROLE_PERMISSIONS } from "@everyos/shared";
 import { DEFAULT_APPEARANCE } from "@everyos/theme";
@@ -2688,4 +2690,242 @@ describe("desktop apps in backups", () => {
     expect(existsSync(join(dir, "apps"))).toBe(false);
     expect(sha256Hex(readFileSync(packageFile))).toBe(build.version.package.sha256);
   }, 30_000);
+});
+
+describe("hybrid apps", () => {
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+
+  it("read their declared integration's data, never its address or credentials", async () => {
+    const backend = createServer((req, res) => {
+      if (req.url === "/System/Info/Public") {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ServerName: "media", Version: "10.11.0" }));
+      } else {
+        res.writeHead(401);
+        res.end();
+      }
+    });
+    backend.listen(0, "127.0.0.1");
+    await once(backend, "listening");
+    const baseUrl = `http://127.0.0.1:${(backend.address() as AddressInfo).port}`;
+    try {
+      const context = await setup();
+      const { admin, viewer } = context;
+      const media = await buildApp(
+        "dev.everyos.mediadesk",
+        "1.0.0",
+        ["integration:jellyfin"],
+        officialKeys.privateKey,
+        { integration: { adapter: "jellyfin" } },
+      );
+      const photos = await buildApp(
+        "dev.everyos.photodesk",
+        "1.0.0",
+        ["integration:immich"],
+        officialKeys.privateKey,
+        { integration: { adapter: "immich" } },
+      );
+      publish(
+        context.registry,
+        index([
+          { id: "dev.everyos.mediadesk", versions: [media] },
+          { id: "dev.everyos.photodesk", versions: [photos] },
+        ]),
+        [media, photos],
+      );
+      await sync(admin);
+      for (const [appId, capability] of [
+        ["dev.everyos.mediadesk", "integration:jellyfin"],
+        ["dev.everyos.photodesk", "integration:immich"],
+      ])
+        expect(
+          (
+            await admin.post("/api/desktop-apps/installed", {
+              registryId: "official",
+              appId,
+              approve: [capability],
+            })
+          ).status,
+        ).toBe(201);
+      const integration = await json<{ id: string }>(
+        await admin.post("/api/integrations", {
+          adapter: "jellyfin",
+          name: "Media server",
+          baseUrl,
+          secret: "jf-secret",
+        }),
+      );
+      const open = async (client: TestClient, appId: string) =>
+        (
+          await json<{ token: string }>(
+            await client.post("/api/app-sdk/instances", { appId, kind: "window" }),
+          )
+        ).token;
+      const host = (client: TestClient, token: string, operation: string, input: unknown = null) =>
+        client.request("POST", `/api/app-sdk/host/${operation}`, { body: { input }, ...as(token) });
+
+      const token = await open(admin, "dev.everyos.mediadesk");
+      const listed = await host(admin, token, "integration.list");
+      const listText = await listed.clone().text();
+      expect(
+        (await json<{ result: { integrations: unknown[] } }>(listed)).result.integrations,
+      ).toEqual([
+        {
+          id: integration.id,
+          name: "Media server",
+          adapter: "jellyfin",
+          feeds: expect.arrayContaining(["status", "sessions"]),
+        },
+      ]);
+      expect(listText).not.toContain(baseUrl);
+      expect(listText).not.toContain("jf-secret");
+      const data = await json<{ result: { status: string; data: unknown } }>(
+        await host(admin, token, "integration.data", {
+          integration: integration.id,
+          feed: "status",
+        }),
+      );
+      expect(data.result).toMatchObject({
+        status: "ok",
+        data: { serverName: "media", version: "10.11.0" },
+      });
+
+      // Another adapter's app sees nothing of it and may not read it.
+      const photosToken = await open(admin, "dev.everyos.photodesk");
+      expect(
+        (
+          await json<{ result: { integrations: unknown[] } }>(
+            await host(admin, photosToken, "integration.list"),
+          )
+        ).result.integrations,
+      ).toEqual([]);
+      expect(
+        (
+          await host(admin, photosToken, "integration.data", {
+            integration: integration.id,
+            feed: "status",
+          })
+        ).status,
+      ).toBe(403);
+      // Someone who may not see the integration gets nothing either.
+      const viewerToken = await open(viewer, "dev.everyos.mediadesk");
+      expect(
+        (
+          await json<{ result: { integrations: unknown[] } }>(
+            await host(viewer, viewerToken, "integration.list"),
+          )
+        ).result.integrations,
+      ).toEqual([]);
+      expect(
+        (
+          await host(viewer, viewerToken, "integration.data", {
+            integration: integration.id,
+            feed: "status",
+          })
+        ).status,
+      ).toBe(404);
+    } finally {
+      backend.close();
+    }
+  });
+});
+
+describe("an independent developer's registry", () => {
+  it("serves an app made with create-everyos-app that EveryOS installs after a fingerprint check", async () => {
+    const work = await mkdtemp(join(tmpdir(), "everyos-dev-registry-"));
+    const dir = join(work, "weather");
+    await createProject({
+      dir,
+      template: "vanilla",
+      publisherId: "org.weatherfolk",
+      publisherName: "Weatherfolk",
+      name: "Weather notes",
+      packages: "npm",
+    });
+    await mkdir(join(dir, "node_modules", "@everyos"), { recursive: true });
+    symlinkSync(
+      join(import.meta.dirname, "../../../packages/app-sdk"),
+      join(dir, "node_modules/@everyos/app-sdk"),
+      "dir",
+    );
+    const project = await loadProject(dir);
+    const paths = {
+      dir: join(dir, "registry"),
+      key: join(dir, "keys/registry.key"),
+      publisherKey: join(dir, "keys/publisher.key"),
+    };
+    const { ctx, admin } = await setup();
+    // Signed at the server's (test) time: an index from the future is refused.
+    const registryKey = await initRegistry(
+      paths,
+      {
+        id: "weatherfolk",
+        name: "Weatherfolk apps",
+        publisherId: "org.weatherfolk",
+        publisherName: "Weatherfolk",
+      },
+      ctx.clock.now,
+    );
+    const packed = await pack(project);
+    await publishPackage(
+      paths,
+      packed.file,
+      { iconFile: join(dir, "dist/icon.png") },
+      ctx.clock.now,
+    );
+
+    // Their own web server: just the static registry directory.
+    const server = createServer((req, res) => {
+      const file = join(paths.dir, (req.url ?? "/").split("?")[0]!);
+      if (!file.startsWith(paths.dir) || !existsSync(file)) {
+        res.writeHead(404);
+        res.end();
+      } else res.end(readFileSync(file));
+    });
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
+    try {
+      const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/index.json`;
+      const source = {
+        kind: "community",
+        name: "Weatherfolk",
+        url,
+        publicKey: registryKey.publicKey,
+        allowPrivate: true,
+      };
+      // A wrong fingerprint is refused: the key is accepted only when people compared it.
+      expect(
+        (
+          await admin.post("/api/desktop-apps/registries", {
+            ...source,
+            fingerprint: `sha256:${"0".repeat(64)}`,
+          })
+        ).status,
+      ).toBe(400);
+      const registry = await json<DesktopAppRegistryView>(
+        await admin.post("/api/desktop-apps/registries", {
+          ...source,
+          fingerprint: registryKey.fingerprint,
+        }),
+      );
+      const synced = await admin.post(`/api/desktop-apps/registries/${registry.id}/sync`, {});
+      expect(synced.status, await synced.clone().text()).toBe(200);
+      const listing = (
+        await json<{ apps: DesktopAppListing[] }>(await admin.get("/api/desktop-apps/catalog"))
+      ).apps.find((app) => app.appId === packed.manifest.id);
+      expect(listing).toMatchObject({ name: "Weather notes", publisher: { name: "Weatherfolk" } });
+      const installed = await admin.post("/api/desktop-apps/installed", {
+        registryId: registry.id,
+        appId: packed.manifest.id,
+      });
+      expect(installed.status).toBe(201);
+      const view = await json<DesktopAppInstallationView>(installed);
+      const page = await admin.get(`${view.runtimeUrl}index.html`);
+      expect(page.status).toBe(200);
+      expect(await page.text()).toContain('src="app.js"');
+    } finally {
+      server.close();
+      await rm(work, { recursive: true, force: true });
+    }
+  }, 60_000);
 });

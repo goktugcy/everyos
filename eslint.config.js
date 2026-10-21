@@ -15,6 +15,9 @@ export default tseslint.config(
       "test-results/**",
       "playwright-report/**",
       "graphify-out/**",
+      // App templates are projects of their own (checked by building and testing generated apps).
+      "packages/create-everyos-app/templates/**",
+      "**/.everyos/**",
     ],
   },
   js.configs.recommended,

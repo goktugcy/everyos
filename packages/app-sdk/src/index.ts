@@ -43,6 +43,8 @@ export type {
   HostResult,
   HttpHeader,
   HttpMethod,
+  IntegrationData,
+  IntegrationInfo,
   NetDnsQuery,
   NetDnsResult,
   NetFailure,

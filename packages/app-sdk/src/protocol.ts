@@ -8,6 +8,8 @@
 import type { HostOperation } from "./host-operations.ts";
 
 export const PROTOCOL = 1;
+/** This SDK's version (apps declare the range they need in `manifest.sdk`). */
+export const SDK_VERSION = "1.0.0";
 export const INIT_TYPE = "everyos:init";
 
 /** Largest message either side accepts (file data travels in chunks below this). */

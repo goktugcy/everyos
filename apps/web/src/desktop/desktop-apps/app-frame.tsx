@@ -1,4 +1,4 @@
-import { APP_SDK_VERSION } from "@everyos/app-manifest";
+import { APP_FRAME_SANDBOX, APP_SDK_VERSION } from "@everyos/app-manifest";
 import { INIT_TYPE, PROTOCOL, type HelloMessage } from "@everyos/app-sdk/protocol";
 import { EVERYOS_VERSION, type DesktopAppInstallationView } from "@everyos/shared";
 import { AlertTriangle } from "lucide-react";
@@ -22,9 +22,8 @@ import { createHandlers, INSTANCE_HEADER, windowState } from "./handlers.ts";
 import { useDesktopApps } from "./store.ts";
 import { themeSnapshot } from "./theme-snapshot.ts";
 
-/** What the frame may do: scripts in its own opaque origin, forms, its own dialogs and downloads. */
-export const APP_FRAME_SANDBOX =
-  "allow-scripts allow-forms allow-modals allow-popups allow-downloads";
+/** What the frame may do (shared with the runtime CSP and the developer tools). */
+export { APP_FRAME_SANDBOX };
 
 const READY_FALLBACK_MS = 4000;
 const CLOSE_DECISION_MS = 10_000;

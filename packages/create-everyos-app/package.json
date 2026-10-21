@@ -1,0 +1,21 @@
+{
+  "name": "create-everyos-app",
+  "version": "1.0.0",
+  "description": "Creates an EveryOS desktop app from a template: vanilla TypeScript, React, React with a widget, or a hybrid app that reads an EveryOS integration.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "create-everyos-app": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/create.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/app-sdk": "workspace:*",
+    "@everyos/shared": "workspace:*"
+  }
+}
