@@ -12,7 +12,9 @@ placed on the desktop, in the sidebar or in the menu bar, as the manifest allows
   once it comes into view. It gets its own instance token: the server allows it only the
   capabilities its widget declares (`requireCapability` checks the widget's list on every call).
 - Widgets have no window: window, dialog, file picker and appearance methods are refused
-  (`EVERYOS_UNKNOWN_METHOD`); a widget can open the app's window with `window.open`.
+  (`EVERYOS_UNKNOWN_METHOD`); a widget can open the app's window with `window.open(state)`. A new
+  window starts with that state (`window.initialState`); a window already open is brought to the
+  front and hears it through `window.onOpened(state => …)` (Notes opens the note a widget names).
 - Storage is the app's (per person), so a widget shows what the app saved.
 - When the app is turned off or uninstalled, its widgets say so and can be removed; they come
   back if it is installed again.

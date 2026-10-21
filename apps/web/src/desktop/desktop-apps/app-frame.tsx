@@ -61,10 +61,19 @@ export function AppFrame({
   } | null>(null);
   const bridgeRef = useRef<AppBridge | null>(null);
   const hostRef = useRef(host);
+  // The window state the app knows: what it was started with or saved itself.
+  const knownState = useRef<unknown>(undefined);
   // Declared before the frame effect, so it runs first in every commit.
   useEffect(() => {
     hostRef.current = host;
   }, [host]);
+  // Opened again with new state (a widget opening a note …): the running app hears it.
+  const appState = host?.appState;
+  useEffect(() => {
+    if (kind !== "window" || appState === undefined || appState === knownState.current) return;
+    knownState.current = appState;
+    bridgeRef.current?.emit("window.opened", { state: appState });
+  }, [kind, appState]);
 
   const showDialog = useCallback(
     (request: Parameters<Parameters<typeof createHandlers>[0]["showDialog"]>[0]) =>
@@ -121,7 +130,13 @@ export function AppFrame({
           kind,
           token,
           granted: new Set(granted),
-          host: hostRef.current,
+          host: hostRef.current && {
+            ...hostRef.current,
+            setAppState: (state: unknown) => {
+              knownState.current = state;
+              hostRef.current?.setAppState(state);
+            },
+          },
           showDialog,
           showPicker,
           markReady,
@@ -173,6 +188,7 @@ export function AppFrame({
         everyos: { version: EVERYOS_VERSION, sdk: APP_SDK_VERSION },
         state: kind === "window" ? (hostRef.current?.appState ?? null) : null,
       };
+      knownState.current = hostRef.current?.appState;
       bridge.start(hello);
       if (readyTimer) clearTimeout(readyTimer);
       readyTimer = setTimeout(markReady, READY_FALLBACK_MS);

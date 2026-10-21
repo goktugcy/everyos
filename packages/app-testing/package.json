@@ -5,7 +5,9 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./dom": "./src/dom.ts",
+    "./setup": "./src/setup.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
@@ -14,6 +16,7 @@
     "@everyos/app-sdk": "^1.0.0"
   },
   "devDependencies": {
-    "@everyos/app-sdk": "workspace:*"
+    "@everyos/app-sdk": "workspace:*",
+    "dompurify": "catalog:"
   }
 }

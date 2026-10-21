@@ -121,6 +121,24 @@ describe("create-everyos-app and everyos-app", () => {
     expect(second.findings.map((finding) => finding.file)).toEqual(
       expect.arrayContaining(["missing.png", "locales/tr.json"]),
     );
+
+    // Plural forms follow each language: Turkish needs only `_other` where English has `_one` too.
+    const texts = (extra: Record<string, string>) => ({ app: { name: "Notes" }, ...extra });
+    writeFileSync(
+      join(dir, "public/locales/en.json"),
+      JSON.stringify(texts({ notes_one: "{{count}} note", notes_other: "{{count}} notes" })),
+    );
+    writeFileSync(
+      join(dir, "public/locales/tr.json"),
+      JSON.stringify(texts({ notes_other: "{{count}} not" })),
+    );
+    const plural = await validateBuild(await build(await loadProject(dir)));
+    expect(plural.findings.filter((finding) => finding.file === "locales/tr.json")).toEqual([]);
+    writeFileSync(join(dir, "public/locales/tr.json"), JSON.stringify(texts({})));
+    const missing = await validateBuild(await build(await loadProject(dir)));
+    expect(
+      missing.findings.find((finding) => finding.file === "locales/tr.json")?.message,
+    ).toContain("notes");
   });
 
   it("serves the app under EveryOS's sandbox policy with a mock desktop page", async () => {

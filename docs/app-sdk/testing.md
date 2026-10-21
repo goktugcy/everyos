@@ -25,7 +25,28 @@ host.setTheme(DARK_THEME);
 ```
 
 `host.call` operations answer only what you pass in `host`; others fail with
-`EVERYOS_MOCK_UNANSWERED`, so a test never silently gets made-up data.
+`EVERYOS_MOCK_UNANSWERED`, so a test never silently gets made-up data. `host.emit(event, data)`
+plays the desktop's events (`window.opened`, `lifecycle.suspend` …). `unmount()` restores the page
+and lets the next `mountMockHost()` connect again, so one test file can start the app many times.
+
+### Interfaces
+
+`@everyos/app-testing/dom` has small helpers for a test DOM: `typeInto` (React sees the change),
+`pressKey` (`mod` is Ctrl), `byText`, `allByText`, `byRole` (role and accessible name) and
+`servePackageFiles(publicDir)`, which answers the app's requests for its own files (locales) as
+EveryOS would.
+
+Add `@everyos/app-testing/setup` to Vitest's `setupFiles` when the app sanitizes HTML (DOMPurify)
+or walks the DOM while changing it: it makes happy-dom's `NodeIterator` and `Node.nodeName` behave
+as the DOM standard says, without which sanitizers drop content in tests. It is never loaded on
+EveryOS.
+
+```ts
+// vitest.config.ts
+export default defineConfig({
+  test: { environment: "happy-dom", setupFiles: ["@everyos/app-testing/setup"] },
+});
+```
 
 ## The developer page
 

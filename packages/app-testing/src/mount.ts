@@ -1,3 +1,4 @@
+import { resetApp } from "@everyos/app-sdk";
 import { INIT_TYPE, PROTOCOL } from "@everyos/app-sdk/protocol";
 import { MOCK_LABEL, MockHost, type MockHostOptions, type PortLike } from "./mock-host.ts";
 
@@ -7,6 +8,7 @@ import { MOCK_LABEL, MockHost, type MockHostOptions, type PortLike } from "./moc
  * app connects; `unmount()` restores the window.
  */
 export function mountMockHost(options: MockHostOptions = {}): MockHost & { unmount(): void } {
+  resetApp();
   const host = new MockHost(options);
   const fakeParent = { label: MOCK_LABEL, postMessage: () => undefined };
   const original = Object.getOwnPropertyDescriptor(window, "parent");
@@ -38,6 +40,7 @@ export function mountMockHost(options: MockHostOptions = {}): MockHost & { unmou
     unmount() {
       window.addEventListener = addEventListener;
       host.disconnect();
+      resetApp();
       if (original) Object.defineProperty(window, "parent", original);
       else delete (window as { parent?: unknown }).parent;
     },

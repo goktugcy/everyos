@@ -70,7 +70,7 @@ export {
   NET_LIMITS,
   SSH_KEY_TYPES,
 } from "./protocol.ts";
-export { createI18n, type I18n, type Messages } from "./i18n.ts";
+export { createI18n, packageMessages, type I18n, type Messages } from "./i18n.ts";
 
 type Unsubscribe = () => void;
 
@@ -94,6 +94,11 @@ export interface EveryOSApp {
     saveState(state: unknown): Promise<void>;
     /** A window of this app (another one, when the app allows several), with initial state. */
     open(state?: unknown): Promise<void>;
+    /**
+     * The window, already running, was opened again with new state (`open(state)` from a widget,
+     * for example): show what the state asks for.
+     */
+    onOpened(listener: (state: unknown) => void): Unsubscribe;
     onChange(listener: (state: WindowState) => void): Unsubscribe;
   };
 
@@ -364,6 +369,7 @@ function build(connection: Connection): EveryOSApp {
       state: () => request("window.getState", null),
       saveState: async (state) => void (await request("window.setState", { state })),
       open: async (state = null) => void (await request("window.open", { state })),
+      onOpened: (listener) => on("window.opened", ({ state }) => listener(state)),
       onChange: (listener) => on("window.changed", listener),
     },
     storage,
@@ -469,6 +475,15 @@ export function createApp(options: { timeoutMs?: number } = {}): Promise<EveryOS
   current ??= connect(options).then(build);
   current.catch(() => (current = null));
   return current;
+}
+
+/**
+ * Forgets the connection, so the next `createApp()` connects again. Only for tests that start the
+ * mock desktop several times in one page (`@everyos/app-testing` does it on `unmount()`): on
+ * EveryOS, every window and widget is a page of its own.
+ */
+export function resetApp(): void {
+  current = null;
 }
 
 export function isBridgeError(error: unknown, code?: string): error is BridgeError {

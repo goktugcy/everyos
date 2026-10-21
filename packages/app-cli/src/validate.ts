@@ -106,7 +106,10 @@ export async function validateBuild(dir: string): Promise<{
       }
     };
     const base = await read(fallback);
-    const expected = new Set(keysOf(base));
+    // Plural forms differ by language (`_one` in English, `_few` in Russian, none in Japanese).
+    const textKeys = (messages: unknown) =>
+      new Set(keysOf(messages).map((key) => key.replace(/_(zero|one|two|few|many|other)$/, "")));
+    const expected = textKeys(base);
     if (!expected.has("app.name"))
       warning(`${path}/${fallback}.json`, "no app.name: EveryOS shows the manifest's name");
     for (const widget of manifest.widgets)
@@ -116,7 +119,7 @@ export async function validateBuild(dir: string): Promise<{
       if (locale === fallback) continue;
       const messages = await read(locale);
       if (messages === null) continue;
-      const keys = new Set(keysOf(messages));
+      const keys = textKeys(messages);
       const missing = [...expected].filter((key) => !keys.has(key));
       if (missing.length)
         error(

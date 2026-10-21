@@ -259,6 +259,8 @@ export interface Events {
   "theme.changed": ThemeSnapshot;
   "locale.changed": { locale: string };
   "window.changed": WindowState;
+  /** The running window was opened again with new state (from a widget, for example). */
+  "window.opened": { state: unknown };
   /** The page or window went into the background (suspend) or came back (resume). */
   "lifecycle.suspend": null;
   "lifecycle.resume": null;
