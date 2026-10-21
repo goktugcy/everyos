@@ -1,0 +1,62 @@
+{
+  "app": {
+    "name": "Éditeur Markdown",
+    "description": "Écrivez en Markdown avec aperçu en direct, code coloré, plan, rechercher-remplacer et export HTML."
+  },
+  "doc": {
+    "untitled": "Sans titre"
+  },
+  "actions": {
+    "new": "Nouveau document",
+    "open": "Ouvrir…",
+    "recent": "Fichiers récents",
+    "save": "Enregistrer",
+    "saveAs": "Enregistrer sous…",
+    "exportMarkdown": "Exporter en Markdown…",
+    "exportHtml": "Exporter en HTML…",
+    "copyHtml": "Copier le HTML",
+    "find": "Rechercher et remplacer",
+    "outline": "Plan"
+  },
+  "close": {
+    "title": "Fermer avec des modifications non enregistrées ?",
+    "body": "Le brouillon reste récupérable ici, mais le fichier n’a pas les modifications.",
+    "confirm": "Fermer"
+  },
+  "replace": {
+    "title": "Quitter « {{name}} » sans enregistrer ?",
+    "body": "Les modifications non enregistrées seront perdues.",
+    "confirm": "Abandonner les modifications"
+  },
+  "save": {
+    "saved": "{{name}} enregistré"
+  },
+  "modes": {
+    "label": "Affichage",
+    "edit": "Éditeur",
+    "split": "Éditeur et aperçu",
+    "preview": "Aperçu"
+  },
+  "outline": {
+    "title": "Plan",
+    "empty": "Les titres (# Titre) apparaissent ici."
+  },
+  "editor": {
+    "label": "Texte Markdown",
+    "placeholder": "Commencez à écrire en Markdown…"
+  },
+  "recent": {
+    "empty": "Aucun fichier récent"
+  },
+  "status": {
+    "label": "Statistiques",
+    "unsaved": "Modifications non enregistrées",
+    "words_one": "{{count}} mot",
+    "words_other": "{{count}} mots",
+    "characters_one": "{{count}} caractère",
+    "characters_other": "{{count}} caractères",
+    "reading_one": "{{count}} min de lecture",
+    "reading_other": "{{count}} min de lecture",
+    "noRecovery": "Trop long pour une copie de récupération : enregistrez le fichier."
+  }
+}

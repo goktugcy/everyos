@@ -1,0 +1,62 @@
+{
+  "app": {
+    "name": "Markdown-Editor",
+    "description": "Markdown schreiben mit Live-Vorschau, hervorgehobenem Code, Gliederung, Suchen und Ersetzen sowie HTML-Export."
+  },
+  "doc": {
+    "untitled": "Unbenannt"
+  },
+  "actions": {
+    "new": "Neues Dokument",
+    "open": "Öffnen…",
+    "recent": "Zuletzt verwendet",
+    "save": "Speichern",
+    "saveAs": "Speichern unter…",
+    "exportMarkdown": "Markdown exportieren…",
+    "exportHtml": "HTML exportieren…",
+    "copyHtml": "HTML kopieren",
+    "find": "Suchen und ersetzen",
+    "outline": "Gliederung"
+  },
+  "close": {
+    "title": "Mit ungespeicherten Änderungen schließen?",
+    "body": "Der Entwurf bleibt hier wiederherstellbar, die Datei enthält die Änderungen aber nicht.",
+    "confirm": "Schließen"
+  },
+  "replace": {
+    "title": "„{{name}}“ ohne Speichern verlassen?",
+    "body": "Ungespeicherte Änderungen gehen verloren.",
+    "confirm": "Änderungen verwerfen"
+  },
+  "save": {
+    "saved": "{{name}} gespeichert"
+  },
+  "modes": {
+    "label": "Ansicht",
+    "edit": "Editor",
+    "split": "Editor und Vorschau",
+    "preview": "Vorschau"
+  },
+  "outline": {
+    "title": "Gliederung",
+    "empty": "Überschriften (# Titel) erscheinen hier."
+  },
+  "editor": {
+    "label": "Markdown-Text",
+    "placeholder": "Markdown schreiben…"
+  },
+  "recent": {
+    "empty": "Keine zuletzt verwendeten Dateien"
+  },
+  "status": {
+    "label": "Statistik",
+    "unsaved": "Ungespeicherte Änderungen",
+    "words_one": "{{count}} Wort",
+    "words_other": "{{count}} Wörter",
+    "characters_one": "{{count}} Zeichen",
+    "characters_other": "{{count}} Zeichen",
+    "reading_one": "{{count}} Min. Lesezeit",
+    "reading_other": "{{count}} Min. Lesezeit",
+    "noRecovery": "Zu lang für eine automatische Sicherungskopie: in die Datei speichern."
+  }
+}

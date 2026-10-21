@@ -1,0 +1,62 @@
+{
+  "app": {
+    "name": "Markdown Editor",
+    "description": "Write Markdown with a live preview, highlighted code, an outline, search and replace, and HTML export."
+  },
+  "doc": {
+    "untitled": "Untitled"
+  },
+  "actions": {
+    "new": "New document",
+    "open": "Open…",
+    "recent": "Recent files",
+    "save": "Save",
+    "saveAs": "Save as…",
+    "exportMarkdown": "Export Markdown…",
+    "exportHtml": "Export HTML…",
+    "copyHtml": "Copy HTML",
+    "find": "Find and replace",
+    "outline": "Outline"
+  },
+  "close": {
+    "title": "Close with unsaved changes?",
+    "body": "The draft stays here to recover, but the file does not have the changes.",
+    "confirm": "Close"
+  },
+  "replace": {
+    "title": "Leave “{{name}}” without saving?",
+    "body": "Its unsaved changes will be lost.",
+    "confirm": "Discard changes"
+  },
+  "save": {
+    "saved": "Saved {{name}}"
+  },
+  "modes": {
+    "label": "View",
+    "edit": "Editor",
+    "split": "Editor and preview",
+    "preview": "Preview"
+  },
+  "outline": {
+    "title": "Outline",
+    "empty": "Headings (# Title) appear here."
+  },
+  "editor": {
+    "label": "Markdown text",
+    "placeholder": "Start writing Markdown…"
+  },
+  "recent": {
+    "empty": "No recent files"
+  },
+  "status": {
+    "label": "Statistics",
+    "unsaved": "Unsaved changes",
+    "words_one": "{{count}} word",
+    "words_other": "{{count}} words",
+    "characters_one": "{{count}} character",
+    "characters_other": "{{count}} characters",
+    "reading_one": "{{count}} min read",
+    "reading_other": "{{count}} min read",
+    "noRecovery": "Too long for an automatic recovery copy: save to the file."
+  }
+}

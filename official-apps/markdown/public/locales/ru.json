@@ -1,0 +1,68 @@
+{
+  "app": {
+    "name": "Редактор Markdown",
+    "description": "Markdown с живым просмотром, подсветкой кода, структурой документа, поиском и заменой и экспортом в HTML."
+  },
+  "doc": {
+    "untitled": "Без имени"
+  },
+  "actions": {
+    "new": "Новый документ",
+    "open": "Открыть…",
+    "recent": "Недавние файлы",
+    "save": "Сохранить",
+    "saveAs": "Сохранить как…",
+    "exportMarkdown": "Экспорт в Markdown…",
+    "exportHtml": "Экспорт в HTML…",
+    "copyHtml": "Копировать HTML",
+    "find": "Найти и заменить",
+    "outline": "Структура"
+  },
+  "close": {
+    "title": "Закрыть с несохранёнными изменениями?",
+    "body": "Черновик сохранится здесь, но в файле изменений нет.",
+    "confirm": "Закрыть"
+  },
+  "replace": {
+    "title": "Уйти из «{{name}}» без сохранения?",
+    "body": "Несохранённые изменения будут потеряны.",
+    "confirm": "Отбросить изменения"
+  },
+  "save": {
+    "saved": "{{name}} сохранён"
+  },
+  "modes": {
+    "label": "Вид",
+    "edit": "Редактор",
+    "split": "Редактор и просмотр",
+    "preview": "Просмотр"
+  },
+  "outline": {
+    "title": "Структура",
+    "empty": "Здесь появятся заголовки (# Заголовок)."
+  },
+  "editor": {
+    "label": "Текст Markdown",
+    "placeholder": "Начните писать в Markdown…"
+  },
+  "recent": {
+    "empty": "Недавних файлов нет"
+  },
+  "status": {
+    "label": "Статистика",
+    "unsaved": "Не сохранено",
+    "words_one": "{{count}} слово",
+    "words_few": "{{count}} слова",
+    "words_many": "{{count}} слов",
+    "words_other": "{{count}} слова",
+    "characters_one": "{{count}} символ",
+    "characters_few": "{{count}} символа",
+    "characters_many": "{{count}} символов",
+    "characters_other": "{{count}} символа",
+    "reading_one": "{{count}} мин чтения",
+    "reading_few": "{{count}} мин чтения",
+    "reading_many": "{{count}} мин чтения",
+    "reading_other": "{{count}} мин чтения",
+    "noRecovery": "Слишком длинный текст для автокопии: сохраните файл."
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "app": {
+    "name": "Markdown Düzenleyici",
+    "description": "Canlı önizleme, renklendirilmiş kod, anahat, bul ve değiştir ve HTML dışa aktarma ile Markdown yazın."
+  },
+  "doc": {
+    "untitled": "Adsız"
+  },
+  "actions": {
+    "new": "Yeni belge",
+    "open": "Aç…",
+    "recent": "Son dosyalar",
+    "save": "Kaydet",
+    "saveAs": "Farklı kaydet…",
+    "exportMarkdown": "Markdown olarak dışa aktar…",
+    "exportHtml": "HTML olarak dışa aktar…",
+    "copyHtml": "HTML'yi kopyala",
+    "find": "Bul ve değiştir",
+    "outline": "Anahat"
+  },
+  "close": {
+    "title": "Kaydedilmemiş değişikliklerle kapatılsın mı?",
+    "body": "Taslak burada kurtarılmak üzere kalır ama dosyada değişiklikler yok.",
+    "confirm": "Kapat"
+  },
+  "replace": {
+    "title": "“{{name}}” kaydedilmeden bırakılsın mı?",
+    "body": "Kaydedilmemiş değişiklikler kaybolacak.",
+    "confirm": "Değişiklikleri at"
+  },
+  "save": {
+    "saved": "{{name}} kaydedildi"
+  },
+  "modes": {
+    "label": "Görünüm",
+    "edit": "Düzenleyici",
+    "split": "Düzenleyici ve önizleme",
+    "preview": "Önizleme"
+  },
+  "outline": {
+    "title": "Anahat",
+    "empty": "Başlıklar (# Başlık) burada görünür."
+  },
+  "editor": {
+    "label": "Markdown metni",
+    "placeholder": "Markdown yazmaya başlayın…"
+  },
+  "recent": {
+    "empty": "Son dosya yok"
+  },
+  "status": {
+    "label": "İstatistikler",
+    "unsaved": "Kaydedilmemiş değişiklikler",
+    "words_one": "{{count}} kelime",
+    "words_other": "{{count}} kelime",
+    "characters_one": "{{count}} karakter",
+    "characters_other": "{{count}} karakter",
+    "reading_one": "{{count}} dk okuma",
+    "reading_other": "{{count}} dk okuma",
+    "noRecovery": "Otomatik kurtarma kopyası için çok uzun: dosyaya kaydedin."
+  }
+}

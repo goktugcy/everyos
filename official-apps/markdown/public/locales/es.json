@@ -1,0 +1,62 @@
+{
+  "app": {
+    "name": "Editor de Markdown",
+    "description": "Escribe Markdown con vista previa en vivo, código resaltado, esquema, buscar y reemplazar y exportación a HTML."
+  },
+  "doc": {
+    "untitled": "Sin título"
+  },
+  "actions": {
+    "new": "Nuevo documento",
+    "open": "Abrir…",
+    "recent": "Archivos recientes",
+    "save": "Guardar",
+    "saveAs": "Guardar como…",
+    "exportMarkdown": "Exportar Markdown…",
+    "exportHtml": "Exportar HTML…",
+    "copyHtml": "Copiar HTML",
+    "find": "Buscar y reemplazar",
+    "outline": "Esquema"
+  },
+  "close": {
+    "title": "¿Cerrar con cambios sin guardar?",
+    "body": "El borrador se conserva aquí, pero el archivo no tiene los cambios.",
+    "confirm": "Cerrar"
+  },
+  "replace": {
+    "title": "¿Dejar «{{name}}» sin guardar?",
+    "body": "Se perderán los cambios sin guardar.",
+    "confirm": "Descartar cambios"
+  },
+  "save": {
+    "saved": "{{name}} guardado"
+  },
+  "modes": {
+    "label": "Vista",
+    "edit": "Editor",
+    "split": "Editor y vista previa",
+    "preview": "Vista previa"
+  },
+  "outline": {
+    "title": "Esquema",
+    "empty": "Los títulos (# Título) aparecen aquí."
+  },
+  "editor": {
+    "label": "Texto Markdown",
+    "placeholder": "Empieza a escribir Markdown…"
+  },
+  "recent": {
+    "empty": "No hay archivos recientes"
+  },
+  "status": {
+    "label": "Estadísticas",
+    "unsaved": "Cambios sin guardar",
+    "words_one": "{{count}} palabra",
+    "words_other": "{{count}} palabras",
+    "characters_one": "{{count}} carácter",
+    "characters_other": "{{count}} caracteres",
+    "reading_one": "{{count}} min de lectura",
+    "reading_other": "{{count}} min de lectura",
+    "noRecovery": "Demasiado largo para la copia de recuperación: guarda el archivo."
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "Markdown エディタ",
+    "description": "ライブプレビュー、コードのハイライト、アウトライン、検索と置換、HTML 書き出しに対応した Markdown エディタ。"
+  },
+  "doc": {
+    "untitled": "無題"
+  },
+  "actions": {
+    "new": "新規ドキュメント",
+    "open": "開く…",
+    "recent": "最近のファイル",
+    "save": "保存",
+    "saveAs": "名前を付けて保存…",
+    "exportMarkdown": "Markdown を書き出す…",
+    "exportHtml": "HTML を書き出す…",
+    "copyHtml": "HTML をコピー",
+    "find": "検索と置換",
+    "outline": "アウトライン"
+  },
+  "close": {
+    "title": "未保存の変更があります。閉じますか?",
+    "body": "下書きはここに残りますが、ファイルには変更が保存されていません。",
+    "confirm": "閉じる"
+  },
+  "replace": {
+    "title": "「{{name}}」を保存せずに閉じますか?",
+    "body": "未保存の変更は失われます。",
+    "confirm": "変更を破棄"
+  },
+  "save": {
+    "saved": "{{name}} を保存しました"
+  },
+  "modes": {
+    "label": "表示",
+    "edit": "エディタ",
+    "split": "エディタとプレビュー",
+    "preview": "プレビュー"
+  },
+  "outline": {
+    "title": "アウトライン",
+    "empty": "見出し (# タイトル) がここに表示されます。"
+  },
+  "editor": {
+    "label": "Markdown テキスト",
+    "placeholder": "Markdown を書き始めましょう…"
+  },
+  "recent": {
+    "empty": "最近のファイルはありません"
+  },
+  "status": {
+    "label": "統計",
+    "unsaved": "未保存の変更",
+    "words_other": "{{count}} 語",
+    "characters_other": "{{count}} 文字",
+    "reading_other": "読了 {{count}} 分",
+    "noRecovery": "自動復元コピーには長すぎます。ファイルに保存してください。"
+  }
+}
