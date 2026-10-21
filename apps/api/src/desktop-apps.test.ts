@@ -36,6 +36,8 @@ import type {
 } from "@everyos/app-sdk/protocol";
 import { signRegistryIndex, type RegistryIndex } from "@everyos/app-registry";
 import { createCatalogFetcher } from "@everyos/catalogs";
+import { ROLE_PERMISSIONS } from "@everyos/shared";
+import { DEFAULT_APPEARANCE } from "@everyos/theme";
 import type {
   ApiErrorBody,
   DesktopAppInstallationView,
@@ -2432,5 +2434,134 @@ describe("app SSH keys", () => {
     expect((await child(".ssh/new_key", "file")).status).toBe(404);
     expect(existsSync(join(root, ".ssh", "new_key"))).toBe(false);
     expect((await child(".ssh/id_ed25519.pub")).status).toBe(201);
+  });
+});
+
+describe("app appearance", () => {
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+
+  it("lets apps holding appearance:manage keep the person's images, and no others", async () => {
+    const context = await setup();
+    const { admin, viewer } = context;
+    const build = await buildApp(
+      "dev.everyos.wallpapers",
+      "1.0.0",
+      ["appearance:manage"],
+      officialKeys.privateKey,
+    );
+    const other = await buildApp(
+      "dev.everyos.other",
+      "1.0.0",
+      ["storage:app"],
+      officialKeys.privateKey,
+    );
+    publish(
+      context.registry,
+      index([
+        { id: "dev.everyos.wallpapers", versions: [build] },
+        { id: "dev.everyos.other", versions: [other] },
+      ]),
+      [build, other],
+    );
+    await sync(admin);
+    for (const appId of ["dev.everyos.wallpapers", "dev.everyos.other"])
+      expect(
+        (
+          await admin.post("/api/desktop-apps/installed", {
+            registryId: "official",
+            appId,
+            approve: ["appearance:manage"],
+          })
+        ).status,
+      ).toBe(201);
+    const open = async (client: TestClient, appId = "dev.everyos.wallpapers") =>
+      (
+        await json<{ token: string }>(
+          await client.post("/api/app-sdk/instances", { appId, kind: "window" }),
+        )
+      ).token;
+    const token = await open(admin);
+    const upload = (instance: string, kind: string, body: Uint8Array, type = "image/png") =>
+      admin.request("POST", `/api/app-sdk/appearance/images/${kind}`, {
+        rawBody: body,
+        headers: { "content-type": type, "x-everyos-app-instance": instance },
+      });
+
+    const icon = await json<{ id: string; width: number }>(await upload(token, "folder-icon", PNG));
+    expect(icon.width).toBe(1);
+    const wallpaper = await json<{ id: string }>(await upload(token, "wallpaper", PNG));
+    const listed = await json<{
+      wallpapers: Array<{ id: string }>;
+      folderIcons: Array<{ id: string }>;
+    }>(await admin.request("GET", "/api/app-sdk/appearance/images", as(token)));
+    expect(listed.wallpapers.map((entry) => entry.id)).toEqual([wallpaper.id]);
+    expect(listed.folderIcons.map((entry) => entry.id)).toEqual([icon.id]);
+    // The same images the person sees in Settings.
+    expect(
+      (
+        await json<{ icons: Array<{ id: string }> }>(await admin.get("/api/folder-icons"))
+      ).icons.map((entry) => entry.id),
+    ).toEqual([icon.id]);
+    const image = await admin.request(
+      "GET",
+      `/api/app-sdk/appearance/images/folder-icon/${icon.id}`,
+      as(token),
+    );
+    expect(image.headers.get("content-type")).toBe("image/png");
+    expect(Buffer.from(await image.arrayBuffer())).toEqual(PNG);
+    // Images are checked like the person's own uploads.
+    expect((await upload(token, "wallpaper", Buffer.from("not an image"))).status).toBe(400);
+    expect((await upload(token, "wallpaper", PNG, "image/svg+xml")).status).toBe(415);
+
+    // An icon in use stays.
+    expect(
+      (
+        await admin.request("PUT", "/api/preferences/appearance", {
+          body: {
+            ...DEFAULT_APPEARANCE,
+            folderIcon: { kind: "uploaded", iconId: icon.id },
+          },
+        })
+      ).status,
+    ).toBe(204);
+    const inUse = await admin.request(
+      "DELETE",
+      `/api/app-sdk/appearance/images/folder-icon/${icon.id}`,
+      {
+        body: {},
+        ...as(token),
+      },
+    );
+    expect(inUse.status).toBe(409);
+    expect(
+      (
+        await admin.request("DELETE", `/api/app-sdk/appearance/images/wallpaper/${wallpaper.id}`, {
+          body: {},
+          ...as(token),
+        })
+      ).status,
+    ).toBe(204);
+
+    // Without the capability, or for someone whose role cannot change preferences: refused.
+    const otherToken = await open(admin, "dev.everyos.other");
+    expect(
+      (await admin.request("GET", "/api/app-sdk/appearance/images", as(otherToken))).status,
+    ).toBe(403);
+    expect((await upload(otherToken, "wallpaper", PNG)).status).toBe(403);
+    const viewerToken = await open(viewer);
+    const viewerList = await viewer.request(
+      "GET",
+      "/api/app-sdk/appearance/images",
+      as(viewerToken),
+    );
+    expect(viewerList.status).toBe(ROLE_PERMISSIONS.viewer.has("preferences:manage") ? 200 : 403);
+    const audits = context.ctx.db.all<{ action: string }>(
+      "SELECT action FROM audit_events WHERE action LIKE 'desktop-apps.appearance.%' ORDER BY id",
+    );
+    expect(audits.map((entry) => entry.action)).toEqual([
+      "desktop-apps.appearance.upload",
+      "desktop-apps.appearance.upload",
+      "desktop-apps.appearance.delete",
+    ]);
   });
 });

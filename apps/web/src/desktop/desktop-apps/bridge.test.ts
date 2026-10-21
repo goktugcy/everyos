@@ -124,6 +124,47 @@ describe("request validation", () => {
   });
 });
 
+describe("appearance requests", () => {
+  it("accept only the wallpapers and folder icons EveryOS knows", () => {
+    const set = VALIDATORS["appearance.setWallpaper"];
+    expect(set({ desktopId: null, wallpaper: { kind: "preset", id: "aurora" } })).toBe(true);
+    expect(set({ desktopId: "d1", wallpaper: { kind: "solid", color: "#12abef" } })).toBe(true);
+    expect(set({ desktopId: null, wallpaper: null })).toBe(true);
+    for (const wallpaper of [
+      { kind: "preset", id: "made-up" },
+      { kind: "solid", color: "red" },
+      { kind: "gradient", from: "#000000", to: "#ffffff", angle: 400 },
+      { kind: "image", wallpaperId: "../x", fit: "cover" },
+      { kind: "image", wallpaperId: "abc", fit: "stretch" },
+      { kind: "solid", color: "#000000", extra: 1 },
+    ])
+      expect(set({ desktopId: null, wallpaper }), JSON.stringify(wallpaper)).toBe(false);
+    expect(VALIDATORS["appearance.setFolderIcon"]({ icon: { kind: "preset", id: "amber" } })).toBe(
+      true,
+    );
+    expect(VALIDATORS["appearance.setFolderIcon"]({ icon: { kind: "preset", id: "pink" } })).toBe(
+      false,
+    );
+    const upload = VALIDATORS["appearance.upload"];
+    expect(upload({ kind: "wallpaper", data: new ArrayBuffer(8), type: "image/png" })).toBe(true);
+    expect(upload({ kind: "wallpaper", data: new ArrayBuffer(8), type: "image/svg+xml" })).toBe(
+      false,
+    );
+    expect(
+      upload({ kind: "wallpaper", data: new ArrayBuffer(11 * 1024 * 1024), type: "image/png" }),
+    ).toBe(false);
+    expect(
+      VALIDATORS["appearance.image"]({
+        source: { kind: "wallpaper-preset", id: "aurora" },
+        maxEdge: 64,
+      }),
+    ).toBe(true);
+    expect(VALIDATORS["appearance.image"]({ source: { kind: "file", id: "x" }, maxEdge: 64 })).toBe(
+      false,
+    );
+  });
+});
+
 describe("file picker filters", () => {
   it("matches extensions, exact types and type families", async () => {
     const { matchesAccept } = await import("./file-picker.tsx");

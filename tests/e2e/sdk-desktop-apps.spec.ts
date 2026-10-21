@@ -62,6 +62,8 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     const install = details.getByRole("button", { name: "Kur", exact: true });
     await expect(install).toBeDisabled();
     await details.getByRole("checkbox", { name: "Klasör boyutlarını ölçme" }).check();
+    await expect(install).toBeDisabled();
+    await details.getByRole("checkbox", { name: "Görünümünüzü değiştirme" }).check();
     await install.click();
     await details.getByRole("button", { name: "Aç", exact: true }).click();
     await expect(details).toHaveCount(0);
@@ -114,6 +116,23 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
         return ((await response.json()) as { content: string }).content;
       }),
     ).toBe("written by the probe");
+
+    // Appearance: the app sets the person's wallpaper through the desktop, and gets previews.
+    await frame.getByRole("button", { name: "Wallpaper" }).click();
+    await expect(probe("wallpaper")).toHaveText('{"kind":"solid","color":"#123456"}');
+    await expect(probe("preview")).toHaveText("image/png 64x40");
+    await expect(probe("appearanceChanged")).toHaveText("yes");
+    await expect
+      .poll(async () =>
+        page.evaluate(async () => {
+          const response = await fetch("/api/preferences");
+          const body = (await response.json()) as {
+            preferences: { appearance?: { wallpaper?: unknown } };
+          };
+          return JSON.stringify(body.preferences.appearance?.wallpaper ?? null);
+        }),
+      )
+      .toBe('{"kind":"solid","color":"#123456"}');
 
     // Its data survives closing the window, and the launcher knows it by its Turkish name.
     await window.getByRole("button", { name: "Kapat" }).first().click();

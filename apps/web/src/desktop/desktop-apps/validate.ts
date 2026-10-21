@@ -4,6 +4,12 @@ import {
   MAX_STORAGE_VALUE_BYTES,
   type Method,
 } from "@everyos/app-sdk/protocol";
+import {
+  FOLDER_ICON_PRESET_IDS,
+  MAX_WALLPAPER_BYTES,
+  WALLPAPER_MIME_TYPES,
+  WALLPAPER_PRESET_IDS,
+} from "@everyos/shared";
 
 /*
  * Run-time checks of what an app sends. The app is untrusted: every request is checked against the
@@ -82,6 +88,17 @@ const relativePath: Check = (value) =>
 const fileName: Check = (value) =>
   plainText(255, 1)(value) && !/[/\\]/.test(value as string) && value !== "." && value !== "..";
 const accept = list(plainText(100), 32);
+const imageId: Check = (value) => typeof value === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(value);
+const hexColor: Check = (value) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+const imageKind = oneOf("wallpaper", "folder-icon");
+const wallpaperChoice: Check = (value) =>
+  shape({ kind: oneOf("preset"), id: oneOf(...WALLPAPER_PRESET_IDS) })(value) ||
+  shape({ kind: oneOf("gradient"), from: hexColor, to: hexColor, angle: int(0, 360) })(value) ||
+  shape({ kind: oneOf("solid"), color: hexColor })(value) ||
+  shape({ kind: oneOf("image"), wallpaperId: imageId, fit: oneOf("cover", "contain") })(value);
+const folderIconChoice: Check = (value) =>
+  shape({ kind: oneOf("preset"), id: oneOf(...FOLDER_ICON_PRESET_IDS) })(value) ||
+  shape({ kind: oneOf("uploaded"), iconId: imageId })(value);
 
 export const VALIDATORS: Readonly<Record<Method, Check>> = {
   "window.setTitle": shape({ title: plainText(120) }),
@@ -148,6 +165,26 @@ export const VALIDATORS: Readonly<Record<Method, Check>> = {
   }),
 
   "clipboard.writeText": shape({ text: text(1_000_000) }),
+
+  "appearance.get": none,
+  "appearance.image": shape({
+    source: shape({
+      kind: oneOf("wallpaper", "folder-icon", "wallpaper-preset", "folder-icon-preset"),
+      id: imageId,
+    }),
+    maxEdge: int(16, 4096),
+  }),
+  "appearance.upload": shape({
+    kind: imageKind,
+    data: buffer(MAX_WALLPAPER_BYTES),
+    type: oneOf(...WALLPAPER_MIME_TYPES),
+  }),
+  "appearance.deleteImage": shape({ kind: imageKind, id: imageId }),
+  "appearance.setWallpaper": shape({
+    desktopId: nullable(imageId),
+    wallpaper: nullable(wallpaperChoice),
+  }),
+  "appearance.setFolderIcon": shape({ icon: nullable(folderIconChoice) }),
   "theme.get": none,
   "locale.get": none,
 

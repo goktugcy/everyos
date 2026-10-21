@@ -11,6 +11,7 @@ import { api } from "../../lib/api.ts";
 import { randomId } from "../../lib/random-id.ts";
 import type { AppHost } from "../apps/app-context.ts";
 import { windowManager } from "../state/window-store.ts";
+import { usePreferences } from "../state/preferences-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { setCloseGuard } from "../windows/close-guards.ts";
 import { AppDialog, type PendingDialog } from "./app-dialog.tsx";
@@ -102,6 +103,7 @@ export function AppFrame({
     if (!element) return;
     let disposed = false;
     let token: string | null = null;
+    let grantedNow: ReadonlySet<string> = new Set();
     let readyTimer: ReturnType<typeof setTimeout> | null = null;
     const decisions = new Map<string, (close: boolean) => void>();
     const windowId = hostRef.current?.windowId ?? null;
@@ -193,6 +195,7 @@ export function AppFrame({
           return;
         }
         token = opened.token;
+        grantedNow = new Set(opened.granted);
         listener = onLoad(opened.granted);
         element.addEventListener("load", listener);
         // The source is set only once the listener is in place, so the first load is never missed.
@@ -208,6 +211,20 @@ export function AppFrame({
         bridgeRef.current?.emit("theme.changed", themeSnapshot(state.theme));
     });
     const onLanguage = (locale: string) => bridgeRef.current?.emit("locale.changed", { locale });
+    // Wallpapers and folder icons, for apps that manage them.
+    const appearanceOf = (state: ReturnType<typeof usePreferences.getState>) =>
+      JSON.stringify([
+        state.appearance.wallpaper,
+        state.appearance.folderIcon ?? null,
+        state.desktop.desktops.map((entry) => [entry.id, entry.name, entry.wallpaper]),
+      ]);
+    let lastAppearance = appearanceOf(usePreferences.getState());
+    const unsubscribeAppearance = usePreferences.subscribe((state) => {
+      const next = appearanceOf(state);
+      if (next === lastAppearance) return;
+      lastAppearance = next;
+      if (grantedNow.has("appearance:manage")) bridgeRef.current?.emit("appearance.changed", null);
+    });
     i18next.on("languageChanged", onLanguage);
     let lastState = JSON.stringify(windowState(windowId));
     let lastVisible = windowState(windowId).visible;
@@ -233,6 +250,7 @@ export function AppFrame({
       bridgeRef.current?.close();
       bridgeRef.current = null;
       unsubscribeTheme();
+      unsubscribeAppearance();
       unsubscribeWindows();
       i18next.off("languageChanged", onLanguage);
       document.removeEventListener("visibilitychange", onWindow);

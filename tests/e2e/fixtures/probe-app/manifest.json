@@ -12,7 +12,8 @@
     "clipboard:write",
     "files:pick",
     "files:save",
-    "storage:usage.read"
+    "storage:usage.read",
+    "appearance:manage"
   ],
   "window": {
     "defaultWidth": 640,

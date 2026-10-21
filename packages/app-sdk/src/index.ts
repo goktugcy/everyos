@@ -1,7 +1,13 @@
 import { BridgeError, connect, type Connection } from "./client.ts";
 import {
   MAX_CHUNK_BYTES,
+  type AppearanceImage,
+  type AppearanceImageKind,
+  type AppearanceImageSource,
+  type AppearanceState,
   type DirectoryEntry,
+  type FolderIconChoice,
+  type WallpaperChoice,
   type Events,
   type FileHandle,
   type HostInput,
@@ -14,6 +20,12 @@ import {
 
 export { BridgeError } from "./client.ts";
 export type {
+  AppearanceImage,
+  AppearanceImageKind,
+  AppearanceImageSource,
+  AppearanceState,
+  FolderIconChoice,
+  WallpaperChoice,
   DbColumn,
   DbConnection,
   DbEngine,
@@ -149,6 +161,19 @@ export interface EveryOSApp {
   };
 
   clipboard: { writeText(text: string): Promise<void> };
+
+  /** The person's wallpapers and folder icons (appearance:manage). */
+  appearance: {
+    get(): Promise<AppearanceState>;
+    /** An uploaded image or a preset's preview, as a Blob scaled to fit `maxEdge` pixels. */
+    image(source: AppearanceImageSource, maxEdge?: number): Promise<Blob>;
+    upload(kind: AppearanceImageKind, image: Blob): Promise<AppearanceImage>;
+    deleteImage(kind: AppearanceImageKind, id: string): Promise<void>;
+    /** One desktop's wallpaper, or (`desktopId` null) the default of every desktop. */
+    setWallpaper(wallpaper: WallpaperChoice | null, desktopId?: string | null): Promise<void>;
+    setFolderIcon(icon: FolderIconChoice | null): Promise<void>;
+    onChange(listener: () => void): Unsubscribe;
+  };
 
   theme: {
     readonly current: ThemeSnapshot;
@@ -370,6 +395,27 @@ function build(connection: Connection): EveryOSApp {
     },
     clipboard: {
       writeText: async (text) => void (await request("clipboard.writeText", { text })),
+    },
+    appearance: {
+      get: () => request("appearance.get", null),
+      image: async (source, maxEdge = 512) => {
+        const { data, type } = await request("appearance.image", { source, maxEdge });
+        return new Blob([data], { type });
+      },
+      upload: async (kind, image) => {
+        const type = image.type as AppearanceImage["type"];
+        const data = await image.arrayBuffer();
+        return request(
+          "appearance.upload",
+          { kind, data, type },
+          { transfer: [data], timeoutMs: 120_000 },
+        );
+      },
+      deleteImage: async (kind, id) => void (await request("appearance.deleteImage", { kind, id })),
+      setWallpaper: async (wallpaper, desktopId = null) =>
+        void (await request("appearance.setWallpaper", { desktopId, wallpaper })),
+      setFolderIcon: async (icon) => void (await request("appearance.setFolderIcon", { icon })),
+      onChange: (listener) => on("appearance.changed", () => listener()),
     },
     theme: {
       get current() {

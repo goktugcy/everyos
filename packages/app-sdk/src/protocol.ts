@@ -85,6 +85,51 @@ export interface DirectoryEntry {
 
 export type NotificationLevel = "info" | "success" | "warning" | "critical";
 
+/** A wallpaper as EveryOS describes one (colors are `#rrggbb`). */
+export type WallpaperChoice =
+  | { kind: "preset"; id: string }
+  | { kind: "gradient"; from: string; to: string; angle: number }
+  | { kind: "solid"; color: string }
+  | { kind: "image"; wallpaperId: string; fit: "cover" | "contain" };
+
+export type FolderIconChoice =
+  { kind: "preset"; id: string } | { kind: "uploaded"; iconId: string };
+
+/** Images the person uploaded: wallpapers, or folder icons. */
+export type AppearanceImageKind = "wallpaper" | "folder-icon";
+
+export interface AppearanceImage {
+  id: string;
+  type: "image/jpeg" | "image/png" | "image/webp";
+  size: number;
+  width: number;
+  height: number;
+  createdAt: number;
+}
+
+/** The person's appearance, as an app holding appearance:manage sees it. */
+export interface AppearanceState {
+  /** The wallpaper of every desktop without its own (null: EveryOS's default). */
+  wallpaper: WallpaperChoice | null;
+  desktops: Array<{ id: string; name: string; wallpaper: WallpaperChoice | null; active: boolean }>;
+  wallpaperPresets: Array<{ id: string; name: string; scheme: "dark" | "light" }>;
+  wallpapers: AppearanceImage[];
+  folderIcon: FolderIconChoice | null;
+  folderIconPresets: Array<{ id: string; name: string }>;
+  folderIcons: AppearanceImage[];
+  limits: {
+    wallpapers: number;
+    wallpaperBytes: number;
+    folderIconBytes: number;
+    folderIconEdge: number;
+  };
+}
+
+/** What `appearance.image` draws: an uploaded image, or a preset's preview. */
+export type AppearanceImageSource =
+  | { kind: AppearanceImageKind; id: string }
+  | { kind: "wallpaper-preset" | "folder-icon-preset"; id: string };
+
 /* ------------------------------------------------------------------ methods */
 
 /** Every request an app can make: params and result per method. */
@@ -164,6 +209,25 @@ export interface Methods {
 
   "clipboard.writeText": { params: { text: string }; result: null };
 
+  "appearance.get": { params: null; result: AppearanceState };
+  /** An image, scaled to fit `maxEdge` pixels (PNG, JPEG or WebP bytes). */
+  "appearance.image": {
+    params: { source: AppearanceImageSource; maxEdge: number };
+    result: { data: ArrayBuffer; type: string };
+  };
+  /** Uploads a JPEG, PNG or WebP image the person made in the app. */
+  "appearance.upload": {
+    params: { kind: AppearanceImageKind; data: ArrayBuffer; type: AppearanceImage["type"] };
+    result: AppearanceImage;
+  };
+  "appearance.deleteImage": { params: { kind: AppearanceImageKind; id: string }; result: null };
+  /** Sets the wallpaper of one desktop, or (`desktopId: null`) the default of all. */
+  "appearance.setWallpaper": {
+    params: { desktopId: string | null; wallpaper: WallpaperChoice | null };
+    result: null;
+  };
+  "appearance.setFolderIcon": { params: { icon: FolderIconChoice | null }; result: null };
+
   "theme.get": { params: null; result: ThemeSnapshot };
   "locale.get": { params: null; result: { locale: string } };
 
@@ -203,6 +267,8 @@ export interface Events {
   "app.updated": { version: string };
   /** Files handles were revoked from outside (the user or an administrator). */
   "files.revoked": { handles: string[] };
+  /** The person's wallpapers or folder icons changed (in Settings or another app). */
+  "appearance.changed": null;
 }
 export type EventName = keyof Events;
 

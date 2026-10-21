@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@types/ws": "catalog:",
-    "@types/pg": "catalog:"
+    "@types/pg": "catalog:",
+    "@everyos/theme": "workspace:*"
   }
 }

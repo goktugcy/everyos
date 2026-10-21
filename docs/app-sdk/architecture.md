@@ -114,6 +114,7 @@ activation propagates to ancestors).
 | `system:network.read`       | interfaces, routes, DNS configuration                         | `system:read`                |
 | `logs:read`                 | journald via the existing logs API                            | `logs:read`                  |
 | `storage:usage.read`        | bounded directory sizes inside the user's file roots          | `files:read`                 |
+| `appearance:manage`         | the person's wallpapers and folder icons (images and choices) | `preferences:manage`         |
 | `network:outbound`          | HTTP/DNS/TLS to targets on the admin allowlist only           | `apps:manage` grants per app |
 | `database:connect`          | saved connections via the server connector, read-only default | `apps:manage` grants per app |
 | `secrets:ssh`               | the user's own SSH key store (sealed)                         | —                            |
@@ -136,6 +137,9 @@ confirms each change in a dialog the desktop draws. See [databases](databases.md
 **SSH keys** belong to each person and are sealed on the server; a private key leaves only through an
 export the person confirms in a dialog the desktop draws, and file access never reaches `.ssh`
 secrets. See [SSH keys](ssh-keys.md).
+
+**Appearance**: images go through the server (grant checked per call); choosing a wallpaper or
+folder icon is applied by the desktop as the person's own preference. See [appearance](appearance.md).
 
 ## Manifest
 

@@ -17,6 +17,7 @@ import { wm } from "../state/window-store.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
 import type { PendingDialog } from "./app-dialog.tsx";
 import type { PickerRequest, PickerResult } from "./file-picker.tsx";
+import { appearanceHandlers } from "./appearance.ts";
 import { useAppBadges } from "./badges.ts";
 import { BridgeRefusal, type Handlers } from "./bridge.ts";
 import { desktopAppWindowId } from "./store.ts";
@@ -76,7 +77,11 @@ export function createHandlers(context: InstanceContext): Handlers {
   const windowId = host?.windowId ?? null;
   const sdk = <T>(
     path: string,
-    init: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
+    init: {
+      method?: "GET" | "POST" | "DELETE";
+      body?: unknown;
+      raw?: { body: Blob | ArrayBuffer; contentType: string };
+    } = {},
   ) => api<T>(`/app-sdk${path}`, { ...init, headers: { [INSTANCE_HEADER]: token } });
   const managed = () => (windowId && wm().windows[windowId] ? windowId : null);
   const hostCall = async <T>(operation: string, input: unknown = null) =>
@@ -141,8 +146,8 @@ export function createHandlers(context: InstanceContext): Handlers {
     return false;
   };
   const file = (id: string) => `/files/${encodeURIComponent(id)}`;
-  /** Binary reads skip the JSON helper; errors still arrive as API errors. */
-  const readBytes = async (path: string): Promise<{ data: ArrayBuffer; eof: boolean }> => {
+  /** Binary responses skip the JSON helper; errors still arrive as API errors. */
+  const fetchBinary = async (path: string): Promise<Response> => {
     const response = await fetch(`/api/app-sdk${path}`, {
       credentials: "same-origin",
       headers: { [INSTANCE_HEADER]: token },
@@ -159,6 +164,10 @@ export function createHandlers(context: InstanceContext): Handlers {
         body?.error?.details,
       );
     }
+    return response;
+  };
+  const readBytes = async (path: string): Promise<{ data: ArrayBuffer; eof: boolean }> => {
+    const response = await fetchBinary(path);
     return {
       data: await response.arrayBuffer(),
       eof: response.headers.get("x-everyos-eof") === "1",
@@ -230,6 +239,7 @@ export function createHandlers(context: InstanceContext): Handlers {
 
   return {
     ...shared,
+    ...appearanceHandlers(context.granted, sdk, async (path) => (await fetchBinary(path)).blob()),
     "window.setTitle": ({ title }) => {
       host?.setTitle(title);
       return null;

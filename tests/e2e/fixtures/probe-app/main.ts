@@ -71,4 +71,14 @@ document.querySelector('[data-action="save"]')?.addEventListener("click", () => 
     );
   });
 });
+app.appearance.onChange(() => show("appearanceChanged", "yes"));
+document.querySelector('[data-action="wallpaper"]')?.addEventListener("click", () => {
+  void (async () => {
+    await app.appearance.setWallpaper({ kind: "solid", color: "#123456" });
+    show("wallpaper", JSON.stringify((await app.appearance.get()).wallpaper));
+    const preview = await app.appearance.image({ kind: "wallpaper-preset", id: "aurora" }, 64);
+    const bitmap = await createImageBitmap(preview);
+    show("preview", `${preview.type} ${bitmap.width}x${bitmap.height}`);
+  })();
+});
 await app.lifecycle.ready();
