@@ -1,0 +1,148 @@
+{
+  "app": {
+    "name": "Yapılacaklar",
+    "description": "Projeler, öncelikler, son tarihler, tekrarlar, etiketler, alt görevler, hatırlatıcılar, ilerleme ve widget ile görevler."
+  },
+  "widgets": {
+    "today": {
+      "name": "Bugünün görevleri",
+      "description": "Bugün ve gecikmiş görevler: tamamlayın ya da yenisini ekleyin."
+    }
+  },
+  "lists": {
+    "inbox": "Gelen kutusu",
+    "today": "Bugün",
+    "upcoming": "Yaklaşan",
+    "overdue": "Gecikmiş",
+    "all": "Tüm görevler",
+    "completed": "Tamamlananlar"
+  },
+  "backup": {
+    "import": "Yedeği içe aktar…",
+    "export": "Yedeği dışa aktar…",
+    "imported_one": "{{count}} görev içe aktarıldı",
+    "imported_other": "{{count}} görev içe aktarıldı"
+  },
+  "due": {
+    "today": "Bugün",
+    "tomorrow": "Yarın",
+    "yesterday": "Dün"
+  },
+  "empty": {
+    "inbox": "Gelen kutunuz boş",
+    "today": "Bugün yapılacak bir şey yok",
+    "upcoming": "Önümüzdeki 7 günde bir şey yok",
+    "overdue": "Gecikmiş görev yok",
+    "all": "Açık görev yok",
+    "completed": "Henüz tamamlanan görev yok",
+    "list": "Burada görev yok"
+  },
+  "progress": {
+    "title": "İlerleme",
+    "chart": "Son 7 günde günlük tamamlanan",
+    "done": "{{total}} görevden {{done}} tamamlandı",
+    "open": "Açık görevler",
+    "week": "Bu hafta tamamlanan"
+  },
+  "projects": {
+    "title": "Projeler",
+    "add": "Yeni proje",
+    "rename": "Projeyi yeniden adlandır",
+    "delete": "Projeyi sil",
+    "deleteTitle": "“{{name}}” projesi silinsin mi?",
+    "deleteBody": "Görevleri gelen kutusuna taşınır.",
+    "name": "Proje adı"
+  },
+  "recurrence": {
+    "title": "Tekrar",
+    "repeat": "Tekrarlanır",
+    "repeats": "Tekrarlanır",
+    "monthMode": "Gün",
+    "monthDay": "Ayın {{day}}. günü",
+    "monthWeekday": "Ayın aynı {{weekday}} günü",
+    "next": "Sonraki: {{date}}",
+    "weekdays": "Bu günlerde",
+    "units": {
+      "none": "Tekrarlanmaz",
+      "day": "Her gün",
+      "weekday": "Hafta içi her gün (Pzt–Cum)",
+      "week": "Her hafta",
+      "month": "Her ay",
+      "year": "Her yıl"
+    },
+    "every": {
+      "day": "Kaç günde bir",
+      "week": "Kaç haftada bir",
+      "month": "Kaç ayda bir",
+      "year": "Kaç yılda bir"
+    }
+  },
+  "reminder": {
+    "at": "Son saat {{time}}",
+    "today": "Bugün yapılmalı",
+    "needsDue": "Hatırlatıcı için son tarih gerekir (saat yoksa 09:00).",
+    "none": "Hatırlatma yok",
+    "options": {
+      "0": "Son saatte",
+      "5": "5 dakika önce",
+      "10": "10 dakika önce",
+      "15": "15 dakika önce",
+      "30": "30 dakika önce",
+      "60": "1 saat önce",
+      "120": "2 saat önce",
+      "1440": "1 gün önce"
+    }
+  },
+  "search": {
+    "label": "Görevlerde ara",
+    "none": "Eşleşen görev yok"
+  },
+  "sort": {
+    "label": "Sırala",
+    "manual": "Benim sıram",
+    "due": "Son tarih",
+    "priority": "Öncelik",
+    "title": "Başlık"
+  },
+  "subtasks": {
+    "title": "Alt görevler",
+    "add": "Alt görev ekle",
+    "delete": "Alt görevi sil"
+  },
+  "tags": {
+    "title": "Etiketler"
+  },
+  "task": {
+    "added": "Görev eklendi",
+    "complete": "Tamamlandı olarak işaretle",
+    "completeNamed": "“{{name}}” görevini tamamla",
+    "completed": "Tamamlandı",
+    "deleteTitle": "“{{name}}” silinsin mi?",
+    "details": "Görev ayrıntıları",
+    "done": "Tamamlandı",
+    "due": "Son tarih",
+    "moveDown": "Aşağı taşı",
+    "moveUp": "Yukarı taşı",
+    "nextOccurrence": "Tamamlandı. Bir sonraki tarihe taşındı.",
+    "notes": "Notlar",
+    "priority": "Öncelik",
+    "project": "Proje",
+    "quickAdd": "Yeni görev",
+    "quickAddPlaceholder": "Görev ekleyin… (#etiket kullanılabilir)",
+    "reminder": "Hatırlatıcı",
+    "reopen": "Tamamlanmadı olarak işaretle",
+    "tags": "Etiketler",
+    "tagsHint": "Boşluk veya virgülle ayırın",
+    "time": "Saat",
+    "title": "Başlık"
+  },
+  "priority": {
+    "0": "Öncelik yok",
+    "1": "Düşük",
+    "2": "Orta",
+    "3": "Yüksek"
+  },
+  "widget": {
+    "add": "Bugün için görev ekleyin…"
+  }
+}

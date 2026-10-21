@@ -1,0 +1,148 @@
+{
+  "app": {
+    "name": "Tareas",
+    "description": "Tareas con proyectos, prioridades, fechas, repeticiones, etiquetas, subtareas, recordatorios, progreso y un widget."
+  },
+  "widgets": {
+    "today": {
+      "name": "Tareas de hoy",
+      "description": "Tareas de hoy y atrasadas: márcalas o añade una."
+    }
+  },
+  "lists": {
+    "inbox": "Bandeja de entrada",
+    "today": "Hoy",
+    "upcoming": "Próximas",
+    "overdue": "Atrasadas",
+    "all": "Todas las tareas",
+    "completed": "Completadas"
+  },
+  "backup": {
+    "import": "Importar copia…",
+    "export": "Exportar copia…",
+    "imported_one": "{{count}} tarea importada",
+    "imported_other": "{{count}} tareas importadas"
+  },
+  "due": {
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "yesterday": "Ayer"
+  },
+  "empty": {
+    "inbox": "Tu bandeja está vacía",
+    "today": "Nada para hoy",
+    "upcoming": "Nada en los próximos 7 días",
+    "overdue": "Nada atrasado",
+    "all": "No hay tareas pendientes",
+    "completed": "Aún no hay tareas completadas",
+    "list": "No hay tareas aquí"
+  },
+  "progress": {
+    "title": "Progreso",
+    "chart": "Completadas por día, últimos 7 días",
+    "done": "{{done}} de {{total}} completadas",
+    "open": "Tareas pendientes",
+    "week": "Completadas esta semana"
+  },
+  "projects": {
+    "title": "Proyectos",
+    "add": "Nuevo proyecto",
+    "rename": "Cambiar nombre del proyecto",
+    "delete": "Eliminar proyecto",
+    "deleteTitle": "¿Eliminar el proyecto «{{name}}»?",
+    "deleteBody": "Sus tareas pasan a la bandeja de entrada.",
+    "name": "Nombre del proyecto"
+  },
+  "recurrence": {
+    "title": "Repetición",
+    "repeat": "Se repite",
+    "repeats": "Se repite",
+    "monthMode": "El",
+    "monthDay": "El día {{day}} del mes",
+    "monthWeekday": "El mismo {{weekday}} del mes",
+    "next": "Siguiente: {{date}}",
+    "weekdays": "Estos días",
+    "units": {
+      "none": "No se repite",
+      "day": "Cada día",
+      "weekday": "Días laborables (lun–vie)",
+      "week": "Cada semana",
+      "month": "Cada mes",
+      "year": "Cada año"
+    },
+    "every": {
+      "day": "Cada … días",
+      "week": "Cada … semanas",
+      "month": "Cada … meses",
+      "year": "Cada … años"
+    }
+  },
+  "reminder": {
+    "at": "Vence a las {{time}}",
+    "today": "Vence hoy",
+    "needsDue": "Los recordatorios necesitan una fecha (09:00 si no hay hora).",
+    "none": "Sin recordatorio",
+    "options": {
+      "0": "A la hora",
+      "5": "5 minutos antes",
+      "10": "10 minutos antes",
+      "15": "15 minutos antes",
+      "30": "30 minutos antes",
+      "60": "1 hora antes",
+      "120": "2 horas antes",
+      "1440": "1 día antes"
+    }
+  },
+  "search": {
+    "label": "Buscar tareas",
+    "none": "Ninguna tarea coincide"
+  },
+  "sort": {
+    "label": "Ordenar",
+    "manual": "Mi orden",
+    "due": "Fecha",
+    "priority": "Prioridad",
+    "title": "Título"
+  },
+  "subtasks": {
+    "title": "Subtareas",
+    "add": "Añadir subtarea",
+    "delete": "Eliminar subtarea"
+  },
+  "tags": {
+    "title": "Etiquetas"
+  },
+  "task": {
+    "added": "Tarea añadida",
+    "complete": "Marcar como hecha",
+    "completeNamed": "Marcar «{{name}}» como hecha",
+    "completed": "Hecha",
+    "deleteTitle": "¿Eliminar «{{name}}»?",
+    "details": "Detalles de la tarea",
+    "done": "Hecha",
+    "due": "Fecha límite",
+    "moveDown": "Bajar",
+    "moveUp": "Subir",
+    "nextOccurrence": "Hecha. Pasa a su próxima fecha.",
+    "notes": "Notas",
+    "priority": "Prioridad",
+    "project": "Proyecto",
+    "quickAdd": "Nueva tarea",
+    "quickAddPlaceholder": "Añade una tarea… (admite #etiquetas)",
+    "reminder": "Recordatorio",
+    "reopen": "Marcar como pendiente",
+    "tags": "Etiquetas",
+    "tagsHint": "Separa con espacios o comas",
+    "time": "Hora",
+    "title": "Título"
+  },
+  "priority": {
+    "0": "Sin prioridad",
+    "1": "Baja",
+    "2": "Media",
+    "3": "Alta"
+  },
+  "widget": {
+    "add": "Añade una tarea para hoy…"
+  }
+}

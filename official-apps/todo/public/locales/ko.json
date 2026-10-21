@@ -1,0 +1,147 @@
+{
+  "app": {
+    "name": "할 일",
+    "description": "프로젝트, 우선순위, 마감일, 반복, 태그, 하위 작업, 알림, 진행 현황, 위젯을 갖춘 할 일 관리."
+  },
+  "widgets": {
+    "today": {
+      "name": "오늘의 할 일",
+      "description": "오늘 할 일과 지난 할 일: 완료하거나 새로 추가하세요."
+    }
+  },
+  "lists": {
+    "inbox": "받은 편지함",
+    "today": "오늘",
+    "upcoming": "예정",
+    "overdue": "기한 지남",
+    "all": "모든 할 일",
+    "completed": "완료됨"
+  },
+  "backup": {
+    "import": "백업 가져오기…",
+    "export": "백업 내보내기…",
+    "imported_other": "할 일 {{count}}개를 가져왔습니다"
+  },
+  "due": {
+    "today": "오늘",
+    "tomorrow": "내일",
+    "yesterday": "어제"
+  },
+  "empty": {
+    "inbox": "받은 편지함이 비어 있습니다",
+    "today": "오늘 마감인 할 일이 없습니다",
+    "upcoming": "앞으로 7일간 할 일이 없습니다",
+    "overdue": "기한이 지난 할 일이 없습니다",
+    "all": "남은 할 일이 없습니다",
+    "completed": "아직 완료한 할 일이 없습니다",
+    "list": "할 일이 없습니다"
+  },
+  "progress": {
+    "title": "진행 현황",
+    "chart": "최근 7일간 일별 완료 수",
+    "done": "{{total}}개 중 {{done}}개 완료",
+    "open": "남은 할 일",
+    "week": "이번 주 완료"
+  },
+  "projects": {
+    "title": "프로젝트",
+    "add": "새 프로젝트",
+    "rename": "프로젝트 이름 변경",
+    "delete": "프로젝트 삭제",
+    "deleteTitle": "“{{name}}” 프로젝트를 삭제할까요?",
+    "deleteBody": "할 일은 받은 편지함으로 이동합니다.",
+    "name": "프로젝트 이름"
+  },
+  "recurrence": {
+    "title": "반복",
+    "repeat": "반복 주기",
+    "repeats": "반복",
+    "monthMode": "날짜",
+    "monthDay": "매월 {{day}}일",
+    "monthWeekday": "매월 같은 주의 {{weekday}}",
+    "next": "다음: {{date}}",
+    "weekdays": "요일",
+    "units": {
+      "none": "반복 안 함",
+      "day": "매일",
+      "weekday": "평일 (월–금)",
+      "week": "매주",
+      "month": "매월",
+      "year": "매년"
+    },
+    "every": {
+      "day": "며칠마다",
+      "week": "몇 주마다",
+      "month": "몇 달마다",
+      "year": "몇 년마다"
+    }
+  },
+  "reminder": {
+    "at": "{{time}} 마감",
+    "today": "오늘 마감",
+    "needsDue": "알림에는 마감일이 필요합니다 (시간이 없으면 09:00).",
+    "none": "알림 없음",
+    "options": {
+      "0": "마감 시각",
+      "5": "5분 전",
+      "10": "10분 전",
+      "15": "15분 전",
+      "30": "30분 전",
+      "60": "1시간 전",
+      "120": "2시간 전",
+      "1440": "1일 전"
+    }
+  },
+  "search": {
+    "label": "할 일 검색",
+    "none": "일치하는 할 일이 없습니다"
+  },
+  "sort": {
+    "label": "정렬",
+    "manual": "사용자 지정 순서",
+    "due": "마감일",
+    "priority": "우선순위",
+    "title": "제목"
+  },
+  "subtasks": {
+    "title": "하위 작업",
+    "add": "하위 작업 추가",
+    "delete": "하위 작업 삭제"
+  },
+  "tags": {
+    "title": "태그"
+  },
+  "task": {
+    "added": "할 일을 추가했습니다",
+    "complete": "완료로 표시",
+    "completeNamed": "“{{name}}” 완료",
+    "completed": "완료",
+    "deleteTitle": "“{{name}}”을(를) 삭제할까요?",
+    "details": "할 일 세부 정보",
+    "done": "완료",
+    "due": "마감일",
+    "moveDown": "아래로 이동",
+    "moveUp": "위로 이동",
+    "nextOccurrence": "완료했습니다. 다음 날짜로 옮겼습니다.",
+    "notes": "메모",
+    "priority": "우선순위",
+    "project": "프로젝트",
+    "quickAdd": "새 할 일",
+    "quickAddPlaceholder": "할 일 추가… (#태그 사용 가능)",
+    "reminder": "알림",
+    "reopen": "미완료로 표시",
+    "tags": "태그",
+    "tagsHint": "공백이나 쉼표로 구분",
+    "time": "시간",
+    "title": "제목"
+  },
+  "priority": {
+    "0": "우선순위 없음",
+    "1": "낮음",
+    "2": "보통",
+    "3": "높음"
+  },
+  "widget": {
+    "add": "오늘 할 일 추가…"
+  }
+}
