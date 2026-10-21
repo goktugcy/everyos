@@ -227,6 +227,35 @@ describe("create-everyos-app and everyos-app", () => {
     }
   });
 
+  it("picks the production build of packages that ship one per mode", async () => {
+    const dir = join(work, "conditions");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    const library = join(dir, "node_modules/mode-lib");
+    mkdirSync(library, { recursive: true });
+    writeFileSync(
+      join(library, "package.json"),
+      JSON.stringify({
+        name: "mode-lib",
+        exports: {
+          ".": { development: "./dev.js", production: "./prod.js" },
+          "./style.css": { development: "./dev.css", production: "./prod.css" },
+        },
+      }),
+    );
+    writeFileSync(join(library, "dev.js"), 'export const mode = "development build";\n');
+    writeFileSync(join(library, "prod.js"), 'export const mode = "production build";\n');
+    writeFileSync(join(library, "dev.css"), "body { color: red; }\n");
+    writeFileSync(join(library, "prod.css"), "body { color: green; }\n");
+    writeFileSync(
+      join(dir, "src/main.ts"),
+      'import "mode-lib/style.css";\nimport { mode } from "mode-lib";\ndocument.title = mode;\n',
+    );
+    const out = await build(await loadProject(dir));
+    expect(readFileSync(join(out, "app.js"), "utf8")).toContain("production build");
+    expect(readFileSync(join(out, "app.css"), "utf8")).toContain("green");
+  });
+
   it("serves the app under EveryOS's sandbox policy with a mock desktop page", async () => {
     const dir = join(work, "devserver");
     await createProject({ dir, template: "react-widget", packages: "npm" });

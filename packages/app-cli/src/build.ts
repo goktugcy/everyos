@@ -31,6 +31,8 @@ function esbuildOptions(project: Project, outDir: string, dev: boolean): BuildOp
     bundle: true,
     format: "esm",
     platform: "browser",
+    // Packages that ship separate builds (and styles) per mode, as other bundlers pick them.
+    conditions: [dev ? "development" : "production"],
     target: "es2022",
     splitting: true,
     chunkNames: "chunks/[name]-[hash]",
