@@ -1,0 +1,92 @@
+{
+  "app": {
+    "name": "JSON スタジオ",
+    "description": "JSON の検証、整形、探索。ツリー表示、JSONPath クエリ、構造比較、CSV 書き出し。"
+  },
+  "actions": {
+    "open": "開く…",
+    "save": "名前を付けて保存…",
+    "indent": "インデント",
+    "sortKeys": "キーを並べ替え",
+    "format": "整形",
+    "minify": "圧縮",
+    "copy": "コピー"
+  },
+  "indent": {
+    "two": "スペース 2 つ",
+    "four": "スペース 4 つ",
+    "tab": "タブ"
+  },
+  "editor": {
+    "label": "JSON テキスト",
+    "placeholder": "JSON を貼り付けるか入力、またはファイルを開く…"
+  },
+  "status": {
+    "empty": "空",
+    "valid": "有効な JSON",
+    "invalid": "無効",
+    "at": "{{line}} 行 {{column}} 列",
+    "fixFirst": "まず JSON を修正してください。正しくありません。",
+    "emptyPanel": "JSON を貼り付けるか開くと探索できます",
+    "invalidPanel": "JSON にエラーがあります。エディタを確認してください"
+  },
+  "problems": {
+    "unexpected-end": "テキストが途中で終わっています",
+    "unexpected-character": "予期しない文字",
+    "bad-string": "文字列に制御文字があります (エスケープしてください)",
+    "bad-escape": "無効なエスケープシーケンス",
+    "bad-number": "無効な数値",
+    "trailing-comma": "末尾のカンマ (JSON では使えません)",
+    "expected-colon": "キーの後に「:」が必要です",
+    "expected-comma": "「,」または閉じかっこが必要です",
+    "expected-key": "ダブルクォートで囲んだキーが必要です",
+    "trailing-content": "JSON 値の後に余分なテキストがあります",
+    "empty": "読み取る内容がありません"
+  },
+  "panels": {
+    "label": "ツール",
+    "tree": "ツリー",
+    "query": "クエリ",
+    "diff": "比較",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "ドキュメントツリー",
+    "search": "キーと値を検索",
+    "hit": "{{current}} / {{total}}",
+    "noHits": "一致なし",
+    "previous": "前の一致",
+    "next": "次の一致",
+    "copyPath": "パスをコピー",
+    "copyValue": "値をコピー",
+    "members_other": "{{count}} 個のメンバー",
+    "items_other": "{{count}} 個の要素"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "例",
+    "error": "{{position}} 文字目: {{message}}",
+    "results_other": "{{count}} 件",
+    "copy": "結果をコピー",
+    "show": "ツリーで表示",
+    "more": "ほか {{count}} 件"
+  },
+  "diff": {
+    "with": "別の JSON ドキュメントと比較",
+    "open": "開く…",
+    "other": "比較する JSON",
+    "placeholder": "もう一方のバージョンをここに貼り付け",
+    "same": "ドキュメントは同じです",
+    "added_other": "追加 {{count}}",
+    "removed_other": "削除 {{count}}",
+    "changed_other": "変更 {{count}}"
+  },
+  "csv": {
+    "needsArray": "CSV にはリストが必要です",
+    "needsArrayText": "ドキュメントは配列 (列にはオブジェクトの配列) である必要があります。",
+    "summary": "{{rows}} 行、{{columns}} 列",
+    "copy": "CSV をコピー",
+    "export": "CSV を書き出す…",
+    "preview": "CSV プレビュー"
+  }
+}

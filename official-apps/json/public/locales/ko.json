@@ -1,0 +1,92 @@
+{
+  "app": {
+    "name": "JSON 스튜디오",
+    "description": "JSON 검증, 서식 지정, 탐색. 트리 보기, JSONPath 쿼리, 구조 비교, CSV 내보내기."
+  },
+  "actions": {
+    "open": "열기…",
+    "save": "다른 이름으로 저장…",
+    "indent": "들여쓰기",
+    "sortKeys": "키 정렬",
+    "format": "서식 지정",
+    "minify": "축소",
+    "copy": "복사"
+  },
+  "indent": {
+    "two": "공백 2칸",
+    "four": "공백 4칸",
+    "tab": "탭"
+  },
+  "editor": {
+    "label": "JSON 텍스트",
+    "placeholder": "JSON을 붙여넣거나 입력하거나 파일을 여세요…"
+  },
+  "status": {
+    "empty": "비어 있음",
+    "valid": "올바른 JSON",
+    "invalid": "잘못됨",
+    "at": "{{line}}줄 {{column}}열",
+    "fixFirst": "먼저 JSON을 고치세요. 올바르지 않습니다.",
+    "emptyPanel": "탐색하려면 JSON을 붙여넣거나 여세요",
+    "invalidPanel": "JSON에 오류가 있습니다. 편집기를 확인하세요"
+  },
+  "problems": {
+    "unexpected-end": "텍스트가 너무 일찍 끝납니다",
+    "unexpected-character": "예상하지 못한 문자",
+    "bad-string": "문자열에 제어 문자가 있습니다 (이스케이프하세요)",
+    "bad-escape": "잘못된 이스케이프 시퀀스",
+    "bad-number": "잘못된 숫자",
+    "trailing-comma": "끝에 쉼표 (JSON에서는 허용되지 않음)",
+    "expected-colon": "키 뒤에 “:”가 필요합니다",
+    "expected-comma": "“,” 또는 닫는 괄호가 필요합니다",
+    "expected-key": "큰따옴표로 묶은 키가 필요합니다",
+    "trailing-content": "JSON 값 뒤에 예상하지 못한 텍스트가 있습니다",
+    "empty": "읽을 내용이 없습니다"
+  },
+  "panels": {
+    "label": "도구",
+    "tree": "트리",
+    "query": "쿼리",
+    "diff": "비교",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "문서 트리",
+    "search": "키와 값 검색",
+    "hit": "{{current}} / {{total}}",
+    "noHits": "일치 항목 없음",
+    "previous": "이전 일치 항목",
+    "next": "다음 일치 항목",
+    "copyPath": "경로 복사",
+    "copyValue": "값 복사",
+    "members_other": "멤버 {{count}}개",
+    "items_other": "항목 {{count}}개"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "예시",
+    "error": "{{position}}번째 위치: {{message}}",
+    "results_other": "결과 {{count}}개",
+    "copy": "결과 복사",
+    "show": "트리에서 보기",
+    "more": "외 {{count}}개"
+  },
+  "diff": {
+    "with": "다른 JSON 문서와 비교",
+    "open": "열기…",
+    "other": "비교할 JSON",
+    "placeholder": "다른 버전을 여기에 붙여넣으세요",
+    "same": "두 문서가 같습니다",
+    "added_other": "추가 {{count}}",
+    "removed_other": "삭제 {{count}}",
+    "changed_other": "변경 {{count}}"
+  },
+  "csv": {
+    "needsArray": "CSV에는 목록이 필요합니다",
+    "needsArrayText": "문서는 배열(열을 만들려면 객체 배열)이어야 합니다.",
+    "summary": "{{rows}}행, {{columns}}열",
+    "copy": "CSV 복사",
+    "export": "CSV 내보내기…",
+    "preview": "CSV 미리 보기"
+  }
+}

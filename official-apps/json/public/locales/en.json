@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "JSON Studio",
+    "description": "Validate, format and explore JSON: a tree, JSONPath queries, structural diff and CSV export."
+  },
+  "actions": {
+    "open": "Open…",
+    "save": "Save as…",
+    "indent": "Indentation",
+    "sortKeys": "Sort keys",
+    "format": "Format",
+    "minify": "Minify",
+    "copy": "Copy"
+  },
+  "indent": {
+    "two": "2 spaces",
+    "four": "4 spaces",
+    "tab": "Tabs"
+  },
+  "editor": {
+    "label": "JSON text",
+    "placeholder": "Paste or type JSON, or open a file…"
+  },
+  "status": {
+    "empty": "Empty",
+    "valid": "Valid JSON",
+    "invalid": "Invalid",
+    "at": "Line {{line}}, column {{column}}",
+    "fixFirst": "Fix the JSON first: it is not valid.",
+    "emptyPanel": "Paste or open JSON to explore it",
+    "invalidPanel": "The JSON has an error: see the editor"
+  },
+  "problems": {
+    "unexpected-end": "The text ends too early",
+    "unexpected-character": "Unexpected character",
+    "bad-string": "A string contains a control character (escape it)",
+    "bad-escape": "Invalid escape sequence",
+    "bad-number": "Invalid number",
+    "trailing-comma": "Trailing comma (not allowed in JSON)",
+    "expected-colon": "Expected “:” after the key",
+    "expected-comma": "Expected “,” or a closing bracket",
+    "expected-key": "Expected a key in double quotes",
+    "trailing-content": "Unexpected text after the JSON value",
+    "empty": "Nothing to read"
+  },
+  "panels": {
+    "label": "Tools",
+    "tree": "Tree",
+    "query": "Query",
+    "diff": "Compare",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "Document tree",
+    "search": "Search keys and values",
+    "hit": "{{current}} of {{total}}",
+    "noHits": "No matches",
+    "previous": "Previous match",
+    "next": "Next match",
+    "copyPath": "Copy path",
+    "copyValue": "Copy value",
+    "members_one": "{{count}} member",
+    "members_other": "{{count}} members",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "Examples",
+    "error": "At {{position}}: {{message}}",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results",
+    "copy": "Copy results",
+    "show": "Show in the tree",
+    "more": "and {{count}} more"
+  },
+  "diff": {
+    "with": "Compare with another JSON document",
+    "open": "Open…",
+    "other": "JSON to compare",
+    "placeholder": "Paste the other version here",
+    "same": "The documents are the same",
+    "added_one": "{{count}} added",
+    "added_other": "{{count}} added",
+    "removed_one": "{{count}} removed",
+    "removed_other": "{{count}} removed",
+    "changed_one": "{{count}} changed",
+    "changed_other": "{{count}} changed"
+  },
+  "csv": {
+    "needsArray": "CSV needs a list",
+    "needsArrayText": "The document must be an array (of objects, for columns).",
+    "summary": "{{rows}} rows, {{columns}} columns",
+    "copy": "Copy CSV",
+    "export": "Export CSV…",
+    "preview": "CSV preview"
+  }
+}

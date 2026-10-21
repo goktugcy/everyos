@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "JSON Studio",
+    "description": "Valida, formatta ed esplora JSON: albero, query JSONPath, confronto strutturale ed esportazione CSV."
+  },
+  "actions": {
+    "open": "Apri…",
+    "save": "Salva con nome…",
+    "indent": "Rientro",
+    "sortKeys": "Ordina chiavi",
+    "format": "Formatta",
+    "minify": "Minifica",
+    "copy": "Copia"
+  },
+  "indent": {
+    "two": "2 spazi",
+    "four": "4 spazi",
+    "tab": "Tabulazioni"
+  },
+  "editor": {
+    "label": "Testo JSON",
+    "placeholder": "Incolla o scrivi JSON, oppure apri un file…"
+  },
+  "status": {
+    "empty": "Vuoto",
+    "valid": "JSON valido",
+    "invalid": "Non valido",
+    "at": "Riga {{line}}, colonna {{column}}",
+    "fixFirst": "Correggi prima il JSON: non è valido.",
+    "emptyPanel": "Incolla o apri JSON per esplorarlo",
+    "invalidPanel": "Il JSON contiene un errore: vedi l’editor"
+  },
+  "problems": {
+    "unexpected-end": "Il testo finisce troppo presto",
+    "unexpected-character": "Carattere inatteso",
+    "bad-string": "Una stringa contiene un carattere di controllo (usa l’escape)",
+    "bad-escape": "Sequenza di escape non valida",
+    "bad-number": "Numero non valido",
+    "trailing-comma": "Virgola finale (non ammessa in JSON)",
+    "expected-colon": "Atteso «:» dopo la chiave",
+    "expected-comma": "Atteso «,» o una parentesi di chiusura",
+    "expected-key": "Attesa una chiave tra virgolette doppie",
+    "trailing-content": "Testo inatteso dopo il valore JSON",
+    "empty": "Niente da leggere"
+  },
+  "panels": {
+    "label": "Strumenti",
+    "tree": "Albero",
+    "query": "Query",
+    "diff": "Confronta",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "Albero del documento",
+    "search": "Cerca chiavi e valori",
+    "hit": "{{current}} di {{total}}",
+    "noHits": "Nessuna corrispondenza",
+    "previous": "Corrispondenza precedente",
+    "next": "Corrispondenza successiva",
+    "copyPath": "Copia percorso",
+    "copyValue": "Copia valore",
+    "members_one": "{{count}} membro",
+    "members_other": "{{count}} membri",
+    "items_one": "{{count}} elemento",
+    "items_other": "{{count}} elementi"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "Esempi",
+    "error": "Alla posizione {{position}}: {{message}}",
+    "results_one": "{{count}} risultato",
+    "results_other": "{{count}} risultati",
+    "copy": "Copia risultati",
+    "show": "Mostra nell’albero",
+    "more": "e altri {{count}}"
+  },
+  "diff": {
+    "with": "Confronta con un altro documento JSON",
+    "open": "Apri…",
+    "other": "JSON da confrontare",
+    "placeholder": "Incolla qui l’altra versione",
+    "same": "I documenti sono uguali",
+    "added_one": "{{count}} aggiunto",
+    "added_other": "{{count}} aggiunti",
+    "removed_one": "{{count}} rimosso",
+    "removed_other": "{{count}} rimossi",
+    "changed_one": "{{count}} modificato",
+    "changed_other": "{{count}} modificati"
+  },
+  "csv": {
+    "needsArray": "Il CSV richiede un elenco",
+    "needsArrayText": "Il documento deve essere un array (di oggetti, per le colonne).",
+    "summary": "{{rows}} righe, {{columns}} colonne",
+    "copy": "Copia CSV",
+    "export": "Esporta CSV…",
+    "preview": "Anteprima CSV"
+  }
+}
