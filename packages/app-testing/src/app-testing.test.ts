@@ -54,6 +54,44 @@ describe("the mock host", () => {
     expect(host.ready).toBe(true);
   });
 
+  it("works in picked folders: lists, opens and creates files and folders", async () => {
+    const { host, app } = await start({
+      granted: ["files:pick", "files:save"],
+      files: { "/project/src/main.ts": "main", "/project/README.md": "readme" },
+      pick: () => ["/project"],
+    });
+    const [folder] = await app.files.open({ directory: true, write: true });
+    expect(folder).toMatchObject({ name: "project", kind: "directory", writable: true });
+    expect((await app.files.list(folder!)).map((entry) => [entry.name, entry.kind])).toEqual([
+      ["README.md", "file"],
+      ["src", "directory"],
+    ]);
+    expect(await app.files.readText(await app.files.child(folder!, "src/main.ts"))).toBe("main");
+
+    await app.files.child(folder!, "docs", "directory");
+    const notes = await app.files.child(folder!, "docs/notes.txt", "file");
+    await app.files.write(notes, "hello");
+    await app.files.child(folder!, "empty", "directory");
+    expect((await app.files.list(folder!)).map((entry) => entry.name)).toEqual([
+      "docs",
+      "empty",
+      "README.md",
+      "src",
+    ]);
+    expect(host.readText("/project/docs/notes.txt")).toBe("hello");
+    // Asking to create what exists hands out the existing file, untouched.
+    await app.files.child(folder!, "docs/notes.txt", "file");
+    expect(host.readText("/project/docs/notes.txt")).toBe("hello");
+    await expect(app.files.child(folder!, "missing.txt")).rejects.toMatchObject({
+      code: "EVERYOS_INVALID_REQUEST",
+    });
+
+    const [readOnly] = await app.files.open({ directory: true });
+    await expect(app.files.child(readOnly!, "new.txt", "file")).rejects.toMatchObject({
+      code: "EVERYOS_PERMISSION_DENIED",
+    });
+  });
+
   it("refuses what is not granted, and window-only methods in widgets", async () => {
     const { host, app } = await start({ granted: ["storage:app"] });
     await expect(app.notifications.send({ title: "Hi" })).rejects.toMatchObject({

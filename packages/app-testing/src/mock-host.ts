@@ -206,6 +206,8 @@ export class MockHost {
   readonly storage = new Map<string, unknown>();
   /** The virtual file system (`/path` → bytes). */
   readonly files = new Map<string, { data: Uint8Array; modifiedAt: number }>();
+  /** Empty folders the app made (folders holding files exist through their files). */
+  readonly folders = new Set<string>();
   readonly window: WindowState & { title: string; badge: number | null; state: unknown } = {
     visible: true,
     focused: true,
@@ -346,6 +348,14 @@ export class MockHost {
     this.#handles.set(id, handle);
     const { path: _path, ...visible } = handle;
     return visible;
+  }
+
+  #isFolder(path: string): boolean {
+    const prefix = `${path}/`;
+    return (
+      this.folders.has(path) ||
+      [...this.files.keys(), ...this.folders].some((key) => key.startsWith(prefix))
+    );
   }
 
   #inside(handle: { path: string; kind: string }, relative: string): string {
@@ -544,18 +554,28 @@ export class MockHost {
           else if (!entries.has(name))
             entries.set(name, { name, kind: "directory", size: null, modifiedAt: file.modifiedAt });
         }
+        for (const path of this.folders) {
+          if (!path.startsWith(folder === "/" ? "/" : `${folder}/`)) continue;
+          const name = path.slice(folder === "/" ? 1 : folder.length + 1).split("/")[0]!;
+          if (!entries.has(name))
+            entries.set(name, { name, kind: "directory", size: null, modifiedAt: 0 });
+        }
         return done([...entries.values()].sort((a, b) => a.name.localeCompare(b.name)));
       }
       case "files.child": {
         this.#requireAny(["files:pick", "files:save"]);
         const parent = this.#handleOf(String(p.handle));
         const path = this.#inside(parent, String(p.path));
-        if (p.create === "file" && !this.files.has(path)) {
+        if (p.create) {
           this.#require("files:save");
-          this.files.set(path, { data: new Uint8Array(), modifiedAt: Date.now() });
+          if (!parent.writable) throw new Refusal(BRIDGE_ERRORS.permission, "Read-only folder");
         }
+        // Like the desktop, creating something that exists hands out the existing entry.
+        if (p.create === "file" && !this.files.has(path) && !this.#isFolder(path))
+          this.files.set(path, { data: new Uint8Array(), modifiedAt: Date.now() });
+        if (p.create === "directory" && !this.files.has(path)) this.folders.add(path);
         const isFile = this.files.has(path);
-        const isFolder = [...this.files.keys()].some((key) => key.startsWith(`${path}/`));
+        const isFolder = this.#isFolder(path);
         if (!isFile && !isFolder && p.create !== "directory")
           throw new Refusal(BRIDGE_ERRORS.invalid, "No such file");
         return done(

@@ -408,14 +408,27 @@ export function editorSetup(options: EditorSetup = {}): Extension {
 export const EDITOR_LANGUAGES: ReadonlyArray<{ name: string; extensions: readonly string[] }> =
   languages.map((language) => ({ name: language.name, extensions: language.extensions }));
 
+/** Matches a file name as written, then lowercased (`MAIN.C`, `Styles.CSS`). */
+function byFilename(fileName: string): LanguageDescription | null {
+  return (
+    LanguageDescription.matchFilename(languages, fileName) ??
+    LanguageDescription.matchFilename(languages, fileName.toLowerCase())
+  );
+}
+
+/** The language CodeMirror would use for a file name (extension or whole name), or null. */
+export function languageNameFor(fileName: string | null | undefined): string | null {
+  if (!fileName) return null;
+  return byFilename(fileName)?.name ?? null;
+}
+
 /** Loads the language for a file name or a language name (null: plain text). */
 export async function loadLanguage(
   nameOrFile: string | null | undefined,
 ): Promise<LanguageSupport | null> {
   if (!nameOrFile) return null;
   const description =
-    LanguageDescription.matchLanguageName(languages, nameOrFile, true) ??
-    LanguageDescription.matchFilename(languages, nameOrFile);
+    LanguageDescription.matchLanguageName(languages, nameOrFile, true) ?? byFilename(nameOrFile);
   return description ? description.load() : null;
 }
 

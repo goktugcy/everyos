@@ -6,7 +6,7 @@ import { act, createElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import { AppProvider, createAppI18n } from "./app.tsx";
-import { CodeEditor, loadLanguage } from "./editor.tsx";
+import { CodeEditor, languageNameFor, loadLanguage } from "./editor.tsx";
 import { markdownHeadings, renderMarkdown } from "./markdown.ts";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -78,5 +78,10 @@ describe("CodeEditor", () => {
     expect(await loadLanguage("script.ts")).not.toBeNull();
     expect(await loadLanguage("JSON")).not.toBeNull();
     expect(await loadLanguage("notes.unknownext")).toBeNull();
+    expect(languageNameFor("src/app.tsx")).toBe("TSX");
+    expect(languageNameFor("Dockerfile")).toBe("Dockerfile");
+    expect(languageNameFor("styles.CSS")).toBe("CSS");
+    expect(languageNameFor("notes.unknownext")).toBeNull();
+    expect(languageNameFor(null)).toBeNull();
   });
 });

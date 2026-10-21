@@ -22,7 +22,7 @@ import {
   useT,
   useToast,
 } from "@everyos/app-ui";
-import { EDITOR_LANGUAGES, loadLanguage } from "@everyos/app-ui/editor";
+import { EDITOR_LANGUAGES, languageNameFor, loadLanguage } from "@everyos/app-ui/editor";
 import {
   ArrowLeftRight,
   ChevronDown,
@@ -32,7 +32,7 @@ import {
   FilePlus2,
   FolderOpen,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { diffStats, lineEnding, unifiedPatch, type LineEnding } from "./diff.ts";
 import { DiffSurface, type DiffInfo, type SurfaceControls, type ViewMode } from "./surface.tsx";
 
@@ -57,19 +57,6 @@ const isSide = (value: unknown): value is Side =>
   value !== null &&
   typeof (value as Side).text === "string" &&
   ((value as Side).name === null || typeof (value as Side).name === "string");
-
-/** The language name for a file name, by extension or whole name (Dockerfile, Makefile). */
-function languageFor(name: string | null): string | null {
-  if (!name) return null;
-  const lower = name.toLowerCase();
-  const extension = lower.includes(".") ? lower.slice(lower.lastIndexOf(".") + 1) : "";
-  return (
-    EDITOR_LANGUAGES.find(
-      (language) =>
-        language.extensions.includes(extension) || language.name.toLowerCase() === lower,
-    )?.name ?? null
-  );
-}
 
 export function DiffApp() {
   const app = useApp();
@@ -110,7 +97,7 @@ export function DiffApp() {
     setNotKept((current) => ({ ...current, right: !kept })),
   );
 
-  const detected = languageFor(right.name) ?? languageFor(left.name);
+  const detected = languageNameFor(right.name) ?? languageNameFor(left.name);
   const languageName =
     languageChoice === "auto" ? detected : languageChoice === "plain" ? null : languageChoice;
   const [language, setLanguage] = useState<Extension | null>(null);
@@ -399,7 +386,9 @@ function useKept(loaded: boolean, key: SideKey, side: Side, report: (kept: boole
     const write = next.text || next.name ? app.storage.set(key, next) : app.storage.delete(key);
     void write.catch(() => undefined);
   }, [app, key]);
-  useEffect(() => {
+  // A layout effect: the change is pending as soon as it is on screen, so a pagehide right after
+  // an edit flushes it (a passive effect could still be waiting to run).
+  useLayoutEffect(() => {
     if (!loaded) return;
     pending.current = side;
     const timer = setTimeout(flush, 400);
