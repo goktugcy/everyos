@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "正規表現テスター",
+    "description": "JavaScript の正規表現をその場でテスト。一致の強調表示、グループ、フラグ、置換、解説。"
+  },
+  "pattern": {
+    "section": "式",
+    "label": "正規表現",
+    "placeholder": "パターンを入力…",
+    "copy": "式をコピー"
+  },
+  "flags": {
+    "label": "フラグ",
+    "d": "インデックス: 各グループの一致位置を返す",
+    "g": "グローバル: 最初だけでなくすべて検索",
+    "i": "大文字と小文字を区別しない",
+    "m": "複数行: ^ と $ が各行に一致",
+    "s": "dotAll: . が改行にも一致",
+    "u": "Unicode: コードポイントと \\p{…} プロパティ",
+    "v": "Unicode セット: 文字クラスで集合演算",
+    "y": "sticky: 直前の一致の終わりからのみ",
+    "short": {
+      "d": "位置",
+      "g": "全体",
+      "i": "大小無視",
+      "m": "複数行",
+      "s": "dotAll",
+      "u": "Unicode",
+      "v": "セット",
+      "y": "sticky"
+    }
+  },
+  "status": {
+    "empty": "正規表現を入力してください",
+    "running": "照合中…",
+    "matches_other": "{{count}} 件一致",
+    "ms": "{{ms}} ミリ秒",
+    "timeout": "停止しました: {{seconds}} 秒を超えました (破滅的なバックトラックの可能性があります)。",
+    "tooLong": "テスト用テキストが {{count}} 文字を超えています。",
+    "syntax": "正しい式ではありません: {{message}}",
+    "worker": "照合を実行できませんでした: {{message}}"
+  },
+  "text": {
+    "label": "テスト用テキスト",
+    "highlighted": "テキスト中の一致",
+    "highlightLimit": "強調表示は最初の 200,000 文字までです。"
+  },
+  "panels": {
+    "label": "結果",
+    "matches": "一致",
+    "explain": "解説",
+    "replace": "置換"
+  },
+  "matches": {
+    "none": "一致なし",
+    "empty": "(空の一致)",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "不参加",
+    "truncated": "最初の {{count}} 件のみ表示します。",
+    "more": "ほか {{count}} 件"
+  },
+  "replace": {
+    "label": "置換文字列",
+    "hint": "$1、$<name>、$& (一致)、$` と $' (前後)、$ は $$",
+    "result": "結果",
+    "copy": "結果をコピー"
+  },
+  "examples": {
+    "title": "例",
+    "email": {
+      "name": "メールアドレス",
+      "description": "テキスト中のアドレス向けの実用的なパターン (RFC 5322 のすべてではない)"
+    },
+    "url": {
+      "name": "Web アドレス",
+      "description": "http と https のリンク"
+    },
+    "ipv4": {
+      "name": "IPv4 アドレス",
+      "description": "0〜255 の 4 つの数"
+    },
+    "isoDate": {
+      "name": "ISO 日付",
+      "description": "名前付きグループの YYYY-MM-DD"
+    },
+    "hexColor": {
+      "name": "16 進カラー",
+      "description": "#rgb または #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "バージョン 1〜8"
+    },
+    "semver": {
+      "name": "セマンティックバージョン",
+      "description": "メジャー.マイナー.パッチ (プレリリースとビルド付き)"
+    },
+    "phone": {
+      "name": "電話番号",
+      "description": "空白、ドット、ハイフン、かっこを含む数字"
+    },
+    "slug": {
+      "name": "URL スラッグ",
+      "description": "ハイフンでつないだ小文字の単語 (1 行に 1 つ)"
+    },
+    "words": {
+      "name": "あらゆる文字の単語",
+      "description": "Unicode プロパティによる文字 (u が必要)"
+    },
+    "duplicateWords": {
+      "name": "重複した単語",
+      "description": "後方参照で、続けて 2 回書かれた単語"
+    },
+    "trailingSpace": {
+      "name": "行末の空白",
+      "description": "行末のスペースとタブ"
+    }
+  },
+  "saved": {
+    "title": "保存済み",
+    "save": "保存",
+    "name": "名前",
+    "done": "式を保存しました",
+    "delete": "{{name}} を削除"
+  },
+  "explain": {
+    "digit": "数字 (0〜9)",
+    "nonDigit": "数字以外の文字",
+    "word": "単語文字 (英字、数字、_)",
+    "nonWord": "単語文字以外の文字",
+    "space": "空白文字",
+    "nonSpace": "空白以外の文字",
+    "newline": "改行 (LF)",
+    "carriageReturn": "復帰 (CR)",
+    "tab": "タブ",
+    "formFeed": "改ページ",
+    "verticalTab": "垂直タブ",
+    "nul": "NUL 文字",
+    "wordBoundary": "単語の境界",
+    "nonWordBoundary": "単語の境界以外",
+    "backreference": "グループ {{number}} と同じ文字列",
+    "namedBackreference": "グループ「{{name}}」と同じ文字列",
+    "property": "Unicode プロパティ {{name}} を持つ文字",
+    "notProperty": "Unicode プロパティ {{name}} を持たない文字",
+    "hex": "文字 {{char}} (16 進コード)",
+    "unicode": "文字 {{char}} (Unicode コード)",
+    "control": "制御文字 Ctrl+{{letter}}",
+    "literal": "文字 {{char}}",
+    "literals": "文字列「{{char}}」",
+    "class": "次のいずれか 1 文字: {{items}}",
+    "notClass": "次以外の 1 文字: {{items}}",
+    "group": "グループ {{number}}: 一致部分をキャプチャ",
+    "namedGroup": "グループ {{number}}「{{name}}」: 一致部分をキャプチャ",
+    "nonCapturing": "キャプチャしないグループ",
+    "lookahead": "後に続く (一致に含めない):",
+    "negativeLookahead": "後に続かない:",
+    "lookbehind": "前にある (一致に含めない):",
+    "negativeLookbehind": "前にない:",
+    "modifiers": "フラグ {{flags}} 付きのグループ",
+    "groupEnd": "グループの終わり",
+    "alternation": "または",
+    "start": "テキストの先頭 (m なら行頭)",
+    "end": "テキストの末尾 (m なら行末)",
+    "any": "任意の 1 文字 (s がなければ改行以外)",
+    "zeroOrMore": "0 回以上 (できるだけ多く)",
+    "zeroOrMoreLazy": "0 回以上 (できるだけ少なく)",
+    "oneOrMore": "1 回以上 (できるだけ多く)",
+    "oneOrMoreLazy": "1 回以上 (できるだけ少なく)",
+    "optional": "省略可 (0 回か 1 回)",
+    "optionalLazy": "省略可 (できれば 0 回)",
+    "exactly_other": "ちょうど {{count}} 回",
+    "exactlyLazy_other": "ちょうど {{count}} 回",
+    "atLeast_other": "{{count}} 回以上 (できるだけ多く)",
+    "atLeastLazy_other": "{{count}} 回以上 (できるだけ少なく)",
+    "between": "{{min}}〜{{max}} 回 (できるだけ多く)",
+    "betweenLazy": "{{min}}〜{{max}} 回 (できるだけ少なく)"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "entries": { "app.js": "src/main.tsx" },
+  "workers": { "match.worker.js": "src/match-worker.ts" }
+}

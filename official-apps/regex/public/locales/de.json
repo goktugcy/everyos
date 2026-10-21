@@ -1,0 +1,183 @@
+{
+  "app": {
+    "name": "Regex-Tester",
+    "description": "JavaScript-Regex live testen: hervorgehobene Treffer, Gruppen, Flags, Ersetzungen und Erklärungen."
+  },
+  "pattern": {
+    "section": "Ausdruck",
+    "label": "Regulärer Ausdruck",
+    "placeholder": "Muster eingeben…",
+    "copy": "Ausdruck kopieren"
+  },
+  "flags": {
+    "label": "Flags",
+    "d": "Indizes: Position jeder Gruppe angeben",
+    "g": "Global: alle Treffer statt nur des ersten",
+    "i": "Groß-/Kleinschreibung ignorieren",
+    "m": "Mehrzeilig: ^ und $ an Zeilenumbrüchen",
+    "s": "Dotall: . passt auch auf Zeilenumbrüche",
+    "u": "Unicode: Codepoints und \\p{…}-Eigenschaften",
+    "v": "Unicode-Mengen: Mengenoperationen in Klassen",
+    "y": "Sticky: nur dort, wo der letzte Treffer endete",
+    "short": {
+      "d": "Indizes",
+      "g": "global",
+      "i": "ohne Groß/klein",
+      "m": "mehrzeilig",
+      "s": "dotall",
+      "u": "Unicode",
+      "v": "Mengen",
+      "y": "sticky"
+    }
+  },
+  "status": {
+    "empty": "Geben Sie einen regulären Ausdruck ein",
+    "running": "Suche läuft…",
+    "matches_one": "{{count}} Treffer",
+    "matches_other": "{{count}} Treffer",
+    "ms": "{{ms}} ms",
+    "timeout": "Abgebrochen: Der Ausdruck brauchte länger als {{seconds}} s (vermutlich katastrophales Backtracking).",
+    "tooLong": "Der Testtext ist länger als {{count}} Zeichen.",
+    "syntax": "Kein gültiger Ausdruck: {{message}}",
+    "worker": "Suche konnte nicht laufen: {{message}}"
+  },
+  "text": {
+    "label": "Testtext",
+    "highlighted": "Treffer im Text",
+    "highlightLimit": "Nur die ersten 200.000 Zeichen werden hervorgehoben."
+  },
+  "panels": {
+    "label": "Ergebnisse",
+    "matches": "Treffer",
+    "explain": "Erklärung",
+    "replace": "Ersetzen"
+  },
+  "matches": {
+    "none": "Keine Treffer",
+    "empty": "(leerer Treffer)",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "nicht beteiligt",
+    "truncated": "Nur die ersten {{count}} Treffer werden angezeigt.",
+    "more": "und {{count}} weitere"
+  },
+  "replace": {
+    "label": "Ersetzung",
+    "hint": "$1, $<name>, $& (Treffer), $` und $' (davor und danach), $$ für $",
+    "result": "Ergebnis",
+    "copy": "Ergebnis kopieren"
+  },
+  "examples": {
+    "title": "Beispiele",
+    "email": {
+      "name": "E-Mail-Adresse",
+      "description": "Praktisches Muster für Adressen im Text (nicht jede gültige RFC-5322-Adresse)"
+    },
+    "url": {
+      "name": "Webadresse",
+      "description": "http- und https-Links"
+    },
+    "ipv4": {
+      "name": "IPv4-Adresse",
+      "description": "Vier Zahlen von 0 bis 255"
+    },
+    "isoDate": {
+      "name": "ISO-Datum",
+      "description": "JJJJ-MM-TT mit benannten Gruppen"
+    },
+    "hexColor": {
+      "name": "Hex-Farbe",
+      "description": "#rgb oder #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "Versionen 1 bis 8"
+    },
+    "semver": {
+      "name": "Semantische Version",
+      "description": "major.minor.patch mit Vorabversion und Build"
+    },
+    "phone": {
+      "name": "Telefonnummer",
+      "description": "Ziffern mit Leerzeichen, Punkten, Strichen oder Klammern"
+    },
+    "slug": {
+      "name": "URL-Slug",
+      "description": "Kleine Wörter mit Bindestrichen, eins pro Zeile"
+    },
+    "words": {
+      "name": "Wörter in jeder Schrift",
+      "description": "Buchstaben per Unicode-Eigenschaft (braucht u)"
+    },
+    "duplicateWords": {
+      "name": "Doppelte Wörter",
+      "description": "Ein direkt doppelt geschriebenes Wort, per Rückverweis"
+    },
+    "trailingSpace": {
+      "name": "Leerzeichen am Zeilenende",
+      "description": "Leerzeichen und Tabs am Zeilenende"
+    }
+  },
+  "saved": {
+    "title": "Gespeichert",
+    "save": "Speichern",
+    "name": "Name",
+    "done": "Ausdruck gespeichert",
+    "delete": "{{name}} löschen"
+  },
+  "explain": {
+    "digit": "Eine Ziffer (0–9)",
+    "nonDigit": "Jedes Zeichen außer einer Ziffer",
+    "word": "Ein Wortzeichen (Buchstabe, Ziffer oder _)",
+    "nonWord": "Jedes Zeichen außer einem Wortzeichen",
+    "space": "Ein Leerraumzeichen",
+    "nonSpace": "Jedes Zeichen außer Leerraum",
+    "newline": "Ein Zeilenvorschub",
+    "carriageReturn": "Ein Wagenrücklauf",
+    "tab": "Ein Tabulator",
+    "formFeed": "Ein Seitenvorschub",
+    "verticalTab": "Ein vertikaler Tabulator",
+    "nul": "Das NUL-Zeichen",
+    "wordBoundary": "Eine Wortgrenze",
+    "nonWordBoundary": "Keine Wortgrenze",
+    "backreference": "Derselbe Text wie Gruppe {{number}}",
+    "namedBackreference": "Derselbe Text wie die Gruppe „{{name}}“",
+    "property": "Ein Zeichen mit der Unicode-Eigenschaft {{name}}",
+    "notProperty": "Ein Zeichen ohne die Unicode-Eigenschaft {{name}}",
+    "hex": "Das Zeichen {{char}} (hexadezimal)",
+    "unicode": "Das Zeichen {{char}} (Unicode-Code)",
+    "control": "Das Steuerzeichen Strg+{{letter}}",
+    "literal": "Das Zeichen {{char}}",
+    "literals": "Der Text „{{char}}“",
+    "class": "Ein Zeichen aus: {{items}}",
+    "notClass": "Ein Zeichen außer: {{items}}",
+    "group": "Gruppe {{number}}: merkt sich den Treffer",
+    "namedGroup": "Gruppe {{number}} „{{name}}“: merkt sich den Treffer",
+    "nonCapturing": "Eine Gruppe ohne Merken",
+    "lookahead": "Gefolgt von (nicht Teil des Treffers):",
+    "negativeLookahead": "Nicht gefolgt von:",
+    "lookbehind": "Davor steht (nicht Teil des Treffers):",
+    "negativeLookbehind": "Davor steht nicht:",
+    "modifiers": "Eine Gruppe mit den Flags {{flags}}",
+    "groupEnd": "Ende der Gruppe",
+    "alternation": "Oder",
+    "start": "Textanfang (mit m: Zeilenanfang)",
+    "end": "Textende (mit m: Zeilenende)",
+    "any": "Beliebiges Zeichen (ohne s keine Zeilenumbrüche)",
+    "zeroOrMore": "Null- oder mehrmals, so oft wie möglich",
+    "zeroOrMoreLazy": "Null- oder mehrmals, so selten wie möglich",
+    "oneOrMore": "Ein- oder mehrmals, so oft wie möglich",
+    "oneOrMoreLazy": "Ein- oder mehrmals, so selten wie möglich",
+    "optional": "Optional (einmal oder gar nicht)",
+    "optionalLazy": "Optional, lieber gar nicht",
+    "exactly_one": "Genau {{count}}-mal",
+    "exactly_other": "Genau {{count}}-mal",
+    "exactlyLazy_one": "Genau {{count}}-mal",
+    "exactlyLazy_other": "Genau {{count}}-mal",
+    "atLeast_one": "Mindestens {{count}}-mal, so oft wie möglich",
+    "atLeast_other": "Mindestens {{count}}-mal, so oft wie möglich",
+    "atLeastLazy_one": "Mindestens {{count}}-mal, so selten wie möglich",
+    "atLeastLazy_other": "Mindestens {{count}}-mal, so selten wie möglich",
+    "between": "Zwischen {{min}}- und {{max}}-mal, so oft wie möglich",
+    "betweenLazy": "Zwischen {{min}}- und {{max}}-mal, so selten wie möglich"
+  }
+}
