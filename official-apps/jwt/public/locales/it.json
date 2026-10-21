@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "Ispettore JWT",
+    "description": "Decodifica JSON Web Token, leggi claim e scadenza, verifica le firme con le tue chiavi ed esporta claim oscurati. I token non lasciano mai questo dispositivo."
+  },
+  "remember": {
+    "label": "Ricorda l’ultimo token",
+    "hint": "Disattivato per impostazione predefinita: i token restano solo in questa finestra. Le chiavi non vengono mai salvate."
+  },
+  "token": {
+    "section": "Token",
+    "label": "JSON Web Token",
+    "placeholder": "Incolla un token (eyJ…), con o senza «Bearer»",
+    "parts": "Intestazione, payload e firma",
+    "privacy": "La decodifica avviene su questo dispositivo; il token non viene inviato da nessuna parte.",
+    "waiting": "Incolla un token per esaminarlo",
+    "noAlg": "Nessun algoritmo",
+    "algNone": "Non firmato (alg: none): chiunque potrebbe averlo scritto"
+  },
+  "parts": {
+    "0": "intestazione",
+    "1": "payload",
+    "2": "firma"
+  },
+  "problems": {
+    "segments": "Un token ha tre parti separate da punti",
+    "base64": "La parte {{part}} non è Base64URL valido",
+    "json": "La parte {{part}} non è JSON",
+    "not-object": "La parte {{part}} deve essere un oggetto JSON",
+    "jwe": "Un token cifrato (JWE): non si può leggere senza la chiave privata"
+  },
+  "validity": {
+    "valid": "Valido",
+    "expiresIn": "Scade {{when}}",
+    "expired": "Scaduto {{when}}",
+    "notYet": "Non ancora valido: inizia {{when}}",
+    "noExpiry": "Nessuna scadenza (exp)",
+    "skew": "Tolleranza dell’orologio",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "panels": {
+    "label": "Viste",
+    "decoded": "Decodificato",
+    "verify": "Verifica firma",
+    "export": "Esporta"
+  },
+  "decoded": {
+    "header": "Intestazione",
+    "payload": "Payload",
+    "claim": "Claim",
+    "value": "Valore"
+  },
+  "verify": {
+    "secretHint": "Questo token usa un segreto HMAC: incolla il segreto condiviso.",
+    "keyHint": "Incolla la chiave pubblica dell’emittente: PEM (BEGIN PUBLIC KEY), un certificato, un JWK o un set JWK (scelto per kid).",
+    "encoding": "Il segreto è",
+    "encodings": {
+      "text": "Testo",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "Segreto",
+    "key": "Chiave pubblica",
+    "check": "Verifica la firma",
+    "private": "La chiave viene usata solo in questa finestra e non viene salvata.",
+    "results": {
+      "valid": "Firma valida ({{alg}})",
+      "invalid-signature": "La firma non corrisponde a questa chiave",
+      "alg-none": "I token non firmati (alg: none) non vengono mai accettati",
+      "alg-unsupported": "L’algoritmo {{alg}} non è supportato",
+      "key-mismatch": "Questo tipo di chiave non è adatto a {{alg}}",
+      "bad-key": "Impossibile leggere la chiave",
+      "private-key": "È una chiave privata: incolla invece la chiave pubblica",
+      "no-matching-key": "Nessuna chiave del set corrisponde al kid del token"
+    }
+  },
+  "export": {
+    "hint": "Condividi il contenuto di un token senza ciò che identifica una persona: scegli i claim da nascondere.",
+    "redact": "Claim da nascondere",
+    "redactClaim": "Nascondi {{claim}}",
+    "preview": "Cosa verrà esportato",
+    "copy": "Copia",
+    "save": "Salva come JSON…"
+  },
+  "claims": {
+    "iss": "Emittente",
+    "sub": "Soggetto (a chi si riferisce)",
+    "aud": "Destinatari (chi può accettarlo)",
+    "exp": "Scade il",
+    "nbf": "Non valido prima del",
+    "iat": "Emesso il",
+    "jti": "Id del token",
+    "azp": "Parte autorizzata",
+    "scope": "Ambiti concessi",
+    "scp": "Ambiti concessi",
+    "client_id": "Client",
+    "sid": "Id di sessione",
+    "nonce": "Nonce",
+    "auth_time": "Accesso il",
+    "acr": "Livello di autenticazione",
+    "amr": "Metodi di autenticazione",
+    "name": "Nome",
+    "given_name": "Nome di battesimo",
+    "family_name": "Cognome",
+    "preferred_username": "Nome utente",
+    "email": "Email",
+    "email_verified": "Email verificata",
+    "phone_number": "Numero di telefono",
+    "roles": "Ruoli",
+    "groups": "Gruppi",
+    "tid": "Tenant",
+    "oid": "Id oggetto"
+  }
+}

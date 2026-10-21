@@ -1,0 +1,137 @@
+.jwt-app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  min-height: 0;
+}
+.jwt-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.jwt-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  min-height: 0;
+}
+.jwt-body[data-narrow] {
+  grid-template-columns: 1fr;
+  overflow: auto;
+}
+.jwt-input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-right: 1px solid var(--eui-line);
+  min-height: 0;
+  overflow: auto;
+}
+.jwt-token {
+  min-height: 140px;
+  word-break: break-all;
+}
+.jwt-colored {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-sm);
+  font-size: 0.85rem;
+  word-break: break-all;
+  line-height: 1.5;
+}
+.jwt-colored [data-part="header"] {
+  color: #e11d48;
+}
+.jwt-colored [data-part="payload"] {
+  color: #9333ea;
+}
+.jwt-colored [data-part="signature"] {
+  color: #0891b2;
+}
+.jwt-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.jwt-skew {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--eui-subtle);
+}
+.jwt-skew .eui-select {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+.jwt-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  padding: 12px;
+  min-height: 0;
+}
+.jwt-panel-body {
+  min-height: 0;
+  overflow: auto;
+}
+.jwt-panel-body h2 {
+  margin: 8px 0 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eui-subtle);
+}
+.jwt-json {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-sm);
+  background: var(--eui-inset);
+  font:
+    0.82rem/1.5 ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.jwt-claims th[scope="row"] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 500;
+}
+.jwt-claim-name {
+  font-size: 0.75rem;
+  color: var(--eui-subtle);
+  font-weight: 400;
+}
+.jwt-value {
+  overflow-wrap: anywhere;
+}
+.jwt-verify,
+.jwt-export {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.jwt-key {
+  min-height: 120px;
+}
+.jwt-result {
+  margin: 0;
+}
+.jwt-redact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px;
+}
+.jwt-actions {
+  display: flex;
+  gap: 6px;
+}

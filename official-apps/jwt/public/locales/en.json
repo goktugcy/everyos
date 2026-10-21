@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "JWT Inspector",
+    "description": "Decode JSON Web Tokens, read their claims and expiry, check signatures with your own keys, and export redacted claims. Tokens never leave this device."
+  },
+  "remember": {
+    "label": "Remember the last token",
+    "hint": "Off by default: tokens are kept in this window only. Keys are never stored."
+  },
+  "token": {
+    "section": "Token",
+    "label": "JSON Web Token",
+    "placeholder": "Paste a token (eyJ…), with or without “Bearer”",
+    "parts": "Header, payload and signature",
+    "privacy": "Decoding happens on this device; the token is not sent anywhere.",
+    "waiting": "Paste a token to inspect it",
+    "noAlg": "No algorithm",
+    "algNone": "Unsigned (alg: none): anyone could have written it"
+  },
+  "parts": {
+    "0": "header",
+    "1": "payload",
+    "2": "signature"
+  },
+  "problems": {
+    "segments": "A token has three parts separated by dots",
+    "base64": "The {{part}} is not valid Base64URL",
+    "json": "The {{part}} is not JSON",
+    "not-object": "The {{part}} must be a JSON object",
+    "jwe": "An encrypted token (JWE): it cannot be read without its private key"
+  },
+  "validity": {
+    "valid": "Valid",
+    "expiresIn": "Expires {{when}}",
+    "expired": "Expired {{when}}",
+    "notYet": "Not valid yet: starts {{when}}",
+    "noExpiry": "No expiry (exp)",
+    "skew": "Clock tolerance",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "panels": {
+    "label": "Views",
+    "decoded": "Decoded",
+    "verify": "Verify signature",
+    "export": "Export"
+  },
+  "decoded": {
+    "header": "Header",
+    "payload": "Payload",
+    "claim": "Claim",
+    "value": "Value"
+  },
+  "verify": {
+    "secretHint": "This token uses an HMAC secret: paste the shared secret.",
+    "keyHint": "Paste the issuer's public key: PEM (BEGIN PUBLIC KEY), a certificate, a JWK or a JWK set (picked by kid).",
+    "encoding": "Secret is",
+    "encodings": {
+      "text": "Text",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "Secret",
+    "key": "Public key",
+    "check": "Check the signature",
+    "private": "The key is used only in this window and is not stored.",
+    "results": {
+      "valid": "Signature valid ({{alg}})",
+      "invalid-signature": "Signature does not match this key",
+      "alg-none": "Unsigned tokens (alg: none) are never accepted",
+      "alg-unsupported": "The algorithm {{alg}} is not supported",
+      "key-mismatch": "This kind of key does not fit {{alg}}",
+      "bad-key": "The key could not be read",
+      "private-key": "That is a private key: paste the public key instead",
+      "no-matching-key": "No key in the set matches this token's kid"
+    }
+  },
+  "export": {
+    "hint": "Share what a token says without what identifies a person: choose the claims to hide.",
+    "redact": "Claims to hide",
+    "redactClaim": "Hide {{claim}}",
+    "preview": "What will be exported",
+    "copy": "Copy",
+    "save": "Save as JSON…"
+  },
+  "claims": {
+    "iss": "Issuer",
+    "sub": "Subject (who the token is about)",
+    "aud": "Audience (who may accept it)",
+    "exp": "Expires at",
+    "nbf": "Not valid before",
+    "iat": "Issued at",
+    "jti": "Token id",
+    "azp": "Authorized party",
+    "scope": "Scopes granted",
+    "scp": "Scopes granted",
+    "client_id": "Client",
+    "sid": "Session id",
+    "nonce": "Nonce",
+    "auth_time": "Signed in at",
+    "acr": "Authentication level",
+    "amr": "Authentication methods",
+    "name": "Name",
+    "given_name": "Given name",
+    "family_name": "Family name",
+    "preferred_username": "User name",
+    "email": "Email",
+    "email_verified": "Email verified",
+    "phone_number": "Phone number",
+    "roles": "Roles",
+    "groups": "Groups",
+    "tid": "Tenant",
+    "oid": "Object id"
+  }
+}

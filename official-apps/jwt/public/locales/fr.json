@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "Inspecteur JWT",
+    "description": "Décodez des JSON Web Tokens, lisez leurs claims et leur expiration, vérifiez les signatures avec vos clés et exportez des claims masqués. Les jetons ne quittent jamais cet appareil."
+  },
+  "remember": {
+    "label": "Mémoriser le dernier jeton",
+    "hint": "Désactivé par défaut : les jetons restent dans cette fenêtre. Les clés ne sont jamais enregistrées."
+  },
+  "token": {
+    "section": "Jeton",
+    "label": "JSON Web Token",
+    "placeholder": "Collez un jeton (eyJ…), avec ou sans « Bearer »",
+    "parts": "En-tête, charge utile et signature",
+    "privacy": "Le décodage se fait sur cet appareil ; le jeton n’est envoyé nulle part.",
+    "waiting": "Collez un jeton pour l’inspecter",
+    "noAlg": "Aucun algorithme",
+    "algNone": "Non signé (alg : none) : n’importe qui a pu l’écrire"
+  },
+  "parts": {
+    "0": "en-tête",
+    "1": "charge utile",
+    "2": "signature"
+  },
+  "problems": {
+    "segments": "Un jeton compte trois parties séparées par des points",
+    "base64": "La partie {{part}} n’est pas du Base64URL valide",
+    "json": "La partie {{part}} n’est pas du JSON",
+    "not-object": "La partie {{part}} doit être un objet JSON",
+    "jwe": "Un jeton chiffré (JWE) : illisible sans sa clé privée"
+  },
+  "validity": {
+    "valid": "Valide",
+    "expiresIn": "Expire {{when}}",
+    "expired": "Expiré {{when}}",
+    "notYet": "Pas encore valide : commence {{when}}",
+    "noExpiry": "Pas d’expiration (exp)",
+    "skew": "Tolérance d’horloge",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "panels": {
+    "label": "Vues",
+    "decoded": "Décodé",
+    "verify": "Vérifier la signature",
+    "export": "Exporter"
+  },
+  "decoded": {
+    "header": "En-tête",
+    "payload": "Charge utile",
+    "claim": "Claim",
+    "value": "Valeur"
+  },
+  "verify": {
+    "secretHint": "Ce jeton utilise un secret HMAC : collez le secret partagé.",
+    "keyHint": "Collez la clé publique de l’émetteur : PEM (BEGIN PUBLIC KEY), certificat, JWK ou ensemble JWK (choisi par kid).",
+    "encoding": "Le secret est",
+    "encodings": {
+      "text": "Texte",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "Secret",
+    "key": "Clé publique",
+    "check": "Vérifier la signature",
+    "private": "La clé n’est utilisée que dans cette fenêtre et n’est pas enregistrée.",
+    "results": {
+      "valid": "Signature valide ({{alg}})",
+      "invalid-signature": "La signature ne correspond pas à cette clé",
+      "alg-none": "Les jetons non signés (alg : none) ne sont jamais acceptés",
+      "alg-unsupported": "L’algorithme {{alg}} n’est pas pris en charge",
+      "key-mismatch": "Ce type de clé ne convient pas à {{alg}}",
+      "bad-key": "La clé n’a pas pu être lue",
+      "private-key": "C’est une clé privée : collez plutôt la clé publique",
+      "no-matching-key": "Aucune clé de l’ensemble ne correspond au kid du jeton"
+    }
+  },
+  "export": {
+    "hint": "Partagez ce que dit un jeton sans ce qui identifie une personne : choisissez les claims à masquer.",
+    "redact": "Claims à masquer",
+    "redactClaim": "Masquer {{claim}}",
+    "preview": "Ce qui sera exporté",
+    "copy": "Copier",
+    "save": "Enregistrer en JSON…"
+  },
+  "claims": {
+    "iss": "Émetteur",
+    "sub": "Sujet (la personne concernée)",
+    "aud": "Audience (qui peut l’accepter)",
+    "exp": "Expire le",
+    "nbf": "Pas valide avant",
+    "iat": "Émis le",
+    "jti": "Identifiant du jeton",
+    "azp": "Partie autorisée",
+    "scope": "Portées accordées",
+    "scp": "Portées accordées",
+    "client_id": "Client",
+    "sid": "Identifiant de session",
+    "nonce": "Nonce",
+    "auth_time": "Connecté le",
+    "acr": "Niveau d’authentification",
+    "amr": "Méthodes d’authentification",
+    "name": "Nom",
+    "given_name": "Prénom",
+    "family_name": "Nom de famille",
+    "preferred_username": "Nom d’utilisateur",
+    "email": "E-mail",
+    "email_verified": "E-mail vérifié",
+    "phone_number": "Numéro de téléphone",
+    "roles": "Rôles",
+    "groups": "Groupes",
+    "tid": "Locataire",
+    "oid": "Identifiant d’objet"
+  }
+}
