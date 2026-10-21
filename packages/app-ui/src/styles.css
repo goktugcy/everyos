@@ -31,6 +31,29 @@
   --eui-warning: rgb(var(--everyos-warning, 146 64 14));
   --eui-gap: 12px;
 }
+/* Syntax colors (editors, highlighted code): readable on light and dark surfaces. */
+:root {
+  --eui-code-keyword: #8b3fd9;
+  --eui-code-string: #0a7d3c;
+  --eui-code-number: #b45309;
+  --eui-code-comment: #6b7a90;
+  --eui-code-function: #1d63c9;
+  --eui-code-type: #0f766e;
+  --eui-code-property: #9a3412;
+  --eui-code-tag: #be185d;
+  --eui-code-definition: #1e3a8a;
+}
+[data-everyos-scheme="dark"] {
+  --eui-code-keyword: #c792ea;
+  --eui-code-string: #a5e075;
+  --eui-code-number: #f7a865;
+  --eui-code-comment: #8b9bb4;
+  --eui-code-function: #82aaff;
+  --eui-code-type: #5ee3d4;
+  --eui-code-property: #ffcb8b;
+  --eui-code-tag: #ff8fb7;
+  --eui-code-definition: #9ecbff;
+}
 [data-everyos-density="compact"] {
   --eui-gap: 8px;
 }
@@ -698,4 +721,55 @@ body {
 .eui-markdown td {
   padding: 4px 10px;
   border: 1px solid var(--eui-line);
+}
+
+/* ---------------------------------------------------------------- code editor (CodeEditor) */
+.eui-code-editor {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.eui-code-editor .cm-editor {
+  height: 100%;
+}
+/* highlight.js classes (renderMarkdown with highlighting) on the same colors. */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in {
+  color: var(--eui-code-keyword);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: var(--eui-code-string);
+}
+.hljs-number,
+.hljs-literal {
+  color: var(--eui-code-number);
+}
+.hljs-comment,
+.hljs-quote,
+.hljs-meta {
+  color: var(--eui-code-comment);
+  font-style: italic;
+}
+.hljs-title,
+.hljs-title.function_ {
+  color: var(--eui-code-function);
+}
+.hljs-type,
+.hljs-class {
+  color: var(--eui-code-type);
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-property {
+  color: var(--eui-code-property);
+}
+.hljs-tag,
+.hljs-name {
+  color: var(--eui-code-tag);
+}
+.hljs-deletion {
+  color: var(--eui-danger);
 }

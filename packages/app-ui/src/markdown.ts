@@ -24,8 +24,20 @@ md.core.ruler.after("inline", "everyos-tasks", (state) => {
   }
 });
 
-/** Sanitized HTML for a Markdown text (links open outside the app). */
-export function renderMarkdown(source: string): string {
+/**
+ * Sanitized HTML for a Markdown text (links open outside the app). `highlight` colors fenced
+ * code (return HTML of escaped code with `hljs-*` spans, e.g. from highlight.js; it is sanitized
+ * with the rest).
+ */
+export function renderMarkdown(
+  source: string,
+  options: { highlight?: (code: string, language: string) => string | null } = {},
+): string {
+  md.set({
+    highlight: options.highlight
+      ? (code, language) => options.highlight!(code, language) ?? ""
+      : null,
+  });
   const html = md.render(source);
   const clean = DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
@@ -35,4 +47,4 @@ export function renderMarkdown(source: string): string {
   return clean.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
 }
 
-export { markdownText, markdownTitle } from "./text.ts";
+export { markdownHeadings, markdownText, markdownTitle, type MarkdownHeading } from "./text.ts";

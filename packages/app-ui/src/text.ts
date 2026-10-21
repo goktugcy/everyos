@@ -24,3 +24,33 @@ export function markdownText(source: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+export interface MarkdownHeading {
+  level: number;
+  text: string;
+  /** 0-based line of the heading in the source. */
+  line: number;
+}
+
+/** The headings of a Markdown text (outlines), outside fenced code. */
+export function markdownHeadings(source: string): MarkdownHeading[] {
+  const headings: MarkdownHeading[] = [];
+  let fence: string | null = null;
+  source.split("\n").forEach((raw, line) => {
+    const marker = /^\s{0,3}(`{3,}|~{3,})/.exec(raw)?.[1];
+    if (marker) {
+      if (!fence) fence = marker[0]!;
+      else if (marker[0] === fence) fence = null;
+      return;
+    }
+    if (fence) return;
+    const match = /^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/.exec(raw);
+    if (match)
+      headings.push({
+        level: match[1]!.length,
+        text: match[2]!.replace(/[*_`~]/g, ""),
+        line,
+      });
+  });
+  return headings;
+}

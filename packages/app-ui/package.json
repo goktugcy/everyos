@@ -8,15 +8,24 @@
     ".": "./src/index.ts",
     "./styles.css": "./src/styles.css",
     "./markdown": "./src/markdown.ts",
-    "./testing": "./src/testing.ts"
+    "./testing": "./src/testing.ts",
+    "./editor": "./src/editor.tsx"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/commands": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/language-data": "catalog:",
+    "@codemirror/search": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "dompurify": "catalog:",
     "lucide-react": "catalog:",
-    "markdown-it": "catalog:",
-    "dompurify": "catalog:"
+    "markdown-it": "catalog:"
   },
   "peerDependencies": {
     "@everyos/app-sdk": "^1.0.0",

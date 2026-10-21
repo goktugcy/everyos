@@ -59,5 +59,5 @@ export {
   type Persisted,
 } from "./hooks.ts";
 export { UI_MESSAGES } from "./messages.ts";
-export { markdownText, markdownTitle } from "./text.ts";
+export { markdownHeadings, markdownText, markdownTitle, type MarkdownHeading } from "./text.ts";
 export { startWorker } from "./workers.ts";

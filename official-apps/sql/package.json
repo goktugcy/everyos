@@ -1,0 +1,34 @@
+{
+  "name": "@everyos-official/sql",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EveryOS SQL Client.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "everyos-app build",
+    "validate": "everyos-app validate",
+    "pack": "everyos-app pack",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/commands": "catalog:",
+    "@codemirror/lang-sql": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/search": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@everyos/app-sdk": "workspace:*",
+    "@everyos/app-ui": "workspace:*",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@everyos/app-cli": "workspace:*",
+    "@everyos/app-testing": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
+  }
+}
