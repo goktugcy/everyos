@@ -286,6 +286,12 @@ export function desktopAppRoutes(services: Services): Hono<AppEnv> {
     services.desktopApps.settings.set(appId, requireAuth(c).user.id, settings);
     return c.json(settings);
   });
+  app.post("/installed/:appId/repair", manage, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    await parseJsonBody(c, Empty);
+    return c.json(await audited(c, "repair", appId, () => installer.repair(appId)));
+  });
   app.patch("/installed/:appId", manage, async (c) => {
     parseQuery(c, Empty);
     const { appId } = parseParams(c, DesktopAppIdParamSchema);

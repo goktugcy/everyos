@@ -4083,6 +4083,9 @@ export const es: LocaleMessages = {
       adminsOnly: "Solo un administrador puede cambiar el acceso a la red.",
     },
     store: {
+      restoreUnverified:
+        "Los archivos de esta aplicación no se pudieron verificar tras una restauración, así que sigue desactivada. Reparar vuelve a descargar la misma versión firmada desde su origen; sus ajustes y datos se conservan.",
+      repair: "Reparar",
       typeFilter: "Tipo",
       types: {
         all: "Todas las aplicaciones",

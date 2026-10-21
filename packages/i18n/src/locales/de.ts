@@ -4083,6 +4083,9 @@ export const de: LocaleMessages = {
       adminsOnly: "Nur Administratoren können den Netzwerkzugriff ändern.",
     },
     store: {
+      restoreUnverified:
+        "Die Dateien dieser App ließen sich nach einer Wiederherstellung nicht prüfen, daher bleibt sie aus. Reparieren lädt dieselbe signierte Version erneut von ihrer Quelle; Einstellungen und Daten bleiben erhalten.",
+      repair: "Reparieren",
       typeFilter: "Art",
       types: {
         all: "Alle Apps",

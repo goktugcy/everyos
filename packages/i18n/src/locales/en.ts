@@ -3850,6 +3850,9 @@ export const en: Messages = {
       adminsOnly: "Only an administrator can change network access.",
     },
     store: {
+      restoreUnverified:
+        "This app's files could not be verified after a restore, so it stays off. Repair fetches the same signed version from its source again; its settings and data stay.",
+      repair: "Repair",
       typeFilter: "Type",
       types: {
         all: "All apps",

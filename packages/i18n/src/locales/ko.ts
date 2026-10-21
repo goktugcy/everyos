@@ -3992,6 +3992,9 @@ export const ko: LocaleMessages = {
       adminsOnly: "네트워크 접근은 관리자만 변경할 수 있습니다.",
     },
     store: {
+      restoreUnverified:
+        "복원 후 이 앱의 파일을 확인할 수 없어 꺼진 상태로 유지됩니다. 복구하면 같은 서명된 버전을 출처에서 다시 받으며, 설정과 데이터는 그대로 유지됩니다.",
+      repair: "복구",
       typeFilter: "유형",
       types: {
         all: "모든 앱",

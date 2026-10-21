@@ -3874,6 +3874,9 @@ export const zh: LocaleMessages = {
       adminsOnly: "只有管理员可以更改网络访问。",
     },
     store: {
+      restoreUnverified:
+        "恢复后无法验证此应用的文件，因此它保持关闭。修复会从其来源重新获取相同的已签名版本；其设置和数据会保留。",
+      repair: "修复",
       typeFilter: "类型",
       types: {
         all: "全部应用",

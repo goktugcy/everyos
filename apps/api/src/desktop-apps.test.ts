@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { createHash, generateKeyPairSync } from "node:crypto";
@@ -35,11 +35,14 @@ import type {
   SshKey,
 } from "@everyos/app-sdk/protocol";
 import { signRegistryIndex, type RegistryIndex } from "@everyos/app-registry";
+import { silentLogger } from "@everyos/logger";
 import { createCatalogFetcher } from "@everyos/catalogs";
 import { ROLE_PERMISSIONS } from "@everyos/shared";
 import { DEFAULT_APPEARANCE } from "@everyos/theme";
 import type {
   ApiErrorBody,
+  BackupManifest,
+  BackupOverview,
   DesktopAppInstallationView,
   DesktopAppDbConnectionView,
   DesktopAppListing,
@@ -47,7 +50,8 @@ import type {
   DesktopAppRegistryView,
 } from "@everyos/shared";
 import pg from "pg";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { applyPendingRestore } from "./modules/backups/snapshot.ts";
 import { RUNTIME_CSP } from "./modules/desktop-apps/runtime-routes.ts";
 import {
   completeSetup,
@@ -2564,4 +2568,124 @@ describe("app appearance", () => {
       "desktop-apps.appearance.delete",
     ]);
   });
+});
+
+describe("desktop apps in backups", () => {
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+
+  it("keeps installed packages in backups and verifies them again when they come back", async () => {
+    const context = await setup();
+    const { ctx, admin } = context;
+    const build = await buildApp(
+      "dev.everyos.keeper",
+      "1.0.0",
+      ["storage:app"],
+      officialKeys.privateKey,
+    );
+    publish(context.registry, index([{ id: "dev.everyos.keeper", versions: [build] }]), [build]);
+    await sync(admin);
+    expect(
+      (
+        await admin.post("/api/desktop-apps/installed", {
+          registryId: "official",
+          appId: "dev.everyos.keeper",
+        })
+      ).status,
+    ).toBe(201);
+    const token = (
+      await json<{ token: string }>(
+        await admin.post("/api/app-sdk/instances", { appId: "dev.everyos.keeper", kind: "window" }),
+      )
+    ).token;
+    await admin.request("POST", "/api/app-sdk/storage/set", {
+      body: { key: "note", value: "kept" },
+      ...as(token),
+    });
+
+    // A backup carries the package, listed with its digest.
+    expect((await admin.post("/api/backups", {})).status).toBe(202);
+    await vi.waitFor(() => expect(ctx.services.backups.job()).toBeNull(), { timeout: 10_000 });
+    const backupId = (await json<BackupOverview>(await admin.get("/api/backups"))).lastJob!
+      .backupId!;
+    const manifest = JSON.parse(
+      readFileSync(join(ctx.config.backups.dir, backupId, "manifest.json"), "utf8"),
+    ) as BackupManifest;
+    expect(manifest.contents.desktopApps).toEqual([
+      { id: "dev.everyos.keeper", version: "1.0.0", sha256: build.version.package.sha256 },
+    ]);
+    expect(manifest.files.map((file) => file.name)).toContain("desktop-apps.tar.gz");
+
+    // Files lost (as after a restore): unpacked again from the verified package.
+    const dir = ctx.config.desktopApps.dir;
+    const appDir = join(dir, "apps", "dev.everyos.keeper");
+    rmSync(appDir, { recursive: true, force: true });
+    await ctx.services.desktopApps.reconcile();
+    expect(existsSync(join(appDir, "1.0.0", "index.html"))).toBe(true);
+    const runtime = (
+      await json<{ apps: DesktopAppInstallationView[] }>(
+        await admin.get("/api/desktop-apps/installed"),
+      )
+    ).apps[0]!;
+    expect(runtime.state).toBe("active");
+    expect((await admin.get(`${runtime.runtimeUrl}index.html`)).status).toBe(200);
+
+    // A package that changed is never run: the app is turned off and says why.
+    const packageFile = join(dir, "packages", "dev.everyos.keeper@1.0.0.eosapp");
+    const bytes = readFileSync(packageFile);
+    bytes[bytes.length - 40]! ^= 0xff;
+    writeFileSync(packageFile, bytes);
+    rmSync(appDir, { recursive: true, force: true });
+    await ctx.services.desktopApps.reconcile();
+    expect(existsSync(appDir)).toBe(false);
+    const off = (
+      await json<{ apps: DesktopAppInstallationView[] }>(
+        await admin.get("/api/desktop-apps/installed"),
+      )
+    ).apps[0]!;
+    expect(off).toMatchObject({ state: "disabled", stateReason: "restore-unverified" });
+    const enable = await admin.patch("/api/desktop-apps/installed/dev.everyos.keeper", {
+      enabled: true,
+    });
+    expect(enable.status).toBe(409);
+    expect(await code(enable)).toMatchObject({
+      code: "DESKTOP_APP_PACKAGE_INVALID",
+      details: { reason: "restore-unverified" },
+    });
+    // The person's data is still there for when the app is installed again.
+    expect(
+      ctx.db.get<{ count: number }>(
+        "SELECT COUNT(*) AS count FROM desktop_app_storage WHERE app_id = 'dev.everyos.keeper'",
+      ),
+    ).toEqual({ count: 1 });
+
+    // Repair fetches the same signed package again; grants and data stay.
+    const repaired = await json<DesktopAppInstallationView>(
+      await admin.post("/api/desktop-apps/installed/dev.everyos.keeper/repair", {}),
+    );
+    expect(repaired).toMatchObject({ state: "active", stateReason: null });
+    expect(existsSync(join(appDir, "1.0.0", "index.html"))).toBe(true);
+    expect(sha256Hex(readFileSync(packageFile))).toBe(build.version.package.sha256);
+
+    // A full restore puts the backup's packages back and leaves unpacking to the next start.
+    await admin.post(`/api/backups/${backupId}/restore`, {
+      settings: "database",
+      apps: [],
+      password: STRONG_PASSWORD,
+      confirm: true,
+    });
+    await vi.waitFor(() => expect(ctx.services.backups.job()).toBeNull(), { timeout: 10_000 });
+    mkdirSync(join(dir, "apps", "left-over.app.x"), { recursive: true });
+    const applied = await applyPendingRestore({
+      dataDir: ctx.config.paths.dataDir,
+      databaseFile: ctx.config.paths.databaseFile,
+      backupDir: ctx.config.paths.backupDir,
+      secretKeyFile: ctx.config.paths.secretKeyFile,
+      keysDir: join(ctx.config.paths.dataDir, "keys"),
+      desktopAppsDir: dir,
+      logger: silentLogger,
+    });
+    expect(applied).toMatchObject({ backupId });
+    expect(existsSync(join(dir, "apps"))).toBe(false);
+    expect(sha256Hex(readFileSync(packageFile))).toBe(build.version.package.sha256);
+  }, 30_000);
 });

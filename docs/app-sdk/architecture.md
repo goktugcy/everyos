@@ -231,8 +231,10 @@ permissions, publisher, versions and storage use.
 ## Backups and updates
 
 The database snapshot carries installations, grants, settings, storage and registries; backups add
-the installed `.eosapp` files. Restore re-verifies each package's hash and publisher signature
-before activating it; a package that cannot be verified is restored disabled with an explanation.
+the installed `.eosapp` files (`desktop-apps.tar.gz`). After a restore, each package's size,
+SHA-256, publisher signature and manifest are verified again before it is unpacked; one that cannot
+be verified stays off with `restore-unverified` until **Repair** fetches the same signed package
+from its source (docs/backups.md › Desktop apps).
 
 ## Release gates
 

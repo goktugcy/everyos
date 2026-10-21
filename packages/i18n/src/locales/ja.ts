@@ -4049,6 +4049,9 @@ export const ja: LocaleMessages = {
       adminsOnly: "ネットワークアクセスを変更できるのは管理者だけです。",
     },
     store: {
+      restoreUnverified:
+        "復元後にこのアプリのファイルを検証できなかったため、オフのままです。修復すると同じ署名済みバージョンを提供元から再取得します。設定とデータはそのまま残ります。",
+      repair: "修復",
       typeFilter: "種類",
       types: {
         all: "すべてのアプリ",

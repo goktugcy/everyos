@@ -3887,6 +3887,9 @@ export const tr = {
       adminsOnly: "Ağ erişimini yalnızca bir yönetici değiştirebilir.",
     },
     store: {
+      restoreUnverified:
+        "Bu uygulamanın dosyaları geri yüklemeden sonra doğrulanamadığı için kapalı kalıyor. Onar, aynı imzalı sürümü kaynağından yeniden indirir; ayarları ve verileri korunur.",
+      repair: "Onar",
       typeFilter: "Tür",
       types: {
         all: "Tüm uygulamalar",

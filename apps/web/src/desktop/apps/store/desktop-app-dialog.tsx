@@ -194,6 +194,14 @@ export function DesktopAppDialog({
         body: { approve: [...approved] },
       }),
     );
+  const unverified = installation?.stateReason === "restore-unverified";
+  const repair = () =>
+    run(() =>
+      api<DesktopAppInstallationView>(`/desktop-apps/installed/${appId}/repair`, {
+        method: "POST",
+        body: {},
+      }),
+    );
   const setEnabled = (enabled: boolean) =>
     run(() =>
       api<DesktopAppInstallationView>(`/desktop-apps/installed/${appId}`, {
@@ -287,6 +295,9 @@ export function DesktopAppDialog({
           <Alert tone="warning">
             {t(`desktopApps.store.incompatible.${listing.incompatible}`)}
           </Alert>
+        ) : null}
+        {unverified ? (
+          <Alert tone="warning">{t("desktopApps.store.restoreUnverified")}</Alert>
         ) : null}
         {listing?.revoked || installation?.state === "revoked" ? (
           <Alert tone="danger">
@@ -396,7 +407,11 @@ export function DesktopAppDialog({
               <Button variant="ghost" disabled={pending} onClick={() => void uninstall()}>
                 {t("desktopApps.store.uninstall")}
               </Button>
-              {state === "active" || state === "disabled" ? (
+              {unverified ? (
+                <Button variant="secondary" disabled={pending} onClick={() => void repair()}>
+                  {t("desktopApps.store.repair")}
+                </Button>
+              ) : state === "active" || state === "disabled" ? (
                 <Button
                   variant="secondary"
                   disabled={pending}

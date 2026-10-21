@@ -1,5 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
-import { mkdir, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   APP_SDK_VERSION,
@@ -9,7 +10,13 @@ import {
   type AppCapability,
   type AppManifest,
 } from "@everyos/app-manifest";
-import { extractPackage, PackageError, sha256Hex, verifyPackage } from "@everyos/app-package";
+import {
+  extractPackage,
+  PACKAGE_LIMITS,
+  PackageError,
+  sha256Hex,
+  verifyPackage,
+} from "@everyos/app-package";
 import {
   latestVersion,
   revocationOf,
@@ -485,12 +492,50 @@ export class DesktopAppInstaller {
     });
   }
 
+  /**
+   * Fetches the installed version again from its registry when its files are gone or did not
+   * verify (after a restore): the package must carry the publisher's signature and be the very
+   * package that was installed (same SHA-256). Grants, settings and everyone's data stay.
+   */
+  async repair(appId: string): Promise<DesktopAppInstallationView> {
+    return this.#exclusive(appId, async () => {
+      const row = this.#row(appId);
+      if (!row) throw notFound("App");
+      if (row.state === "revoked")
+        throw new ApiError(409, "DESKTOP_APP_REVOKED", "This version was revoked", {
+          details: { reason: row.state_reason },
+        });
+      if (!row.registry_id)
+        throw new ApiError(409, "CONFLICT", "The registry of this app was removed");
+      const { registry, app } = this.listing(row.registry_id, appId);
+      const entry = app.versions.find((version) => version.version === row.version);
+      if (!entry || entry.package.sha256 !== row.sha256)
+        throw new ApiError(409, "CONFLICT", "The registry no longer offers this version", {
+          details: { version: row.version },
+        });
+      const { bytes } = await this.#download(registry, app, entry);
+      await this.#unpack(appId, entry, bytes);
+      this.#db.run(
+        "UPDATE desktop_app_installations SET state = 'active', state_reason = NULL, updated_at = ? WHERE app_id = ?",
+        this.#now(),
+        appId,
+      );
+      this.#logger.info("Desktop app repaired", { app: appId, version: row.version });
+      return this.installation(appId)!;
+    });
+  }
+
   setEnabled(appId: string, enabled: boolean): DesktopAppInstallationView {
     const row = this.#row(appId);
     if (!row) throw notFound("App");
     if (row.state === "revoked" && enabled)
       throw new ApiError(409, "DESKTOP_APP_REVOKED", "This version was revoked", {
         details: { reason: row.state_reason },
+      });
+    // Its files did not come back verified (a restore): only installing again brings it back.
+    if (enabled && !existsSync(join(this.#dir, "apps", appId, row.version)))
+      throw new ApiError(409, "DESKTOP_APP_PACKAGE_INVALID", "Install the app again", {
+        details: { reason: row.state_reason ?? "missing" },
       });
     if (row.state !== "revoked")
       this.#db.run(
@@ -507,6 +552,74 @@ export class DesktopAppInstaller {
     const packages = join(this.#dir, "packages");
     for (const name of await readdir(packages).catch(() => [] as string[]))
       if (name.startsWith(`${appId}@`)) await rm(join(packages, name), { force: true });
+  }
+
+  /**
+   * Brings back the files of installations that have none (after a database restore): each one
+   * from the package EveryOS kept, checked again against what was installed (size, SHA-256, the
+   * publisher's signature, the exact manifest). One that cannot be verified is turned off with
+   * the reason `restore-unverified`. Files of no installation are removed.
+   */
+  async reconcile(): Promise<{ restored: string[]; disabled: string[] }> {
+    const restored: string[] = [];
+    const disabled: string[] = [];
+    const rows = this.#db.all<InstallationRow>("SELECT * FROM desktop_app_installations");
+    const packages = join(this.#dir, "packages");
+    for (const row of rows) {
+      const target = join(this.#dir, "apps", row.app_id, row.version);
+      if (existsSync(target)) continue;
+      const file = join(packages, `${row.app_id}@${row.version}.eosapp`);
+      const staging = join(this.#dir, "staging", randomUUID());
+      try {
+        const info = await stat(file);
+        if (info.size !== row.size || info.size > PACKAGE_LIMITS.packedBytes)
+          throw new Error("size");
+        const bytes = await readFile(file);
+        if (sha256Hex(bytes) !== row.sha256) throw new Error("digest");
+        const digest = {
+          appId: row.app_id,
+          version: row.version,
+          sha256: row.sha256,
+          size: row.size,
+        };
+        if (!verifyPackage(digest, row.signature, row.publisher_key)) throw new Error("signature");
+        await mkdir(join(this.#dir, "staging"), { recursive: true, mode: 0o750 });
+        const { manifest } = await extractPackage(bytes, staging);
+        if (canonical(manifest) !== canonical(JSON.parse(row.manifest_json)))
+          throw new Error("manifest-mismatch");
+        await mkdir(join(this.#dir, "apps", row.app_id), { recursive: true, mode: 0o755 });
+        await rename(staging, target);
+        restored.push(row.app_id);
+      } catch (error) {
+        await rm(staging, { recursive: true, force: true });
+        if (row.state !== "revoked")
+          this.#db.run(
+            "UPDATE desktop_app_installations SET state = 'disabled', state_reason = 'restore-unverified', updated_at = ? WHERE app_id = ?",
+            this.#now(),
+            row.app_id,
+          );
+        disabled.push(row.app_id);
+        this.#logger.warn("A desktop app could not be verified after a restore", {
+          app: row.app_id,
+          version: row.version,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+    // Leftovers of apps no longer installed.
+    const installed = new Map(rows.map((row) => [row.app_id, row.version]));
+    for (const name of await readdir(join(this.#dir, "apps")).catch(() => [] as string[]))
+      if (!installed.has(name))
+        await rm(join(this.#dir, "apps", name), { recursive: true, force: true });
+    for (const name of await readdir(packages).catch(() => [] as string[])) {
+      const at = name.lastIndexOf("@");
+      if (
+        name.endsWith(".eosapp") &&
+        installed.get(name.slice(0, at)) !== name.slice(at + 1, -".eosapp".length)
+      )
+        await rm(join(packages, name), { force: true });
+    }
+    return { restored, disabled };
   }
 
   /** Removes the app with everyone's data, grants and settings for it. */

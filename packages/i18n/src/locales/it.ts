@@ -4081,6 +4081,9 @@ export const it: LocaleMessages = {
       adminsOnly: "Solo un amministratore può modificare l'accesso alla rete.",
     },
     store: {
+      restoreUnverified:
+        "I file di questa app non sono stati verificati dopo un ripristino, quindi resta disattivata. Ripara scarica di nuovo la stessa versione firmata dalla sua fonte; impostazioni e dati restano.",
+      repair: "Ripara",
       typeFilter: "Tipo",
       types: {
         all: "Tutte le app",

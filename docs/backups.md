@@ -97,6 +97,25 @@ extracts into a fresh private directory without following links (`O_EXCL | O_NOF
 only created as leaves and never written through), strips setuid/setgid bits, and finally swaps
 the directory in. Unfinished transfers are released after 10 minutes.
 
+## Desktop apps
+
+Everything desktop apps keep in the database comes with the snapshot: installations and their
+grants, sources, each person's app storage, settings and file grants, network rules, monitors and
+their history, database connections and SSH keys (their secrets stay sealed with the server
+secret, like every other secret in the database). The packages EveryOS kept for the installed apps
+(`<app id>@<version>.eosapp`) go into `desktop-apps.tar.gz`, listed with their SHA-256 in the
+manifest (`contents.desktopApps`).
+
+A full database restore puts those packages back and removes the unpacked apps. On its next start,
+EveryOS unpacks each installed app again from its package, but only after checking it against what
+was installed: its size and SHA-256, the publisher's Ed25519 signature over them, and a manifest
+identical to the approved one. An app whose package is missing or does not verify stays **off**
+with the reason `restore-unverified`; the App Store says so and offers **Repair**, which fetches
+the same version from its source again (it must carry the publisher's signature and the very same
+SHA-256), keeping its grants, settings and everyone's data. Turning it on without repairing is
+refused. Files of apps that are not installed in the restored database are removed. Revocations
+from the sources apply again at the next sync.
+
 ## Space, integrity and retention
 
 - Before a backup the API checks that the database snapshot and each app's data fit while

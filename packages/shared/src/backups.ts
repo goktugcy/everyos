@@ -69,6 +69,8 @@ export interface BackupManifest {
     apps: BackupAppContent[];
     /** EveryOS-managed homes, including Desktop files and their private trash. Absent in older backups. */
     homes?: BackupHomeContent[];
+    /** Installed desktop app packages (`desktop-apps.tar.gz`). Absent in older backups. */
+    desktopApps?: Array<{ id: string; version: string; sha256: string }>;
   };
   files: BackupManifestFile[];
 }

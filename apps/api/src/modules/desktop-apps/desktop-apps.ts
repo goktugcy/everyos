@@ -112,6 +112,16 @@ export class DesktopAppsService {
       this.#logger.warn("Registries changed installed apps' state", { apps: changed });
   }
 
+  /** Unpacks verified packages of installations that lost their files (a restore). */
+  async reconcile(): Promise<void> {
+    const { restored, disabled } = await this.installer.reconcile();
+    if (restored.length) this.#logger.info("Desktop apps restored", { apps: restored });
+    if (disabled.length)
+      this.#logger.warn("Desktop apps turned off: not verified after a restore", {
+        apps: disabled,
+      });
+  }
+
   start(): void {
     const run = () => void this.refresh().catch(() => undefined);
     this.#timers = [setTimeout(run, FIRST_REFRESH_MS), setInterval(run, REFRESH_INTERVAL_MS)];

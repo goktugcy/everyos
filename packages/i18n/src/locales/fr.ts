@@ -4097,6 +4097,9 @@ export const fr: LocaleMessages = {
       adminsOnly: "Seul un administrateur peut modifier l’accès réseau.",
     },
     store: {
+      restoreUnverified:
+        "Les fichiers de cette application n’ont pas pu être vérifiés après une restauration : elle reste désactivée. Réparer télécharge à nouveau la même version signée depuis sa source ; ses réglages et données sont conservés.",
+      repair: "Réparer",
       typeFilter: "Type",
       types: {
         all: "Toutes les applications",

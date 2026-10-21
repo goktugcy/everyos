@@ -294,6 +294,7 @@ export function createServices(deps: ServiceDependencies): Services {
     dir: deps.config.backups.dir,
     files,
     dataDir: deps.config.paths.dataDir,
+    desktopAppsDir: deps.config.desktopApps.dir,
     configFile: deps.config.configFile,
     reserveBytes: deps.config.backups.minFreeBytes,
     maxUploadBytes: deps.config.backups.maxUploadBytes,
