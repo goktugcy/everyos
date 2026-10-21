@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "Pomodoro",
+    "description": "Kısa ve uzun molalar, oturum geçmişi, günlük istatistikler, bildirimler ve masaüstü widget'ı olan odaklanma zamanlayıcısı."
+  },
+  "widgets": {
+    "timer": {
+      "name": "Pomodoro zamanlayıcısı",
+      "description": "Başlat ve duraklat düğmeleriyle odak zamanlayıcısı bir bakışta."
+    }
+  },
+  "views": {
+    "label": "Görünüm",
+    "timer": "Zamanlayıcı",
+    "history": "Geçmiş",
+    "stats": "İstatistikler"
+  },
+  "phases": {
+    "label": "Aşama",
+    "focus": "Odak",
+    "short": "Kısa mola",
+    "long": "Uzun mola"
+  },
+  "timer": {
+    "left": "Kalan süre",
+    "cycle": "Uzun moladan önce {{of}} odak oturumundan {{done}} tanesi tamamlandı",
+    "label": "Ne üzerinde çalışıyorsunuz?",
+    "labelPlaceholder": "İsteğe bağlı, geçmişte gösterilir"
+  },
+  "status": {
+    "ready": "Hazır",
+    "paused": "Duraklatıldı",
+    "running": {
+      "focus": "Odaklanın",
+      "short": "Kısa bir mola verin",
+      "long": "Uzun molanın tadını çıkarın"
+    }
+  },
+  "actions": {
+    "start": "Başlat",
+    "pause": "Duraklat",
+    "resume": "Devam et",
+    "reset": "Sıfırla",
+    "resetHint": "Bu aşamayı baştan başlat (R)",
+    "skip": "Atla",
+    "skipHint": "Sonraki aşamaya geç (S)"
+  },
+  "errors": {
+    "save": "Zamanlayıcı kaydedilemedi. Burada çalışmaya devam ediyor."
+  },
+  "history": {
+    "empty": "Henüz oturum yok",
+    "emptyText": "Tamamlanan odak oturumları burada görünür.",
+    "count_one": "{{count}} oturum",
+    "count_other": "{{count}} oturum",
+    "clear": "Geçmişi temizle",
+    "clearTitle": "Oturum geçmişi silinsin mi?",
+    "unlabelled": "Odak oturumu",
+    "minutes_one": "{{count}} dk",
+    "minutes_other": "{{count}} dk",
+    "stopped": "Erken durduruldu"
+  },
+  "stats": {
+    "todayMinutes": "Bugün odaklanılan",
+    "todaySessions": "Bugünkü oturumlar",
+    "week": "Son 7 gün",
+    "streak": "Seri",
+    "days_one": "{{count}} gün",
+    "days_other": "{{count}} gün",
+    "chart": "Günlük odak dakikası"
+  },
+  "settings": {
+    "durations": "Süreler",
+    "focusMinutes": "Odak (dakika)",
+    "shortMinutes": "Kısa mola (dakika)",
+    "longMinutes": "Uzun mola (dakika)",
+    "longEvery": "Uzun mola sıklığı",
+    "longEveryHint": "Uzun moladan önceki odak oturumu sayısı",
+    "flow": "Akış",
+    "autoStartBreaks": "Molaları otomatik başlat",
+    "autoStartFocus": "Odak oturumlarını otomatik başlat",
+    "notify": "Aşama bitince bildir",
+    "notifyHint": "EveryOS bir tarayıcıda açıkken (bu pencere veya widget)",
+    "notifyDenied": "Pomodoro'ya bildirim gönderme izni verilmedi. Uygulama Mağazası'ndan izin verin."
+  },
+  "notify": {
+    "focusDone": "Odak oturumu tamamlandı",
+    "breakDone": "Mola bitti",
+    "next": {
+      "focus": "{{minutes}} dakika odaklanma zamanı.",
+      "short": "{{minutes}} dakikalık bir mola verin.",
+      "long": "{{minutes}} dakikalık uzun molanın tadını çıkarın."
+    }
+  },
+  "widget": {
+    "open": "Pomodoro'yu aç"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "Pomodoro",
+    "description": "Un timer di concentrazione con pause brevi e lunghe, cronologia delle sessioni, statistiche giornaliere, notifiche e widget."
+  },
+  "widgets": {
+    "timer": {
+      "name": "Timer Pomodoro",
+      "description": "Il timer a colpo d’occhio, con avvio e pausa."
+    }
+  },
+  "views": {
+    "label": "Vista",
+    "timer": "Timer",
+    "history": "Cronologia",
+    "stats": "Statistiche"
+  },
+  "phases": {
+    "label": "Fase",
+    "focus": "Concentrazione",
+    "short": "Pausa breve",
+    "long": "Pausa lunga"
+  },
+  "timer": {
+    "left": "Tempo rimanente",
+    "cycle": "{{done}} di {{of}} sessioni prima della pausa lunga",
+    "label": "A cosa stai lavorando?",
+    "labelPlaceholder": "Facoltativo, compare nella cronologia"
+  },
+  "status": {
+    "ready": "Pronto",
+    "paused": "In pausa",
+    "running": {
+      "focus": "Resta concentrato",
+      "short": "Fai una breve pausa",
+      "long": "Goditi una pausa lunga"
+    }
+  },
+  "actions": {
+    "start": "Avvia",
+    "pause": "Pausa",
+    "resume": "Riprendi",
+    "reset": "Azzera",
+    "resetHint": "Ricomincia questa fase (R)",
+    "skip": "Salta",
+    "skipHint": "Vai alla fase successiva (S)"
+  },
+  "errors": {
+    "save": "Impossibile salvare il timer. Continua a funzionare qui."
+  },
+  "history": {
+    "empty": "Ancora nessuna sessione",
+    "emptyText": "Le sessioni completate compaiono qui.",
+    "count_one": "{{count}} sessione",
+    "count_other": "{{count}} sessioni",
+    "clear": "Cancella cronologia",
+    "clearTitle": "Eliminare la cronologia delle sessioni?",
+    "unlabelled": "Sessione di concentrazione",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "stopped": "Interrotta"
+  },
+  "stats": {
+    "todayMinutes": "Concentrazione oggi",
+    "todaySessions": "Sessioni oggi",
+    "week": "Ultimi 7 giorni",
+    "streak": "Serie",
+    "days_one": "{{count}} giorno",
+    "days_other": "{{count}} giorni",
+    "chart": "Minuti di concentrazione al giorno"
+  },
+  "settings": {
+    "durations": "Durate",
+    "focusMinutes": "Concentrazione (minuti)",
+    "shortMinutes": "Pausa breve (minuti)",
+    "longMinutes": "Pausa lunga (minuti)",
+    "longEvery": "Pausa lunga dopo",
+    "longEveryHint": "Sessioni prima di una pausa lunga",
+    "flow": "Flusso",
+    "autoStartBreaks": "Avvia le pause automaticamente",
+    "autoStartFocus": "Avvia le sessioni automaticamente",
+    "notify": "Avvisa alla fine di una fase",
+    "notifyHint": "Finché EveryOS è aperto in un browser (finestra o widget)",
+    "notifyDenied": "Pomodoro non ha il permesso di inviare notifiche. Consentilo nell’App Store."
+  },
+  "notify": {
+    "focusDone": "Sessione completata",
+    "breakDone": "Pausa finita",
+    "next": {
+      "focus": "È il momento di concentrarsi per {{minutes}} minuti.",
+      "short": "Fai una pausa di {{minutes}} minuti.",
+      "long": "Goditi una pausa di {{minutes}} minuti."
+    }
+  },
+  "widget": {
+    "open": "Apri Pomodoro"
+  }
+}

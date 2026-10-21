@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "Pomodoro",
+    "description": "Ein Fokus-Timer mit kurzen und langen Pausen, Sitzungsverlauf, Tagesstatistik, Benachrichtigungen und Desktop-Widget."
+  },
+  "widgets": {
+    "timer": {
+      "name": "Pomodoro-Timer",
+      "description": "Der Fokus-Timer auf einen Blick, mit Start und Pause."
+    }
+  },
+  "views": {
+    "label": "Ansicht",
+    "timer": "Timer",
+    "history": "Verlauf",
+    "stats": "Statistik"
+  },
+  "phases": {
+    "label": "Phase",
+    "focus": "Fokus",
+    "short": "Kurze Pause",
+    "long": "Lange Pause"
+  },
+  "timer": {
+    "left": "Verbleibende Zeit",
+    "cycle": "{{done}} von {{of}} Fokus-Sitzungen bis zur langen Pause",
+    "label": "Woran arbeiten Sie?",
+    "labelPlaceholder": "Optional, erscheint im Verlauf"
+  },
+  "status": {
+    "ready": "Bereit",
+    "paused": "Pausiert",
+    "running": {
+      "focus": "Bleiben Sie fokussiert",
+      "short": "Machen Sie eine kurze Pause",
+      "long": "Genießen Sie die lange Pause"
+    }
+  },
+  "actions": {
+    "start": "Starten",
+    "pause": "Pause",
+    "resume": "Fortsetzen",
+    "reset": "Zurücksetzen",
+    "resetHint": "Diese Phase neu beginnen (R)",
+    "skip": "Überspringen",
+    "skipHint": "Zur nächsten Phase (S)"
+  },
+  "errors": {
+    "save": "Der Timer konnte nicht gespeichert werden. Er läuft hier weiter."
+  },
+  "history": {
+    "empty": "Noch keine Sitzungen",
+    "emptyText": "Abgeschlossene Fokus-Sitzungen erscheinen hier.",
+    "count_one": "{{count}} Sitzung",
+    "count_other": "{{count}} Sitzungen",
+    "clear": "Verlauf löschen",
+    "clearTitle": "Sitzungsverlauf löschen?",
+    "unlabelled": "Fokus-Sitzung",
+    "minutes_one": "{{count}} Min.",
+    "minutes_other": "{{count}} Min.",
+    "stopped": "Vorzeitig beendet"
+  },
+  "stats": {
+    "todayMinutes": "Heute fokussiert",
+    "todaySessions": "Sitzungen heute",
+    "week": "Letzte 7 Tage",
+    "streak": "Serie",
+    "days_one": "{{count}} Tag",
+    "days_other": "{{count}} Tage",
+    "chart": "Fokusminuten pro Tag"
+  },
+  "settings": {
+    "durations": "Dauer",
+    "focusMinutes": "Fokus (Minuten)",
+    "shortMinutes": "Kurze Pause (Minuten)",
+    "longMinutes": "Lange Pause (Minuten)",
+    "longEvery": "Lange Pause nach",
+    "longEveryHint": "Fokus-Sitzungen vor einer langen Pause",
+    "flow": "Ablauf",
+    "autoStartBreaks": "Pausen automatisch starten",
+    "autoStartFocus": "Fokus-Sitzungen automatisch starten",
+    "notify": "Benachrichtigen, wenn eine Phase endet",
+    "notifyHint": "Solange EveryOS in einem Browser geöffnet ist (Fenster oder Widget)",
+    "notifyDenied": "Pomodoro darf keine Benachrichtigungen senden. Erlauben Sie es im App Store."
+  },
+  "notify": {
+    "focusDone": "Fokus-Sitzung beendet",
+    "breakDone": "Pause vorbei",
+    "next": {
+      "focus": "Zeit für {{minutes}} Minuten Fokus.",
+      "short": "Machen Sie {{minutes}} Minuten Pause.",
+      "long": "Genießen Sie {{minutes}} Minuten lange Pause."
+    }
+  },
+  "widget": {
+    "open": "Pomodoro öffnen"
+  }
+}
