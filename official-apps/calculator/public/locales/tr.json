@@ -1,0 +1,228 @@
+{
+  "app": {
+    "name": "Hesap Makinesi",
+    "description": "Kesin ondalık hesaplama, geçmiş, bellek ve birim dönüştürme sunan standart ve bilimsel hesap makinesi."
+  },
+  "modes": {
+    "label": "Mod",
+    "standard": "Standart",
+    "scientific": "Bilimsel",
+    "converter": "Dönüştürücü"
+  },
+  "angle": {
+    "toggle": "Derece ile radyan arasında geçiş yap",
+    "deg": "Derece",
+    "rad": "Radyan"
+  },
+  "history": {
+    "toggle": "Geçmişi göster",
+    "title": "Geçmiş",
+    "clear": "Geçmişi temizle",
+    "clearTitle": "Hesaplama geçmişi temizlensin mi?",
+    "empty": "Henüz hesaplama yok",
+    "useExpression": "Bu ifadeyi kullan",
+    "useResult": "Bu sonucu kullan"
+  },
+  "memory": {
+    "label": "Bellek",
+    "value": "Bellekteki değer"
+  },
+  "display": {
+    "expression": "İfade",
+    "result": "Sonuç"
+  },
+  "actions": {
+    "copy": "Sonucu kopyala"
+  },
+  "errors": {
+    "syntax": "Bu ifade eksik ya da geçersiz",
+    "divide-by-zero": "Sıfıra bölünemez",
+    "domain": "Fonksiyonun tanım kümesi dışında",
+    "overflow": "Sonuç çok büyük",
+    "factorial-range": "Faktöriyel 3000’e kadar tam sayılar için hesaplanır",
+    "unknown-name": "İfadede bilinmeyen bir ad var",
+    "empty": "Bir ifade yazın"
+  },
+  "converter": {
+    "category": "Büyüklük",
+    "value": "Değer",
+    "from": "Kaynak",
+    "to": "Hedef",
+    "swap": "Birimleri değiştir",
+    "result": "Dönüştürülen değer",
+    "all": "Tüm birimlerde"
+  },
+  "categories": {
+    "length": "Uzunluk",
+    "area": "Alan",
+    "volume": "Hacim",
+    "mass": "Kütle",
+    "temperature": "Sıcaklık",
+    "speed": "Hız",
+    "time": "Zaman",
+    "data": "Veri",
+    "pressure": "Basınç",
+    "energy": "Enerji",
+    "angle": "Açı"
+  },
+  "units": {
+    "length": {
+      "mm": "Milimetre",
+      "cm": "Santimetre",
+      "m": "Metre",
+      "km": "Kilometre",
+      "in": "İnç",
+      "ft": "Fit",
+      "yd": "Yarda",
+      "mi": "Mil",
+      "nmi": "Deniz mili",
+      "um": "Mikrometre"
+    },
+    "area": {
+      "mm2": "Milimetrekare",
+      "cm2": "Santimetrekare",
+      "m2": "Metrekare",
+      "ha": "Hektar",
+      "km2": "Kilometrekare",
+      "in2": "İnç kare",
+      "ft2": "Fit kare",
+      "yd2": "Yarda kare",
+      "acre": "Akre",
+      "mi2": "Mil kare"
+    },
+    "volume": {
+      "ml": "Mililitre",
+      "cl": "Santilitre",
+      "l": "Litre",
+      "m3": "Metreküp",
+      "cm3": "Santimetreküp",
+      "tsp": "Çay kaşığı (ABD)",
+      "tbsp": "Yemek kaşığı (ABD)",
+      "floz": "Sıvı ons (ABD)",
+      "cup": "Su bardağı (ABD)",
+      "pt": "Pint (ABD)",
+      "qt": "Kuart (ABD)",
+      "gal": "Galon (ABD)",
+      "ukgal": "Galon (Birleşik Krallık)"
+    },
+    "mass": {
+      "mg": "Miligram",
+      "g": "Gram",
+      "kg": "Kilogram",
+      "t": "Ton",
+      "oz": "Ons",
+      "lb": "Libre",
+      "st": "Stone",
+      "ct": "Kırat"
+    },
+    "temperature": {
+      "c": "Santigrat",
+      "f": "Fahrenheit",
+      "k": "Kelvin"
+    },
+    "speed": {
+      "mps": "Metre/saniye",
+      "kph": "Kilometre/saat",
+      "mph": "Mil/saat",
+      "knot": "Knot",
+      "fps": "Fit/saniye"
+    },
+    "time": {
+      "ms": "Milisaniye",
+      "s": "Saniye",
+      "min": "Dakika",
+      "h": "Saat",
+      "d": "Gün",
+      "wk": "Hafta",
+      "yr": "Yıl (365,25 gün)"
+    },
+    "data": {
+      "bit": "Bit",
+      "B": "Bayt",
+      "kB": "Kilobayt",
+      "MB": "Megabayt",
+      "GB": "Gigabayt",
+      "TB": "Terabayt",
+      "KiB": "Kibibayt",
+      "MiB": "Mebibayt",
+      "GiB": "Gibibayt",
+      "TiB": "Tebibayt",
+      "kbit": "Kilobit",
+      "Mbit": "Megabit",
+      "Gbit": "Gigabit"
+    },
+    "pressure": {
+      "Pa": "Paskal",
+      "kPa": "Kilopaskal",
+      "bar": "Bar",
+      "atm": "Atmosfer",
+      "psi": "İnç kare başına libre",
+      "mmHg": "Milimetre cıva"
+    },
+    "energy": {
+      "J": "Jul",
+      "kJ": "Kilojul",
+      "cal": "Kalori",
+      "kcal": "Kilokalori",
+      "Wh": "Watt-saat",
+      "kWh": "Kilowatt-saat",
+      "eV": "Elektronvolt",
+      "BTU": "İngiliz ısı birimi"
+    },
+    "angle": {
+      "deg": "Derece",
+      "rad": "Radyan",
+      "grad": "Grad",
+      "turn": "Tur",
+      "arcmin": "Yay dakikası",
+      "arcsec": "Yay saniyesi"
+    }
+  },
+  "keys": {
+    "clear": "Temizle",
+    "backspace": "Son karakteri sil",
+    "percent": "Yüzde",
+    "divide": "Böl",
+    "multiply": "Çarp",
+    "subtract": "Çıkar",
+    "add": "Topla",
+    "negate": "İşareti değiştir",
+    "decimal": "Ondalık ayırıcı",
+    "equals": "Eşittir",
+    "memoryClear": "Belleği temizle",
+    "memoryRecall": "Bellekten çağır",
+    "memoryAdd": "Belleğe ekle",
+    "memorySubtract": "Bellekten çıkar",
+    "memoryStore": "Belleğe kaydet",
+    "sin": "Sinüs",
+    "cos": "Kosinüs",
+    "tan": "Tanjant",
+    "asin": "Ters sinüs",
+    "acos": "Ters kosinüs",
+    "atan": "Ters tanjant",
+    "sinh": "Hiperbolik sinüs",
+    "cosh": "Hiperbolik kosinüs",
+    "tanh": "Hiperbolik tanjant",
+    "open": "Açma parantezi",
+    "close": "Kapama parantezi",
+    "pi": "Pi",
+    "e": "Euler sayısı",
+    "square": "Karesi",
+    "cube": "Küpü",
+    "power": "Üs",
+    "sqrt": "Karekök",
+    "cbrt": "Küpkök",
+    "root": "Kök: root(x, n)",
+    "reciprocal": "Çarpmaya göre ters",
+    "ln": "Doğal logaritma",
+    "log": "10 tabanında logaritma",
+    "logb": "Logaritma: logb(x, taban)",
+    "factorial": "Faktöriyel",
+    "abs": "Mutlak değer",
+    "exp": "e üzeri x",
+    "exponent": "On üzeri (1,5e3)",
+    "ans": "Son sonuç",
+    "random": "0 ile 1 arasında rastgele sayı",
+    "comma": "Bağımsız değişken ayırıcı"
+  }
+}

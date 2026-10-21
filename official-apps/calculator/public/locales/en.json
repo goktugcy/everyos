@@ -1,0 +1,228 @@
+{
+  "app": {
+    "name": "Calculator",
+    "description": "Standard and scientific calculator with exact decimals, history, memory and unit conversion."
+  },
+  "modes": {
+    "label": "Mode",
+    "standard": "Standard",
+    "scientific": "Scientific",
+    "converter": "Converter"
+  },
+  "angle": {
+    "toggle": "Switch between degrees and radians",
+    "deg": "Degrees",
+    "rad": "Radians"
+  },
+  "history": {
+    "toggle": "Show history",
+    "title": "History",
+    "clear": "Clear history",
+    "clearTitle": "Clear the calculation history?",
+    "empty": "No calculations yet",
+    "useExpression": "Use this expression",
+    "useResult": "Use this result"
+  },
+  "memory": {
+    "label": "Memory",
+    "value": "Value in memory"
+  },
+  "display": {
+    "expression": "Expression",
+    "result": "Result"
+  },
+  "actions": {
+    "copy": "Copy result"
+  },
+  "errors": {
+    "syntax": "This expression is not complete or not valid",
+    "divide-by-zero": "Cannot divide by zero",
+    "domain": "Outside the function’s domain",
+    "overflow": "The result is too large",
+    "factorial-range": "Factorials work for whole numbers up to 3000",
+    "unknown-name": "Unknown name in the expression",
+    "empty": "Type an expression"
+  },
+  "converter": {
+    "category": "Quantity",
+    "value": "Value",
+    "from": "From",
+    "to": "To",
+    "swap": "Swap units",
+    "result": "Converted value",
+    "all": "In every unit"
+  },
+  "categories": {
+    "length": "Length",
+    "area": "Area",
+    "volume": "Volume",
+    "mass": "Mass",
+    "temperature": "Temperature",
+    "speed": "Speed",
+    "time": "Time",
+    "data": "Data",
+    "pressure": "Pressure",
+    "energy": "Energy",
+    "angle": "Angle"
+  },
+  "units": {
+    "length": {
+      "mm": "Millimeters",
+      "cm": "Centimeters",
+      "m": "Meters",
+      "km": "Kilometers",
+      "in": "Inches",
+      "ft": "Feet",
+      "yd": "Yards",
+      "mi": "Miles",
+      "nmi": "Nautical miles",
+      "um": "Micrometers"
+    },
+    "area": {
+      "mm2": "Square millimeters",
+      "cm2": "Square centimeters",
+      "m2": "Square meters",
+      "ha": "Hectares",
+      "km2": "Square kilometers",
+      "in2": "Square inches",
+      "ft2": "Square feet",
+      "yd2": "Square yards",
+      "acre": "Acres",
+      "mi2": "Square miles"
+    },
+    "volume": {
+      "ml": "Milliliters",
+      "cl": "Centiliters",
+      "l": "Liters",
+      "m3": "Cubic meters",
+      "cm3": "Cubic centimeters",
+      "tsp": "Teaspoons (US)",
+      "tbsp": "Tablespoons (US)",
+      "floz": "Fluid ounces (US)",
+      "cup": "Cups (US)",
+      "pt": "Pints (US)",
+      "qt": "Quarts (US)",
+      "gal": "Gallons (US)",
+      "ukgal": "Gallons (UK)"
+    },
+    "mass": {
+      "mg": "Milligrams",
+      "g": "Grams",
+      "kg": "Kilograms",
+      "t": "Metric tons",
+      "oz": "Ounces",
+      "lb": "Pounds",
+      "st": "Stones",
+      "ct": "Carats"
+    },
+    "temperature": {
+      "c": "Celsius",
+      "f": "Fahrenheit",
+      "k": "Kelvin"
+    },
+    "speed": {
+      "mps": "Meters per second",
+      "kph": "Kilometers per hour",
+      "mph": "Miles per hour",
+      "knot": "Knots",
+      "fps": "Feet per second"
+    },
+    "time": {
+      "ms": "Milliseconds",
+      "s": "Seconds",
+      "min": "Minutes",
+      "h": "Hours",
+      "d": "Days",
+      "wk": "Weeks",
+      "yr": "Years (365.25 days)"
+    },
+    "data": {
+      "bit": "Bits",
+      "B": "Bytes",
+      "kB": "Kilobytes",
+      "MB": "Megabytes",
+      "GB": "Gigabytes",
+      "TB": "Terabytes",
+      "KiB": "Kibibytes",
+      "MiB": "Mebibytes",
+      "GiB": "Gibibytes",
+      "TiB": "Tebibytes",
+      "kbit": "Kilobits",
+      "Mbit": "Megabits",
+      "Gbit": "Gigabits"
+    },
+    "pressure": {
+      "Pa": "Pascals",
+      "kPa": "Kilopascals",
+      "bar": "Bars",
+      "atm": "Atmospheres",
+      "psi": "Pounds per square inch",
+      "mmHg": "Millimeters of mercury"
+    },
+    "energy": {
+      "J": "Joules",
+      "kJ": "Kilojoules",
+      "cal": "Calories",
+      "kcal": "Kilocalories",
+      "Wh": "Watt-hours",
+      "kWh": "Kilowatt-hours",
+      "eV": "Electronvolts",
+      "BTU": "British thermal units"
+    },
+    "angle": {
+      "deg": "Degrees",
+      "rad": "Radians",
+      "grad": "Gradians",
+      "turn": "Turns",
+      "arcmin": "Minutes of arc",
+      "arcsec": "Seconds of arc"
+    }
+  },
+  "keys": {
+    "clear": "Clear",
+    "backspace": "Delete last character",
+    "percent": "Percent",
+    "divide": "Divide",
+    "multiply": "Multiply",
+    "subtract": "Subtract",
+    "add": "Add",
+    "negate": "Change sign",
+    "decimal": "Decimal point",
+    "equals": "Equals",
+    "memoryClear": "Clear memory",
+    "memoryRecall": "Recall memory",
+    "memoryAdd": "Add to memory",
+    "memorySubtract": "Subtract from memory",
+    "memoryStore": "Store in memory",
+    "sin": "Sine",
+    "cos": "Cosine",
+    "tan": "Tangent",
+    "asin": "Inverse sine",
+    "acos": "Inverse cosine",
+    "atan": "Inverse tangent",
+    "sinh": "Hyperbolic sine",
+    "cosh": "Hyperbolic cosine",
+    "tanh": "Hyperbolic tangent",
+    "open": "Opening parenthesis",
+    "close": "Closing parenthesis",
+    "pi": "Pi",
+    "e": "Euler’s number",
+    "square": "Square",
+    "cube": "Cube",
+    "power": "Power",
+    "sqrt": "Square root",
+    "cbrt": "Cube root",
+    "root": "Root: root(x, n)",
+    "reciprocal": "Reciprocal",
+    "ln": "Natural logarithm",
+    "log": "Logarithm base 10",
+    "logb": "Logarithm: logb(x, base)",
+    "factorial": "Factorial",
+    "abs": "Absolute value",
+    "exp": "e to the power of x",
+    "exponent": "Times ten to the power (1.5e3)",
+    "ans": "Last result",
+    "random": "Random number between 0 and 1",
+    "comma": "Argument separator"
+  }
+}
