@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Diff Viewer",
+    "description": "Compare two texts or files side by side or inline, with syntax highlighting, whitespace-insensitive comparison, change navigation and patch export."
+  },
+  "sides": {
+    "original": "Original",
+    "changed": "Changed",
+    "typed": "Typed text",
+    "open": "Open…",
+    "openOriginal": "Open the original file…",
+    "openChanged": "Open the changed file…",
+    "placeholderOriginal": "Paste or type the original text, or open a file.",
+    "placeholderChanged": "Paste or type the changed text, or open a file.",
+    "swap": "Swap sides",
+    "notKept": "Not kept",
+    "notKeptHint": "This side is too large to keep after the window closes; open the file again next time."
+  },
+  "view": {
+    "label": "View",
+    "split": "Side by side",
+    "inline": "Inline"
+  },
+  "options": {
+    "ignoreWhitespace": "Ignore whitespace",
+    "collapse": "Hide unchanged lines",
+    "wrap": "Wrap lines",
+    "language": "Highlighting",
+    "auto": "Automatic",
+    "autoNamed": "Automatic ({{name}})",
+    "plain": "Plain text"
+  },
+  "nav": {
+    "previous": "Previous change ({{key}})",
+    "next": "Next change ({{key}})",
+    "position": "{{current}} of {{total}}",
+    "count_one": "{{count}} change",
+    "count_other": "{{count}} changes"
+  },
+  "stats": {
+    "added_one": "{{count}} line added",
+    "added_other": "{{count}} lines added",
+    "removed_one": "{{count}} line removed",
+    "removed_other": "{{count}} lines removed"
+  },
+  "status": {
+    "empty": "Nothing to compare yet",
+    "identical": "Identical",
+    "whitespaceOnly": "Only whitespace differs",
+    "approximate": "Large difference: shown approximately",
+    "endings": "Line endings differ ({{a}} / {{b}}); the comparison ignores them and a patch uses LF."
+  },
+  "patch": {
+    "copy": "Copy patch",
+    "save": "Save patch…",
+    "tooDifferent": "The texts are too different to make a patch in time."
+  },
+  "files": {
+    "binary": "“{{name}}” is not a text file."
+  },
+  "actions": {
+    "new": "New comparison",
+    "newTitle": "Start a new comparison?",
+    "newBody": "Both sides will be cleared. Files you opened are not changed."
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "差分ビューアー",
+    "description": "2 つのテキストやファイルを左右に並べて、またはインラインで比較します。構文の色分け、空白を無視した比較、変更間の移動、パッチの書き出しに対応。"
+  },
+  "sides": {
+    "original": "変更前",
+    "changed": "変更後",
+    "typed": "入力したテキスト",
+    "open": "開く…",
+    "openOriginal": "変更前のファイルを開く…",
+    "openChanged": "変更後のファイルを開く…",
+    "placeholderOriginal": "変更前のテキストを貼り付けるか入力するか、ファイルを開いてください。",
+    "placeholderChanged": "変更後のテキストを貼り付けるか入力するか、ファイルを開いてください。",
+    "swap": "左右を入れ替え",
+    "notKept": "保持されません",
+    "notKeptHint": "この側は大きすぎるため、ウィンドウを閉じた後は保持されません。次回はファイルを開き直してください。"
+  },
+  "view": {
+    "label": "表示",
+    "split": "左右に並べる",
+    "inline": "インライン"
+  },
+  "options": {
+    "ignoreWhitespace": "空白を無視",
+    "collapse": "変更のない行を隠す",
+    "wrap": "行を折り返す",
+    "language": "色分け",
+    "auto": "自動",
+    "autoNamed": "自動 ({{name}})",
+    "plain": "プレーンテキスト"
+  },
+  "nav": {
+    "previous": "前の変更 ({{key}})",
+    "next": "次の変更 ({{key}})",
+    "position": "{{current}} / {{total}}",
+    "count_other": "{{count}} 件の変更"
+  },
+  "stats": {
+    "added_other": "{{count}} 行追加",
+    "removed_other": "{{count}} 行削除"
+  },
+  "status": {
+    "empty": "まだ比較する内容がありません",
+    "identical": "同一",
+    "whitespaceOnly": "空白のみ異なります",
+    "approximate": "差分が大きいため概算で表示しています",
+    "endings": "改行コードが異なります ({{a}} / {{b}})。比較では無視し、パッチは LF を使います。"
+  },
+  "patch": {
+    "copy": "パッチをコピー",
+    "save": "パッチを保存…",
+    "tooDifferent": "テキストの差が大きすぎて、時間内にパッチを作成できません。"
+  },
+  "files": {
+    "binary": "「{{name}}」はテキストファイルではありません。"
+  },
+  "actions": {
+    "new": "新しい比較",
+    "newTitle": "新しい比較を始めますか?",
+    "newBody": "両側が空になります。開いたファイルは変更されません。"
+  }
+}

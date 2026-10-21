@@ -185,3 +185,39 @@ test.describe("Regex Tester", () => {
     await expect(frame.locator(".rx-status")).toContainText("40 eşleşme");
   });
 });
+
+test.describe("Diff Viewer", () => {
+  const diff = OFFICIAL.find((app) => app.slug === "diff")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${diff.id}`, { confirm: true });
+  });
+
+  test("compares side by side and inline, and moves between changes", async ({ page }) => {
+    test.setTimeout(60_000);
+    await install(page, diff);
+    const { frame } = await open(page, diff.name, diff.id);
+    const original = frame.getByRole("textbox", { name: "Özgün" });
+    const changed = frame.getByRole("textbox", { name: "Değişmiş" });
+    await original.fill("bir\niki\nüç\ndört\n");
+    await changed.fill("bir\nİKİ\nüç\ndört\nbeş\n");
+    await expect(frame.locator(".diff-position")).toHaveText("2 değişiklik");
+    await expect(frame.locator(".diff-added")).toHaveText("+2");
+    await expect(frame.locator(".diff-removed")).toHaveText("−1");
+    // Two aligned editors next to each other, with the changed words marked.
+    const [left, right] = await Promise.all([
+      frame.locator(".cm-merge-a").boundingBox(),
+      frame.locator(".cm-merge-b").boundingBox(),
+    ]);
+    expect(left!.width).toBeGreaterThan(200);
+    expect(right!.x).toBeGreaterThanOrEqual(left!.x + left!.width - 1);
+    await expect(frame.locator(".cm-merge-b .cm-changedText").first()).toHaveText("İKİ");
+    await frame.getByRole("button", { name: "Sonraki değişiklik (F7)" }).click();
+    await expect(frame.locator(".diff-position")).toHaveText("1 / 2");
+    await page.keyboard.press("F7");
+    await expect(frame.locator(".diff-position")).toHaveText("2 / 2");
+    await frame.getByRole("tab", { name: "Satır içi" }).click();
+    // The removed line is shown above its replacement (pure insertions get an empty widget).
+    await expect(frame.locator(".cm-deletedChunk", { hasText: "iki" })).toHaveCount(1);
+    await expect(frame.locator(".cm-editor")).toHaveCount(1);
+  });
+});

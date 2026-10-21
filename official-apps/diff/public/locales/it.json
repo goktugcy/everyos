@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Visualizzatore differenze",
+    "description": "Confronta due testi o file affiancati o in linea, con evidenziazione della sintassi, confronto che ignora gli spazi, navigazione tra le modifiche ed esportazione di patch."
+  },
+  "sides": {
+    "original": "Originale",
+    "changed": "Modificato",
+    "typed": "Testo digitato",
+    "open": "Apri…",
+    "openOriginal": "Apri il file originale…",
+    "openChanged": "Apri il file modificato…",
+    "placeholderOriginal": "Incolla o digita il testo originale, oppure apri un file.",
+    "placeholderChanged": "Incolla o digita il testo modificato, oppure apri un file.",
+    "swap": "Scambia i lati",
+    "notKept": "Non conservato",
+    "notKeptHint": "Questo lato è troppo grande per essere conservato dopo la chiusura; riapri il file la prossima volta."
+  },
+  "view": {
+    "label": "Vista",
+    "split": "Affiancato",
+    "inline": "In linea"
+  },
+  "options": {
+    "ignoreWhitespace": "Ignora gli spazi",
+    "collapse": "Nascondi le righe invariate",
+    "wrap": "A capo automatico",
+    "language": "Evidenziazione",
+    "auto": "Automatica",
+    "autoNamed": "Automatica ({{name}})",
+    "plain": "Testo semplice"
+  },
+  "nav": {
+    "previous": "Modifica precedente ({{key}})",
+    "next": "Modifica successiva ({{key}})",
+    "position": "{{current}} di {{total}}",
+    "count_one": "{{count}} modifica",
+    "count_other": "{{count}} modifiche"
+  },
+  "stats": {
+    "added_one": "{{count}} riga aggiunta",
+    "added_other": "{{count}} righe aggiunte",
+    "removed_one": "{{count}} riga rimossa",
+    "removed_other": "{{count}} righe rimosse"
+  },
+  "status": {
+    "empty": "Ancora niente da confrontare",
+    "identical": "Identici",
+    "whitespaceOnly": "Differiscono solo gli spazi",
+    "approximate": "Differenza ampia: mostrata in modo approssimativo",
+    "endings": "I fine riga differiscono ({{a}} / {{b}}); il confronto li ignora e la patch usa LF."
+  },
+  "patch": {
+    "copy": "Copia la patch",
+    "save": "Salva la patch…",
+    "tooDifferent": "I testi sono troppo diversi per creare una patch in tempo."
+  },
+  "files": {
+    "binary": "«{{name}}» non è un file di testo."
+  },
+  "actions": {
+    "new": "Nuovo confronto",
+    "newTitle": "Iniziare un nuovo confronto?",
+    "newBody": "Entrambi i lati verranno svuotati. I file aperti non vengono modificati."
+  }
+}

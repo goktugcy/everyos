@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Visor de diferencias",
+    "description": "Compara dos textos o archivos en paralelo o en línea, con resaltado de sintaxis, comparación sin espacios en blanco, navegación entre cambios y exportación de parches."
+  },
+  "sides": {
+    "original": "Original",
+    "changed": "Modificado",
+    "typed": "Texto escrito",
+    "open": "Abrir…",
+    "openOriginal": "Abrir el archivo original…",
+    "openChanged": "Abrir el archivo modificado…",
+    "placeholderOriginal": "Pega o escribe el texto original, o abre un archivo.",
+    "placeholderChanged": "Pega o escribe el texto modificado, o abre un archivo.",
+    "swap": "Intercambiar lados",
+    "notKept": "No se guarda",
+    "notKeptHint": "Este lado es demasiado grande para guardarlo al cerrar la ventana; vuelve a abrir el archivo la próxima vez."
+  },
+  "view": {
+    "label": "Vista",
+    "split": "En paralelo",
+    "inline": "En línea"
+  },
+  "options": {
+    "ignoreWhitespace": "Ignorar espacios en blanco",
+    "collapse": "Ocultar líneas sin cambios",
+    "wrap": "Ajustar líneas",
+    "language": "Resaltado",
+    "auto": "Automático",
+    "autoNamed": "Automático ({{name}})",
+    "plain": "Texto sin formato"
+  },
+  "nav": {
+    "previous": "Cambio anterior ({{key}})",
+    "next": "Cambio siguiente ({{key}})",
+    "position": "{{current}} de {{total}}",
+    "count_one": "{{count}} cambio",
+    "count_other": "{{count}} cambios"
+  },
+  "stats": {
+    "added_one": "{{count}} línea añadida",
+    "added_other": "{{count}} líneas añadidas",
+    "removed_one": "{{count}} línea eliminada",
+    "removed_other": "{{count}} líneas eliminadas"
+  },
+  "status": {
+    "empty": "Aún no hay nada que comparar",
+    "identical": "Idénticos",
+    "whitespaceOnly": "Solo difieren los espacios en blanco",
+    "approximate": "Diferencia grande: se muestra de forma aproximada",
+    "endings": "Los finales de línea difieren ({{a}} / {{b}}); la comparación los ignora y el parche usa LF."
+  },
+  "patch": {
+    "copy": "Copiar parche",
+    "save": "Guardar parche…",
+    "tooDifferent": "Los textos son demasiado distintos para crear un parche a tiempo."
+  },
+  "files": {
+    "binary": "«{{name}}» no es un archivo de texto."
+  },
+  "actions": {
+    "new": "Nueva comparación",
+    "newTitle": "¿Empezar una nueva comparación?",
+    "newBody": "Se vaciarán ambos lados. Los archivos que abriste no cambian."
+  }
+}

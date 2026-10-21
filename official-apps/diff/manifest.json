@@ -1,0 +1,32 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.diff",
+  "name": "Diff Viewer",
+  "version": "1.0.0",
+  "description": "Compare two texts or files side by side or inline, with syntax highlighting, whitespace-insensitive comparison, change navigation and patch export.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "developer",
+  "permissions": ["storage:app", "clipboard:write", "files:pick", "files:save"],
+  "window": {
+    "defaultWidth": 1180,
+    "defaultHeight": 740,
+    "minWidth": 360,
+    "minHeight": 420,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/diff"
+}
