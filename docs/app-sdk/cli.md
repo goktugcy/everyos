@@ -7,7 +7,7 @@ app's folder (the one with `manifest.json`).
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `dev [--port 5180] [--host 127.0.0.1]`             | Rebuilds on every change and opens a developer page with a **mock** desktop (see [testing](testing.md)).               |
 | `dev --registry`                                   | Also serves a signed development registry a real EveryOS can add (each build is a new `-dev.<time>` version).          |
-| `build`                                            | Bundles the entries with esbuild (minified) and copies `public/` and the manifest into `dist/`.                        |
+| `build`                                            | Bundles the entries and workers with esbuild (minified) and copies `public/` and the manifest into `dist/`.            |
 | `validate`                                         | Builds, then checks the package exactly as EveryOS will (below). Fails on errors.                                      |
 | `pack [--out file]`                                | Builds, validates (errors refuse) and writes `<id>-<version>.eosapp`.                                                  |
 | `test [-- vitest args]`                            | Validates, then runs the project's Vitest tests.                                                                       |
@@ -42,6 +42,7 @@ Nothing is ever published to the official EveryOS registry from the CLI.
 ```json
 {
   "entries": { "app.js": "src/main.tsx", "widget.js": "src/widget.tsx" },
+  "workers": { "search.worker.js": "src/search-worker.ts" },
   "publicDir": "public",
   "outDir": "dist",
   "registry": {
@@ -53,3 +54,9 @@ Nothing is ever published to the official EveryOS registry from the CLI.
 ```
 
 Without it, `src/main.tsx` (or `.ts`) becomes `app.js`.
+
+Entries are ES modules: code they share, and code loaded with `import()`, goes into `chunks/`, so
+a large library an app needs only for one view loads when that view opens. Each worker is bundled
+into a single file of its own: an app runs in an opaque origin, where a worker can only start from
+a blob URL of its code (`startWorker("search.worker.js")` in `@everyos/app-ui` does that), and
+such a worker cannot load chunks.

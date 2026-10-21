@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -139,6 +139,43 @@ describe("create-everyos-app and everyos-app", () => {
     expect(
       missing.findings.find((finding) => finding.file === "locales/tr.json")?.message,
     ).toContain("notes");
+  });
+
+  it("splits code into chunks loaded on demand, and bundles workers on their own", async () => {
+    const dir = join(work, "chunks");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    writeFileSync(join(dir, "src/heavy.ts"), 'export const heavy = () => "loaded later";\n');
+    writeFileSync(
+      join(dir, "src/main.ts"),
+      'void import("./heavy.ts").then(({ heavy }) => (document.body.textContent = heavy()));\n',
+    );
+    writeFileSync(join(dir, "src/shared.ts"), "export const twice = (n: number) => n * 2;\n");
+    writeFileSync(
+      join(dir, "src/worker.ts"),
+      'import { twice } from "./shared.ts";\nonmessage = (event) => postMessage(twice(Number(event.data)));\n',
+    );
+    writeFileSync(
+      join(dir, "everyos.config.json"),
+      JSON.stringify({
+        entries: { "app.js": "src/main.ts" },
+        workers: { "worker.js": "src/worker.ts" },
+      }),
+    );
+    const out = await build(await loadProject(dir));
+    const chunks = readdirSync(join(out, "chunks"));
+    expect(
+      chunks.some((name) =>
+        readFileSync(join(out, "chunks", name), "utf8").includes("loaded later"),
+      ),
+    ).toBe(true);
+    expect(readFileSync(join(out, "app.js"), "utf8")).not.toContain("loaded later");
+    // The worker holds all of its code: no import of a chunk.
+    const worker = readFileSync(join(out, "worker.js"), "utf8");
+    expect(worker).not.toMatch(/\bimport\b|\bfrom\s*["']/);
+    expect(worker).toContain("postMessage");
+    const { findings } = await validateBuild(out);
+    expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
   });
 
   it("serves the app under EveryOS's sandbox policy with a mock desktop page", async () => {

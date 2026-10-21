@@ -13,30 +13,51 @@ export interface BuildOptionsCli {
   version?: string;
 }
 
-/** What esbuild should do for the project's entries. */
+const entryPoints = (outputs: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(outputs).map(([output, source]) => [output.replace(/\.js$/, ""), source]),
+  );
+
+/**
+ * What esbuild should do for the project's entries: ES modules that share code through chunks
+ * (`chunks/`), loaded on demand by dynamic `import()`.
+ */
 function esbuildOptions(project: Project, outDir: string, dev: boolean): BuildOptions {
   return {
     absWorkingDir: project.root,
-    entryPoints: Object.fromEntries(
-      Object.entries(project.config.entries).map(([output, source]) => [
-        output.replace(/\.js$/, ""),
-        source,
-      ]),
-    ),
+    entryPoints: entryPoints(project.config.entries),
     outdir: outDir,
     bundle: true,
     format: "esm",
     platform: "browser",
     target: "es2022",
-    splitting: false,
+    splitting: true,
+    chunkNames: "chunks/[name]-[hash]",
     minify: !dev,
     sourcemap: dev ? "linked" : false,
     jsx: "automatic",
-    loader: { ".png": "file", ".svg": "file", ".woff2": "file", ".webp": "file" },
+    loader: {
+      ".png": "file",
+      ".svg": "file",
+      ".woff": "file",
+      ".woff2": "file",
+      ".ttf": "file",
+      ".webp": "file",
+    },
     assetNames: "assets/[name]-[hash]",
     define: { "process.env.NODE_ENV": JSON.stringify(dev ? "development" : "production") },
     logLevel: "silent",
     metafile: true,
+  };
+}
+
+/** Workers: one self-contained module each (a worker from a blob URL cannot load chunks). */
+function workerOptions(project: Project, outDir: string, dev: boolean): BuildOptions {
+  return {
+    ...esbuildOptions(project, outDir, dev),
+    entryPoints: entryPoints(project.config.workers),
+    splitting: false,
+    metafile: false,
   };
 }
 
@@ -62,8 +83,14 @@ export async function build(project: Project, options: BuildOptionsCli = {}): Pr
   const outDir = join(project.root, options.outDir ?? project.config.outDir);
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
-  if (Object.keys(project.config.entries).length) {
-    await esbuild(esbuildOptions(project, outDir, options.dev ?? false)).catch(
+  const builds = [
+    Object.keys(project.config.entries).length &&
+      esbuildOptions(project, outDir, options.dev ?? false),
+    Object.keys(project.config.workers).length &&
+      workerOptions(project, outDir, options.dev ?? false),
+  ].filter((entry): entry is BuildOptions => entry !== 0);
+  for (const buildOptions of builds) {
+    await esbuild(buildOptions).catch(
       (
         error: Error & {
           errors?: Array<{ text: string; location?: { file: string; line: number } }>;
@@ -111,6 +138,10 @@ export async function watch(
   };
   const ctx = await context({ ...esbuildOptions(project, outDir, true), plugins: [reporter] });
   await ctx.watch();
+  const workers = Object.keys(project.config.workers).length
+    ? await context(workerOptions(project, outDir, true))
+    : null;
+  await workers?.watch();
   // Static files are not part of the module graph: watch them too.
   const { watch: watchFiles } = await import("node:fs");
   const watchers = [project.config.publicDir, "manifest.json"]
@@ -124,5 +155,6 @@ export async function watch(
   return async () => {
     for (const watcher of watchers) watcher.close();
     await ctx.dispose();
+    await workers?.dispose();
   };
 }

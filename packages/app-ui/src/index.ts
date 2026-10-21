@@ -60,3 +60,4 @@ export {
 } from "./hooks.ts";
 export { UI_MESSAGES } from "./messages.ts";
 export { markdownText, markdownTitle } from "./text.ts";
+export { startWorker } from "./workers.ts";

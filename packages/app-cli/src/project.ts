@@ -10,6 +10,11 @@ import { join, resolve } from "node:path";
 export interface ProjectConfig {
   /** Output file (relative to the package root) → source entry. */
   entries: Record<string, string>;
+  /**
+   * Output file → source of a Web Worker: bundled into one self-contained file (no shared chunks),
+   * as a worker started from a blob URL in the app's opaque origin needs.
+   */
+  workers: Record<string, string>;
   publicDir: string;
   outDir: string;
   /** Your own registry (`everyos-app publish`): its directory and the keys that sign it. */
@@ -58,7 +63,8 @@ export async function loadProject(root = process.cwd()): Promise<Project> {
     existsSync(join(dir, file)),
   );
   const entries = configured.entries ?? (main ? { "app.js": main } : {});
-  for (const [output, source] of Object.entries(entries)) {
+  const workers = configured.workers ?? {};
+  for (const [output, source] of [...Object.entries(entries), ...Object.entries(workers)]) {
     if (!/^(?!\/)(?!.*\.\.)[\w./-]+\.js$/.test(output))
       throw new CliError(`Entry output "${output}" must be a relative path ending in .js`);
     if (!existsSync(join(dir, source))) throw new CliError(`Entry source not found: ${source}`);
@@ -68,6 +74,7 @@ export async function loadProject(root = process.cwd()): Promise<Project> {
     manifest: manifest as Record<string, unknown>,
     config: {
       entries,
+      workers,
       publicDir: configured.publicDir ?? "public",
       outDir: configured.outDir ?? "dist",
       registry: {
