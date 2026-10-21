@@ -108,7 +108,7 @@ function encode(privateKey: KeyObject): Encoded {
   const n = b64url(jwk.n);
   return {
     type: "ssh-rsa",
-    bits: (privateKey.asymmetricKeyDetails?.modulusLength ?? n.length * 8),
+    bits: privateKey.asymmetricKeyDetails?.modulusLength ?? n.length * 8,
     publicBlob: Buffer.concat([string("ssh-rsa"), mpint(b64url(jwk.e)), mpint(n)]),
     privateFields: Buffer.concat([
       string("ssh-rsa"),
@@ -261,7 +261,10 @@ export class AppSshKeys {
 
   list(userId: string): SshKey[] {
     return this.#db
-      .all<Row>("SELECT * FROM desktop_app_ssh_keys WHERE user_id = ? ORDER BY created_at, rowid", userId)
+      .all<Row>(
+        "SELECT * FROM desktop_app_ssh_keys WHERE user_id = ? ORDER BY created_at, rowid",
+        userId,
+      )
       .map((row) => this.#view(row));
   }
 
