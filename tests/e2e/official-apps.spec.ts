@@ -26,15 +26,25 @@ const OFFICIAL = readdirSync(root)
     return { slug, id: manifest.id, permissions: manifest.permissions, name: tr.app.name };
   });
 
-async function api(page: Page, method: string, path: string, body?: unknown) {
-  const session = (await (await page.request.get("/api/auth/session")).json()) as {
-    csrfToken: string;
-  };
-  return page.request.fetch(path, {
-    method,
-    headers: { [CSRF_HEADER]: session.csrfToken },
-    ...(body === undefined ? {} : { data: body }),
-  });
+/** An API call made by the signed-in page itself (so it also works over EVERYOS_E2E_HTTP_HOST). */
+function api(
+  page: Page,
+  method: string,
+  path: string,
+  body?: unknown,
+): Promise<{ status: number; text: string }> {
+  return page.evaluate(
+    async ({ method, path, body, header }) => {
+      const session = (await (await fetch("/api/auth/session")).json()) as { csrfToken: string };
+      const response = await fetch(path, {
+        method,
+        headers: { "Content-Type": "application/json", [header]: session.csrfToken },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+      return { status: response.status, text: await response.text() };
+    },
+    { method, path, body, header: CSRF_HEADER },
+  );
 }
 
 /** Installs through the API, then reloads so the desktop lists the app (the store UI does both). */
@@ -47,7 +57,7 @@ async function install(page: Page, app: (typeof OFFICIAL)[number]) {
     appId: app.id,
     approve,
   });
-  expect(response.status(), await response.text()).toBe(201);
+  expect(response.status, response.text).toBe(201);
   await page.reload();
   await expect(page.getByTestId("desktop")).toBeVisible();
 }
@@ -66,7 +76,7 @@ test.describe.configure({ mode: "serial" });
 
 test.beforeEach(async ({ page }) => {
   await signIn(page);
-  expect((await api(page, "POST", "/api/desktop-apps/registries/official/sync", {})).status()).toBe(
+  expect((await api(page, "POST", "/api/desktop-apps/registries/official/sync", {})).status).toBe(
     200,
   );
 });
