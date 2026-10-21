@@ -3843,6 +3843,14 @@ export const tr = {
       },
     },
     dialog: {
+      exportKeyTitle: "“{{name}}” özel anahtarı dışa aktarılsın mı?",
+      exportKeyBody:
+        "{{app}} bu özel anahtarı alacak. Ona sahip olan herkes, anahtarın güvenildiği her yerde sizin adınıza oturum açabilir; dosyayı güvende tutun.",
+      exportKeyConfirm: "Özel anahtarı dışa aktar",
+      deleteKeyTitle: "“{{name}}” anahtarı silinsin mi?",
+      deleteKeyBody:
+        "{{app}} bu anahtarı silmek istiyor. Özel anahtarı kalıcı olarak gider: ona güvenen sunucular artık bu anahtarla girişinize izin vermez.",
+      deleteKeyConfirm: "Anahtarı sil",
       hostLabel: "EveryOS, {{app}} için soruyor",
       writeTitle: "{{connection}} içindeki veriler değiştirilsin mi?",
       writeBody:

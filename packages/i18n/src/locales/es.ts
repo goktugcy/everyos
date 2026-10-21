@@ -4039,6 +4039,14 @@ export const es: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "¿Exportar la clave privada «{{name}}»?",
+      exportKeyBody:
+        "{{app}} recibirá esta clave privada. Quien la tenga puede iniciar sesión como tú dondequiera que se confíe en la clave, así que guarda el archivo en un lugar seguro.",
+      exportKeyConfirm: "Exportar clave privada",
+      deleteKeyTitle: "¿Eliminar la clave «{{name}}»?",
+      deleteKeyBody:
+        "{{app}} quiere eliminar esta clave. Su clave privada desaparece para siempre: los servidores que confían en ella ya no te dejarán entrar con ella.",
+      deleteKeyConfirm: "Eliminar clave",
       hostLabel: "EveryOS pregunta por {{app}}",
       writeTitle: "¿Cambiar datos en {{connection}}?",
       writeBody:

@@ -3806,6 +3806,14 @@ export const en: Messages = {
       },
     },
     dialog: {
+      exportKeyTitle: "Export the private key “{{name}}”?",
+      exportKeyBody:
+        "{{app}} will receive this private key. Anyone who has it can sign in as you wherever the key is trusted, so keep the file safe.",
+      exportKeyConfirm: "Export private key",
+      deleteKeyTitle: "Delete the key “{{name}}”?",
+      deleteKeyBody:
+        "{{app}} asks to delete this key. Its private key is gone for good: servers that trust it will no longer let you in with it.",
+      deleteKeyConfirm: "Delete key",
       hostLabel: "EveryOS asks for {{app}}",
       writeTitle: "Change data in {{connection}}?",
       writeBody:

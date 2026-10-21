@@ -34,6 +34,8 @@ export async function signIn(
     (await page.request.patch("/api/account", { headers, data: { locale: "tr" } })).status(),
   ).toBe(200);
   if (reset) {
+    // Leave the desktop first: it may still save the windows it restored, after the reset.
+    await page.goto("about:blank");
     for (const key of [
       "appearance",
       "desktop",
@@ -59,7 +61,7 @@ export async function signIn(
         ).status(),
       ).toBe(204);
   }
-  await page.reload();
+  await page.goto("/");
   await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();
   return session;
 }

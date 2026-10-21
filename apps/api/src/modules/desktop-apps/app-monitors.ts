@@ -134,7 +134,7 @@ export class AppMonitors {
   list(appId: string, userId: string): NetMonitor[] {
     return this.#db
       .all<Row>(
-        "SELECT * FROM desktop_app_monitors WHERE app_id = ? AND user_id = ? ORDER BY created_at",
+        "SELECT * FROM desktop_app_monitors WHERE app_id = ? AND user_id = ? ORDER BY created_at, rowid",
         appId,
         userId,
       )

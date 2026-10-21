@@ -1,6 +1,7 @@
 import {
   BRIDGE_ERRORS,
   type DbConnection,
+  type SshKey,
   type DirectoryEntry,
   type FileHandle,
   type WindowState,
@@ -78,37 +79,66 @@ export function createHandlers(context: InstanceContext): Handlers {
     init: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
   ) => api<T>(`/app-sdk${path}`, { ...init, headers: { [INSTANCE_HEADER]: token } });
   const managed = () => (windowId && wm().windows[windowId] ? windowId : null);
-  /**
-   * For a database write: false when there is nothing to confirm (a read, or a connection that
-   * only reads, which the server refuses), true once the person confirmed; refuses otherwise.
-   */
-  const confirmWrite = async (input: unknown): Promise<boolean> => {
-    const query = input as { write?: unknown; sql?: unknown; connection?: unknown } | null;
-    if (!query || query.write !== true || typeof query.sql !== "string") return false;
-    const { connections } = (
-      await sdk<{ result: { connections: DbConnection[] } }>("/host/db.connections", {
-        method: "POST",
-        body: { input: null },
-      })
-    ).result;
-    const connection = connections.find((entry) => entry.id === query.connection);
-    if (!connection || connection.access !== "write") return false;
+  const hostCall = async <T>(operation: string, input: unknown = null) =>
+    (await sdk<{ result: T }>(`/host/${operation}`, { method: "POST", body: { input } })).result;
+  /** Asks the person in a dialog EveryOS draws over the app; refuses when they decline. */
+  const ask = async (title: string, message: string, confirm: string, code: string) => {
     if (context.kind !== "window")
-      throw new BridgeRefusal(BRIDGE_ERRORS.permission, "Widgets cannot change databases");
+      throw new BridgeRefusal(BRIDGE_ERRORS.permission, "Widgets cannot ask for this");
     const confirmed = await context.showDialog({
       kind: "confirm",
-      title: i18next.t("desktopApps.dialog.writeTitle", { connection: connection.name }),
-      message: i18next.t("desktopApps.dialog.writeBody", {
-        app: app.name,
-        database: `${connection.database} · ${connection.host}`,
-      }),
-      confirm: i18next.t("desktopApps.dialog.writeConfirm"),
+      title,
+      message,
+      confirm,
       destructive: true,
-      host: { code: query.sql.slice(0, 20_000) },
+      host: { code },
     });
     if (confirmed !== true)
-      throw new BridgeRefusal(BRIDGE_ERRORS.cancelled, "The person did not confirm the change");
+      throw new BridgeRefusal(BRIDGE_ERRORS.cancelled, "The person did not confirm");
     return true;
+  };
+  /**
+   * Whether the person confirmed what the app asks for: a database write, a private key export or
+   * deleting a key that has a private part. False when there is nothing to confirm (the server
+   * then refuses anything that needed it).
+   */
+  const confirmation = async (operation: string, input: unknown): Promise<boolean> => {
+    const value = (input ?? {}) as Record<string, unknown>;
+    if (operation === "db.query") {
+      if (value.write !== true || typeof value.sql !== "string") return false;
+      const { connections } = await hostCall<{ connections: DbConnection[] }>("db.connections");
+      const connection = connections.find((entry) => entry.id === value.connection);
+      if (!connection || connection.access !== "write") return false;
+      return ask(
+        i18next.t("desktopApps.dialog.writeTitle", { connection: connection.name }),
+        i18next.t("desktopApps.dialog.writeBody", {
+          app: app.name,
+          database: `${connection.database} · ${connection.host}`,
+        }),
+        i18next.t("desktopApps.dialog.writeConfirm"),
+        value.sql.slice(0, 20_000),
+      );
+    }
+    if (operation === "ssh.keys.export" || operation === "ssh.keys.delete") {
+      if (operation === "ssh.keys.export" && value.private !== true) return false;
+      const { keys } = await hostCall<{ keys: SshKey[] }>("ssh.keys.list");
+      const key = keys.find((entry) => entry.id === value.id);
+      if (!key?.hasPrivateKey) return false;
+      return operation === "ssh.keys.export"
+        ? ask(
+            i18next.t("desktopApps.dialog.exportKeyTitle", { name: key.name }),
+            i18next.t("desktopApps.dialog.exportKeyBody", { app: app.name }),
+            i18next.t("desktopApps.dialog.exportKeyConfirm"),
+            `${key.fingerprint}\n${key.publicKey}`,
+          )
+        : ask(
+            i18next.t("desktopApps.dialog.deleteKeyTitle", { name: key.name }),
+            i18next.t("desktopApps.dialog.deleteKeyBody", { app: app.name }),
+            i18next.t("desktopApps.dialog.deleteKeyConfirm"),
+            `${key.fingerprint}\n${key.publicKey}`,
+          );
+    }
+    return false;
   };
   const file = (id: string) => `/files/${encodeURIComponent(id)}`;
   /** Binary reads skip the JSON helper; errors still arrive as API errors. */
@@ -168,8 +198,8 @@ export function createHandlers(context: InstanceContext): Handlers {
       return null;
     },
     "host.call": async ({ operation, input }) => {
-      // An app changes a database only after the person confirms the statement here.
-      const confirmed = operation === "db.query" && (await confirmWrite(input));
+      // Some calls go ahead only after the person confirms them here (database writes, keys).
+      const confirmed = await confirmation(operation, input);
       return (
         await sdk<{ result: unknown }>(`/host/${operation}`, {
           method: "POST",

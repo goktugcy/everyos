@@ -4039,6 +4039,14 @@ export const de: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "Den privaten Schlüssel „{{name}}“ exportieren?",
+      exportKeyBody:
+        "{{app}} erhält diesen privaten Schlüssel. Wer ihn hat, kann sich überall dort als du anmelden, wo dem Schlüssel vertraut wird – bewahre die Datei sicher auf.",
+      exportKeyConfirm: "Privaten Schlüssel exportieren",
+      deleteKeyTitle: "Den Schlüssel „{{name}}“ löschen?",
+      deleteKeyBody:
+        "{{app}} möchte diesen Schlüssel löschen. Sein privater Schlüssel ist endgültig weg: Server, die ihm vertrauen, lassen dich damit nicht mehr herein.",
+      deleteKeyConfirm: "Schlüssel löschen",
       hostLabel: "EveryOS fragt für {{app}}",
       writeTitle: "Daten in {{connection}} ändern?",
       writeBody:

@@ -93,6 +93,17 @@ interface MediaUrl {
 const segments = (path: string) => path.split("/").filter(Boolean);
 
 /**
+ * SSH secrets never reach apps through files: inside a `.ssh` folder only public keys (`*.pub`),
+ * never the folder itself, and nothing named like a host key.
+ */
+export function sshSecretPath(path: string): boolean {
+  const parts = segments(path);
+  const last = parts.at(-1) ?? "";
+  if (parts.includes(".ssh")) return last === ".ssh" || !last.endsWith(".pub");
+  return /^ssh_host_.+_key$/.test(last);
+}
+
+/**
  * Files an app may reach for a person: only items that person picked in the EveryOS picker
  * (grants), never anything else. Folder grants reach inside the folder but never through links.
  */
@@ -140,6 +151,10 @@ export class AppFiles {
     )!.count;
     if (count >= MAX_GRANTS)
       throw new ApiError(409, "CONFLICT", "The app already holds too many file grants");
+    if (sshSecretPath(input.path))
+      throw new ApiError(403, "FORBIDDEN", "SSH keys are not available to apps", {
+        details: { reason: "ssh" },
+      });
     const row: FileGrantRow = {
       id: randomBytes(16).toString("base64url"),
       app_id: input.appId,
@@ -243,6 +258,7 @@ export class AppFiles {
     }
     if (properties.type !== "file" && properties.type !== "directory") throw notFound("File");
     if (expect !== "any" && properties.type !== expect) throw notFound("File");
+    if (sshSecretPath(path)) throw notFound("File");
     return { path, kind: properties.type, size: properties.size };
   }
 

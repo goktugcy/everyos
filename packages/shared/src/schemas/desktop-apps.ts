@@ -351,3 +351,38 @@ export const AppDbQueryInputSchema = z.strictObject({
   timeoutMs: z.int().min(1000).max(120_000).default(30_000),
   write: z.boolean().default(false),
 });
+
+/* ------------------------------------------------------------------ SSH keys */
+
+const sshKeyName = z.string().trim().min(1).max(80);
+/** OpenSSH comments are one line of text. */
+const sshComment = z
+  .string()
+  .trim()
+  .max(200)
+  .regex(/^[^\r\n\0]*$/);
+
+export const AppSshGenerateSchema = z.strictObject({
+  name: sshKeyName,
+  type: z.enum(["ed25519", "ecdsa-256", "ecdsa-384", "ecdsa-521", "rsa-3072", "rsa-4096"]),
+  comment: sshComment,
+});
+
+export const AppSshImportSchema = z.strictObject({
+  name: sshKeyName,
+  publicKey: z.string().trim().min(16).max(16_384),
+});
+
+export const AppSshUpdateSchema = z.strictObject({
+  id: z.uuid(),
+  name: sshKeyName,
+  comment: sshComment,
+});
+
+export const AppSshExportSchema = z.strictObject({
+  id: z.uuid(),
+  private: z.boolean(),
+  passphrase: z.string().min(8).max(1024).nullable().default(null),
+});
+
+export const AppSshKeyIdSchema = z.strictObject({ id: z.uuid() });

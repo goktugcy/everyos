@@ -1,9 +1,14 @@
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { execFile, spawn, type ChildProcess } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer, type AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
+
+/** Asynchronous and bounded: a slow disk can never freeze the test runner's own timeouts. */
+const run = (file: string, args: string[]) =>
+  promisify(execFile)(file, args, { timeout: 60_000 }).then(() => undefined);
 
 /*
  * Throwaway database servers for the database connector's tests: real PostgreSQL and MariaDB
@@ -88,34 +93,39 @@ export async function startPostgres(): Promise<TestDatabaseServer | null> {
   const data = join(dir, "data");
   const password = "admin-secret-1";
   await writeFile(join(dir, "pw"), password);
-  execFileSync(
-    initdb,
-    [
-      "-D",
-      data,
-      "-U",
-      "admin",
-      `--pwfile=${join(dir, "pw")}`,
-      "--auth=scram-sha-256",
-      "-E",
-      "UTF8",
-      "--no-locale",
-    ],
-    { stdio: "ignore" },
-  );
+  // A throwaway cluster: nothing is synced to disk (it is deleted afterwards).
+  await run(initdb, [
+    "-D",
+    data,
+    "-U",
+    "admin",
+    `--pwfile=${join(dir, "pw")}`,
+    "--auth=scram-sha-256",
+    "-E",
+    "UTF8",
+    "--no-locale",
+    "--no-sync",
+  ]);
   const port = await freePort();
-  execFileSync(
-    pgCtl,
-    ["-D", data, "-l", join(dir, "log"), "-o", `-p ${port} -k ${dir} -h 127.0.0.1`, "-w", "start"],
-    { stdio: "ignore" },
-  );
+  await run(pgCtl, [
+    "-D",
+    data,
+    "-l",
+    join(dir, "log"),
+    "-o",
+    `-p ${port} -k ${dir} -h 127.0.0.1 -c fsync=off -c synchronous_commit=off`,
+    "-t",
+    "45",
+    "-w",
+    "start",
+  ]);
   return {
     port,
     user: "admin",
     password,
     stop: async () => {
       try {
-        execFileSync(pgCtl, ["-D", data, "-m", "immediate", "stop"], { stdio: "ignore" });
+        await run(pgCtl, ["-D", data, "-m", "immediate", "stop"]);
       } finally {
         await rm(dir, { recursive: true, force: true });
       }
@@ -138,16 +148,12 @@ export async function startMysql(): Promise<(TestDatabaseServer & { host: string
   if (!server || !install) return null;
   const dir = await mkdtemp(join(tmpdir(), "everyos-mysql-"));
   const data = join(dir, "data");
-  execFileSync(
-    install,
-    [
-      "--no-defaults",
-      `--datadir=${data}`,
-      "--auth-root-authentication-method=normal",
-      "--skip-test-db",
-    ],
-    { stdio: "ignore" },
-  );
+  await run(install, [
+    "--no-defaults",
+    `--datadir=${data}`,
+    "--auth-root-authentication-method=normal",
+    "--skip-test-db",
+  ]);
   const port = await freePort();
   const child: ChildProcess = spawn(
     server,

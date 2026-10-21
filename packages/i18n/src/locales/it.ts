@@ -4037,6 +4037,14 @@ export const it: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "Esportare la chiave privata «{{name}}»?",
+      exportKeyBody:
+        "{{app}} riceverà questa chiave privata. Chiunque la possieda può accedere come te ovunque la chiave sia considerata attendibile, quindi conserva il file al sicuro.",
+      exportKeyConfirm: "Esporta chiave privata",
+      deleteKeyTitle: "Eliminare la chiave «{{name}}»?",
+      deleteKeyBody:
+        "{{app}} chiede di eliminare questa chiave. La sua chiave privata sparisce per sempre: i server che la considerano attendibile non ti faranno più entrare con essa.",
+      deleteKeyConfirm: "Elimina chiave",
       hostLabel: "EveryOS chiede per {{app}}",
       writeTitle: "Modificare i dati in {{connection}}?",
       writeBody:

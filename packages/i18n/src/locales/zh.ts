@@ -3832,6 +3832,14 @@ export const zh: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "要导出私钥“{{name}}”吗？",
+      exportKeyBody:
+        "{{app}} 将收到此私钥。拥有它的人可以在任何信任该密钥的地方以你的身份登录，请妥善保管文件。",
+      exportKeyConfirm: "导出私钥",
+      deleteKeyTitle: "要删除密钥“{{name}}”吗？",
+      deleteKeyBody:
+        "{{app}} 请求删除此密钥。其私钥将永久消失：信任它的服务器将不再允许你用它登录。",
+      deleteKeyConfirm: "删除密钥",
       hostLabel: "EveryOS 代 {{app}} 询问",
       writeTitle: "要更改 {{connection}} 中的数据吗？",
       writeBody: "{{app}} 想在 {{database}} 上运行此语句。无法在此撤销更改。",

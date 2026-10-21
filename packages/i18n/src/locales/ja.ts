@@ -4005,6 +4005,14 @@ export const ja: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "秘密鍵「{{name}}」をエクスポートしますか？",
+      exportKeyBody:
+        "{{app}} がこの秘密鍵を受け取ります。これを持つ人は、この鍵が信頼されているすべての場所であなたとしてサインインできます。ファイルは安全に保管してください。",
+      exportKeyConfirm: "秘密鍵をエクスポート",
+      deleteKeyTitle: "鍵「{{name}}」を削除しますか？",
+      deleteKeyBody:
+        "{{app}} がこの鍵の削除を求めています。秘密鍵は完全に失われ、この鍵を信頼しているサーバーにはこの鍵でログインできなくなります。",
+      deleteKeyConfirm: "鍵を削除",
       hostLabel: "EveryOS から {{app}} についての確認",
       writeTitle: "{{connection}} のデータを変更しますか？",
       writeBody:

@@ -19,7 +19,7 @@ import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { fileViewFor, type FileUser } from "../files/file-view.ts";
 import { parseRange } from "../files/routes.ts";
-import { mimeOf, type FileGrantRow } from "./app-files.ts";
+import { mimeOf, type FileGrantRow, sshSecretPath } from "./app-files.ts";
 import { instanceCall, requireCapability, type InstanceCall } from "./sdk-routes.ts";
 
 const Empty = z.strictObject({});
@@ -234,6 +234,9 @@ export function appSdkFileRoutes(services: Services): Hono<AppEnv> {
     if (parent.kind !== "directory") throw new ApiError(400, "VALIDATION_FAILED", "Not a folder");
     const view = viewOf(c);
     const parts = input.path.split("/").filter(Boolean);
+    // Nothing is made, or handed out, among SSH keys.
+    if (sshSecretPath([parent.path, ...parts].join("/")))
+      throw new ApiError(404, "NOT_FOUND", "File not found");
     if (input.create) {
       if (parent.mode !== "readwrite") throw new ApiError(403, "FORBIDDEN", "Read-only folder");
       requireCapability(call, "files:save");

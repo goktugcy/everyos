@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
-import { mkdir, mkdtemp, readdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
+import { createHash, generateKeyPairSync } from "node:crypto";
 import { createSocket } from "node:dgram";
 import {
   createServer,
@@ -31,6 +32,7 @@ import type {
   NetMonitor,
   NetMonitorCheck,
   NetTlsResult,
+  SshKey,
 } from "@everyos/app-sdk/protocol";
 import { signRegistryIndex, type RegistryIndex } from "@everyos/app-registry";
 import { createCatalogFetcher } from "@everyos/catalogs";
@@ -2175,4 +2177,260 @@ describe("app databases", () => {
     expect(many.result.rows).toHaveLength(3);
     await seed.end();
   }, 60_000);
+});
+
+describe("app SSH keys", () => {
+  const as = (token: string) => ({ headers: { "x-everyos-app-instance": token } });
+  const keygen = [
+    "/usr/bin/ssh-keygen",
+    "/usr/local/bin/ssh-keygen",
+    "/opt/homebrew/bin/ssh-keygen",
+  ].find((path) => existsSync(path));
+
+  async function withKeysApp() {
+    const context = await setup();
+    const build = await buildApp(
+      "dev.everyos.sshkeys",
+      "1.0.0",
+      ["secrets:ssh", "files:pick"],
+      officialKeys.privateKey,
+    );
+    const other = await buildApp(
+      "dev.everyos.other",
+      "1.0.0",
+      ["storage:app"],
+      officialKeys.privateKey,
+    );
+    publish(
+      context.registry,
+      index([
+        { id: "dev.everyos.sshkeys", versions: [build] },
+        { id: "dev.everyos.other", versions: [other] },
+      ]),
+      [build, other],
+    );
+    await sync(context.admin);
+    for (const appId of ["dev.everyos.sshkeys", "dev.everyos.other"])
+      expect(
+        (
+          await context.admin.post("/api/desktop-apps/installed", {
+            registryId: "official",
+            appId,
+            approve: ["secrets:ssh"],
+          })
+        ).status,
+      ).toBe(201);
+    const open = async (client: TestClient, appId = "dev.everyos.sshkeys") =>
+      (
+        await json<{ token: string }>(
+          await client.post("/api/app-sdk/instances", { appId, kind: "window" }),
+        )
+      ).token;
+    const host = (
+      client: TestClient,
+      token: string,
+      operation: string,
+      input: unknown = null,
+      confirmed = false,
+    ) =>
+      client.request("POST", `/api/app-sdk/host/${operation}`, {
+        body: { input, ...(confirmed ? { confirmed: true } : {}) },
+        ...as(token),
+      });
+    return { ...context, open, host };
+  }
+
+  it("makes keys OpenSSH reads, and reveals a private key only on a confirmed export", async () => {
+    const { ctx, admin, operator, open, host } = await withKeysApp();
+    const token = await open(admin);
+    const scratch = await mkdtemp(join(tmpdir(), "everyos-ssh-test-"));
+    for (const [type, keyType, bits] of [
+      ["ed25519", "ssh-ed25519", 256],
+      ["ecdsa-256", "ecdsa-sha2-nistp256", 256],
+      ["ecdsa-384", "ecdsa-sha2-nistp384", 384],
+      ["rsa-3072", "ssh-rsa", 3072],
+    ] as const) {
+      const key = (
+        await json<{ result: SshKey }>(
+          await host(admin, token, "ssh.keys.generate", {
+            name: `Laptop ${type}`,
+            type,
+            comment: "goktug@laptop",
+          }),
+        )
+      ).result;
+      expect(key).toMatchObject({
+        type: keyType,
+        bits,
+        hasPrivateKey: true,
+        comment: "goktug@laptop",
+      });
+      expect(key.publicKey).toMatch(new RegExp(`^${keyType} [A-Za-z0-9+/=]+ goktug@laptop$`));
+      const exportPrivate = (confirmed: boolean, passphrase: string | null = null) =>
+        host(admin, token, "ssh.keys.export", { id: key.id, private: true, passphrase }, confirmed);
+      const refused = await exportPrivate(false);
+      expect(refused.status).toBe(403);
+      expect((await code(refused)).details).toMatchObject({ confirmation: "required" });
+      const exported = (
+        await json<{ result: { text: string; fileName: string } }>(await exportPrivate(true))
+      ).result;
+      expect(exported.text).toMatch(/^-----BEGIN OPENSSH PRIVATE KEY-----\n/);
+      if (!keygen) continue;
+      // OpenSSH itself reads the key back to the same public key and fingerprint.
+      const file = join(scratch, type);
+      writeFileSync(file, exported.text, { mode: 0o600 });
+      const derived = execFileSync(keygen, ["-y", "-f", file], { encoding: "utf8" }).trim();
+      expect(derived.split(" ").slice(0, 2)).toEqual(key.publicKey.split(" ").slice(0, 2));
+      writeFileSync(`${file}.pub`, key.publicKey);
+      expect(
+        execFileSync(keygen, ["-l", "-E", "sha256", "-f", `${file}.pub`], { encoding: "utf8" }),
+      ).toContain(key.fingerprint);
+      if (type === "ed25519") {
+        // A passphrase-protected export: unreadable without it, readable with it.
+        const locked = (
+          await json<{ result: { text: string } }>(
+            await exportPrivate(true, "correct horse battery"),
+          )
+        ).result.text;
+        expect(locked).not.toBe(exported.text);
+        writeFileSync(file, locked, { mode: 0o600 });
+        expect(() =>
+          execFileSync(keygen, ["-y", "-P", "", "-f", file], { stdio: "pipe" }),
+        ).toThrow();
+        expect(
+          execFileSync(keygen, ["-y", "-P", "correct horse battery", "-f", file], {
+            encoding: "utf8",
+          }).split(" ")[1],
+        ).toBe(key.publicKey.split(" ")[1]);
+      }
+    }
+    // Sealed at rest; the public export needs no confirmation.
+    for (const row of ctx.db.all<{ sealed_private: string }>(
+      "SELECT sealed_private FROM desktop_app_ssh_keys",
+    ))
+      expect(row.sealed_private).not.toContain("OPENSSH");
+    const keys = (
+      await json<{ result: { keys: SshKey[] } }>(await host(admin, token, "ssh.keys.list"))
+    ).result.keys;
+    expect(keys).toHaveLength(4);
+    const pub = await json<{ result: { text: string; fileName: string } }>(
+      await host(admin, token, "ssh.keys.export", { id: keys[0]!.id, private: false }),
+    );
+    expect(pub.result).toEqual({ text: `${keys[0]!.publicKey}\n`, fileName: "Laptop_ed25519.pub" });
+    const audits = ctx.db.all<{ action: string; outcome: string; details: string }>(
+      "SELECT action, outcome, details FROM audit_events WHERE action LIKE 'desktop-apps.ssh-key.%' ORDER BY id",
+    );
+    expect(
+      audits
+        .filter((entry) => entry.action.endsWith("export-private"))
+        .map((entry) => entry.outcome),
+    ).toContain("failure");
+    expect(audits.map((entry) => entry.details).join("")).not.toContain("OPENSSH");
+
+    // Keys belong to their person only.
+    const operatorToken = await open(operator);
+    expect(
+      (
+        await json<{ result: { keys: SshKey[] } }>(
+          await host(operator, operatorToken, "ssh.keys.list"),
+        )
+      ).result.keys,
+    ).toEqual([]);
+    expect(
+      (
+        await host(
+          operator,
+          operatorToken,
+          "ssh.keys.export",
+          { id: keys[0]!.id, private: true },
+          true,
+        )
+      ).status,
+    ).toBe(404);
+    // And only to apps holding secrets:ssh.
+    const otherToken = await open(admin, "dev.everyos.other");
+    expect((await host(admin, otherToken, "ssh.keys.list")).status).toBe(403);
+
+    // Deleting a key with a private part needs the person's confirmation too.
+    expect((await host(admin, token, "ssh.keys.delete", { id: keys[0]!.id })).status).toBe(403);
+    expect((await host(admin, token, "ssh.keys.delete", { id: keys[0]!.id }, true)).status).toBe(
+      200,
+    );
+    await rm(scratch, { recursive: true, force: true });
+  }, 60_000);
+
+  it("imports only well-formed public keys and keeps SSH files away from apps", async () => {
+    const { ctx, admin, open, host } = await withKeysApp();
+    const token = await open(admin);
+    const { publicKey } = generateKeyPairSync("ed25519");
+    const raw = Buffer.from(publicKey.export({ format: "jwk" }).x!, "base64url");
+    const blob = Buffer.concat([
+      Buffer.from([0, 0, 0, 11]),
+      Buffer.from("ssh-ed25519"),
+      Buffer.from([0, 0, 0, 32]),
+      raw,
+    ]);
+    const line = `ssh-ed25519 ${blob.toString("base64")} friend@desk`;
+    const imported = (
+      await json<{ result: SshKey }>(
+        await host(admin, token, "ssh.keys.import", { name: "Friend", publicKey: line }),
+      )
+    ).result;
+    expect(imported).toMatchObject({ hasPrivateKey: false, comment: "friend@desk", bits: 256 });
+    expect(imported.fingerprint).toBe(
+      `SHA256:${createHash("sha256").update(blob).digest("base64").replace(/=+$/, "")}`,
+    );
+    expect(
+      (await host(admin, token, "ssh.keys.import", { name: "Again", publicKey: line })).status,
+    ).toBe(409);
+    for (const bad of [
+      "ssh-ed25519 not-base64!! x",
+      `ssh-rsa ${blob.toString("base64")}`,
+      `${line}\n${line}`,
+      "-----BEGIN OPENSSH PRIVATE KEY-----",
+    ])
+      expect(
+        (await host(admin, token, "ssh.keys.import", { name: "Bad", publicKey: bad })).status,
+        bad,
+      ).toBe(400);
+    const renamed = (
+      await json<{ result: SshKey }>(
+        await host(admin, token, "ssh.keys.update", {
+          id: imported.id,
+          name: "Ayşe",
+          comment: "ayse@desk",
+        }),
+      )
+    ).result;
+    expect(renamed.publicKey).toBe(`ssh-ed25519 ${blob.toString("base64")} ayse@desk`);
+    // A public key only: deleting it needs no confirmation.
+    expect((await host(admin, token, "ssh.keys.delete", { id: imported.id })).status).toBe(200);
+
+    // Files: nothing in .ssh but public keys, whatever the person picks.
+    const root = ctx.config.files.roots[0]!.path;
+    mkdirSync(join(root, ".ssh"), { recursive: true });
+    writeFileSync(
+      join(root, ".ssh", "id_ed25519"),
+      "-----BEGIN OPENSSH PRIVATE KEY-----\nsecret\n",
+    );
+    writeFileSync(join(root, ".ssh", "id_ed25519.pub"), line);
+    const grant = (path: string) =>
+      admin.request("POST", "/api/app-sdk/files/grants", {
+        body: { items: [{ root: "dev", path }], write: false, persist: false },
+        ...as(token),
+      });
+    expect((await grant(".ssh/id_ed25519")).status).toBe(403);
+    expect((await grant(".ssh")).status).toBe(403);
+    const home = (await json<{ handles: Array<{ id: string }> }>(await grant(""))).handles[0]!.id;
+    const child = (path: string, create: "file" | "directory" | null = null) =>
+      admin.request("POST", `/api/app-sdk/files/${home}/child`, {
+        body: { path, create },
+        ...as(token),
+      });
+    expect((await child(".ssh/id_ed25519")).status).toBe(404);
+    expect((await child(".ssh")).status).toBe(404);
+    expect((await child(".ssh/new_key", "file")).status).toBe(404);
+    expect(existsSync(join(root, ".ssh", "new_key"))).toBe(false);
+    expect((await child(".ssh/id_ed25519.pub")).status).toBe(201);
+  });
 });

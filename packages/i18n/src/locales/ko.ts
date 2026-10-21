@@ -3948,6 +3948,14 @@ export const ko: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "개인 키 “{{name}}”을(를) 내보낼까요?",
+      exportKeyBody:
+        "{{app}}이(가) 이 개인 키를 받게 됩니다. 이 키를 가진 사람은 키를 신뢰하는 모든 곳에서 내 이름으로 로그인할 수 있으니 파일을 안전하게 보관하세요.",
+      exportKeyConfirm: "개인 키 내보내기",
+      deleteKeyTitle: "키 “{{name}}”을(를) 삭제할까요?",
+      deleteKeyBody:
+        "{{app}}이(가) 이 키를 삭제하려고 합니다. 개인 키는 영구히 사라지며, 이 키를 신뢰하는 서버에 더 이상 이 키로 로그인할 수 없습니다.",
+      deleteKeyConfirm: "키 삭제",
       hostLabel: "EveryOS가 {{app}}에 대해 묻습니다",
       writeTitle: "{{connection}}의 데이터를 변경할까요?",
       writeBody:

@@ -12,6 +12,11 @@ import {
   AppNetHttpInputSchema,
   AppNetTlsInputSchema,
   AppNotificationSchema,
+  AppSshExportSchema,
+  AppSshGenerateSchema,
+  AppSshImportSchema,
+  AppSshKeyIdSchema,
+  AppSshUpdateSchema,
   LogQuerySchema,
 } from "@everyos/shared/schemas";
 import { Hono, type Context } from "hono";
@@ -191,7 +196,7 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     return c.body(null, 204);
   });
 
-  const { network, monitors, databases } = services.desktopApps;
+  const { network, monitors, databases, sshKeys } = services.desktopApps;
   const person = (call: InstanceCall) => ({
     id: call.auth.user.id,
     permissions: call.auth.permissions,
@@ -282,6 +287,53 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
         person(call),
         AppDbConnectionInputSchema.parse(input).connection,
       ),
+    "ssh.keys.list": (_c, call) => ({ keys: sshKeys.list(call.auth.user.id) }),
+    "ssh.keys.generate": (c, call, input) => {
+      const key = sshKeys.generate(call.auth.user.id, AppSshGenerateSchema.parse(input));
+      audit(c, call, "ssh-key.generate", "success", { key: key.id, fingerprint: key.fingerprint });
+      return key;
+    },
+    "ssh.keys.import": (c, call, input) => {
+      const key = sshKeys.import(call.auth.user.id, AppSshImportSchema.parse(input));
+      audit(c, call, "ssh-key.import", "success", { key: key.id, fingerprint: key.fingerprint });
+      return key;
+    },
+    "ssh.keys.update": (_c, call, input) =>
+      sshKeys.update(call.auth.user.id, AppSshUpdateSchema.parse(input)),
+    "ssh.keys.export": async (c, call, input, confirmed) => {
+      const parsed = AppSshExportSchema.parse(input);
+      if (!parsed.private) return sshKeys.export(call.auth.user.id, parsed, false);
+      try {
+        const exported = await sshKeys.export(call.auth.user.id, parsed, confirmed);
+        audit(c, call, "ssh-key.export-private", "success", {
+          key: parsed.id,
+          encrypted: parsed.passphrase !== null,
+        });
+        return exported;
+      } catch (error) {
+        audit(c, call, "ssh-key.export-private", "failure", {
+          key: parsed.id,
+          code: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        });
+        throw error;
+      }
+    },
+    "ssh.keys.delete": (c, call, input, confirmed) => {
+      const { id } = AppSshKeyIdSchema.parse(input);
+      // A private key cannot be made again: deleting one needs the person's confirmation.
+      if (sshKeys.hasPrivate(call.auth.user.id, id) && !confirmed)
+        throw new ApiError(
+          403,
+          "FORBIDDEN",
+          "Deleting a private key needs the person's confirmation",
+          {
+            details: { confirmation: "required" },
+          },
+        );
+      sshKeys.delete(call.auth.user.id, id);
+      audit(c, call, "ssh-key.delete", "success", { key: id });
+      return null;
+    },
     "db.query": async (c, call, input, confirmed) => {
       const parsed = AppDbQueryInputSchema.parse(input);
       if (!parsed.write) return databases.query(call.instance.appId, person(call), parsed, false);
@@ -333,6 +385,12 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     "net.monitors.save": "network:outbound",
     "net.monitors.delete": "network:outbound",
     "net.monitors.check": "network:outbound",
+    "ssh.keys.list": "secrets:ssh",
+    "ssh.keys.generate": "secrets:ssh",
+    "ssh.keys.import": "secrets:ssh",
+    "ssh.keys.update": "secrets:ssh",
+    "ssh.keys.export": "secrets:ssh",
+    "ssh.keys.delete": "secrets:ssh",
     "db.connections": "database:connect",
     "db.test": "database:connect",
     "db.tables": "database:connect",

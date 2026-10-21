@@ -4053,6 +4053,14 @@ export const fr: LocaleMessages = {
       },
     },
     dialog: {
+      exportKeyTitle: "Exporter la clé privée « {{name}} » ?",
+      exportKeyBody:
+        "{{app}} recevra cette clé privée. Quiconque la possède peut se connecter en votre nom partout où la clé est approuvée : gardez le fichier en lieu sûr.",
+      exportKeyConfirm: "Exporter la clé privée",
+      deleteKeyTitle: "Supprimer la clé « {{name}} » ?",
+      deleteKeyBody:
+        "{{app}} demande de supprimer cette clé. Sa clé privée disparaît définitivement : les serveurs qui lui font confiance ne vous laisseront plus entrer avec elle.",
+      deleteKeyConfirm: "Supprimer la clé",
       hostLabel: "EveryOS demande pour {{app}}",
       writeTitle: "Modifier des données dans {{connection}} ?",
       writeBody:

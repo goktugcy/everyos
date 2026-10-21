@@ -7,6 +7,7 @@ import { AppDatabases } from "./app-databases.ts";
 import { AppFiles } from "./app-files.ts";
 import { AppMonitors } from "./app-monitors.ts";
 import { AppNetwork } from "./app-network.ts";
+import { AppSshKeys } from "./app-ssh-keys.ts";
 import { AppUserSettings } from "./app-settings.ts";
 import { AppStorage } from "./app-storage.ts";
 import { RegistryAssets } from "./assets.ts";
@@ -33,6 +34,8 @@ export class DesktopAppsService {
   readonly monitors: AppMonitors;
   /** Databases administrators connected for apps holding database:connect. */
   readonly databases: AppDatabases;
+  /** Each person's SSH keys, for apps holding secrets:ssh. */
+  readonly sshKeys: AppSshKeys;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
@@ -82,6 +85,12 @@ export class DesktopAppsService {
       db: options.db,
       secrets: options.secrets,
       now: options.now,
+    });
+    this.sshKeys = new AppSshKeys({
+      db: options.db,
+      secrets: options.secrets,
+      now: options.now,
+      dir: options.dir,
     });
     this.monitors = new AppMonitors({
       db: options.db,

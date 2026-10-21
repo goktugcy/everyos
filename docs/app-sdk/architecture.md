@@ -133,6 +133,10 @@ cookies and credentials are never sent. See [network access](network.md).
 apps run one statement at a time, read-only unless the connection allows changes and the person
 confirms each change in a dialog the desktop draws. See [databases](databases.md).
 
+**SSH keys** belong to each person and are sealed on the server; a private key leaves only through an
+export the person confirms in a dialog the desktop draws, and file access never reaches `.ssh`
+secrets. See [SSH keys](ssh-keys.md).
+
 ## Manifest
 
 `manifest.json` (`manifestVersion: 1`), validated with zod on the server and in the CLI
@@ -200,7 +204,7 @@ Tables (migration 0016, append-only): `desktop_app_registries`, `desktop_app_cat
 `desktop_app_installations`, `desktop_app_storage`, `desktop_app_file_grants`,
 `desktop_app_user_settings`, `desktop_app_network_rules` (0018: per-app rules),
 `desktop_app_monitors`, `desktop_app_monitor_checks`, `desktop_app_db_connections` (0019),
-`desktop_app_ssh_keys`, with foreign keys, unique constraints and per-user isolation.
+`desktop_app_ssh_keys` (0020), with foreign keys, unique constraints and per-user isolation.
 
 ## Desktop integration
 

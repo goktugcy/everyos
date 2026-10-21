@@ -43,11 +43,19 @@ export type {
   NetTlsResult,
   NetTlsTarget,
   NotificationLevel,
+  SshKey,
+  SshKeyType,
   ThemeSnapshot,
   TlsCertificate,
   WindowState,
 } from "./protocol.ts";
-export { DB_LIMITS, DNS_RECORD_TYPES, HTTP_METHODS, NET_LIMITS } from "./protocol.ts";
+export {
+  DB_LIMITS,
+  DNS_RECORD_TYPES,
+  HTTP_METHODS,
+  NET_LIMITS,
+  SSH_KEY_TYPES,
+} from "./protocol.ts";
 export { createI18n, type I18n, type Messages } from "./i18n.ts";
 
 type Unsubscribe = () => void;

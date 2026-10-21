@@ -25,13 +25,9 @@ export const HOST_OPERATIONS = [
   "ssh.keys.list",
   "ssh.keys.generate",
   "ssh.keys.import",
+  "ssh.keys.update",
   "ssh.keys.export",
   "ssh.keys.delete",
-  "appearance.wallpapers",
-  "appearance.setWallpaper",
-  "appearance.uploadWallpaper",
-  "appearance.folderIcons",
-  "appearance.uploadFolderIcon",
 ] as const;
 export type HostOperation = (typeof HOST_OPERATIONS)[number];
 
@@ -329,6 +325,39 @@ export interface DbQueryResult {
   readOnly: boolean;
 }
 
+/* ------------------------------------------------------------------ SSH keys (secrets:ssh) */
+
+/**
+ * The person's own SSH keys, kept by EveryOS. Private keys are sealed on the server; exporting one,
+ * or deleting a key that has one, needs the person's confirmation in a dialog EveryOS draws.
+ */
+export const SSH_KEY_TYPES = [
+  "ed25519",
+  "ecdsa-256",
+  "ecdsa-384",
+  "ecdsa-521",
+  "rsa-3072",
+  "rsa-4096",
+] as const;
+export type SshKeyType = (typeof SSH_KEY_TYPES)[number];
+
+export interface SshKey {
+  id: string;
+  name: string;
+  /** The OpenSSH key type: `ssh-ed25519`, `ecdsa-sha2-nistp256`, `ssh-rsa`, `sk-…` … */
+  type: string;
+  bits: number;
+  comment: string;
+  /** `SHA256:` and the unpadded base64 digest, as `ssh-keygen -l` prints it. */
+  fingerprint: string;
+  /** One `authorized_keys` line. */
+  publicKey: string;
+  /** False for imported public keys. */
+  hasPrivateKey: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /* ------------------------------------------------------------------ typed operations */
 
 /** Input and result of each operation (unknown where the app reads EveryOS's own shapes). */
@@ -356,16 +385,23 @@ export interface HostOperations {
   "db.test": { input: { connection: string }; result: { version: string; ms: number } };
   "db.tables": { input: { connection: string }; result: { tables: DbTable[]; truncated: boolean } };
   "db.query": { input: DbQueryInput; result: DbQueryResult };
-  "ssh.keys.list": { input: unknown; result: unknown };
-  "ssh.keys.generate": { input: unknown; result: unknown };
-  "ssh.keys.import": { input: unknown; result: unknown };
-  "ssh.keys.export": { input: unknown; result: unknown };
-  "ssh.keys.delete": { input: unknown; result: unknown };
-  "appearance.wallpapers": { input: unknown; result: unknown };
-  "appearance.setWallpaper": { input: unknown; result: unknown };
-  "appearance.uploadWallpaper": { input: unknown; result: unknown };
-  "appearance.folderIcons": { input: unknown; result: unknown };
-  "appearance.uploadFolderIcon": { input: unknown; result: unknown };
+  "ssh.keys.list": { input: null; result: { keys: SshKey[] } };
+  "ssh.keys.generate": {
+    input: { name: string; type: SshKeyType; comment: string };
+    result: SshKey;
+  };
+  /** A public key (one `authorized_keys` line). */
+  "ssh.keys.import": { input: { name: string; publicKey: string }; result: SshKey };
+  "ssh.keys.update": { input: { id: string; name: string; comment: string }; result: SshKey };
+  /**
+   * The public key, or (`private: true`, after the person confirms) the private key in OpenSSH
+   * format, encrypted with `passphrase` when given.
+   */
+  "ssh.keys.export": {
+    input: { id: string; private: boolean; passphrase?: string | null };
+    result: { text: string; fileName: string };
+  };
+  "ssh.keys.delete": { input: { id: string }; result: null };
 }
 
 export type HostInput<O extends HostOperation> = HostOperations[O]["input"];
