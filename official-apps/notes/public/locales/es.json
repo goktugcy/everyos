@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "Notas",
+    "description": "Notas en Markdown con carpetas, etiquetas, fijado, búsqueda, historial de versiones, importación y exportación, y un widget de nota rápida."
+  },
+  "widgets": {
+    "quick": { "name": "Nota rápida", "description": "Escribe una nota sin abrir Notas." }
+  },
+  "views": {
+    "all": "Todas las notas",
+    "pinned": "Fijadas",
+    "folders": "Carpetas",
+    "tags": "Etiquetas",
+    "trash": "Eliminadas recientemente"
+  },
+  "actions": {
+    "newNote": "Nueva nota",
+    "newFolder": "Nueva carpeta",
+    "renameFolder": "Cambiar nombre de la carpeta",
+    "deleteFolder": "Eliminar carpeta",
+    "pin": "Fijar",
+    "unpin": "No fijar",
+    "copy": "Copiar Markdown",
+    "exportNote": "Exportar como Markdown…",
+    "exportAll": "Exportar todas las notas…",
+    "import": "Importar notas…",
+    "history": "Historial de versiones",
+    "delete": "Eliminar nota",
+    "restore": "Restaurar",
+    "deleteForever": "Eliminar definitivamente",
+    "emptyTrash": "Vaciar",
+    "restoreVersion": "Restaurar esta versión",
+    "back": "Volver a las notas"
+  },
+  "list": {
+    "label": "Notas",
+    "search": "Buscar notas",
+    "sort": "Ordenar por",
+    "sortUpdated": "Última edición",
+    "sortCreated": "Fecha de creación",
+    "sortTitle": "Título",
+    "untitled": "Nota nueva",
+    "noText": "Sin texto adicional",
+    "pinned": "Fijada"
+  },
+  "empty": {
+    "title": "Todavía no hay notas",
+    "text": "Escribe tu primera nota o importa archivos Markdown.",
+    "trash": "No hay nada en Eliminadas recientemente",
+    "trashText": "Las notas eliminadas se quedan aquí 30 días.",
+    "search": "Ninguna nota coincide con «{{query}}»",
+    "select": "Elige una nota o empieza una nueva."
+  },
+  "editor": {
+    "tools": "Nota",
+    "modes": "Vista",
+    "edit": "Editar",
+    "split": "Dividida",
+    "preview": "Vista previa",
+    "saving": "Guardando…",
+    "editing": "Editando…",
+    "failed": "Sin guardar",
+    "saved": "Guardada",
+    "inTrash": "Esta nota está en Eliminadas recientemente y se borrará definitivamente el {{date}}.",
+    "folder": "Carpeta",
+    "noFolder": "Sin carpeta",
+    "tags": "Etiquetas",
+    "tagsHint": "Separa las etiquetas con comas",
+    "label": "Texto de la nota",
+    "placeholder": "Empieza a escribir. Admite Markdown: # títulos, **negrita**, - listas, - [ ] tareas…",
+    "previewLabel": "Vista previa",
+    "words_one": "{{count}} palabra",
+    "words_other": "{{count}} palabras",
+    "edited": "Editada: {{date}}"
+  },
+  "folder": {
+    "name": "Nombre de la carpeta",
+    "exists": "Ya existe una carpeta con este nombre",
+    "deleteTitle": "¿Eliminar la carpeta «{{name}}»?",
+    "deleteBody": "Sus notas se conservan y salen de la carpeta."
+  },
+  "trash": {
+    "deleteTitle": "¿Eliminar «{{name}}» definitivamente?",
+    "emptyTitle": "¿Eliminar todas las notas de Eliminadas recientemente?",
+    "body": "Esta acción no se puede deshacer.",
+    "moved": "Movida a Eliminadas recientemente",
+    "restored": "Nota restaurada"
+  },
+  "history": {
+    "title": "Historial de versiones",
+    "empty": "Todavía no hay versiones anteriores. Notas guarda hasta 20 versiones de cada nota mientras editas.",
+    "restored": "Versión anterior restaurada"
+  },
+  "import": {
+    "done_one": "{{count}} nota importada",
+    "done_other": "{{count}} notas importadas",
+    "none": "No se importó nada",
+    "skipped": "Se omitió {{name}}: ocupa más de 5 MB"
+  },
+  "widget": {
+    "placeholder": "Escribe una nota rápida…",
+    "save": "Añadir nota",
+    "saved": "Nota añadida",
+    "recent": "Recientes",
+    "empty": "Todavía no hay notas",
+    "open": "Abrir Notas"
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "メモ",
+    "description": "フォルダ、タグ、ピン留め、検索、バージョン履歴、読み込みと書き出し、クイックメモウィジェットを備えた Markdown のメモ。"
+  },
+  "widgets": {
+    "quick": { "name": "クイックメモ", "description": "メモを開かずにメモを書けます。" }
+  },
+  "views": {
+    "all": "すべてのメモ",
+    "pinned": "ピン留め",
+    "folders": "フォルダ",
+    "tags": "タグ",
+    "trash": "最近削除した項目"
+  },
+  "actions": {
+    "newNote": "新規メモ",
+    "newFolder": "新規フォルダ",
+    "renameFolder": "フォルダ名を変更",
+    "deleteFolder": "フォルダを削除",
+    "pin": "ピン留め",
+    "unpin": "ピン留めを解除",
+    "copy": "Markdown をコピー",
+    "exportNote": "Markdown として書き出す…",
+    "exportAll": "すべてのメモを書き出す…",
+    "import": "メモを読み込む…",
+    "history": "バージョン履歴",
+    "delete": "メモを削除",
+    "restore": "復元",
+    "deleteForever": "完全に削除",
+    "emptyTrash": "空にする",
+    "restoreVersion": "このバージョンを復元",
+    "back": "メモ一覧に戻る"
+  },
+  "list": {
+    "label": "メモ",
+    "search": "メモを検索",
+    "sort": "並べ替え",
+    "sortUpdated": "最終編集日",
+    "sortCreated": "作成日",
+    "sortTitle": "タイトル",
+    "untitled": "新規メモ",
+    "noText": "追加のテキストなし",
+    "pinned": "ピン留め済み"
+  },
+  "empty": {
+    "title": "メモはまだありません",
+    "text": "最初のメモを書くか、Markdown ファイルを読み込んでください。",
+    "trash": "最近削除した項目はありません",
+    "trashText": "削除したメモはここに 30 日間保持されます。",
+    "search": "「{{query}}」に一致するメモはありません",
+    "select": "メモを選ぶか、新しいメモを作成してください。"
+  },
+  "editor": {
+    "tools": "メモ",
+    "modes": "表示",
+    "edit": "編集",
+    "split": "分割",
+    "preview": "プレビュー",
+    "saving": "保存中…",
+    "editing": "編集中…",
+    "failed": "保存されていません",
+    "saved": "保存済み",
+    "inTrash": "このメモは「最近削除した項目」にあり、{{date}} に完全に削除されます。",
+    "folder": "フォルダ",
+    "noFolder": "フォルダなし",
+    "tags": "タグ",
+    "tagsHint": "タグはカンマで区切ります",
+    "label": "メモの本文",
+    "placeholder": "書き始めましょう。Markdown が使えます: # 見出し、**太字**、- リスト、- [ ] タスク…",
+    "previewLabel": "プレビュー",
+    "words_other": "{{count}} 語",
+    "edited": "編集日時: {{date}}"
+  },
+  "folder": {
+    "name": "フォルダ名",
+    "exists": "同じ名前のフォルダがすでにあります",
+    "deleteTitle": "フォルダ「{{name}}」を削除しますか?",
+    "deleteBody": "中のメモは残り、フォルダの外に移動します。"
+  },
+  "trash": {
+    "deleteTitle": "「{{name}}」を完全に削除しますか?",
+    "emptyTitle": "「最近削除した項目」のメモをすべて削除しますか?",
+    "body": "この操作は取り消せません。",
+    "moved": "「最近削除した項目」に移動しました",
+    "restored": "メモを復元しました"
+  },
+  "history": {
+    "title": "バージョン履歴",
+    "empty": "以前のバージョンはまだありません。編集するたびに、各メモにつき最大 20 個のバージョンが保存されます。",
+    "restored": "以前のバージョンを復元しました"
+  },
+  "import": {
+    "done_other": "{{count}} 件のメモを読み込みました",
+    "none": "何も読み込まれませんでした",
+    "skipped": "{{name}} はスキップされました: 5 MB を超えています"
+  },
+  "widget": {
+    "placeholder": "クイックメモを書く…",
+    "save": "メモを追加",
+    "saved": "メモを追加しました",
+    "recent": "最近のメモ",
+    "empty": "メモはまだありません",
+    "open": "メモを開く"
+  }
+}

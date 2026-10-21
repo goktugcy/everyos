@@ -1,9 +1,11 @@
 /**
- * A desktop app registry for end-to-end tests: builds the probe app with the real SDK, packs it as
- * `.eosapp`, signs package and index with throwaway keys and serves them over HTTP. Production
- * code paths (sync, verification, installation, the runtime) handle it like any registry.
+ * A desktop app registry for end-to-end tests: builds the probe app with the real SDK and the
+ * official apps with their own build (`everyos-app pack`), signs packages and index with throwaway
+ * keys and serves them over HTTP. Production code paths (sync, verification, installation, the
+ * runtime) handle it like any registry.
  */
-import { copyFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { copyFile, mkdir, mkdtemp, readdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -16,6 +18,7 @@ import {
   signPackage,
 } from "../../packages/app-package/src/index.ts";
 import { signRegistryIndex, type RegistryIndex } from "../../packages/app-registry/src/index.ts";
+import { loadProject, pack } from "../../packages/app-cli/src/index.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PNG = Buffer.from(
@@ -52,22 +55,80 @@ async function buildProbe(): Promise<Buffer> {
   return (await packDirectory(out)).bytes;
 }
 
+type Manifest = RegistryIndex["apps"][number]["versions"][number]["manifest"];
+interface Listed {
+  manifest: Manifest;
+  bytes: Buffer;
+  icon: { path: string; content: Buffer };
+}
+
+/** Every official app of the repository, packed as its release would be. */
+async function officialApps(): Promise<Listed[]> {
+  const root = join(here, "../../official-apps");
+  const out = await mkdtemp(join(tmpdir(), "everyos-official-"));
+  const listed: Listed[] = [];
+  for (const slug of (await readdir(root)).sort()) {
+    if (!existsSync(join(root, slug, "manifest.json"))) continue;
+    const packed = await pack(await loadProject(join(root, slug)), {
+      out: join(out, `${slug}.eosapp`),
+    });
+    listed.push({
+      manifest: packed.manifest,
+      bytes: Buffer.from(packed.bytes),
+      icon: {
+        path: `icons/${packed.manifest.id}.svg`,
+        content: await readFile(join(root, slug, "public", packed.manifest.icon)),
+      },
+    });
+  }
+  return listed;
+}
+
 export async function startAppRegistry(
   port: number,
 ): Promise<{ url: string; publicKey: string; close: () => void }> {
   const registryKeys = generatePublisherKeys();
   const publisherKeys = generatePublisherKeys();
-  const bytes = await buildProbe();
-  const manifest = JSON.parse(
-    await readFile(join(here, "fixtures/probe-app/manifest.json"), "utf8"),
-  ) as RegistryIndex["apps"][number]["versions"][number]["manifest"];
-  const digest = {
-    appId: manifest.id,
-    version: manifest.version,
-    sha256: sha256Hex(bytes),
-    size: bytes.length,
+  const probe: Listed = {
+    manifest: JSON.parse(
+      await readFile(join(here, "fixtures/probe-app/manifest.json"), "utf8"),
+    ) as Manifest,
+    bytes: await buildProbe(),
+    icon: { path: "icons/probe.png", content: PNG },
   };
+  const listed = [probe, ...(await officialApps())];
   const now = Date.now();
+  const files = new Map<string, Buffer>();
+  const apps = listed.map(({ manifest, bytes, icon }) => {
+    const digest = {
+      appId: manifest.id,
+      version: manifest.version,
+      sha256: sha256Hex(bytes),
+      size: bytes.length,
+    };
+    const url = `packages/${manifest.id}-${manifest.version}.eosapp`;
+    files.set(`/${url}`, bytes);
+    files.set(`/${icon.path}`, icon.content);
+    return {
+      id: manifest.id,
+      publisher: "dev.everyos",
+      icon: icon.path,
+      screenshots: [],
+      versions: [
+        {
+          version: manifest.version,
+          manifest,
+          package: {
+            url,
+            size: bytes.length,
+            sha256: digest.sha256,
+            signature: signPackage(digest, publisherKeys.privateKey),
+          },
+          publishedAt: now - 60_000,
+        },
+      ],
+    };
+  });
   const index: RegistryIndex = {
     format: "everyos-app-registry",
     schemaVersion: 1,
@@ -76,37 +137,13 @@ export async function startAppRegistry(
     publishedAt: now - 60_000,
     expiresAt: now + 30 * 86_400_000,
     publishers: [{ id: "dev.everyos", name: "EveryOS", keys: [publisherKeys.publicKey] }],
-    apps: [
-      {
-        id: manifest.id,
-        publisher: "dev.everyos",
-        icon: "icons/probe.png",
-        screenshots: [],
-        versions: [
-          {
-            version: manifest.version,
-            manifest,
-            package: {
-              url: `packages/${manifest.id}-${manifest.version}.eosapp`,
-              size: bytes.length,
-              sha256: digest.sha256,
-              signature: signPackage(digest, publisherKeys.privateKey),
-            },
-            publishedAt: now - 60_000,
-          },
-        ],
-      },
-    ],
+    apps,
     revoked: [],
   };
-  const files = new Map<string, Buffer>([
-    [
-      "/index.json",
-      Buffer.from(signRegistryIndex(index, registryKeys.privateKey, { official: true })),
-    ],
-    ["/icons/probe.png", PNG],
-    [`/packages/${manifest.id}-${manifest.version}.eosapp`, bytes],
-  ]);
+  files.set(
+    "/index.json",
+    Buffer.from(signRegistryIndex(index, registryKeys.privateKey, { official: true })),
+  );
   const server = createServer((request, response) => {
     const body = files.get(request.url ?? "");
     response.writeHead(body ? 200 : 404);

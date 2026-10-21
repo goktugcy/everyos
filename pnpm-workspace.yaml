@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - official-apps/*
 
 # Centralized dependency versions. Workspace packages reference these with
 # "catalog:" so every package resolves the exact same version.
@@ -42,6 +43,9 @@ catalog:
   pg-cursor: 2.22.1
   "@types/pg": 8.23.1
   mysql2: 3.24.5
+  # Markdown for official desktop apps (Notes, Markdown Editor): rendered, then sanitized.
+  markdown-it: 15.0.2
+  dompurify: 3.4.16
 
 saveExact: true
 engineStrict: true

@@ -1,0 +1,111 @@
+{
+  "app": {
+    "name": "Notizen",
+    "description": "Notizen in Markdown mit Ordnern, Tags, Anheften, Suche, Versionsverlauf, Import und Export sowie einem Widget für schnelle Notizen."
+  },
+  "widgets": {
+    "quick": {
+      "name": "Schnelle Notiz",
+      "description": "Eine Notiz schreiben, ohne Notizen zu öffnen."
+    }
+  },
+  "views": {
+    "all": "Alle Notizen",
+    "pinned": "Angeheftet",
+    "folders": "Ordner",
+    "tags": "Tags",
+    "trash": "Zuletzt gelöscht"
+  },
+  "actions": {
+    "newNote": "Neue Notiz",
+    "newFolder": "Neuer Ordner",
+    "renameFolder": "Ordner umbenennen",
+    "deleteFolder": "Ordner löschen",
+    "pin": "Anheften",
+    "unpin": "Lösen",
+    "copy": "Markdown kopieren",
+    "exportNote": "Als Markdown exportieren…",
+    "exportAll": "Alle Notizen exportieren…",
+    "import": "Notizen importieren…",
+    "history": "Versionsverlauf",
+    "delete": "Notiz löschen",
+    "restore": "Wiederherstellen",
+    "deleteForever": "Endgültig löschen",
+    "emptyTrash": "Leeren",
+    "restoreVersion": "Diese Version wiederherstellen",
+    "back": "Zurück zu den Notizen"
+  },
+  "list": {
+    "label": "Notizen",
+    "search": "Notizen durchsuchen",
+    "sort": "Sortieren nach",
+    "sortUpdated": "Zuletzt bearbeitet",
+    "sortCreated": "Erstellungsdatum",
+    "sortTitle": "Titel",
+    "untitled": "Neue Notiz",
+    "noText": "Kein weiterer Text",
+    "pinned": "Angeheftet"
+  },
+  "empty": {
+    "title": "Noch keine Notizen",
+    "text": "Schreiben Sie Ihre erste Notiz oder importieren Sie Markdown-Dateien.",
+    "trash": "„Zuletzt gelöscht“ ist leer",
+    "trashText": "Gelöschte Notizen bleiben 30 Tage hier.",
+    "search": "Keine Notiz passt zu „{{query}}“",
+    "select": "Wählen Sie eine Notiz aus oder beginnen Sie eine neue."
+  },
+  "editor": {
+    "tools": "Notiz",
+    "modes": "Ansicht",
+    "edit": "Bearbeiten",
+    "split": "Geteilt",
+    "preview": "Vorschau",
+    "saving": "Wird gespeichert…",
+    "editing": "Wird bearbeitet…",
+    "failed": "Nicht gespeichert",
+    "saved": "Gespeichert",
+    "inTrash": "Diese Notiz liegt in „Zuletzt gelöscht“ und wird am {{date}} endgültig entfernt.",
+    "folder": "Ordner",
+    "noFolder": "Kein Ordner",
+    "tags": "Tags",
+    "tagsHint": "Tags durch Kommas trennen",
+    "label": "Notiztext",
+    "placeholder": "Einfach losschreiben. Markdown funktioniert: # Überschriften, **fett**, - Listen, - [ ] Aufgaben…",
+    "previewLabel": "Vorschau",
+    "words_one": "{{count}} Wort",
+    "words_other": "{{count}} Wörter",
+    "edited": "Bearbeitet: {{date}}"
+  },
+  "folder": {
+    "name": "Ordnername",
+    "exists": "Ein Ordner mit diesem Namen existiert bereits",
+    "deleteTitle": "Ordner „{{name}}“ löschen?",
+    "deleteBody": "Die Notizen darin bleiben erhalten und werden aus dem Ordner verschoben."
+  },
+  "trash": {
+    "deleteTitle": "„{{name}}“ endgültig löschen?",
+    "emptyTitle": "Alle Notizen in „Zuletzt gelöscht“ löschen?",
+    "body": "Dies kann nicht rückgängig gemacht werden.",
+    "moved": "In „Zuletzt gelöscht“ verschoben",
+    "restored": "Notiz wiederhergestellt"
+  },
+  "history": {
+    "title": "Versionsverlauf",
+    "empty": "Noch keine früheren Versionen. Notizen bewahrt beim Bearbeiten bis zu 20 Versionen jeder Notiz auf.",
+    "restored": "Frühere Version wiederhergestellt"
+  },
+  "import": {
+    "done_one": "{{count}} Notiz importiert",
+    "done_other": "{{count}} Notizen importiert",
+    "none": "Es wurde nichts importiert",
+    "skipped": "{{name}} wurde übersprungen: größer als 5 MB"
+  },
+  "widget": {
+    "placeholder": "Schnelle Notiz schreiben…",
+    "save": "Notiz hinzufügen",
+    "saved": "Notiz hinzugefügt",
+    "recent": "Zuletzt",
+    "empty": "Noch keine Notizen",
+    "open": "Notizen öffnen"
+  }
+}
