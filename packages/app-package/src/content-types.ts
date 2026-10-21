@@ -31,6 +31,11 @@ export const PACKAGE_CONTENT_TYPES: Readonly<Record<string, string>> = {
   mp4: "video/mp4",
   webm: "video/webm",
   pdf: "application/pdf",
+  // Data files libraries load by name (pdf.js: character maps, Type 1 fonts, colour profiles);
+  // served as plain bytes, which browsers never render or run.
+  bcmap: "application/octet-stream",
+  pfb: "application/octet-stream",
+  icc: "application/octet-stream",
 };
 
 export function contentTypeOf(path: string): string | null {

@@ -3,21 +3,21 @@
 `@everyos/app-cli` builds, checks, packs, signs and publishes EveryOS desktop apps. Run it from the
 app's folder (the one with `manifest.json`).
 
-| Command                                            | What it does                                                                                                           |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `dev [--port 5180] [--host 127.0.0.1]`             | Rebuilds on every change and opens a developer page with a **mock** desktop (see [testing](testing.md)).               |
-| `dev --registry`                                   | Also serves a signed development registry a real EveryOS can add (each build is a new `-dev.<time>` version).          |
-| `build`                                            | Bundles the entries and workers with esbuild (minified) and copies `public/` and the manifest into `dist/`.            |
-| `validate`                                         | Builds, then checks the package exactly as EveryOS will (below). Fails on errors.                                      |
-| `pack [--out file]`                                | Builds, validates (errors refuse) and writes `<id>-<version>.eosapp`.                                                  |
-| `test [-- vitest args]`                            | Validates, then runs the project's Vitest tests.                                                                       |
-| `keygen [--out keys/publisher]`                    | Creates an Ed25519 key pair; the `.key` file is readable by you only and never overwritten.                            |
-| `sign <file.eosapp> [--key keys/publisher.key]`    | Writes `<file>.sig.json`: the package digest signed with your publisher key.                                           |
-| `registry init`                                    | Creates your registry in `registry/` and its keys in `keys/` (`--id`, `--name`, `--publisher-id`, `--publisher-name`). |
-| `publish [--changelog text]`                       | Packs, signs and adds this version to your registry, then signs the index again.                                       |
-| `registry refresh`                                 | Signs the index again with a later expiry (indexes are valid for 180 days).                                            |
-| `registry revoke <app id> <version or *> --reason` | Revokes a version; EveryOS turns installed copies off at its next sync.                                                |
-| `registry info`                                    | Prints the registry key's fingerprint.                                                                                 |
+| Command                                            | What it does                                                                                                            |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `dev [--port 5180] [--host 127.0.0.1]`             | Rebuilds on every change and opens a developer page with a **mock** desktop (see [testing](testing.md)).                |
+| `dev --registry`                                   | Also serves a signed development registry a real EveryOS can add (each build is a new `-dev.<time>` version).           |
+| `build`                                            | Bundles the entries and workers with esbuild (minified) and copies `public/`, the assets and the manifest into `dist/`. |
+| `validate`                                         | Builds, then checks the package exactly as EveryOS will (below). Fails on errors.                                       |
+| `pack [--out file]`                                | Builds, validates (errors refuse) and writes `<id>-<version>.eosapp`.                                                   |
+| `test [-- vitest args]`                            | Validates, then runs the project's Vitest tests.                                                                        |
+| `keygen [--out keys/publisher]`                    | Creates an Ed25519 key pair; the `.key` file is readable by you only and never overwritten.                             |
+| `sign <file.eosapp> [--key keys/publisher.key]`    | Writes `<file>.sig.json`: the package digest signed with your publisher key.                                            |
+| `registry init`                                    | Creates your registry in `registry/` and its keys in `keys/` (`--id`, `--name`, `--publisher-id`, `--publisher-name`).  |
+| `publish [--changelog text]`                       | Packs, signs and adds this version to your registry, then signs the index again.                                        |
+| `registry refresh`                                 | Signs the index again with a later expiry (indexes are valid for 180 days).                                             |
+| `registry revoke <app id> <version or *> --reason` | Revokes a version; EveryOS turns installed copies off at its next sync.                                                 |
+| `registry info`                                    | Prints the registry key's fingerprint.                                                                                  |
 
 Nothing is ever published to the official EveryOS registry from the CLI.
 
@@ -43,6 +43,7 @@ Nothing is ever published to the official EveryOS registry from the CLI.
 {
   "entries": { "app.js": "src/main.tsx", "widget.js": "src/widget.tsx" },
   "workers": { "search.worker.js": "src/search-worker.ts" },
+  "assets": { "pdfjs/cmaps/": "node_modules/pdfjs-dist/cmaps" },
   "publicDir": "public",
   "outDir": "dist",
   "registry": {
@@ -60,3 +61,9 @@ a large library an app needs only for one view loads when that view opens. Each 
 into a single classic script of its own: an app runs in an opaque origin, where a worker can only
 start from a blob URL of its code and only as a classic worker (`startWorker("search.worker.js")`
 in `@everyos/app-ui` does that), so it cannot import modules or load chunks.
+
+`assets` copies files a library loads at run time (fonts, WebAssembly, data files) from the
+project, usually from a dependency in `node_modules`, into the package at build time: package path
+→ file or folder. Only the file types EveryOS serves are copied (licence texts without an
+extension stay behind; mention the licences in your README); a single file of another type is
+refused.

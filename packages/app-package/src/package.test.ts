@@ -7,6 +7,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { TarWriter } from "@everyos/system/archive";
 import { describe, expect, it } from "vitest";
 import {
+  contentTypeOf,
   extractPackage,
   generatePublisherKeys,
   inspectPackage,
@@ -198,6 +199,17 @@ describe(".eosapp packages", () => {
     expect(
       await code(inspectPackage(package_, { ...PACKAGE_LIMITS, packedBytes: package_.length - 1 })),
     ).toBe("too-large");
+  });
+});
+
+describe("package file types", () => {
+  it("serves web assets and library data files, and nothing executable", () => {
+    expect(contentTypeOf("app.js")).toBe("text/javascript; charset=utf-8");
+    expect(contentTypeOf("pdfjs/wasm/openjpeg.wasm")).toBe("application/wasm");
+    for (const data of ["pdfjs/cmaps/UniJIS-UCS2-H.bcmap", "fonts/FoxitSans.pfb", "x/sRGB.icc"])
+      expect(contentTypeOf(data), data).toBe("application/octet-stream");
+    for (const refused of ["tool.exe", "run.sh", "page.xhtml", "README", ".env"])
+      expect(contentTypeOf(refused), refused).toBeNull();
   });
 });
 

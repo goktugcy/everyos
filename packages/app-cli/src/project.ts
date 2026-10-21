@@ -1,6 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { isPackagePath } from "@everyos/app-manifest";
+import { contentTypeOf } from "@everyos/app-package";
 
 /*
  * An app project: `manifest.json` at its root, static files in `public/`, code in `src/`, and an
@@ -15,6 +17,11 @@ export interface ProjectConfig {
    * as a worker started from a blob URL in the app's opaque origin needs.
    */
   workers: Record<string, string>;
+  /**
+   * Package path → file or folder in the project (often a dependency's, such as
+   * `node_modules/pdfjs-dist/cmaps`), copied in at build time instead of being kept in `public/`.
+   */
+  assets: Record<string, string>;
   publicDir: string;
   outDir: string;
   /** Your own registry (`everyos-app publish`): its directory and the keys that sign it. */
@@ -69,12 +76,23 @@ export async function loadProject(root = process.cwd()): Promise<Project> {
       throw new CliError(`Entry output "${output}" must be a relative path ending in .js`);
     if (!existsSync(join(dir, source))) throw new CliError(`Entry source not found: ${source}`);
   }
+  const assets = configured.assets ?? {};
+  for (const [output, source] of Object.entries(assets)) {
+    if (!isPackagePath(output.replace(/\/$/, "")))
+      throw new CliError(`Asset path "${output}" must be a relative package path`);
+    if (source.split(/[\\/]/).includes("..") || source.startsWith("/"))
+      throw new CliError(`Asset source "${source}" must be inside the project`);
+    if (!existsSync(join(dir, source))) throw new CliError(`Asset source not found: ${source}`);
+    if (!statSync(join(dir, source)).isDirectory() && !contentTypeOf(source))
+      throw new CliError(`Asset "${source}": EveryOS does not serve this type of file`);
+  }
   return {
     root: dir,
     manifest: manifest as Record<string, unknown>,
     config: {
       entries,
       workers,
+      assets,
       publicDir: configured.publicDir ?? "public",
       outDir: configured.outDir ?? "dist",
       registry: {

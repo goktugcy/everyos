@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { contentTypeOf } from "@everyos/app-package";
 import { join } from "node:path";
 import { build as esbuild, context, type BuildOptions, type Plugin } from "esbuild";
 import type { Project } from "./project.ts";
@@ -74,6 +75,22 @@ async function copyStatic(project: Project, outDir: string, version?: string): P
       recursive: true,
       filter: (source) => !source.split("/").at(-1)!.startsWith("."),
     });
+  // Assets from dependencies: only the files EveryOS serves (licence texts without an extension,
+  // sources and the like stay behind).
+  for (const [output, source] of Object.entries(project.config.assets)) {
+    const from = join(project.root, source);
+    const directory = (await stat(from)).isDirectory();
+    await cp(from, join(outDir, output.replace(/\/$/, "")), {
+      recursive: true,
+      dereference: true,
+      filter: async (path) => {
+        const name = path.split(/[\\/]/).at(-1)!;
+        if (name.startsWith(".")) return false;
+        if (directory && (await stat(path)).isDirectory()) return true;
+        return contentTypeOf(name) !== null;
+      },
+    });
+  }
   // Read again: in watch mode the manifest may have changed since the project was loaded.
   const current = JSON.parse(await readFile(join(project.root, "manifest.json"), "utf8")) as Record<
     string,

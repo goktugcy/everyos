@@ -1,5 +1,12 @@
 import { execFile } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
 import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -176,6 +183,44 @@ describe("create-everyos-app and everyos-app", () => {
     expect(worker).toContain("postMessage");
     const { findings } = await validateBuild(out);
     expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
+  });
+
+  it("copies assets from dependencies, only the files EveryOS serves", async () => {
+    const dir = join(work, "assets");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    const library = join(dir, "node_modules/data-lib");
+    mkdirSync(join(library, "cmaps/nested"), { recursive: true });
+    writeFileSync(join(library, "cmaps/UniJIS-H.bcmap"), "cmap");
+    writeFileSync(join(library, "cmaps/nested/extra.json"), "{}");
+    writeFileSync(join(library, "cmaps/LICENSE"), "licence text");
+    writeFileSync(join(library, "cmaps/.hidden.json"), "{}");
+    writeFileSync(join(library, "decoder.wasm"), "wasm");
+    writeFileSync(
+      join(dir, "everyos.config.json"),
+      JSON.stringify({
+        assets: {
+          "lib/cmaps/": "node_modules/data-lib/cmaps",
+          "lib/decoder.wasm": "node_modules/data-lib/decoder.wasm",
+        },
+      }),
+    );
+    const out = await build(await loadProject(dir));
+    expect(readdirSync(join(out, "lib/cmaps")).sort()).toEqual(["UniJIS-H.bcmap", "nested"]);
+    expect(readFileSync(join(out, "lib/cmaps/nested/extra.json"), "utf8")).toBe("{}");
+    expect(readFileSync(join(out, "lib/decoder.wasm"), "utf8")).toBe("wasm");
+    const { findings } = await validateBuild(out);
+    expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
+
+    for (const [assets, message] of [
+      [{ "../out": "node_modules/data-lib/cmaps" }, /must be a relative package path/],
+      [{ lib: "../elsewhere" }, /must be inside the project/],
+      [{ lib: "node_modules/missing" }, /Asset source not found/],
+      [{ "lib/LICENSE": "node_modules/data-lib/cmaps/LICENSE" }, /EveryOS does not serve/],
+    ] as const) {
+      writeFileSync(join(dir, "everyos.config.json"), JSON.stringify({ assets }));
+      await expect(loadProject(dir)).rejects.toThrow(message);
+    }
   });
 
   it("serves the app under EveryOS's sandbox policy with a mock desktop page", async () => {
