@@ -81,3 +81,5 @@ engineStrict: true
 # Only these packages may run install scripts (pnpm blocks all others).
 allowBuilds:
   esbuild: true
+patchedDependencies:
+  '@excalidraw/excalidraw@0.18.1': patches/@excalidraw__excalidraw@0.18.1.patch
