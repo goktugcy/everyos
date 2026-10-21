@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { contentTypeOf } from "@everyos/app-package";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { build as esbuild, context, type BuildOptions, type Plugin } from "esbuild";
 import type { Project } from "./project.ts";
 
@@ -39,6 +39,7 @@ function esbuildOptions(project: Project, outDir: string, dev: boolean): BuildOp
     jsx: "automatic",
     loader: {
       ".png": "file",
+      ".gif": "file",
       ".svg": "file",
       ".woff": "file",
       ".woff2": "file",
@@ -79,14 +80,19 @@ async function copyStatic(project: Project, outDir: string, version?: string): P
   // sources and the like stay behind).
   for (const [output, source] of Object.entries(project.config.assets)) {
     const from = join(project.root, source);
-    const directory = (await stat(from)).isDirectory();
-    await cp(from, join(outDir, output.replace(/\/$/, "")), {
+    const to = join(outDir, output.replace(/\/$/, ""));
+    if (!(await stat(from)).isDirectory()) {
+      await mkdir(dirname(to), { recursive: true });
+      await cp(from, to, { dereference: true });
+      continue;
+    }
+    await cp(from, to, {
       recursive: true,
       dereference: true,
       filter: async (path) => {
         const name = path.split(/[\\/]/).at(-1)!;
         if (name.startsWith(".")) return false;
-        if (directory && (await stat(path)).isDirectory()) return true;
+        if ((await stat(path)).isDirectory()) return true;
         return contentTypeOf(name) !== null;
       },
     });

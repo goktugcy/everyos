@@ -83,8 +83,9 @@ export async function loadProject(root = process.cwd()): Promise<Project> {
     if (source.split(/[\\/]/).includes("..") || source.startsWith("/"))
       throw new CliError(`Asset source "${source}" must be inside the project`);
     if (!existsSync(join(dir, source))) throw new CliError(`Asset source not found: ${source}`);
-    if (!statSync(join(dir, source)).isDirectory() && !contentTypeOf(source))
-      throw new CliError(`Asset "${source}": EveryOS does not serve this type of file`);
+    // A single file is served under its package path (a licence can become `LICENSE.txt`).
+    if (!statSync(join(dir, source)).isDirectory() && !contentTypeOf(output))
+      throw new CliError(`Asset "${output}": EveryOS does not serve this type of file`);
   }
   return {
     root: dir,

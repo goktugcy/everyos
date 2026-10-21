@@ -202,6 +202,7 @@ describe("create-everyos-app and everyos-app", () => {
         assets: {
           "lib/cmaps/": "node_modules/data-lib/cmaps",
           "lib/decoder.wasm": "node_modules/data-lib/decoder.wasm",
+          "lib/LICENSE.txt": "node_modules/data-lib/cmaps/LICENSE",
         },
       }),
     );
@@ -209,6 +210,8 @@ describe("create-everyos-app and everyos-app", () => {
     expect(readdirSync(join(out, "lib/cmaps")).sort()).toEqual(["UniJIS-H.bcmap", "nested"]);
     expect(readFileSync(join(out, "lib/cmaps/nested/extra.json"), "utf8")).toBe("{}");
     expect(readFileSync(join(out, "lib/decoder.wasm"), "utf8")).toBe("wasm");
+    // A single file is published under its package path: a licence as LICENSE.txt.
+    expect(readFileSync(join(out, "lib/LICENSE.txt"), "utf8")).toBe("licence text");
     const { findings } = await validateBuild(out);
     expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
 
@@ -217,6 +220,7 @@ describe("create-everyos-app and everyos-app", () => {
       [{ lib: "../elsewhere" }, /must be inside the project/],
       [{ lib: "node_modules/missing" }, /Asset source not found/],
       [{ "lib/LICENSE": "node_modules/data-lib/cmaps/LICENSE" }, /EveryOS does not serve/],
+      [{ "lib/tool.exe": "node_modules/data-lib/decoder.wasm" }, /EveryOS does not serve/],
     ] as const) {
       writeFileSync(join(dir, "everyos.config.json"), JSON.stringify({ assets }));
       await expect(loadProject(dir)).rejects.toThrow(message);

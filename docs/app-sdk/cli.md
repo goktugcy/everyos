@@ -64,6 +64,6 @@ in `@everyos/app-ui` does that), so it cannot import modules or load chunks.
 
 `assets` copies files a library loads at run time (fonts, WebAssembly, data files) from the
 project, usually from a dependency in `node_modules`, into the package at build time: package path
-→ file or folder. Only the file types EveryOS serves are copied (licence texts without an
-extension stay behind; mention the licences in your README); a single file of another type is
-refused.
+→ file or folder. From a folder, only the file types EveryOS serves are copied. A single file is
+published under its package path, so a licence without an extension ships as `LICENSE.txt`:
+include the licences that ask to travel with the code you redistribute.
