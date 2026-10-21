@@ -126,7 +126,7 @@ export function RegexApp({ start = startMatchWorker }: { start?: () => Promise<W
         : outcome.ok
           ? `${t("status.matches", { count: outcome.matches.length })} · ${t("status.ms", { ms: i18n.number(outcome.ms) })}`
           : outcome.error === "timeout"
-            ? t("status.timeout", { seconds: LIMITS.timeoutMs / 1000 })
+            ? t("status.timeout", { seconds: i18n.number(LIMITS.timeoutMs / 1000) })
             : outcome.error === "too-long"
               ? t("status.tooLong", { count: i18n.number(LIMITS.text) })
               : outcome.error === "syntax"

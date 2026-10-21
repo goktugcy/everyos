@@ -51,11 +51,16 @@ function esbuildOptions(project: Project, outDir: string, dev: boolean): BuildOp
   };
 }
 
-/** Workers: one self-contained module each (a worker from a blob URL cannot load chunks). */
+/**
+ * Workers: one self-contained classic script each. In an app's opaque origin a worker starts only
+ * from a blob URL, and only as a classic worker (module workers from such URLs fail in Chromium),
+ * so it can neither import nor load chunks.
+ */
 function workerOptions(project: Project, outDir: string, dev: boolean): BuildOptions {
   return {
     ...esbuildOptions(project, outDir, dev),
     entryPoints: entryPoints(project.config.workers),
+    format: "iife",
     splitting: false,
     metafile: false,
   };

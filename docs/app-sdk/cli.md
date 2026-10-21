@@ -57,6 +57,6 @@ Without it, `src/main.tsx` (or `.ts`) becomes `app.js`.
 
 Entries are ES modules: code they share, and code loaded with `import()`, goes into `chunks/`, so
 a large library an app needs only for one view loads when that view opens. Each worker is bundled
-into a single file of its own: an app runs in an opaque origin, where a worker can only start from
-a blob URL of its code (`startWorker("search.worker.js")` in `@everyos/app-ui` does that), and
-such a worker cannot load chunks.
+into a single classic script of its own: an app runs in an opaque origin, where a worker can only
+start from a blob URL of its code and only as a classic worker (`startWorker("search.worker.js")`
+in `@everyos/app-ui` does that), so it cannot import modules or load chunks.

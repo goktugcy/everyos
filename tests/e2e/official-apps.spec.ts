@@ -161,3 +161,27 @@ test.describe("Notes", () => {
     await expect(frame.locator(".notes-row-title")).toHaveText(["Tesisatçıyı ara", "Alışveriş"]);
   });
 });
+
+test.describe("Regex Tester", () => {
+  const regex = OFFICIAL.find((app) => app.slug === "regex")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${regex.id}`, { confirm: true });
+  });
+
+  test("matches in its worker and stops runaway expressions", async ({ page }) => {
+    test.setTimeout(60_000);
+    await install(page, regex);
+    const { frame } = await open(page, regex.name, regex.id);
+    const pattern = frame.getByRole("textbox", { name: "Düzenli ifade" });
+    const text = frame.getByRole("textbox", { name: "Test metni" });
+    await pattern.fill(String.raw`(\d+)-(\d+)`);
+    await text.fill("10-20 ve 3-4");
+    await expect(frame.locator(".rx-highlight mark")).toHaveText(["10-20", "3-4"]);
+    // Catastrophic backtracking: the worker is stopped, the window stays responsive.
+    await pattern.fill("(a+)+$");
+    await text.fill(`${"a".repeat(40)}!`);
+    await expect(frame.locator(".rx-status")).toContainText("Durduruldu", { timeout: 10_000 });
+    await pattern.fill("a");
+    await expect(frame.locator(".rx-status")).toContainText("40 eşleşme");
+  });
+});
