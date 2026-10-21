@@ -92,6 +92,33 @@ describe("the mock host", () => {
     });
   });
 
+  it("carries persistent handles into a later session and revokes access", async () => {
+    const files = { "/project/a.txt": "a" };
+    const first = await start({ granted: ["files:pick"], files, pick: () => ["/project"] });
+    const [folder] = await first.app.files.open({ directory: true, persist: true });
+    await first.app.files.open({ directory: true });
+    const kept = first.host.persistentHandles();
+    expect(kept).toEqual([
+      { id: folder!.id, path: "/project", kind: "directory", writable: false },
+    ]);
+    unmount?.();
+    vi.resetModules();
+
+    const second = await start({ granted: ["files:pick"], files, handles: kept });
+    const [restored] = await second.app.files.handles();
+    expect(restored).toMatchObject({ id: folder!.id, name: "project", persistent: true });
+    expect(await second.app.files.readText(await second.app.files.child(restored!, "a.txt"))).toBe(
+      "a",
+    );
+    const revoked: string[][] = [];
+    second.app.files.onRevoked((ids) => revoked.push(ids));
+    second.host.revoke([folder!.id]);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(revoked).toEqual([[folder!.id]]);
+    // Exactly the revoked handles go (a file handed out from the folder is a grant of its own).
+    expect((await second.app.files.handles()).map((handle) => handle.id)).not.toContain(folder!.id);
+  });
+
   it("refuses what is not granted, and window-only methods in widgets", async () => {
     const { host, app } = await start({ granted: ["storage:app"] });
     await expect(app.notifications.send({ title: "Hi" })).rejects.toMatchObject({

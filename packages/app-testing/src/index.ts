@@ -5,6 +5,7 @@ export {
   MockHost,
   type MockCall,
   type MockHostOptions,
+  type PersistedHandle,
   type PortLike,
 } from "./mock-host.ts";
 export { attachMockHost, mountMockHost } from "./mount.ts";

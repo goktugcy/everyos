@@ -136,8 +136,18 @@ export interface MockHostOptions {
   /** Answers of `host.call` operations; others report that the mock was not given one. */
   host?: Partial<Record<HostOperation, HostResponder>>;
   storage?: Record<string, unknown>;
+  /** Persistent file handles from an earlier session (see `MockHost.persistentHandles()`). */
+  handles?: PersistedHandle[];
   /** Restored window state. */
   state?: unknown;
+}
+
+/** A persistent handle as the mock keeps it between sessions. */
+export interface PersistedHandle {
+  id: string;
+  path: string;
+  kind: "file" | "directory";
+  writable: boolean;
 }
 
 export interface MockCall {
@@ -246,7 +256,30 @@ export class MockHost {
     for (const [path, value] of Object.entries(options.files ?? {}))
       this.files.set(normalize(path), { data: bytesOf(value), modifiedAt: Date.now() });
     for (const [key, value] of Object.entries(options.storage ?? {})) this.storage.set(key, value);
+    for (const handle of options.handles ?? []) {
+      this.#handles.set(handle.id, {
+        ...handle,
+        name: nameOf(handle.path) || "/",
+        size: handle.kind === "file" ? (this.files.get(handle.path)?.data.length ?? 0) : null,
+        type: handle.kind === "file" ? typeOf(handle.path) : null,
+        persistent: true,
+      });
+      this.#next = Math.max(this.#next, Number(handle.id.replace(/\D/g, "")) + 1);
+    }
     this.window.state = options.state ?? null;
+  }
+
+  /** Persistent handles granted so far, to start a later session with (`handles` option). */
+  persistentHandles(): PersistedHandle[] {
+    return [...this.#handles.values()]
+      .filter((handle) => handle.persistent)
+      .map(({ id, path, kind, writable }) => ({ id, path, kind, writable }));
+  }
+
+  /** Simulates EveryOS withdrawing access to handles (the app hears `files.revoked`). */
+  revoke(ids: string[]): void {
+    for (const id of ids) this.#handles.delete(id);
+    this.emit("files.revoked", { handles: ids });
   }
 
   get kind(): "window" | "widget" {

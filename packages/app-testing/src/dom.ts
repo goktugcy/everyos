@@ -59,7 +59,15 @@ export function byText(text: string | RegExp, selector = "*"): HTMLElement | nul
   );
 }
 
-/** An element by role and accessible name (aria-label, label text or own text). */
+function labelAround(element: HTMLElement): string | null {
+  const label = element.closest("label");
+  if (!label) return null;
+  const copy = label.cloneNode(true) as HTMLElement;
+  for (const control of copy.querySelectorAll("input,select,textarea")) control.remove();
+  return copy.textContent;
+}
+
+/** An element by role and accessible name (aria-label, its label or own text). */
 export function byRole(role: string, name?: string | RegExp): HTMLElement | null {
   const implicit: Record<string, string> = {
     button: "button,[role=button]",
@@ -88,6 +96,8 @@ export function byRole(role: string, name?: string | RegExp): HTMLElement | null
       const label =
         element.getAttribute("aria-label") ??
         (element.id ? document.querySelector(`label[for="${element.id}"]`)?.textContent : null) ??
+        // A control inside its <label> is named by the label's other text.
+        (element.matches("input,select,textarea") ? labelAround(element) : null) ??
         textOf(element);
       const value = (label ?? "").trim();
       return name instanceof RegExp ? name.test(value) : value === name;
