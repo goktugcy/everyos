@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test, type FrameLocator, type Page } from "@playwright/test";
 import { capabilityInfo, type AppCapability } from "../../packages/app-manifest/src/index.ts";
 import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
+import { makePdf } from "../../official-apps/pdf/test/make-pdf.ts";
 import { signIn } from "./helpers.ts";
 
 /*
@@ -292,5 +293,125 @@ test.describe("Code Editor", () => {
         }),
       )
       .toBe("export const answer = 42;\n// e2e");
+  });
+});
+
+test.describe("PDF Viewer", () => {
+  const pdf = OFFICIAL.find((app) => app.slug === "pdf")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${pdf.id}`, { confirm: true });
+  });
+
+  test("renders, searches, navigates, remembers the place and prints a document", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await install(page, pdf);
+    const bytes = makePdf({
+      // Five pages: the third can scroll to the top (the current page is the first one in view).
+      pages: [
+        ["Hello EveryOS"],
+        ["Second page", "search target"],
+        ["Third page"],
+        ["Four"],
+        ["Five"],
+      ],
+      outline: [
+        { title: "Chapter 1", page: 1 },
+        { title: "Chapter 3", page: 3 },
+      ],
+    });
+    expect(
+      await page.evaluate(
+        async ({ header, data }) => {
+          const session = (await (await fetch("/api/auth/session")).json()) as {
+            csrfToken: string;
+          };
+          const response = await fetch(
+            "/api/files/upload?root=home&path=Belgeler&name=kilavuz.pdf",
+            {
+              method: "POST",
+              headers: { [header]: session.csrfToken },
+              body: new Uint8Array(data),
+            },
+          );
+          return response.status;
+        },
+        { header: CSRF_HEADER, data: [...bytes] },
+      ),
+    ).toBe(201);
+
+    const opened = await open(page, pdf.name, pdf.id);
+    const window = opened.window;
+    let frame = opened.frame;
+    await frame.getByRole("button", { name: "PDF aç…" }).first().click();
+    const picker = window.getByTestId("desktop-app-file-picker");
+    await picker.getByRole("option", { name: "kilavuz.pdf" }).click();
+    await picker.getByRole("button", { name: "Aç" }).click();
+
+    // pdf.js in its worker: drawn pages with a selectable text layer, and thumbnails.
+    await expect(frame.locator(".pdf-page-count")).toHaveText("/ 5");
+    await expect(frame.locator(".textLayer").first()).toContainText("Hello EveryOS");
+    const firstPage = frame.locator(".pdfViewer .page canvas").first();
+    await expect(firstPage).toBeVisible();
+    expect((await firstPage.boundingBox())!.width).toBeGreaterThan(200);
+    await expect(frame.locator(".pdf-thumb-canvas")).toHaveCount(5);
+    await expect(frame.locator(".pdf-thumb-canvas").first()).toHaveAttribute("height", "155");
+
+    await frame.getByRole("button", { name: "Sonraki sayfa" }).click();
+    await expect(frame.getByRole("textbox", { name: "Sayfa numarası" })).toHaveValue("2");
+
+    await frame
+      .getByRole("button", { name: "Belgede bul (Ctrl+F)" })
+      .or(frame.getByRole("button", { name: "Belgede bul (⌘F)" }))
+      .click();
+    await frame.getByRole("textbox", { name: "Bul" }).fill("target");
+    await expect(frame.locator(".pdf-find-status")).toHaveText("1 / 1 eşleşme");
+    await expect(frame.locator(".textLayer .highlight").first()).toBeVisible();
+    await frame.getByRole("button", { name: "Aramayı kapat" }).click();
+
+    await frame.getByRole("tab", { name: "Ana hatlar" }).click();
+    await frame.getByRole("button", { name: "Chapter 3" }).click();
+    await expect(frame.getByRole("textbox", { name: "Sayfa numarası" })).toHaveValue("3");
+
+    await frame.getByRole("button", { name: "Sağa döndür" }).click();
+    const third = frame.locator('.pdfViewer .page[data-page-number="3"]');
+    await expect
+      .poll(async () => {
+        const box = await third.boundingBox();
+        return box ? box.width > box.height : false;
+      })
+      .toBe(true);
+    await frame.getByRole("button", { name: "Bu sayfaya yer imi ekle" }).click();
+    await frame.getByRole("tab", { name: "Yer imleri" }).click();
+    await expect(frame.locator(".pdf-bookmark-label")).toHaveText(["Sayfa 3"]);
+
+    // Printing: every page is drawn for the print dialog (the dialog itself is the browser's).
+    const app = page.frames().find((candidate) => candidate.url().includes("/app-runtime/"))!;
+    await app.evaluate(() => {
+      // `globalThis`: the page's window (`window` here is the app window's locator).
+      const target = globalThis as unknown as { print: () => void; printed: number };
+      target.print = () => {
+        target.printed = document.querySelectorAll(".pdf-print img").length;
+      };
+    });
+    await frame.getByRole("button", { name: /^Yazdır/ }).click();
+    await expect
+      .poll(() => app.evaluate(() => (globalThis as unknown as { printed?: number }).printed))
+      .toBe(5);
+
+    // Reopened from the recent list: the same page, rotation and bookmark.
+    await window.getByRole("button", { name: "Kapat" }).first().click();
+    ({ frame } = await open(page, pdf.name, pdf.id));
+    await frame.getByRole("button", { name: /kilavuz\.pdf/ }).click();
+    await expect(frame.getByRole("textbox", { name: "Sayfa numarası" })).toHaveValue("3");
+    await frame.getByRole("tab", { name: "Yer imleri" }).click();
+    await expect(frame.locator(".pdf-bookmark-label")).toHaveText(["Sayfa 3"]);
+    await expect
+      .poll(async () => {
+        const box = await frame.locator('.pdfViewer .page[data-page-number="3"]').boundingBox();
+        return box ? box.width > box.height : false;
+      })
+      .toBe(true);
   });
 });

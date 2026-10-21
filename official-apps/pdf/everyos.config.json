@@ -1,0 +1,26 @@
+{
+  "entries": {
+    "app.js": "src/main.tsx"
+  },
+  "workers": {
+    "pdf.worker.js": "src/pdf-worker.ts"
+  },
+  "assets": {
+    "pdfjs/cmaps/": "node_modules/pdfjs-dist/cmaps",
+    "pdfjs/standard_fonts/": "node_modules/pdfjs-dist/standard_fonts",
+    "pdfjs/iccs/": "node_modules/pdfjs-dist/iccs",
+    "pdfjs/wasm/openjpeg.wasm": "node_modules/pdfjs-dist/wasm/openjpeg.wasm",
+    "pdfjs/wasm/jbig2.wasm": "node_modules/pdfjs-dist/wasm/jbig2.wasm",
+    "pdfjs/wasm/qcms_bg.wasm": "node_modules/pdfjs-dist/wasm/qcms_bg.wasm",
+    "pdfjs/LICENSE.txt": "node_modules/pdfjs-dist/LICENSE",
+    "pdfjs/wasm/LICENSE_JBIG2.txt": "node_modules/pdfjs-dist/wasm/LICENSE_JBIG2",
+    "pdfjs/wasm/LICENSE_PDFJS_JBIG2.txt": "node_modules/pdfjs-dist/wasm/LICENSE_PDFJS_JBIG2",
+    "pdfjs/wasm/LICENSE_OPENJPEG.txt": "node_modules/pdfjs-dist/wasm/LICENSE_OPENJPEG",
+    "pdfjs/wasm/LICENSE_PDFJS_OPENJPEG.txt": "node_modules/pdfjs-dist/wasm/LICENSE_PDFJS_OPENJPEG",
+    "pdfjs/wasm/LICENSE_QCMS.txt": "node_modules/pdfjs-dist/wasm/LICENSE_QCMS",
+    "pdfjs/wasm/LICENSE_PDFJS_QCMS.txt": "node_modules/pdfjs-dist/wasm/LICENSE_PDFJS_QCMS",
+    "pdfjs/standard_fonts/LICENSE_FOXIT.txt": "node_modules/pdfjs-dist/standard_fonts/LICENSE_FOXIT",
+    "pdfjs/standard_fonts/LICENSE_LIBERATION.txt": "node_modules/pdfjs-dist/standard_fonts/LICENSE_LIBERATION",
+    "pdfjs/iccs/LICENSE.txt": "node_modules/pdfjs-dist/iccs/LICENSE"
+  }
+}

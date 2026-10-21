@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "Visionneuse PDF",
+    "description": "Lisez des PDF : pages et miniatures, zoom et rotation, recherche de texte, plan du document et vos signets, impression et enregistrement d’une copie."
+  },
+  "actions": {
+    "open": "Ouvrir un PDF…"
+  },
+  "pages": {
+    "label": "Pages",
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "current": "Numéro de page",
+    "of": "sur {{count}}",
+    "thumbnail": "Page {{page}}"
+  },
+  "zoom": {
+    "label": "Zoom",
+    "in": "Zoom avant",
+    "out": "Zoom arrière",
+    "auto": "Automatique",
+    "page-width": "Largeur de page",
+    "page-fit": "Page entière",
+    "page-actual": "Taille réelle"
+  },
+  "rotate": {
+    "left": "Pivoter à gauche",
+    "right": "Pivoter à droite"
+  },
+  "find": {
+    "open": "Rechercher dans le document",
+    "label": "Rechercher",
+    "placeholder": "Rechercher dans le document…",
+    "previous": "Résultat précédent",
+    "next": "Résultat suivant",
+    "caseSensitive": "Respecter la casse",
+    "entireWord": "Mots entiers",
+    "close": "Fermer la recherche",
+    "searching": "Recherche…",
+    "notFound": "Introuvable",
+    "position_one": "{{current}} sur {{count}} résultat",
+    "position_other": "{{current}} sur {{count}} résultats"
+  },
+  "bookmarks": {
+    "addCurrent": "Ajouter un signet sur cette page",
+    "removeCurrent": "Retirer le signet de cette page",
+    "defaultLabel": "Page {{page}}",
+    "added": "Signet ajouté à la page {{page}}",
+    "renameTitle": "Renommer le signet",
+    "rename": "Renommer « {{label}} »",
+    "remove": "Retirer « {{label}} »",
+    "empty": "Aucun signet",
+    "emptyText": "Utilisez le bouton signet de la barre d’outils pour retenir une page."
+  },
+  "print": {
+    "action": "Imprimer",
+    "preparing": "Préparation de l’impression",
+    "progress": "Page {{done}} sur {{total}}",
+    "failed": "Le document n’a pas pu être préparé pour l’impression."
+  },
+  "save": {
+    "action": "Enregistrer une copie",
+    "saved": "Copie de {{name}} enregistrée"
+  },
+  "sidebar": {
+    "label": "Navigation",
+    "show": "Afficher le panneau latéral",
+    "hide": "Masquer le panneau latéral",
+    "pages": "Pages",
+    "outline": "Plan",
+    "bookmarks": "Signets"
+  },
+  "outline": {
+    "label": "Plan du document",
+    "expand": "Déplier {{title}}",
+    "collapse": "Replier {{title}}",
+    "external": "Ouvre une page web",
+    "empty": "Pas de plan",
+    "emptyText": "Ce document n’a pas de table des matières."
+  },
+  "viewer": {
+    "label": "Pages de {{name}}",
+    "opening": "Ouverture…",
+    "emptyTitle": "Ouvrez un PDF pour le lire",
+    "emptyText": "Les documents s’ouvrent là où vous vous êtes arrêté, avec vos signets.",
+    "tryAnother": "Essayez un autre fichier."
+  },
+  "recent": {
+    "title": "Récents",
+    "gone": "« {{name}} » n’est plus disponible."
+  },
+  "errors": {
+    "tooLarge": "Les PDF jusqu’à {{size}} peuvent être ouverts.",
+    "invalid": "« {{name}} » n’est pas un PDF ou est endommagé.",
+    "password": "Ce PDF n’a pas pu être ouvert avec ce mot de passe.",
+    "open": "« {{name}} » n’a pas pu être ouvert."
+  },
+  "password": {
+    "title": "Ce PDF est protégé",
+    "label": "Mot de passe",
+    "open": "Ouvrir",
+    "incorrect": "Mot de passe incorrect. Réessayez."
+  }
+}

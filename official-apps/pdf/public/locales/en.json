@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "PDF Viewer",
+    "description": "Read PDF files: pages and thumbnails, zoom and rotation, text search, the document outline and your own bookmarks, printing and saving a copy."
+  },
+  "actions": {
+    "open": "Open PDF…"
+  },
+  "pages": {
+    "label": "Pages",
+    "previous": "Previous page",
+    "next": "Next page",
+    "current": "Page number",
+    "of": "of {{count}}",
+    "thumbnail": "Page {{page}}"
+  },
+  "zoom": {
+    "label": "Zoom",
+    "in": "Zoom in",
+    "out": "Zoom out",
+    "auto": "Automatic",
+    "page-width": "Page width",
+    "page-fit": "Whole page",
+    "page-actual": "Actual size"
+  },
+  "rotate": {
+    "left": "Rotate left",
+    "right": "Rotate right"
+  },
+  "find": {
+    "open": "Find in document",
+    "label": "Find",
+    "placeholder": "Find in document…",
+    "previous": "Previous match",
+    "next": "Next match",
+    "caseSensitive": "Match case",
+    "entireWord": "Whole words",
+    "close": "Close search",
+    "searching": "Searching…",
+    "notFound": "Not found",
+    "position_one": "{{current}} of {{count}} match",
+    "position_other": "{{current}} of {{count}} matches"
+  },
+  "bookmarks": {
+    "addCurrent": "Bookmark this page",
+    "removeCurrent": "Remove this page's bookmark",
+    "defaultLabel": "Page {{page}}",
+    "added": "Page {{page}} bookmarked",
+    "renameTitle": "Rename bookmark",
+    "rename": "Rename “{{label}}”",
+    "remove": "Remove “{{label}}”",
+    "empty": "No bookmarks yet",
+    "emptyText": "Use the bookmark button in the toolbar to remember a page."
+  },
+  "print": {
+    "action": "Print",
+    "preparing": "Preparing to print",
+    "progress": "Page {{done}} of {{total}}",
+    "failed": "The document could not be prepared for printing."
+  },
+  "save": {
+    "action": "Save a copy",
+    "saved": "Saved a copy of {{name}}"
+  },
+  "sidebar": {
+    "label": "Navigation",
+    "show": "Show the sidebar",
+    "hide": "Hide the sidebar",
+    "pages": "Pages",
+    "outline": "Outline",
+    "bookmarks": "Bookmarks"
+  },
+  "outline": {
+    "label": "Document outline",
+    "expand": "Expand {{title}}",
+    "collapse": "Collapse {{title}}",
+    "external": "Opens a web page",
+    "empty": "No outline",
+    "emptyText": "This document has no table of contents."
+  },
+  "viewer": {
+    "label": "Pages of {{name}}",
+    "opening": "Opening…",
+    "emptyTitle": "Open a PDF to read it",
+    "emptyText": "Documents open where you left them, with your bookmarks.",
+    "tryAnother": "Try opening another file."
+  },
+  "recent": {
+    "title": "Recent",
+    "gone": "“{{name}}” is no longer available."
+  },
+  "errors": {
+    "tooLarge": "PDF files up to {{size}} can be opened.",
+    "invalid": "“{{name}}” is not a PDF or is damaged.",
+    "password": "This PDF could not be opened with that password.",
+    "open": "“{{name}}” could not be opened."
+  },
+  "password": {
+    "title": "This PDF is protected",
+    "label": "Password",
+    "open": "Open",
+    "incorrect": "That password is not right. Try again."
+  }
+}
