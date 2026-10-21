@@ -1,6 +1,6 @@
 import type { SystemInfo, WidgetPlacement, WidgetSize } from "@everyos/shared";
 import {
-  BUILT_IN_WIDGETS,
+  allWidgets,
   missingConfig,
   sizesFor,
   supportsPlacement,
@@ -38,10 +38,10 @@ const chip =
   "rounded-full px-3 py-1 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent";
 
 function adapterOf(manifest: WidgetManifest) {
-  return manifest.categories.includes("apps")
+  return manifest.categories.includes("apps") && manifest.provider !== "desktopApp"
     ? (manifest.provider as Exclude<
         WidgetManifest["provider"],
-        "system" | "docker" | "raspberryPi" | "ai"
+        "system" | "docker" | "raspberryPi" | "ai" | "desktopApp"
       >)
     : null;
 }
@@ -194,9 +194,8 @@ function GalleryBody({
 
   const entries = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase(i18n.language);
-    return BUILT_IN_WIDGETS.filter(
-      (manifest) => category === "all" || manifest.categories.includes(category),
-    )
+    return allWidgets()
+      .filter((manifest) => category === "all" || manifest.categories.includes(category))
       .filter(
         (manifest) =>
           !needle ||

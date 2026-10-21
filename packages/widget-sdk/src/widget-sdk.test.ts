@@ -3,10 +3,12 @@ import { PERMISSIONS, type WidgetPreferences } from "@everyos/shared";
 import { describe, expect, it } from "vitest";
 import {
   addWidget,
+  allWidgets,
   BUILT_IN_WIDGETS,
   changePlacement,
   defaultConfig,
   defaultWidgetPreferences,
+  desktopAppWidgetId,
   detectAdapters,
   duplicateWidget,
   EMPTY_WIDGETS,
@@ -19,10 +21,12 @@ import {
   moveWidget,
   normalizeConfig,
   ordered,
+  parseDesktopAppWidgetId,
   reorderWidget,
   repositoryOf,
   resizeWidget,
   resolveTopics,
+  setDesktopAppWidgets,
   sizesFor,
   updateWidget,
   widgetAvailability,
@@ -338,5 +342,41 @@ describe("layout operations", () => {
     const moved = reassignDesktops(doc, ["d1", "d2"]);
     expect(moved.instances.map((i) => i.desktopId)).toEqual(["d1", "d2"]);
     expect(reassignDesktops(moved, ["d1", "d2"])).toBe(moved);
+  });
+});
+
+describe("desktop app widgets", () => {
+  it("join the built-in ones while their app is installed, under `<app id>#<widget id>`", () => {
+    const id = desktopAppWidgetId("dev.everyos.pomodoro", "timer");
+    expect(id).toBe("dev.everyos.pomodoro#timer");
+    expect(parseDesktopAppWidgetId(id)).toEqual({
+      appId: "dev.everyos.pomodoro",
+      widgetId: "timer",
+    });
+    expect(parseDesktopAppWidgetId("system.cpu")).toBeNull();
+    const manifest = {
+      ...widget("system.cpu"),
+      id,
+      provider: "desktopApp" as const,
+      categories: ["apps" as const],
+      permissions: ["apps:read" as const],
+      dataSources: [],
+    };
+    setDesktopAppWidgets([manifest]);
+    expect(getWidget(id)).toBe(manifest);
+    expect(allWidgets().at(-1)).toBe(manifest);
+    expect(allWidgets()).toHaveLength(BUILT_IN_WIDGETS.length + 1);
+    // Placed like any widget, and the saved document passes the server's schema.
+    const added = addWidget(EMPTY_WIDGETS, manifest, {
+      id: "w-app",
+      placement: "desktop",
+      desktopId: "d1",
+      grid,
+    });
+    expect(added.instances[0]?.widgetId).toBe(id);
+    expect(WidgetPreferencesSchema.safeParse(added).success).toBe(true);
+    setDesktopAppWidgets([]);
+    expect(getWidget(id)).toBeUndefined();
+    expect(getWidget("system.cpu")).toBeDefined();
   });
 });

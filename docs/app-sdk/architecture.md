@@ -214,8 +214,8 @@ Tables (migration 0016, append-only): `desktop_app_registries`, `desktop_app_cat
 
 Installed desktop apps become dynamic `DesktopAppManifest` entries (`everyos.desktop.<appId>`) whose
 window renders the sandboxed frame host; dock, launcher, mobile shell, window state restore and
-widgets accept them. Third-party widgets render in the same kind of frame inside the widget frame and
-activate lazily. The App Store gains type, source and status filters and a detail page with
+widgets accept them. Third-party widgets (`<app id>#<widget id>`) render in the same kind of frame
+inside the widget frame and activate lazily; see [widgets](widgets.md). The App Store gains type, source and status filters and a detail page with
 permissions, publisher, versions and storage use.
 
 ## Official apps and developer tooling

@@ -26,15 +26,25 @@ const PNG = Buffer.from(
 async function buildProbe(): Promise<Buffer> {
   const source = join(here, "fixtures/probe-app");
   const out = await mkdtemp(join(tmpdir(), "everyos-probe-"));
-  await build({
-    entryPoints: [join(source, "main.ts")],
-    bundle: true,
-    format: "esm",
-    target: "es2022",
-    outfile: join(out, "app.js"),
-    logLevel: "silent",
-  });
-  for (const file of ["manifest.json", "index.html", "locales/en.json", "locales/tr.json"]) {
+  for (const [entry, output] of [
+    ["main.ts", "app.js"],
+    ["widget.ts", "widget.js"],
+  ] as const)
+    await build({
+      entryPoints: [join(source, entry)],
+      bundle: true,
+      format: "esm",
+      target: "es2022",
+      outfile: join(out, output),
+      logLevel: "silent",
+    });
+  for (const file of [
+    "manifest.json",
+    "index.html",
+    "widget.html",
+    "locales/en.json",
+    "locales/tr.json",
+  ]) {
     await mkdir(dirname(join(out, file)), { recursive: true });
     await copyFile(join(source, file), join(out, file));
   }

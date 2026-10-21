@@ -1,1 +1,5 @@
-{ "app": { "name": "Sonda" }, "ask": "Deneme notu silinsin mi?" }
+{
+  "app": { "name": "Sonda" },
+  "ask": "Deneme notu silinsin mi?",
+  "widgets": { "status": { "name": "Sonda durumu", "description": "Sondanın kaç kez çalıştığı." } }
+}

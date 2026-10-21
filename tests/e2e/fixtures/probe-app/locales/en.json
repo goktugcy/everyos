@@ -1,1 +1,7 @@
-{ "app": { "name": "Probe" }, "ask": "Delete the test note?" }
+{
+  "app": { "name": "Probe" },
+  "ask": "Delete the test note?",
+  "widgets": {
+    "status": { "name": "Probe status", "description": "How many times the probe ran." }
+  }
+}

@@ -140,9 +140,37 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     await openFromLauncher(page);
     await expect(probe("runs")).toHaveText("2");
 
-    // Uninstalled from the store, after a confirmation; the launcher no longer offers it.
     await window.getByRole("button", { name: "Kapat" }).first().click();
     await expect(window).toHaveCount(0);
+    await store.getByRole("button", { name: "Kapat" }).first().click();
+    await expect(store).toHaveCount(0);
+
+    // Its widget: offered in the gallery by its Turkish name, drawn in its own sandboxed frame,
+    // sharing the app's data, without the window-only methods.
+    const sidebar = page.getByTestId("widget-sidebar");
+    if (!(await sidebar.isVisible())) await page.getByTestId("widget-sidebar-toggle").click();
+    await sidebar.getByRole("button", { name: "Widget ekle…" }).first().click();
+    const gallery = page.getByRole("dialog", { name: "Widget galerisi" });
+    await expect(gallery).toBeVisible();
+    await gallery.getByRole("tab", { name: "Uygulamalar", exact: true }).click();
+    await gallery.getByRole("button", { name: "Ekle: Sonda durumu" }).click();
+    await page.keyboard.press("Escape");
+    const widget = sidebar.locator(
+      '[data-testid="widget"][data-widget="dev.everyos.probe#status"]',
+    );
+    await expect(widget).toBeVisible();
+    const widgetFrame = widget.frameLocator('[data-testid="desktop-app-frame"]');
+    await expect(widgetFrame.locator('[data-probe="widget"]')).toHaveText("widget");
+    await expect(widgetFrame.locator('[data-probe="widgetRuns"]')).toHaveText("2");
+    await expect(widgetFrame.locator('[data-probe="widgetFiles"]')).toHaveText(
+      "EVERYOS_UNKNOWN_METHOD",
+    );
+
+    // Uninstalled from the store, after a confirmation; the launcher no longer offers it.
+    await page.keyboard.press("Control+k");
+    await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("mağaza");
+    await page.keyboard.press("Enter");
+    await store.getByLabel("Tür", { exact: true }).selectOption("desktop");
     await store
       .locator('[data-testid="desktop-app-listing"][data-app-id="dev.everyos.probe"]')
       .click();
@@ -159,6 +187,8 @@ test("a desktop app runs sandboxed, keeps its data and cannot reach the desktop"
     await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("Sonda");
     await expect(page.getByRole("option", { name: /Sonda/ })).toHaveCount(0);
     await page.keyboard.press("Escape");
+    // Its widget says it is gone and can be removed.
+    await expect(widget).toContainText("Bu widget artık mevcut değil.");
   } finally {
     // Leaves nothing behind when a step above failed.
     await call(page, "POST", "/api/files/delete", {

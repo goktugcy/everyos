@@ -13,7 +13,8 @@
     "files:pick",
     "files:save",
     "storage:usage.read",
-    "appearance:manage"
+    "appearance:manage",
+    "widgets:register"
   ],
   "window": {
     "defaultWidth": 640,
@@ -22,7 +23,18 @@
     "minHeight": 240,
     "instances": "single"
   },
-  "widgets": [],
+  "widgets": [
+    {
+      "id": "status",
+      "name": "Probe status",
+      "description": "How many times the probe ran.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium"],
+      "defaultSize": "small",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["storage:app"]
+    }
+  ],
   "locales": {
     "default": "en",
     "supported": ["en", "tr"],
