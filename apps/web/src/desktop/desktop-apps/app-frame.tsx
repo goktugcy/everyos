@@ -17,6 +17,7 @@ import { setCloseGuard } from "../windows/close-guards.ts";
 import { AppDialog, type PendingDialog } from "./app-dialog.tsx";
 import { FilePicker, type PickerRequest, type PickerResult } from "./file-picker.tsx";
 import { useAppBadges } from "./badges.ts";
+import { retireLater } from "./retire.ts";
 import { AppBridge } from "./bridge.ts";
 import { createHandlers, INSTANCE_HEADER, windowState } from "./handlers.ts";
 import { useDesktopApps } from "./store.ts";
@@ -262,7 +263,7 @@ export function AppFrame({
       disposed = true;
       if (listener) element.removeEventListener("load", listener);
       if (readyTimer) clearTimeout(readyTimer);
-      bridgeRef.current?.close();
+      const bridge = bridgeRef.current;
       bridgeRef.current = null;
       unsubscribeTheme();
       unsubscribeAppearance();
@@ -272,13 +273,17 @@ export function AppFrame({
       if (windowId) setCloseGuard(windowId, null);
       useAppBadges.getState().clear(app.appId, windowId);
       for (const resolve of decisions.values()) resolve(true);
-      if (token)
-        void api("/app-sdk/instances/current", {
-          method: "DELETE",
-          body: {},
-          headers: { [INSTANCE_HEADER]: token },
-          keepalive: true,
-        }).catch(() => undefined);
+      // What the app saved on its way out (pagehide) is still carried out, then the instance ends.
+      retireLater(() => {
+        bridge?.close();
+        if (token)
+          void api("/app-sdk/instances/current", {
+            method: "DELETE",
+            body: {},
+            headers: { [INSTANCE_HEADER]: token },
+            keepalive: true,
+          }).catch(() => undefined);
+      });
     };
     // A new version (runtime URL) or a retry starts a fresh instance.
   }, [app, kind, widgetId, entry, attempt, showDialog, showPicker]);
