@@ -221,3 +221,76 @@ test.describe("Diff Viewer", () => {
     await expect(frame.locator(".cm-editor")).toHaveCount(1);
   });
 });
+
+test.describe("Code Editor", () => {
+  const code = OFFICIAL.find((app) => app.slug === "code")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${code.id}`, { confirm: true });
+  });
+
+  test("opens a workspace folder the person picks, edits and saves a file in it", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await install(page, code);
+    for (const [path, name] of [
+      ["Belgeler", "kod-projesi"],
+      ["Belgeler/kod-projesi", "src"],
+    ])
+      expect(
+        (await api(page, "POST", "/api/files/mkdir", { root: "home", path, name })).status,
+      ).toBe(201);
+    expect(
+      await page.evaluate(async (header) => {
+        const session = (await (await fetch("/api/auth/session")).json()) as { csrfToken: string };
+        const response = await fetch(
+          "/api/files/upload?root=home&path=Belgeler/kod-projesi/src&name=main.ts",
+          {
+            method: "POST",
+            headers: { [header]: session.csrfToken },
+            body: "export const answer = 42;\n",
+          },
+        );
+        return response.status;
+      }, CSRF_HEADER),
+    ).toBe(201);
+
+    const { window, frame } = await open(page, code.name, code.id);
+    await frame.getByRole("button", { name: "Klasör aç…" }).first().click();
+    const picker = window.getByTestId("desktop-app-file-picker");
+    await expect(picker).toContainText("Klasör seç");
+    await picker.getByRole("option", { name: "kod-projesi" }).click();
+    await picker.getByRole("button", { name: "Bu klasörü seç" }).click();
+
+    await frame.getByRole("treeitem", { name: "src" }).click();
+    await frame.getByRole("treeitem", { name: "main.ts" }).click();
+    await expect(frame.getByRole("tab", { name: "main.ts" })).toBeVisible();
+    const content = frame.getByRole("textbox", { name: "main.ts içeriği" });
+    await expect(content).toContainText("export const answer = 42;");
+    // Highlighted as TypeScript, with the minimap drawn next to the text.
+    await expect(content.locator("span").first()).toBeVisible();
+    const minimap = frame.locator(".cm-minimap-gutter canvas");
+    await expect(minimap).toBeVisible();
+    expect((await minimap.boundingBox())!.width).toBeGreaterThan(20);
+
+    await content.click();
+    await page.keyboard.press("ControlOrMeta+End");
+    await page.keyboard.type("// e2e");
+    // Screen readers hear the unsaved mark as words.
+    await expect(
+      frame.getByRole("tab", { name: "Kaydedilmemiş değişiklikler main.ts" }),
+    ).toBeVisible();
+    await page.keyboard.press("ControlOrMeta+s");
+    await expect(frame.getByRole("tab", { name: "main.ts", exact: true })).toBeVisible();
+    await expect
+      .poll(() =>
+        page.evaluate(async () => {
+          const response = await fetch(
+            "/api/files/text?root=home&path=Belgeler/kod-projesi/src/main.ts",
+          );
+          return ((await response.json()) as { content: string }).content;
+        }),
+      )
+      .toBe("export const answer = 42;\n// e2e");
+  });
+});

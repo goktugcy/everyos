@@ -1,0 +1,102 @@
+{
+  "app": {
+    "name": "コードエディター",
+    "description": "タブでコードを編集。構文の色分け、ミニマップ、検索と置換、選んだフォルダーのファイルエクスプローラーに対応。"
+  },
+  "actions": {
+    "new": "新規ファイル",
+    "openFile": "ファイルを開く…",
+    "openFolder": "フォルダーを開く…",
+    "save": "保存",
+    "saveAs": "名前を付けて保存…",
+    "find": "検索と置換"
+  },
+  "explorer": {
+    "label": "ファイル",
+    "show": "ファイルを表示",
+    "hide": "ファイルを隠す",
+    "newFile": "フォルダーに新規ファイル",
+    "newFolder": "新規フォルダー",
+    "refresh": "更新",
+    "close": "フォルダーを閉じる",
+    "newFileTitle": "新規ファイル",
+    "newFolderTitle": "新規フォルダー",
+    "inFolder": "{{folder}} 内",
+    "inRoot": "{{name}} 内",
+    "names": {
+      "empty": "名前を入力してください。",
+      "reserved": "「{{name}}」は名前に使えません。",
+      "separator": "名前に / や \\ は使えません。",
+      "tooLong": "名前が長すぎます。",
+      "exists": "「{{name}}」は既にあります。"
+    },
+    "unreadable": "このフォルダーを読み取れません",
+    "unreadableShort": "読み取り不可",
+    "empty": "このフォルダーは空です",
+    "more_other": "ほか {{count}} 件は非表示"
+  },
+  "tabs": {
+    "label": "開いているファイル",
+    "unsaved": "未保存の変更",
+    "close": "{{name}} を閉じる"
+  },
+  "editor": {
+    "label": "{{name}} の内容"
+  },
+  "status": {
+    "label": "ステータス",
+    "position": "{{line}} 行、{{column}} 列",
+    "selected_other": "{{count}} 文字選択",
+    "language": "言語",
+    "autoNamed": "{{name}} (ファイル名から)",
+    "autoPlain": "プレーンテキスト (ファイル名から)",
+    "plain": "プレーンテキスト",
+    "spaces": "スペース: {{count}}",
+    "tabs": "タブ幅: {{count}}",
+    "eol": "改行コード"
+  },
+  "settings": {
+    "title": "エディターの設定",
+    "theme": "テーマ",
+    "themes": {
+      "system": "EveryOS と同じ",
+      "light": "ライト",
+      "dark": "ダーク",
+      "contrast": "ハイコントラスト"
+    },
+    "fontSize": "フォントサイズ",
+    "tabSize": "タブ幅",
+    "insertSpaces": "スペースでインデント",
+    "wrap": "長い行を折り返す",
+    "minimap": "ミニマップを表示"
+  },
+  "welcome": {
+    "title": "編集するものを開いてください",
+    "text": "プロジェクトフォルダーを開いてファイルを見るか、ファイルを個別に開くか、新規作成してください。",
+    "withFolder": "左のフォルダーからファイルを選ぶか、新規作成してください。"
+  },
+  "doc": {
+    "untitled": "無題 {{number}}"
+  },
+  "open": {
+    "binary": "「{{name}}」はテキストファイルではありません。",
+    "notUtf8": "「{{name}}」は UTF-8 のテキストではありません。他のエンコーディングを読めるテキストエディターで開いてください。"
+  },
+  "save": {
+    "saved": "{{name}} を保存しました",
+    "changedTitle": "「{{name}}」はディスク上で変更されています",
+    "changedBody": "開いた後にこのファイルが変更されました。保存すると、その変更はあなたの内容で置き換えられます。",
+    "overwrite": "置き換える"
+  },
+  "close": {
+    "title_other": "未保存のファイルが {{count}} 件あります。閉じますか?",
+    "body": "未保存の変更は保持され、次にコードエディターを開くと戻ります。",
+    "confirm": "閉じる",
+    "tabTitle": "「{{name}}」の変更を破棄しますか?",
+    "tabBody": "保存していない変更は失われます。",
+    "discard": "破棄"
+  },
+  "recovery": {
+    "lost": "次の未保存ファイルを復元できませんでした: {{names}}"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.code",
+  "name": "Code Editor",
+  "version": "1.0.0",
+  "description": "Edit code in tabs with syntax highlighting, a minimap, search and replace, and a file explorer for a folder you choose.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "developer",
+  "permissions": ["storage:app", "files:pick", "files:save"],
+  "window": {
+    "defaultWidth": 1200,
+    "defaultHeight": 760,
+    "minWidth": 360,
+    "minHeight": 420,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/code"
+}

@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Code-Editor",
+    "description": "Code in Tabs bearbeiten – mit Syntaxhervorhebung, Minimap, Suchen und Ersetzen und einem Datei-Explorer für einen Ordner Ihrer Wahl."
+  },
+  "actions": {
+    "new": "Neue Datei",
+    "openFile": "Datei öffnen…",
+    "openFolder": "Ordner öffnen…",
+    "save": "Speichern",
+    "saveAs": "Speichern unter…",
+    "find": "Suchen und ersetzen"
+  },
+  "explorer": {
+    "label": "Dateien",
+    "show": "Dateien einblenden",
+    "hide": "Dateien ausblenden",
+    "newFile": "Neue Datei im Ordner",
+    "newFolder": "Neuer Ordner",
+    "refresh": "Aktualisieren",
+    "close": "Ordner schließen",
+    "newFileTitle": "Neue Datei",
+    "newFolderTitle": "Neuer Ordner",
+    "inFolder": "In {{folder}}",
+    "inRoot": "In {{name}}",
+    "names": {
+      "empty": "Geben Sie einen Namen ein.",
+      "reserved": "„{{name}}“ kann nicht als Name verwendet werden.",
+      "separator": "Namen dürfen kein / oder \\ enthalten.",
+      "tooLong": "Dieser Name ist zu lang.",
+      "exists": "„{{name}}“ gibt es hier bereits."
+    },
+    "unreadable": "Dieser Ordner kann nicht gelesen werden",
+    "unreadableShort": "nicht lesbar",
+    "empty": "Dieser Ordner ist leer",
+    "more_one": "{{count}} weiterer nicht angezeigt",
+    "more_other": "{{count}} weitere nicht angezeigt"
+  },
+  "tabs": {
+    "label": "Geöffnete Dateien",
+    "unsaved": "Ungespeicherte Änderungen",
+    "close": "{{name}} schließen"
+  },
+  "editor": {
+    "label": "Inhalt von {{name}}"
+  },
+  "status": {
+    "label": "Status",
+    "position": "Z. {{line}}, Sp. {{column}}",
+    "selected_one": "{{count}} ausgewählt",
+    "selected_other": "{{count}} ausgewählt",
+    "language": "Sprache",
+    "autoNamed": "{{name}} (aus dem Dateinamen)",
+    "autoPlain": "Nur Text (aus dem Dateinamen)",
+    "plain": "Nur Text",
+    "spaces": "Leerzeichen: {{count}}",
+    "tabs": "Tabbreite: {{count}}",
+    "eol": "Zeilenenden"
+  },
+  "settings": {
+    "title": "Editor-Einstellungen",
+    "theme": "Design",
+    "themes": {
+      "system": "Wie EveryOS",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "contrast": "Hoher Kontrast"
+    },
+    "fontSize": "Schriftgröße",
+    "tabSize": "Tabbreite",
+    "insertSpaces": "Mit Leerzeichen einrücken",
+    "wrap": "Lange Zeilen umbrechen",
+    "minimap": "Minimap anzeigen"
+  },
+  "welcome": {
+    "title": "Etwas zum Bearbeiten öffnen",
+    "text": "Öffnen Sie einen Projektordner, um seine Dateien zu durchsuchen, einzelne Dateien, oder beginnen Sie eine neue.",
+    "withFolder": "Wählen Sie links eine Datei im Ordner oder beginnen Sie eine neue."
+  },
+  "doc": {
+    "untitled": "Unbenannt {{number}}"
+  },
+  "open": {
+    "binary": "„{{name}}“ ist keine Textdatei.",
+    "notUtf8": "„{{name}}“ ist kein UTF-8-Text. Öffnen Sie die Datei im Texteditor, der andere Kodierungen liest."
+  },
+  "save": {
+    "saved": "{{name}} gespeichert",
+    "changedTitle": "„{{name}}“ wurde auf dem Datenträger geändert",
+    "changedBody": "Die Datei wurde geändert, seit Sie sie geöffnet haben. Speichern ersetzt diese Änderungen durch Ihre.",
+    "overwrite": "Ersetzen"
+  },
+  "close": {
+    "title_one": "Mit {{count}} ungespeicherten Datei schließen?",
+    "title_other": "Mit {{count}} ungespeicherten Dateien schließen?",
+    "body": "Ungespeicherte Änderungen bleiben erhalten und sind beim nächsten Öffnen wieder da.",
+    "confirm": "Schließen",
+    "tabTitle": "Änderungen an „{{name}}“ verwerfen?",
+    "tabBody": "Nicht gespeicherte Änderungen gehen verloren.",
+    "discard": "Verwerfen"
+  },
+  "recovery": {
+    "lost": "Diese ungespeicherten Dateien konnten nicht wiederhergestellt werden: {{names}}"
+  }
+}
