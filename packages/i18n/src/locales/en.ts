@@ -3979,6 +3979,10 @@ export const en: Messages = {
         title: "See network settings",
         description: "Reads network interfaces, addresses, routes and name servers.",
       },
+      system_services_read: {
+        title: "See system services",
+        description: "Reads which services run on the server and whether any failed.",
+      },
       logs_read: { title: "Read system logs", description: "Reads the system journal." },
       storage_usage_read: {
         title: "Measure folder sizes",

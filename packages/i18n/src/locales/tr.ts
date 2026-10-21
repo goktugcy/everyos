@@ -4018,6 +4018,10 @@ export const tr = {
         title: "Ağ ayarlarını görme",
         description: "Ağ arayüzlerini, adresleri, yönlendirmeleri ve ad sunucularını okur.",
       },
+      system_services_read: {
+        title: "Sistem servislerini görme",
+        description: "Sunucuda hangi servislerin çalıştığını ve hata veren olup olmadığını okur.",
+      },
       logs_read: { title: "Sistem günlüklerini okuma", description: "Sistem günlüğünü okur." },
       storage_usage_read: {
         title: "Klasör boyutlarını ölçme",

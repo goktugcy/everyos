@@ -4115,6 +4115,10 @@ export const ko: LocaleMessages = {
         title: "네트워크 설정 보기",
         description: "네트워크 인터페이스, 주소, 경로, 이름 서버를 읽습니다.",
       },
+      system_services_read: {
+        title: "시스템 서비스 보기",
+        description: "서버에서 실행 중인 서비스와 실패한 서비스가 있는지 읽습니다.",
+      },
       logs_read: { title: "시스템 로그 읽기", description: "시스템 저널을 읽습니다." },
       storage_usage_read: {
         title: "폴더 크기 측정",

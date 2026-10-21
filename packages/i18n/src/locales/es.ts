@@ -4219,6 +4219,10 @@ export const es: LocaleMessages = {
         title: "Ver la configuración de red",
         description: "Lee interfaces de red, direcciones, rutas y servidores de nombres.",
       },
+      system_services_read: {
+        title: "Ver los servicios del sistema",
+        description: "Lee qué servicios se ejecutan en el servidor y si alguno ha fallado.",
+      },
       logs_read: {
         title: "Leer los registros del sistema",
         description: "Lee el diario del sistema.",

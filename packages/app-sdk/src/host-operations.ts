@@ -8,6 +8,8 @@ export const HOST_OPERATIONS = [
   "system.info",
   "system.sockets",
   "system.network",
+  "system.storage",
+  "system.services",
   "logs.query",
   "disk.usage",
   "integration.list",
@@ -39,6 +41,8 @@ export const HOST_OPERATION_CAPABILITY: Readonly<Record<HostOperation, string>> 
   "system.info": "system:metrics.read",
   "system.sockets": "system:sockets.read",
   "system.network": "system:network.read",
+  "system.storage": "system:metrics.read",
+  "system.services": "system:services.read",
   "logs.query": "logs:read",
   "disk.usage": "storage:usage.read",
   // Any `integration:<adapter>` the app holds; the server checks each integration's adapter.
@@ -410,16 +414,204 @@ export type IntegrationData =
   | { status: "unavailable"; reason: string; at: number }
   | { status: "error"; code: string; at: number };
 
+/* ------------------------------------------------------------------ system (read-only) */
+
+/**
+ * Where a figure comes from: the machine EveryOS runs on, or (development installations only)
+ * EveryOS's simulator. Apps show simulated data as such.
+ */
+export type SystemDataSource = "host" | "simulated";
+
+export interface SystemMetricsPoint {
+  at: number;
+  cpuPercent: number | null;
+  memoryUsedBytes: number | null;
+  memoryTotalBytes: number | null;
+  swapUsedBytes: number | null;
+  swapTotalBytes: number | null;
+  load1: number | null;
+  netRxBytesPerSec: number | null;
+  netTxBytesPerSec: number | null;
+  diskReadBytesPerSec: number | null;
+  diskWriteBytesPerSec: number | null;
+  temperatureC: number | null;
+}
+
+/** The latest measurement (null: not measurable on this machine). */
+export interface SystemMetrics {
+  source: SystemDataSource;
+  point: SystemMetricsPoint;
+  uptimeSeconds: number;
+  load: [number, number, number] | null;
+  cpuCores: number[] | null;
+  cpuFrequencyMHz: number[] | null;
+  interfaces: Array<{ name: string; rxBytesPerSec: number; txBytesPerSec: number }> | null;
+  disks: Array<{
+    name: string;
+    readBytesPerSec: number;
+    writeBytesPerSec: number;
+    busyPercent: number;
+  }> | null;
+  thermal: Array<{ zone: string; type: string; celsius: number }> | null;
+  fans: Array<{ name: string; rpm: number }> | null;
+}
+
+/** What EveryOS can read on this machine, and why not when it cannot. */
+export interface SystemCapabilityStatus {
+  available: boolean;
+  reason?:
+    | "not-linux"
+    | "not-detected"
+    | "socket-missing"
+    | "permission-denied"
+    | "unsupported-hardware"
+    | "tool-missing"
+    | undefined;
+  simulated?: true | undefined;
+}
+
+export interface SystemInfo {
+  source: SystemDataSource;
+  hostname: string;
+  platform: string;
+  arch: string;
+  kernel: string;
+  os: { id: string | null; name: string; version: string | null; prettyName: string };
+  cpu: { model: string; cores: number };
+  memory: { totalBytes: number };
+  uptimeSeconds: number;
+  /** Milliseconds since the epoch. */
+  bootTime: number;
+  hardware: { model: string | null; isRaspberryPi: boolean };
+  capabilities: Record<
+    "procfs" | "systemd" | "journald" | "docker" | "tailscale" | "thermal" | "raspberryPi",
+    SystemCapabilityStatus
+  >;
+  collectedAt: number;
+}
+
+export interface SystemSockets {
+  source: SystemDataSource;
+  /** At most 2,000 listening sockets. */
+  listening: Array<{
+    protocol: "tcp" | "udp";
+    address: string;
+    port: number;
+    /** The program, when EveryOS may see it. */
+    process: string | null;
+  }>;
+  connections: { established: number; timeWait: number; other: number };
+}
+
+export interface SystemNetwork {
+  source: SystemDataSource;
+  interfaces: Array<{
+    name: string;
+    kind: "ethernet" | "wireless" | "loopback" | "tailscale" | "bridge" | "virtual" | "other";
+    up: boolean;
+    mac: string | null;
+    mtu: number | null;
+    speedMbps: number | null;
+    addresses: Array<{ family: "ipv4" | "ipv6"; address: string; prefix: number }>;
+  }>;
+  gateways: Array<{ interface: string; address: string; family: "ipv4" | "ipv6" }>;
+  dns: string[];
+  internet: {
+    state: "online" | "offline" | "unknown" | "disabled";
+    checkedAt: number | null;
+    latencyMs: number | null;
+  };
+}
+
+/** Mounted file systems and how full they are. */
+export interface SystemStorage {
+  source: SystemDataSource;
+  mounts: Array<{
+    device: string;
+    mountpoint: string;
+    fsType: string;
+    readOnly: boolean;
+    totalBytes: number;
+    usedBytes: number;
+    availableBytes: number;
+    inodesTotal: number;
+    inodesFree: number;
+  }>;
+}
+
+/** systemd services (read-only: apps never start or stop them). */
+export interface SystemServices {
+  source: SystemDataSource;
+  units: Array<{
+    name: string;
+    description: string;
+    /** `loaded`, `not-found` … */
+    load: string;
+    /** `active`, `inactive`, `failed`, `activating` … */
+    active: string;
+    /** `running`, `exited`, `dead` … */
+    sub: string;
+    unitFileState: string | null;
+    protected: boolean;
+  }>;
+}
+
+/** A journal query: newest first, `before` continues towards older entries. */
+export interface LogQuery {
+  unit?: string;
+  /** This priority and everything more severe: 0 emerg … 3 err, 4 warning … 7 debug. */
+  priority?: number;
+  since?: number;
+  until?: number;
+  /** Text the message contains. */
+  grep?: string;
+  /** 1–1,000 (default 200). */
+  limit?: number;
+  before?: string;
+}
+
+export interface LogEntry {
+  cursor: string;
+  ts: number;
+  priority: number;
+  unit: string | null;
+  identifier: string | null;
+  pid: number | null;
+  hostname: string | null;
+  message: string;
+}
+
+export interface LogPage {
+  source: SystemDataSource;
+  entries: LogEntry[];
+  hasMore: boolean;
+}
+
+/** Sizes inside a folder the person shared with the app (bounded in entries, depth and time). */
+export interface DiskUsage {
+  total: number;
+  files: number;
+  folders: number;
+  /** Not every entry was measured (limits reached, or folders that could not be read). */
+  truncated: boolean;
+  children: Array<{ name: string; kind: "file" | "directory"; size: number; items: number }>;
+  largest: Array<{ path: string; size: number }>;
+  types: Array<{ extension: string; count: number; size: number }>;
+}
+
 /* ------------------------------------------------------------------ typed operations */
 
-/** Input and result of each operation (unknown where the app reads EveryOS's own shapes). */
+/** Input and result of each operation. */
 export interface HostOperations {
-  "system.metrics": { input: null; result: unknown };
-  "system.info": { input: null; result: unknown };
-  "system.sockets": { input: null; result: unknown };
-  "system.network": { input: null; result: unknown };
-  "logs.query": { input: unknown; result: unknown };
-  "disk.usage": { input: { handle: string; path?: string }; result: unknown };
+  "system.metrics": { input: null; result: SystemMetrics };
+  "system.info": { input: null; result: SystemInfo };
+  "system.sockets": { input: null; result: SystemSockets };
+  "system.network": { input: null; result: SystemNetwork };
+  "system.storage": { input: null; result: SystemStorage };
+  "system.services": { input: null; result: SystemServices };
+  "logs.query": { input: LogQuery; result: LogPage };
+  /** `handle`: a folder the person shared with the app (`files.open({ directory: true })`). */
+  "disk.usage": { input: { handle: string; path?: string }; result: DiskUsage };
   "integration.list": { input: null; result: { integrations: IntegrationInfo[] } };
   "integration.data": { input: { integration: string; feed: string }; result: IntegrationData };
   "net.http": { input: NetHttpRequest; result: NetHttpResponse };

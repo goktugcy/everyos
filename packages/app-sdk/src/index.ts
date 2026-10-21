@@ -34,6 +34,7 @@ export type {
   DbQueryResult,
   DbTable,
   DirectoryEntry,
+  DiskUsage,
   DnsRecord,
   DnsRecordType,
   FileHandle,
@@ -45,6 +46,9 @@ export type {
   HttpMethod,
   IntegrationData,
   IntegrationInfo,
+  LogEntry,
+  LogPage,
+  LogQuery,
   NetDnsQuery,
   NetDnsResult,
   NetFailure,
@@ -59,6 +63,15 @@ export type {
   NotificationLevel,
   SshKey,
   SshKeyType,
+  SystemCapabilityStatus,
+  SystemDataSource,
+  SystemInfo,
+  SystemMetrics,
+  SystemMetricsPoint,
+  SystemNetwork,
+  SystemServices,
+  SystemSockets,
+  SystemStorage,
   ThemeSnapshot,
   TlsCertificate,
   WindowState,
@@ -459,8 +472,9 @@ function build(connection: Connection): EveryOSApp {
       onChange: (listener) => on("permissions.changed", () => listener(granted)),
     },
     host: {
+      // The server answers with the operation's result type (sdk-host-routes is typed by it).
       call: <O extends HostOperation>(operation: O, input: HostInput<O> | null = null) =>
-        request("host.call", { operation, input }),
+        request("host.call", { operation, input }) as Promise<HostResult<O>>,
     },
   };
 }

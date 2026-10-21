@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import {
   HOST_OPERATION_CAPABILITY,
+  type DiskUsage,
   type HostOperation,
   type HostResult,
 } from "@everyos/app-sdk/protocol";
@@ -48,16 +49,6 @@ const NOTIFY_PER_DAY = 200;
 const DISK_LIMITS = { entries: 50_000, depth: 32, ms: 15_000, largest: 50 };
 /** A refused network target is audited once per app, target and period. */
 const REFUSAL_AUDIT_MS = 10 * 60_000;
-
-interface DiskUsage {
-  total: number;
-  files: number;
-  folders: number;
-  truncated: boolean;
-  children: Array<{ name: string; kind: "file" | "directory"; size: number; items: number }>;
-  largest: Array<{ path: string; size: number }>;
-  types: Array<{ extension: string; count: number; size: number }>;
-}
 
 /**
  * Sizes inside a folder the person shared with the app: per child, the largest files and file
@@ -228,6 +219,8 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     "system.info": (c) => callAgent(c, services, "system.info", {}),
     "system.sockets": (c) => callAgent(c, services, "network.sockets", {}),
     "system.network": (c) => callAgent(c, services, "network.status", {}),
+    "system.storage": (c) => callAgent(c, services, "storage.usage", {}),
+    "system.services": (c) => callAgent(c, services, "services.list", {}),
     "logs.query": (c, _call, input) =>
       callAgent(c, services, "logs.query", LogQuerySchema.parse(input ?? {})),
     "disk.usage": async (c, call, input) => {

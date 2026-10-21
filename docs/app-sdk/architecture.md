@@ -109,9 +109,10 @@ activation propagates to ancestors).
 | `notifications:send`        | app notifications, rate-limited, per-app user preferences     | —                            |
 | `clipboard:write`           | user-initiated copy                                           | —                            |
 | `widgets:register`          | the widgets declared in the manifest                          | —                            |
-| `system:metrics.read`       | metrics, uptime, storage summary (existing data hub topics)   | `system:read`                |
+| `system:metrics.read`       | metrics, system information, mounted file systems             | `system:read`                |
 | `system:sockets.read`       | listening sockets (`network.sockets`)                         | `system:read`                |
 | `system:network.read`       | interfaces, routes, DNS configuration                         | `system:read`                |
+| `system:services.read`      | systemd services and their state (never control)              | `services:read`              |
 | `logs:read`                 | journald via the existing logs API                            | `logs:read`                  |
 | `storage:usage.read`        | bounded directory sizes inside the user's file roots          | `files:read`                 |
 | `appearance:manage`         | the person's wallpapers and folder icons (images and choices) | `preferences:manage`         |
@@ -242,3 +243,21 @@ CI adds SDK, package, registry, security and per-app test jobs on amd64 and arm6
 validates all 33 packages, and writes a machine-readable release report (app, id, version,
 checksum, manifest, build, tests, localization completeness, permission review). The release fails
 if any official app is missing, broken, incompatible or unsigned.
+
+## Host data operations
+
+Read-only, typed in `@everyos/app-sdk` (`HostOperations`):
+
+| Operation         | Capability             | Result                                                                |
+| ----------------- | ---------------------- | --------------------------------------------------------------------- |
+| `system.metrics`  | `system:metrics.read`  | `SystemMetrics`: CPU, memory, load, network and disk rates, sensors   |
+| `system.info`     | `system:metrics.read`  | `SystemInfo`: host, OS, CPU, uptime, boot time, what can be measured  |
+| `system.storage`  | `system:metrics.read`  | `SystemStorage`: mounted file systems, size, use and inodes           |
+| `system.sockets`  | `system:sockets.read`  | `SystemSockets`: listening TCP/UDP sockets and the programs behind    |
+| `system.network`  | `system:network.read`  | `SystemNetwork`: interfaces, addresses, gateways, DNS, internet state |
+| `system.services` | `system:services.read` | `SystemServices`: systemd services and their active state             |
+| `logs.query`      | `logs:read`            | `LogPage` for a `LogQuery` (unit, priority, time, text, paging)       |
+| `disk.usage`      | `storage:usage.read`   | `DiskUsage` inside a folder the person shared with the app            |
+
+Every result says whether it was read from the machine (`source: "host"`) or, on development
+installations, simulated (`"simulated"`); apps show the difference.

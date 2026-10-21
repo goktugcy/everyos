@@ -4217,6 +4217,10 @@ export const it: LocaleMessages = {
         title: "Vedere le impostazioni di rete",
         description: "Legge interfacce di rete, indirizzi, instradamenti e server dei nomi.",
       },
+      system_services_read: {
+        title: "Vedere i servizi di sistema",
+        description: "Legge quali servizi sono attivi sul server e se qualcuno ha avuto un errore.",
+      },
       logs_read: { title: "Leggere i log di sistema", description: "Legge il journal di sistema." },
       storage_usage_read: {
         title: "Misurare le dimensioni delle cartelle",

@@ -1090,7 +1090,28 @@ describe("app notifications and host data", () => {
     const viewerToken = await open(viewer);
     expect((await host(viewer, viewerToken, "logs.query", { limit: 5 })).status).toBe(403);
     expect((await host(viewer, viewerToken, "system.metrics")).status).toBe(200);
+    // File systems come with the system status; services need their own capability.
+    const storage = await json<{ result: { mounts: Array<{ mountpoint: string }> } }>(
+      await host(admin, token, "system.storage"),
+    );
+    expect(storage.result.mounts.length).toBeGreaterThan(0);
+    expect((await host(admin, token, "system.services")).status).toBe(403);
     expect(ctx).toBeDefined();
+  });
+
+  it("lists services read-only for apps holding system:services.read", async () => {
+    const { admin, open } = await withApp(["system:services.read"], ["system:services.read"]);
+    const token = await open(admin);
+    const response = await admin.request("POST", "/api/app-sdk/host/system.services", {
+      body: { input: null },
+      ...as(token),
+    });
+    expect(response.status).toBe(200);
+    const { result } = await json<{
+      result: { source: string; units: Array<{ name: string; active: string }> };
+    }>(response);
+    expect(result.units.length).toBeGreaterThan(0);
+    expect(result.units[0]).toHaveProperty("active");
   });
 
   it("sizes a shared folder without following links", async () => {

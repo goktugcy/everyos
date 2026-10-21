@@ -3981,6 +3981,10 @@ export const zh: LocaleMessages = {
         title: "查看网络设置",
         description: "读取网络接口、地址、路由和域名服务器。",
       },
+      system_services_read: {
+        title: "查看系统服务",
+        description: "读取服务器上运行的服务以及是否有服务失败。",
+      },
       logs_read: { title: "读取系统日志", description: "读取系统日志。" },
       storage_usage_read: { title: "测量文件夹大小", description: "测量你与它共享的文件夹大小。" },
       network_outbound: {

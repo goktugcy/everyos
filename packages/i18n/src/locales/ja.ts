@@ -4181,6 +4181,10 @@ export const ja: LocaleMessages = {
         title: "ネットワーク設定を見る",
         description: "ネットワークインターフェイス、アドレス、経路、ネームサーバーを読み取ります。",
       },
+      system_services_read: {
+        title: "システムサービスの表示",
+        description: "サーバーで動作しているサービスと、失敗したサービスがあるかを読み取ります。",
+      },
       logs_read: { title: "システムログを読む", description: "システムジャーナルを読み取ります。" },
       storage_usage_read: {
         title: "フォルダーのサイズを測る",

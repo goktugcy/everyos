@@ -4217,6 +4217,10 @@ export const de: LocaleMessages = {
         title: "Netzwerkeinstellungen sehen",
         description: "Liest Netzwerkschnittstellen, Adressen, Routen und Namensserver.",
       },
+      system_services_read: {
+        title: "Systemdienste sehen",
+        description: "Liest, welche Dienste auf dem Server laufen und ob einer fehlgeschlagen ist.",
+      },
       logs_read: { title: "Systemprotokolle lesen", description: "Liest das Systemjournal." },
       storage_usage_read: {
         title: "Ordnergrößen messen",
