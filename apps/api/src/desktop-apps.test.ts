@@ -148,6 +148,7 @@ async function buildApp(
     await writeFile(join(dir, path), content);
   }
   const { bytes, manifest: parsed } = await packDirectory(dir);
+  await rm(dir, { recursive: true, force: true });
   const digest = { appId: id, version, sha256: sha256Hex(bytes), size: bytes.length };
   return {
     bytes,

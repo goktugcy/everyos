@@ -219,7 +219,7 @@ export class FakeAgent implements AgentGateway {
   readonly apt = createAptSimulator(() => this.now());
   /** Disks, answered by the development simulator under a throwaway mount root. */
   readonly disks = createDiskSimulator({
-    mountRoot: mkdtempSync(join(tmpdir(), "everyos-disks-")),
+    mountRoot: temporaryDir("everyos-disks-"),
   });
 
   #defaults(op: string, params: unknown): unknown {
@@ -501,13 +501,13 @@ export interface TestContext {
   readSetupToken(): string;
 }
 
-/** The test file's installations (each holds a database), removed after its tests. */
+/** The test file's installations (each holds a database) and disk mount roots, removed after its tests. */
 const testDirs: string[] = [];
 afterAll(() => {
   for (const dir of testDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
-function temporaryDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));
+function temporaryDir(prefix = "everyos-api-"): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
   testDirs.push(dir);
   return dir;
 }
