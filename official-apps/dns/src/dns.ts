@@ -158,6 +158,7 @@ export function readHistory(value: unknown): HistoryEntry[] {
       v.port > 65535 ||
       typeof v.at !== "number" ||
       !Number.isFinite(v.at) ||
+      Number.isNaN(new Date(v.at).getTime()) ||
       v.at < 0
     )
       return [];

@@ -149,6 +149,7 @@ describe("DNS persistence", () => {
         {},
         null,
         { ...entry, at: Infinity },
+        { ...entry, at: 9e15 },
         { ...entry, types: ["INVALID"] },
         { ...entry, server: "example.com" },
         { ...entry, port: 65536 },

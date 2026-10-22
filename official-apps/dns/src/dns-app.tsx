@@ -87,7 +87,7 @@ export function DnsApp() {
       saved?.types ?? (settings.type === "common" ? [...COMMON_TYPES] : [settings.type]);
     const normalized = normalizeName(saved?.name ?? settings.name, types[0]!);
     if ("problem" in normalized) {
-      setProblem(t(`validation.${normalized.problem}`));
+      setProblem(`validation.${normalized.problem}`);
       return;
     }
     const server = saved
@@ -99,11 +99,11 @@ export function DnsApp() {
           : (PUBLIC_SERVERS.find((s) => s.id === settings.server)?.address ?? null);
     const port = saved?.port ?? (settings.server === "custom" ? Number(settings.port) : 53);
     if (server !== null && !isIp(server)) {
-      setProblem(t("validation.server"));
+      setProblem("validation.server");
       return;
     }
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
-      setProblem(t("validation.port"));
+      setProblem("validation.port");
       return;
     }
     if (saved)
@@ -158,8 +158,12 @@ export function DnsApp() {
     }
   };
   const clearHistory = async () => {
-    if (await app.dialogs.confirm(t("history.clear"), t("ui.deleteBody"), { destructive: true }))
-      saveHistory([]);
+    try {
+      if (await app.dialogs.confirm(t("history.clear"), t("ui.deleteBody"), { destructive: true }))
+        saveHistory([]);
+    } catch (error) {
+      fail(error);
+    }
   };
   const storageError = settingsState.error ?? historyState.error;
   if (!settingsState.loaded || !historyState.loaded) return <LoadingState />;
@@ -258,7 +262,7 @@ export function DnsApp() {
           ) : null}
           {problem ? (
             <p role="alert" className="eui-error-text">
-              {problem}
+              {t(problem)}
             </p>
           ) : null}
           {busy ? (

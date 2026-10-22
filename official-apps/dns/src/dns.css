@@ -12,7 +12,7 @@
   padding: 16px;
 }
 .dns-history {
-  border-left: 1px solid var(--eui-border);
+  border-left: 1px solid var(--eui-line);
 }
 .dns-form {
   display: flex;
@@ -41,7 +41,7 @@
   gap: 8px;
   padding: 12px;
   background: var(--eui-surface);
-  border: 1px solid var(--eui-border);
+  border: 1px solid var(--eui-line);
   border-radius: var(--eui-radius-md);
 }
 .dns-count {
@@ -57,7 +57,7 @@
 .dns-bar {
   flex: 1;
   height: 8px;
-  background: var(--eui-border);
+  background: var(--eui-line);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -68,7 +68,7 @@
 }
 .dns-answer {
   min-width: 0;
-  border: 1px solid var(--eui-border);
+  border: 1px solid var(--eui-line);
   border-radius: var(--eui-radius-md);
   padding: 12px;
 }
@@ -103,7 +103,7 @@
   }
   .dns-history {
     border-left: 0;
-    border-top: 1px solid var(--eui-border);
+    border-top: 1px solid var(--eui-line);
   }
   .dns-form > .eui-field {
     flex: 1 1 140px;

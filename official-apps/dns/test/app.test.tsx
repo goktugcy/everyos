@@ -45,6 +45,13 @@ async function start(options: MockHostOptions = {}) {
 }
 
 describe("DNS Lookup", () => {
+  it("retranslates a validation error when the desktop language changes", async () => {
+    const { host } = await start();
+    await click("Look up");
+    expect(byRole("alert")?.textContent).toBe("Enter a name to look up.");
+    host.setLocale("tr");
+    await vi.waitFor(() => expect(byRole("alert")?.textContent).toBe("Sorgulanacak bir ad girin."));
+  });
   it("queries common records serially, shows real results and timing, copies and restores history", async () => {
     const asked: NetDnsQuery[] = [];
     let inFlight = 0;
