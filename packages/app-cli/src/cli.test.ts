@@ -87,14 +87,32 @@ describe("create-everyos-app and everyos-app", () => {
       await run(join(dir, "node_modules/typescript/bin/tsc"), ["-p", "tsconfig.json"], {
         cwd: dir,
       });
-      const tests = await run(
+      const reportFile = join(dir, "test-report.json");
+      await run(
         process.execPath,
-        [join(dir, "node_modules/vitest/vitest.mjs"), "run", "--root", dir],
+        [
+          join(dir, "node_modules/vitest/vitest.mjs"),
+          "run",
+          "--root",
+          dir,
+          "--reporter=json",
+          `--outputFile=${reportFile}`,
+        ],
         { cwd: dir },
       ).catch((error: { stdout: string; stderr: string }) => {
         throw new Error(`${error.stdout}\n${error.stderr}`);
       });
-      expect(tests.stdout).toMatch(/Tests\s+\d+ passed/);
+      // Human-readable output differs between CI reporters and terminals.
+      const report = JSON.parse(readFileSync(reportFile, "utf8")) as {
+        success: boolean;
+        numPassedTests: number;
+        numFailedTests: number;
+        numFailedTestSuites: number;
+      };
+      expect(report.success).toBe(true);
+      expect(report.numPassedTests).toBeGreaterThan(0);
+      expect(report.numFailedTests).toBe(0);
+      expect(report.numFailedTestSuites).toBe(0);
     },
     120_000,
   );
