@@ -156,6 +156,26 @@ describe("the mock host", () => {
     ).rejects.toMatchObject({ code: "EVERYOS_MOCK_UNANSWERED" });
   });
 
+  it("preserves a host responder's bridge error code and details", async () => {
+    const { BridgeError } = await import("@everyos/app-sdk");
+    const details = { host: "1.1.1.1", port: 53, reason: "no-rule" };
+    const { app } = await start({
+      granted: ["network:outbound"],
+      host: {
+        "net.dns": () => {
+          throw new BridgeError("DESKTOP_APP_NETWORK_BLOCKED", "Blocked", details);
+        },
+      },
+    });
+    await expect(
+      app.host.call("net.dns", { name: "example.com", type: "A" }),
+    ).rejects.toMatchObject({
+      code: "DESKTOP_APP_NETWORK_BLOCKED",
+      message: "Blocked",
+      details,
+    });
+  });
+
   it("keeps widgets to what widgets can do", async () => {
     const { app } = await start({ kind: "widget", widgetId: "timer", granted: ["files:pick"] });
     expect(app.instance).toMatchObject({ kind: "widget", widgetId: "timer" });

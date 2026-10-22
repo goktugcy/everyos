@@ -75,3 +75,8 @@ any installed app: in EveryOS's sandbox, with the permissions people approve, it
 database access governed by the administrator's policies. Development mode bypasses nothing.
 
 Development registries cannot carry ids in EveryOS's reserved namespaces (`dev.everyos.*`).
+
+Host responders can throw `BridgeError` from `@everyos/app-sdk` to simulate server errors,
+including the original `code` and `details` (for example a blocked network target). Ordinary
+exceptions remain generic mock validation failures. This tests app recovery through the bridge;
+it does not verify the production policy, which still needs API and browser tests.

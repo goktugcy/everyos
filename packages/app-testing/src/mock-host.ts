@@ -133,7 +133,7 @@ export interface MockHostOptions {
   /** Answers of dialogs; default: confirm → true, prompt → the given value. */
   confirm?: (request: Params<"dialog.confirm">) => boolean | Promise<boolean>;
   prompt?: (request: Params<"dialog.prompt">) => string | null | Promise<string | null>;
-  /** Answers of `host.call` operations; others report that the mock was not given one. */
+  /** Answers of `host.call`; throw BridgeError to simulate a server refusal, with its details. */
   host?: Partial<Record<HostOperation, HostResponder>>;
   storage?: Record<string, unknown>;
   /** Persistent file handles from an earlier session (see `MockHost.persistentHandles()`). */
@@ -413,7 +413,12 @@ export class MockHost {
       const refusal =
         error instanceof Refusal
           ? error
-          : new Refusal(BRIDGE_ERRORS.invalid, error instanceof Error ? error.message : "Failed");
+          : error instanceof Error &&
+              error.name === "BridgeError" &&
+              "code" in error &&
+              typeof error.code === "string"
+            ? new Refusal(error.code, error.message, "details" in error ? error.details : undefined)
+            : new Refusal(BRIDGE_ERRORS.invalid, error instanceof Error ? error.message : "Failed");
       this.calls.push({ method, params, ok: false, error: refusal.code });
       this.#port?.postMessage({
         kind: "response",
