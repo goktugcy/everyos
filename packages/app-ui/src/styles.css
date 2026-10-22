@@ -218,7 +218,7 @@ body {
   white-space: nowrap;
   transition: background 120ms ease;
 }
-.eui-button:hover:not(:disabled) {
+.eui-button:hover:not(:disabled):not([data-variant="primary"]):not([data-variant="danger"]) {
   background: var(--eui-hover-strong);
 }
 .eui-button:disabled {
