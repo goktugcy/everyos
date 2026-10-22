@@ -3,6 +3,7 @@ import {
   Button,
   IconButton,
   ListItem,
+  LoadingState,
   Select,
   Spacer,
   Switch,
@@ -10,6 +11,7 @@ import {
   Toolbar,
   ToolbarTitle,
   errorMessage,
+  ErrorState,
   saveTextFile,
   useApp,
   useI18n,
@@ -57,13 +59,13 @@ export function CronApp() {
   const i18n = useI18n();
   const toast = useToast();
   const narrow = useNarrow(860);
-  const [state, setState] = usePersistentState<State>("state", {
+  const [state, setState, stateStatus] = usePersistentState<State>("state", {
     expression: "0 9 * * 1-5",
     seconds: false,
     timeZone: localTimeZone(),
     command: "",
   });
-  const [saved, setSaved] = usePersistentState<Saved[]>("saved", []);
+  const [saved, setSaved, savedStatus] = usePersistentState<Saved[]>("saved", []);
   const [name, setName] = useState("");
   const zones = useMemo(timeZones, []);
 
@@ -131,8 +133,14 @@ export function CronApp() {
     ? `[Unit]\nDescription=${state.command.trim() || t("export.defaultDescription")}\n\n[Timer]\n${onCalendar.map((line) => `OnCalendar=${line}`).join("\n")}\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n`
     : "";
 
+  // An edit made before hydration would use the machine's zone, replacing the saved one.
+  if (!stateStatus.loaded || !savedStatus.loaded) return <LoadingState />;
+
   return (
     <div className="cron-app">
+      {stateStatus.error || savedStatus.error ? (
+        <ErrorState error={stateStatus.error ?? savedStatus.error} />
+      ) : null}
       <Toolbar label={t("app.name")}>
         <ToolbarTitle>{t("app.name")}</ToolbarTitle>
         <Spacer />
