@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "Recherche DNS",
+    "description": "Enregistrements DNS, délais, résolveurs et historique des requêtes."
+  },
+  "query": {
+    "name": "Nom ou adresse IP pour PTR",
+    "type": "Type d’enregistrement",
+    "common": "Types courants",
+    "server": "Résolveur",
+    "system": "Par défaut du serveur",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "Serveur personnalisé",
+    "address": "Adresse IP du résolveur",
+    "port": "Port DNS",
+    "run": "Rechercher",
+    "working": "Recherche en cours…",
+    "systemHint": "Les requêtes utilisent les résolveurs DNS configurés sur ce serveur.",
+    "policyHint": "Un administrateur doit autoriser l’adresse et le port du résolveur dans la politique réseau de l’app."
+  },
+  "validation": {
+    "empty": "Saisissez un nom à rechercher.",
+    "tooLong": "Le nom DNS est trop long (253 caractères ASCII au maximum).",
+    "invalid": "Saisissez un nom DNS valide, sans URL, chemin ni port.",
+    "needsAddress": "Choisissez PTR pour rechercher une adresse IP.",
+    "server": "Saisissez une adresse IP de résolveur valide.",
+    "port": "Saisissez un port entre 1 et 65535."
+  },
+  "results": {
+    "empty": "Rechercher des enregistrements DNS",
+    "emptyHint": "Saisissez un nom, choisissez un type et un résolveur, puis lancez la recherche.",
+    "overview": "Enregistrements par type",
+    "timing": "{{ms}} ms",
+    "servers": "Résolveurs : {{servers}}",
+    "records": "Enregistrements {{type}}",
+    "value": "Valeur",
+    "ttl": "TTL",
+    "unavailable": "Non renvoyé",
+    "copyAll": "Copier tous les résultats"
+  },
+  "status": {
+    "ok": "Réponse reçue",
+    "no-data": "Aucun enregistrement de ce type",
+    "not-found": "Nom introuvable",
+    "refused": "Le résolveur a refusé la requête",
+    "server-failure": "Échec du résolveur",
+    "timeout": "Délai dépassé",
+    "error": "Échec de la requête"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "Vérification"
+  },
+  "history": {
+    "title": "Historique",
+    "clear": "Effacer l’historique DNS ?",
+    "empty": "Les requêtes terminées s’affichent ici. Sélectionnez-en une pour la relancer."
+  }
+}

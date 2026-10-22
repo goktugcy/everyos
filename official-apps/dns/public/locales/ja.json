@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "DNS 検索",
+    "description": "DNS レコード、応答時間、リゾルバー、検索履歴。"
+  },
+  "query": {
+    "name": "名前（PTR は IP アドレスも可）",
+    "type": "レコード種別",
+    "common": "主な種別",
+    "server": "リゾルバー",
+    "system": "サーバーの既定値",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "カスタムサーバー",
+    "address": "リゾルバーの IP アドレス",
+    "port": "DNS ポート",
+    "run": "検索",
+    "working": "検索中…",
+    "systemHint": "このサーバーに設定された DNS リゾルバーを使います。",
+    "policyHint": "管理者がアプリのネットワークポリシーでこのリゾルバーのアドレスとポートを許可する必要があります。"
+  },
+  "validation": {
+    "empty": "検索する名前を入力してください。",
+    "tooLong": "DNS 名が長すぎます（ASCII で最大253文字）。",
+    "invalid": "URL、パス、ポートを含まない有効な DNS 名を入力してください。",
+    "needsAddress": "IP アドレスを調べる場合は PTR を選んでください。",
+    "server": "有効なリゾルバーの IP アドレスを入力してください。",
+    "port": "1～65535 のポートを入力してください。"
+  },
+  "results": {
+    "empty": "DNS レコードを検索",
+    "emptyHint": "名前、レコード種別、リゾルバーを指定して検索します。",
+    "overview": "種別ごとのレコード",
+    "timing": "{{ms}} ミリ秒",
+    "servers": "リゾルバー: {{servers}}",
+    "records": "{{type}} レコード",
+    "value": "値",
+    "ttl": "TTL",
+    "unavailable": "応答に含まれません",
+    "copyAll": "すべての結果をコピー"
+  },
+  "status": {
+    "ok": "応答あり",
+    "no-data": "この種別のレコードはありません",
+    "not-found": "名前が見つかりません",
+    "refused": "リゾルバーが検索を拒否しました",
+    "server-failure": "リゾルバーエラー",
+    "timeout": "検索がタイムアウトしました",
+    "error": "検索に失敗しました"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "確認"
+  },
+  "history": {
+    "title": "履歴",
+    "clear": "DNS 履歴を消去しますか？",
+    "empty": "完了した検索がここに表示されます。選択すると再検索できます。"
+  }
+}

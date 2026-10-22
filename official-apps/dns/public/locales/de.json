@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "DNS-Abfrage",
+    "description": "DNS-Einträge, Antwortzeiten, Resolver und Abfrageverlauf."
+  },
+  "query": {
+    "name": "Name oder IP-Adresse für PTR",
+    "type": "Eintragstyp",
+    "common": "Gängige Typen",
+    "server": "Resolver",
+    "system": "Serverstandard",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "Eigener Server",
+    "address": "IP-Adresse des Resolvers",
+    "port": "DNS-Port",
+    "run": "Abfragen",
+    "working": "Abfrage läuft…",
+    "systemHint": "Abfragen nutzen die DNS-Resolver dieses Servers.",
+    "policyHint": "Eine Administration muss Adresse und Port dieses Resolvers in der Netzwerkrichtlinie der App erlauben."
+  },
+  "validation": {
+    "empty": "Bitte einen Namen eingeben.",
+    "tooLong": "Der DNS-Name ist zu lang (höchstens 253 ASCII-Zeichen).",
+    "invalid": "Einen gültigen DNS-Namen ohne URL, Pfad oder Port eingeben.",
+    "needsAddress": "Für eine IP-Adresse PTR wählen.",
+    "server": "Eine gültige Resolver-IP-Adresse eingeben.",
+    "port": "Einen Port von 1 bis 65535 eingeben."
+  },
+  "results": {
+    "empty": "DNS-Einträge abfragen",
+    "emptyHint": "Namen eingeben, Eintragstyp und Resolver wählen und abfragen.",
+    "overview": "Einträge nach Typ",
+    "timing": "{{ms}} ms",
+    "servers": "Resolver: {{servers}}",
+    "records": "{{type}}-Einträge",
+    "value": "Wert",
+    "ttl": "TTL",
+    "unavailable": "Nicht übermittelt",
+    "copyAll": "Alle Ergebnisse kopieren"
+  },
+  "status": {
+    "ok": "Beantwortet",
+    "no-data": "Keine Einträge dieses Typs",
+    "not-found": "Name nicht gefunden",
+    "refused": "Resolver hat die Abfrage abgelehnt",
+    "server-failure": "Resolverfehler",
+    "timeout": "Zeitüberschreitung",
+    "error": "Abfrage fehlgeschlagen"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "Verifizierung"
+  },
+  "history": {
+    "title": "Verlauf",
+    "clear": "DNS-Verlauf löschen?",
+    "empty": "Abgeschlossene Abfragen erscheinen hier. Zum Wiederholen auswählen."
+  }
+}

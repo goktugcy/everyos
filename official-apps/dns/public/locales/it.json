@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "Ricerca DNS",
+    "description": "Record DNS, tempi, resolver e cronologia delle query."
+  },
+  "query": {
+    "name": "Nome o indirizzo IP per PTR",
+    "type": "Tipo di record",
+    "common": "Tipi comuni",
+    "server": "Resolver",
+    "system": "Predefinito del server",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "Server personalizzato",
+    "address": "Indirizzo IP del resolver",
+    "port": "Porta DNS",
+    "run": "Cerca",
+    "working": "Ricerca in corso…",
+    "systemHint": "Le query usano i resolver DNS configurati su questo server.",
+    "policyHint": "Un amministratore deve consentire indirizzo e porta del resolver nei criteri di rete dell’app."
+  },
+  "validation": {
+    "empty": "Inserisci un nome da cercare.",
+    "tooLong": "Il nome DNS è troppo lungo (massimo 253 caratteri ASCII).",
+    "invalid": "Inserisci un nome DNS valido, senza URL, percorso o porta.",
+    "needsAddress": "Scegli PTR per cercare un indirizzo IP.",
+    "server": "Inserisci un indirizzo IP del resolver valido.",
+    "port": "Inserisci una porta da 1 a 65535."
+  },
+  "results": {
+    "empty": "Cerca record DNS",
+    "emptyHint": "Inserisci un nome, scegli tipo di record e resolver, quindi cerca.",
+    "overview": "Record per tipo",
+    "timing": "{{ms}} ms",
+    "servers": "Resolver: {{servers}}",
+    "records": "Record {{type}}",
+    "value": "Valore",
+    "ttl": "TTL",
+    "unavailable": "Non restituito",
+    "copyAll": "Copia tutti i risultati"
+  },
+  "status": {
+    "ok": "Risposta ricevuta",
+    "no-data": "Nessun record di questo tipo",
+    "not-found": "Nome non trovato",
+    "refused": "Il resolver ha rifiutato la query",
+    "server-failure": "Errore del resolver",
+    "timeout": "Tempo scaduto",
+    "error": "Query non riuscita"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "Verifica"
+  },
+  "history": {
+    "title": "Cronologia",
+    "clear": "Cancellare la cronologia DNS?",
+    "empty": "Le query completate appaiono qui. Selezionane una per ripeterla."
+  }
+}

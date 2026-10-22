@@ -74,7 +74,7 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 17  | JWT Inspector    | `dev.everyos.jwt`         | open   |
 | 18  | Color Studio     | `dev.everyos.color`       | open   |
 | 19  | Port Inspector   | `dev.everyos.ports`       | open   |
-| 20  | DNS Lookup       | `dev.everyos.dns`         | open   |
+| 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
 | 21  | SSL Inspector    | `dev.everyos.ssl`         | open   |
 | 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | open   |
 | 23  | Log Viewer       | `dev.everyos.logs`        | open   |
@@ -93,3 +93,23 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 
 Launch time, memory, CPU, network activity and package sizes are measured on the owner's Raspberry
 Pi 5 and an amd64 runner once apps exist; nothing is estimated here.
+
+## Development verification — 2026-10-22
+
+- Baseline before new apps: format, lint, typecheck, 1,184 unit/integration tests, build and the
+  nine foundation/official-app browser tests passed on the development Mac. This is not Linux
+  acceptance or a release qualification.
+- DNS Lookup: 25 logic tests and four interface tests pass (`official-apps/dns/test/`). The
+  package validates with its declared elevated network permission. Its real-browser workflow in
+  `official-apps.spec.ts` uses a loopback UDP DNS fixture: zero queries before policy approval,
+  an actual A answer after approval, immediate-close history persistence, replay with the saved
+  resolver port, and a mobile launch at 390 px without horizontal overflow.
+- Shared kit: all network failure reasons, blocked-target guidance, IPv6 formatting, malformed
+  error details and locale completeness pass in 12 tests (`network.test.ts`). The mock desktop
+  preserves responder error details, covered by a separate regression test.
+- CI already runs the complete browser suite on arm64 and amd64. Its additional plain-HTTP run
+  now explicitly includes `official-apps.spec.ts` too; the hosted run remains to be verified.
+
+“Tested” in the app table records development evidence, not public release approval. The remaining
+apps, signed catalog pipeline, community service, complete reference docs, Linux measurements and
+release evidence are still required. No tag or public release has been created.

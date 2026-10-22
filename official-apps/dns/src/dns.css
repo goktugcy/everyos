@@ -1,0 +1,111 @@
+.dns-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.dns-main,
+.dns-history {
+  overflow: auto;
+  min-width: 0;
+  padding: 16px;
+}
+.dns-history {
+  border-left: 1px solid var(--eui-border);
+}
+.dns-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+.dns-form > .eui-field:first-child {
+  flex: 1 1 240px;
+}
+.dns-meta {
+  font-size: 12px;
+  color: var(--eui-muted);
+  overflow-wrap: anywhere;
+}
+.dns-name {
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+.dns-results {
+  display: grid;
+  gap: 16px;
+}
+.dns-overview {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: var(--eui-surface);
+  border: 1px solid var(--eui-border);
+  border-radius: var(--eui-radius-md);
+}
+.dns-count {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.dns-count strong {
+  width: 52px;
+  font-size: 12px;
+}
+.dns-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--eui-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dns-bar span {
+  display: block;
+  height: 100%;
+  background: var(--eui-accent);
+}
+.dns-answer {
+  min-width: 0;
+  border: 1px solid var(--eui-border);
+  border-radius: var(--eui-radius-md);
+  padding: 12px;
+}
+.dns-answer-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.dns-answer-heading h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.dns-answer-heading > span {
+  font-size: 12px;
+}
+.dns-table {
+  overflow-x: auto;
+}
+.dns-table code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .dns-layout {
+    display: block;
+    overflow: auto;
+  }
+  .dns-main,
+  .dns-history {
+    overflow: visible;
+  }
+  .dns-history {
+    border-left: 0;
+    border-top: 1px solid var(--eui-border);
+  }
+  .dns-form > .eui-field {
+    flex: 1 1 140px;
+  }
+}

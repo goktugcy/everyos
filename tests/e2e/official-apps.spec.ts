@@ -6,6 +6,7 @@ import { capabilityInfo, type AppCapability } from "../../packages/app-manifest/
 import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
 import { makePdf } from "../../official-apps/pdf/test/make-pdf.ts";
 import { signIn } from "./helpers.ts";
+import { startDnsFixture } from "./dns-fixture.ts";
 
 /*
  * EveryOS's official apps (official-apps/*), built and signed into the fixture's official registry,
@@ -508,5 +509,77 @@ test.describe("Whiteboard", () => {
     await picker.getByRole("button", { name: "Kaydet" }).click();
     await expect(frame.getByText("Tahtam.png kaydedildi")).toBeVisible({ timeout: 20_000 });
     expect(problems).toEqual([]);
+  });
+});
+
+test.describe("DNS Lookup", () => {
+  const dnsApp = OFFICIAL.find((app) => app.slug === "dns")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${dnsApp.id}`, { confirm: true });
+  });
+
+  test("queries an approved resolver over UDP, recovers from a blocked target and keeps history", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const dns = await startDnsFixture();
+    try {
+      await install(page, dnsApp);
+      let { window, frame } = await open(page, dnsApp.name, dnsApp.id);
+      await frame
+        .getByRole("textbox", { name: "Ad veya PTR için IP adresi" })
+        .fill("printer.home.arpa");
+      await frame.getByRole("combobox", { name: "Kayıt türü" }).selectOption("A");
+      await frame
+        .getByRole("combobox", { name: "Çözümleyici", exact: true })
+        .selectOption("custom");
+      await frame.getByRole("textbox", { name: "Çözümleyici IP adresi" }).fill("127.0.0.1");
+      await frame.getByRole("spinbutton", { name: "DNS portu" }).fill(String(dns.port));
+      await frame.getByRole("button", { name: "Sorgula", exact: true }).click();
+      await expect(frame.getByRole("alert")).toContainText(`127.0.0.1:${dns.port}`);
+      await expect(frame.getByRole("alert")).toContainText("Uygulama Mağazası");
+      expect(dns.queries).toEqual([]);
+      const rule = await api(page, "POST", "/api/desktop-apps/network-rules", {
+        kind: "cidr",
+        pattern: "127.0.0.1/32",
+        ports: [dns.port],
+        appId: dnsApp.id,
+      });
+      expect(rule.status, rule.text).toBe(201);
+      await frame.getByRole("button", { name: "Sorgula", exact: true }).click();
+      await expect(frame.getByRole("table", { name: "A kayıtları" })).toContainText("192.0.2.40");
+      await expect(frame.getByRole("table", { name: "A kayıtları" })).toContainText("300");
+      expect(dns.queries).toEqual(["printer.home.arpa"]);
+      await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      ({ window, frame } = await open(page, dnsApp.name, dnsApp.id));
+      await expect(frame.getByRole("textbox", { name: "Çözümleyici IP adresi" })).toHaveValue(
+        "127.0.0.1",
+      );
+      await expect(frame.getByRole("spinbutton", { name: "DNS portu" })).toHaveValue(
+        String(dns.port),
+      );
+      await frame.getByRole("button", { name: /printer.home.arpa/ }).click();
+      await expect(frame.getByRole("table", { name: "A kayıtları" })).toContainText("192.0.2.40");
+      expect(dns.queries).toHaveLength(2);
+      await page.setViewportSize({ width: 390, height: 844 });
+      // The responsive host replaces desktop windows with its mobile launcher.
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: dnsApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${dnsApp.id}"]`);
+      await frame.getByRole("button", { name: /printer.home.arpa/ }).click();
+      await expect(frame.getByRole("button", { name: "Sorgula", exact: true })).toBeVisible();
+      await expect(frame.getByRole("table", { name: "A kayıtları" })).toContainText("192.0.2.40");
+      expect(dns.queries).toHaveLength(3);
+      const overflow = await frame
+        .locator(".dns-layout")
+        .evaluate((element) => element.scrollWidth > element.clientWidth);
+      expect(overflow).toBe(false);
+      await page.screenshot({ path: test.info().outputPath("dns-mobile.png") });
+    } finally {
+      await dns.close();
+    }
   });
 });
