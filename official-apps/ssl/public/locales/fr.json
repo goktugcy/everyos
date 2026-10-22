@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "Inspecteur SSL",
+    "description": "Inspectez les certificats TLS, leur expiration, l’identité et les chaînes des cibles autorisées."
+  },
+  "target": {
+    "host": "Nom d’hôte ou adresse IP",
+    "port": "Port TLS",
+    "sni": "Nom du serveur (SNI), facultatif",
+    "hint": "Seules les cibles autorisées par la politique réseau de l’app peuvent être inspectées. Cela ne modifie pas la confiance des certificats.",
+    "inspect": "Inspecter",
+    "working": "Inspection en cours…",
+    "invalid": "Saisissez un hôte ou une IP valide, un port de 1 à 65535 et un nom DNS facultatif. Pas d’URL ni de chemin."
+  },
+  "saved": {
+    "title": "Cibles enregistrées",
+    "save": "Enregistrer la cible",
+    "empty": "Enregistrez une cible pour l’inspecter à nouveau.",
+    "remove": "Supprimer {{target}}",
+    "limit": "50 cibles au maximum. Supprimez-en une avant d’en ajouter."
+  },
+  "result": {
+    "empty": "Inspecter une cible TLS",
+    "trusted": "Chaîne vérifiée",
+    "untrusted": "La chaîne n’a pas pu être vérifiée avec les racines de confiance de ce serveur.",
+    "matches": "Le nom correspond au certificat",
+    "mismatch": "Le certificat ne correspond pas au nom du serveur demandé.",
+    "remote": "Adresse connectée",
+    "protocol": "Protocole",
+    "cipher": "Suite de chiffrement",
+    "alpn": "ALPN",
+    "time": "Temps de réponse",
+    "unavailable": "Indisponible",
+    "chain": "Chaîne de certificats",
+    "noChain": "La cible n’a pas renvoyé de détails sur le certificat."
+  },
+  "cert": {
+    "subject": "Sujet",
+    "issuer": "Émetteur",
+    "sans": "Noms alternatifs (SAN)",
+    "from": "Valide à partir du",
+    "to": "Valide jusqu’au",
+    "serial": "Numéro de série",
+    "fingerprint": "Empreinte SHA-256",
+    "key": "Clé publique",
+    "selfSigned": "Autosigné"
+  },
+  "validity": {
+    "valid": "Dans la période de validité",
+    "expired": "Certificat expiré",
+    "future": "Le certificat n’est pas encore valide",
+    "soon": "Le certificat expire dans les 30 jours"
+  }
+}

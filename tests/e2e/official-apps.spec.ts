@@ -7,6 +7,7 @@ import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
 import { makePdf } from "../../official-apps/pdf/test/make-pdf.ts";
 import { signIn } from "./helpers.ts";
 import { startDnsFixture } from "./dns-fixture.ts";
+import { startTlsFixture } from "./tls-fixture.ts";
 
 /*
  * EveryOS's official apps (official-apps/*), built and signed into the fixture's official registry,
@@ -580,6 +581,89 @@ test.describe("DNS Lookup", () => {
       await page.screenshot({ path: test.info().outputPath("dns-mobile.png") });
     } finally {
       await dns.close();
+    }
+  });
+});
+
+test.describe("SSL Inspector", () => {
+  const sslApp = OFFICIAL.find((app) => app.slug === "ssl")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${sslApp.id}`, { confirm: true });
+  });
+
+  test("inspects a real TLS certificate, distinguishes trust from identity and remembers endpoints", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const tls = await startTlsFixture();
+    try {
+      await install(page, sslApp);
+      const rule = await api(page, "POST", "/api/desktop-apps/network-rules", {
+        kind: "cidr",
+        pattern: "127.0.0.1/32",
+        ports: [tls.port],
+        appId: sslApp.id,
+      });
+      expect(rule.status, rule.text).toBe(201);
+      let { window, frame } = await open(page, sslApp.name, sslApp.id);
+      await frame
+        .getByRole("textbox", { name: "Ana bilgisayar adı veya IP adresi" })
+        .fill("127.0.0.1");
+      await frame.getByRole("spinbutton", { name: "TLS portu" }).fill(String(tls.port));
+      await frame
+        .getByRole("textbox", { name: "Sunucu adı (SNI), isteğe bağlı" })
+        .fill("everyos-ssl-test.home.arpa");
+      await frame.getByRole("button", { name: "İncele", exact: true }).click();
+      await expect(frame.getByText("Ad sertifikayla eşleşiyor", { exact: true })).toBeVisible();
+      await expect(
+        frame.getByText("Zincir, bu sunucunun güvenilen kök sertifikalarıyla doğrulanamadı.", {
+          exact: false,
+        }),
+      ).toBeVisible();
+      await expect(frame.getByText("Kendinden imzalı", { exact: true })).toBeVisible();
+      await expect(
+        frame.getByText("Sertifikanın süresi 30 gün içinde dolacak", { exact: true }),
+      ).toBeVisible();
+      await expect(frame.locator(".ssl-results")).toContainText("DNS:everyos-ssl-test.home.arpa");
+      await expect(frame.locator(".ssl-results")).toContainText(/TLSv1\.[23]/);
+      await expect(
+        frame.locator(".ssl-certificate dd").filter({ hasText: /^[A-F0-9]{2}(:[A-F0-9]{2}){31}$/ }),
+      ).toBeVisible();
+      await frame.getByRole("button", { name: "Hedefi kaydet", exact: true }).click();
+      await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      ({ window, frame } = await open(page, sslApp.name, sslApp.id));
+      await frame
+        .locator(".ssl-endpoint > .eui-item")
+        .filter({ hasText: `127.0.0.1:${tls.port}` })
+        .click();
+      await expect(frame.getByText("Ad sertifikayla eşleşiyor", { exact: true })).toBeVisible();
+      await frame
+        .getByRole("textbox", { name: "Sunucu adı (SNI), isteğe bağlı" })
+        .fill("mismatch.test");
+      await frame.getByRole("button", { name: "İncele", exact: true }).click();
+      await expect(
+        frame.getByText("Sertifika, istenen sunucu adıyla eşleşmiyor.", { exact: true }),
+      ).toBeVisible();
+      await page.screenshot({ path: test.info().outputPath("ssl-desktop.png") });
+      await page.setViewportSize({ width: 360, height: 800 });
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: sslApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${sslApp.id}"]`);
+      await frame
+        .locator(".ssl-endpoint > .eui-item")
+        .filter({ hasText: `127.0.0.1:${tls.port}` })
+        .click();
+      await expect(frame.getByText("Ad sertifikayla eşleşiyor", { exact: true })).toBeVisible();
+      const overflow = await frame
+        .locator(".ssl-layout")
+        .evaluate((element) => element.scrollWidth > element.clientWidth);
+      expect(overflow).toBe(false);
+      await page.screenshot({ path: test.info().outputPath("ssl-mobile.png") });
+    } finally {
+      await tls.close();
     }
   });
 });

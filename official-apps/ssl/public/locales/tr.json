@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "SSL İnceleyici",
+    "description": "İzin verilen hedeflerin TLS sertifikalarını, geçerlilik sürelerini, kimliklerini ve sertifika zincirlerini inceleyin."
+  },
+  "target": {
+    "host": "Ana bilgisayar adı veya IP adresi",
+    "port": "TLS portu",
+    "sni": "Sunucu adı (SNI), isteğe bağlı",
+    "hint": "Yalnızca uygulamanın ağ politikasında izin verilen hedefler incelenebilir. Bu işlem sertifika güvenini değiştirmez.",
+    "inspect": "İncele",
+    "working": "İnceleniyor…",
+    "invalid": "Geçerli bir bilgisayar adı veya IP, 1–65535 arasında bir port ve isteğe bağlı bir DNS sunucu adı girin. URL veya yol girmeyin."
+  },
+  "saved": {
+    "title": "Kayıtlı hedefler",
+    "save": "Hedefi kaydet",
+    "empty": "Daha sonra yeniden incelemek için bir hedef kaydedin.",
+    "remove": "{{target}} hedefini kaldır",
+    "limit": "En fazla 50 hedef kaydedilebilir. Yeni hedef eklemek için birini kaldırın."
+  },
+  "result": {
+    "empty": "TLS hedefini inceleyin",
+    "trusted": "Zincir doğrulandı",
+    "untrusted": "Zincir, bu sunucunun güvenilen kök sertifikalarıyla doğrulanamadı.",
+    "matches": "Ad sertifikayla eşleşiyor",
+    "mismatch": "Sertifika, istenen sunucu adıyla eşleşmiyor.",
+    "remote": "Bağlanılan adres",
+    "protocol": "Protokol",
+    "cipher": "Şifre takımı",
+    "alpn": "ALPN",
+    "time": "Yanıt süresi",
+    "unavailable": "Mevcut değil",
+    "chain": "Sertifika zinciri",
+    "noChain": "Hedef sertifika ayrıntılarını döndürmedi."
+  },
+  "cert": {
+    "subject": "Konu",
+    "issuer": "Veren",
+    "sans": "Alternatif adlar (SAN)",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "serial": "Seri numarası",
+    "fingerprint": "SHA-256 parmak izi",
+    "key": "Açık anahtar",
+    "selfSigned": "Kendinden imzalı"
+  },
+  "validity": {
+    "valid": "Geçerlilik süresi içinde",
+    "expired": "Sertifikanın süresi dolmuş",
+    "future": "Sertifika henüz geçerli değil",
+    "soon": "Sertifikanın süresi 30 gün içinde dolacak"
+  }
+}
