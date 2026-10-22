@@ -26,7 +26,7 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     # Real database servers for the desktop apps' database connector tests.
     services:
       postgres:
@@ -77,9 +77,11 @@ jobs:
           EVERYOS_TEST_MYSQL: 127.0.0.1:3306:root:admin-secret-1
 
       - name: Build
+        id: build
         run: pnpm build
 
       - name: Install Playwright browser
+        id: browser
         run: pnpm exec playwright install --with-deps --only-shell chromium
 
       - name: End-to-end tests
@@ -87,7 +89,7 @@ jobs:
 
       # Browsers give plain-HTTP pages opened by host name no secure-context APIs (randomUUID…).
       - name: End-to-end tests over plain HTTP
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.browser.outcome == 'success' }}
         run: pnpm test:e2e foundation.spec.ts:9 plain-http.spec.ts sdk-desktop-apps.spec.ts official-apps.spec.ts
         env:
           EVERYOS_E2E_HTTP_HOST: everyos.lan

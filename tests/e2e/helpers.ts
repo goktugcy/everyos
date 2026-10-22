@@ -28,38 +28,65 @@ export async function signIn(
   await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
   await page.getByRole("button", { name: /Giriş yap|Sign in/ }).click();
   await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();
-  const session = (await (await page.request.get("/api/auth/session")).json()) as SessionInfo;
-  const headers = { [CSRF_HEADER]: session.csrfToken };
+  // EVERYOS_E2E_HTTP_HOST is mapped by Chromium, not Node's APIRequestContext.
+  const session = await page.evaluate(async () => {
+    const response = await fetch("/api/auth/session");
+    return (await response.json()) as SessionInfo;
+  });
   expect(
-    (await page.request.patch("/api/account", { headers, data: { locale: "tr" } })).status(),
+    await page.evaluate(
+      async ({ header, token }) =>
+        (
+          await fetch("/api/account", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", [header]: token },
+            body: JSON.stringify({ locale: "tr" }),
+          })
+        ).status,
+      { header: CSRF_HEADER, token: session.csrfToken },
+    ),
   ).toBe(200);
   if (reset) {
-    // Leave the desktop first: it may still save the windows it restored, after the reset.
-    await page.goto("about:blank");
-    for (const key of [
-      "appearance",
-      "desktop",
-      "dock",
-      "windows",
-      "security",
-      "menubar",
-      "widgets",
-      "notifications",
-      "pulse",
-    ]) {
-      expect((await page.request.delete(`/api/preferences/${key}`, { headers })).status()).toBe(
-        204,
-      );
-    }
-    if (!toasts)
-      expect(
-        (
-          await page.request.put("/api/preferences/notifications", {
-            headers,
-            data: { version: 1, toasts: false, toastMinSeverity: "warning", mutedCategories: [] },
-          })
-        ).status(),
-      ).toBe(204);
+    // Unmount the desktop before resetting, while retaining an inert same-origin document.
+    await page.goto("/api/health");
+    const statuses = await page.evaluate(
+      async ({ header, token, toasts }) => {
+        const headers = { "Content-Type": "application/json", [header]: token };
+        const statuses: number[] = [];
+        for (const key of [
+          "appearance",
+          "desktop",
+          "dock",
+          "windows",
+          "security",
+          "menubar",
+          "widgets",
+          "notifications",
+          "pulse",
+        ])
+          statuses.push(
+            (await fetch(`/api/preferences/${key}`, { method: "DELETE", headers })).status,
+          );
+        if (!toasts)
+          statuses.push(
+            (
+              await fetch("/api/preferences/notifications", {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                  version: 1,
+                  toasts: false,
+                  toastMinSeverity: "warning",
+                  mutedCategories: [],
+                }),
+              })
+            ).status,
+          );
+        return statuses;
+      },
+      { header: CSRF_HEADER, token: session.csrfToken, toasts },
+    );
+    for (const status of statuses) expect(status).toBe(204);
   }
   await page.goto("/");
   await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();
@@ -67,8 +94,11 @@ export async function signIn(
 }
 
 export async function preferences(page: Page): Promise<Partial<PreferenceDocuments>> {
-  const body = (await (await page.request.get("/api/preferences")).json()) as {
-    preferences: Partial<PreferenceDocuments>;
-  };
+  const body = await page.evaluate(
+    async () =>
+      (await (await fetch("/api/preferences")).json()) as {
+        preferences: Partial<PreferenceDocuments>;
+      },
+  );
   return body.preferences;
 }

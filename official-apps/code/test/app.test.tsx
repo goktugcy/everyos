@@ -148,7 +148,8 @@ describe("Code Editor", () => {
 
     const { host } = await start({ storage, handles });
     await vi.waitFor(() => expect(tabs()).toEqual(["●README.md", "●Untitled 1"]));
-    expect(treeItems()).toEqual(["src", "package.json", "README.md"]);
+    // The restored explorer reads the folder independently of restoring the tabs.
+    await vi.waitFor(() => expect(treeItems()).toEqual(["src", "package.json", "README.md"]));
     expect(editorText()).toBe("scratch");
     await click("tab", "●README.md");
     await vi.waitFor(() => expect(editorText()).toBe("# Project\nMore.\n"));

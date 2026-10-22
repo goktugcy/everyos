@@ -144,3 +144,23 @@ contains the complete public instance and i18n signatures, all 28 typed host ope
 capabilities, lifecycle/file/storage semantics, errors and links to the domain contracts. All
 relative file links in these new reference pages resolve. Community-service documentation and
 final distribution evidence remain open.
+
+### Hosted CI portability follow-up
+
+[CI run 106](https://github.com/goktugcy/everyos/actions/runs/39795217684) passed the production
+security audit. Its arm64 job passed unit tests and the regular full browser suite, then reached
+the job's 20-minute deadline during the extra plain-HTTP run. The job now has 35 minutes for both
+browser passes. The extra pass runs after a successful build and browser installation, including
+when the regular browser pass fails; it no longer attempts to start a missing build after an
+earlier unit-test failure.
+
+The amd64 run exposed a race in Code Editor's interface test: restored tabs and the folder
+explorer finish independently. The exact expected tree assertion now waits for the asynchronous
+folder read; no expected data or functionality was removed. The shared browser sign-in helper
+also now makes authenticated requests from a same-origin browser document, because Chromium's
+`everyos.lan` mapping does not apply to Node's APIRequestContext. Preference reset still unmounts
+the desktop first, preventing restored window saves from racing the reset.
+
+The corrected plain-HTTP command passed locally with `EVERYOS_E2E_HTTP_HOST=everyos.lan`: all
+14 foundation, official-app, upload and SDK sandbox/network-policy browser tests passed. The
+Code Editor logic/interface project also passed all 18 tests with the exact tree assertion retained.
