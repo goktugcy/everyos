@@ -21,3 +21,11 @@ describe("byRole", () => {
     expect(byRole("checkbox", "Nope")).toBeNull();
   });
 });
+
+it("finds native and explicit search boxes by accessible name", () => {
+  document.body.innerHTML =
+    '<label for="native-search">Find ports</label><input id="native-search" type="search"><div role="searchbox" aria-label="Find services"></div><input type="text" aria-label="Not a search box">';
+  expect(byRole("searchbox", "Find ports")?.id).toBe("native-search");
+  expect(byRole("searchbox", "Find services")?.getAttribute("role")).toBe("searchbox");
+  expect(byRole("searchbox", "Not a search box")).toBeNull();
+});

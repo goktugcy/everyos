@@ -72,6 +72,7 @@ export function byRole(role: string, name?: string | RegExp): HTMLElement | null
   const implicit: Record<string, string> = {
     button: "button,[role=button]",
     textbox: "input:not([type]),input[type=text],input[type=search],textarea,[role=textbox]",
+    searchbox: "input[type=search],[role=searchbox]",
     checkbox: "input[type=checkbox],[role=checkbox]",
     radio: "input[type=radio],[role=radio]",
     spinbutton: "input[type=number],[role=spinbutton]",
