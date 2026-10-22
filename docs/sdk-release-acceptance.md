@@ -46,6 +46,13 @@ checked yet; the evidence column records what already passes, so the remaining w
 
 ## Official apps
 
+The official registry trust anchor is pinned to the GitHub release index and the owner's public
+key (see [publishing](app-sdk/publishing.md)). `anchors.test.ts` verifies the URL, fingerprint
+and absent community anchor; `packages/catalogs/src/fetch.test.ts` verifies GitHub's latest →
+versioned release → object redirect with public DNS pinned at every hop, credentials dropped
+across origins, and private/metadata/mapped-address redirects refused. These five focused tests
+passed on 2026-10-22. Publication, the complete signed catalog and the community anchor remain open.
+
 | #   | App              | Id                        | Status |
 | --- | ---------------- | ------------------------- | ------ |
 | 01  | Notes            | `dev.everyos.notes`       | open   |

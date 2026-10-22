@@ -38,3 +38,20 @@ EveryOS repository: see [community submissions](community.md).
 ## The official registry
 
 Only EveryOS's own apps are published there, by EveryOS's release process.
+
+The built-in trust anchor is
+`https://github.com/goktugcy/everyos/releases/latest/download/official-apps.json`, signed by the
+Ed25519 registry key with fingerprint
+`sha256:d0670c89bb20001940869994f8c59e10dfa44c552115a2e06496b47ff1ae5852`.
+The public key is pinned in `apps/api/src/modules/desktop-apps/anchors.ts`; private signing keys
+stay in the protected GitHub `release` environment. Pinning an anchor does not publish a release.
+Until the complete SDK release is authorized and published, this index may be unavailable.
+
+Packages and icons are assets of the same release. Use flat relative asset names in the index
+(for example `dev.everyos.notes-1.0.0.eosapp`), which resolve against the original index URL,
+or absolute version-specific release URLs. A `packages/` subdirectory is not a GitHub release
+asset path. Every redirect, including GitHub's object-storage redirect, is DNS-checked and pinned;
+private, link-local and metadata addresses remain blocked. Cross-origin redirects never inherit
+a private registry's authorization header.
+
+The community anchor remains absent until the community service has its own domain and public key.
