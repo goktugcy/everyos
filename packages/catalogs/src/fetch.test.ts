@@ -23,7 +23,8 @@ describe("GitHub release asset transport", () => {
           end: () => {
             options.lookup!(url.hostname, { all: false }, (error, address) => {
               expect(error).toBeNull();
-              seen.push({ url: url.href, headers: options.headers, address: String(address) });
+              if (typeof address !== "string") throw new Error("Expected one pinned address");
+              seen.push({ url: url.href, headers: options.headers, address });
             });
             const stream = new PassThrough();
             const response = stream as unknown as IncomingMessage;

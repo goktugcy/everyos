@@ -75,7 +75,7 @@ export function networkMessage(t: Translate, error: unknown): string {
       return t("ui.networkForbidden");
     case "rate-limited":
       return t("ui.networkRateLimited");
-    default:
+    case undefined:
       return errorMessage(t, error);
   }
 }
