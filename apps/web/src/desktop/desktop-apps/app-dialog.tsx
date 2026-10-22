@@ -80,7 +80,12 @@ export function AppDialog({ dialog, appName }: { dialog: PendingDialog; appName:
           {dialog.title}
         </h2>
         {dialog.message ? (
-          <p className="whitespace-pre-wrap text-sm text-fg-muted">{dialog.message}</p>
+          <p
+            id={`app-dialog-${dialog.id}-message`}
+            className="whitespace-pre-wrap text-sm text-fg-muted"
+          >
+            {dialog.message}
+          </p>
         ) : null}
         {dialog.kind === "confirm" && dialog.host ? (
           <pre className="glass-inset max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-everyos-md p-2 font-mono text-xs text-fg">
@@ -90,6 +95,8 @@ export function AppDialog({ dialog, appName }: { dialog: PendingDialog; appName:
         {dialog.kind === "prompt" ? (
           <input
             ref={input}
+            aria-labelledby={`app-dialog-${dialog.id}`}
+            aria-describedby={dialog.message ? `app-dialog-${dialog.id}-message` : undefined}
             value={value}
             placeholder={dialog.placeholder ?? undefined}
             onChange={(event) => setValue(event.target.value.slice(0, 1000))}
