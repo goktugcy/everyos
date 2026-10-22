@@ -1,0 +1,69 @@
+.ports-main {
+  padding: 16px;
+  min-width: 0;
+}
+.ports-hint {
+  font-size: 12px;
+  color: var(--eui-muted);
+}
+.ports-source,
+.ports-filters,
+.ports-pagination {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ports-source {
+  font-size: 12px;
+  color: var(--eui-muted);
+}
+.ports-filters {
+  align-items: end;
+  margin-block: 20px;
+}
+.ports-filters > .eui-search {
+  flex: 1 1 240px;
+}
+.ports-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.ports-stats > div {
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  padding: 12px;
+}
+.ports-stats dt {
+  font-size: 12px;
+  color: var(--eui-muted);
+}
+.ports-stats dd {
+  margin: 8px 0 0;
+  font-size: 22px;
+}
+.ports-table {
+  overflow-x: auto;
+}
+.ports-table td {
+  overflow-wrap: anywhere;
+}
+.ports-warning {
+  color: var(--eui-warning);
+  font-size: 13px;
+}
+.ports-pagination {
+  margin-top: 16px;
+}
+@media (max-width: 480px) {
+  .ports-main {
+    padding: 12px;
+  }
+  .ports-filters > .eui-search {
+    flex-basis: 100%;
+  }
+  .ports-filters > .eui-field {
+    flex: 1 1 130px;
+  }
+}

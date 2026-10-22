@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Port İnceleyici"
+  },
+  "ports": {
+    "refresh": "Yenile",
+    "export": "CSV dışa aktar",
+    "readOnly": "Hostun dinleme portları salt okunur gösterilir. Bağlantı veya tarama yapılmaz. Bağlanılan adres, güvenlik duvarından erişilebildiğini göstermez.",
+    "permission": "Bu uygulamanın host soketlerini okuma iznine ihtiyacı var. Bir yönetici, Uygulama Mağazası’ndan izin verebilir; rolün de sistem erişimine izin vermeli.",
+    "unavailable": "Bu hostta dinleme soketi verisi kullanılamıyor. Toplayıcı, Linux ve okunabilir /proc verisi gerektirir.",
+    "loadFailed": "Host soketleri okunamadı. Agent bağlantısını kontrol edip yeniden dene.",
+    "host": "Host verisi",
+    "simulated": "Simüle veri",
+    "simulatedHint": "Bu dinleyiciler geliştirme hostu tarafından simüle edilir. Gerçekte açık portları göstermezler.",
+    "retrieved": "Alınma zamanı: {{at}}",
+    "stale": "Yenileme başarısız. Önceki anlık görüntü, alınma zamanı ile gösterilmeye devam ediyor.",
+    "listening": "Dinleme soketleri",
+    "established": "Kurulu TCP bağlantısı",
+    "timeWait": "TCP bekleme durumu",
+    "other": "Diğer TCP durumları",
+    "search": "Dinleyicilerde ara",
+    "searchHint": "Adres, port veya süreç",
+    "protocol": "Protokol",
+    "family": "Adres ailesi",
+    "scope": "Bağlama kapsamı",
+    "all": "Tümü",
+    "reset": "Filtreleri sıfırla",
+    "showing": "{{total}} dinleyiciden {{shown}} tanesi eşleşiyor",
+    "limit": "En fazla 2.000 dinleyici döner. Agent, sonuçları 30 saniye önbellekte tutabilir. Portlar küçükten büyüğe sıralanır.",
+    "empty": "Eşleşen dinleyici yok",
+    "emptyHint": "Dönen anlık görüntüyü incelemek için filtreleri değiştir veya sıfırla.",
+    "address": "Adres",
+    "port": "Port",
+    "process": "Süreç",
+    "unknown": "Kullanılamıyor",
+    "processHint": "Süreç adları yalnızca agent okuyabildiğinde gösterilir. Eksik adlar, servis port numarasından tahmin edilmez.",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "page": "Sayfa {{page}} / {{pages}}"
+  },
+  "scope": {
+    "all": "Tüm kapsamlar",
+    "wildcard": "Tüm arayüzler",
+    "loopback": "Geri döngü",
+    "specific": "Belirli adres"
+  }
+}

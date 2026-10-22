@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Inspector de puertos"
+  },
+  "ports": {
+    "refresh": "Actualizar",
+    "export": "Exportar CSV",
+    "readOnly": "Solo lectura de puertos del host. No se conecta ni escanea. Las direcciones no indican accesibilidad a través del cortafuegos.",
+    "permission": "Esta app necesita permiso para leer sockets del host. Un administrador puede concederlo en la tienda; tu rol también debe permitir acceso al sistema.",
+    "unavailable": "Los sockets de escucha no están disponibles en este host. El recopilador requiere Linux y datos /proc legibles.",
+    "loadFailed": "No se pudieron leer los sockets. Comprueba la conexión del agente e inténtalo de nuevo.",
+    "host": "Datos del host",
+    "simulated": "Datos simulados",
+    "simulatedHint": "Estos puertos están simulados por el host de desarrollo. No describen puertos abiertos reales.",
+    "retrieved": "Obtenido: {{at}}",
+    "stale": "Falló la actualización. Sigue visible la instantánea anterior con su hora de obtención.",
+    "listening": "Sockets en escucha",
+    "established": "TCP establecidas",
+    "timeWait": "TCP en espera",
+    "other": "Otros estados TCP",
+    "search": "Buscar sockets",
+    "searchHint": "Dirección, puerto o proceso",
+    "protocol": "Protocolo",
+    "family": "Familia de direcciones",
+    "scope": "Ámbito de enlace",
+    "all": "Todos",
+    "reset": "Restablecer filtros",
+    "showing": "Coinciden {{shown}} de {{total}} sockets",
+    "limit": "Se devuelven hasta 2.000 sockets. El agente puede almacenar resultados 30 segundos. Los puertos se ordenan de menor a mayor.",
+    "empty": "No hay sockets coincidentes",
+    "emptyHint": "Cambia o restablece los filtros para ver la instantánea recibida.",
+    "address": "Dirección",
+    "port": "Puerto",
+    "process": "Proceso",
+    "unknown": "No disponible",
+    "processHint": "Los nombres de proceso solo aparecen si el agente puede leerlos. No se deducen de los números de puerto.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {{page}} de {{pages}}"
+  },
+  "scope": {
+    "all": "Todos los ámbitos",
+    "wildcard": "Todas las interfaces",
+    "loopback": "Bucle local",
+    "specific": "Dirección específica"
+  }
+}

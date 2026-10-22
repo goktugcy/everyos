@@ -195,3 +195,24 @@ and its remaining gates are still open.
 The first-run and HTTP Monitor browser workflows also passed with
 `EVERYOS_E2E_HTTP_HOST=everyos.lan` (two tests), including the background check, notification,
 CSV picker and mobile reopening on an insecure LAN origin.
+
+### Port Inspector
+
+The app reads the existing bounded `system.sockets` operation: listening TCP/UDP addresses,
+ports, readable process names and connection counters. It provides persistent search/protocol/
+address-family/bind-scope filters, manual refresh, 100-row pagination and CSV export of every
+matching row with source and UTC retrieval time. Bind scope does not assert firewall reachability.
+Unsupported collectors and missing process names are explicit; simulated snapshots remain labelled
+in both the interface and export. Revoking permission clears the displayed snapshot.
+
+Eleven logic tests and six interface tests pass; the package validates in all ten locales.
+The DOM test helper now recognizes the native `searchbox` role, with both its existing naming
+test and the new native/explicit search-role test passing. No existing assertion was removed.
+The two focused browser tests pass on macOS: they verify the unsupported-host message, persistence
+and 390 px layout without inventing listeners. On Linux CI, the same workflow opens a real HTTP
+fixture, finds its actual listening port through the agent, verifies the CSV through the file
+picker and confirms that inspection made no connection to the fixture. Linux evidence is pending.
+The full local gate passes under UTC/CI settings: format, lint, typecheck, 1,310 tests in 145
+files, build, all 13 foundation/official-app Chromium tests and a clean production audit.
+The first-run and Port Inspector browser workflows also pass over plain HTTP at `everyos.lan`
+(two tests); this macOS run verifies honest unavailability, saved filters and mobile layout.

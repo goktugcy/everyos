@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Inspecteur de ports"
+  },
+  "ports": {
+    "refresh": "Actualiser",
+    "export": "Exporter CSV",
+    "readOnly": "Lecture seule des ports de l’hôte. Aucune connexion ni analyse. Les adresses ne garantissent pas l’accessibilité à travers le pare-feu.",
+    "permission": "Cette app doit pouvoir lire les sockets de l’hôte. Un administrateur peut l’autoriser dans la boutique ; votre rôle doit aussi permettre l’accès au système.",
+    "unavailable": "Les sockets d’écoute sont indisponibles sur cet hôte. Le collecteur nécessite Linux et des données /proc lisibles.",
+    "loadFailed": "Impossible de lire les sockets. Vérifiez la connexion de l’agent et réessayez.",
+    "host": "Données de l’hôte",
+    "simulated": "Données simulées",
+    "simulatedHint": "Ces ports sont simulés par l’hôte de développement. Ils ne décrivent pas de vrais ports ouverts.",
+    "retrieved": "Récupéré : {{at}}",
+    "stale": "Échec de l’actualisation. L’instantané précédent reste affiché avec son heure de récupération.",
+    "listening": "Sockets d’écoute",
+    "established": "TCP établies",
+    "timeWait": "TCP en attente",
+    "other": "Autres états TCP",
+    "search": "Rechercher des sockets",
+    "searchHint": "Adresse, port ou processus",
+    "protocol": "Protocole",
+    "family": "Famille d’adresses",
+    "scope": "Portée de liaison",
+    "all": "Tous",
+    "reset": "Réinitialiser les filtres",
+    "showing": "{{shown}} sockets correspondent sur {{total}}",
+    "limit": "Jusqu’à 2 000 sockets sont renvoyés. L’agent peut garder les résultats 30 secondes. Les ports sont triés par ordre croissant.",
+    "empty": "Aucun socket correspondant",
+    "emptyHint": "Modifiez ou réinitialisez les filtres pour voir l’instantané reçu.",
+    "address": "Adresse",
+    "port": "Port",
+    "process": "Processus",
+    "unknown": "Indisponible",
+    "processHint": "Les noms de processus ne sont affichés que si l’agent peut les lire. Ils ne sont pas déduits des ports.",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page {{page}} sur {{pages}}"
+  },
+  "scope": {
+    "all": "Toutes les portées",
+    "wildcard": "Toutes les interfaces",
+    "loopback": "Boucle locale",
+    "specific": "Adresse précise"
+  }
+}

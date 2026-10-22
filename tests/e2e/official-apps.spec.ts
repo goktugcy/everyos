@@ -770,3 +770,93 @@ test.describe("HTTP Monitor", () => {
     }
   });
 });
+
+test.describe("Port Inspector", () => {
+  const portsApp = OFFICIAL.find((app) => app.slug === "ports")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${portsApp.id}`, { confirm: true });
+  });
+
+  test("reads actual Linux listeners or explains host unavailability, preserves filters and fits mobile", async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+    const upstream = await startHttpFixture();
+    try {
+      await install(page, portsApp);
+      let { window, frame } = await open(page, portsApp.name, portsApp.id);
+      const search = frame.getByRole("searchbox", { name: "Dinleyicilerde ara" });
+      await expect(search).toBeVisible();
+      if (process.platform === "linux") {
+        // The fixture listens in the same real host namespace as the agent's /proc collector.
+        // A previous read may still be in the agent's 30-second cache.
+        await search.fill(String(upstream.port));
+        await expect
+          .poll(
+            async () => {
+              await frame.getByRole("button", { name: "Yenile", exact: true }).click();
+              return frame.locator("tbody").innerText();
+            },
+            { timeout: 45000, intervals: [1000, 5000] },
+          )
+          .toContain(String(upstream.port));
+        await expect(frame.getByText("Host verisi", { exact: true })).toBeVisible();
+        await expect(frame.getByRole("table", { name: "Dinleme soketleri" })).toContainText("TCP");
+        await expect(frame.getByRole("table", { name: "Dinleme soketleri" })).toContainText(
+          "127.0.0.1",
+        );
+        await frame.getByRole("button", { name: "CSV dışa aktar", exact: true }).click();
+        const picker = window.getByTestId("desktop-app-file-picker");
+        const exportName = `listening-ports-test-${Date.now()}.csv`;
+        await picker.getByRole("textbox", { name: "Ad", exact: true }).fill(exportName);
+        await picker.getByRole("button", { name: "Kaydet", exact: true }).click();
+        await expect
+          .poll(async () => {
+            const response = await api(
+              page,
+              "GET",
+              `/api/files/text?root=home&path=Belgeler/${exportName}`,
+            );
+            return response.status === 200
+              ? (JSON.parse(response.text) as { content: string }).content
+              : null;
+          })
+          .toContain(`"tcp","127.0.0.1","${upstream.port}"`);
+        expect(upstream.checks).toEqual([]);
+      } else {
+        await expect(frame.getByRole("alert")).toContainText("Linux ve okunabilir /proc");
+        await expect(frame.getByRole("table", { name: "Dinleme soketleri" })).toHaveCount(0);
+        await search.fill("8080");
+      }
+      await expect(frame.getByRole("combobox", { name: "Protokol", exact: true })).toBeVisible();
+      await frame.getByRole("combobox", { name: "Protokol", exact: true }).selectOption("tcp");
+      await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      ({ window, frame } = await open(page, portsApp.name, portsApp.id));
+      await expect(frame.getByRole("searchbox", { name: "Dinleyicilerde ara" })).toHaveValue(
+        process.platform === "linux" ? String(upstream.port) : "8080",
+      );
+      await expect(frame.getByRole("combobox", { name: "Protokol", exact: true })).toHaveValue(
+        "tcp",
+      );
+      await page.screenshot({ path: test.info().outputPath("ports-desktop.png") });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: portsApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${portsApp.id}"]`);
+      await expect(frame.getByRole("combobox", { name: "Protokol", exact: true })).toHaveValue(
+        "tcp",
+      );
+      expect(
+        await frame
+          .locator(".ports-main")
+          .evaluate((element) => element.scrollWidth > element.clientWidth),
+      ).toBe(false);
+      await page.screenshot({ path: test.info().outputPath("ports-mobile.png") });
+    } finally {
+      await upstream.close();
+    }
+  });
+});
