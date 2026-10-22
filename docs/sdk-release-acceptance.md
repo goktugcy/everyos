@@ -75,7 +75,7 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 18  | Color Studio     | `dev.everyos.color`       | open   |
 | 19  | Port Inspector   | `dev.everyos.ports`       | open   |
 | 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
-| 21  | SSL Inspector    | `dev.everyos.ssl`         | open   |
+| 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
 | 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | open   |
 | 23  | Log Viewer       | `dev.everyos.logs`        | open   |
 | 24  | Disk Explorer    | `dev.everyos.disk`        | open   |
@@ -99,7 +99,7 @@ Pi 5 and an amd64 runner once apps exist; nothing is estimated here.
 - Baseline before new apps: format, lint, typecheck, 1,184 unit/integration tests, build and the
   nine foundation/official-app browser tests passed on the development Mac. This is not Linux
   acceptance or a release qualification.
-- DNS Lookup: 25 logic tests and four interface tests pass (`official-apps/dns/test/`). The
+- DNS Lookup: 25 logic tests and five interface tests pass (`official-apps/dns/test/`). The
   package validates with its declared elevated network permission. Its real-browser workflow in
   `official-apps.spec.ts` uses a loopback UDP DNS fixture: zero queries before policy approval,
   an actual A answer after approval, immediate-close history persistence, replay with the saved
@@ -113,3 +113,25 @@ Pi 5 and an amd64 runner once apps exist; nothing is estimated here.
 “Tested” in the app table records development evidence, not public release approval. The remaining
 apps, signed catalog pipeline, community service, complete reference docs, Linux measurements and
 release evidence are still required. No tag or public release has been created.
+
+### SSL and CI follow-up
+
+- SSL Inspector: 27 logic tests and four interface tests pass. Its package validates. The
+  Chromium workflow uses an actual self-signed local TLS service, checks trust and SNI identity
+  separately, verifies the SHA-256 fingerprint and expiry warning, saves/reopens an endpoint,
+  then verifies a genuine name mismatch. Its desktop layout was visually reviewed.
+- The first pushed checkpoint passed the local full gate: 1,231 tests, build and ten browser
+  tests. [CI run 105](https://github.com/goktugcy/everyos/actions/runs/39784658662) then exposed
+  two Linux issues: Cron accepted edits before saved timezone hydration, and CLI template tests
+  assumed a terminal-specific stdout summary. Cron now waits for stored state. The CLI test
+  still runs each template's tests and now asserts the JSON report's success, positive passed
+  count, zero failed tests and zero failed suites. No assertion of product behavior was removed;
+  no tests were disabled. The focused checks pass under UTC and CI environment variables.
+- Production dependency audit reported 15 advisories across pinned upstream dependencies.
+  `markdown-it` is updated to 15.0.3; overrides select nanoid 3.3.18/5.1.16, lodash-es 4.18.1,
+  KaTeX 0.18.2 and Sass 1.105.0 (whose watcher avoids the unpatched braces dependency).
+  `pnpm audit --prod --json` reports zero advisories after the update. Install-script approval
+  remains limited to esbuild; the optional Parcel watcher is explicitly denied. No release-age
+  policy exception is used. The Excalidraw CDN-font patch is preserved.
+
+These fixes require a fresh full local gate and a new hosted CI run before the CI gate is closed.
