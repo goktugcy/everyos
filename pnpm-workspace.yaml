@@ -44,7 +44,7 @@ catalog:
   "@types/pg": 8.23.1
   mysql2: 3.24.5
   # Markdown for official desktop apps (Notes, Markdown Editor): rendered, then sanitized.
-  markdown-it: 15.0.2
+  markdown-it: 15.0.3
   dompurify: 3.4.16
   # Official desktop apps. Editors: CodeMirror 6 (MIT).
   "@codemirror/state": 6.7.6
@@ -80,6 +80,16 @@ saveExact: true
 engineStrict: true
 # Only these packages may run install scripts (pnpm blocks all others).
 allowBuilds:
+  "@parcel/watcher": false
   esbuild: true
 patchedDependencies:
   "@excalidraw/excalidraw@0.18.1": patches/@excalidraw__excalidraw@0.18.1.patch
+
+# Upstream pins older dependencies; keep the maintained nanoid major for each consumer.
+overrides:
+  "nanoid@<4": 3.3.18
+  "nanoid@>=4 <5.1.16": 5.1.16
+  lodash-es: 4.18.1
+  katex: 0.18.2
+  # The old Sass watcher pulls in an unpatched braces release.
+  sass: 1.105.0
