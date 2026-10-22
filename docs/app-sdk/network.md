@@ -109,3 +109,9 @@ closed: `list`, `history`, `save`, `delete`, `check` (by hand, at most every ten
 
 An app should explain a `DESKTOP_APP_NETWORK_BLOCKED` refusal with the host and port, and tell the
 person that an administrator can allow them on the app's page in the App Store.
+
+Apps using `@everyos/app-ui` can show `networkMessage(t, error)` for these errors. It includes
+the blocked target and App Store guidance, translates every `NetFailure`, permission refusal
+and rate limit in all ten kit languages, and falls back to `errorMessage` for other errors.
+`networkProblem(error)` returns a typed `blocked`, `failed`, `forbidden` or `rate-limited`
+problem (or `null` for another error) when the interface needs a recovery action.
