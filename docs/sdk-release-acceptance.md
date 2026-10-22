@@ -76,7 +76,7 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 19  | Port Inspector   | `dev.everyos.ports`       | open   |
 | 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
 | 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
-| 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | open   |
+| 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | tested |
 | 23  | Log Viewer       | `dev.everyos.logs`        | open   |
 | 24  | Disk Explorer    | `dev.everyos.disk`        | open   |
 | 25  | SSH Keys         | `dev.everyos.sshkeys`     | open   |
@@ -111,7 +111,7 @@ Pi 5 and an amd64 runner once apps exist; nothing is estimated here.
   now explicitly includes `official-apps.spec.ts` too; the hosted run remains to be verified.
 
 “Tested” in the app table records development evidence, not public release approval. The remaining
-apps, signed catalog pipeline, community service, complete reference docs, Linux measurements and
+apps, signed catalog pipeline, community service and its documentation, Linux measurements and
 release evidence are still required. No tag or public release has been created.
 
 ### SSL and CI follow-up
@@ -164,3 +164,34 @@ the desktop first, preventing restored window saves from racing the reset.
 The corrected plain-HTTP command passed locally with `EVERYOS_E2E_HTTP_HOST=everyos.lan`: all
 14 foundation, official-app, upload and SDK sandbox/network-policy browser tests passed. The
 Code Editor logic/interface project also passed all 18 tests with the exact tree assertion retained.
+
+### HTTP Monitor and hosted CI run 107
+
+[CI run 107](https://github.com/goktugcy/everyos/actions/runs/39801994843) passed the dependency
+audit and the entire arm64 job, including both browser passes. The amd64 job reached a Text
+Editor interface-test race: its tab appears before the asynchronous editor mounts. The test now
+waits for the exact decoded file content before editing; its encoding and line-ending assertions
+remain intact. No test was skipped or relaxed.
+
+HTTP Monitor uses the existing per-person, per-app server scheduler and network policy. Its
+23 logic tests and six interface tests pass, covering strict form limits, incomplete draft
+recovery, policy and locale changes, permission revocation, isolated endpoint histories,
+100-row pagination and complete spreadsheet-safe CSV export. The package validates with all ten
+locales. The browser workflow covers policy refusal, a real HTTP response, the unmodified
+60-second background schedule with the window closed, down notifications, destination-picker
+export, pause and reopening on mobile. All 1,292 unit/integration tests, the build and all 12
+foundation/official-app Chromium tests passed before the following dependency update. The desktop
+and 390 px mobile layouts were visually reviewed; the mobile layout has no horizontal overflow.
+
+The final audit then reported three DOMPurify advisories (critical, high and low), all fixed in
+[3.4.17](https://github.com/cure53/DOMPurify/releases/tag/3.4.17). The catalog and a scoped override
+now select that version for both direct and transitive consumers; no advisory is ignored and
+no supply-chain policy is relaxed. A fresh production audit reports zero advisories at every
+severity. Full verification with the patched dependency passed under UTC/CI settings: format,
+lint, typecheck, all 1,292 unit/integration tests, build, all 12 foundation/official-app Chromium
+tests and the production audit. This remains development evidence; the complete 33-app release
+and its remaining gates are still open.
+
+The first-run and HTTP Monitor browser workflows also passed with
+`EVERYOS_E2E_HTTP_HOST=everyos.lan` (two tests), including the background check, notification,
+CSV picker and mobile reopening on an insecure LAN origin.

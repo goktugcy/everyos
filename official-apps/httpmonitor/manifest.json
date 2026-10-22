@@ -1,0 +1,32 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.httpmonitor",
+  "name": "HTTP Monitor",
+  "version": "1.0.0",
+  "description": "Scheduled HTTP health checks, status expectations, uptime, latency history and CSV export.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "network",
+  "permissions": ["storage:app", "files:save", "network:outbound", "notifications:send"],
+  "window": {
+    "defaultWidth": 1040,
+    "defaultHeight": 720,
+    "minWidth": 360,
+    "minHeight": 320,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/httpmonitor"
+}

@@ -8,6 +8,7 @@ import { makePdf } from "../../official-apps/pdf/test/make-pdf.ts";
 import { signIn } from "./helpers.ts";
 import { startDnsFixture } from "./dns-fixture.ts";
 import { startTlsFixture } from "./tls-fixture.ts";
+import { startHttpFixture } from "./http-fixture.ts";
 
 /*
  * EveryOS's official apps (official-apps/*), built and signed into the fixture's official registry,
@@ -664,6 +665,108 @@ test.describe("SSL Inspector", () => {
       await page.screenshot({ path: test.info().outputPath("ssl-mobile.png") });
     } finally {
       await tls.close();
+    }
+  });
+});
+
+test.describe("HTTP Monitor", () => {
+  test.use({ actionTimeout: 20000 });
+  const monitorApp = OFFICIAL.find((app) => app.slug === "httpmonitor")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${monitorApp.id}`, { confirm: true });
+  });
+
+  test("checks an approved endpoint, keeps monitoring while closed and restores real failure history on mobile", async ({
+    page,
+  }) => {
+    test.setTimeout(150_000);
+    const upstream = await startHttpFixture();
+    try {
+      await install(page, monitorApp);
+      let { window, frame } = await open(page, monitorApp.name, monitorApp.id);
+      await frame.getByRole("button", { name: "Yeni izleyici", exact: true }).click();
+      await frame.getByRole("textbox", { name: "Ad", exact: true }).fill("Ev servisi");
+      await frame.getByRole("textbox", { name: "HTTP veya HTTPS adresi" }).fill(upstream.url);
+      await frame
+        .getByRole("textbox", { name: "Yanıtta bulunması gereken metin (isteğe bağlı)" })
+        .fill("ready");
+      await frame.getByRole("button", { name: "İzleyiciyi kaydet", exact: true }).click();
+      await expect(frame.getByRole("dialog").getByRole("alert")).toContainText(
+        `127.0.0.1:${upstream.port}`,
+      );
+      expect(upstream.checks).toEqual([]);
+      const rule = await api(page, "POST", "/api/desktop-apps/network-rules", {
+        kind: "cidr",
+        pattern: "127.0.0.1/32",
+        ports: [upstream.port],
+        appId: monitorApp.id,
+      });
+      expect(rule.status, rule.text).toBe(201);
+      await frame.getByRole("button", { name: "İzleyiciyi kaydet", exact: true }).click();
+      await expect(frame.getByRole("heading", { name: "Ev servisi", exact: true })).toBeVisible();
+      await frame.getByRole("button", { name: "Şimdi kontrol et", exact: true }).click();
+      await expect(frame.getByRole("table", { name: "Kontrol geçmişi" })).toContainText("200");
+      expect(upstream.checks.some((check) => check.method === "GET" && check.status === 200)).toBe(
+        true,
+      );
+      await page.screenshot({ path: test.info().outputPath("http-monitor-desktop.png") });
+      await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      upstream.setStatus(503);
+      // Wait for the real 60-second server schedule with no app frame alive.
+      await expect
+        .poll(() => upstream.checks.some((check) => check.status === 503), {
+          timeout: 80000,
+          intervals: [1000],
+        })
+        .toBe(true);
+      ({ window, frame } = await open(page, monitorApp.name, monitorApp.id));
+      await expect(frame.getByRole("table", { name: "Kontrol geçmişi" })).toContainText("503");
+      await expect(
+        frame.getByText("Beklenmeyen HTTP durumu", { exact: true }).first(),
+      ).toBeVisible();
+      await expect(frame.locator(".monitor-heading")).toContainText("Kesinti");
+      const notifications = await api(page, "GET", "/api/notifications?limit=100");
+      expect(notifications.status).toBe(200);
+      expect(notifications.text).toContain("app-monitor-down");
+      expect(notifications.text).toContain("Ev servisi");
+      await frame.getByRole("button", { name: "CSV dışa aktar", exact: true }).click();
+      const picker = window.getByTestId("desktop-app-file-picker");
+      await expect(picker).toContainText("Farklı kaydet");
+      const exportName = `http-monitor-test-${Date.now()}.csv`;
+      await picker.getByRole("textbox", { name: "Ad", exact: true }).fill(exportName);
+      await picker.getByRole("button", { name: "Kaydet", exact: true }).click();
+      await expect
+        .poll(async () => {
+          const response = await api(
+            page,
+            "GET",
+            `/api/files/text?root=home&path=Belgeler/${exportName}`,
+          );
+          return response.status === 200
+            ? (JSON.parse(response.text) as { content: string }).content
+            : null;
+        })
+        .toContain('"false","503"');
+      await frame.getByRole("button", { name: "Duraklat", exact: true }).click();
+      await expect(frame.locator(".monitor-heading")).toContainText("Duraklatıldı");
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: monitorApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(
+        `[data-testid="desktop-app-frame"][data-app-id="${monitorApp.id}"]`,
+      );
+      await expect(frame.getByRole("table", { name: "Kontrol geçmişi" })).toContainText("503");
+      expect(
+        await frame
+          .locator(".monitor-main")
+          .evaluate((element) => element.scrollWidth > element.clientWidth),
+      ).toBe(false);
+      await page.screenshot({ path: test.info().outputPath("http-monitor-mobile.png") });
+    } finally {
+      await upstream.close();
     }
   });
 });

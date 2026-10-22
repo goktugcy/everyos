@@ -1,0 +1,27 @@
+import type { NetMonitor } from "@everyos/app-sdk";
+
+export const fixture = (change: Partial<NetMonitor> = {}): NetMonitor => ({
+  id: "monitor-1",
+  name: "Home service",
+  url: "https://service.test/health",
+  method: "GET",
+  intervalSeconds: 60,
+  timeoutMs: 10000,
+  expectStatus: { min: 200, max: 299 },
+  keyword: null,
+  downAfter: 1,
+  verifyTls: true,
+  notify: true,
+  enabled: true,
+  state: "up",
+  stateSince: 1700000000000,
+  checkedAt: 1700000000000,
+  lastStatus: 200,
+  lastMs: 12.5,
+  lastError: null,
+  uptime24h: 0.98,
+  uptime7d: 0.99,
+  avgMs24h: 15,
+  createdAt: 1700000000000,
+  ...change,
+});

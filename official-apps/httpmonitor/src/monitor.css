@@ -1,0 +1,115 @@
+.monitor-main {
+  padding: 16px;
+  max-width: 1200px;
+  margin-inline: auto;
+  min-width: 0;
+}
+.monitor-table {
+  overflow-x: auto;
+}
+.monitor-sidebar-title {
+  font-size: 13px;
+  padding: 12px;
+  margin: 0;
+  color: var(--eui-muted);
+}
+.monitor-hint {
+  font-size: 12px;
+  color: var(--eui-muted);
+  overflow-wrap: anywhere;
+}
+.eui-sidebar > .monitor-hint {
+  padding: 12px;
+}
+.monitor-heading,
+.monitor-actions,
+.monitor-history-heading {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.monitor-heading {
+  justify-content: space-between;
+}
+.monitor-heading > div {
+  min-width: 0;
+}
+.monitor-heading h1 {
+  font-size: 22px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.monitor-url {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  margin-bottom: 0;
+}
+.monitor-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-block: 20px;
+}
+.monitor-stats > div {
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  padding: 12px;
+}
+.monitor-stats dt {
+  font-size: 12px;
+  color: var(--eui-muted);
+}
+.monitor-stats dd {
+  margin: 8px 0 0;
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+.monitor-history-heading {
+  margin-top: 28px;
+}
+.monitor-history-heading h2 {
+  font-size: 16px;
+  margin-right: auto;
+}
+.monitor-failure {
+  color: var(--eui-warning);
+  font-size: 13px;
+}
+.monitor-timeline {
+  list-style: none;
+  display: flex;
+  gap: 3px;
+  padding: 0;
+  height: 24px;
+}
+.monitor-timeline li {
+  flex: 1;
+  max-width: 20px;
+  border-radius: 2px;
+  background: var(--eui-danger);
+}
+.monitor-timeline li[data-ok="true"] {
+  background: var(--eui-success);
+}
+.monitor-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.monitor-checkboxes {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.monitor-form > .eui-field:nth-child(-n + 2) {
+  grid-column: 1 / -1;
+}
+@media (max-width: 480px) {
+  .monitor-main {
+    padding: 12px;
+  }
+  .monitor-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
