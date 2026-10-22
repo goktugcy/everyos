@@ -363,6 +363,14 @@ System data exposes `source` / capability status where the host cannot provide a
 Distinguish actual host values, explicitly simulated development values and unavailable data in
 the interface. Do not convert missing data into a fabricated zero or healthy status.
 
+`logs.query` accepts an exact systemd `unit`, a `priority` threshold (0–7, including more severe
+entries), epoch-millisecond `since` / `until`, a case-insensitive **literal** message substring
+`grep`, a `limit` of 1–1,000 and an exclusive older-page cursor `before`. Results are newest
+first; `hasMore` indicates older matches beyond the page. Preserve the page's `source` when
+displaying or exporting records. On Linux, the provider escapes literal search text because
+[`journalctl --grep`](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html#-g)
+normally interprets it as a regular expression. Query and live-follow sources share this behavior.
+
 Detailed contracts and bounds:
 
 - [Network](network.md): HTTP methods/headers/bodies/timing, DNS records, TLS chains, monitors,
