@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Strumenti di rete"
+  },
+  "network": {
+    "export": "Esporta rapporto",
+    "interfaces": "Interfacce di rete",
+    "interface": "Interfaccia",
+    "auto": "Aggiorna i dati dell’host ogni 10 secondi quando attivo",
+    "permission": "La lettura delle interfacce richiede system:network.read e un ruolo con accesso al sistema. Un amministratore può concedere i permessi nello Store.",
+    "metricsPermission": "I dati di traffico richiedono system:metrics.read e un ruolo con accesso al sistema.",
+    "loadFailed": "Impossibile leggere i dati di rete. Controlla la connessione dell’agente e riprova.",
+    "unsupported": "L’host non può fornire questi dati di rete.",
+    "internetChecked": "Connettività host verificata: {{at}}",
+    "internetHint": "Questo stato segue le destinazioni di connettività configurate sull’host. I controlli possono essere memorizzati per 60 secondi.",
+    "ms": "{{value}} ms",
+    "noInterfaces": "L’host non ha segnalato interfacce.",
+    "up": "Attiva",
+    "down": "Inattiva",
+    "addresses": "Indirizzi IP e prefissi",
+    "mac": "Indirizzo MAC",
+    "mtu": "MTU",
+    "speed": "Velocità collegamento dichiarata",
+    "mbps": "{{value}} Mbit/s",
+    "receive": "Velocità ricezione",
+    "transmit": "Velocità trasmissione",
+    "rate": "{{value}}/s",
+    "routes": "Riepilogo gateway predefiniti",
+    "routesHint": "Questo riepilogo mostra i gateway predefiniti segnalati dall’host. Gli indirizzi delle interfacce includono i prefissi di rete.",
+    "gateway": "Gateway",
+    "noGateways": "L’host non ha segnalato gateway predefiniti.",
+    "dns": "Server DNS segnalati",
+    "noDns": "L’host non ha segnalato server DNS.",
+    "traffic": "Traffico interfacce",
+    "measured": "Misurato: {{at}}",
+    "noTraffic": "Le velocità per interfaccia non sono disponibili su questo host.",
+    "refresh": "Aggiorna",
+    "unavailable": "Non disponibile",
+    "retrieved": "Recuperato: {{at}}",
+    "family": "Famiglia indirizzi",
+    "stale": "Aggiornamento fallito. Rimane visibile l’istantanea precedente con l’ora di recupero."
+  },
+  "source": {
+    "simulatedHint": "Questi valori sono simulati dall’host di sviluppo e non descrivono l’host reale.",
+    "host": "Dati dell’host",
+    "simulated": "Dati simulati"
+  },
+  "internet": {
+    "online": "Connettività host disponibile",
+    "offline": "Controllo connettività host fallito",
+    "unknown": "Connettività host sconosciuta",
+    "disabled": "Controllo connettività host disattivato"
+  },
+  "kind": {
+    "ethernet": "Ethernet",
+    "wireless": "Wireless",
+    "loopback": "Loopback",
+    "tailscale": "Tailscale",
+    "bridge": "Bridge",
+    "virtual": "Virtuale",
+    "other": "Altra"
+  },
+  "diagnostic": {
+    "title": "Verifica destinazione autorizzata",
+    "policy": "Invia HEAD a una destinazione HTTP autorizzata nello Store. TLS è verificato e ogni reindirizzamento è controllato dai criteri.",
+    "permission": "Le verifiche richiedono network:outbound. Un amministratore può concederlo nello Store.",
+    "url": "URL HTTP o HTTPS",
+    "check": "Verifica destinazione",
+    "checking": "Verifica…",
+    "invalid": "Inserisci un URL HTTP o HTTPS senza credenziali né frammento.",
+    "attempt": "Ultimo tentativo: {{url}} · {{at}}",
+    "responded": "Risposta HTTP ricevuta",
+    "responseHint": "Una risposta HTTP indica che la destinazione ha risposto. Lo stato descrive la risposta del servizio.",
+    "status": "Stato HTTP",
+    "address": "Indirizzo remoto",
+    "time": "Ora del controllo",
+    "elapsed": "Tempo di risposta",
+    "redirects": "Reindirizzamenti seguiti"
+  }
+}

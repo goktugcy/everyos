@@ -860,3 +860,109 @@ test.describe("Port Inspector", () => {
     }
   });
 });
+
+test.describe("Network Tools", () => {
+  const networkApp = OFFICIAL.find((app) => app.slug === "network")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${networkApp.id}`, { confirm: true });
+  });
+
+  test("reads host interfaces, checks an approved endpoint, exports diagnostics and restores the mobile draft", async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+    const upstream = await startHttpFixture();
+    try {
+      await install(page, networkApp);
+      let { window, frame } = await open(page, networkApp.name, networkApp.id);
+      await expect(frame.locator(".network-interface").first()).toBeVisible();
+      await frame
+        .getByRole("combobox", { name: "Arayüz", exact: true })
+        .selectOption(process.platform === "linux" ? "lo" : "lo0");
+      await expect(frame.getByText("127.0.0.1/8", { exact: true })).toBeVisible();
+      await expect(frame.getByText("Host verisi", { exact: true }).first()).toBeVisible();
+      await frame.getByRole("textbox", { name: "HTTP veya HTTPS adresi" }).fill(upstream.url);
+      await frame.getByRole("button", { name: "Hedefi kontrol et", exact: true }).click();
+      await expect(
+        frame.getByRole("alert").filter({ hasText: `127.0.0.1:${upstream.port}` }),
+      ).toContainText("Uygulama Mağazası");
+      expect(upstream.checks).toEqual([]);
+      const rule = await api(page, "POST", "/api/desktop-apps/network-rules", {
+        kind: "cidr",
+        pattern: "127.0.0.1/32",
+        ports: [upstream.port],
+        appId: networkApp.id,
+      });
+      expect(rule.status, rule.text).toBe(201);
+      await frame.getByRole("button", { name: "Hedefi kontrol et", exact: true }).click();
+      await expect(frame.getByText("HTTP yanıtı alındı", { exact: true })).toBeVisible();
+      await expect(frame.locator(".network-probe-result")).toContainText("200 OK");
+      expect(upstream.checks).toEqual([{ method: "HEAD", status: 200 }]);
+      await frame.getByRole("button", { name: "Raporu dışa aktar", exact: true }).click();
+      const picker = window.getByTestId("desktop-app-file-picker");
+      const exportName = `network-diagnostics-test-${Date.now()}.json`;
+      await picker.getByRole("textbox", { name: "Ad", exact: true }).fill(exportName);
+      await picker.getByRole("button", { name: "Kaydet", exact: true }).click();
+      await expect
+        .poll(async () => {
+          const saved = await api(
+            page,
+            "GET",
+            `/api/files/text?root=home&path=Belgeler/${exportName}`,
+          );
+          if (saved.status !== 200) return null;
+          try {
+            const file = JSON.parse(saved.text) as { content: string };
+            return (JSON.parse(file.content) as { probe: { response: { status: number } } }).probe
+              .response.status;
+          } catch {
+            return null;
+          }
+        })
+        .toBe(200);
+      const saved = await api(page, "GET", `/api/files/text?root=home&path=Belgeler/${exportName}`);
+      const content = (JSON.parse(saved.text) as { content: string }).content;
+      const diagnostics = JSON.parse(content) as {
+        network: { value: { source: string; interfaces: unknown[] } };
+        probe: { response: { status: number; headers?: unknown; body?: unknown } };
+      };
+      expect(diagnostics.network.value.source).toBe("host");
+      expect(diagnostics.network.value.interfaces.length).toBeGreaterThan(0);
+      expect(diagnostics.probe.response.status).toBe(200);
+      expect(diagnostics.probe.response).not.toHaveProperty("headers");
+      expect(diagnostics.probe.response).not.toHaveProperty("body");
+      await frame.locator(".eui-content").evaluate((element) => {
+        element.scrollTop = 0;
+      });
+      await page.screenshot({ path: test.info().outputPath("network-desktop.png") });
+      await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      ({ window, frame } = await open(page, networkApp.name, networkApp.id));
+      await expect(frame.getByRole("textbox", { name: "HTTP veya HTTPS adresi" })).toHaveValue(
+        upstream.url,
+      );
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: networkApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(
+        `[data-testid="desktop-app-frame"][data-app-id="${networkApp.id}"]`,
+      );
+      await frame.getByRole("button", { name: "Hedefi kontrol et", exact: true }).click();
+      await expect(frame.getByText("HTTP yanıtı alındı", { exact: true })).toBeVisible();
+      expect(
+        await frame
+          .locator(".network-main")
+          .evaluate((element) => element.scrollWidth > element.clientWidth),
+      ).toBe(false);
+      expect(upstream.checks).toHaveLength(2);
+      await frame.locator(".eui-content").evaluate((element) => {
+        element.scrollTop = 0;
+      });
+      await page.screenshot({ path: test.info().outputPath("network-mobile.png") });
+    } finally {
+      await upstream.close();
+    }
+  });
+});

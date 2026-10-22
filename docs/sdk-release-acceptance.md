@@ -73,14 +73,14 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 16  | Cron Builder     | `dev.everyos.cron`        | open   |
 | 17  | JWT Inspector    | `dev.everyos.jwt`         | open   |
 | 18  | Color Studio     | `dev.everyos.color`       | open   |
-| 19  | Port Inspector   | `dev.everyos.ports`       | open   |
+| 19  | Port Inspector   | `dev.everyos.ports`       | tested |
 | 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
 | 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
 | 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | tested |
 | 23  | Log Viewer       | `dev.everyos.logs`        | open   |
 | 24  | Disk Explorer    | `dev.everyos.disk`        | open   |
 | 25  | SSH Keys         | `dev.everyos.sshkeys`     | open   |
-| 26  | Network Tools    | `dev.everyos.network`     | open   |
+| 26  | Network Tools    | `dev.everyos.network`     | tested |
 | 27  | Uptime           | `dev.everyos.uptime`      | open   |
 | 28  | Music Player     | `dev.everyos.music`       | open   |
 | 29  | Video Player     | `dev.everyos.video`       | open   |
@@ -211,8 +211,42 @@ test and the new native/explicit search-role test passing. No existing assertion
 The two focused browser tests pass on macOS: they verify the unsupported-host message, persistence
 and 390 px layout without inventing listeners. On Linux CI, the same workflow opens a real HTTP
 fixture, finds its actual listening port through the agent, verifies the CSV through the file
-picker and confirms that inspection made no connection to the fixture. Linux evidence is pending.
+picker and confirms that inspection made no connection to the fixture. The arm64 job in CI run 109
+now passes both the regular and plain-HTTP Linux paths, verifying the actual listening port and
+CSV contents without making a connection to the fixture.
 The full local gate passes under UTC/CI settings: format, lint, typecheck, 1,310 tests in 145
 files, build, all 13 foundation/official-app Chromium tests and a clean production audit.
 The first-run and Port Inspector browser workflows also pass over plain HTTP at `everyos.lan`
 (two tests); this macOS run verifies honest unavailability, saved filters and mobile layout.
+
+### Network Tools and PDF title synchronization
+
+Network Tools reads source-tagged interfaces, addresses/prefixes, link metadata, reported default
+gateways, DNS and configured reachability through the existing typed operations. An interface
+selector keeps the detail panel compact and persists the selection. The separate traffic table
+retains all measured interface rates, source and measurement/retrieval times; unavailable values
+remain explicit. Optional polling pauses on suspend, waits for pending reads and refreshes on
+resume. Policy-approved HEAD checks verify TLS and every redirect, distinguish a received HTTP
+response from a successful status, and fence late results after permission revocation.
+
+Nine logic tests and seven interface tests pass, including safe URL normalization, source and
+timestamp preservation, partial-data errors, report redaction, selection and draft persistence,
+permission changes and suspended polling. All ten locales validate. The first focused Chromium
+workflow passed using actual host interfaces and a real HTTP endpoint: no connection before policy
+approval, a HEAD response afterward, a JSON report through the destination picker and mobile
+reopening. The compact selector passes the fresh full gate under UTC/CI settings: format, lint,
+typecheck, 1,326 tests in 147 files, build, all 14 foundation/official-app browser tests and a
+clean production dependency audit.
+The first-run and Network Tools browser workflows also pass over plain HTTP at `everyos.lan`
+(two tests). The final desktop and 390 px mobile selector layouts were visually reviewed, with
+no horizontal overflow.
+
+[CI run 109](https://github.com/goktugcy/everyos/actions/runs/39836304500) passed its production
+audit. Its amd64 unit suite exposed a PDF Viewer test that read the desktop title before the
+asynchronous bridge delivered it, although the toolbar had already updated. The exact
+`Field guide` expectation now waits for the bridge; the other restoration, zoom, rotation and
+bookmark assertions remain intact. Both PDF test files pass under UTC/CI settings (13 tests).
+The [arm64 job](https://github.com/goktugcy/everyos/actions/runs/39836304500/job/120026097351)
+passed 1,310 tests, all 86 regular browser tests and all 16 additional plain-HTTP tests, including
+HTTP Monitor and actual Linux Port Inspector data. The amd64 PDF title fix still needs hosted
+verification; the full release remains open.
