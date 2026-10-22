@@ -197,7 +197,8 @@ describe("PDF Viewer", () => {
     ]);
     expect(pageInput().value).toBe("3");
     expect(byText("Field guide", ".eui-toolbar-title, h1, *")).not.toBeNull();
-    expect(host.window.title).toBe("Field guide");
+    // The desktop title arrives through the async bridge after the app's toolbar updates.
+    await vi.waitFor(() => expect(host.window.title).toBe("Field guide"));
     expect((byRole("combobox", "Zoom") as HTMLSelectElement).value).toBe("page-width");
     await click("tab", "Bookmarks");
     await vi.waitFor(() => expect(byText("Methods")).not.toBeNull());
