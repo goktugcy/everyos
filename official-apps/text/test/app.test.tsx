@@ -38,7 +38,8 @@ describe("Text Editor", () => {
     const { host } = await start({ locale: "tr", files: { "/docs/notlar.txt": latin } });
     await click("Aç…");
     await vi.waitFor(() => expect(tabs()).toContain("notlar.txt"));
-    expect(editor().textContent).toBe("Karı");
+    // The tab is committed before its asynchronously loaded editor is mounted.
+    await vi.waitFor(() => expect(editor()?.textContent).toBe("Karı"));
     expect(byText("WINDOWS-1254")).not.toBeNull();
     type("ş");
     await vi.waitFor(() => expect(tabs()[0]).toBe("●notlar.txt"));
