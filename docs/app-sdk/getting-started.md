@@ -47,6 +47,9 @@ app's own files (`everyos-app validate` reports what would be blocked).
 
 ## Next
 
+- [Manifest reference](manifest.md): every field, capability and cross-field rule.
+- [SDK reference](sdk-reference.md): every public method, host operation and error code.
+
 - [CLI](cli.md): every `everyos-app` command.
 - [Testing](testing.md): the mock desktop, and running on a real EveryOS.
 - [Publishing](publishing.md): your own registry, the community registry.

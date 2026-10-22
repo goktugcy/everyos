@@ -134,4 +134,13 @@ release evidence are still required. No tag or public release has been created.
   remains limited to esbuild; the optional Parcel watcher is explicitly denied. No release-age
   policy exception is used. The Excalidraw CDN-font patch is preserved.
 
-These fixes require a fresh full local gate and a new hosted CI run before the CI gate is closed.
+The fresh local gate passed under UTC/CI settings: format, lint, typecheck, 1,263 tests, build,
+11 Chromium tests and a clean production dependency audit. Both new apps were also visually
+reviewed at mobile widths (DNS 390 px, SSL 360 px). Hosted CI verification is still required.
+
+The [manifest reference](app-sdk/manifest.md) now documents every field and cross-field rule;
+both JSON examples validate against the actual schema. The [SDK reference](app-sdk/sdk-reference.md)
+contains the complete public instance and i18n signatures, all 28 typed host operations and their
+capabilities, lifecycle/file/storage semantics, errors and links to the domain contracts. All
+relative file links in these new reference pages resolve. Community-service documentation and
+final distribution evidence remain open.
