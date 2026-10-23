@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { uptime } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, test, type FrameLocator, type Page } from "@playwright/test";
 import { capabilityInfo, type AppCapability } from "../../packages/app-manifest/src/index.ts";
@@ -1248,5 +1249,120 @@ test.describe("Disk Explorer", () => {
         .evaluate((element) => element.scrollWidth > element.clientWidth),
     ).toBe(false);
     await page.screenshot({ path: test.info().outputPath("disk-mobile.png") });
+  });
+});
+
+test.describe("Uptime", () => {
+  test.use({ actionTimeout: 20000 });
+  const uptimeApp = OFFICIAL.find((app) => app.slug === "uptime")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${uptimeApp.id}`, { confirm: true });
+  });
+  test("reads real host uptime, observes approved endpoint failures, notifies and shares health with its widget", async ({
+    page,
+  }) => {
+    test.setTimeout(120000);
+    const upstream = await startHttpFixture();
+    try {
+      await install(page, uptimeApp);
+      const opened = await open(page, uptimeApp.name, uptimeApp.id);
+      const appWindow = opened.window;
+      let { frame } = opened;
+      const duration = frame.locator(".uptime-duration");
+      await expect(duration).toHaveText(/^\d+g \d+sa \d+dk \d+sn$/);
+      const parts = (await duration.innerText()).match(/^(\d+)g (\d+)sa (\d+)dk (\d+)sn$/)!;
+      const measuredSeconds =
+        Number(parts[1]) * 86400 +
+        Number(parts[2]) * 3600 +
+        Number(parts[3]) * 60 +
+        Number(parts[4]);
+      expect(Math.abs(uptime() - measuredSeconds)).toBeLessThan(30);
+      await expect(frame.getByText("Simüle veri", { exact: true })).toBeVisible();
+      await expect(frame.getByText("Yetersiz veri", { exact: true })).toBeVisible();
+      await frame.getByRole("button", { name: "Yeni izleyici", exact: true }).click();
+      await frame.getByRole("textbox", { name: "Ad", exact: true }).fill("Yerel sağlık");
+      await frame
+        .getByRole("textbox", { name: "HTTP veya HTTPS adresi", exact: true })
+        .fill(upstream.url);
+      await frame.getByRole("button", { name: "İzleyiciyi kaydet", exact: true }).click();
+      await expect(frame.getByRole("dialog").getByRole("alert")).toContainText(
+        `127.0.0.1:${upstream.port}`,
+      );
+      expect(upstream.checks).toEqual([]);
+      const rule = await api(page, "POST", "/api/desktop-apps/network-rules", {
+        kind: "cidr",
+        pattern: "127.0.0.1/32",
+        ports: [upstream.port],
+        appId: uptimeApp.id,
+      });
+      expect(rule.status, rule.text).toBe(201);
+      await frame.getByRole("button", { name: "İzleyiciyi kaydet", exact: true }).click();
+      await expect(frame.getByRole("heading", { name: "Yerel sağlık", exact: true })).toBeVisible();
+      await frame.getByRole("button", { name: "Şimdi kontrol et", exact: true }).click();
+      await expect(
+        frame.getByRole("table", { name: "Kontrol geçmişi", exact: true }),
+      ).toContainText("200");
+      expect(upstream.checks.some((check) => check.status === 200 && check.method === "GET")).toBe(
+        true,
+      );
+      upstream.setStatus(503);
+      await frame.getByRole("button", { name: "Şimdi kontrol et", exact: true }).click();
+      await expect(
+        frame.getByRole("table", { name: "Kontrol geçmişi", exact: true }),
+      ).toContainText("503");
+      await expect(frame.getByText("İlk hata gözlendi", { exact: true })).toBeVisible();
+      await expect(frame.getByText("Hata gözlendi", { exact: true })).toBeVisible();
+      const notifications = await api(page, "GET", "/api/notifications?limit=100");
+      expect(notifications.status).toBe(200);
+      expect(notifications.text).toContain("app-monitor-down");
+      expect(notifications.text).toContain("Yerel sağlık");
+      await frame.locator(".eui-content").evaluate((element) => {
+        element.scrollTop = 0;
+      });
+      await page.screenshot({ path: test.info().outputPath("uptime-desktop.png") });
+      const sidebar = page.getByTestId("widget-sidebar");
+      if (!(await sidebar.isVisible())) await page.getByTestId("widget-sidebar-toggle").click();
+      await sidebar.getByRole("button", { name: "Widget ekle…" }).first().click();
+      const gallery = page.getByRole("dialog", { name: "Widget galerisi" });
+      await gallery.getByRole("tab", { name: "Uygulamalar", exact: true }).click();
+      await gallery
+        .getByRole("button", { name: "Ekle: Çalışma süresi özeti", exact: true })
+        .click();
+      await page.keyboard.press("Escape");
+      const widget = sidebar.locator(
+        `[data-testid="widget"][data-widget="${uptimeApp.id}#health"]`,
+      );
+      await expect(widget).toBeVisible();
+      const health = widget.frameLocator('[data-testid="desktop-app-frame"]');
+      await expect(health.getByText("Hata gözlendi", { exact: true })).toBeVisible();
+      await expect(health.getByText("Simüle veri", { exact: true })).toBeVisible();
+      await expect(health.getByText("Simüle veri", { exact: true })).toBeInViewport();
+      await appWindow.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      await expect(appWindow).toHaveCount(0);
+      await page.screenshot({ path: test.info().outputPath("uptime-widget.png") });
+      await health.getByRole("button", { name: "Çalışma Süresi’ni aç", exact: true }).click();
+      const reopened = page.locator(`[data-app-id="everyos.desktop.${uptimeApp.id}"]`);
+      await expect(reopened).toBeVisible();
+      frame = reopened.frameLocator('[data-testid="desktop-app-frame"]');
+      await expect(frame.getByRole("heading", { name: "Yerel sağlık", exact: true })).toBeVisible();
+      await frame.getByRole("button", { name: "Duraklat", exact: true }).click();
+      await expect(frame.getByRole("button", { name: "Etkinleştir", exact: true })).toBeVisible();
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: uptimeApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${uptimeApp.id}"]`);
+      await expect(frame.getByRole("heading", { name: "Yerel sağlık", exact: true })).toBeVisible();
+      expect(
+        await frame
+          .locator(".uptime-main")
+          .evaluate((element) => element.scrollWidth > element.clientWidth),
+      ).toBe(false);
+      await page.screenshot({ path: test.info().outputPath("uptime-mobile.png") });
+    } finally {
+      await upstream.close();
+    }
   });
 });

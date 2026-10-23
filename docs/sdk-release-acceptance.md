@@ -81,7 +81,7 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 24  | Disk Explorer    | `dev.everyos.disk`        | tested |
 | 25  | SSH Keys         | `dev.everyos.sshkeys`     | open   |
 | 26  | Network Tools    | `dev.everyos.network`     | tested |
-| 27  | Uptime           | `dev.everyos.uptime`      | open   |
+| 27  | Uptime           | `dev.everyos.uptime`      | tested |
 | 28  | Music Player     | `dev.everyos.music`       | open   |
 | 29  | Video Player     | `dev.everyos.video`       | open   |
 | 30  | Image Viewer     | `dev.everyos.images`      | open   |
@@ -326,3 +326,40 @@ overflow. Desktop and mobile screenshots were reviewed.
 The full checkpoint passes format, lint, typecheck, 1,368 tests in 153 files, the production build
 and all 16 first-run/official-app browser workflows. Dependency audit reports no known vulnerabilities.
 The first-run and Disk Explorer workflows also pass over plain HTTP at `everyos.lan` (2/2).
+
+[CI run 114](https://github.com/goktugcy/everyos/actions/runs/39923220292) passes the audit and
+both full Linux architecture jobs: 1,368 tests in 153 files, 89 regular browser scenarios and
+19 extra plain-HTTP scenarios on each. Each normal pass intentionally skips the existing
+insecure-origin-only scenario, which is exercised in the additional HTTP pass. No scenario
+requires a retry in this run; Disk Explorer passes both browser modes on both architectures.
+
+### Uptime
+
+Uptime reads source-tagged host uptime/boot time and service state, and manages its own approved
+HTTP endpoint checks through the existing monitor scheduler. Settings include interval, timeout,
+expected status range, failure threshold, notifications and enabled state. Checks use GET with
+verified TLS; targets and redirects remain behind the App Store network policy. Service actions
+are read-only. Its health summary requires complete, real, fresh data for a passing result;
+missing, stale, simulated and pending observations remain incomplete. Failed reads retain their
+last measured values while changing the summary to insufficient data.
+
+The 24-hour/seven-day availability figures are measured check rates. History has 100-row pages,
+up to 5,000 retained checks and a latest-60-check timeline. Incident observations are actual
+transitions into failed/blocked checks and first subsequent success, capped at 100; an initial
+failure is marked as a partial start. No past service incidents or precise downtime intervals
+are inferred. The window and widget poll every 15 seconds while active, suspend/resume cleanly
+and fence revoked/late reads. Endpoint drafts persist and ask before discard. All 138 locale keys
+are supplied in ten languages. The widget declares its own capability subset and its implementation
+only reads host information, services and this app's monitor list, then opens the full window.
+
+Seventeen logic, interface and widget tests pass, including source separation, overdue/stale
+health, safe targets/configuration, check transitions, draft restoration, confirmation, lifecycle
+polling, permission revocation, notifications configuration and widget opening. The first focused
+Chromium run passes with real measured host uptime, a loopback endpoint blocked before policy
+approval, actual 200/503 responses, a server notification, widget/window sharing and mobile reopening.
+The development service source stays explicitly simulated. Screenshot review prompted a smaller
+widget summary with the simulated-source badge moved into its first row. The second focused run
+passes with an explicit viewport assertion for that badge; its new screenshot was reviewed. The
+full checkpoint passes format, lint, typecheck, 1,385 tests in 155 files, the production build
+and all 17 first-run/official-app browser workflows. Dependency audit reports no known vulnerabilities.
+The first-run and Uptime workflows also pass over plain HTTP at `everyos.lan` (2/2).

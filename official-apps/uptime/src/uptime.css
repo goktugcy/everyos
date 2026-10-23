@@ -1,0 +1,135 @@
+.eui-toolbar {
+  flex-wrap: wrap;
+}
+.uptime-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  max-width: 1440px;
+  margin: auto;
+  padding: 18px;
+}
+.uptime-main h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+.uptime-main h3 {
+  font-size: 14px;
+  margin: 14px 0 8px;
+}
+.uptime-main p {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.uptime-hint {
+  color: var(--eui-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.uptime-panel,
+.uptime-health {
+  padding: 16px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  min-width: 0;
+}
+.uptime-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.uptime-duration {
+  font-size: 24px;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.uptime-targets,
+.uptime-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.uptime-targets .eui-button {
+  gap: 12px;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.uptime-targets [aria-pressed="true"] {
+  border-color: var(--eui-accent);
+  background: var(--eui-hover-strong);
+}
+.uptime-url {
+  font-family: monospace;
+}
+.uptime-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.uptime-stats dt {
+  color: var(--eui-muted);
+  font-size: 12px;
+}
+.uptime-stats dd {
+  margin: 6px 0;
+  font-size: 18px;
+}
+.uptime-table {
+  overflow: auto;
+  max-width: 100%;
+  margin: 12px 0;
+}
+.uptime-table td {
+  overflow-wrap: anywhere;
+  max-width: 480px;
+}
+.uptime-timeline {
+  display: flex;
+  gap: 3px;
+  height: 28px;
+  margin: 12px 0;
+}
+.uptime-timeline span {
+  flex: 1;
+  min-width: 1px;
+  border-radius: 3px;
+  background: var(--eui-danger);
+}
+.uptime-timeline span[data-ok="true"] {
+  background: var(--eui-success);
+}
+.uptime-incidents {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+.uptime-incidents li {
+  border-left: 2px solid var(--eui-line-strong);
+  display: grid;
+  gap: 5px;
+  padding: 4px 12px 16px;
+  font-size: 12px;
+}
+.uptime-incidents time {
+  color: var(--eui-muted);
+}
+.uptime-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+@media (max-width: 700px) {
+  .uptime-columns,
+  .uptime-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .uptime-main {
+    padding: 12px;
+  }
+  .uptime-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
