@@ -1095,3 +1095,158 @@ test.describe("Log Viewer", () => {
     await page.screenshot({ path: test.info().outputPath("logs-mobile.png") });
   });
 });
+
+test.describe("Disk Explorer", () => {
+  test.use({ actionTimeout: 20000 });
+  const diskApp = OFFICIAL.find((app) => app.slug === "disk")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${diskApp.id}`, { confirm: true });
+  });
+
+  test("measures a shared folder, records real growth, exports its scope and restores navigation on mobile", async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+    await install(page, diskApp);
+    const name = `disk-test-${Date.now()}`;
+    const base = `Belgeler/${name}`;
+    for (const [path, child] of [
+      ["Belgeler", name],
+      [base, "media"],
+    ]) {
+      const created = await api(page, "POST", "/api/files/mkdir", {
+        root: "home",
+        path,
+        name: child,
+      });
+      expect(created.status, created.text).toBe(201);
+    }
+    const upload = async (path: string, fileName: string, size: number) => {
+      expect(
+        await page.evaluate(
+          async ({ path, fileName, size, header }) => {
+            const session = (await (await fetch("/api/auth/session")).json()) as {
+              csrfToken: string;
+            };
+            return (
+              await fetch(
+                `/api/files/upload?root=home&path=${encodeURIComponent(path)}&name=${encodeURIComponent(fileName)}`,
+                {
+                  method: "POST",
+                  headers: { [header]: session.csrfToken },
+                  body: "x".repeat(size),
+                },
+              )
+            ).status;
+          },
+          { path, fileName, size, header: CSRF_HEADER },
+        ),
+      ).toBe(201);
+    };
+    await upload(base, "readme.txt", 128);
+    await upload(`${base}/media`, "large.bin", 4096);
+    await upload(`${base}/media`, "photo.jpg", 2048);
+    await upload("Belgeler", `${name}-outside.txt`, 10000);
+    const opened = await open(page, diskApp.name, diskApp.id);
+    const { window } = opened;
+    let { frame } = opened;
+    await frame.getByRole("button", { name: "Klasör seç", exact: true }).first().click();
+    const picker = window.getByTestId("desktop-app-file-picker");
+    await picker.getByRole("option", { name, exact: true }).click();
+    await picker.getByRole("button", { name: "Bu klasörü seç", exact: true }).click();
+    const table = () => frame.getByRole("table", { name: "Dosyalar ve klasörler", exact: true });
+    await expect(table().locator("tbody tr")).toHaveCount(2);
+    await expect(
+      frame.getByRole("table", { name: "En büyük dosyalar", exact: true }),
+    ).toContainText("media/large.bin");
+    await expect(
+      frame.getByRole("table", { name: "Dosya türü istatistikleri", exact: true }),
+    ).toContainText(".jpg");
+    await frame.getByRole("button", { name: "media", exact: true }).click();
+    await expect(table()).toContainText("large.bin");
+    await expect(table()).not.toContainText("readme.txt");
+    await frame.getByRole("button", { name: "Üst klasör", exact: true }).click();
+    await expect(table()).toContainText("readme.txt");
+    await upload(base, "growth.bin", 512);
+    // The app keeps at most one actual observation per 15-second interval.
+    await page.waitForTimeout(16000);
+    await frame.getByRole("button", { name: "Yenile", exact: true }).click();
+    await expect(table().locator("tbody tr")).toHaveCount(3);
+    await expect(
+      frame.getByRole("img", { name: "Ölçülen depolama eğilimi", exact: true }),
+    ).toBeVisible();
+    await frame.getByRole("button", { name: "Raporu dışa aktar", exact: true }).click();
+    const save = window.getByTestId("desktop-app-file-picker");
+    const exportName = `${name}.json`;
+    await save.getByRole("textbox", { name: "Ad", exact: true }).fill(exportName);
+    await save.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(save).toHaveCount(0);
+    let exported = "";
+    await expect
+      .poll(async () => {
+        const response = await api(
+          page,
+          "GET",
+          `/api/files/text?root=home&path=Belgeler/${exportName}`,
+        );
+        if (response.status !== 200) return null;
+        try {
+          exported = (JSON.parse(response.text) as { content: string }).content;
+          return JSON.parse(exported) as unknown;
+        } catch {
+          // The picker creates the destination before the bridge finishes writing its contents.
+          return null;
+        }
+      })
+      .toMatchObject({
+        folder: {
+          name,
+          path: "",
+          source: "host",
+          total: 6784,
+          files: 4,
+          folders: 1,
+          truncated: false,
+        },
+        storage: { value: { source: "host" } },
+      });
+    const report = JSON.parse(exported) as {
+      history: { scope: { kind: string; path?: string }; samples: { bytes: number }[] }[];
+    };
+    const trend = report.history.find(
+      (value) => value.scope.kind === "folder" && value.scope.path === "",
+    );
+    expect(trend!.samples.map((value) => value.bytes)).toEqual([6272, 6784]);
+    expect(exported).not.toContain(`${name}-outside.txt`);
+    await frame.getByRole("tab", { name: "Bağlı depolama", exact: true }).click();
+    await expect(
+      frame.getByRole("combobox", { name: "Bağlama noktası", exact: true }),
+    ).toBeVisible();
+    await expect(frame.getByRole("meter", { name: "Kullanılan alan", exact: true })).toBeVisible();
+    await frame.getByRole("tab", { name: "Klasör", exact: true }).click();
+    await frame.locator(".eui-content").evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.screenshot({ path: test.info().outputPath("disk-desktop.png") });
+    await frame.getByRole("button", { name: "media", exact: true }).click();
+    await expect(table()).toContainText("large.bin");
+    await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    ({ frame } = await open(page, diskApp.name, diskApp.id));
+    await expect(table()).toContainText("large.bin");
+    await expect(table()).not.toContainText("readme.txt");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId("mobile-shell")).toBeVisible();
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: diskApp.name, exact: true })
+      .click();
+    frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${diskApp.id}"]`);
+    await expect(table()).toContainText("large.bin");
+    expect(
+      await frame
+        .locator(".disk-main")
+        .evaluate((element) => element.scrollWidth > element.clientWidth),
+    ).toBe(false);
+    await page.screenshot({ path: test.info().outputPath("disk-mobile.png") });
+  });
+});

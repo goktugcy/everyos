@@ -78,7 +78,7 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
 | 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | tested |
 | 23  | Log Viewer       | `dev.everyos.logs`        | tested |
-| 24  | Disk Explorer    | `dev.everyos.disk`        | open   |
+| 24  | Disk Explorer    | `dev.everyos.disk`        | tested |
 | 25  | SSH Keys         | `dev.everyos.sshkeys`     | open   |
 | 26  | Network Tools    | `dev.everyos.network`     | tested |
 | 27  | Uptime           | `dev.everyos.uptime`      | open   |
@@ -284,3 +284,45 @@ build and all 15 first-run/official-app browser scenarios. Dependency audit repo
 vulnerabilities. Desktop and 390-pixel mobile screenshots were reviewed, including the saved
 filter name and its adjacent removal button.
 The first-run and Log Viewer workflows also pass over plain HTTP at `everyos.lan` (2/2).
+
+[CI run 111](https://github.com/goktugcy/everyos/actions/runs/39916244747) finishes successfully
+on both architectures, including the complete browser suite and the extra plain-HTTP pass.
+Each architecture passes 1,349 tests in 150 files and all 18 plain-HTTP scenarios. The regular
+amd64 pass reports 88 passed / 1 intentionally skipped insecure-origin scenario. The arm64 pass
+reports 87 passed / 1 flaky / the same intentional skip: the existing terminal shell-exit test
+timed out waiting for `ended` once and passed on its configured retry. That terminal test and
+client remain unchanged under the owner's explicit scope restriction. Log Viewer's normal and
+plain-HTTP workflows pass on both architectures without a retry.
+
+### Disk Explorer
+
+Disk Explorer measures only a persistent, read-only directory handle chosen by the person.
+It restores relative navigation, renders per-child size bars and 100-row pages, finds the largest
+50 files, summarizes the largest 50 extension groups and exports all collected rows as JSON.
+Mounted storage is a separate source-tagged view with capacity, used/available bytes, filesystem,
+device, access mode and inode availability. Capacity values from potentially overlapping mounts
+are never added together. File lengths are distinguished from filesystem allocation.
+
+Its 14 logic/interface tests pass: bounded restored settings/history, safe relative navigation,
+sample/time spacing, source separation, picker access, persisted folder restoration, pagination,
+complete exports, partial scans, simulated-source labels, stale reads and permission/file-share
+revocation. Actual observations are kept for at most 8 scopes / 24 samples per scope / 160 KiB;
+refreshes within 15 seconds replace an observation. Incomplete folder scans do not enter history.
+All 64 translation keys are supplied in ten languages.
+
+Five new provider regression tests cover unreadable descendants, scoped nested totals, symlinks,
+listing/depth limits, the global 50,000-entry budget and deadlines between direct children.
+Those tests and the existing SDK API integration suite pass together (36/36, including MariaDB).
+The provider now reports inaccessible descendants as partial and applies its count/time guards
+to direct children as well as nested directories.
+
+The focused Chromium workflow passes through the actual sandbox, file picker and API. It measures
+real temporary files, enters a child folder, observes a real 512-byte increase after the sampling
+interval and verifies both actual totals in the exported trend (6,272 then 6,784 bytes). The JSON
+report excludes a larger sibling outside the shared folder. The workflow also checks actual mounted
+storage, persists the folder's relative location and reopens at 390 pixels without horizontal
+overflow. Desktop and mobile screenshots were reviewed.
+
+The full checkpoint passes format, lint, typecheck, 1,368 tests in 153 files, the production build
+and all 16 first-run/official-app browser workflows. Dependency audit reports no known vulnerabilities.
+The first-run and Disk Explorer workflows also pass over plain HTTP at `everyos.lan` (2/2).
