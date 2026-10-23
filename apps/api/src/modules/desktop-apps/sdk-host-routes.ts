@@ -217,8 +217,8 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
         AppDbConnectionInputSchema.parse(input).connection,
       ),
     "ssh.keys.list": (_c, call) => ({ keys: sshKeys.list(call.auth.user.id) }),
-    "ssh.keys.generate": (c, call, input) => {
-      const key = sshKeys.generate(call.auth.user.id, AppSshGenerateSchema.parse(input));
+    "ssh.keys.generate": async (c, call, input) => {
+      const key = await sshKeys.generate(call.auth.user.id, AppSshGenerateSchema.parse(input));
       audit(c, call, "ssh-key.generate", "success", { key: key.id, fingerprint: key.fingerprint });
       return key;
     },
@@ -227,12 +227,17 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
       audit(c, call, "ssh-key.import", "success", { key: key.id, fingerprint: key.fingerprint });
       return key;
     },
-    "ssh.keys.update": (_c, call, input) =>
-      sshKeys.update(call.auth.user.id, AppSshUpdateSchema.parse(input)),
+    "ssh.keys.update": (c, call, input) => {
+      const key = sshKeys.update(call.auth.user.id, AppSshUpdateSchema.parse(input));
+      audit(c, call, "ssh-key.update", "success", { key: key.id, fingerprint: key.fingerprint });
+      return key;
+    },
     "ssh.keys.export": async (c, call, input, confirmed) => {
       const parsed = AppSshExportSchema.parse(input);
       if (!parsed.private) return sshKeys.export(call.auth.user.id, parsed, false);
       try {
+        if (call.instance.kind !== "window")
+          throw new ApiError(403, "FORBIDDEN", "Widgets cannot export private keys");
         const exported = await sshKeys.export(call.auth.user.id, parsed, confirmed);
         audit(c, call, "ssh-key.export-private", "success", {
           key: parsed.id,
@@ -249,19 +254,30 @@ export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
     },
     "ssh.keys.delete": (c, call, input, confirmed) => {
       const { id } = AppSshKeyIdSchema.parse(input);
-      // A private key cannot be made again: deleting one needs the person's confirmation.
-      if (sshKeys.hasPrivate(call.auth.user.id, id) && !confirmed)
-        throw new ApiError(
-          403,
-          "FORBIDDEN",
-          "Deleting a private key needs the person's confirmation",
-          {
-            details: { confirmation: "required" },
-          },
-        );
-      sshKeys.delete(call.auth.user.id, id);
-      audit(c, call, "ssh-key.delete", "success", { key: id });
-      return null;
+      try {
+        // A private key cannot be made again; a widget cannot obtain native confirmation.
+        if (
+          sshKeys.hasPrivate(call.auth.user.id, id) &&
+          (!confirmed || call.instance.kind !== "window")
+        )
+          throw new ApiError(
+            403,
+            "FORBIDDEN",
+            "Deleting a private key needs the person's confirmation",
+            {
+              details: { confirmation: "required" },
+            },
+          );
+        sshKeys.delete(call.auth.user.id, id);
+        audit(c, call, "ssh-key.delete", "success", { key: id });
+        return null;
+      } catch (error) {
+        audit(c, call, "ssh-key.delete", "failure", {
+          key: id,
+          code: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        });
+        throw error;
+      }
     },
     "db.query": async (c, call, input, confirmed) => {
       const parsed = AppDbQueryInputSchema.parse(input);

@@ -1,7 +1,8 @@
 import { execFile } from "node:child_process";
 import {
   createHash,
-  generateKeyPairSync,
+  ECDH,
+  generateKeyPair,
   randomBytes,
   randomUUID,
   type KeyObject,
@@ -13,7 +14,7 @@ import { promisify } from "node:util";
 import type { SshKey, SshKeyType } from "@everyos/app-sdk/protocol";
 import type { Database } from "@everyos/database";
 import type { SecretBox } from "@everyos/security";
-import { ApiError, notFound } from "../../http/errors.ts";
+import { ApiError, notFound, rateLimited } from "../../http/errors.ts";
 
 /*
  * Each person's SSH keys for apps holding secrets:ssh (docs/app-sdk/ssh-keys.md). Keys are made
@@ -44,7 +45,7 @@ const mpint = (value: Buffer) => {
 const b64url = (value: string | undefined) => Buffer.from(value ?? "", "base64url");
 
 /** Reads the `string`s of an SSH wire blob, refusing anything truncated. */
-function readStrings(blob: Buffer, count: number): Buffer[] {
+function readStrings(blob: Buffer, count: number, complete = false): Buffer[] {
   const out: Buffer[] = [];
   let offset = 0;
   for (let index = 0; index < count; index++) {
@@ -55,13 +56,14 @@ function readStrings(blob: Buffer, count: number): Buffer[] {
     out.push(blob.subarray(offset, offset + length));
     offset += length;
   }
+  if (complete && offset !== blob.length) throw new Error("trailing data");
   return out;
 }
 
 const CURVES = {
-  "P-256": { name: "nistp256", bits: 256 },
-  "P-384": { name: "nistp384", bits: 384 },
-  "P-521": { name: "nistp521", bits: 521 },
+  "P-256": { name: "nistp256", bits: 256, nodeCurve: "prime256v1" },
+  "P-384": { name: "nistp384", bits: 384, nodeCurve: "secp384r1" },
+  "P-521": { name: "nistp521", bits: 521, nodeCurve: "secp521r1" },
 } as const;
 
 interface Encoded {
@@ -166,6 +168,7 @@ export function parsePublicKey(line: string): {
     new ApiError(400, "VALIDATION_FAILED", "Not an SSH public key", {
       details: [{ path: "publicKey", message: "Not an SSH public key" }],
     });
+  if (line.includes("\0")) throw invalid();
   const lines = line.trim().split(/\r?\n/);
   if (lines.length !== 1) throw invalid();
   const [type = "", data = "", ...rest] = lines[0]!.trim().split(/\s+/);
@@ -175,18 +178,46 @@ export function parsePublicKey(line: string): {
     const [inner] = readStrings(blob, 1);
     if (inner?.toString() !== type) throw invalid();
     let bits = 256;
+    const securityKey = type.startsWith("sk-");
     if (type === "ssh-rsa") {
-      const [, , n] = readStrings(blob, 3);
-      const modulus = n!.subarray(n![0] === 0 ? 1 : 0);
-      bits = modulus.length * 8;
+      const [, e, n] = readStrings(blob, 3, true);
+      const positive = (field: Buffer): Buffer => {
+        if (!field.length || field[0]! & 0x80) throw invalid();
+        if (field[0] !== 0) return field;
+        if (field.length === 1 || !(field[1]! & 0x80)) throw invalid();
+        return field.subarray(1);
+      };
+      const exponent = positive(e!);
+      const modulus = positive(n!);
+      if (
+        !(exponent.at(-1)! & 1) ||
+        (exponent.length === 1 && exponent[0]! < 3) ||
+        !(modulus.at(-1)! & 1)
+      )
+        throw invalid();
+      bits = (modulus.length - 1) * 8 + 32 - Math.clz32(modulus[0]!);
       if (bits < 2048) throw invalid();
-    } else if (type.startsWith("ecdsa-sha2-")) {
-      const [, curve] = readStrings(blob, 3);
-      bits = Number(curve?.toString().replace("nistp", "")) || 0;
-    } else if (type === "ssh-ed25519") {
-      const [, key] = readStrings(blob, 2);
+    } else if (type.includes("ecdsa-sha2-")) {
+      const curve = Object.values(CURVES).find(
+        (value) =>
+          type === `ecdsa-sha2-${value.name}` || type === `sk-ecdsa-sha2-${value.name}@openssh.com`,
+      );
+      if (!curve) throw invalid();
+      const [, name, point, application] = readStrings(blob, securityKey ? 4 : 3, true);
+      if (
+        name?.toString() !== curve.name ||
+        point?.length !== 1 + 2 * Math.ceil(curve.bits / 8) ||
+        point[0] !== 4
+      )
+        throw invalid();
+      ECDH.convertKey(point, curve.nodeCurve);
+      if (securityKey && application!.includes(0)) throw invalid();
+      bits = curve.bits;
+    } else {
+      const [, key, application] = readStrings(blob, securityKey ? 3 : 2, true);
       if (key?.length !== 32) throw invalid();
-    } else readStrings(blob, 2);
+      if (securityKey && application!.includes(0)) throw invalid();
+    }
     return { type, bits, blob, comment: rest.join(" ").slice(0, 200) };
   } catch (error) {
     if (error instanceof ApiError) throw error;
@@ -221,6 +252,7 @@ export class AppSshKeys {
   readonly #now: () => number;
   /** A private directory for the moment ssh-keygen encrypts an export. */
   readonly #scratch: string;
+  #cryptoBusy = false;
 
   constructor(options: { db: Database; secrets: SecretBox; now: () => number; dir: string }) {
     this.#db = options.db;
@@ -279,11 +311,7 @@ export class AppSshKeys {
       privateKey: string | null;
     },
   ): SshKey {
-    const count = this.#db.get<{ count: number }>(
-      "SELECT COUNT(*) AS count FROM desktop_app_ssh_keys WHERE user_id = ?",
-      userId,
-    );
-    if ((count?.count ?? 0) >= MAX_KEYS) throw new ApiError(409, "CONFLICT", "Too many keys");
+    this.#assertRoom(userId);
     const id = randomUUID();
     const fingerprint = fingerprintOf(fields.blob);
     const publicKey = `${fields.type} ${fields.blob.toString("base64")}${fields.comment ? ` ${fields.comment}` : ""}`;
@@ -315,25 +343,50 @@ export class AppSshKeys {
     return this.#view(this.#row(userId, id));
   }
 
-  generate(userId: string, input: { name: string; type: SshKeyType; comment: string }): SshKey {
-    const { privateKey } =
-      input.type === "ed25519"
-        ? generateKeyPairSync("ed25519")
-        : input.type.startsWith("ecdsa-")
-          ? generateKeyPairSync("ec", {
-              namedCurve: `P-${input.type.slice("ecdsa-".length)}`,
-            })
-          : generateKeyPairSync("rsa", {
-              modulusLength: Number(input.type.slice("rsa-".length)),
-            });
-    const encoded = encode(privateKey);
-    return this.#insert(userId, {
-      name: input.name,
-      type: encoded.type,
-      bits: encoded.bits,
-      comment: input.comment,
-      blob: encoded.publicBlob,
-      privateKey: opensshPrivate(encoded, input.comment),
+  async #withCryptoSlot<T>(work: () => Promise<T>): Promise<T> {
+    // One expensive crypto task leaves capacity for normal requests and other host reads.
+    if (this.#cryptoBusy) throw rateLimited(1000);
+    this.#cryptoBusy = true;
+    try {
+      return await work();
+    } finally {
+      this.#cryptoBusy = false;
+    }
+  }
+
+  #assertRoom(userId: string): void {
+    const count = this.#db.get<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM desktop_app_ssh_keys WHERE user_id = ?",
+      userId,
+    );
+    if ((count?.count ?? 0) >= MAX_KEYS) throw new ApiError(409, "CONFLICT", "Too many keys");
+  }
+
+  async generate(
+    userId: string,
+    input: { name: string; type: SshKeyType; comment: string },
+  ): Promise<SshKey> {
+    this.#assertRoom(userId);
+    // The native async primitive keeps expensive generation off the HTTP event loop.
+    return this.#withCryptoSlot(async () => {
+      const privateKey = await new Promise<KeyObject>((resolve, reject) => {
+        const done = (error: Error | null, _publicKey: KeyObject, key: KeyObject) =>
+          error ? reject(error) : resolve(key);
+        if (input.type === "ed25519") generateKeyPair("ed25519", {}, done);
+        else if (input.type.startsWith("ecdsa-"))
+          generateKeyPair("ec", { namedCurve: `P-${input.type.slice("ecdsa-".length)}` }, done);
+        else
+          generateKeyPair("rsa", { modulusLength: Number(input.type.slice("rsa-".length)) }, done);
+      });
+      const encoded = encode(privateKey);
+      return this.#insert(userId, {
+        name: input.name,
+        type: encoded.type,
+        bits: encoded.bits,
+        comment: input.comment,
+        blob: encoded.publicBlob,
+        privateKey: opensshPrivate(encoded, input.comment),
+      });
     });
   }
 
@@ -397,36 +450,38 @@ export class AppSshKeys {
    * command line, which other users could read.
    */
   async #encrypt(plain: string, passphrase: string): Promise<string> {
-    const keygen = sshKeygen();
-    if (!keygen)
-      throw new ApiError(503, "HOST_CAPABILITY_UNAVAILABLE", "ssh-keygen is not installed", {
-        details: { tool: "ssh-keygen" },
-      });
-    const dir = await mkdtemp(join(this.#scratch, "ssh-"));
-    try {
-      await chmod(dir, 0o700);
-      const key = join(dir, "key");
-      const askpass = join(dir, "askpass");
-      await writeFile(key, plain, { mode: 0o600 });
-      await writeFile(askpass, "#!/bin/sh\nprintf '%s\\n' \"$EVERYOS_SSH_PASSPHRASE\"\n", {
-        mode: 0o700,
-      });
-      await run(keygen, ["-q", "-p", "-f", key], {
-        timeout: 30_000,
-        env: {
-          PATH: "/usr/bin:/bin",
-          SSH_ASKPASS: askpass,
-          SSH_ASKPASS_REQUIRE: "force",
-          DISPLAY: ":0",
-          EVERYOS_SSH_PASSPHRASE: passphrase,
-        },
-      });
-      const encrypted = await readFile(key, "utf8");
-      if (encrypted === plain) throw new Error("ssh-keygen left the key unencrypted");
-      return encrypted;
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
+    return this.#withCryptoSlot(async () => {
+      const keygen = sshKeygen();
+      if (!keygen)
+        throw new ApiError(503, "HOST_CAPABILITY_UNAVAILABLE", "ssh-keygen is not installed", {
+          details: { tool: "ssh-keygen" },
+        });
+      const dir = await mkdtemp(join(this.#scratch, "ssh-"));
+      try {
+        await chmod(dir, 0o700);
+        const key = join(dir, "key");
+        const askpass = join(dir, "askpass");
+        await writeFile(key, plain, { mode: 0o600 });
+        await writeFile(askpass, "#!/bin/sh\nprintf '%s\\n' \"$EVERYOS_SSH_PASSPHRASE\"\n", {
+          mode: 0o700,
+        });
+        await run(keygen, ["-q", "-p", "-f", key], {
+          timeout: 30_000,
+          env: {
+            PATH: "/usr/bin:/bin",
+            SSH_ASKPASS: askpass,
+            SSH_ASKPASS_REQUIRE: "force",
+            DISPLAY: ":0",
+            EVERYOS_SSH_PASSPHRASE: passphrase,
+          },
+        });
+        const encrypted = await readFile(key, "utf8");
+        if (encrypted === plain) throw new Error("ssh-keygen left the key unencrypted");
+        return encrypted;
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    });
   }
 
   delete(userId: string, id: string): void {

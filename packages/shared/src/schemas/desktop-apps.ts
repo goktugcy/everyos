@@ -354,6 +354,16 @@ export const AppDbQueryInputSchema = z.strictObject({
 
 /* ------------------------------------------------------------------ SSH keys */
 
+// Shared schemas do not depend on Node or DOM globals.
+const utf8Bytes = (value: string): number => {
+  let size = 0;
+  for (const character of value) {
+    const point = character.codePointAt(0)!;
+    size += point <= 0x7f ? 1 : point <= 0x7ff ? 2 : point <= 0xffff ? 3 : 4;
+  }
+  return size;
+};
+
 const sshKeyName = z.string().trim().min(1).max(80);
 /** OpenSSH comments are one line of text. */
 const sshComment = z
@@ -382,7 +392,21 @@ export const AppSshUpdateSchema = z.strictObject({
 export const AppSshExportSchema = z.strictObject({
   id: z.uuid(),
   private: z.boolean(),
-  passphrase: z.string().min(8).max(1024).nullable().default(null),
+  // OpenSSH askpass reads at most 1,023 bytes and stops at the first line break.
+  passphrase: z
+    .string()
+    .min(8)
+    .max(1023)
+    .refine(
+      (value) =>
+        !value.includes("\0") &&
+        !value.includes("\r") &&
+        !value.includes("\n") &&
+        utf8Bytes(value) <= 1023,
+      { message: "Passphrase must be one line without NUL and at most 1023 UTF-8 bytes" },
+    )
+    .nullable()
+    .default(null),
 });
 
 export const AppSshKeyIdSchema = z.strictObject({ id: z.uuid() });

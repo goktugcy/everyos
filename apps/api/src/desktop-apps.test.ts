@@ -2217,13 +2217,29 @@ describe("app SSH keys", () => {
     "/opt/homebrew/bin/ssh-keygen",
   ].find((path) => existsSync(path));
 
-  async function withKeysApp() {
+  async function withKeysApp(widgets = false) {
     const context = await setup();
     const build = await buildApp(
       "dev.everyos.sshkeys",
       "1.0.0",
-      ["secrets:ssh", "files:pick"],
+      ["secrets:ssh", "files:pick", ...(widgets ? ["widgets:register"] : [])],
       officialKeys.privateKey,
+      widgets
+        ? {
+            widgets: [
+              {
+                id: "keys",
+                name: "Keys",
+                description: "Key metadata",
+                entry: "widget.html",
+                sizes: ["small"],
+                defaultSize: "small",
+                placements: ["sidebar"],
+                permissions: ["secrets:ssh"],
+              },
+            ],
+          }
+        : {},
     );
     const other = await buildApp(
       "dev.everyos.other",
@@ -2388,6 +2404,183 @@ describe("app SSH keys", () => {
     );
     await rm(scratch, { recursive: true, force: true });
   }, 60_000);
+
+  it("also generates OpenSSH-compatible P-521 and RSA-4096 keys", async () => {
+    const { admin, open, host } = await withKeysApp();
+    const token = await open(admin);
+    const scratch = await mkdtemp(join(tmpdir(), "everyos-ssh-extra-"));
+    try {
+      for (const [type, bits] of [
+        ["ecdsa-521", 521],
+        ["rsa-4096", 4096],
+      ] as const) {
+        const key = (
+          await json<{ result: SshKey }>(
+            await host(admin, token, "ssh.keys.generate", {
+              name: type,
+              type,
+              comment: "interop-test",
+            }),
+          )
+        ).result;
+        expect(key.bits).toBe(bits);
+        const exported = (
+          await json<{ result: { text: string } }>(
+            await host(admin, token, "ssh.keys.export", { id: key.id, private: true }, true),
+          )
+        ).result;
+        if (keygen) {
+          const file = join(scratch, type);
+          writeFileSync(file, exported.text, { mode: 0o600 });
+          expect(
+            execFileSync(keygen, ["-y", "-f", file], { encoding: "utf8" })
+              .trim()
+              .split(" ")
+              .slice(0, 2),
+          ).toEqual(key.publicKey.split(" ").slice(0, 2));
+        }
+        expect((await host(admin, token, "ssh.keys.delete", { id: key.id }, true)).status).toBe(
+          200,
+        );
+      }
+    } finally {
+      await rm(scratch, { recursive: true, force: true });
+    }
+  }, 60000);
+
+  it("rejects truncating passphrases and encrypts with the complete bounded UTF-8 passphrase", async () => {
+    const { ctx, admin, open, host } = await withKeysApp();
+    const token = await open(admin);
+    const key = (
+      await json<{ result: SshKey }>(
+        await host(admin, token, "ssh.keys.generate", {
+          name: "Export test",
+          type: "ed25519",
+          comment: "test",
+        }),
+      )
+    ).result;
+    for (const passphrase of [
+      "dummy-secret\nrest",
+      "dummy-secret\rrest",
+      `dummy-secret${String.fromCharCode(0)}rest`,
+      "x".repeat(1024),
+      "ş".repeat(512),
+    ])
+      expect(
+        (
+          await host(
+            admin,
+            token,
+            "ssh.keys.export",
+            { id: key.id, private: true, passphrase },
+            true,
+          )
+        ).status,
+      ).toBe(400);
+    const passphrase = "ş".repeat(511) + "x";
+    const response = await host(
+      admin,
+      token,
+      "ssh.keys.export",
+      { id: key.id, private: true, passphrase },
+      true,
+    );
+    if (!keygen) {
+      expect((await code(response)).code).toBe("HOST_CAPABILITY_UNAVAILABLE");
+      return;
+    }
+    expect(response.status).toBe(200);
+    const exported = (await json<{ result: { text: string } }>(response)).result.text;
+    const scratch = await mkdtemp(join(tmpdir(), "everyos-ssh-passphrase-"));
+    try {
+      const file = join(scratch, "key");
+      writeFileSync(file, exported, { mode: 0o600 });
+      expect(() => execFileSync(keygen, ["-y", "-P", "", "-f", file], { stdio: "pipe" })).toThrow();
+      expect(
+        execFileSync(keygen, ["-y", "-P", passphrase, "-f", file], { encoding: "utf8" })
+          .trim()
+          .split(" ")
+          .slice(0, 2),
+      ).toEqual(key.publicKey.split(" ").slice(0, 2));
+      const audits = ctx.db.all<{ details: string }>(
+        "SELECT details FROM audit_events WHERE action LIKE 'desktop-apps.ssh-key.%'",
+      );
+      expect(audits.map((value) => value.details).join("")).not.toContain(passphrase);
+      expect(audits.map((value) => value.details).join("")).not.toContain("OPENSSH");
+    } finally {
+      await rm(scratch, { recursive: true, force: true });
+    }
+  });
+
+  it("bounds expensive crypto work while leaving metadata reads available", async () => {
+    const { ctx } = await withKeysApp();
+    const store = ctx.services.desktopApps.sshKeys;
+    const userId = ctx.db.get<{ id: string }>("SELECT id FROM users LIMIT 1")!.id;
+    const generating = store.generate(userId, { name: "First", type: "ed25519", comment: "test" });
+    await expect(
+      store.generate(userId, { name: "Second", type: "ed25519", comment: "test" }),
+    ).rejects.toMatchObject({ code: "RATE_LIMITED" });
+    const key = await generating;
+    expect(store.list(userId)).toHaveLength(1);
+    if (keygen) {
+      const encrypting = store.export(
+        userId,
+        { id: key.id, private: true, passphrase: "dummy test passphrase" },
+        true,
+      );
+      expect(store.list(userId)[0]?.fingerprint).toBe(key.fingerprint);
+      await expect(
+        store.generate(userId, { name: "Third", type: "ed25519", comment: "test" }),
+      ).rejects.toMatchObject({ code: "RATE_LIMITED" });
+      await encrypting;
+    }
+    await expect(
+      store.generate(userId, { name: "After", type: "ed25519", comment: "test" }),
+    ).resolves.toMatchObject({ hasPrivateKey: true });
+  });
+
+  it("refuses private exports and deletion from widgets even with a forged confirmation flag", async () => {
+    const { ctx, admin, open, host } = await withKeysApp(true);
+    const token = await open(admin);
+    const key = (
+      await json<{ result: SshKey }>(
+        await host(admin, token, "ssh.keys.generate", {
+          name: "Widget test",
+          type: "ed25519",
+          comment: "test",
+        }),
+      )
+    ).result;
+    const widgetToken = (
+      await json<{ token: string }>(
+        await admin.post("/api/app-sdk/instances", {
+          appId: "dev.everyos.sshkeys",
+          kind: "widget",
+          widgetId: "keys",
+        }),
+      )
+    ).token;
+    expect(
+      (await host(admin, widgetToken, "ssh.keys.export", { id: key.id, private: false })).status,
+    ).toBe(200);
+    expect(
+      (await host(admin, widgetToken, "ssh.keys.export", { id: key.id, private: true }, true))
+        .status,
+    ).toBe(403);
+    expect((await host(admin, widgetToken, "ssh.keys.delete", { id: key.id }, true)).status).toBe(
+      403,
+    );
+    expect(
+      (await json<{ result: { keys: SshKey[] } }>(await host(admin, token, "ssh.keys.list"))).result
+        .keys,
+    ).toHaveLength(1);
+    const refused = ctx.db.all<{ action: string }>(
+      "SELECT action FROM audit_events WHERE outcome = 'failure' AND action LIKE 'desktop-apps.ssh-key.%'",
+    );
+    expect(refused.map((value) => value.action)).toContain("desktop-apps.ssh-key.export-private");
+    expect(refused.map((value) => value.action)).toContain("desktop-apps.ssh-key.delete");
+  });
 
   it("imports only well-formed public keys and keeps SSH files away from apps", async () => {
     const { ctx, admin, open, host } = await withKeysApp();

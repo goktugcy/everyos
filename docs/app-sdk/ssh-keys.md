@@ -10,6 +10,10 @@ SSH keys, kept by EveryOS. Each person sees only their own keys, whatever app th
   written in OpenSSH's own format (`openssh-key-v1`) and sealed with the server secret at once.
 - **Import**: public keys only (`ssh-ed25519`, `ssh-rsa` from 2048 bits, `ecdsa-sha2-nistp*`,
   `sk-*` security keys), one line, checked: the type inside the key must match the line's type.
+  Fields must consume the whole blob. RSA integers must be canonical and positive, with an odd
+  modulus and an odd exponent of at least 3; the minimum size is measured in actual bits. ECDSA
+  curve names must match the algorithm and points must be valid uncompressed points on that curve.
+  Security keys include their required NUL-free application field.
 - **Fingerprints** are `SHA256:` and the unpadded base64 digest, exactly as `ssh-keygen -l`
   prints them.
 - **Organize**: rename a key and change its comment (the public line follows).
@@ -29,8 +33,22 @@ handing it the passphrase through an askpass helper's environment, never on the 
 which other users of the host could read. Without `ssh-keygen` installed, a protected export
 reports `HOST_CAPABILITY_UNAVAILABLE`; an unprotected one still works.
 
-Generating, importing, deleting and every private export (confirmed or refused) are audited with
-the key's id and fingerprint, never key material.
+Generating, importing, metadata changes, deletion attempts and every private export (confirmed or
+refused) are audited with identifiers, fingerprints and outcome metadata, never key material or
+passphrases. Private exports and deletion of private keys also check the instance's window kind
+on the server, even if a caller supplies a confirmation flag.
+
+Protected export passphrases contain at least 8 characters and at most 1,023 UTF-8 bytes, with no
+NUL, CR or LF. The byte and line limits match [OpenSSH's askpass reader](https://github.com/openssh/openssh-portable/blob/master/readpass.c),
+which uses a 1,024-byte buffer and stops at a line break. Rejecting incompatible input prevents
+silently encrypting with a truncated passphrase. Shared request schemas remain independent of
+Node/DOM globals. Public wire validation follows the [OpenSSH public-key deserializer](https://github.com/openssh/openssh-portable/blob/master/sshkey.c)
+and the algorithm-specific curve/security-key field contracts.
+
+Generation uses Node's asynchronous cryptography API. Each API service permits one expensive
+generation or protected-export operation at a time; another attempt receives `RATE_LIMITED` and
+can retry. Metadata reads remain available. The 100-key ceiling is checked before generation
+and again at insertion, including races with public imports.
 
 ## Keys on disk stay out of reach
 
