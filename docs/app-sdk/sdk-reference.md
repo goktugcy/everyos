@@ -371,6 +371,16 @@ displaying or exporting records. On Linux, the provider escapes literal search t
 [`journalctl --grep`](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html#-g)
 normally interprets it as a regular expression. Query and live-follow sources share this behavior.
 
+`disk.usage` requires an opaque directory handle from the person's file picker. `path` stays
+relative to that shared folder and is resolved through the person's authorized file view.
+The read-only scan never follows symbolic links. It visits at most 50,000 entries and 32 nested
+levels, checking its 15-second deadline between entries; an individual listing is also subject
+to the file provider's own timeout. An unreadable chosen folder fails the call. Unreadable
+descendants, listing limits and exhausted scan budgets set `truncated: true`; measured sizes
+then represent a partial sum, not the complete folder. `largest` and `types` contain the largest
+50 files and file types respectively. Folder file sizes are logical lengths, distinct from
+mounted file-system usage returned by `system.storage`.
+
 Detailed contracts and bounds:
 
 - [Network](network.md): HTTP methods/headers/bodies/timing, DNS records, TLS chains, monitors,

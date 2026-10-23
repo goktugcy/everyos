@@ -1,7 +1,6 @@
 import { randomBytes } from "node:crypto";
 import {
   HOST_OPERATION_CAPABILITY,
-  type DiskUsage,
   type HostOperation,
   type HostResult,
 } from "@everyos/app-sdk/protocol";
@@ -35,8 +34,8 @@ import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { fileViewFor } from "../files/file-view.ts";
 import { ADAPTERS } from "../integrations/adapters.ts";
-import type { FileView } from "../files/file-view.ts";
 import { AppDatabases } from "./app-databases.ts";
+import { diskUsage } from "./disk-usage.ts";
 import { instanceCall, requireCapability, type InstanceCall } from "./sdk-routes.ts";
 
 const Empty = z.strictObject({});
@@ -46,115 +45,8 @@ const SNAPSHOT_MAX_AGE_MS = 15_000;
 const NOTIFY_PER_MINUTE = 10;
 const NOTIFY_PER_DAY = 200;
 
-const DISK_LIMITS = { entries: 50_000, depth: 32, ms: 15_000, largest: 50 };
 /** A refused network target is audited once per app, target and period. */
 const REFUSAL_AUDIT_MS = 10 * 60_000;
-
-/**
- * Sizes inside a folder the person shared with the app: per child, the largest files and file
- * types. Bounded in entries, depth and time; links are never followed.
- */
-async function diskUsage(view: FileView, root: string, base: string): Promise<DiskUsage> {
-  const deadline = Date.now() + DISK_LIMITS.ms;
-  const result: DiskUsage = {
-    total: 0,
-    files: 0,
-    folders: 0,
-    truncated: false,
-    children: [],
-    largest: [],
-    types: [],
-  };
-  const types = new Map<string, { count: number; size: number }>();
-  let visited = 0;
-  const walk = async (path: string, depth: number): Promise<{ size: number; items: number }> => {
-    let size = 0;
-    let items = 0;
-    if (depth > DISK_LIMITS.depth || Date.now() > deadline || visited > DISK_LIMITS.entries) {
-      result.truncated = true;
-      return { size, items };
-    }
-    const listing = await view.list(root, path, true).catch(() => null);
-    if (!listing) return { size, items };
-    if (listing.truncated) result.truncated = true;
-    for (const entry of listing.entries) {
-      if (++visited > DISK_LIMITS.entries) {
-        result.truncated = true;
-        break;
-      }
-      const child = path ? `${path}/${entry.name}` : entry.name;
-      if (entry.type === "file") {
-        size += entry.size;
-        items += 1;
-        result.files += 1;
-        const dot = entry.name.lastIndexOf(".");
-        const extension =
-          dot > 0
-            ? entry.name
-                .slice(dot + 1)
-                .toLowerCase()
-                .slice(0, 16)
-            : "";
-        const type = types.get(extension) ?? { count: 0, size: 0 };
-        type.count += 1;
-        type.size += entry.size;
-        types.set(extension, type);
-        result.largest.push({ path: child.slice(base ? base.length + 1 : 0), size: entry.size });
-        if (result.largest.length > DISK_LIMITS.largest * 2) {
-          result.largest.sort((a, b) => b.size - a.size);
-          result.largest.length = DISK_LIMITS.largest;
-        }
-      } else if (entry.type === "directory") {
-        result.folders += 1;
-        const inner = await walk(child, depth + 1);
-        size += inner.size;
-        items += inner.items + 1;
-      }
-    }
-    return { size, items };
-  };
-  const top = await view.list(root, base, true);
-  if (top.truncated) result.truncated = true;
-  for (const entry of top.entries) {
-    const child = base ? `${base}/${entry.name}` : entry.name;
-    if (entry.type === "file") {
-      visited += 1;
-      result.files += 1;
-      result.children.push({ name: entry.name, kind: "file", size: entry.size, items: 1 });
-      result.largest.push({ path: entry.name, size: entry.size });
-      const dot = entry.name.lastIndexOf(".");
-      const extension =
-        dot > 0
-          ? entry.name
-              .slice(dot + 1)
-              .toLowerCase()
-              .slice(0, 16)
-          : "";
-      const type = types.get(extension) ?? { count: 0, size: 0 };
-      type.count += 1;
-      type.size += entry.size;
-      types.set(extension, type);
-    } else if (entry.type === "directory") {
-      result.folders += 1;
-      const inner = await walk(child, 1);
-      result.children.push({
-        name: entry.name,
-        kind: "directory",
-        size: inner.size,
-        items: inner.items,
-      });
-    }
-  }
-  result.total = result.children.reduce((sum, child) => sum + child.size, 0);
-  result.children.sort((a, b) => b.size - a.size);
-  result.largest.sort((a, b) => b.size - a.size);
-  result.largest.length = Math.min(result.largest.length, DISK_LIMITS.largest);
-  result.types = [...types]
-    .map(([extension, value]) => ({ extension, ...value }))
-    .sort((a, b) => b.size - a.size)
-    .slice(0, 50);
-  return result;
-}
 
 /** `/api/app-sdk`: notifications and host data, each behind its capability. */
 export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
