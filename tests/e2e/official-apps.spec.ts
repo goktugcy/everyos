@@ -966,3 +966,132 @@ test.describe("Network Tools", () => {
     }
   });
 });
+
+test.describe("Log Viewer", () => {
+  test.use({ actionTimeout: 20000 });
+  const logsApp = OFFICIAL.find((app) => app.slug === "logs")!;
+  test.afterEach(async ({ page }) => {
+    await page.evaluate(() =>
+      (window as Window & { __sdkLogFixture?: EventSource }).__sdkLogFixture?.close(),
+    );
+    await api(page, "DELETE", `/api/desktop-apps/installed/${logsApp.id}`, { confirm: true });
+  });
+
+  test("labels simulated journal data, polls live, pauses, saves a filter and exports loaded records through the sandbox", async ({
+    page,
+  }) => {
+    test.setTimeout(90000);
+    await install(page, logsApp);
+    const opened = await open(page, logsApp.name, logsApp.id);
+    const { window } = opened;
+    let { frame } = opened;
+    const records = () => frame.getByRole("table", { name: "Günlük kayıtları" });
+    await expect(frame.getByText("Simüle veri", { exact: true })).toBeVisible();
+    await expect(frame.getByRole("status")).toContainText("simüle edilir");
+    await expect(records().locator("tbody tr")).toHaveCount(100);
+    // The read-only development stream produces explicitly simulated records for the SDK poller.
+    await page.evaluate(() => {
+      (globalThis as typeof globalThis & { __sdkLogFixture?: EventSource }).__sdkLogFixture =
+        new EventSource("/api/logs/stream");
+    });
+    const before = await records().locator("tbody tr").first().innerText();
+    await frame.getByRole("button", { name: "Canlı yenilemeyi başlat", exact: true }).click();
+    await expect
+      .poll(() => records().locator("tbody tr").first().innerText(), { timeout: 15000 })
+      .not.toBe(before);
+    await frame.getByRole("button", { name: "Canlı yenilemeyi duraklat", exact: true }).click();
+    await expect(frame.getByText("Yenileme duraklatıldı", { exact: true })).toBeVisible();
+    const paused = await records().locator("tbody tr").first().innerText();
+    await page.waitForTimeout(6500);
+    expect(await records().locator("tbody tr").first().innerText()).toBe(paused);
+    await page.evaluate(() =>
+      (
+        globalThis as typeof globalThis & { __sdkLogFixture?: EventSource }
+      ).__sdkLogFixture?.close(),
+    );
+    const sample = JSON.parse((await api(page, "GET", "/api/logs?limit=1")).text) as {
+      source: string;
+      entries: { unit: string | null; priority: number; message: string }[];
+    };
+    expect(sample.source).toBe("simulated");
+    const entry = sample.entries[0]!;
+    const search = entry.message.slice(0, 30);
+    await frame.getByRole("searchbox", { name: "Mesajlarda ara" }).fill(search);
+    await frame.getByRole("textbox", { name: "Systemd birimi" }).fill(entry.unit ?? "");
+    await frame
+      .getByRole("combobox", { name: "Önem düzeyi", exact: true })
+      .selectOption(String(entry.priority));
+    await frame.getByRole("button", { name: "Uygula", exact: true }).click();
+    await expect(records()).toContainText(search);
+    await frame.getByRole("button", { name: "Filtreyi kaydet", exact: true }).click();
+    const prompt = window.getByRole("alertdialog", { name: "Geçerli filtreyi kaydet" });
+    await prompt
+      .getByRole("textbox", { name: "Geçerli filtreyi kaydet" })
+      .fill("Tarayıcı günlük filtresi");
+    await prompt.getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(prompt).toHaveCount(0);
+    await frame.getByRole("button", { name: "JSON dışa aktar", exact: true }).click();
+    const picker = window.getByTestId("desktop-app-file-picker");
+    const exportName = `journal-test-${Date.now()}.json`;
+    await picker.getByRole("textbox", { name: "Ad", exact: true }).fill(exportName);
+    await picker.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect
+      .poll(async () => {
+        const saved = await api(
+          page,
+          "GET",
+          `/api/files/text?root=home&path=Belgeler/${exportName}`,
+        );
+        if (saved.status !== 200) return null;
+        try {
+          return (
+            JSON.parse((JSON.parse(saved.text) as { content: string }).content) as {
+              source: string;
+            }
+          ).source;
+        } catch {
+          return null;
+        }
+      })
+      .toBe("simulated");
+    const saved = await api(page, "GET", `/api/files/text?root=home&path=Belgeler/${exportName}`);
+    const report = JSON.parse((JSON.parse(saved.text) as { content: string }).content) as {
+      entries: { message: string; priority: number }[];
+      filter: { search: string };
+    };
+    expect(report.entries.length).toBeGreaterThan(0);
+    expect(report.filter.search).toBe(search);
+    expect(
+      report.entries.every(
+        (row) =>
+          row.message.toLowerCase().includes(search.toLowerCase()) &&
+          row.priority <= entry.priority,
+      ),
+    ).toBe(true);
+    await frame.locator(".eui-content").evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.screenshot({ path: test.info().outputPath("logs-desktop.png") });
+    await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    ({ frame } = await open(page, logsApp.name, logsApp.id));
+    await expect(frame.getByRole("searchbox", { name: "Mesajlarda ara" })).toHaveValue(search);
+    await expect(
+      frame.getByRole("button", { name: "Tarayıcı günlük filtresi", exact: true }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId("mobile-shell")).toBeVisible();
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: logsApp.name, exact: true })
+      .click();
+    frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${logsApp.id}"]`);
+    await expect(frame.getByRole("searchbox", { name: "Mesajlarda ara" })).toHaveValue(search);
+    await expect(frame.getByRole("table", { name: "Günlük kayıtları" })).toContainText(search);
+    expect(
+      await frame
+        .locator(".logs-main")
+        .evaluate((element) => element.scrollWidth > element.clientWidth),
+    ).toBe(false);
+    await page.screenshot({ path: test.info().outputPath("logs-mobile.png") });
+  });
+});

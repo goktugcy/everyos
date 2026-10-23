@@ -77,7 +77,7 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 | 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
 | 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
 | 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | tested |
-| 23  | Log Viewer       | `dev.everyos.logs`        | open   |
+| 23  | Log Viewer       | `dev.everyos.logs`        | tested |
 | 24  | Disk Explorer    | `dev.everyos.disk`        | open   |
 | 25  | SSH Keys         | `dev.everyos.sshkeys`     | open   |
 | 26  | Network Tools    | `dev.everyos.network`     | tested |
@@ -250,3 +250,37 @@ The [arm64 job](https://github.com/goktugcy/everyos/actions/runs/39836304500/job
 passed 1,310 tests, all 86 regular browser tests and all 16 additional plain-HTTP tests, including
 HTTP Monitor and actual Linux Port Inspector data. The amd64 PDF title fix still needs hosted
 verification; the full release remains open.
+
+### Log Viewer and CI duration
+
+Log Viewer uses the authorized `logs.query` host operation for exact unit names, literal
+case-insensitive message search, severity thresholds, relative/custom time bounds and older
+cursor pages. Its live view polls every three seconds while active, permits one read at a time,
+pauses on suspend and freezes an outstanding poll when paused. The buffer deduplicates cursors,
+keeps at most 1,000 entries / 4 MiB of encoded records, resets on a source change and reports
+limits, live gaps and stale reads. Full collected messages and metadata open from table rows.
+Twenty logic/interface tests pass, including time validation, byte limits, source separation,
+pagination, presets, report contents and revocation of an outstanding read. All ten locales
+validate; common log labels and severity names reuse the core translations.
+
+The focused Chromium workflow passes through the real sandbox bridge using the explicitly
+simulated development journal source. It verifies a new live record, a frozen view for two poll
+intervals after pause, severity/text/unit filters, an accessibly labelled host prompt, a saved
+filter, an actual JSON report with its `simulated` source and mobile reopening without horizontal
+overflow. It does not claim to have read a native journal in this development browser run.
+The native journal provider has three new query/follow regression tests: literal metacharacters,
+unchanged read-only command/resource bounds and a missing collector. The provider now escapes
+the search string to match the SDK's documented literal behavior and the simulator.
+
+[CI run 110](https://github.com/goktugcy/everyos/actions/runs/39840317385) passed its audit and
+entire arm64 job. The amd64 job passed 1,326 tests and 87 regular browser tests, including Network
+Tools. Its additional 17-test plain-HTTP pass then reached the 35-minute job deadline; no failing
+product assertion preceded cancellation. The matrix job now allows 45 minutes for both passes,
+with all test commands and assertions retained. The normal browser pass excludes the existing
+plain-HTTP-only test, which runs in the additional insecure-origin pass.
+
+The Log Viewer checkpoint passes format, lint, typecheck, 1,349 tests in 150 files, the production
+build and all 15 first-run/official-app browser scenarios. Dependency audit reports no known
+vulnerabilities. Desktop and 390-pixel mobile screenshots were reviewed, including the saved
+filter name and its adjacent removal button.
+The first-run and Log Viewer workflows also pass over plain HTTP at `everyos.lan` (2/2).
