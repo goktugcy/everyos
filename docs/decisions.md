@@ -744,3 +744,21 @@ every call against the installation's granted capabilities and the user's role. 
 belongs to the pinned official registry. Official apps live in this repository; the community
 registry is a Cloudflare service. The feature ships in one release (see
 [App SDK architecture](app-sdk/architecture.md) and [acceptance](sdk-release-acceptance.md)).
+
+### D54 — The official SSH app exports private keys only as protected OpenSSH files
+
+The SSH Keys app requires a matching export passphrase before the desktop asks the person to
+approve the key's fingerprint. This keeps an explicit private-export feature without a plaintext
+export option in the official interface. The SDK retains its documented optional unencrypted
+export for other authorized window apps; every private export still requires desktop confirmation.
+
+The app has no app-storage or file-picking permission. Drafts and passphrases remain in memory,
+and passphrase inputs clear before export and on cancellation, suspend or permission changes.
+Names and comments are stored in the existing user vault, where private keys are encrypted by
+`SecretBox`. Public-only deletion has an app-requested EveryOS confirmation; private-key deletion
+uses the desktop's mandatory fingerprint confirmation. The app does not read host private keys.
+
+OpenSSH's askpass reader accepts at most 1,023 bytes and terminates on line breaks, so protected
+export validates the full UTF-8 passphrase length and rejects NUL, CR and LF. Generation is async,
+and one crypto slot per API service bounds generation and protected exports while metadata reads
+remain available. See [SSH key SDK contract](app-sdk/ssh-keys.md).

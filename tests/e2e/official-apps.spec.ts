@@ -1,6 +1,8 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { generateKeyPairSync } from "node:crypto";
 import { dirname, join } from "node:path";
-import { uptime } from "node:os";
+import { tmpdir, uptime } from "node:os";
 import { fileURLToPath } from "node:url";
 import { expect, test, type FrameLocator, type Page } from "@playwright/test";
 import { capabilityInfo, type AppCapability } from "../../packages/app-manifest/src/index.ts";
@@ -1364,5 +1366,189 @@ test.describe("Uptime", () => {
     } finally {
       await upstream.close();
     }
+  });
+});
+
+test.describe("SSH Keys", () => {
+  test.use({ actionTimeout: 20000 });
+  const keysApp = OFFICIAL.find((app) => app.slug === "sshkeys")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${keysApp.id}`, { confirm: true });
+  });
+
+  test("generates real keys, confirms protected exports in EveryOS, imports public keys and deletes safely on mobile", async ({
+    page,
+  }) => {
+    test.setTimeout(150000);
+    await install(page, keysApp);
+    const opened = await open(page, keysApp.name, keysApp.id);
+    const { window } = opened;
+    let { frame } = opened;
+    const name = `Browser SSH ${Date.now()}`;
+    const renamed = `${name} renamed`;
+    const passphrase = "browser-test-only-passphrase-ü";
+    const records = () => frame.getByRole("table", { name: "SSH anahtarları" });
+    await frame.getByRole("button", { name: "Anahtar üret", exact: true }).click();
+    let form = frame.getByRole("dialog", { name: "Anahtar üret", exact: true });
+    await form.getByRole("textbox", { name: "Ad", exact: true }).fill(name);
+    await form.getByRole("textbox", { name: "Açıklama", exact: true }).fill("Browser key fixture");
+    await form.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(records()).toContainText(name);
+    await expect(records()).toContainText("ssh-ed25519");
+    await expect(form).not.toBeVisible();
+    const fingerprint = await frame.locator(".keys-detail .keys-fingerprint").innerText();
+    expect(fingerprint).toMatch(/^SHA256:[A-Za-z0-9+/]{43}$/);
+    await frame.getByRole("button", { name: "Düzenle", exact: true }).click();
+    form = frame.getByRole("dialog", { name: "Düzenle", exact: true });
+    await form.getByRole("textbox", { name: "Ad", exact: true }).fill(renamed);
+    await form
+      .getByRole("textbox", { name: "Açıklama", exact: true })
+      .fill("Updated browser comment");
+    await form.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(records()).toContainText(renamed);
+    await expect(frame.locator(".keys-detail")).toContainText("Updated browser comment");
+    const publicKey = await frame.locator(".keys-detail textarea").inputValue();
+    const identity = (value: string) => value.trim().split(/\s+/).slice(0, 2).join(" ");
+    const picker = () => page.getByTestId("desktop-app-file-picker");
+    const savedText = async (file: string) => {
+      const saved = await api(page, "GET", `/api/files/text?root=home&path=Belgeler/${file}`);
+      if (saved.status !== 200) return "";
+      try {
+        return (JSON.parse(saved.text) as { content: string }).content;
+      } catch {
+        return "";
+      }
+    };
+    const saveAs = async (file: string) => {
+      await picker().getByRole("textbox", { name: "Ad", exact: true }).fill(file);
+      await picker().getByRole("button", { name: "Kaydet", exact: true }).click();
+      await expect(picker()).toHaveCount(0);
+    };
+    const publicFile = `ssh-browser-${Date.now()}.pub`;
+    await frame.getByRole("button", { name: "Açık anahtarı dışa aktar", exact: true }).click();
+    await saveAs(publicFile);
+    await expect.poll(() => savedText(publicFile)).toBe(publicKey + "\n");
+    await frame.locator(".eui-content").evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.screenshot({ path: test.info().outputPath("sshkeys-desktop.png") });
+
+    const openPrivate = async () => {
+      await frame
+        .getByRole("button", { name: "Korumalı özel anahtarı dışa aktar", exact: true })
+        .click();
+      const dialog = frame.getByRole("dialog", {
+        name: "Korumalı özel anahtarı dışa aktar",
+        exact: true,
+      });
+      await dialog.getByLabel("Dışa aktarma parolası", { exact: true }).fill(passphrase);
+      await dialog.getByLabel("Parolayı tekrarla", { exact: true }).fill(passphrase);
+      await dialog.getByRole("button", { name: "Devam et", exact: true }).click();
+      await expect(dialog).not.toBeVisible();
+      return page.getByRole("alertdialog", {
+        name: `“${renamed}” özel anahtarı dışa aktarılsın mı?`,
+        exact: true,
+      });
+    };
+    let approval = await openPrivate();
+    await expect(approval).toContainText(fingerprint);
+    await expect(approval).toContainText("EveryOS, SSH Anahtarları için soruyor");
+    await expect(approval).not.toContainText(passphrase);
+    await expect(frame.locator('input[type="password"]')).toHaveCount(0);
+    await page.screenshot({ path: test.info().outputPath("sshkeys-private-approval.png") });
+    await approval.getByRole("button", { name: "Vazgeç", exact: true }).click();
+    await expect(approval).toHaveCount(0);
+    await expect(picker()).toHaveCount(0);
+    await expect(frame.getByRole("alert")).toHaveCount(0);
+    approval = await openPrivate();
+    await approval.getByRole("button", { name: "Özel anahtarı dışa aktar", exact: true }).click();
+    const privateFile = `ssh-browser-${Date.now()}.key`;
+    await saveAs(privateFile);
+    await expect
+      .poll(() => savedText(privateFile))
+      .toContain("-----BEGIN OPENSSH PRIVATE KEY-----");
+    const protectedKey = await savedText(privateFile);
+    const blob = Buffer.from(
+      protectedKey.replace(/-----[^\n]+-----/g, "").replace(/\s/g, ""),
+      "base64",
+    );
+    expect(blob.subarray(0, 15).toString()).toBe("openssh-key-v1\0");
+    const cipherLength = blob.readUInt32BE(15);
+    expect(blob.subarray(19, 19 + cipherLength).toString()).not.toBe("none");
+    const directory = mkdtempSync(join(tmpdir(), "everyos-ssh-browser-"));
+    try {
+      const file = join(directory, "export.key");
+      writeFileSync(file, protectedKey, { mode: 0o600 });
+      // A disposable fixture passphrase verifies native OpenSSH interoperability, not host keys.
+      const derived = execFileSync("ssh-keygen", ["-y", "-P", passphrase, "-f", file], {
+        encoding: "utf8",
+      });
+      expect(identity(derived)).toBe(identity(publicKey));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+    await expect(frame.locator("body")).not.toContainText(passphrase);
+    await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    ({ frame } = await open(page, keysApp.name, keysApp.id));
+    await expect(records()).toContainText(renamed);
+    await expect(frame.locator(".keys-detail .keys-fingerprint")).toHaveText(fingerprint);
+
+    const generated = generateKeyPairSync("ed25519").publicKey.export({ format: "jwk" });
+    const field = (data: Buffer) => {
+      const size = Buffer.alloc(4);
+      size.writeUInt32BE(data.length);
+      return Buffer.concat([size, data]);
+    };
+    const imported = `ssh-ed25519 ${Buffer.concat([field(Buffer.from("ssh-ed25519")), field(Buffer.from(generated.x!, "base64url"))]).toString("base64")} Imported fixture`;
+    const importedName = `${name} public`;
+    await frame.getByRole("button", { name: "Açık anahtar içe aktar", exact: true }).click();
+    form = frame.getByRole("dialog", { name: "Açık anahtar içe aktar", exact: true });
+    await form.getByRole("textbox", { name: "Ad", exact: true }).fill(importedName);
+    await form.getByRole("textbox", { name: "Açık anahtar", exact: true }).fill(imported);
+    await form.getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect(records()).toContainText(importedName);
+    await expect(frame.locator(".keys-detail textarea")).toHaveValue(imported);
+    await expect(
+      frame.getByRole("button", { name: "Korumalı özel anahtarı dışa aktar", exact: true }),
+    ).toHaveCount(0);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId("mobile-shell")).toBeVisible();
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: keysApp.name, exact: true })
+      .click();
+    frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${keysApp.id}"]`);
+    await expect(records()).toContainText(importedName);
+    await expect(frame.locator(".keys-detail")).toContainText("ssh-ed25519 · 256 Bit");
+    expect(
+      await frame
+        .locator(".keys-main")
+        .evaluate((element) => element.scrollWidth > element.clientWidth),
+    ).toBe(false);
+    await page.screenshot({ path: test.info().outputPath("sshkeys-mobile.png") });
+    await frame.getByRole("button", { name: "Sil", exact: true }).click();
+    let deletion = page.getByRole("alertdialog", { name: "Anahtar silinsin mi?", exact: true });
+    await expect(deletion).toContainText(importedName);
+    await deletion.getByRole("button", { name: "Vazgeç", exact: true }).click();
+    await expect(deletion).toHaveCount(0);
+    await expect(records()).toContainText(importedName);
+    await frame.getByRole("button", { name: "Sil", exact: true }).click();
+    await deletion.getByRole("button", { name: "Sil", exact: true }).click();
+    await expect(records()).not.toContainText(importedName);
+    await expect(frame.locator(".keys-detail .keys-fingerprint")).toHaveText(fingerprint);
+    await frame.getByRole("button", { name: "Sil", exact: true }).click();
+    deletion = page.getByRole("alertdialog", {
+      name: `“${renamed}” anahtarı silinsin mi?`,
+      exact: true,
+    });
+    await expect(deletion).toContainText(fingerprint);
+    await expect(deletion).toContainText("EveryOS, SSH Anahtarları için soruyor");
+    await deletion.getByRole("button", { name: "Vazgeç", exact: true }).click();
+    await expect(deletion).toHaveCount(0);
+    await expect(records()).toContainText(renamed);
+    await frame.getByRole("button", { name: "Sil", exact: true }).click();
+    await deletion.getByRole("button", { name: "Anahtarı sil", exact: true }).click();
+    await expect(records()).toHaveCount(0);
+    await expect(frame.getByText("Eşleşen anahtar yok", { exact: true })).toBeVisible();
   });
 });

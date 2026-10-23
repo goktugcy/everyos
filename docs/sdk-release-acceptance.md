@@ -46,6 +46,10 @@ checked yet; the evidence column records what already passes, so the remaining w
 
 ## Official apps
 
+The first sixteen apps were implemented and tested before the network-app handoff; the baseline
+verification below records their shared gate. The table now consistently marks their development
+evidence alongside the nine subsequent apps. These 25 tested apps are not a complete release.
+
 The official registry trust anchor is pinned to the GitHub release index and the owner's public
 key (see [publishing](app-sdk/publishing.md)). `anchors.test.ts` verifies the URL, fingerprint
 and absent community anchor; `packages/catalogs/src/fetch.test.ts` verifies GitHub's latest →
@@ -55,31 +59,31 @@ passed on 2026-10-22. Publication, the complete signed catalog and the community
 
 | #   | App              | Id                        | Status |
 | --- | ---------------- | ------------------------- | ------ |
-| 01  | Notes            | `dev.everyos.notes`       | open   |
-| 02  | Markdown Editor  | `dev.everyos.markdown`    | open   |
-| 03  | Calculator       | `dev.everyos.calculator`  | open   |
-| 04  | Calendar         | `dev.everyos.calendar`    | open   |
-| 05  | Pomodoro         | `dev.everyos.pomodoro`    | open   |
-| 06  | To-Do            | `dev.everyos.todo`        | open   |
-| 07  | PDF Viewer       | `dev.everyos.pdf`         | open   |
-| 08  | Text Editor      | `dev.everyos.text`        | open   |
-| 09  | Whiteboard       | `dev.everyos.whiteboard`  | open   |
-| 10  | Code Editor      | `dev.everyos.code`        | open   |
-| 11  | JSON Studio      | `dev.everyos.json`        | open   |
+| 01  | Notes            | `dev.everyos.notes`       | tested |
+| 02  | Markdown Editor  | `dev.everyos.markdown`    | tested |
+| 03  | Calculator       | `dev.everyos.calculator`  | tested |
+| 04  | Calendar         | `dev.everyos.calendar`    | tested |
+| 05  | Pomodoro         | `dev.everyos.pomodoro`    | tested |
+| 06  | To-Do            | `dev.everyos.todo`        | tested |
+| 07  | PDF Viewer       | `dev.everyos.pdf`         | tested |
+| 08  | Text Editor      | `dev.everyos.text`        | tested |
+| 09  | Whiteboard       | `dev.everyos.whiteboard`  | tested |
+| 10  | Code Editor      | `dev.everyos.code`        | tested |
+| 11  | JSON Studio      | `dev.everyos.json`        | tested |
 | 12  | API Client       | `dev.everyos.apiclient`   | open   |
-| 13  | Regex Tester     | `dev.everyos.regex`       | open   |
+| 13  | Regex Tester     | `dev.everyos.regex`       | tested |
 | 14  | SQL Client       | `dev.everyos.sql`         | open   |
-| 15  | Diff Viewer      | `dev.everyos.diff`        | open   |
-| 16  | Cron Builder     | `dev.everyos.cron`        | open   |
-| 17  | JWT Inspector    | `dev.everyos.jwt`         | open   |
-| 18  | Color Studio     | `dev.everyos.color`       | open   |
+| 15  | Diff Viewer      | `dev.everyos.diff`        | tested |
+| 16  | Cron Builder     | `dev.everyos.cron`        | tested |
+| 17  | JWT Inspector    | `dev.everyos.jwt`         | tested |
+| 18  | Color Studio     | `dev.everyos.color`       | tested |
 | 19  | Port Inspector   | `dev.everyos.ports`       | tested |
 | 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
 | 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
 | 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | tested |
 | 23  | Log Viewer       | `dev.everyos.logs`        | tested |
 | 24  | Disk Explorer    | `dev.everyos.disk`        | tested |
-| 25  | SSH Keys         | `dev.everyos.sshkeys`     | open   |
+| 25  | SSH Keys         | `dev.everyos.sshkeys`     | tested |
 | 26  | Network Tools    | `dev.everyos.network`     | tested |
 | 27  | Uptime           | `dev.everyos.uptime`      | tested |
 | 28  | Music Player     | `dev.everyos.music`       | open   |
@@ -363,3 +367,65 @@ passes with an explicit viewport assertion for that badge; its new screenshot wa
 full checkpoint passes format, lint, typecheck, 1,385 tests in 155 files, the production build
 and all 17 first-run/official-app browser workflows. Dependency audit reports no known vulnerabilities.
 The first-run and Uptime workflows also pass over plain HTTP at `everyos.lan` (2/2).
+
+[CI run 115](https://github.com/goktugcy/everyos/actions/runs/39928725993) passes the audit and
+both Linux architecture jobs: 1,385 tests in 155 files, 90 regular browser scenarios and
+20 extra plain-HTTP scenarios on each. The regular pass intentionally skips the existing
+insecure-origin-only scenario, exercised in the additional HTTP pass. No test requires a retry.
+
+### SSH Keys
+
+SSH Keys manages the person's existing EveryOS vault through `ssh.keys.*`: six generated key
+algorithms, public-only import, fingerprints, names/comments, filtering, public export and
+explicit protected private export. The user vault is shared across authorized apps; existing
+host private-key files are never read. The app declares only `secrets:ssh`, `files:save` and
+`clipboard:write`, with no app storage, file picker or widget. Private exports require matching
+passphrases and EveryOS's own fingerprint confirmation. Public-only deletion asks through the
+app dialog service; a private key requires the desktop's fingerprint confirmation. All 57
+translation keys are present in ten languages.
+
+The focused platform regression run passes 41 tests, including the existing MariaDB integration
+suite. New checks cover complete public-key wire parsing, canonical RSA mpints and real bit
+lengths, ECDSA curve/point validation, required security-key application fields, native P-521 and
+RSA 4096 interoperability, the full 1,023-byte UTF-8 export-passphrase boundary, concurrent crypto
+refusal with metadata reads still available, and widget private-export/deletion denial even when
+caller input says confirmed. Generation uses Node's async key API and generation/protected export
+share a bounded crypto slot. Metadata changes and denied private actions are audited without
+secret details. This was a focused source review and regression implementation, not a full audit.
+
+Fifteen app logic/interface tests pass for metadata validation, supported public input, immediate
+private-paste clearing, UTF-8 passphrase limits, filtering, generation/import/update, public and
+protected exports, password clearing, cancellation, suspend/resume polling, stale snapshots,
+missing-tool/busy errors, both deletion paths and permission changes during export or a picker.
+No secret is written to app storage or copied to the clipboard. Clearing JavaScript inputs does
+not claim to overwrite garbage-collected process memory.
+
+The focused Chromium workflow passes real Ed25519 generation, metadata persistence across close
+and reopen, public export, declined and approved native private-export confirmation, protected
+file output, public import and declined/approved deletion of each key type. The exported OpenSSH
+file has a non-plaintext cipher and `ssh-keygen -y` with the disposable fixture passphrase derives
+the same public identity. The workflow also passes at 390 pixels without horizontal overflow.
+Screenshot review prompted a mobile table with name/material columns and algorithm/bits in the
+selected-key details, avoiding character-by-character numeric and algorithm wrapping.
+
+The complete SSH checkpoint passes formatting, lint, all typechecks, 1,410 tests in 159 files,
+the production build and all 18 first-run/official-app browser workflows without a retry.
+The production dependency audit reports no known vulnerabilities. The first-run and SSH Keys
+workflows also pass over plain HTTP at `everyos.lan` (2/2).
+
+## Remaining after the SSH Keys checkpoint — 2026-10-23
+
+- Eight apps: API Client, SQL Client, Music Player, Video Player, Image Viewer, Gallery,
+  Wallpaper Studio and Icon Studio. Their directories contain scaffolding, not completed apps.
+- The all-33-app build, validate, sign and index pipeline; a machine-readable release report;
+  protected `release` environment integration and the CI gate for that report. The owner's
+  private signing keys remain in the protected environment.
+- The community service (`services/community-registry`) using Workers, R2 and D1, its local
+  tests and developer guide. The owner still supplies the domain and performs deployment;
+  no account token is needed by the coding agent. Pin the community anchor after deployment.
+- Synchronize and verify the existing manifest/SDK references, finish the remaining app and
+  community documentation, measure Pi/amd64 package sizes, startup and resource use, and fill
+  every final acceptance gate with evidence. CI already exercises official-app workflows on
+  both architectures and over plain HTTP; final acceptance must cover the completed set of 33.
+
+The Pi remains read-only. No tag, public release or main-branch merge is part of this checkpoint.
