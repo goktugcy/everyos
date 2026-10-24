@@ -785,3 +785,26 @@ its own bounded value. Its deletion path locks and flushes the editor before del
 the kit's explicit flush waits for already outstanding writes too. Bounded SDK file reads enforce
 `maxBytes` while consuming chunks because restored handle size may be unknown or stale. Videos
 use native range streaming. Browser codec reports remain hints; actual decode errors are shown.
+
+### D57 — Official distribution signs measured build evidence and verifies the complete catalog
+
+The official release is built as one 29-app unit, with actual per-app tests and a committed exact
+app/widget permission policy. Build jobs have no signing secrets. A protected release job verifies
+all downloaded archives again, signs packages, the flat GitHub-compatible index and a separate
+machine-readable report, and verifies the entire signature chain before publication. Development
+CI uses ephemeral in-memory keys and an explicit development report that production verification
+rejects. Private keys are not written to disk or inherited by source/test subprocesses.
+
+The previous official index is verified against the registry pin before reuse. Its digest is
+bound into the new report; sequence/version rollback, changed bytes under a published version and
+revoked current versions are refused. Revocations survive subsequent releases. This keeps the
+same version immutability promised to independent registries and prevents a complete fresh catalog
+from silently clearing old revocations. Existing host services and release authorization stay
+outside the build script.
+
+### D58 — Official app manifests keep English as their fallback locale
+
+On 2026-10-24 the owner explicitly chose `locales.default: "en"` in official app manifests.
+This overrides the general project default for manifest metadata. All 29 manifests retain English
+as fallback, with Turkish and the other complete dictionaries selected through the host locale.
+The distribution gate enforces this declared default and all ten normalized text-key sets.

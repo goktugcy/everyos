@@ -55,3 +55,67 @@ private, link-local and metadata addresses remain blocked. Cross-origin redirect
 a private registry's authorization header.
 
 The community anchor remains absent until the community service has its own domain and public key.
+
+## The complete official-app release pipeline
+
+The catalog in `scripts/official-apps.config.ts` and the explicit app/widget permission policy in
+`scripts/official-app-permissions.json` cover exactly 29 apps. A missing app, an unlisted manifest,
+a permission change, an incompatible SDK/EveryOS requirement, an incomplete locale, a skipped or
+failed app test, or a corrupt package fails the complete build. Official apps default to English;
+all ten locale dictionaries must have the same nonempty text keys (plural variants are normalized).
+Permission status means **matched-policy**, not that the build replaces administrator approval.
+
+```bash
+pnpm official-apps:check
+```
+
+This development command executes the actual `official-apps` Vitest project, builds and validates
+every app, packs deterministic archives, generates two ephemeral Ed25519 keys in memory, signs
+packages, index and report, then independently verifies the complete directory. It writes
+`dist/official-apps-check/`; choose a fresh directory with `--out` for a repeated run. Existing
+output directories are refused rather than overwritten. No private key is persisted. The report
+is explicitly `mode: "development"`; the production verifier refuses it. CI runs this gate on
+both Linux architectures and uploads the report even when app validation fails.
+
+Production uses two jobs in `.github/workflows/release.yml`:
+
+1. After the existing exact-commit green-CI gate and source-version check, the package job runs
+   `pnpm official-apps:build`. A production candidate requires a clean checkout. Actual app test
+   results, including positive per-app assertion/suite counts and their JSON-report digest, enter
+   the unsigned build report. Archives and icons are uploaded with that report.
+2. The `sign` job runs in the protected `release` environment. It obtains the previous published
+   official index with `node scripts/official-apps.ts previous`, verifies its pinned signature,
+   then runs `pnpm official-apps:sign --sequence "$GITHUB_RUN_NUMBER" --previous-index
+dist/previous-official-apps.json`. Only this step receives
+   `EVERYOS_APP_REGISTRY_PRIVATE_KEY` and `EVERYOS_APP_PUBLISHER_PRIVATE_KEY`. Their derived public
+   keys must match the committed registry and publisher pins. Keys are never written to a file,
+   included in subprocess environments, printed, or placed in an artifact.
+3. `pnpm official-apps:verify` checks the signed report, registry and publisher signatures, exact
+   catalog coverage, source commit/version, byte lengths and SHA-256 hashes, safe extraction,
+   built manifest, compatibility, translations, permissions and matching package/store icons.
+   Only then can the existing publication step upload the app assets alongside the OS assets.
+
+The [latest-release API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)
+is queried with the workflow token; the public index download receives no authorization header.
+Only a missing release or an existing release without `official-apps.json` is a first-index case.
+Network errors, bad URLs, oversized responses and invalid previous signatures fail closed. The
+first-index receipt contains `null`; later receipts contain the exact signed index. When there
+is a prior index, the new release includes `official-apps-previous.json` and binds its digest into
+the report. A sequence must increase, app versions cannot go backward or reuse different bytes,
+revoked versions cannot reappear, and previous revocations are retained. Bump an app's manifest
+version when its package bytes change, including after a bundled dependency change.
+
+All published app assets have flat names: the 29 `.eosapp` files, matching icons,
+`official-apps.json`, `official-app-registry.pub`, `official-app-publisher.pub`,
+`official-apps-report.json` and, after the first index, `official-apps-previous.json`.
+The report is `{report, signature}` JSON, with a domain-separated registry-key signature over the
+canonical report. It records each app's name, id, version, checksum, build/manifest/test status,
+localization and permission-policy match. Its source includes whether the tree was dirty, and its
+mode distinguishes unsigned candidates, ephemeral development verification and production signing.
+A failed build writes `status: "failed"` with the affected app identities and errors and cannot
+be signed. Signed test results attest to the trusted build job's measured run; offline verification
+does not rerun those historical tests. Rebuild/test with the matching checkout for fresh evidence.
+
+The pipeline is implemented before publication. Creating a tag or public release still requires
+the owner's explicit authorization and the remaining ecosystem acceptance gates. No production
+signature or release is claimed merely because the ephemeral development gate passes.

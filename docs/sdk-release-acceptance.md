@@ -419,9 +419,9 @@ SQL Client, Video Player, Image Viewer and Gallery are now implemented and teste
 owner removed API Client, Music Player, Wallpaper Studio and Icon Studio; the release target is
 29 apps. The remaining release work is:
 
-- The all-29-app build, validate, sign and index pipeline; a machine-readable release report;
-  protected `release` environment integration and the CI gate for that report. The owner's
-  private signing keys remain in the protected environment.
+- Qualify the implemented all-29-app distribution pipeline in hosted CI and, after explicit
+  publication authorization, run it with the protected production keys. Local development
+  signing uses ephemeral keys; it is not a production-signed release candidate.
 - The community service (`services/community-registry`) using Workers, R2 and D1, its local
   tests and developer guide. The owner still supplies the domain and performs deployment;
   no account token is needed by the coding agent. Pin the community anchor after deployment.
@@ -514,5 +514,37 @@ expected and requires administrator approval. All ten locales validate for every
 An additional browser pass over plain HTTP at `everyos.lan` passes 5/5: first-run setup and
 the complete SQL Client, Image Viewer, Gallery and Video Player workflows. Desktop and
 390-pixel screenshots are reviewed. This is development evidence on the Mac, not final
-ARM64/AMD64 release qualification. The next hosted CI run must verify the complete current
-branch; CI 116's protected terminal failure remains recorded above.
+ARM64/AMD64 release qualification. [CI 117](https://github.com/goktugcy/everyos/actions/runs/40084914446) subsequently passes on
+both Linux architectures: 1,442 tests each, 94 regular browser tests on amd64 / 95 on arm64,
+and 25 plain-HTTP tests each. The dependency audit passes. The protected terminal scenario
+also passes in this run; its CI 116 failure is retained above as historical evidence.
+
+## Official distribution pipeline — 2026-10-24
+
+The complete catalog is built, validated, packed, signed and verified by
+`scripts/official-apps.ts`; [publishing](app-sdk/publishing.md) documents the commands and trust
+boundary. A committed exact permission policy covers app and widget grants. The machine-readable
+report binds each app's name/id/version, actual positive test counts, checksum, manifest/build,
+compatibility, all-ten-locales and permission-policy status to its source and signing mode.
+The report itself is signed with a domain-separated registry signature. Both CI architectures
+now require the ephemeral-key development pipeline and retain its report. The protected release
+job consumes only verified unsigned artifacts, matches both app signing secrets to the public
+pins, checks previous-version immutability/sequence/revocations, and verifies all bytes again
+before the existing publication step. Published assets have flat GitHub-compatible names.
+
+The fresh 29-app development run passes 447 app tests and verifies all 29 packages/index
+with ephemeral keys. Twenty-nine focused pipeline tests pass for deterministic archive bytes,
+failed/skipped/missing tests, catalog coverage, changed permissions/default locale/localization,
+SDK incompatibility, wrong signing keys, dirty source, modified report/package/icon data, missing
+or extra/symlink assets, incomplete or expired signed indexes, source/policy drift, immutable
+versions, rollback, retained revocations and credential-free asset downloads.
+
+The complete local gate passes format, lint, all typechecks, 1,471 unit/integration tests in
+168 files, production build, the 29-app pipeline with 447 actual app tests, all 22 foundation/
+official-app Chromium workflows, and the production audit with zero advisories. Fresh hosted CI
+for the distribution changes is required; CI 117 above qualifies the prior application checkpoint.
+
+The owner explicitly keeps `locales.default: "en"` in all official manifests; the pipeline checks
+that value and complete Turkish plus the other eight dictionaries. No production key was read or
+used locally. Production signing, publication, packaged install/upgrade qualification, community
+service and device measurements remain release gates.

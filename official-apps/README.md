@@ -93,3 +93,12 @@ pnpm --filter @everyos-official/<slug> typecheck
 cd official-apps/<slug> && pnpm exec everyos-app validate
 pnpm exec eslint official-apps/<slug> && pnpm exec prettier --check official-apps/<slug>
 ```
+
+## Complete catalog verification
+
+Run `pnpm official-apps:check` from the repository root to execute every app's tests and build,
+validate, pack, sign with ephemeral keys and independently verify the exact 29-app catalog.
+The development report includes checksums, measured test counts, all ten locales and the exact
+app/widget permission-policy match. Manifest fallback is English (`locales.default: "en"`).
+See [official distribution](../docs/app-sdk/publishing.md#the-complete-official-app-release-pipeline)
+for the protected production pipeline; a development signature is not a public release.
