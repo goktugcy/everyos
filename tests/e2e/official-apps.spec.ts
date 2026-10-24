@@ -12,6 +12,8 @@ import { signIn } from "./helpers.ts";
 import { startDnsFixture } from "./dns-fixture.ts";
 import { startTlsFixture } from "./tls-fixture.ts";
 import { startHttpFixture } from "./http-fixture.ts";
+import { startSqlFixture } from "./database-fixture.ts";
+import { makeImage } from "./image-fixture.ts";
 
 /*
  * EveryOS's official apps (official-apps/*), built and signed into the fixture's official registry,
@@ -1550,5 +1552,645 @@ test.describe("SSH Keys", () => {
     await deletion.getByRole("button", { name: "Anahtarı sil", exact: true }).click();
     await expect(records()).toHaveCount(0);
     await expect(frame.getByText("Eşleşen anahtar yok", { exact: true })).toBeVisible();
+  });
+});
+
+test.describe("SQL Client", () => {
+  test.use({ actionTimeout: 20000 });
+  const sqlApp = OFFICIAL.find((app) => app.slug === "sql")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${sqlApp.id}`, { confirm: true });
+  });
+  test("queries real PostgreSQL read-only, confirms the complete write statement, exports CSV and fits mobile", async ({
+    page,
+  }) => {
+    test.setTimeout(150000);
+    const database = await startSqlFixture();
+    let connectionId: string | null = null;
+    try {
+      await install(page, sqlApp);
+      const created = await api(
+        page,
+        "POST",
+        "/api/desktop-apps/db-connections",
+        database.connection,
+      );
+      expect(created.status, created.text).toBe(201);
+      expect(created.text).not.toContain(database.connection.password);
+      connectionId = (JSON.parse(created.text) as { id: string }).id;
+      const opened = await open(page, sqlApp.name, sqlApp.id);
+      const { window } = opened;
+      let { frame } = opened;
+      await frame.getByRole("button", { name: "public.contacts", exact: true }).click();
+      await expect(frame.locator(".sql-schema")).toContainText("integer");
+      await frame.getByRole("button", { name: "Bağlantıyı test et", exact: true }).click();
+      await expect(frame.getByRole("status")).toContainText("PostgreSQL");
+      await frame.getByRole("button", { name: "Sorguyu çalıştır", exact: true }).click();
+      const results = () => frame.getByRole("table", { name: "Sorgu sonuçları", exact: true });
+      await expect(results()).toContainText("Ada");
+      await expect(results()).toContainText("Grace");
+      const editor = () => frame.getByRole("textbox", { name: "SQL sorgusu", exact: true });
+      // The approval must include the end of a statement beyond the former 20,000-character cut.
+      const write = `UPDATE contacts SET name = $1 WHERE id = 1 RETURNING name /* ${"x".repeat(20500)} NATIVE_QUERY_END */`;
+      await editor().fill(write);
+      await frame
+        .getByRole("textbox", { name: "JSON dizisi olarak parametreler", exact: true })
+        .fill('["Updated"]');
+      await frame.getByRole("button", { name: "Sorguyu çalıştır", exact: true }).click();
+      await expect(frame.getByRole("alert")).toContainText("salt okunur modda reddedildi");
+      await expect(page.getByRole("alertdialog")).toHaveCount(0);
+      await expect(results()).toContainText("Ada");
+      await frame.getByRole("checkbox", { name: "Bu sorgu için yazma iste", exact: true }).check();
+      const approval = () =>
+        page.getByRole("alertdialog", {
+          name: "SQL browser fixture içindeki veriler değiştirilsin mi?",
+          exact: true,
+        });
+      await frame.getByRole("button", { name: "Sorguyu çalıştır", exact: true }).click();
+      await expect(approval().locator("pre")).toHaveText(write);
+      await expect(approval()).not.toContainText(database.connection.password);
+      await approval().getByRole("button", { name: "Vazgeç", exact: true }).click();
+      await expect(approval()).toHaveCount(0);
+      await expect(results()).toContainText("Ada");
+      await frame.getByRole("button", { name: "Sorguyu çalıştır", exact: true }).click();
+      await approval().getByRole("button", { name: "Değişikliği çalıştır", exact: true }).click();
+      await expect(results()).toContainText("Updated");
+      const file = `sql-results-${Date.now()}.csv`;
+      await frame.getByRole("button", { name: "Sonuçları CSV dışa aktar", exact: true }).click();
+      const picker = page.getByTestId("desktop-app-file-picker");
+      await picker.getByRole("textbox", { name: "Ad", exact: true }).fill(file);
+      await picker.getByRole("button", { name: "Kaydet", exact: true }).click();
+      await expect
+        .poll(async () => {
+          const saved = await api(page, "GET", `/api/files/text?root=home&path=Belgeler/${file}`);
+          return saved.status === 200
+            ? (JSON.parse(saved.text) as { content: string }).content
+            : "";
+        })
+        .toContain('"Updated"');
+      await editor().fill("SELECT name FROM contacts ORDER BY id");
+      await frame
+        .getByRole("textbox", { name: "JSON dizisi olarak parametreler", exact: true })
+        .fill("[]");
+      await frame
+        .getByRole("checkbox", { name: "Bu sorgu için yazma iste", exact: true })
+        .uncheck();
+      await frame.getByRole("button", { name: "Sorguyu çalıştır", exact: true }).click();
+      await expect(results()).toContainText("Updated");
+      await expect(results()).toContainText("Grace");
+      await frame.locator(".eui-content").evaluate((element) => {
+        element.scrollTop = 0;
+      });
+      await page.screenshot({ path: test.info().outputPath("sql-desktop.png") });
+      await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+      ({ frame } = await open(page, sqlApp.name, sqlApp.id));
+      await expect(editor()).toHaveText("");
+      await expect(frame.locator(".sql-history button")).toHaveCount(0);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.getByTestId("mobile-shell")).toBeVisible();
+      await page
+        .getByTestId("mobile-shell")
+        .getByRole("button", { name: sqlApp.name, exact: true })
+        .click();
+      frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${sqlApp.id}"]`);
+      await frame.getByRole("button", { name: "public.contacts", exact: true }).click();
+      await frame.getByRole("button", { name: "Sorguyu çalıştır", exact: true }).click();
+      await expect(results()).toContainText("Updated");
+      expect(
+        await frame
+          .locator(".sql-main")
+          .evaluate((element) => element.scrollWidth > element.clientWidth),
+      ).toBe(false);
+      await frame.locator(".eui-content").evaluate((element) => {
+        element.scrollTop = 0;
+      });
+      await page.screenshot({ path: test.info().outputPath("sql-mobile.png") });
+    } finally {
+      if (connectionId)
+        await api(page, "DELETE", `/api/desktop-apps/db-connections/${connectionId}`, {
+          confirm: true,
+        });
+      await database.close();
+    }
+  });
+});
+
+test.describe("Image Viewer", () => {
+  test.use({ actionTimeout: 20000 });
+  const imagesApp = OFFICIAL.find((app) => app.slug === "images")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${imagesApp.id}`, { confirm: true });
+  });
+  test("decodes selected images, zooms, pans, rotates, saves originals and restores a mobile slideshow", async ({
+    page,
+  }) => {
+    test.setTimeout(120000);
+    await install(page, imagesApp);
+    const suffix = Date.now();
+    const firstName = `viewer-first-${suffix}.png`;
+    const secondName = `viewer-second-${suffix}.png`;
+    const damagedName = `viewer-damaged-${suffix}.png`;
+    const first = makeImage(640, 360, [30, 130, 90], "EveryOS fixture camera");
+    const second = makeImage(320, 480, [140, 70, 180]);
+    for (const [name, bytes] of [
+      [firstName, first],
+      [secondName, second],
+      [damagedName, Buffer.from([1, 2, 3])],
+    ] as const) {
+      const uploaded = await page.evaluate(
+        async ({ name, bytes, header }) => {
+          const session = (await (await fetch("/api/auth/session")).json()) as {
+            csrfToken: string;
+          };
+          return (
+            await fetch(`/api/files/upload?root=home&path=Belgeler&name=${name}`, {
+              method: "POST",
+              headers: { [header]: session.csrfToken },
+              body: new Uint8Array(bytes),
+            })
+          ).status;
+        },
+        { name, bytes: [...bytes], header: CSRF_HEADER },
+      );
+      expect(uploaded).toBe(201);
+    }
+    const opened = await open(page, imagesApp.name, imagesApp.id);
+    const { window } = opened;
+    let { frame } = opened;
+    await frame.getByRole("button", { name: "Görselleri aç", exact: true }).click();
+    const picker = () => page.getByTestId("desktop-app-file-picker");
+    await picker().getByRole("option", { name: firstName, exact: true }).click();
+    await picker().getByRole("option", { name: secondName, exact: true }).click();
+    await picker().getByRole("button", { name: "Aç", exact: true }).click();
+    await expect(frame.getByRole("img", { name: firstName, exact: true })).toBeVisible();
+    await expect(frame.locator(".image-metadata")).toContainText("640 × 360 px");
+    await expect(frame.locator(".image-metadata")).toContainText("EveryOS fixture camera");
+    await frame.getByRole("button", { name: "Yakınlaştır", exact: true }).click();
+    await frame.getByRole("button", { name: "Sağa döndür", exact: true }).click();
+    const canvas = () => frame.getByRole("region", { name: "Görsel önizlemesi", exact: true });
+    await expect(canvas()).toHaveAttribute("data-rotation", "90");
+    await expect(canvas()).toHaveAttribute("data-zoom", "1.25");
+    await canvas().press("Alt+ArrowRight");
+    await expect(frame.getByRole("img", { name: firstName, exact: true })).toHaveAttribute(
+      "style",
+      /translate\(30px, 0px\)/,
+    );
+    await frame.getByRole("button", { name: "Özgün görseli kaydet", exact: true }).click();
+    const copyName = `viewer-copy-${Date.now()}.png`;
+    await picker().getByRole("textbox", { name: "Ad", exact: true }).fill(copyName);
+    await picker().getByRole("button", { name: "Kaydet", exact: true }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(async (name) => {
+          const response = await fetch(`/api/files/download?root=home&path=Belgeler/${name}`);
+          return response.ok
+            ? btoa(String.fromCharCode(...new Uint8Array(await response.arrayBuffer())))
+            : "";
+        }, copyName),
+      )
+      .toBe(first.toString("base64"));
+    await frame.getByRole("button", { name: "Sığdır ve sıfırla", exact: true }).click();
+    await expect(canvas()).toHaveAttribute("data-rotation", "0");
+    await frame.getByRole("button", { name: "Sonraki görsel", exact: true }).click();
+    await expect(frame.getByRole("img", { name: secondName, exact: true })).toBeVisible();
+    await frame.locator(".eui-content").evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.screenshot({ path: test.info().outputPath("images-desktop.png") });
+    await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    ({ frame } = await open(page, imagesApp.name, imagesApp.id));
+    await expect(frame.getByRole("img", { name: secondName, exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId("mobile-shell")).toBeVisible();
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: imagesApp.name, exact: true })
+      .click();
+    frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${imagesApp.id}"]`);
+    await expect(frame.getByRole("img", { name: secondName, exact: true })).toBeVisible();
+    await frame.getByRole("combobox", { name: "Slayt aralığı", exact: true }).selectOption("2000");
+    await frame.getByRole("button", { name: "Slayt gösterisini başlat", exact: true }).click();
+    await expect(frame.getByRole("img", { name: firstName, exact: true })).toBeVisible({
+      timeout: 6000,
+    });
+    await frame.getByRole("button", { name: "Slayt gösterisini durdur", exact: true }).click();
+    expect(
+      await frame
+        .locator(".images-main")
+        .evaluate((element) => element.scrollWidth > element.clientWidth),
+    ).toBe(false);
+    await page.screenshot({ path: test.info().outputPath("images-mobile.png") });
+    await frame.getByRole("button", { name: "Görselleri aç", exact: true }).click();
+    await picker().getByRole("option", { name: damagedName, exact: true }).click();
+    await picker().getByRole("button", { name: "Aç", exact: true }).click();
+    await expect(frame.getByRole("alert")).toContainText("tarayıcı tarafından desteklenmiyor");
+  });
+});
+
+test.describe("Gallery", () => {
+  test.use({ actionTimeout: 20000 });
+  const galleryApp = OFFICIAL.find((app) => app.slug === "gallery")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${galleryApp.id}`, { confirm: true });
+  });
+  test("indexes only an approved folder, restores favorites and albums, and removes references without deleting photos", async ({
+    page,
+  }) => {
+    test.setTimeout(150000);
+    await install(page, galleryApp);
+    const folder = `gallery-${Date.now()}`;
+    const base = `Belgeler/${folder}`;
+    expect(
+      (
+        await api(page, "POST", "/api/files/mkdir", {
+          root: "home",
+          path: "Belgeler",
+          name: folder,
+        })
+      ).status,
+    ).toBe(201);
+    expect(
+      (await api(page, "POST", "/api/files/mkdir", { root: "home", path: base, name: "walks" }))
+        .status,
+    ).toBe(201);
+    const upload = async (path: string, name: string, bytes: Buffer) => {
+      expect(
+        await page.evaluate(
+          async ({ path, name, bytes, header }) => {
+            const session = (await (await fetch("/api/auth/session")).json()) as {
+              csrfToken: string;
+            };
+            return (
+              await fetch(
+                `/api/files/upload?root=home&path=${encodeURIComponent(path)}&name=${encodeURIComponent(name)}`,
+                {
+                  method: "POST",
+                  headers: { [header]: session.csrfToken },
+                  body: new Uint8Array(bytes),
+                },
+              )
+            ).status;
+          },
+          { path, name, bytes: [...bytes], header: CSRF_HEADER },
+        ),
+      ).toBe(201);
+    };
+    await upload(base, "winter.png", makeImage(640, 360, [30, 130, 90]));
+    await upload(`${base}/walks`, "summer.png", makeImage(320, 480, [140, 70, 180]));
+    await upload("Belgeler", `${folder}-outside.png`, makeImage(32, 32, [10, 10, 10]));
+    const opened = await open(page, galleryApp.name, galleryApp.id);
+    const { window } = opened;
+    let { frame } = opened;
+    await frame.getByRole("button", { name: "Yeni albüm", exact: true }).click();
+    let prompt = page.getByRole("alertdialog", { name: "Yeni albüm", exact: true });
+    await prompt.getByRole("textbox", { name: "Yeni albüm", exact: true }).fill("Geziler");
+    await prompt.getByRole("button", { name: "Onayla", exact: true }).click();
+    await frame
+      .getByRole("button", { name: "İzin verilen klasörü dizine al", exact: true })
+      .click();
+    const picker = page.getByTestId("desktop-app-file-picker");
+    await picker.getByRole("option", { name: folder, exact: true }).click();
+    await picker.getByRole("button", { name: "Bu klasörü seç", exact: true }).click();
+    const cards = () => frame.locator(".gallery-photo");
+    await expect(cards()).toHaveCount(2);
+    await expect(frame.locator(".gallery-grid")).not.toContainText(`${folder}-outside.png`);
+    await expect
+      .poll(() =>
+        frame
+          .getByRole("img", { name: "winter.png", exact: true })
+          .evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBe(640);
+    await cards()
+      .filter({ hasText: "winter.png" })
+      .getByRole("button", { name: "Favorilere ekle", exact: true })
+      .click();
+    await frame.getByRole("checkbox", { name: "Yalnızca favoriler", exact: true }).check();
+    await expect(cards()).toHaveCount(1);
+    await expect(cards()).toContainText("winter.png");
+    await frame.getByRole("checkbox", { name: "Yalnızca favoriler", exact: true }).uncheck();
+    await frame
+      .getByRole("searchbox", { name: "Görsel adlarında ve yollarda ara", exact: true })
+      .fill("walks");
+    await expect(cards()).toHaveCount(1);
+    await expect(cards()).toContainText("summer.png");
+    await frame
+      .getByRole("searchbox", { name: "Görsel adlarında ve yollarda ara", exact: true })
+      .fill("");
+    await upload(base, "spring.png", makeImage(80, 80, [180, 130, 20]));
+    await frame.getByRole("button", { name: "Klasör dizinlerini yenile", exact: true }).click();
+    await expect(cards()).toHaveCount(3);
+    await expect(
+      cards()
+        .filter({ hasText: "winter.png" })
+        .getByRole("button", { name: "Favorilerden çıkar", exact: true }),
+    ).toBeVisible();
+    await frame.getByRole("button", { name: "Albümü yeniden adlandır", exact: true }).click();
+    prompt = page.getByRole("alertdialog", { name: "Albümü yeniden adlandır", exact: true });
+    await prompt
+      .getByRole("textbox", { name: "Albümü yeniden adlandır", exact: true })
+      .fill("Geziler 2026");
+    await prompt.getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(frame.getByRole("combobox", { name: "Albüm", exact: true })).toContainText(
+      "Geziler 2026",
+    );
+    await cards().first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: test.info().outputPath("gallery-desktop.png") });
+    await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    ({ frame } = await open(page, galleryApp.name, galleryApp.id));
+    await expect(cards()).toHaveCount(3);
+    await expect(
+      cards()
+        .filter({ hasText: "winter.png" })
+        .getByRole("button", { name: "Favorilerden çıkar", exact: true }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId("mobile-shell")).toBeVisible();
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: galleryApp.name, exact: true })
+      .click();
+    frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${galleryApp.id}"]`);
+    await expect(cards()).toHaveCount(3);
+    expect(
+      await frame
+        .locator(".gallery-main")
+        .evaluate((element) => element.scrollWidth > element.clientWidth),
+    ).toBe(false);
+    await cards().first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: test.info().outputPath("gallery-mobile.png") });
+    await frame.getByRole("button", { name: "winter.png önizle", exact: true }).click();
+    await expect(frame.locator(".image-canvas img")).toBeVisible();
+    await frame.getByRole("combobox", { name: "Slayt aralığı", exact: true }).selectOption("2000");
+    await frame.getByRole("button", { name: "Slayt gösterisini başlat", exact: true }).click();
+    await expect(frame.locator(".gallery-preview h2")).not.toHaveText("winter.png", {
+      timeout: 6000,
+    });
+    await frame.getByRole("button", { name: "Slayt gösterisini durdur", exact: true }).click();
+    await frame.getByRole("button", { name: "Önizlemeyi kapat", exact: true }).click();
+    await frame.getByRole("checkbox", { name: "Yalnızca favoriler", exact: true }).check();
+    await frame.getByRole("button", { name: "Bu sayfayı seç", exact: true }).click();
+    await frame.getByRole("button", { name: "Seçilenleri albümden çıkar", exact: true }).click();
+    let confirm = page.getByRole("alertdialog", {
+      name: "Seçilenleri albümden çıkar",
+      exact: true,
+    });
+    await confirm.getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(cards()).toHaveCount(0);
+    await frame.getByRole("checkbox", { name: "Yalnızca favoriler", exact: true }).uncheck();
+    await expect(cards()).toHaveCount(2);
+    await frame.getByRole("button", { name: "Albümü sil", exact: true }).click();
+    confirm = page.getByRole("alertdialog", { name: "Albümü sil", exact: true });
+    await confirm.getByRole("button", { name: "Vazgeç", exact: true }).click();
+    await expect(cards()).toHaveCount(2);
+    await frame.getByRole("button", { name: "Albümü sil", exact: true }).click();
+    await confirm.getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(frame.getByText("Henüz albüm yok", { exact: true })).toBeVisible();
+    const actual = await api(
+      page,
+      "GET",
+      `/api/files/list?root=home&path=${encodeURIComponent(base)}`,
+    );
+    expect(actual.status).toBe(200);
+    expect(actual.text).toContain("winter.png");
+    expect(actual.text).toContain("spring.png");
+    const nested = await api(
+      page,
+      "GET",
+      `/api/files/list?root=home&path=${encodeURIComponent(base + "/walks")}`,
+    );
+    expect(nested.status).toBe(200);
+    expect(nested.text).toContain("summer.png");
+  });
+});
+
+test.describe("Video Player", () => {
+  test.use({ actionTimeout: 20000 });
+  const videoApp = OFFICIAL.find((app) => app.slug === "video")!;
+  test.afterEach(async ({ page }) => {
+    await api(page, "DELETE", `/api/desktop-apps/installed/${videoApp.id}`, { confirm: true });
+  });
+  test("plays real streamed video, loads safe subtitles, enters fullscreen and restores positions and named playlists", async ({
+    page,
+  }) => {
+    test.setTimeout(150000);
+    await install(page, videoApp);
+    const suffix = Date.now();
+    const firstName = `clip-first-${suffix}.webm`;
+    const secondName = `clip-second-${suffix}.webm`;
+    const subtitleName = `captions-${suffix}.srt`;
+    const badName = `unsupported-${suffix}.avi`;
+    const bytes = readFileSync(join(root, "../tests/e2e/fixtures/media/demo.webm"));
+    const srt = Buffer.from(
+      "1\n00:00:00,000 --> 00:00:07,500\nEveryOS caption fixture\n\n2\n00:00:07,500 --> 00:00:07,800\n<script>never execute</script>\n",
+    );
+    for (const [name, data] of [
+      [firstName, bytes],
+      [secondName, bytes],
+      [subtitleName, srt],
+      [badName, Buffer.from([1, 2, 3])],
+    ] as const) {
+      expect(
+        await page.evaluate(
+          async ({ name, data, header }) => {
+            const session = (await (await fetch("/api/auth/session")).json()) as {
+              csrfToken: string;
+            };
+            return (
+              await fetch(
+                `/api/files/upload?root=home&path=Belgeler&name=${encodeURIComponent(name)}`,
+                {
+                  method: "POST",
+                  headers: { [header]: session.csrfToken },
+                  body: new Uint8Array(data),
+                },
+              )
+            ).status;
+          },
+          { name, data: [...data], header: CSRF_HEADER },
+        ),
+      ).toBe(201);
+    }
+    let ranges = 0;
+    page.on("response", (response) => {
+      if (response.status() === 206 && response.headers()["content-type"]?.startsWith("video/"))
+        ranges++;
+    });
+    const opened = await open(page, videoApp.name, videoApp.id);
+    const { window } = opened;
+    let { frame } = opened;
+    await frame.getByRole("button", { name: "Video ekle", exact: true }).click();
+    const picker = () => page.getByTestId("desktop-app-file-picker");
+    await picker().getByRole("option", { name: firstName, exact: true }).click();
+    await picker().getByRole("option", { name: secondName, exact: true }).click();
+    await picker().getByRole("button", { name: "Aç", exact: true }).click();
+    const player = () => frame.getByLabel("Video oynatma", { exact: true });
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.videoWidth))
+      .toBe(640);
+    await expect
+      .poll(() =>
+        player().evaluate(
+          (node: HTMLVideoElement) => Number.isFinite(node.duration) && node.duration > 7,
+        ),
+      )
+      .toBe(true);
+    await frame.getByRole("button", { name: "Oynat", exact: true }).click();
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.currentTime))
+      .toBeGreaterThan(0.3);
+    await frame.getByRole("button", { name: "Duraklat", exact: true }).click();
+    await expect.poll(() => player().evaluate((node: HTMLVideoElement) => node.paused)).toBe(true);
+    await frame.getByRole("combobox", { name: "Oynatma hızı", exact: true }).selectOption("1.5");
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.playbackRate))
+      .toBe(1.5);
+    await player().evaluate((node: HTMLVideoElement) => {
+      node.currentTime = 2.5;
+      node.volume = 0.4;
+      node.muted = true;
+    });
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => Math.abs(node.currentTime - 2.5) < 0.15),
+      )
+      .toBe(true);
+    await frame.getByRole("button", { name: "Tam ekran", exact: true }).click();
+    await expect
+      .poll(() => player().evaluate((node) => node.ownerDocument.fullscreenElement === node))
+      .toBe(true);
+    await page.keyboard.press("Escape");
+    await expect
+      .poll(() => player().evaluate((node) => node.ownerDocument.fullscreenElement === null))
+      .toBe(true);
+    await frame.getByRole("button", { name: "Altyazı aç", exact: true }).click();
+    await picker().getByRole("option", { name: subtitleName, exact: true }).click();
+    await picker().getByRole("button", { name: "Aç", exact: true }).click();
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => node.textTracks[0]?.cues?.length ?? 0),
+      )
+      .toBe(2);
+    expect(
+      await player().evaluate(
+        (node: HTMLVideoElement) => (node.textTracks[0]!.cues![1] as VTTCue).text,
+      ),
+    ).toBe("&lt;script&gt;never execute&lt;/script&gt;");
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.textTracks[0]?.mode))
+      .toBe("showing");
+    await frame.getByRole("button", { name: "Altyazıları gizle", exact: true }).click();
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.textTracks[0]?.mode))
+      .toBe("disabled");
+    await frame.getByRole("button", { name: "Altyazıları göster", exact: true }).click();
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => Math.abs(node.currentTime - 2.5) < 0.15),
+      )
+      .toBe(true);
+    await frame.locator(".eui-content").evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => !node.seeking && node.readyState >= 3),
+      )
+      .toBe(true);
+    await page.screenshot({ path: test.info().outputPath("video-desktop.png") });
+    await window.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    ({ frame } = await open(page, videoApp.name, videoApp.id));
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => Math.abs(node.currentTime - 2.5) < 0.15),
+      )
+      .toBe(true);
+    expect(
+      await player().evaluate((node: HTMLVideoElement) => ({
+        rate: node.playbackRate,
+        volume: node.volume,
+        muted: node.muted,
+      })),
+    ).toEqual({ rate: 1.5, volume: 0.4, muted: true });
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => node.textTracks[0]?.cues?.length ?? 0),
+      )
+      .toBe(2);
+    await frame.getByRole("button", { name: "Listeyi yeniden adlandır", exact: true }).click();
+    let prompt = page.getByRole("alertdialog", { name: "Listeyi yeniden adlandır", exact: true });
+    await prompt
+      .getByRole("textbox", { name: "Listeyi yeniden adlandır", exact: true })
+      .fill("Filmler");
+    await prompt.getByRole("button", { name: "Onayla", exact: true }).click();
+    await frame.getByRole("button", { name: "Yeni oynatma listesi", exact: true }).click();
+    prompt = page.getByRole("alertdialog", { name: "Yeni oynatma listesi", exact: true });
+    await prompt
+      .getByRole("textbox", { name: "Yeni oynatma listesi", exact: true })
+      .fill("Kısa klipler");
+    await prompt.getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(frame.getByText("Video seçilmedi", { exact: true })).toBeVisible();
+    await frame.getByRole("button", { name: "Listeyi sil", exact: true }).click();
+    const confirmation = page.getByRole("alertdialog", { name: "Listeyi sil", exact: true });
+    await confirmation.getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(
+      frame.getByRole("combobox", { name: "Oynatma listesi", exact: true }),
+    ).toContainText("Filmler");
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.videoWidth))
+      .toBe(640);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByTestId("mobile-shell")).toBeVisible();
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: videoApp.name, exact: true })
+      .click();
+    frame = page.frameLocator(`[data-testid="desktop-app-frame"][data-app-id="${videoApp.id}"]`);
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => Math.abs(node.currentTime - 2.5) < 0.15),
+      )
+      .toBe(true);
+    expect(
+      await frame
+        .locator(".video-main")
+        .evaluate((element) => element.scrollWidth > element.clientWidth),
+    ).toBe(false);
+    await player().scrollIntoViewIfNeeded();
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => !node.seeking && node.readyState >= 3),
+      )
+      .toBe(true);
+    await page.screenshot({ path: test.info().outputPath("video-mobile.png") });
+    await player().evaluate((node: HTMLVideoElement) => {
+      node.currentTime = node.duration - 0.15;
+    });
+    await frame.getByRole("button", { name: "Oynat", exact: true }).click();
+    await expect(
+      frame.getByRole("combobox", { name: "Seçili video", exact: true }).locator("option:checked"),
+    ).toHaveText(secondName);
+    await expect
+      .poll(() =>
+        player().evaluate((node: HTMLVideoElement) => !node.paused && node.currentTime > 0.1),
+      )
+      .toBe(true);
+    await player().evaluate((node: HTMLVideoElement) => {
+      node.currentTime = node.duration - 0.15;
+    });
+    await expect
+      .poll(() => player().evaluate((node: HTMLVideoElement) => node.ended && node.paused))
+      .toBe(true);
+    await expect(
+      frame.getByRole("combobox", { name: "Seçili video", exact: true }).locator("option:checked"),
+    ).toHaveText(secondName);
+    await frame.getByRole("button", { name: "Video ekle", exact: true }).click();
+    await picker().getByRole("option", { name: badName, exact: true }).click();
+    await picker().getByRole("button", { name: "Aç", exact: true }).click();
+    await frame
+      .getByRole("combobox", { name: "Seçili video", exact: true })
+      .selectOption({ label: badName });
+    await expect(frame.getByRole("alert")).toContainText("Bu dosya oynatılamadı");
+    expect(ranges).toBeGreaterThan(0);
   });
 });
