@@ -80,6 +80,19 @@ jobs:
         id: build
         run: pnpm build
 
+      - name: Verify all official app release artifacts with ephemeral keys
+        id: officialapps
+        run: pnpm official-apps:check
+
+      - name: Upload official app development report
+        if: ${{ !cancelled() && (steps.officialapps.outcome == 'success' || steps.officialapps.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-apps-report-${{ matrix.arch }}
+          path: dist/official-apps-check/official-apps-report.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Install Playwright browser
         id: browser
         run: pnpm exec playwright install --with-deps --only-shell chromium
