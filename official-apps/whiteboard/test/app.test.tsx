@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { CanvasModule, CanvasProps } from "../src/canvas-types.ts";
 import { WhiteboardApp } from "../src/whiteboard-app.tsx";
+import { BoardStore } from "../src/boards.ts";
 
 const publicDir = join(import.meta.dirname, "../public");
 let rendered: RenderedApp | null = null;
@@ -83,6 +84,16 @@ describe("Whiteboard", () => {
     expect(boardNames()).toEqual(["My board"]);
     fake.draw("rectangle");
     fake.draw("arrow");
+    // The initial empty board is already stored and says Saved during the debounce interval.
+    const store = new BoardStore(first.app);
+    const board = (await store.list())[0]!;
+    await vi.waitFor(
+      async () => {
+        const scene = JSON.parse((await store.load(board.id)) ?? "{}") as { elements?: string[] };
+        expect(scene.elements).toEqual(["rectangle", "arrow"]);
+      },
+      { timeout: 3000 },
+    );
     await vi.waitFor(() => expect(byRole("status")?.textContent).toBe("Saved"));
     await vi.waitFor(() =>
       expect([...first.host.storage.keys()].some((key) => key.startsWith("board/"))).toBe(true),
