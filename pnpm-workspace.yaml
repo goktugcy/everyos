@@ -8,7 +8,7 @@ packages:
 catalog:
   hono: 4.13.13
   "@hono/node-server": 2.1.4
-  zod: 4.6.5
+  zod: 4.6.6
   yaml: 2.9.1
   re2js: 2.8.6
   react: 19.3.0
@@ -36,8 +36,8 @@ catalog:
   "@types/ws": 8.18.2
   "@xterm/xterm": 6.0.0
   "@xterm/addon-fit": 0.11.0
-  # Zero-dependency SMTP client for e-mail notifications (released 2026-10-03).
-  nodemailer: 10.0.14
+  # Zero-dependency SMTP client for e-mail notifications.
+  nodemailer: 10.1.4
   # Database drivers behind the desktop apps' database:connect capability.
   pg: 8.23.1
   pg-cursor: 2.22.1
@@ -87,6 +87,7 @@ patchedDependencies:
 
 # Keep security fixes across direct and transitive consumers, preserving each nanoid major.
 overrides:
+  "zod@>=4 <4.6.6": 4.6.6
   "dompurify@<3.4.17": 3.4.17
   "nanoid@<4": 3.3.18
   "nanoid@>=4 <5.1.16": 5.1.16
