@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Video Oynatıcı",
+    "description": "Seçtiğin videoları altyazı, oynatma listesi ve kaydedilen konumlarla oynat."
+  },
+  "video": {
+    "scope": "Yalnızca seçtiğin dosyalara erişilir. Her biri 100 videoluk en fazla 20 liste oluşturabilirsin. Devam konumu ve ayarlar kaydedilir; videolar EveryOS üzerinden akışla açılır, uygulama depolamasına kopyalanmaz.",
+    "permission": "Video erişimi için Uygulama Mağazası’ndan files:pick izni gerekir.",
+    "add": "Video ekle",
+    "openSubtitles": "Altyazı aç",
+    "fullscreen": "Tam ekran",
+    "fullscreenError": "Tarayıcı tam ekranı reddetti. Kullanılabiliyorsa videonun kendi kontrollerini kullan.",
+    "playlist": "Oynatma listesi",
+    "defaultList": "Videolarım",
+    "newList": "Yeni oynatma listesi",
+    "renameList": "Listeyi yeniden adlandır",
+    "deleteList": "Listeyi sil",
+    "referencesOnly": "Yalnızca liste kayıtları kaldırılır. Özgün dosyalar silinmez.",
+    "revoked": "Listedeki bazı dosyalar artık paylaşılmıyor. Erişimi geri vermek için yeniden ekle.",
+    "empty": "Video seçilmedi",
+    "openHint": "EveryOS üzerinden video seç. Oynatma, tarayıcının kapsayıcı ve kodek desteğine bağlıdır; bu uygulama dönüştürme yapmaz.",
+    "selected": "Seçili video",
+    "previous": "Önceki video",
+    "next": "Sonraki video",
+    "remove": "Listeden çıkar",
+    "player": "Video oynatma",
+    "play": "Oynat",
+    "pause": "Duraklat",
+    "reload": "Videoyu yeniden yükle",
+    "speed": "Oynatma hızı",
+    "subtitles": "Altyazılar",
+    "showSubtitles": "Altyazıları göster",
+    "hideSubtitles": "Altyazıları gizle",
+    "captionHint": "En fazla 1 MiB ve 2.000 zamanlı satırlık düz metin WebVTT veya SRT altyazı. İşaretleme ve stiller çalıştırılmaz.",
+    "badSubtitles": "Altyazı okunamadı. En az bir zamanlı satırı olan, en fazla 1 MiB ve 2.000 satırlık geçerli WebVTT/SRT kullan.",
+    "unsupported": "Bu dosya oynatılamadı. Kodek/kapsayıcı desteklenmiyor, dosya bozuk veya paylaşım süresi dolmuş olabilir. Yeniden yüklemeyi ya da başka tarayıcı/biçimi dene. Dönüştürme yapılmaz.",
+    "codecs": "Tarayıcı kodek desteği",
+    "codecHint": "Bunlar tarayıcının canPlayType bildirimleridir; belirli bir dosyanın açılacağını garanti etmez. Gerçek oynatma sonucu belirleyicidir.",
+    "probably": "Büyük olasılıkla destekleniyor bildirimi",
+    "maybe": "Desteklenebilir bildirimi",
+    "notReported": "Destek bildirilmiyor"
+  }
+}

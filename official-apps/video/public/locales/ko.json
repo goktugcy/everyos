@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "동영상 플레이어",
+    "description": "선택한 동영상을 자막, 재생목록, 저장된 위치로 재생합니다."
+  },
+  "video": {
+    "scope": "선택한 파일에만 접근합니다. 목록당 100개, 최대 20개 목록입니다. 위치와 설정은 저장되며 영상은 앱 저장소에 복사하지 않고 EveryOS에서 스트리밍합니다.",
+    "permission": "영상 접근에는 앱 스토어의 files:pick 권한이 필요합니다.",
+    "add": "동영상 추가",
+    "openSubtitles": "자막 열기",
+    "fullscreen": "전체 화면",
+    "fullscreenError": "브라우저가 전체 화면을 거부했습니다. 가능하면 기본 동영상 컨트롤을 사용하세요.",
+    "playlist": "재생목록",
+    "defaultList": "내 동영상",
+    "newList": "새 재생목록",
+    "renameList": "재생목록 이름 변경",
+    "deleteList": "재생목록 삭제",
+    "referencesOnly": "목록 참조만 제거됩니다. 원본 파일은 삭제되지 않습니다.",
+    "revoked": "일부 파일이 더 이상 공유되지 않습니다. 다시 추가하세요.",
+    "empty": "선택한 동영상 없음",
+    "openHint": "EveryOS에서 동영상을 선택하세요. 재생은 브라우저의 컨테이너와 코덱 지원에 따라 다르며 이 앱은 변환하지 않습니다.",
+    "selected": "선택한 동영상",
+    "previous": "이전 동영상",
+    "next": "다음 동영상",
+    "remove": "재생목록에서 제거",
+    "player": "동영상 재생",
+    "play": "재생",
+    "pause": "일시 정지",
+    "reload": "동영상 다시 로드",
+    "speed": "재생 속도",
+    "subtitles": "자막",
+    "showSubtitles": "자막 표시",
+    "hideSubtitles": "자막 숨기기",
+    "captionHint": "일반 텍스트 WebVTT 또는 SRT 자막으로 최대 1 MiB, 2,000개 큐입니다. 마크업과 스타일은 실행하지 않습니다.",
+    "badSubtitles": "자막을 읽을 수 없습니다. 시간이 있는 큐가 하나 이상인 유효한 WebVTT/SRT를 사용하세요. 최대 1 MiB, 2,000개 큐입니다.",
+    "unsupported": "재생할 수 없습니다. 코덱 미지원, 파일 손상 또는 공유 만료일 수 있습니다. 다시 로드하거나 다른 브라우저/형식을 사용하세요. 변환은 하지 않습니다.",
+    "codecs": "브라우저 코덱 지원",
+    "codecHint": "브라우저의 canPlayType 보고이며 특정 파일의 재생을 보장하지 않습니다. 실제 재생 결과가 기준입니다.",
+    "probably": "지원 가능성 높음",
+    "maybe": "지원 가능성 있음",
+    "notReported": "지원 보고 없음"
+  }
+}
