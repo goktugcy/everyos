@@ -1,0 +1,112 @@
+.eui-toolbar {
+  flex-wrap: wrap;
+}
+.sql-main {
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.sql-main h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+.sql-main p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.sql-hint {
+  color: var(--eui-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.sql-settings,
+.sql-actions,
+.sql-paging {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.sql-settings > * {
+  flex: 1;
+  min-width: 140px;
+}
+.sql-workspace {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
+  gap: 18px;
+  min-width: 0;
+}
+.sql-schema,
+.sql-query {
+  min-width: 0;
+}
+.sql-query {
+  display: grid;
+  gap: 12px;
+}
+.sql-editor {
+  height: 220px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  overflow: hidden;
+}
+.sql-table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow: auto;
+  padding-top: 12px;
+}
+.sql-table-list .eui-button {
+  text-align: start;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.sql-schema dl {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.sql-schema dd {
+  margin: 2px 0 10px;
+  color: var(--eui-muted);
+}
+.sql-results {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+.sql-result-scroll {
+  overflow: auto;
+  max-height: 460px;
+}
+.sql-results td {
+  max-width: 420px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.sql-main pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 180px;
+  overflow: auto;
+}
+.sql-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+@media (max-width: 700px) {
+  .sql-main {
+    padding: 12px;
+  }
+  .sql-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sql-table-list {
+    max-height: 160px;
+  }
+}

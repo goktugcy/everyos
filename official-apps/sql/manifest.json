@@ -1,0 +1,32 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.sql",
+  "name": "SQL Client",
+  "version": "1.0.0",
+  "description": "Query approved PostgreSQL and MySQL connections with read-only defaults, table browsing and confirmed writes.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "developer",
+  "permissions": ["database:connect", "storage:app", "files:save"],
+  "window": {
+    "defaultWidth": 1120,
+    "defaultHeight": 760,
+    "minWidth": 360,
+    "minHeight": 320,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/sql"
+}
