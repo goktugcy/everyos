@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "apps": {
+    "dev.everyos.calculator": {
+      "permissions": ["storage:app", "clipboard:write"],
+      "widgets": {},
+      "rationale": "Store calculation history and copy explicitly selected results."
+    },
+    "dev.everyos.calendar": {
+      "permissions": [
+        "storage:app",
+        "notifications:send",
+        "widgets:register",
+        "files:pick",
+        "files:save"
+      ],
+      "widgets": {
+        "upcoming": ["storage:app", "notifications:send"]
+      },
+      "rationale": "Store events, import or export chosen calendars and send reminders through the upcoming-events widget."
+    },
+    "dev.everyos.code": {
+      "permissions": ["storage:app", "files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Store editor state and edit only explicitly chosen workspace folders or files."
+    },
+    "dev.everyos.color": {
+      "permissions": ["storage:app", "clipboard:write", "files:save"],
+      "widgets": {},
+      "rationale": "Store palettes, copy color values and export generated palette files."
+    },
+    "dev.everyos.cron": {
+      "permissions": ["storage:app", "clipboard:write", "files:save"],
+      "widgets": {},
+      "rationale": "Store scheduling drafts and copy or export the generated expression."
+    },
+    "dev.everyos.diff": {
+      "permissions": ["storage:app", "clipboard:write", "files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Store comparison preferences, compare chosen files, copy differences and export patches."
+    },
+    "dev.everyos.disk": {
+      "permissions": [
+        "storage:app",
+        "files:pick",
+        "files:save",
+        "storage:usage.read",
+        "system:metrics.read"
+      ],
+      "widgets": {},
+      "rationale": "Measure only chosen folders plus permitted host storage and metrics, retain scope and export measurements."
+    },
+    "dev.everyos.dns": {
+      "permissions": ["storage:app", "network:outbound", "clipboard:write"],
+      "widgets": {},
+      "rationale": "Query explicitly approved outbound DNS resolvers, retain history and copy actual responses."
+    },
+    "dev.everyos.gallery": {
+      "permissions": ["files:pick", "storage:app"],
+      "widgets": {},
+      "rationale": "Index only chosen image files or folders and retain album references; source files cannot be written or deleted."
+    },
+    "dev.everyos.httpmonitor": {
+      "permissions": ["storage:app", "files:save", "network:outbound", "notifications:send"],
+      "widgets": {},
+      "rationale": "Monitor explicitly approved HTTP endpoints, retain history, export observations and notify failures."
+    },
+    "dev.everyos.images": {
+      "permissions": ["files:pick", "files:save", "storage:app"],
+      "widgets": {},
+      "rationale": "Read only chosen images, retain selected references and export unchanged originals through the save picker."
+    },
+    "dev.everyos.json": {
+      "permissions": ["storage:app", "files:pick", "files:save", "clipboard:write"],
+      "widgets": {},
+      "rationale": "Store editor preferences, inspect chosen JSON files, export formatted data and copy results."
+    },
+    "dev.everyos.jwt": {
+      "permissions": ["storage:app", "clipboard:write", "files:save"],
+      "widgets": {},
+      "rationale": "Store decoder preferences and copy or export inspected token fields; no server credentials are read."
+    },
+    "dev.everyos.logs": {
+      "permissions": ["storage:app", "files:save", "logs:read"],
+      "widgets": {},
+      "rationale": "Read permitted host journal records, retain filters and export the selected log snapshot."
+    },
+    "dev.everyos.markdown": {
+      "permissions": ["storage:app", "files:pick", "files:save", "clipboard:write"],
+      "widgets": {},
+      "rationale": "Store drafts, edit chosen Markdown files, export documents and copy rendered text."
+    },
+    "dev.everyos.network": {
+      "permissions": [
+        "storage:app",
+        "files:save",
+        "system:network.read",
+        "system:metrics.read",
+        "network:outbound"
+      ],
+      "widgets": {},
+      "rationale": "Read permitted host interfaces and metrics, probe approved endpoints and export diagnostic snapshots."
+    },
+    "dev.everyos.notes": {
+      "permissions": [
+        "storage:app",
+        "files:pick",
+        "files:save",
+        "clipboard:write",
+        "widgets:register"
+      ],
+      "widgets": {
+        "quick": ["storage:app"]
+      },
+      "rationale": "Store notes, open or export chosen files, copy text and provide a scoped quick-note widget."
+    },
+    "dev.everyos.pdf": {
+      "permissions": ["storage:app", "files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Remember reading positions and open, save or print only chosen PDF documents."
+    },
+    "dev.everyos.pomodoro": {
+      "permissions": ["storage:app", "notifications:send", "widgets:register"],
+      "widgets": {
+        "timer": ["storage:app", "notifications:send"]
+      },
+      "rationale": "Store timer preferences, send completion notifications and expose the active timer widget."
+    },
+    "dev.everyos.ports": {
+      "permissions": ["storage:app", "files:save", "system:sockets.read"],
+      "widgets": {},
+      "rationale": "Read host socket metadata, retain filters and export the current listener snapshot."
+    },
+    "dev.everyos.regex": {
+      "permissions": ["storage:app", "clipboard:write"],
+      "widgets": {},
+      "rationale": "Store expressions and copy matching or replacement results; matching stays in a worker."
+    },
+    "dev.everyos.sql": {
+      "permissions": ["database:connect", "storage:app", "files:save"],
+      "widgets": {},
+      "rationale": "Use approved server database connections, retain nonsecret preferences and export selected query results."
+    },
+    "dev.everyos.sshkeys": {
+      "permissions": ["secrets:ssh", "files:save", "clipboard:write"],
+      "widgets": {},
+      "rationale": "Manage the user SSH-key vault, export explicitly approved keys and copy public keys only."
+    },
+    "dev.everyos.ssl": {
+      "permissions": ["storage:app", "network:outbound"],
+      "widgets": {},
+      "rationale": "Inspect explicitly approved TLS endpoints and retain endpoint history."
+    },
+    "dev.everyos.text": {
+      "permissions": ["storage:app", "files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Store editor preferences and open or save only explicitly chosen text files."
+    },
+    "dev.everyos.todo": {
+      "permissions": [
+        "storage:app",
+        "notifications:send",
+        "widgets:register",
+        "files:pick",
+        "files:save"
+      ],
+      "widgets": {
+        "today": ["storage:app", "notifications:send"]
+      },
+      "rationale": "Store tasks, import or export chosen task files, send reminders and provide the task widget."
+    },
+    "dev.everyos.uptime": {
+      "permissions": [
+        "storage:app",
+        "network:outbound",
+        "system:metrics.read",
+        "system:services.read",
+        "notifications:send",
+        "widgets:register"
+      ],
+      "widgets": {
+        "health": ["system:metrics.read", "system:services.read", "network:outbound"]
+      },
+      "rationale": "Read host uptime, approved endpoint and service health, retain history and notify through the scoped health widget."
+    },
+    "dev.everyos.video": {
+      "permissions": ["files:pick", "storage:app"],
+      "widgets": {},
+      "rationale": "Stream only chosen videos and subtitle sidecars, retaining playlist references and playback settings."
+    },
+    "dev.everyos.whiteboard": {
+      "permissions": ["storage:app", "files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Store boards and import or export only chosen drawing files."
+    }
+  }
+}

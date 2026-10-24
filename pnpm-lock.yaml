@@ -406,6 +406,9 @@ importers:
       vitest:
         specifier: 5.0.3
         version: 5.0.3(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.4(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.0)(yaml@2.9.1))
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.6
 
   apps/agent:
     dependencies:

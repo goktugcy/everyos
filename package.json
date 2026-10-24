@@ -23,7 +23,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json && pnpm -r --parallel typecheck",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "official-apps:check": "node scripts/official-apps.ts check",
+    "official-apps:build": "node scripts/official-apps.ts build",
+    "official-apps:sign": "node scripts/official-apps.ts sign",
+    "official-apps:verify": "node scripts/official-apps.ts verify"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -40,6 +44,7 @@
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.1",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "zod": "catalog:"
   }
 }

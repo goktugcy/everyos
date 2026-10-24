@@ -8,6 +8,7 @@ export default defineConfig({
           name: "node",
           include: [
             "packages/*/src/**/*.test.ts",
+            "scripts/**/*.test.ts",
             "apps/api/src/**/*.test.ts",
             "apps/agent/src/**/*.test.ts",
           ],
