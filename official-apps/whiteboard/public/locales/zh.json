@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "白板",
+    "description": "在无限画布上绘图：画笔、形状、文本、连接箭头、撤销和缩放。白板会为你保存，并可导出为 PNG 和 SVG。"
+  },
+  "boards": {
+    "label": "白板",
+    "show": "显示白板",
+    "hide": "隐藏白板",
+    "new": "新建白板",
+    "first": "我的白板",
+    "untitled": "白板 {{number}}",
+    "imported": "导入的白板",
+    "copyName": "{{name}}（副本）",
+    "rename": "重命名 {{name}}",
+    "renameTitle": "重命名白板",
+    "duplicate": "复制 {{name}}",
+    "delete": "删除 {{name}}",
+    "deleteTitle": "删除“{{name}}”？",
+    "none": "没有打开的白板"
+  },
+  "canvas": {
+    "label": "{{name}} 的绘图",
+    "welcome": "绘制、书写并连接你的想法"
+  },
+  "status": {
+    "saved": "已保存",
+    "saving": "正在保存…",
+    "tooLarge": "太大无法保存：请导出为白板文件",
+    "failed": "未保存：请稍后重试"
+  },
+  "import": {
+    "action": "导入白板…",
+    "done": "已将 {{name}} 导入为新白板",
+    "invalid": "“{{name}}”不是此应用可读取的白板文件。"
+  },
+  "export": {
+    "board": "另存为白板文件（.excalidraw）…",
+    "done": "已保存 {{name}}",
+    "empty": "此白板上还没有可导出的内容。"
+  },
+  "library": {
+    "tooLarge": "你的形状库太大，无法保存。"
+  },
+  "errors": {
+    "load": "白板无法启动"
+  }
+}

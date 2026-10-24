@@ -1,0 +1,182 @@
+.cron-app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  min-height: 0;
+}
+.cron-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.cron-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+  min-height: 0;
+}
+.cron-body[data-narrow] {
+  grid-template-columns: 1fr;
+  overflow: auto;
+}
+.cron-main,
+.cron-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  min-height: 0;
+  overflow: auto;
+}
+.cron-main {
+  border-right: 1px solid var(--eui-line);
+}
+.cron-expression {
+  display: flex;
+  gap: 6px;
+}
+.cron-expression .eui-input {
+  flex: 1;
+  font-size: 1.4rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.cron-description {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-align: center;
+  min-height: 1.4em;
+}
+.cron-description[data-error] {
+  color: var(--eui-danger);
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+.cron-builder {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.cron-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-sm);
+}
+.cron-field legend {
+  padding: 0 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.cron-field legend code {
+  margin-inline-start: 4px;
+  font-weight: 400;
+  color: var(--eui-subtle);
+}
+.cron-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.cron-value {
+  min-width: 34px;
+  padding: 3px 4px;
+  border: 1px solid var(--eui-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--eui-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.cron-value[aria-pressed="true"] {
+  background: var(--eui-accent);
+  border-color: transparent;
+  color: #fff;
+}
+.cron-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.cron-number {
+  width: 72px;
+}
+.cron-presets h2,
+.cron-side h2 {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eui-subtle);
+}
+.cron-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.cron-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--eui-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--eui-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.cron-chip:hover {
+  background: var(--eui-hover);
+}
+.cron-runs {
+  margin: 0;
+  padding-inline-start: 22px;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.cron-runs li {
+  padding: 2px 0;
+}
+.cron-export,
+.cron-saved {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cron-output pre {
+  margin: 2px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-sm);
+  background: var(--eui-inset);
+  font:
+    0.82rem/1.5 ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.cron-output-head,
+.cron-task,
+.cron-save-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cron-save-row .eui-input {
+  flex: 1;
+}
+.cron-saved-item {
+  display: flex;
+  align-items: center;
+}

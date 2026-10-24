@@ -5,6 +5,7 @@ import { isLogLevel, LOG_LEVELS, type LogLevel } from "@everyos/logger";
 import { resolveEnvironment } from "@everyos/shared";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
+import { COMMUNITY_APP_REGISTRY, OFFICIAL_APP_REGISTRY } from "./modules/desktop-apps/anchors.ts";
 
 export const DEFAULT_PORT = 7470;
 
@@ -24,6 +25,13 @@ const OriginSchema = z.url().refine((value) => {
 }, "must be an origin such as https://everyos.example.ts.net");
 
 /** Shape of /etc/everyos/config.yaml. Every field is optional. */
+const RegistryAnchorSchema = z.strictObject({
+  url: z.url().max(2048),
+  publicKey: z.string().min(40).max(512),
+  /** A mirror on the local network (never needed for the public registries). */
+  allowPrivate: z.boolean().optional(),
+});
+
 const ConfigFileSchema = z.strictObject({
   server: z
     .strictObject({
@@ -97,6 +105,16 @@ const ConfigFileSchema = z.strictObject({
       maxUploadMiB: z.number().int().min(1).max(4_194_304).optional(),
     })
     .optional(),
+  /**
+   * Trust anchors of the built-in desktop app registries. Only this root-owned file can change
+   * them (docs/app-sdk/architecture.md); the browser can add community and private registries.
+   */
+  desktopApps: z
+    .strictObject({
+      officialRegistry: RegistryAnchorSchema.optional(),
+      communityRegistry: RegistryAnchorSchema.optional(),
+    })
+    .optional(),
 });
 
 export type RuntimeMode = "production" | "development";
@@ -143,6 +161,16 @@ export interface ApiConfig {
     dir: string;
     minFreeBytes: number;
     maxUploadBytes: number;
+  };
+  desktopApps: {
+    /** Installed packages and their unpacked files. */
+    dir: string;
+    officialRegistry: { url: string; publicKey: string; allowPrivate?: boolean | undefined } | null;
+    communityRegistry: {
+      url: string;
+      publicKey: string;
+      allowPrivate?: boolean | undefined;
+    } | null;
   };
   /**
    * Running as a systemd service in production: the API may exit after
@@ -285,6 +313,11 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       dir: env.EVERYOS_BACKUP_DIR ?? file.backups?.dir ?? join(dataDir, "backups", "archives"),
       minFreeBytes: (file.backups?.minFreeMiB ?? 1024) * 1024 * 1024,
       maxUploadBytes: (file.backups?.maxUploadMiB ?? 64 * 1024) * 1024 * 1024,
+    },
+    desktopApps: {
+      dir: join(dataDir, "desktop-apps"),
+      officialRegistry: file.desktopApps?.officialRegistry ?? OFFICIAL_APP_REGISTRY,
+      communityRegistry: file.desktopApps?.communityRegistry ?? COMMUNITY_APP_REGISTRY,
     },
     supervised: mode === "production" && Boolean(env.INVOCATION_ID),
   };

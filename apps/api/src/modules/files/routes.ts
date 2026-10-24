@@ -44,7 +44,7 @@ function disposition(kind: "attachment" | "inline", name: string): string {
   return `${kind}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(name)}`;
 }
 
-function parseRange(
+export function parseRange(
   header: string | undefined,
   size: number,
 ): { start: number; end: number } | null | "invalid" {

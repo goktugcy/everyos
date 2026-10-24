@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Port-Inspektor"
+  },
+  "ports": {
+    "refresh": "Aktualisieren",
+    "export": "CSV exportieren",
+    "readOnly": "Host-Listener werden nur gelesen. Keine Verbindungen oder Scans. Bind-Adressen sagen nichts über die Erreichbarkeit durch Firewalls aus.",
+    "permission": "Diese App benötigt Leserechte für Host-Sockets. Ein Administrator kann sie im App Store erteilen; deine Rolle muss Systemzugriff erlauben.",
+    "unavailable": "Listener-Daten sind auf diesem Host nicht verfügbar. Der Collector benötigt Linux und lesbare /proc-Daten.",
+    "loadFailed": "Host-Sockets konnten nicht gelesen werden. Prüfe die Agent-Verbindung und versuche es erneut.",
+    "host": "Host-Daten",
+    "simulated": "Simulierte Daten",
+    "simulatedHint": "Diese Listener werden vom Entwicklungshost simuliert. Sie zeigen keine echten offenen Ports.",
+    "retrieved": "Abgerufen: {{at}}",
+    "stale": "Aktualisierung fehlgeschlagen. Der vorherige Stand bleibt mit Abrufzeit sichtbar.",
+    "listening": "Lauschende Sockets",
+    "established": "Aufgebaute TCP-Verbindungen",
+    "timeWait": "TCP in Time-Wait",
+    "other": "Andere TCP-Zustände",
+    "search": "Listener suchen",
+    "searchHint": "Adresse, Port oder Prozess",
+    "protocol": "Protokoll",
+    "family": "Adressfamilie",
+    "scope": "Bindungsbereich",
+    "all": "Alle",
+    "reset": "Filter zurücksetzen",
+    "showing": "{{shown}} von {{total}} Listenern passen",
+    "limit": "Bis zu 2.000 Listener werden geliefert. Der Agent kann Ergebnisse 30 Sekunden zwischenspeichern. Ports sind aufsteigend sortiert.",
+    "empty": "Keine passenden Listener",
+    "emptyHint": "Ändere die Filter oder setze sie zurück, um den gelieferten Stand zu sehen.",
+    "address": "Adresse",
+    "port": "Port",
+    "process": "Prozess",
+    "unknown": "Nicht verfügbar",
+    "processHint": "Prozessnamen erscheinen nur, wenn der Agent sie lesen kann. Fehlende Namen werden nicht aus Portnummern abgeleitet.",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "page": "Seite {{page}} von {{pages}}"
+  },
+  "scope": {
+    "all": "Alle Bereiche",
+    "wildcard": "Alle Schnittstellen",
+    "loopback": "Loopback",
+    "specific": "Bestimmte Adresse"
+  }
+}

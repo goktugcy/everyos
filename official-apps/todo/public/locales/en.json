@@ -1,0 +1,148 @@
+{
+  "app": {
+    "name": "To-Do",
+    "description": "Tasks with projects, priorities, due dates, repeats, tags, subtasks, reminders, progress and a widget."
+  },
+  "widgets": {
+    "today": {
+      "name": "Today's tasks",
+      "description": "Tasks due today and overdue: check them off or add one."
+    }
+  },
+  "lists": {
+    "inbox": "Inbox",
+    "today": "Today",
+    "upcoming": "Upcoming",
+    "overdue": "Overdue",
+    "all": "All tasks",
+    "completed": "Completed"
+  },
+  "backup": {
+    "import": "Import backup…",
+    "export": "Export backup…",
+    "imported_one": "{{count}} task imported",
+    "imported_other": "{{count}} tasks imported"
+  },
+  "due": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday"
+  },
+  "empty": {
+    "inbox": "Your inbox is empty",
+    "today": "Nothing due today",
+    "upcoming": "Nothing in the next 7 days",
+    "overdue": "Nothing overdue",
+    "all": "No open tasks",
+    "completed": "No completed tasks yet",
+    "list": "No tasks here"
+  },
+  "progress": {
+    "title": "Progress",
+    "chart": "Completed per day, last 7 days",
+    "done": "{{done}} of {{total}} done",
+    "open": "Open tasks",
+    "week": "Done this week"
+  },
+  "projects": {
+    "title": "Projects",
+    "add": "New project",
+    "rename": "Rename project",
+    "delete": "Delete project",
+    "deleteTitle": "Delete the project “{{name}}”?",
+    "deleteBody": "Its tasks move to the Inbox.",
+    "name": "Project name"
+  },
+  "recurrence": {
+    "title": "Repeat",
+    "repeat": "Repeats",
+    "repeats": "Repeats",
+    "monthMode": "On",
+    "monthDay": "Day {{day}} of the month",
+    "monthWeekday": "The same {{weekday}} of the month",
+    "next": "Next: {{date}}",
+    "weekdays": "On these days",
+    "units": {
+      "none": "Does not repeat",
+      "day": "Daily",
+      "weekday": "Every weekday (Mon–Fri)",
+      "week": "Weekly",
+      "month": "Monthly",
+      "year": "Yearly"
+    },
+    "every": {
+      "day": "Every … days",
+      "week": "Every … weeks",
+      "month": "Every … months",
+      "year": "Every … years"
+    }
+  },
+  "reminder": {
+    "at": "Due at {{time}}",
+    "today": "Due today",
+    "needsDue": "Reminders need a due date (09:00 when no time is set).",
+    "none": "No reminder",
+    "options": {
+      "0": "At the due time",
+      "5": "5 minutes before",
+      "10": "10 minutes before",
+      "15": "15 minutes before",
+      "30": "30 minutes before",
+      "60": "1 hour before",
+      "120": "2 hours before",
+      "1440": "1 day before"
+    }
+  },
+  "search": {
+    "label": "Search tasks",
+    "none": "No tasks match"
+  },
+  "sort": {
+    "label": "Sort",
+    "manual": "My order",
+    "due": "Due date",
+    "priority": "Priority",
+    "title": "Title"
+  },
+  "subtasks": {
+    "title": "Subtasks",
+    "add": "Add a subtask",
+    "delete": "Delete subtask"
+  },
+  "tags": {
+    "title": "Tags"
+  },
+  "task": {
+    "added": "Task added",
+    "complete": "Mark as done",
+    "completeNamed": "Mark “{{name}}” as done",
+    "completed": "Done",
+    "deleteTitle": "Delete “{{name}}”?",
+    "details": "Task details",
+    "done": "Done",
+    "due": "Due date",
+    "moveDown": "Move down",
+    "moveUp": "Move up",
+    "nextOccurrence": "Done. Moved to its next date.",
+    "notes": "Notes",
+    "priority": "Priority",
+    "project": "Project",
+    "quickAdd": "New task",
+    "quickAddPlaceholder": "Add a task… (#tags work)",
+    "reminder": "Reminder",
+    "reopen": "Mark as not done",
+    "tags": "Tags",
+    "tagsHint": "Separate with spaces or commas",
+    "time": "Time",
+    "title": "Title"
+  },
+  "priority": {
+    "0": "No priority",
+    "1": "Low",
+    "2": "Medium",
+    "3": "High"
+  },
+  "widget": {
+    "add": "Add a task for today…"
+  }
+}

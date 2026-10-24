@@ -84,6 +84,9 @@ export function createCatalogFetcher(
     ) => Promise<{ address: string; family: number }[]>;
     maxTotalBytes?: number;
     deadlineMs?: number;
+    /** A credential for one origin (a private app registry); never sent after a cross-origin redirect. */
+    authorization?: { origin: string; value: string };
+    userAgent?: string;
   } = {},
 ): CatalogFetcher {
   let remaining = options.maxTotalBytes ?? 32 * 1024 * 1024;
@@ -134,7 +137,10 @@ export function createCatalogFetcher(
               headers: {
                 Accept: "*/*",
                 "Accept-Encoding": "identity",
-                "User-Agent": "EveryOS-Catalog/1",
+                "User-Agent": options.userAgent ?? "EveryOS-Catalog/1",
+                ...(options.authorization && url.origin === options.authorization.origin
+                  ? { Authorization: options.authorization.value }
+                  : {}),
               },
               lookup: (_hostname, _options, callback) =>
                 callback(null, pinned.address, pinned.family),

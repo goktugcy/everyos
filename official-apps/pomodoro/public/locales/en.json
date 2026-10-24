@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "Pomodoro",
+    "description": "A focus timer with short and long breaks, session history, daily statistics, notifications and a desktop widget."
+  },
+  "widgets": {
+    "timer": {
+      "name": "Pomodoro timer",
+      "description": "The focus timer at a glance, with start and pause."
+    }
+  },
+  "views": {
+    "label": "View",
+    "timer": "Timer",
+    "history": "History",
+    "stats": "Statistics"
+  },
+  "phases": {
+    "label": "Phase",
+    "focus": "Focus",
+    "short": "Short break",
+    "long": "Long break"
+  },
+  "timer": {
+    "left": "Time left",
+    "cycle": "{{done}} of {{of}} focus sessions before a long break",
+    "label": "What are you working on?",
+    "labelPlaceholder": "Optional, shown in the history"
+  },
+  "status": {
+    "ready": "Ready",
+    "paused": "Paused",
+    "running": {
+      "focus": "Stay focused",
+      "short": "Take a short break",
+      "long": "Enjoy a longer break"
+    }
+  },
+  "actions": {
+    "start": "Start",
+    "pause": "Pause",
+    "resume": "Resume",
+    "reset": "Reset",
+    "resetHint": "Start this phase over (R)",
+    "skip": "Skip",
+    "skipHint": "Go to the next phase (S)"
+  },
+  "errors": {
+    "save": "The timer could not be saved. It keeps running here."
+  },
+  "history": {
+    "empty": "No sessions yet",
+    "emptyText": "Completed focus sessions appear here.",
+    "count_one": "{{count}} session",
+    "count_other": "{{count}} sessions",
+    "clear": "Clear history",
+    "clearTitle": "Delete the session history?",
+    "unlabelled": "Focus session",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "stopped": "Stopped early"
+  },
+  "stats": {
+    "todayMinutes": "Focused today",
+    "todaySessions": "Sessions today",
+    "week": "Last 7 days",
+    "streak": "Streak",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "chart": "Focus minutes per day"
+  },
+  "settings": {
+    "durations": "Durations",
+    "focusMinutes": "Focus (minutes)",
+    "shortMinutes": "Short break (minutes)",
+    "longMinutes": "Long break (minutes)",
+    "longEvery": "Long break after",
+    "longEveryHint": "Focus sessions before a long break",
+    "flow": "Flow",
+    "autoStartBreaks": "Start breaks automatically",
+    "autoStartFocus": "Start focus sessions automatically",
+    "notify": "Notify when a phase ends",
+    "notifyHint": "While EveryOS is open in a browser (this window or the widget)",
+    "notifyDenied": "Pomodoro was not allowed to send notifications. Allow it in the App Store."
+  },
+  "notify": {
+    "focusDone": "Focus session complete",
+    "breakDone": "Break is over",
+    "next": {
+      "focus": "Time to focus for {{minutes}} minutes.",
+      "short": "Take a {{minutes}}-minute break.",
+      "long": "Enjoy a {{minutes}}-minute long break."
+    }
+  },
+  "widget": {
+    "open": "Open Pomodoro"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Cron 生成器",
+    "description": "创建和检查 cron 计划：可视化生成器、通俗描述、任意时区的下次运行时间，以及 systemd 和 EveryOS 格式。"
+  },
+  "seconds": {
+    "label": "秒字段"
+  },
+  "expression": {
+    "section": "表达式",
+    "label": "cron 表达式",
+    "copy": "复制表达式"
+  },
+  "fields": {
+    "second": "秒",
+    "minute": "分钟",
+    "hour": "小时",
+    "day": "日",
+    "month": "月",
+    "weekday": "星期"
+  },
+  "problems": {
+    "field-count": "cron 表达式应有 {{count}} 个以空格分隔的字段（实际 {{token}} 个）。",
+    "empty": "{{field}}为空。",
+    "bad-token": "{{field}}：“{{token}}”不是数字、名称、* 或列表。",
+    "out-of-range": "{{field}}：{{token}} 超出范围。",
+    "bad-range": "{{field}}：范围“{{token}}”顺序颠倒。",
+    "bad-step": "{{field}}：“{{token}}”中的步长必须大于 0。",
+    "reboot": "@reboot 在启动时运行而非定时，因此没有运行时间可显示。"
+  },
+  "builder": {
+    "custom": "请在表达式中编辑此字段（生成器无法显示该形式）。",
+    "mode": "{{field}}的设置方式",
+    "modes": {
+      "every": "每",
+      "specific": "指定值",
+      "range": "范围",
+      "step": "每隔 n"
+    },
+    "from": "从",
+    "to": "到",
+    "every": "每隔",
+    "interval": "间隔",
+    "startingAt": "起始于",
+    "start": "起点"
+  },
+  "presets": {
+    "title": "预设",
+    "everyMinute": "每分钟",
+    "every5Minutes": "每 5 分钟",
+    "every15Minutes": "每 15 分钟",
+    "hourly": "每小时",
+    "every6Hours": "每 6 小时",
+    "daily3am": "每天 03:00",
+    "weekdays9am": "工作日 09:00",
+    "weeklySunday": "每周日",
+    "monthlyFirst": "每月 1 日",
+    "quarterly": "每季度",
+    "yearly": "每年"
+  },
+  "runs": {
+    "section": "运行时间",
+    "timeZone": "时区",
+    "next": "接下来的运行",
+    "previous": "之前的运行",
+    "none": "此计划永远不会运行（例如 2 月 30 日）。",
+    "invalid": "请修正表达式以查看运行时间。"
+  },
+  "export": {
+    "title": "使用",
+    "command": "命令",
+    "commandPlaceholder": "/path/to/command",
+    "crontab": "crontab 行",
+    "onCalendar": "systemd 定时器（OnCalendar=）",
+    "twoLines": "cron 在任一日期字段匹配时运行；systemd 需要两者都匹配，因此生成两行。",
+    "timezone": "时区为 {{zone}}。",
+    "everyos": "EveryOS 计划任务",
+    "compatible": "兼容",
+    "problems": {
+      "seconds": "计划任务没有秒字段。",
+      "too-frequent": "计划任务最多每 5 分钟运行一次（每小时 12 次）。"
+    },
+    "timerFile": "保存 .timer 文件…",
+    "defaultDescription": "计划作业",
+    "notScheduled": "Cron 生成器只生成表达式，不会在此服务器上安排任何任务。"
+  },
+  "saved": {
+    "title": "已保存",
+    "name": "名称",
+    "save": "保存表达式",
+    "done": "已保存",
+    "delete": "删除 {{name}}"
+  }
+}

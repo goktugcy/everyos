@@ -1,12 +1,19 @@
 import type { Messages } from "@everyos/i18n/client";
-import type { CapabilityId, InstalledAppView, Permission } from "@everyos/shared";
+import type {
+  CapabilityId,
+  DesktopAppInstallationView,
+  InstalledAppView,
+  Permission,
+} from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import type { LucideIcon } from "lucide-react";
 import type { ComponentType } from "react";
+import type { DesktopAppWindowId } from "../desktop-apps/store.ts";
 import type { InstalledAppId } from "./store/installed-apps-store.ts";
 
 export type AppId =
   | InstalledAppId
+  | DesktopAppWindowId
   | "everyos.homeassistant"
   | "everyos.agents"
   | "everyos.system"
@@ -34,6 +41,8 @@ export type AppId =
 export interface DesktopAppManifest {
   id: AppId;
   installedApp?: InstalledAppView;
+  /** An installed desktop app (docs/app-sdk/architecture.md), run in a sandboxed frame. */
+  desktopApp?: DesktopAppInstallationView;
   titleKey: `apps.${keyof Messages["apps"]}`;
   icon: LucideIcon;
   /** Tailwind gradient classes for the icon tile. */

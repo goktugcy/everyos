@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "カラースタジオ",
+    "description": "HEX・RGB・HSL・OKLCH で色を選び、パレット・配色・グラデーションを作成し、コントラストを確認して EveryOS テーマでプレビューします。"
+  },
+  "actions": {
+    "eyedropper": "画面から色を取得"
+  },
+  "color": {
+    "section": "色",
+    "preview": "現在の色 {{color}}"
+  },
+  "picker": {
+    "saturationValue": "彩度と明度",
+    "svValue": "彩度 {{s}}%、明度 {{v}}%",
+    "hue": "色相",
+    "alpha": "不透明度"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "色ではありません",
+    "copy": "{{format}} をコピー"
+  },
+  "panels": {
+    "label": "ツール",
+    "palette": "パレット",
+    "gradient": "グラデーション",
+    "contrast": "コントラスト",
+    "saved": "保存済み",
+    "theme": "EveryOS テーマ"
+  },
+  "swatch": {
+    "use": "{{color}} を使う"
+  },
+  "harmony": {
+    "label": "配色",
+    "complementary": "補色",
+    "analogous": "類似色",
+    "triadic": "トライアド",
+    "split": "分裂補色",
+    "tetradic": "テトラード",
+    "monochromatic": "モノクロマティック",
+    "save": "配色を保存"
+  },
+  "scale": {
+    "title": "トーンスケール",
+    "step": "ステップ {{step}}: {{color}}",
+    "copyCss": "CSS 変数としてコピー",
+    "save": "スケールを保存"
+  },
+  "gradient": {
+    "preview": "グラデーションのプレビュー",
+    "kind": "種類",
+    "linear": "線形",
+    "radial": "円形",
+    "angle": "角度: {{angle}}°",
+    "stops": "カラーストップ",
+    "useCurrent": "ストップ {{number}} を現在の色にする",
+    "position": "ストップ {{number}} の位置",
+    "remove": "ストップ {{number}} を削除",
+    "hint": "ストップの色見本をクリックすると現在の色になります。グラデーションには 2 つ以上のストップが必要です。",
+    "add": "ストップを追加",
+    "copy": "CSS をコピー"
+  },
+  "contrast": {
+    "text": "文字",
+    "background": "背景",
+    "swap": "文字と背景を入れ替え",
+    "useAsText": "現在の色を文字に使う",
+    "useAsBackground": "現在の色を背景に使う",
+    "sampleLarge": "大きな文字",
+    "sample": "通常の文字はコントラストが低いと読みにくくなります。",
+    "ratio": "コントラスト比",
+    "aa": "AA",
+    "aaLarge": "AA 大",
+    "aaa": "AAA",
+    "aaaLarge": "AAA 大",
+    "pass": "合格",
+    "fail": "不合格",
+    "hint": "WCAG 2: AA は通常の文字で 4.5:1、大きな文字 (24 px または太字 19 px) で 3:1、AAA は 7:1 と 4.5:1 が必要です。"
+  },
+  "saved": {
+    "newName": "新しいパレット",
+    "create": "現在の色で作成",
+    "added": "パレットを保存しました",
+    "addCurrent": "現在の色を {{name}} に追加",
+    "copyCss": "{{name}} を CSS 変数としてコピー",
+    "exportCss": "CSS を保存…",
+    "delete": "{{name}} を削除",
+    "deleteTitle": "パレット「{{name}}」を削除しますか?",
+    "removeColor": "{{color}} を削除",
+    "empty": "保存したパレットはありません",
+    "emptyText": "配色やスケールを保存するか、上でパレットを作成してください。"
+  },
+  "theme": {
+    "current": "現在のテーマ ({{scheme}})",
+    "schemes": {
+      "light": "ライト",
+      "dark": "ダーク"
+    },
+    "tokens": {
+      "accent": "アクセント",
+      "accent-strong": "強いアクセント",
+      "text": "文字",
+      "text-muted": "控えめな文字",
+      "surface": "サーフェス",
+      "inset": "インセット",
+      "danger": "危険",
+      "success": "成功",
+      "warning": "警告"
+    },
+    "previewTitle": "現在の色をアクセントにした場合",
+    "button": "ボタン",
+    "link": "リンク",
+    "linkContrast": "リンクのコントラスト {{ratio}}:1",
+    "hint": "アクセントカラーは 設定 → 外観 で選べます。"
+  }
+}

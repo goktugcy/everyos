@@ -1,0 +1,148 @@
+{
+  "app": {
+    "name": "Attività",
+    "description": "Attività con progetti, priorità, scadenze, ripetizioni, tag, sottoattività, promemoria, avanzamento e un widget."
+  },
+  "widgets": {
+    "today": {
+      "name": "Attività di oggi",
+      "description": "Attività di oggi e in ritardo: completale o aggiungine una."
+    }
+  },
+  "lists": {
+    "inbox": "Posta in arrivo",
+    "today": "Oggi",
+    "upcoming": "In arrivo",
+    "overdue": "In ritardo",
+    "all": "Tutte le attività",
+    "completed": "Completate"
+  },
+  "backup": {
+    "import": "Importa backup…",
+    "export": "Esporta backup…",
+    "imported_one": "{{count}} attività importata",
+    "imported_other": "{{count}} attività importate"
+  },
+  "due": {
+    "today": "Oggi",
+    "tomorrow": "Domani",
+    "yesterday": "Ieri"
+  },
+  "empty": {
+    "inbox": "La posta in arrivo è vuota",
+    "today": "Niente in scadenza oggi",
+    "upcoming": "Niente nei prossimi 7 giorni",
+    "overdue": "Niente in ritardo",
+    "all": "Nessuna attività aperta",
+    "completed": "Ancora nessuna attività completata",
+    "list": "Nessuna attività qui"
+  },
+  "progress": {
+    "title": "Avanzamento",
+    "chart": "Completate al giorno, ultimi 7 giorni",
+    "done": "{{done}} di {{total}} completate",
+    "open": "Attività aperte",
+    "week": "Completate questa settimana"
+  },
+  "projects": {
+    "title": "Progetti",
+    "add": "Nuovo progetto",
+    "rename": "Rinomina progetto",
+    "delete": "Elimina progetto",
+    "deleteTitle": "Eliminare il progetto «{{name}}»?",
+    "deleteBody": "Le sue attività passano alla posta in arrivo.",
+    "name": "Nome del progetto"
+  },
+  "recurrence": {
+    "title": "Ripetizione",
+    "repeat": "Si ripete",
+    "repeats": "Si ripete",
+    "monthMode": "Il",
+    "monthDay": "Il giorno {{day}} del mese",
+    "monthWeekday": "Lo stesso {{weekday}} del mese",
+    "next": "Prossima: {{date}}",
+    "weekdays": "In questi giorni",
+    "units": {
+      "none": "Non si ripete",
+      "day": "Ogni giorno",
+      "weekday": "Giorni feriali (lun–ven)",
+      "week": "Ogni settimana",
+      "month": "Ogni mese",
+      "year": "Ogni anno"
+    },
+    "every": {
+      "day": "Ogni … giorni",
+      "week": "Ogni … settimane",
+      "month": "Ogni … mesi",
+      "year": "Ogni … anni"
+    }
+  },
+  "reminder": {
+    "at": "Scade alle {{time}}",
+    "today": "Scade oggi",
+    "needsDue": "I promemoria richiedono una scadenza (09:00 senza ora).",
+    "none": "Nessun promemoria",
+    "options": {
+      "0": "Alla scadenza",
+      "5": "5 minuti prima",
+      "10": "10 minuti prima",
+      "15": "15 minuti prima",
+      "30": "30 minuti prima",
+      "60": "1 ora prima",
+      "120": "2 ore prima",
+      "1440": "1 giorno prima"
+    }
+  },
+  "search": {
+    "label": "Cerca attività",
+    "none": "Nessuna attività corrisponde"
+  },
+  "sort": {
+    "label": "Ordina",
+    "manual": "Il mio ordine",
+    "due": "Scadenza",
+    "priority": "Priorità",
+    "title": "Titolo"
+  },
+  "subtasks": {
+    "title": "Sottoattività",
+    "add": "Aggiungi sottoattività",
+    "delete": "Elimina sottoattività"
+  },
+  "tags": {
+    "title": "Tag"
+  },
+  "task": {
+    "added": "Attività aggiunta",
+    "complete": "Segna come completata",
+    "completeNamed": "Segna «{{name}}» come completata",
+    "completed": "Completata",
+    "deleteTitle": "Eliminare «{{name}}»?",
+    "details": "Dettagli attività",
+    "done": "Completata",
+    "due": "Scadenza",
+    "moveDown": "Sposta giù",
+    "moveUp": "Sposta su",
+    "nextOccurrence": "Completata. Spostata alla prossima data.",
+    "notes": "Note",
+    "priority": "Priorità",
+    "project": "Progetto",
+    "quickAdd": "Nuova attività",
+    "quickAddPlaceholder": "Aggiungi un’attività… (#tag supportati)",
+    "reminder": "Promemoria",
+    "reopen": "Segna come da fare",
+    "tags": "Tag",
+    "tagsHint": "Separa con spazi o virgole",
+    "time": "Ora",
+    "title": "Titolo"
+  },
+  "priority": {
+    "0": "Nessuna priorità",
+    "1": "Bassa",
+    "2": "Media",
+    "3": "Alta"
+  },
+  "widget": {
+    "add": "Aggiungi un’attività per oggi…"
+  }
+}

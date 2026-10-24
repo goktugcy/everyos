@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { requestClose } from "./windows/close-guards.ts";
 import { useSessionStore } from "../stores/session-store.ts";
 import { useLauncher } from "./launcher/launcher-store.ts";
 import { desktop } from "./state/controller.ts";
@@ -57,7 +58,7 @@ export function useDesktopShortcuts(): void {
             if (focused) state.minimize(focused);
             return true;
           case "KeyW":
-            if (focused) state.close(focused);
+            if (focused) void requestClose(focused, () => state.close(focused));
             return true;
           case "KeyT":
             state.tile("columns");

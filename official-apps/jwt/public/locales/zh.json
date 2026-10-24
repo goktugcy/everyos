@@ -1,0 +1,114 @@
+{
+  "app": {
+    "name": "JWT 检查器",
+    "description": "解码 JSON Web Token，查看声明和有效期，用你自己的密钥验证签名，并导出脱敏的声明。令牌不会离开此设备。"
+  },
+  "remember": {
+    "label": "记住上一个令牌",
+    "hint": "默认关闭：令牌只保留在此窗口中，密钥从不保存。"
+  },
+  "token": {
+    "section": "令牌",
+    "label": "JSON Web Token",
+    "placeholder": "粘贴令牌（eyJ…），可带或不带“Bearer”",
+    "parts": "头部、载荷和签名",
+    "privacy": "解码在此设备上进行，令牌不会发送到任何地方。",
+    "waiting": "粘贴令牌以检查",
+    "noAlg": "无算法",
+    "algNone": "未签名（alg: none）：任何人都可以伪造"
+  },
+  "parts": {
+    "0": "头部",
+    "1": "载荷",
+    "2": "签名"
+  },
+  "problems": {
+    "segments": "令牌由三个以点分隔的部分组成",
+    "base64": "{{part}}不是有效的 Base64URL",
+    "json": "{{part}}不是 JSON",
+    "not-object": "{{part}}必须是 JSON 对象",
+    "jwe": "加密令牌（JWE）：没有私钥无法读取"
+  },
+  "validity": {
+    "valid": "有效",
+    "expiresIn": "{{when}}过期",
+    "expired": "已于{{when}}过期",
+    "notYet": "尚未生效：{{when}}开始",
+    "noExpiry": "无过期时间（exp）",
+    "skew": "时钟容差",
+    "seconds_other": "{{count}} 秒"
+  },
+  "panels": {
+    "label": "视图",
+    "decoded": "解码",
+    "verify": "验证签名",
+    "export": "导出"
+  },
+  "decoded": {
+    "header": "头部",
+    "payload": "载荷",
+    "claim": "声明",
+    "value": "值"
+  },
+  "verify": {
+    "secretHint": "此令牌使用 HMAC 密钥：请粘贴共享密钥。",
+    "keyHint": "粘贴签发方的公钥：PEM（BEGIN PUBLIC KEY）、证书、JWK 或 JWK 集（按 kid 选择）。",
+    "encoding": "密钥格式",
+    "encodings": {
+      "text": "文本",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "密钥",
+    "key": "公钥",
+    "check": "检查签名",
+    "private": "密钥只在此窗口中使用，不会保存。",
+    "results": {
+      "valid": "签名有效（{{alg}}）",
+      "invalid-signature": "签名与此密钥不匹配",
+      "alg-none": "从不接受未签名令牌（alg: none）",
+      "alg-unsupported": "不支持算法 {{alg}}",
+      "key-mismatch": "此类密钥不适用于 {{alg}}",
+      "bad-key": "无法读取密钥",
+      "private-key": "这是私钥：请改为粘贴公钥",
+      "no-matching-key": "集合中没有与此令牌 kid 匹配的密钥"
+    }
+  },
+  "export": {
+    "hint": "分享令牌内容但不包含身份信息：选择要隐藏的声明。",
+    "redact": "要隐藏的声明",
+    "redactClaim": "隐藏 {{claim}}",
+    "preview": "将导出的内容",
+    "copy": "复制",
+    "save": "另存为 JSON…"
+  },
+  "claims": {
+    "iss": "签发者",
+    "sub": "主题（令牌所指对象）",
+    "aud": "受众（谁可以接受）",
+    "exp": "过期时间",
+    "nbf": "生效时间",
+    "iat": "签发时间",
+    "jti": "令牌 ID",
+    "azp": "授权方",
+    "scope": "授予的范围",
+    "scp": "授予的范围",
+    "client_id": "客户端",
+    "sid": "会话 ID",
+    "nonce": "随机数",
+    "auth_time": "登录时间",
+    "acr": "认证级别",
+    "amr": "认证方式",
+    "name": "姓名",
+    "given_name": "名",
+    "family_name": "姓",
+    "preferred_username": "用户名",
+    "email": "电子邮件",
+    "email_verified": "邮箱已验证",
+    "phone_number": "电话号码",
+    "roles": "角色",
+    "groups": "组",
+    "tid": "租户",
+    "oid": "对象 ID"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "PDF Görüntüleyici",
+    "description": "PDF dosyalarını okuyun: sayfalar ve küçük resimler, yakınlaştırma ve döndürme, metin arama, belge ana hatları ve kendi yer imleriniz, yazdırma ve kopya kaydetme."
+  },
+  "actions": {
+    "open": "PDF aç…"
+  },
+  "pages": {
+    "label": "Sayfalar",
+    "previous": "Önceki sayfa",
+    "next": "Sonraki sayfa",
+    "current": "Sayfa numarası",
+    "of": "/ {{count}}",
+    "thumbnail": "Sayfa {{page}}"
+  },
+  "zoom": {
+    "label": "Yakınlaştırma",
+    "in": "Yakınlaştır",
+    "out": "Uzaklaştır",
+    "auto": "Otomatik",
+    "page-width": "Sayfa genişliği",
+    "page-fit": "Tüm sayfa",
+    "page-actual": "Gerçek boyut"
+  },
+  "rotate": {
+    "left": "Sola döndür",
+    "right": "Sağa döndür"
+  },
+  "find": {
+    "open": "Belgede bul",
+    "label": "Bul",
+    "placeholder": "Belgede bul…",
+    "previous": "Önceki eşleşme",
+    "next": "Sonraki eşleşme",
+    "caseSensitive": "Büyük/küçük harf duyarlı",
+    "entireWord": "Tam sözcük",
+    "close": "Aramayı kapat",
+    "searching": "Aranıyor…",
+    "notFound": "Bulunamadı",
+    "position_one": "{{current}} / {{count}} eşleşme",
+    "position_other": "{{current}} / {{count}} eşleşme"
+  },
+  "bookmarks": {
+    "addCurrent": "Bu sayfaya yer imi ekle",
+    "removeCurrent": "Bu sayfanın yer imini kaldır",
+    "defaultLabel": "Sayfa {{page}}",
+    "added": "Sayfa {{page}} yer imlerine eklendi",
+    "renameTitle": "Yer imini yeniden adlandır",
+    "rename": "“{{label}}” adını değiştir",
+    "remove": "“{{label}}” kaldır",
+    "empty": "Henüz yer imi yok",
+    "emptyText": "Bir sayfayı hatırlamak için araç çubuğundaki yer imi düğmesini kullanın."
+  },
+  "print": {
+    "action": "Yazdır",
+    "preparing": "Yazdırmaya hazırlanıyor",
+    "progress": "Sayfa {{done}} / {{total}}",
+    "failed": "Belge yazdırmaya hazırlanamadı."
+  },
+  "save": {
+    "action": "Kopya kaydet",
+    "saved": "{{name}} kopyası kaydedildi"
+  },
+  "sidebar": {
+    "label": "Gezinme",
+    "show": "Kenar çubuğunu göster",
+    "hide": "Kenar çubuğunu gizle",
+    "pages": "Sayfalar",
+    "outline": "Ana hatlar",
+    "bookmarks": "Yer imleri"
+  },
+  "outline": {
+    "label": "Belge ana hatları",
+    "expand": "{{title}} genişlet",
+    "collapse": "{{title}} daralt",
+    "external": "Bir web sayfası açar",
+    "empty": "Ana hat yok",
+    "emptyText": "Bu belgenin içindekiler bölümü yok."
+  },
+  "viewer": {
+    "label": "{{name}} sayfaları",
+    "opening": "Açılıyor…",
+    "emptyTitle": "Okumak için bir PDF açın",
+    "emptyText": "Belgeler, yer imlerinizle birlikte kaldığınız yerden açılır.",
+    "tryAnother": "Başka bir dosya açmayı deneyin."
+  },
+  "recent": {
+    "title": "Son açılanlar",
+    "gone": "“{{name}}” artık erişilebilir değil."
+  },
+  "errors": {
+    "tooLarge": "En fazla {{size}} boyutundaki PDF dosyaları açılabilir.",
+    "invalid": "“{{name}}” bir PDF değil ya da bozuk.",
+    "password": "Bu PDF o parolayla açılamadı.",
+    "open": "“{{name}}” açılamadı."
+  },
+  "password": {
+    "title": "Bu PDF korumalı",
+    "label": "Parola",
+    "open": "Aç",
+    "incorrect": "Parola yanlış. Yeniden deneyin."
+  }
+}

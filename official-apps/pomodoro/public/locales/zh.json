@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "番茄钟",
+    "description": "带有短休息和长休息、专注记录、每日统计、通知和桌面小组件的专注计时器。"
+  },
+  "widgets": {
+    "timer": {
+      "name": "番茄计时器",
+      "description": "一眼查看专注计时器，可开始和暂停。"
+    }
+  },
+  "views": {
+    "label": "视图",
+    "timer": "计时器",
+    "history": "记录",
+    "stats": "统计"
+  },
+  "phases": {
+    "label": "阶段",
+    "focus": "专注",
+    "short": "短休息",
+    "long": "长休息"
+  },
+  "timer": {
+    "left": "剩余时间",
+    "cycle": "长休息前已完成 {{done}}/{{of}} 次专注",
+    "label": "你在做什么？",
+    "labelPlaceholder": "可选，显示在记录中"
+  },
+  "status": {
+    "ready": "就绪",
+    "paused": "已暂停",
+    "running": {
+      "focus": "保持专注",
+      "short": "稍作休息",
+      "long": "好好休息一下"
+    }
+  },
+  "actions": {
+    "start": "开始",
+    "pause": "暂停",
+    "resume": "继续",
+    "reset": "重置",
+    "resetHint": "重新开始此阶段 (R)",
+    "skip": "跳过",
+    "skipHint": "进入下一阶段 (S)"
+  },
+  "errors": {
+    "save": "无法保存计时器，它会在此继续运行。"
+  },
+  "history": {
+    "empty": "还没有专注记录",
+    "emptyText": "完成的专注会显示在这里。",
+    "count_other": "{{count}} 次专注",
+    "clear": "清除记录",
+    "clearTitle": "删除专注记录？",
+    "unlabelled": "专注",
+    "minutes_other": "{{count}} 分钟",
+    "stopped": "提前结束"
+  },
+  "stats": {
+    "todayMinutes": "今日专注",
+    "todaySessions": "今日次数",
+    "week": "最近 7 天",
+    "streak": "连续天数",
+    "days_other": "{{count}} 天",
+    "chart": "每日专注分钟数"
+  },
+  "settings": {
+    "durations": "时长",
+    "focusMinutes": "专注（分钟）",
+    "shortMinutes": "短休息（分钟）",
+    "longMinutes": "长休息（分钟）",
+    "longEvery": "长休息间隔",
+    "longEveryHint": "长休息前的专注次数",
+    "flow": "流程",
+    "autoStartBreaks": "自动开始休息",
+    "autoStartFocus": "自动开始专注",
+    "notify": "阶段结束时通知",
+    "notifyHint": "EveryOS 在浏览器中打开时（此窗口或小组件）",
+    "notifyDenied": "番茄钟没有发送通知的权限。请在应用商店中允许。"
+  },
+  "notify": {
+    "focusDone": "专注完成",
+    "breakDone": "休息结束",
+    "next": {
+      "focus": "该专注 {{minutes}} 分钟了。",
+      "short": "休息 {{minutes}} 分钟吧。",
+      "long": "好好休息 {{minutes}} 分钟。"
+    }
+  },
+  "widget": {
+    "open": "打开番茄钟"
+  }
+}

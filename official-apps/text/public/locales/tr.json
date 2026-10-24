@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Metin Düzenleyici",
+    "description": "Sekmelerde düz metin dosyaları; bul ve değiştir, karakter kodlamaları, satır sonları ve kaydedilmemiş işin kurtarılması."
+  },
+  "actions": {
+    "new": "Yeni belge",
+    "open": "Aç…",
+    "recent": "Son dosyalar",
+    "save": "Kaydet",
+    "saveAs": "Farklı kaydet…",
+    "find": "Bul ve değiştir"
+  },
+  "close": {
+    "title_one": "{{count}} kaydedilmemiş dosyayla kapatılsın mı?",
+    "title_other": "{{count}} kaydedilmemiş dosyayla kapatılsın mı?",
+    "body": "Değişiklikleriniz burada kurtarılabilir kalır ama dosyalara yazılmadı.",
+    "confirm": "Kapat",
+    "tabTitle": "“{{name}}” kaydetmeden kapatılsın mı?",
+    "tabBody": "Kaydedilmemiş değişiklikler kaybolacak.",
+    "discard": "Değişiklikleri at"
+  },
+  "doc": {
+    "untitled": "Adsız {{number}}"
+  },
+  "editor": {
+    "label": "{{name}} metni"
+  },
+  "encoding": {
+    "change": "Kodlamayı değiştir",
+    "title": "Kodlamayla yeniden aç",
+    "hint": "Karakterler bozuk görünüyorsa dosya başka bir kodlama kullanıyor olabilir.",
+    "reopen": "Yeniden aç",
+    "reopenTitle": "Yeniden açılsın ve kaydedilmemiş değişiklikler kaybolsun mu?",
+    "reopenBody": "Dosya diskten yeniden okunur.",
+    "saveTitle": "Kodlamayla kaydet",
+    "saveHint": "Unicode tüm karakterleri korur.",
+    "saveWith": "Başka kodlamayla kaydet…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16, little-endian)",
+      "utf-16be": "Unicode (UTF-16, big-endian)",
+      "windows-1252": "Batı Avrupa (Windows)",
+      "iso-8859-1": "Batı Avrupa (ISO)",
+      "windows-1254": "Türkçe (Windows)",
+      "iso-8859-9": "Türkçe (ISO)",
+      "windows-1250": "Orta Avrupa (Windows)",
+      "iso-8859-2": "Orta Avrupa (ISO)",
+      "windows-1251": "Kiril (Windows)",
+      "koi8-r": "Kiril (KOI8-R)",
+      "shift_jis": "Japonca (Shift_JIS, salt okunur)",
+      "euc-kr": "Korece (EUC-KR, salt okunur)",
+      "gb18030": "Çince (GB18030, salt okunur)"
+    }
+  },
+  "eol": {
+    "label": "Satır sonları"
+  },
+  "open": {
+    "binary": "{{name}} bir metin dosyası değil."
+  },
+  "recent": {
+    "empty": "Son dosya yok"
+  },
+  "recovery": {
+    "lost": "Şunların kaydedilmemiş metni kurtarılamadı: {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} okunabilir ama yazılamaz: UTF-8 olarak kaydedildi.",
+    "saved": "{{name}} kaydedildi",
+    "unencodable": "{{line}}. satırdaki “{{char}}” {{encoding}} ile yazılamaz. Başka bir kodlama seçin."
+  },
+  "status": {
+    "label": "Durum",
+    "lineNumbers": "Satır numaraları",
+    "position": "Sat {{line}}, Süt {{column}}",
+    "selected_one": "{{count}} seçili",
+    "selected_other": "{{count}} seçili",
+    "words_one": "{{count}} kelime",
+    "words_other": "{{count}} kelime",
+    "wrap": "Sözcük kaydırma"
+  },
+  "tabs": {
+    "close": "{{name}} kapat",
+    "label": "Açık belgeler",
+    "unsaved": "Kaydedilmemiş değişiklikler"
+  }
+}

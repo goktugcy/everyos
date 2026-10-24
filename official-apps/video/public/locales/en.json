@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Video Player",
+    "description": "Play selected videos with subtitles, playlists and saved positions."
+  },
+  "video": {
+    "scope": "Only selected files are accessible. Up to 20 playlists of 100 videos. Resume positions and settings are saved; videos are streamed from EveryOS, never copied into app storage.",
+    "permission": "Video access needs files:pick permission from the App Store.",
+    "add": "Add videos",
+    "openSubtitles": "Open subtitles",
+    "fullscreen": "Fullscreen",
+    "fullscreenError": "Fullscreen was refused by this browser. Use the native video controls if available.",
+    "playlist": "Playlist",
+    "defaultList": "My videos",
+    "newList": "New playlist",
+    "renameList": "Rename playlist",
+    "deleteList": "Delete playlist",
+    "referencesOnly": "Only playlist references are removed. Original files are not deleted.",
+    "revoked": "Some playlist files are no longer shared. Add them again to restore access.",
+    "empty": "No video selected",
+    "openHint": "Choose a video through EveryOS. Playback depends on this browser’s containers and codecs; this app does not transcode.",
+    "selected": "Selected video",
+    "previous": "Previous video",
+    "next": "Next video",
+    "remove": "Remove from playlist",
+    "player": "Video playback",
+    "play": "Play",
+    "pause": "Pause",
+    "reload": "Reload video",
+    "speed": "Playback speed",
+    "subtitles": "Subtitles",
+    "showSubtitles": "Show subtitles",
+    "hideSubtitles": "Hide subtitles",
+    "captionHint": "Plain-text WebVTT or SRT subtitles, up to 1 MiB and 2,000 cues. Markup and styling are not executed.",
+    "badSubtitles": "Subtitles could not be read. Use valid WebVTT/SRT with at least one timed cue, at most 1 MiB and 2,000 cues.",
+    "unsupported": "This file could not be played. Its codec/container may be unsupported, the file may be damaged, or its share may have expired. Try reloading or another browser/format. No transcoding is performed.",
+    "codecs": "Browser codec support",
+    "codecHint": "These are the browser’s canPlayType reports, not a promise that a particular file will decode. Actual playback is decisive.",
+    "probably": "Reported as probably supported",
+    "maybe": "Reported as possibly supported",
+    "notReported": "No support reported"
+  }
+}

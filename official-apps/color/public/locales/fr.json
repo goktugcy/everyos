@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Studio couleur",
+    "description": "Choisissez des couleurs en HEX, RVB, TSL et OKLCH, créez palettes, harmonies et dégradés, vérifiez le contraste et prévisualisez-les dans le thème EveryOS."
+  },
+  "actions": {
+    "eyedropper": "Prélever une couleur à l’écran"
+  },
+  "color": {
+    "section": "Couleur",
+    "preview": "Couleur actuelle {{color}}"
+  },
+  "picker": {
+    "saturationValue": "Saturation et luminosité",
+    "svValue": "Saturation {{s}} %, luminosité {{v}} %",
+    "hue": "Teinte",
+    "alpha": "Opacité"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RVB",
+    "hsl": "TSL",
+    "oklch": "OKLCH",
+    "invalid": "Pas une couleur",
+    "copy": "Copier {{format}}"
+  },
+  "panels": {
+    "label": "Outils",
+    "palette": "Palette",
+    "gradient": "Dégradé",
+    "contrast": "Contraste",
+    "saved": "Enregistrées",
+    "theme": "Thème EveryOS"
+  },
+  "swatch": {
+    "use": "Utiliser {{color}}"
+  },
+  "harmony": {
+    "label": "Harmonie",
+    "complementary": "Complémentaire",
+    "analogous": "Analogue",
+    "triadic": "Triadique",
+    "split": "Complémentaire divisée",
+    "tetradic": "Tétradique",
+    "monochromatic": "Monochrome",
+    "save": "Enregistrer l’harmonie"
+  },
+  "scale": {
+    "title": "Échelle de tons",
+    "step": "Niveau {{step}} : {{color}}",
+    "copyCss": "Copier en variables CSS",
+    "save": "Enregistrer l’échelle"
+  },
+  "gradient": {
+    "preview": "Aperçu du dégradé",
+    "kind": "Type",
+    "linear": "Linéaire",
+    "radial": "Radial",
+    "angle": "Angle : {{angle}}°",
+    "stops": "Arrêts de couleur",
+    "useCurrent": "Mettre l’arrêt {{number}} à la couleur actuelle",
+    "position": "Position de l’arrêt {{number}}",
+    "remove": "Retirer l’arrêt {{number}}",
+    "hint": "Cliquez sur la pastille d’un arrêt pour lui donner la couleur actuelle. Un dégradé nécessite au moins deux arrêts.",
+    "add": "Ajouter un arrêt",
+    "copy": "Copier le CSS"
+  },
+  "contrast": {
+    "text": "Texte",
+    "background": "Arrière-plan",
+    "swap": "Inverser texte et arrière-plan",
+    "useAsText": "Utiliser la couleur actuelle pour le texte",
+    "useAsBackground": "Utiliser la couleur actuelle pour le fond",
+    "sampleLarge": "Grand texte",
+    "sample": "Le texte normal est plus difficile à lire avec peu de contraste.",
+    "ratio": "Rapport de contraste",
+    "aa": "AA",
+    "aaLarge": "AA grand",
+    "aaa": "AAA",
+    "aaaLarge": "AAA grand",
+    "pass": "réussi",
+    "fail": "échoue",
+    "hint": "WCAG 2 : AA exige 4,5:1 pour le texte normal et 3:1 pour le grand texte (24 px, ou 19 px gras) ; AAA exige 7:1 et 4,5:1."
+  },
+  "saved": {
+    "newName": "Nouvelle palette",
+    "create": "Créer avec la couleur actuelle",
+    "added": "Palette enregistrée",
+    "addCurrent": "Ajouter la couleur actuelle à {{name}}",
+    "copyCss": "Copier {{name}} en variables CSS",
+    "exportCss": "Enregistrer le CSS…",
+    "delete": "Supprimer {{name}}",
+    "deleteTitle": "Supprimer la palette « {{name}} » ?",
+    "removeColor": "Retirer {{color}}",
+    "empty": "Aucune palette enregistrée",
+    "emptyText": "Enregistrez une harmonie ou une échelle, ou créez une palette ci-dessus."
+  },
+  "theme": {
+    "current": "Votre thème ({{scheme}})",
+    "schemes": {
+      "light": "clair",
+      "dark": "sombre"
+    },
+    "tokens": {
+      "accent": "Accent",
+      "accent-strong": "Accent fort",
+      "text": "Texte",
+      "text-muted": "Texte atténué",
+      "surface": "Surface",
+      "inset": "Encart",
+      "danger": "Danger",
+      "success": "Succès",
+      "warning": "Avertissement"
+    },
+    "previewTitle": "La couleur actuelle comme accent",
+    "button": "Bouton",
+    "link": "Un lien",
+    "linkContrast": "Contraste du lien {{ratio}}:1",
+    "hint": "La couleur d’accent se choisit dans Réglages → Apparence."
+  }
+}

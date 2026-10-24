@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "JWT-Inspektor",
+    "description": "JSON Web Tokens dekodieren, Claims und Ablauf lesen, Signaturen mit eigenen Schlüsseln prüfen und geschwärzte Claims exportieren. Tokens verlassen dieses Gerät nie."
+  },
+  "remember": {
+    "label": "Letztes Token merken",
+    "hint": "Standardmäßig aus: Tokens bleiben nur in diesem Fenster. Schlüssel werden nie gespeichert."
+  },
+  "token": {
+    "section": "Token",
+    "label": "JSON Web Token",
+    "placeholder": "Token einfügen (eyJ…), mit oder ohne „Bearer“",
+    "parts": "Header, Payload und Signatur",
+    "privacy": "Das Dekodieren geschieht auf diesem Gerät; das Token wird nirgendwohin gesendet.",
+    "waiting": "Token zum Prüfen einfügen",
+    "noAlg": "Kein Algorithmus",
+    "algNone": "Unsigniert (alg: none): jeder könnte es erstellt haben"
+  },
+  "parts": {
+    "0": "Header",
+    "1": "Payload",
+    "2": "Signatur"
+  },
+  "problems": {
+    "segments": "Ein Token hat drei durch Punkte getrennte Teile",
+    "base64": "Der Teil „{{part}}“ ist kein gültiges Base64URL",
+    "json": "Der Teil „{{part}}“ ist kein JSON",
+    "not-object": "Der Teil „{{part}}“ muss ein JSON-Objekt sein",
+    "jwe": "Ein verschlüsseltes Token (JWE): ohne privaten Schlüssel nicht lesbar"
+  },
+  "validity": {
+    "valid": "Gültig",
+    "expiresIn": "Läuft {{when}} ab",
+    "expired": "Abgelaufen {{when}}",
+    "notYet": "Noch nicht gültig: ab {{when}}",
+    "noExpiry": "Kein Ablauf (exp)",
+    "skew": "Uhrentoleranz",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "panels": {
+    "label": "Ansichten",
+    "decoded": "Dekodiert",
+    "verify": "Signatur prüfen",
+    "export": "Exportieren"
+  },
+  "decoded": {
+    "header": "Header",
+    "payload": "Payload",
+    "claim": "Claim",
+    "value": "Wert"
+  },
+  "verify": {
+    "secretHint": "Dieses Token nutzt ein HMAC-Geheimnis: das gemeinsame Geheimnis einfügen.",
+    "keyHint": "Den öffentlichen Schlüssel des Ausstellers einfügen: PEM (BEGIN PUBLIC KEY), Zertifikat, JWK oder JWK-Set (Auswahl per kid).",
+    "encoding": "Geheimnis ist",
+    "encodings": {
+      "text": "Text",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "Geheimnis",
+    "key": "Öffentlicher Schlüssel",
+    "check": "Signatur prüfen",
+    "private": "Der Schlüssel wird nur in diesem Fenster genutzt und nicht gespeichert.",
+    "results": {
+      "valid": "Signatur gültig ({{alg}})",
+      "invalid-signature": "Signatur passt nicht zu diesem Schlüssel",
+      "alg-none": "Unsignierte Tokens (alg: none) werden nie akzeptiert",
+      "alg-unsupported": "Der Algorithmus {{alg}} wird nicht unterstützt",
+      "key-mismatch": "Diese Schlüsselart passt nicht zu {{alg}}",
+      "bad-key": "Der Schlüssel konnte nicht gelesen werden",
+      "private-key": "Das ist ein privater Schlüssel: bitte den öffentlichen einfügen",
+      "no-matching-key": "Kein Schlüssel im Set passt zur kid dieses Tokens"
+    }
+  },
+  "export": {
+    "hint": "Teilen, was ein Token aussagt, ohne was eine Person identifiziert: zu verbergende Claims wählen.",
+    "redact": "Zu verbergende Claims",
+    "redactClaim": "{{claim}} verbergen",
+    "preview": "Was exportiert wird",
+    "copy": "Kopieren",
+    "save": "Als JSON speichern…"
+  },
+  "claims": {
+    "iss": "Aussteller",
+    "sub": "Subjekt (wen das Token betrifft)",
+    "aud": "Zielgruppe (wer es annehmen darf)",
+    "exp": "Läuft ab",
+    "nbf": "Nicht gültig vor",
+    "iat": "Ausgestellt am",
+    "jti": "Token-ID",
+    "azp": "Autorisierte Partei",
+    "scope": "Gewährte Scopes",
+    "scp": "Gewährte Scopes",
+    "client_id": "Client",
+    "sid": "Sitzungs-ID",
+    "nonce": "Nonce",
+    "auth_time": "Angemeldet um",
+    "acr": "Authentifizierungsstufe",
+    "amr": "Authentifizierungsmethoden",
+    "name": "Name",
+    "given_name": "Vorname",
+    "family_name": "Nachname",
+    "preferred_username": "Benutzername",
+    "email": "E-Mail",
+    "email_verified": "E-Mail bestätigt",
+    "phone_number": "Telefonnummer",
+    "roles": "Rollen",
+    "groups": "Gruppen",
+    "tid": "Mandant",
+    "oid": "Objekt-ID"
+  }
+}

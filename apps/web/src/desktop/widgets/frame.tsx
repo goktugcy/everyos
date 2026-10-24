@@ -16,6 +16,7 @@ import { widgetActions } from "./actions.ts";
 import { widgetTitle } from "./labels.ts";
 import { widgetMenu } from "./menu.tsx";
 import { Placeholder } from "./renderers/gate.tsx";
+import { DesktopAppWidget } from "./renderers/desktop-app.tsx";
 import { WIDGET_RENDERERS } from "./renderers/index.ts";
 import { widgetUi } from "./ui-store.ts";
 import { SourceReporterContext, StateActions, WidgetInstanceContext } from "./instance.tsx";
@@ -44,7 +45,9 @@ export function WidgetBody({ instance, compact }: { instance: WidgetInstance; co
   const permissions = usePermissions();
   const [attempt, setAttempt] = useState(0);
   const manifest = getWidget(instance.widgetId);
-  const Renderer = WIDGET_RENDERERS[instance.widgetId];
+  const Renderer =
+    WIDGET_RENDERERS[instance.widgetId] ??
+    (manifest?.provider === "desktopApp" ? DesktopAppWidget : undefined);
 
   let content: ReactNode;
   if (!manifest || !Renderer) {

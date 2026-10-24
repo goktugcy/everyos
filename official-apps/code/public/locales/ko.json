@@ -1,0 +1,102 @@
+{
+  "app": {
+    "name": "코드 편집기",
+    "description": "구문 강조, 미니맵, 찾기 및 바꾸기, 선택한 폴더용 파일 탐색기로 탭에서 코드를 편집합니다."
+  },
+  "actions": {
+    "new": "새 파일",
+    "openFile": "파일 열기…",
+    "openFolder": "폴더 열기…",
+    "save": "저장",
+    "saveAs": "다른 이름으로 저장…",
+    "find": "찾기 및 바꾸기"
+  },
+  "explorer": {
+    "label": "파일",
+    "show": "파일 표시",
+    "hide": "파일 숨기기",
+    "newFile": "폴더에 새 파일",
+    "newFolder": "새 폴더",
+    "refresh": "새로 고침",
+    "close": "폴더 닫기",
+    "newFileTitle": "새 파일",
+    "newFolderTitle": "새 폴더",
+    "inFolder": "{{folder}} 안",
+    "inRoot": "{{name}} 안",
+    "names": {
+      "empty": "이름을 입력하세요.",
+      "reserved": "“{{name}}”은(는) 이름으로 쓸 수 없습니다.",
+      "separator": "이름에 / 또는 \\를 쓸 수 없습니다.",
+      "tooLong": "이름이 너무 깁니다.",
+      "exists": "“{{name}}”이(가) 이미 있습니다."
+    },
+    "unreadable": "이 폴더를 읽을 수 없습니다",
+    "unreadableShort": "읽을 수 없음",
+    "empty": "이 폴더는 비어 있습니다",
+    "more_other": "{{count}}개 더 표시 안 됨"
+  },
+  "tabs": {
+    "label": "열린 파일",
+    "unsaved": "저장되지 않은 변경",
+    "close": "{{name}} 닫기"
+  },
+  "editor": {
+    "label": "{{name}} 내용"
+  },
+  "status": {
+    "label": "상태",
+    "position": "{{line}}줄, {{column}}열",
+    "selected_other": "{{count}}자 선택",
+    "language": "언어",
+    "autoNamed": "{{name}} (파일 이름 기준)",
+    "autoPlain": "일반 텍스트 (파일 이름 기준)",
+    "plain": "일반 텍스트",
+    "spaces": "공백: {{count}}",
+    "tabs": "탭 크기: {{count}}",
+    "eol": "줄 끝"
+  },
+  "settings": {
+    "title": "편집기 설정",
+    "theme": "테마",
+    "themes": {
+      "system": "EveryOS와 같게",
+      "light": "라이트",
+      "dark": "다크",
+      "contrast": "고대비"
+    },
+    "fontSize": "글꼴 크기",
+    "tabSize": "탭 크기",
+    "insertSpaces": "공백으로 들여쓰기",
+    "wrap": "긴 줄 바꿈",
+    "minimap": "미니맵 표시"
+  },
+  "welcome": {
+    "title": "편집할 항목을 여세요",
+    "text": "프로젝트 폴더를 열어 파일을 둘러보거나, 파일을 하나씩 열거나, 새 파일을 시작하세요.",
+    "withFolder": "왼쪽 폴더에서 파일을 고르거나 새 파일을 시작하세요."
+  },
+  "doc": {
+    "untitled": "제목 없음 {{number}}"
+  },
+  "open": {
+    "binary": "“{{name}}”은(는) 텍스트 파일이 아닙니다.",
+    "notUtf8": "“{{name}}”은(는) UTF-8 텍스트가 아닙니다. 다른 인코딩을 읽는 텍스트 편집기로 여세요."
+  },
+  "save": {
+    "saved": "{{name}} 저장됨",
+    "changedTitle": "“{{name}}”이(가) 디스크에서 바뀌었습니다",
+    "changedBody": "파일을 연 뒤 이 파일이 바뀌었습니다. 저장하면 그 변경 내용이 내 변경으로 바뀝니다.",
+    "overwrite": "바꾸기"
+  },
+  "close": {
+    "title_other": "저장하지 않은 파일 {{count}}개가 있습니다. 닫을까요?",
+    "body": "저장하지 않은 변경 내용은 보관되며 코드 편집기를 다시 열면 돌아옵니다.",
+    "confirm": "닫기",
+    "tabTitle": "“{{name}}”의 변경 내용을 버릴까요?",
+    "tabBody": "저장하지 않은 변경 내용이 사라집니다.",
+    "discard": "버리기"
+  },
+  "recovery": {
+    "lost": "저장하지 않은 다음 파일을 복원하지 못했습니다: {{names}}"
+  }
+}

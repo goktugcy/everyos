@@ -1,0 +1,183 @@
+{
+  "app": {
+    "name": "Testeur de regex",
+    "description": "Testez des expressions régulières JavaScript en direct : correspondances surlignées, groupes, drapeaux, remplacements et explications."
+  },
+  "pattern": {
+    "section": "Expression",
+    "label": "Expression régulière",
+    "placeholder": "Saisissez un motif…",
+    "copy": "Copier l’expression"
+  },
+  "flags": {
+    "label": "Drapeaux",
+    "d": "Indices : indique où chaque groupe correspond",
+    "g": "Global : toutes les correspondances, pas seulement la première",
+    "i": "Ignorer la casse",
+    "m": "Multiligne : ^ et $ aux sauts de ligne",
+    "s": "Dotall : . correspond aussi aux sauts de ligne",
+    "u": "Unicode : points de code et propriétés \\p{…}",
+    "v": "Ensembles Unicode : opérations dans les classes",
+    "y": "Sticky : seulement là où la dernière correspondance s’est terminée",
+    "short": {
+      "d": "indices",
+      "g": "global",
+      "i": "sans casse",
+      "m": "multiligne",
+      "s": "dotall",
+      "u": "unicode",
+      "v": "ensembles",
+      "y": "sticky"
+    }
+  },
+  "status": {
+    "empty": "Saisissez une expression régulière",
+    "running": "Recherche…",
+    "matches_one": "{{count}} correspondance",
+    "matches_other": "{{count}} correspondances",
+    "ms": "{{ms}} ms",
+    "timeout": "Arrêtée : l’expression a pris plus de {{seconds}} s (probablement un retour arrière catastrophique).",
+    "tooLong": "Le texte dépasse {{count}} caractères.",
+    "syntax": "Expression invalide : {{message}}",
+    "worker": "La recherche n’a pas pu s’exécuter : {{message}}"
+  },
+  "text": {
+    "label": "Texte de test",
+    "highlighted": "Correspondances dans le texte",
+    "highlightLimit": "Seuls les 200 000 premiers caractères sont surlignés."
+  },
+  "panels": {
+    "label": "Résultats",
+    "matches": "Correspondances",
+    "explain": "Explication",
+    "replace": "Remplacer"
+  },
+  "matches": {
+    "none": "Aucune correspondance",
+    "empty": "(correspondance vide)",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "n’a pas participé",
+    "truncated": "Seules les {{count}} premières correspondances sont listées.",
+    "more": "et {{count}} de plus"
+  },
+  "replace": {
+    "label": "Remplacement",
+    "hint": "$1, $<nom>, $& (la correspondance), $` et $' (avant et après), $$ pour $",
+    "result": "Résultat",
+    "copy": "Copier le résultat"
+  },
+  "examples": {
+    "title": "Exemples",
+    "email": {
+      "name": "Adresse e-mail",
+      "description": "Motif pratique pour des adresses dans un texte (pas toutes les adresses RFC 5322)"
+    },
+    "url": {
+      "name": "Adresse web",
+      "description": "Liens http et https"
+    },
+    "ipv4": {
+      "name": "Adresse IPv4",
+      "description": "Quatre nombres de 0 à 255"
+    },
+    "isoDate": {
+      "name": "Date ISO",
+      "description": "AAAA-MM-JJ avec groupes nommés"
+    },
+    "hexColor": {
+      "name": "Couleur hexadécimale",
+      "description": "#rgb ou #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "Versions 1 à 8"
+    },
+    "semver": {
+      "name": "Version sémantique",
+      "description": "majeure.mineure.correctif avec préversion et build"
+    },
+    "phone": {
+      "name": "Numéro de téléphone",
+      "description": "Chiffres avec espaces, points, tirets ou parenthèses"
+    },
+    "slug": {
+      "name": "Slug d’URL",
+      "description": "Mots en minuscules reliés par des tirets, un par ligne"
+    },
+    "words": {
+      "name": "Mots dans toute écriture",
+      "description": "Lettres par propriété Unicode (nécessite u)"
+    },
+    "duplicateWords": {
+      "name": "Mots répétés",
+      "description": "Un mot écrit deux fois de suite, avec une référence arrière"
+    },
+    "trailingSpace": {
+      "name": "Espaces en fin de ligne",
+      "description": "Espaces et tabulations en fin de ligne"
+    }
+  },
+  "saved": {
+    "title": "Enregistrées",
+    "save": "Enregistrer",
+    "name": "Nom",
+    "done": "Expression enregistrée",
+    "delete": "Supprimer {{name}}"
+  },
+  "explain": {
+    "digit": "Un chiffre (0–9)",
+    "nonDigit": "Tout caractère sauf un chiffre",
+    "word": "Un caractère de mot (lettre, chiffre ou _)",
+    "nonWord": "Tout caractère sauf un caractère de mot",
+    "space": "Un caractère d’espacement",
+    "nonSpace": "Tout caractère sauf un espacement",
+    "newline": "Un saut de ligne",
+    "carriageReturn": "Un retour chariot",
+    "tab": "Une tabulation",
+    "formFeed": "Un saut de page",
+    "verticalTab": "Une tabulation verticale",
+    "nul": "Le caractère NUL",
+    "wordBoundary": "Une limite de mot",
+    "nonWordBoundary": "Pas une limite de mot",
+    "backreference": "Le même texte que le groupe {{number}}",
+    "namedBackreference": "Le même texte que le groupe « {{name}} »",
+    "property": "Un caractère ayant la propriété Unicode {{name}}",
+    "notProperty": "Un caractère sans la propriété Unicode {{name}}",
+    "hex": "Le caractère {{char}} (code hexadécimal)",
+    "unicode": "Le caractère {{char}} (code Unicode)",
+    "control": "Le caractère de contrôle Ctrl+{{letter}}",
+    "literal": "Le caractère {{char}}",
+    "literals": "Le texte « {{char}} »",
+    "class": "Un caractère parmi : {{items}}",
+    "notClass": "Un caractère hors de : {{items}}",
+    "group": "Groupe {{number}} : capture ce qui correspond",
+    "namedGroup": "Groupe {{number}} « {{name}} » : capture ce qui correspond",
+    "nonCapturing": "Un groupe non capturant",
+    "lookahead": "Suivi de (hors correspondance) :",
+    "negativeLookahead": "Non suivi de :",
+    "lookbehind": "Précédé de (hors correspondance) :",
+    "negativeLookbehind": "Non précédé de :",
+    "modifiers": "Un groupe avec les drapeaux {{flags}}",
+    "groupEnd": "Fin du groupe",
+    "alternation": "Ou",
+    "start": "Début du texte (ou de la ligne, avec m)",
+    "end": "Fin du texte (ou de la ligne, avec m)",
+    "any": "N’importe quel caractère (sauf sauts de ligne, sans s)",
+    "zeroOrMore": "Zéro fois ou plus, autant que possible",
+    "zeroOrMoreLazy": "Zéro fois ou plus, aussi peu que possible",
+    "oneOrMore": "Une fois ou plus, autant que possible",
+    "oneOrMoreLazy": "Une fois ou plus, aussi peu que possible",
+    "optional": "Facultatif (une fois ou pas du tout)",
+    "optionalLazy": "Facultatif, de préférence aucune fois",
+    "exactly_one": "Exactement {{count}} fois",
+    "exactly_other": "Exactement {{count}} fois",
+    "exactlyLazy_one": "Exactement {{count}} fois",
+    "exactlyLazy_other": "Exactement {{count}} fois",
+    "atLeast_one": "Au moins {{count}} fois, autant que possible",
+    "atLeast_other": "Au moins {{count}} fois, autant que possible",
+    "atLeastLazy_one": "Au moins {{count}} fois, aussi peu que possible",
+    "atLeastLazy_other": "Au moins {{count}} fois, aussi peu que possible",
+    "between": "Entre {{min}} et {{max}} fois, autant que possible",
+    "betweenLazy": "Entre {{min}} et {{max}} fois, aussi peu que possible"
+  }
+}

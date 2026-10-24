@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Générateur cron",
+    "description": "Créez et vérifiez des planifications cron : générateur visuel, descriptions en clair, prochaines exécutions dans tout fuseau, formes systemd et EveryOS."
+  },
+  "seconds": {
+    "label": "Champ des secondes"
+  },
+  "expression": {
+    "section": "Expression",
+    "label": "Expression cron",
+    "copy": "Copier l’expression"
+  },
+  "fields": {
+    "second": "Seconde",
+    "minute": "Minute",
+    "hour": "Heure",
+    "day": "Jour du mois",
+    "month": "Mois",
+    "weekday": "Jour de la semaine"
+  },
+  "problems": {
+    "field-count": "Une expression cron compte {{count}} champs séparés par des espaces ({{token}} trouvés).",
+    "empty": "{{field}} est vide.",
+    "bad-token": "{{field}} : « {{token}} » n’est ni un nombre, ni un nom, ni *, ni une liste.",
+    "out-of-range": "{{field}} : {{token}} est hors limites.",
+    "bad-range": "{{field}} : la plage « {{token}} » est à l’envers.",
+    "bad-step": "{{field}} : le pas dans « {{token}} » doit être un nombre supérieur à 0.",
+    "reboot": "@reboot s’exécute au démarrage, pas à une heure : aucune heure à afficher."
+  },
+  "builder": {
+    "custom": "Modifiez ce champ dans l’expression (il utilise une forme que le générateur n’affiche pas).",
+    "mode": "Réglage de {{field}}",
+    "modes": {
+      "every": "Chaque",
+      "specific": "Valeurs précises",
+      "range": "Plage",
+      "step": "Tous les n"
+    },
+    "from": "De",
+    "to": "À",
+    "every": "Tous les",
+    "interval": "Intervalle",
+    "startingAt": "à partir de",
+    "start": "Début"
+  },
+  "presets": {
+    "title": "Préréglages",
+    "everyMinute": "Chaque minute",
+    "every5Minutes": "Toutes les 5 minutes",
+    "every15Minutes": "Toutes les 15 minutes",
+    "hourly": "Toutes les heures",
+    "every6Hours": "Toutes les 6 heures",
+    "daily3am": "Chaque jour à 03:00",
+    "weekdays9am": "En semaine à 09:00",
+    "weeklySunday": "Chaque dimanche",
+    "monthlyFirst": "Le 1er de chaque mois",
+    "quarterly": "Chaque trimestre",
+    "yearly": "Chaque année"
+  },
+  "runs": {
+    "section": "Heures d’exécution",
+    "timeZone": "Fuseau horaire",
+    "next": "Prochaines exécutions",
+    "previous": "Exécutions précédentes",
+    "none": "Cette planification ne s’exécute jamais (par exemple le 30 février).",
+    "invalid": "Corrigez l’expression pour voir les heures."
+  },
+  "export": {
+    "title": "Utiliser",
+    "command": "Commande",
+    "commandPlaceholder": "/chemin/vers/commande",
+    "crontab": "Ligne crontab",
+    "onCalendar": "Minuteur systemd (OnCalendar=)",
+    "twoLines": "Cron s’exécute si l’un des champs de jour correspond ; systemd exige les deux, d’où deux lignes.",
+    "timezone": "Dans le fuseau {{zone}}.",
+    "everyos": "Tâches planifiées d’EveryOS",
+    "compatible": "Compatible",
+    "problems": {
+      "seconds": "Les tâches planifiées n’ont pas de champ des secondes.",
+      "too-frequent": "Les tâches planifiées s’exécutent au plus toutes les 5 minutes (12 fois par heure)."
+    },
+    "timerFile": "Enregistrer un fichier .timer…",
+    "defaultDescription": "Tâche planifiée",
+    "notScheduled": "Le générateur cron ne fait que créer des expressions : il ne planifie rien sur ce serveur."
+  },
+  "saved": {
+    "title": "Enregistrées",
+    "name": "Nom",
+    "save": "Enregistrer l’expression",
+    "done": "Enregistrée",
+    "delete": "Supprimer {{name}}"
+  }
+}

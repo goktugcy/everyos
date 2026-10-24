@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "Notlar",
+    "description": "Klasörler, etiketler, sabitleme, arama, sürüm geçmişi, içe/dışa aktarma ve hızlı not widget'ı ile Markdown notları."
+  },
+  "widgets": {
+    "quick": { "name": "Hızlı not", "description": "Notlar'ı açmadan not yazın." }
+  },
+  "views": {
+    "all": "Tüm notlar",
+    "pinned": "Sabitlenenler",
+    "folders": "Klasörler",
+    "tags": "Etiketler",
+    "trash": "Son silinenler"
+  },
+  "actions": {
+    "newNote": "Yeni not",
+    "newFolder": "Yeni klasör",
+    "renameFolder": "Klasörü yeniden adlandır",
+    "deleteFolder": "Klasörü sil",
+    "pin": "Sabitle",
+    "unpin": "Sabitlemeyi kaldır",
+    "copy": "Markdown olarak kopyala",
+    "exportNote": "Markdown olarak dışa aktar…",
+    "exportAll": "Tüm notları dışa aktar…",
+    "import": "Not içe aktar…",
+    "history": "Sürüm geçmişi",
+    "delete": "Notu sil",
+    "restore": "Geri yükle",
+    "deleteForever": "Kalıcı olarak sil",
+    "emptyTrash": "Boşalt",
+    "restoreVersion": "Bu sürümü geri yükle",
+    "back": "Notlara dön"
+  },
+  "list": {
+    "label": "Notlar",
+    "search": "Notlarda ara",
+    "sort": "Sıralama",
+    "sortUpdated": "Son düzenleme",
+    "sortCreated": "Oluşturulma tarihi",
+    "sortTitle": "Başlık",
+    "untitled": "Yeni not",
+    "noText": "Başka metin yok",
+    "pinned": "Sabitlendi"
+  },
+  "empty": {
+    "title": "Henüz not yok",
+    "text": "İlk notunuzu yazın ya da Markdown dosyalarını içe aktarın.",
+    "trash": "Son silinenlerde bir şey yok",
+    "trashText": "Silinen notlar 30 gün burada kalır.",
+    "search": "“{{query}}” ile eşleşen not yok",
+    "select": "Bir not seçin ya da yeni bir not başlatın."
+  },
+  "editor": {
+    "tools": "Not",
+    "modes": "Görünüm",
+    "edit": "Düzenle",
+    "split": "Bölünmüş",
+    "preview": "Önizleme",
+    "saving": "Kaydediliyor…",
+    "editing": "Düzenleniyor…",
+    "failed": "Kaydedilmedi",
+    "saved": "Kaydedildi",
+    "inTrash": "Bu not Son silinenler'de; {{date}} tarihinde kalıcı olarak silinecek.",
+    "folder": "Klasör",
+    "noFolder": "Klasör yok",
+    "tags": "Etiketler",
+    "tagsHint": "Etiketleri virgülle ayırın",
+    "label": "Not metni",
+    "placeholder": "Yazmaya başlayın. Markdown kullanabilirsiniz: # başlıklar, **kalın**, - listeler, - [ ] görevler…",
+    "previewLabel": "Önizleme",
+    "words_one": "{{count}} kelime",
+    "words_other": "{{count}} kelime",
+    "edited": "Düzenlendi: {{date}}"
+  },
+  "folder": {
+    "name": "Klasör adı",
+    "exists": "Bu adda bir klasör zaten var",
+    "deleteTitle": "“{{name}}” klasörü silinsin mi?",
+    "deleteBody": "İçindeki notlar korunur ve klasörün dışına taşınır."
+  },
+  "trash": {
+    "deleteTitle": "“{{name}}” kalıcı olarak silinsin mi?",
+    "emptyTitle": "Son silinenlerdeki tüm notlar silinsin mi?",
+    "body": "Bu işlem geri alınamaz.",
+    "moved": "Son silinenler'e taşındı",
+    "restored": "Not geri yüklendi"
+  },
+  "history": {
+    "title": "Sürüm geçmişi",
+    "empty": "Henüz önceki sürüm yok. Notlar, siz düzenledikçe her notun en fazla 20 sürümünü saklar.",
+    "restored": "Önceki sürüm geri yüklendi"
+  },
+  "import": {
+    "done_one": "{{count}} not içe aktarıldı",
+    "done_other": "{{count}} not içe aktarıldı",
+    "none": "Hiçbir şey içe aktarılmadı",
+    "skipped": "{{name}} atlandı: 5 MB'tan büyük"
+  },
+  "widget": {
+    "placeholder": "Hızlı bir not yazın…",
+    "save": "Not ekle",
+    "saved": "Not eklendi",
+    "recent": "Son notlar",
+    "empty": "Henüz not yok",
+    "open": "Notlar'ı aç"
+  }
+}

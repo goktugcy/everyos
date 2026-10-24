@@ -1,0 +1,81 @@
+.eui-toolbar {
+  flex-wrap: wrap;
+}
+.keys-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px;
+  max-width: 1400px;
+  margin: auto;
+}
+.keys-hint {
+  color: var(--eui-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.keys-filters {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.keys-filters > .eui-search {
+  flex: 1;
+  min-width: 180px;
+}
+.keys-table {
+  overflow: auto;
+  max-width: 100%;
+}
+.keys-table td {
+  overflow-wrap: anywhere;
+  max-width: 360px;
+}
+.keys-detail {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+}
+.keys-detail h2 {
+  font-size: 16px;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.keys-detail p {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.keys-fingerprint {
+  font-family: monospace;
+  overflow-wrap: anywhere;
+}
+.keys-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.keys-form {
+  display: grid;
+  gap: 14px;
+}
+@media (max-width: 600px) {
+  .keys-table :is(th, td):nth-child(2),
+  .keys-table :is(th, td):nth-child(3) {
+    display: none;
+  }
+  .keys-table :is(th, td):last-child {
+    width: 120px;
+  }
+  .keys-main {
+    padding: 12px;
+  }
+  .keys-detail {
+    padding: 12px;
+  }
+}

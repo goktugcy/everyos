@@ -25,3 +25,7 @@ packaging/out/
 
 # Generated knowledge graph (local tooling)
 graphify-out/
+
+# Official app packages built locally
+*.eosapp
+*.eosapp.sig.json

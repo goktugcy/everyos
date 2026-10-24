@@ -1,13 +1,14 @@
 packages:
   - apps/*
   - packages/*
+  - official-apps/*
 
 # Centralized dependency versions. Workspace packages reference these with
 # "catalog:" so every package resolves the exact same version.
 catalog:
   hono: 4.13.13
   "@hono/node-server": 2.1.4
-  zod: 4.6.5
+  zod: 4.6.6
   yaml: 2.9.1
   re2js: 2.8.6
   react: 19.3.0
@@ -35,11 +36,61 @@ catalog:
   "@types/ws": 8.18.2
   "@xterm/xterm": 6.0.0
   "@xterm/addon-fit": 0.11.0
-  # Zero-dependency SMTP client for e-mail notifications (released 2026-10-03).
-  nodemailer: 10.0.14
+  # Zero-dependency SMTP client for e-mail notifications.
+  nodemailer: 10.1.4
+  # Database drivers behind the desktop apps' database:connect capability.
+  pg: 8.23.1
+  pg-cursor: 2.22.1
+  "@types/pg": 8.23.1
+  mysql2: 3.24.5
+  # Markdown for official desktop apps (Notes, Markdown Editor): rendered, then sanitized.
+  markdown-it: 15.0.3
+  dompurify: 3.4.17
+  # Official desktop apps. Editors: CodeMirror 6 (MIT).
+  "@codemirror/state": 6.7.6
+  "@codemirror/view": 6.43.13
+  "@codemirror/commands": 6.11.1
+  "@codemirror/language": 6.12.4
+  "@codemirror/search": 6.7.2
+  "@codemirror/autocomplete": 6.20.3
+  "@codemirror/lint": 6.9.7
+  "@codemirror/merge": 6.12.2
+  "@codemirror/language-data": 6.5.2
+  "@codemirror/lang-markdown": 6.5.2
+  "@codemirror/lang-json": 6.0.2
+  "@codemirror/lang-sql": 6.10.0
+  "@lezer/common": 1.5.3
+  "@lezer/highlight": 1.2.5
+  "@replit/codemirror-minimap": 0.5.2
+  highlight.js: 11.12.0
+  # PDF Viewer (Apache-2.0), Whiteboard (MIT), Diff Viewer (BSD-3-Clause).
+  pdfjs-dist: 6.4.299
+  "@excalidraw/excalidraw": 0.18.1
+  diff: 9.0.0
+  # Cron Builder, JWT Inspector, Calendar and To-Do recurrence.
+  cronstrue: 3.30.0
+  cron-parser: 5.10.1
+  jose: 6.2.12
+  rrule: 2.8.1
+  # Image metadata for Image Viewer and Gallery.
+  exifr: 7.1.3
 
 saveExact: true
 engineStrict: true
 # Only these packages may run install scripts (pnpm blocks all others).
 allowBuilds:
+  "@parcel/watcher": false
   esbuild: true
+patchedDependencies:
+  "@excalidraw/excalidraw@0.18.1": patches/@excalidraw__excalidraw@0.18.1.patch
+
+# Keep security fixes across direct and transitive consumers, preserving each nanoid major.
+overrides:
+  "zod@>=4 <4.6.6": 4.6.6
+  "dompurify@<3.4.17": 3.4.17
+  "nanoid@<4": 3.3.18
+  "nanoid@>=4 <5.1.16": 5.1.16
+  lodash-es: 4.18.1
+  katex: 0.18.2
+  # The old Sass watcher pulls in an unpatched braces release.
+  sass: 1.105.0

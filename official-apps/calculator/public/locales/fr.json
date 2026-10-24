@@ -1,0 +1,228 @@
+{
+  "app": {
+    "name": "Calculatrice",
+    "description": "Calculatrice standard et scientifique avec décimales exactes, historique, mémoire et conversion d’unités."
+  },
+  "modes": {
+    "label": "Mode",
+    "standard": "Standard",
+    "scientific": "Scientifique",
+    "converter": "Convertisseur"
+  },
+  "angle": {
+    "toggle": "Basculer entre degrés et radians",
+    "deg": "Degrés",
+    "rad": "Radians"
+  },
+  "history": {
+    "toggle": "Afficher l’historique",
+    "title": "Historique",
+    "clear": "Effacer l’historique",
+    "clearTitle": "Effacer l’historique des calculs ?",
+    "empty": "Aucun calcul pour l’instant",
+    "useExpression": "Utiliser cette expression",
+    "useResult": "Utiliser ce résultat"
+  },
+  "memory": {
+    "label": "Mémoire",
+    "value": "Valeur en mémoire"
+  },
+  "display": {
+    "expression": "Expression",
+    "result": "Résultat"
+  },
+  "actions": {
+    "copy": "Copier le résultat"
+  },
+  "errors": {
+    "syntax": "Cette expression est incomplète ou invalide",
+    "divide-by-zero": "Division par zéro impossible",
+    "domain": "Hors du domaine de la fonction",
+    "overflow": "Le résultat est trop grand",
+    "factorial-range": "La factorielle accepte les entiers jusqu’à 3000",
+    "unknown-name": "Nom inconnu dans l’expression",
+    "empty": "Saisissez une expression"
+  },
+  "converter": {
+    "category": "Grandeur",
+    "value": "Valeur",
+    "from": "De",
+    "to": "Vers",
+    "swap": "Inverser les unités",
+    "result": "Valeur convertie",
+    "all": "Dans toutes les unités"
+  },
+  "categories": {
+    "length": "Longueur",
+    "area": "Superficie",
+    "volume": "Volume",
+    "mass": "Masse",
+    "temperature": "Température",
+    "speed": "Vitesse",
+    "time": "Durée",
+    "data": "Données",
+    "pressure": "Pression",
+    "energy": "Énergie",
+    "angle": "Angle"
+  },
+  "units": {
+    "length": {
+      "mm": "Millimètres",
+      "cm": "Centimètres",
+      "m": "Mètres",
+      "km": "Kilomètres",
+      "in": "Pouces",
+      "ft": "Pieds",
+      "yd": "Yards",
+      "mi": "Miles",
+      "nmi": "Milles marins",
+      "um": "Micromètres"
+    },
+    "area": {
+      "mm2": "Millimètres carrés",
+      "cm2": "Centimètres carrés",
+      "m2": "Mètres carrés",
+      "ha": "Hectares",
+      "km2": "Kilomètres carrés",
+      "in2": "Pouces carrés",
+      "ft2": "Pieds carrés",
+      "yd2": "Yards carrés",
+      "acre": "Acres",
+      "mi2": "Miles carrés"
+    },
+    "volume": {
+      "ml": "Millilitres",
+      "cl": "Centilitres",
+      "l": "Litres",
+      "m3": "Mètres cubes",
+      "cm3": "Centimètres cubes",
+      "tsp": "Cuillères à café (US)",
+      "tbsp": "Cuillères à soupe (US)",
+      "floz": "Onces liquides (US)",
+      "cup": "Tasses (US)",
+      "pt": "Pintes (US)",
+      "qt": "Quarts (US)",
+      "gal": "Gallons (US)",
+      "ukgal": "Gallons (UK)"
+    },
+    "mass": {
+      "mg": "Milligrammes",
+      "g": "Grammes",
+      "kg": "Kilogrammes",
+      "t": "Tonnes",
+      "oz": "Onces",
+      "lb": "Livres",
+      "st": "Stones",
+      "ct": "Carats"
+    },
+    "temperature": {
+      "c": "Celsius",
+      "f": "Fahrenheit",
+      "k": "Kelvin"
+    },
+    "speed": {
+      "mps": "Mètres par seconde",
+      "kph": "Kilomètres par heure",
+      "mph": "Miles par heure",
+      "knot": "Nœuds",
+      "fps": "Pieds par seconde"
+    },
+    "time": {
+      "ms": "Millisecondes",
+      "s": "Secondes",
+      "min": "Minutes",
+      "h": "Heures",
+      "d": "Jours",
+      "wk": "Semaines",
+      "yr": "Années (365,25 jours)"
+    },
+    "data": {
+      "bit": "Bits",
+      "B": "Octets",
+      "kB": "Kilooctets",
+      "MB": "Mégaoctets",
+      "GB": "Gigaoctets",
+      "TB": "Téraoctets",
+      "KiB": "Kibioctets",
+      "MiB": "Mébioctets",
+      "GiB": "Gibioctets",
+      "TiB": "Tébioctets",
+      "kbit": "Kilobits",
+      "Mbit": "Mégabits",
+      "Gbit": "Gigabits"
+    },
+    "pressure": {
+      "Pa": "Pascals",
+      "kPa": "Kilopascals",
+      "bar": "Bars",
+      "atm": "Atmosphères",
+      "psi": "Livres par pouce carré",
+      "mmHg": "Millimètres de mercure"
+    },
+    "energy": {
+      "J": "Joules",
+      "kJ": "Kilojoules",
+      "cal": "Calories",
+      "kcal": "Kilocalories",
+      "Wh": "Wattheures",
+      "kWh": "Kilowattheures",
+      "eV": "Électronvolts",
+      "BTU": "Unités thermiques britanniques"
+    },
+    "angle": {
+      "deg": "Degrés",
+      "rad": "Radians",
+      "grad": "Grades",
+      "turn": "Tours",
+      "arcmin": "Minutes d’arc",
+      "arcsec": "Secondes d’arc"
+    }
+  },
+  "keys": {
+    "clear": "Effacer",
+    "backspace": "Supprimer le dernier caractère",
+    "percent": "Pourcentage",
+    "divide": "Diviser",
+    "multiply": "Multiplier",
+    "subtract": "Soustraire",
+    "add": "Additionner",
+    "negate": "Changer de signe",
+    "decimal": "Séparateur décimal",
+    "equals": "Égal",
+    "memoryClear": "Effacer la mémoire",
+    "memoryRecall": "Rappeler la mémoire",
+    "memoryAdd": "Ajouter à la mémoire",
+    "memorySubtract": "Soustraire de la mémoire",
+    "memoryStore": "Mettre en mémoire",
+    "sin": "Sinus",
+    "cos": "Cosinus",
+    "tan": "Tangente",
+    "asin": "Arc sinus",
+    "acos": "Arc cosinus",
+    "atan": "Arc tangente",
+    "sinh": "Sinus hyperbolique",
+    "cosh": "Cosinus hyperbolique",
+    "tanh": "Tangente hyperbolique",
+    "open": "Parenthèse ouvrante",
+    "close": "Parenthèse fermante",
+    "pi": "Pi",
+    "e": "Nombre d’Euler",
+    "square": "Carré",
+    "cube": "Cube",
+    "power": "Puissance",
+    "sqrt": "Racine carrée",
+    "cbrt": "Racine cubique",
+    "root": "Racine : root(x, n)",
+    "reciprocal": "Inverse",
+    "ln": "Logarithme népérien",
+    "log": "Logarithme décimal",
+    "logb": "Logarithme : logb(x, base)",
+    "factorial": "Factorielle",
+    "abs": "Valeur absolue",
+    "exp": "e puissance x",
+    "exponent": "Fois dix puissance (1,5e3)",
+    "ans": "Dernier résultat",
+    "random": "Nombre aléatoire entre 0 et 1",
+    "comma": "Séparateur d’arguments"
+  }
+}

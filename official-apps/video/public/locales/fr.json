@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Lecteur vidéo",
+    "description": "Lisez les vidéos choisies avec sous-titres, listes et reprise."
+  },
+  "video": {
+    "scope": "Seuls les fichiers choisis sont accessibles. Jusqu’à 20 listes de 100 vidéos. Positions et réglages sont conservés ; les vidéos sont diffusées depuis EveryOS, sans copie dans l’app.",
+    "permission": "L’accès nécessite la permission files:pick de la boutique.",
+    "add": "Ajouter des vidéos",
+    "openSubtitles": "Ouvrir des sous-titres",
+    "fullscreen": "Plein écran",
+    "fullscreenError": "Le navigateur a refusé le plein écran. Utilisez les commandes natives si disponibles.",
+    "playlist": "Liste de lecture",
+    "defaultList": "Mes vidéos",
+    "newList": "Nouvelle liste",
+    "renameList": "Renommer la liste",
+    "deleteList": "Supprimer la liste",
+    "referencesOnly": "Seules les références sont retirées. Les fichiers originaux ne sont pas supprimés.",
+    "revoked": "Certains fichiers ne sont plus partagés. Ajoutez-les à nouveau.",
+    "empty": "Aucune vidéo sélectionnée",
+    "openHint": "Choisissez une vidéo via EveryOS. La lecture dépend des formats et codecs du navigateur ; cette app ne transcode pas.",
+    "selected": "Vidéo sélectionnée",
+    "previous": "Vidéo précédente",
+    "next": "Vidéo suivante",
+    "remove": "Retirer de la liste",
+    "player": "Lecture vidéo",
+    "play": "Lire",
+    "pause": "Pause",
+    "reload": "Recharger la vidéo",
+    "speed": "Vitesse de lecture",
+    "subtitles": "Sous-titres",
+    "showSubtitles": "Afficher les sous-titres",
+    "hideSubtitles": "Masquer les sous-titres",
+    "captionHint": "Sous-titres WebVTT ou SRT en texte, jusqu’à 1 Mio et 2 000 entrées. Balisage et styles ne sont pas exécutés.",
+    "badSubtitles": "Sous-titres illisibles. Utilisez un WebVTT/SRT valide avec au moins une entrée horodatée, au plus 1 Mio et 2 000 entrées.",
+    "unsupported": "Lecture impossible : codec non pris en charge, fichier endommagé ou accès expiré. Rechargez ou essayez un autre navigateur/format. Aucun transcodage.",
+    "codecs": "Codecs du navigateur",
+    "codecHint": "Il s’agit des indications canPlayType du navigateur, sans garantie pour chaque fichier. La lecture réelle fait foi.",
+    "probably": "Probablement pris en charge",
+    "maybe": "Peut-être pris en charge",
+    "notReported": "Aucune prise en charge déclarée"
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "PDF-Viewer",
+    "description": "PDF-Dateien lesen: Seiten und Miniaturen, Zoom und Drehen, Textsuche, Gliederung und eigene Lesezeichen, Drucken und Kopie speichern."
+  },
+  "actions": {
+    "open": "PDF öffnen…"
+  },
+  "pages": {
+    "label": "Seiten",
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "current": "Seitenzahl",
+    "of": "von {{count}}",
+    "thumbnail": "Seite {{page}}"
+  },
+  "zoom": {
+    "label": "Zoom",
+    "in": "Vergrößern",
+    "out": "Verkleinern",
+    "auto": "Automatisch",
+    "page-width": "Seitenbreite",
+    "page-fit": "Ganze Seite",
+    "page-actual": "Originalgröße"
+  },
+  "rotate": {
+    "left": "Nach links drehen",
+    "right": "Nach rechts drehen"
+  },
+  "find": {
+    "open": "Im Dokument suchen",
+    "label": "Suchen",
+    "placeholder": "Im Dokument suchen…",
+    "previous": "Vorheriger Treffer",
+    "next": "Nächster Treffer",
+    "caseSensitive": "Groß-/Kleinschreibung",
+    "entireWord": "Ganze Wörter",
+    "close": "Suche schließen",
+    "searching": "Suche läuft…",
+    "notFound": "Nicht gefunden",
+    "position_one": "{{current}} von {{count}} Treffer",
+    "position_other": "{{current}} von {{count}} Treffern"
+  },
+  "bookmarks": {
+    "addCurrent": "Lesezeichen für diese Seite",
+    "removeCurrent": "Lesezeichen dieser Seite entfernen",
+    "defaultLabel": "Seite {{page}}",
+    "added": "Seite {{page}} gemerkt",
+    "renameTitle": "Lesezeichen umbenennen",
+    "rename": "„{{label}}“ umbenennen",
+    "remove": "„{{label}}“ entfernen",
+    "empty": "Noch keine Lesezeichen",
+    "emptyText": "Mit der Lesezeichen-Taste in der Symbolleiste merken Sie sich eine Seite."
+  },
+  "print": {
+    "action": "Drucken",
+    "preparing": "Druck wird vorbereitet",
+    "progress": "Seite {{done}} von {{total}}",
+    "failed": "Das Dokument konnte nicht für den Druck vorbereitet werden."
+  },
+  "save": {
+    "action": "Kopie speichern",
+    "saved": "Kopie von {{name}} gespeichert"
+  },
+  "sidebar": {
+    "label": "Navigation",
+    "show": "Seitenleiste einblenden",
+    "hide": "Seitenleiste ausblenden",
+    "pages": "Seiten",
+    "outline": "Gliederung",
+    "bookmarks": "Lesezeichen"
+  },
+  "outline": {
+    "label": "Dokumentgliederung",
+    "expand": "{{title}} aufklappen",
+    "collapse": "{{title}} zuklappen",
+    "external": "Öffnet eine Webseite",
+    "empty": "Keine Gliederung",
+    "emptyText": "Dieses Dokument hat kein Inhaltsverzeichnis."
+  },
+  "viewer": {
+    "label": "Seiten von {{name}}",
+    "opening": "Wird geöffnet…",
+    "emptyTitle": "PDF zum Lesen öffnen",
+    "emptyText": "Dokumente öffnen sich dort, wo Sie aufgehört haben – mit Ihren Lesezeichen.",
+    "tryAnother": "Versuchen Sie eine andere Datei."
+  },
+  "recent": {
+    "title": "Zuletzt geöffnet",
+    "gone": "„{{name}}“ ist nicht mehr verfügbar."
+  },
+  "errors": {
+    "tooLarge": "PDF-Dateien bis {{size}} können geöffnet werden.",
+    "invalid": "„{{name}}“ ist kein PDF oder beschädigt.",
+    "password": "Dieses PDF ließ sich mit dem Passwort nicht öffnen.",
+    "open": "„{{name}}“ konnte nicht geöffnet werden."
+  },
+  "password": {
+    "title": "Dieses PDF ist geschützt",
+    "label": "Passwort",
+    "open": "Öffnen",
+    "incorrect": "Das Passwort stimmt nicht. Bitte erneut versuchen."
+  }
+}

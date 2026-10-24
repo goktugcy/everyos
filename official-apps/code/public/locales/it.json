@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Editor di codice",
+    "description": "Modifica il codice in schede con evidenziazione della sintassi, minimappa, trova e sostituisci e un esplora file per la cartella che scegli."
+  },
+  "actions": {
+    "new": "Nuovo file",
+    "openFile": "Apri file…",
+    "openFolder": "Apri cartella…",
+    "save": "Salva",
+    "saveAs": "Salva con nome…",
+    "find": "Trova e sostituisci"
+  },
+  "explorer": {
+    "label": "File",
+    "show": "Mostra i file",
+    "hide": "Nascondi i file",
+    "newFile": "Nuovo file nella cartella",
+    "newFolder": "Nuova cartella",
+    "refresh": "Aggiorna",
+    "close": "Chiudi cartella",
+    "newFileTitle": "Nuovo file",
+    "newFolderTitle": "Nuova cartella",
+    "inFolder": "In {{folder}}",
+    "inRoot": "In {{name}}",
+    "names": {
+      "empty": "Inserisci un nome.",
+      "reserved": "«{{name}}» non può essere usato come nome.",
+      "separator": "I nomi non possono contenere / o \\.",
+      "tooLong": "Questo nome è troppo lungo.",
+      "exists": "«{{name}}» esiste già qui."
+    },
+    "unreadable": "Impossibile leggere questa cartella",
+    "unreadableShort": "illeggibile",
+    "empty": "Questa cartella è vuota",
+    "more_one": "altri {{count}} non mostrati",
+    "more_other": "altri {{count}} non mostrati"
+  },
+  "tabs": {
+    "label": "File aperti",
+    "unsaved": "Modifiche non salvate",
+    "close": "Chiudi {{name}}"
+  },
+  "editor": {
+    "label": "Contenuto di {{name}}"
+  },
+  "status": {
+    "label": "Stato",
+    "position": "Riga {{line}}, col {{column}}",
+    "selected_one": "{{count}} selezionato",
+    "selected_other": "{{count}} selezionati",
+    "language": "Linguaggio",
+    "autoNamed": "{{name}} (dal nome del file)",
+    "autoPlain": "Testo semplice (dal nome del file)",
+    "plain": "Testo semplice",
+    "spaces": "Spazi: {{count}}",
+    "tabs": "Tabulazione: {{count}}",
+    "eol": "Fine riga"
+  },
+  "settings": {
+    "title": "Impostazioni dell’editor",
+    "theme": "Tema",
+    "themes": {
+      "system": "Come EveryOS",
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "contrast": "Contrasto elevato"
+    },
+    "fontSize": "Dimensione carattere",
+    "tabSize": "Ampiezza tabulazione",
+    "insertSpaces": "Rientra con spazi",
+    "wrap": "A capo nelle righe lunghe",
+    "minimap": "Mostra la minimappa"
+  },
+  "welcome": {
+    "title": "Apri qualcosa da modificare",
+    "text": "Apri una cartella di progetto per sfogliarne i file, apri singoli file o iniziane uno nuovo.",
+    "withFolder": "Scegli un file nella cartella a sinistra o iniziane uno nuovo."
+  },
+  "doc": {
+    "untitled": "Senza titolo {{number}}"
+  },
+  "open": {
+    "binary": "«{{name}}» non è un file di testo.",
+    "notUtf8": "«{{name}}» non è testo UTF-8. Aprilo nell’Editor di testo, che legge altre codifiche."
+  },
+  "save": {
+    "saved": "{{name}} salvato",
+    "changedTitle": "«{{name}}» è cambiato sul disco",
+    "changedBody": "Questo file è cambiato da quando l’hai aperto. Salvando sostituisci quelle modifiche con le tue.",
+    "overwrite": "Sostituisci"
+  },
+  "close": {
+    "title_one": "Chiudere con {{count}} file non salvato?",
+    "title_other": "Chiudere con {{count}} file non salvati?",
+    "body": "Le modifiche non salvate vengono conservate e tornano quando riapri l’Editor di codice.",
+    "confirm": "Chiudi",
+    "tabTitle": "Scartare le modifiche a «{{name}}»?",
+    "tabBody": "Le modifiche non salvate andranno perse.",
+    "discard": "Scarta"
+  },
+  "recovery": {
+    "lost": "Impossibile ripristinare questi file non salvati: {{names}}"
+  }
+}

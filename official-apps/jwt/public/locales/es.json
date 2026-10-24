@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "Inspector de JWT",
+    "description": "Decodifica JSON Web Tokens, lee sus claims y caducidad, comprueba firmas con tus claves y exporta claims ocultos. Los tokens nunca salen de este dispositivo."
+  },
+  "remember": {
+    "label": "Recordar el último token",
+    "hint": "Desactivado por defecto: los tokens solo se guardan en esta ventana. Las claves nunca se guardan."
+  },
+  "token": {
+    "section": "Token",
+    "label": "JSON Web Token",
+    "placeholder": "Pega un token (eyJ…), con o sin «Bearer»",
+    "parts": "Cabecera, carga útil y firma",
+    "privacy": "La decodificación se hace en este dispositivo; el token no se envía a ningún sitio.",
+    "waiting": "Pega un token para inspeccionarlo",
+    "noAlg": "Sin algoritmo",
+    "algNone": "Sin firma (alg: none): cualquiera pudo escribirlo"
+  },
+  "parts": {
+    "0": "cabecera",
+    "1": "carga útil",
+    "2": "firma"
+  },
+  "problems": {
+    "segments": "Un token tiene tres partes separadas por puntos",
+    "base64": "La {{part}} no es Base64URL válida",
+    "json": "La {{part}} no es JSON",
+    "not-object": "La {{part}} debe ser un objeto JSON",
+    "jwe": "Un token cifrado (JWE): no se puede leer sin su clave privada"
+  },
+  "validity": {
+    "valid": "Válido",
+    "expiresIn": "Caduca {{when}}",
+    "expired": "Caducó {{when}}",
+    "notYet": "Aún no es válido: empieza {{when}}",
+    "noExpiry": "Sin caducidad (exp)",
+    "skew": "Tolerancia de reloj",
+    "seconds_one": "{{count}} s",
+    "seconds_other": "{{count}} s"
+  },
+  "panels": {
+    "label": "Vistas",
+    "decoded": "Decodificado",
+    "verify": "Verificar firma",
+    "export": "Exportar"
+  },
+  "decoded": {
+    "header": "Cabecera",
+    "payload": "Carga útil",
+    "claim": "Claim",
+    "value": "Valor"
+  },
+  "verify": {
+    "secretHint": "Este token usa un secreto HMAC: pega el secreto compartido.",
+    "keyHint": "Pega la clave pública del emisor: PEM (BEGIN PUBLIC KEY), un certificado, un JWK o un conjunto JWK (elegido por kid).",
+    "encoding": "El secreto es",
+    "encodings": {
+      "text": "Texto",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "Secreto",
+    "key": "Clave pública",
+    "check": "Comprobar la firma",
+    "private": "La clave solo se usa en esta ventana y no se guarda.",
+    "results": {
+      "valid": "Firma válida ({{alg}})",
+      "invalid-signature": "La firma no coincide con esta clave",
+      "alg-none": "Los tokens sin firma (alg: none) nunca se aceptan",
+      "alg-unsupported": "El algoritmo {{alg}} no es compatible",
+      "key-mismatch": "Este tipo de clave no sirve para {{alg}}",
+      "bad-key": "No se pudo leer la clave",
+      "private-key": "Es una clave privada: pega la clave pública",
+      "no-matching-key": "Ninguna clave del conjunto coincide con el kid del token"
+    }
+  },
+  "export": {
+    "hint": "Comparte lo que dice un token sin lo que identifica a una persona: elige los claims que ocultar.",
+    "redact": "Claims que ocultar",
+    "redactClaim": "Ocultar {{claim}}",
+    "preview": "Lo que se exportará",
+    "copy": "Copiar",
+    "save": "Guardar como JSON…"
+  },
+  "claims": {
+    "iss": "Emisor",
+    "sub": "Sujeto (a quién se refiere)",
+    "aud": "Audiencia (quién puede aceptarlo)",
+    "exp": "Caduca el",
+    "nbf": "No válido antes de",
+    "iat": "Emitido el",
+    "jti": "Id del token",
+    "azp": "Parte autorizada",
+    "scope": "Ámbitos concedidos",
+    "scp": "Ámbitos concedidos",
+    "client_id": "Cliente",
+    "sid": "Id de sesión",
+    "nonce": "Nonce",
+    "auth_time": "Inició sesión el",
+    "acr": "Nivel de autenticación",
+    "amr": "Métodos de autenticación",
+    "name": "Nombre",
+    "given_name": "Nombre de pila",
+    "family_name": "Apellido",
+    "preferred_username": "Nombre de usuario",
+    "email": "Correo electrónico",
+    "email_verified": "Correo verificado",
+    "phone_number": "Teléfono",
+    "roles": "Roles",
+    "groups": "Grupos",
+    "tid": "Inquilino",
+    "oid": "Id de objeto"
+  }
+}

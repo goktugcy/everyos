@@ -1,0 +1,20 @@
+{
+  "name": "@everyos/app-manifest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The EveryOS desktop app manifest: types, capabilities, identifiers and version compatibility (zod-free, safe for the browser), plus the strict zod schema for servers and tooling (@everyos/app-manifest/schema).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@everyos/shared": "workspace:*"
+  }
+}

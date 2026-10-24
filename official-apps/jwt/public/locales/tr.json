@@ -1,0 +1,115 @@
+{
+  "app": {
+    "name": "JWT İnceleyici",
+    "description": "JSON Web Token'ları çözün, taleplerini ve süresini okuyun, imzaları kendi anahtarlarınızla doğrulayın, gizlenmiş talepleri dışa aktarın. Token'lar bu cihazdan çıkmaz."
+  },
+  "remember": {
+    "label": "Son token'ı hatırla",
+    "hint": "Varsayılan olarak kapalı: token'lar yalnızca bu pencerede tutulur. Anahtarlar asla saklanmaz."
+  },
+  "token": {
+    "section": "Token",
+    "label": "JSON Web Token",
+    "placeholder": "Bir token yapıştırın (eyJ…), “Bearer” ile ya da olmadan",
+    "parts": "Başlık, içerik ve imza",
+    "privacy": "Çözümleme bu cihazda yapılır; token hiçbir yere gönderilmez.",
+    "waiting": "İncelemek için bir token yapıştırın",
+    "noAlg": "Algoritma yok",
+    "algNone": "İmzasız (alg: none): herkes yazmış olabilir"
+  },
+  "parts": {
+    "0": "başlık",
+    "1": "içerik",
+    "2": "imza"
+  },
+  "problems": {
+    "segments": "Bir token noktayla ayrılmış üç bölümden oluşur",
+    "base64": "{{part}} geçerli Base64URL değil",
+    "json": "{{part}} JSON değil",
+    "not-object": "{{part}} bir JSON nesnesi olmalı",
+    "jwe": "Şifreli bir token (JWE): özel anahtarı olmadan okunamaz"
+  },
+  "validity": {
+    "valid": "Geçerli",
+    "expiresIn": "Süresi {{when}} doluyor",
+    "expired": "Süresi {{when}} doldu",
+    "notYet": "Henüz geçerli değil: {{when}} başlıyor",
+    "noExpiry": "Süre sonu yok (exp)",
+    "skew": "Saat toleransı",
+    "seconds_one": "{{count}} sn",
+    "seconds_other": "{{count}} sn"
+  },
+  "panels": {
+    "label": "Görünümler",
+    "decoded": "Çözülmüş",
+    "verify": "İmzayı doğrula",
+    "export": "Dışa aktar"
+  },
+  "decoded": {
+    "header": "Başlık",
+    "payload": "İçerik",
+    "claim": "Talep",
+    "value": "Değer"
+  },
+  "verify": {
+    "secretHint": "Bu token bir HMAC gizi kullanıyor: ortak gizi yapıştırın.",
+    "keyHint": "Yayıncının açık anahtarını yapıştırın: PEM (BEGIN PUBLIC KEY), sertifika, JWK ya da JWK kümesi (kid ile seçilir).",
+    "encoding": "Giz biçimi",
+    "encodings": {
+      "text": "Metin",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "Gizli anahtar",
+    "key": "Açık anahtar",
+    "check": "İmzayı denetle",
+    "private": "Anahtar yalnızca bu pencerede kullanılır ve saklanmaz.",
+    "results": {
+      "valid": "İmza geçerli ({{alg}})",
+      "invalid-signature": "İmza bu anahtarla eşleşmiyor",
+      "alg-none": "İmzasız token'lar (alg: none) asla kabul edilmez",
+      "alg-unsupported": "{{alg}} algoritması desteklenmiyor",
+      "key-mismatch": "Bu anahtar türü {{alg}} için uygun değil",
+      "bad-key": "Anahtar okunamadı",
+      "private-key": "Bu bir özel anahtar: yerine açık anahtarı yapıştırın",
+      "no-matching-key": "Kümedeki hiçbir anahtar bu token'ın kid değeriyle eşleşmiyor"
+    }
+  },
+  "export": {
+    "hint": "Bir token'ın içeriğini kişiyi tanımlayan bilgiler olmadan paylaşın: gizlenecek talepleri seçin.",
+    "redact": "Gizlenecek talepler",
+    "redactClaim": "{{claim}} gizle",
+    "preview": "Dışa aktarılacak içerik",
+    "copy": "Kopyala",
+    "save": "JSON olarak kaydet…"
+  },
+  "claims": {
+    "iss": "Yayıncı",
+    "sub": "Konu (token'ın ilgili olduğu kişi)",
+    "aud": "Hedef kitle (kimin kabul edebileceği)",
+    "exp": "Süre sonu",
+    "nbf": "Şundan önce geçersiz",
+    "iat": "Verilme zamanı",
+    "jti": "Token kimliği",
+    "azp": "Yetkili taraf",
+    "scope": "Verilen kapsamlar",
+    "scp": "Verilen kapsamlar",
+    "client_id": "İstemci",
+    "sid": "Oturum kimliği",
+    "nonce": "Nonce",
+    "auth_time": "Giriş zamanı",
+    "acr": "Kimlik doğrulama düzeyi",
+    "amr": "Kimlik doğrulama yöntemleri",
+    "name": "Ad",
+    "given_name": "Ad",
+    "family_name": "Soyadı",
+    "preferred_username": "Kullanıcı adı",
+    "email": "E-posta",
+    "email_verified": "E-posta doğrulandı",
+    "phone_number": "Telefon numarası",
+    "roles": "Roller",
+    "groups": "Gruplar",
+    "tid": "Kiracı",
+    "oid": "Nesne kimliği"
+  }
+}

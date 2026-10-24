@@ -1,0 +1,13 @@
+{
+  "app": {
+    "name": "%%APP_NAME%%"
+  },
+  "notes": {
+    "title": "Notes",
+    "placeholder": "Write something…",
+    "saving": "Saving…",
+    "saved_one": "Saved · {{count}} character",
+    "saved_other": "Saved · {{count}} characters",
+    "copy": "Copy"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Visionneuse de différences",
+    "description": "Comparez deux textes ou fichiers côte à côte ou en ligne, avec coloration syntaxique, comparaison sans les espaces, navigation entre les modifications et export de patch."
+  },
+  "sides": {
+    "original": "Original",
+    "changed": "Modifié",
+    "typed": "Texte saisi",
+    "open": "Ouvrir…",
+    "openOriginal": "Ouvrir le fichier original…",
+    "openChanged": "Ouvrir le fichier modifié…",
+    "placeholderOriginal": "Collez ou saisissez le texte original, ou ouvrez un fichier.",
+    "placeholderChanged": "Collez ou saisissez le texte modifié, ou ouvrez un fichier.",
+    "swap": "Inverser les côtés",
+    "notKept": "Non conservé",
+    "notKeptHint": "Ce côté est trop volumineux pour être conservé après la fermeture ; rouvrez le fichier la prochaine fois."
+  },
+  "view": {
+    "label": "Affichage",
+    "split": "Côte à côte",
+    "inline": "En ligne"
+  },
+  "options": {
+    "ignoreWhitespace": "Ignorer les espaces",
+    "collapse": "Masquer les lignes inchangées",
+    "wrap": "Retour à la ligne",
+    "language": "Coloration",
+    "auto": "Automatique",
+    "autoNamed": "Automatique ({{name}})",
+    "plain": "Texte brut"
+  },
+  "nav": {
+    "previous": "Modification précédente ({{key}})",
+    "next": "Modification suivante ({{key}})",
+    "position": "{{current}} sur {{total}}",
+    "count_one": "{{count}} modification",
+    "count_other": "{{count}} modifications"
+  },
+  "stats": {
+    "added_one": "{{count}} ligne ajoutée",
+    "added_other": "{{count}} lignes ajoutées",
+    "removed_one": "{{count}} ligne supprimée",
+    "removed_other": "{{count}} lignes supprimées"
+  },
+  "status": {
+    "empty": "Rien à comparer pour l’instant",
+    "identical": "Identiques",
+    "whitespaceOnly": "Seuls les espaces diffèrent",
+    "approximate": "Grande différence : affichage approximatif",
+    "endings": "Les fins de ligne diffèrent ({{a}} / {{b}}) ; la comparaison les ignore et le patch utilise LF."
+  },
+  "patch": {
+    "copy": "Copier le patch",
+    "save": "Enregistrer le patch…",
+    "tooDifferent": "Les textes sont trop différents pour créer un patch à temps."
+  },
+  "files": {
+    "binary": "« {{name}} » n’est pas un fichier texte."
+  },
+  "actions": {
+    "new": "Nouvelle comparaison",
+    "newTitle": "Commencer une nouvelle comparaison ?",
+    "newBody": "Les deux côtés seront vidés. Les fichiers ouverts ne sont pas modifiés."
+  }
+}

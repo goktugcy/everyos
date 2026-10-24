@@ -34,7 +34,8 @@ export interface WidgetManifest {
   id: string;
   /** Bumped when the configuration format changes; older configurations are migrated. */
   version: number;
-  provider: "system" | "docker" | "raspberryPi" | "ai" | IntegrationAdapter;
+  /** `desktopApp`: a widget an installed desktop app declares (drawn in its sandboxed frame). */
+  provider: "system" | "docker" | "raspberryPi" | "ai" | "desktopApp" | IntegrationAdapter;
   categories: WidgetCategory[];
   supportedSizes: WidgetSize[];
   defaultSize: WidgetSize;

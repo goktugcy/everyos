@@ -12,11 +12,14 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { Spinner } from "../../components/ui/spinner.tsx";
 import { APP_MANIFESTS } from "../apps/registry.ts";
+import { desktopAppIdOf } from "../desktop-apps/store.ts";
 
 /** One lazy component per app, created once; each app's code loads on first use only. */
 const LAZY_APPS: Readonly<Record<string, LazyExoticComponent<ComponentType>>> = Object.fromEntries(
   APP_MANIFESTS.map((manifest) => [manifest.id, lazy(manifest.load)]),
 );
+/** Every installed desktop app shares one host component (its frame loads the app itself). */
+const DesktopAppWindow = lazy(() => import("../desktop-apps/app-window.tsx"));
 
 function Crashed({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation();
@@ -72,6 +75,15 @@ export function AppLoading() {
 
 /** Renders an app's lazily loaded component inside an error boundary. */
 export const AppContent = memo(function AppContent({ appId }: { appId: string }) {
+  const desktopAppId = desktopAppIdOf(appId);
+  if (desktopAppId)
+    return (
+      <AppErrorBoundary>
+        <Suspense fallback={<AppLoading />}>
+          <DesktopAppWindow appId={desktopAppId} />
+        </Suspense>
+      </AppErrorBoundary>
+    );
   const App = LAZY_APPS[appId];
   if (!App) return null;
   return (

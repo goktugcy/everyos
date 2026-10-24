@@ -2928,6 +2928,15 @@ export const de: LocaleMessages = {
         title: "Übertragung fehlgeschlagen: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} ist nicht erreichbar",
+        body: "{{app}} · {{target}} antwortet nicht wie erwartet.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} ist wieder erreichbar",
+        body: "{{app}} · {{target}} antwortet wieder.",
+      },
       "disk-detached": {
         title: "Datenträger entfernt: {{disk}}",
         body: "{{unsafe}}",
@@ -3979,6 +3988,283 @@ export const de: LocaleMessages = {
     rateLimited: "Zu viele Linux-Authentifizierungsversuche. Versuche es in einer Minute erneut.",
     unlinked: "Nicht verknüpft",
   },
+  desktopApps: {
+    database: {
+      title: "Datenbanken für Apps",
+      description:
+        "Apps, die sich mit Datenbanken verbinden dürfen, nutzen nur die hier aufgeführten Verbindungen und sehen deren Passwörter nie.",
+      empty: "Noch ist keine Datenbank verbunden.",
+      add: "Datenbank verbinden",
+      edit: "Bearbeiten",
+      editTitle: "Datenbankverbindung bearbeiten",
+      remove: "Entfernen",
+      removeTitle: "{{name}} entfernen?",
+      removeBody:
+        "Apps können diese Datenbank nicht mehr nutzen. Die Datenbank selbst bleibt unverändert.",
+      test: "Testen",
+      testOk: "Verbunden: {{version}} ({{ms}} ms)",
+      adminsOnly: "Nur Administratoren können Datenbanken verbinden.",
+      name: "Name",
+      engine: "Datenbank",
+      host: "Host",
+      port: "Port",
+      database: "Datenbankname",
+      username: "Benutzername",
+      password: "Passwort",
+      passwordHint: "Wird verschlüsselt auf diesem Server gespeichert; Apps sehen es nie.",
+      passwordKept: "Leer lassen, um das gespeicherte Passwort zu behalten.",
+      tls: "Verschlüsselung",
+      accessLabel: "Zugriff",
+      audienceLabel: "Wer sie nutzen darf",
+      readHint:
+        "Jede Anweisung läuft in einer schreibgeschützten Transaktion. Für eine feste Garantie einen Datenbankbenutzer verwenden, der nur lesen kann.",
+      writeHint:
+        "Apps dürfen Daten ändern, und jede Änderung braucht die Bestätigung der Person in einem Dialog, den EveryOS zeichnet.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Verschlüsselt",
+        verify: "Verschlüsselt, Zertifikat geprüft",
+        disable: "Unverschlüsselt",
+      },
+      access: {
+        read: "Nur lesen",
+        write: "Lesen und ändern",
+      },
+      audience: {
+        admins: "Administratoren",
+        everyone: "Alle, die die App nutzen können",
+      },
+    },
+    dialog: {
+      exportKeyTitle: "Den privaten Schlüssel „{{name}}“ exportieren?",
+      exportKeyBody:
+        "{{app}} erhält diesen privaten Schlüssel. Wer ihn hat, kann sich überall dort als du anmelden, wo dem Schlüssel vertraut wird – bewahre die Datei sicher auf.",
+      exportKeyConfirm: "Privaten Schlüssel exportieren",
+      deleteKeyTitle: "Den Schlüssel „{{name}}“ löschen?",
+      deleteKeyBody:
+        "{{app}} möchte diesen Schlüssel löschen. Sein privater Schlüssel ist endgültig weg: Server, die ihm vertrauen, lassen dich damit nicht mehr herein.",
+      deleteKeyConfirm: "Schlüssel löschen",
+      hostLabel: "EveryOS fragt für {{app}}",
+      writeTitle: "Daten in {{connection}} ändern?",
+      writeBody:
+        "{{app}} möchte diese Anweisung auf {{database}} ausführen. Änderungen lassen sich hier nicht rückgängig machen.",
+      writeConfirm: "Änderung ausführen",
+    },
+    network: {
+      title: "Netzwerkzugriff für Apps",
+      description:
+        "Apps, die sich mit Adressen verbinden dürfen, erreichen nur, was hier aufgeführt ist. Eine Hostnamen-Regel deckt nur öffentliche Adressen ab; Adressen im lokalen Netzwerk und dieser Server brauchen einen Adressbereich.",
+      empty: "Noch ist keine Adresse erlaubt.",
+      add: "Erlauben",
+      kind: "Art",
+      kinds: {
+        host: "Hostname",
+        cidr: "Adressbereich",
+      },
+      pattern: "Adresse",
+      patternHostHint: "api.example.com oder *.example.com für alle Subdomains",
+      patternRangeHint: "Zum Beispiel 192.168.1.0/24 oder 192.168.1.20/32 für ein Gerät",
+      ports: "Ports",
+      portsHint: "Durch Kommas getrennt, zum Beispiel 80, 443",
+      portList: "Ports {{ports}}",
+      note: "Notiz (optional)",
+      scope: "Gilt für",
+      thisApp: "Diese App",
+      allApps: "Alle Apps",
+      onlyApp: "Nur {{name}}",
+      thisServer: "Umfasst diesen Server",
+      remove: "Entfernen",
+      removeTitle: "Regel für {{pattern}} entfernen?",
+      removeBody:
+        "Apps erreichen diese Adressen nicht mehr, und Monitore, die sie nutzen, halten mit einem Hinweis an.",
+      adminsOnly: "Nur Administratoren können den Netzwerkzugriff ändern.",
+    },
+    store: {
+      restoreUnverified:
+        "Die Dateien dieser App ließen sich nach einer Wiederherstellung nicht prüfen, daher bleibt sie aus. Reparieren lädt dieselbe signierte Version erneut von ihrer Quelle; Einstellungen und Daten bleiben erhalten.",
+      repair: "Reparieren",
+      typeFilter: "Art",
+      types: {
+        all: "Alle Apps",
+        docker: "Docker-Apps",
+        desktop: "Desktop-Apps",
+        hybrid: "Hybrid-Apps",
+      },
+      sourceFilter: "Quelle",
+      allSources: "Alle Quellen",
+      sources: {
+        official: "Offiziell",
+        community: "Community",
+        private: "Privat",
+      },
+      updatesOnly: "Nur Aktualisierungen",
+      desktopBadge: "Desktop-App",
+      by: "von {{publisher}}",
+      version: "Version {{version}}",
+      installed: "Installiert",
+      installedSection: "Desktop-Apps",
+      updateTo: "Auf {{version}} aktualisieren",
+      install: "Installieren",
+      open: "Öffnen",
+      enable: "Einschalten",
+      disable: "Ausschalten",
+      uninstall: "Deinstallieren",
+      uninstallTitle: "{{name}} deinstallieren?",
+      uninstallBody:
+        "Ihre Daten werden für alle gelöscht, die die App auf diesem Server genutzt haben.",
+      permissions: "Was diese App darf",
+      noPermissions: "Diese App fordert keine Berechtigungen an.",
+      notGranted: "Für dich nicht erlaubt",
+      approve:
+        "Hake jede Berechtigung an, die du erlaubst. Die App wird erst installiert, wenn alle erlaubt sind.",
+      approveUpdate:
+        "Diese Aktualisierung fordert mehr an. Hake jede neue Berechtigung an, die du erlaubst.",
+      elevatedAdmins: "Nur Administratoren können die hervorgehobenen Berechtigungen erlauben.",
+      risk: {
+        standard: "Standard",
+        sensitive: "Sensibel",
+        elevated: "Erweitert",
+      },
+      state: {
+        active: "Ein",
+        disabled: "Ausgeschaltet",
+        revoked: "Zurückgezogen",
+      },
+      conflict:
+        "Eine andere Quelle bietet eine App mit derselben Kennung von einem anderen Herausgeber an. Installiere sie nur aus einer Quelle, der du vertraust.",
+      incompatible: {
+        "everyos-too-old": "Diese App benötigt eine neuere EveryOS-Version.",
+        "sdk-unsupported":
+          "Diese App wurde für ein App-SDK entwickelt, das dieses EveryOS nicht unterstützt.",
+      },
+      revoked: "Von der Quelle zurückgezogen: {{reason}}",
+      languages_one: "{{count}} Sprache",
+      languages_other: "{{count}} Sprachen",
+      widgets_one: "{{count}} Widget",
+      widgets_other: "{{count}} Widgets",
+      license: "Lizenz: {{license}}",
+      homepage: "Website",
+      source: "Quellcode",
+      versions: "Versionen und Änderungen",
+      notifications: "Benachrichtigungen dieser App",
+    },
+    registries: {
+      title: "Quellen für Desktop-Apps",
+      add: "Quelle hinzufügen",
+      kind: "Art",
+      name: "Name",
+      url: "Index-Adresse",
+      publicKey: "Öffentlicher Schlüssel",
+      fingerprint: "Schlüssel-Fingerabdruck",
+      fingerprintHint:
+        "Vergleiche ihn mit dem Fingerabdruck, den die Quelle veröffentlicht; der Schlüssel wird nur bei Übereinstimmung angenommen.",
+      token: "Zugangstoken (optional)",
+      allowPrivate: "Die Quelle ist in meinem lokalen Netzwerk",
+      synced: "Synchronisiert {{time}}",
+      never: "Noch nicht synchronisiert",
+      apps_one: "{{count}} App",
+      apps_other: "{{count}} Apps",
+      failed: "Die letzte Synchronisierung ist fehlgeschlagen ({{reason}}).",
+      sync: "Jetzt synchronisieren",
+      remove: "Entfernen",
+      removeTitle: "{{name}} entfernen?",
+      removeBody:
+        "Daraus installierte Apps bleiben erhalten, erhalten aber keine Aktualisierungen mehr von dort.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Eigene Daten speichern",
+        description:
+          "Speichert Einstellungen und Dokumente in einem eigenen Bereich, für jede Person getrennt.",
+      },
+      files_pick: {
+        title: "Von dir gewählte Dateien öffnen",
+        description: "Liest nur die Dateien und Ordner, die du für sie auswählst.",
+      },
+      files_save: {
+        title: "Dort speichern, wo du es wählst",
+        description: "Schreibt nur in die Dateien und Ordner, die du für sie auswählst.",
+      },
+      notifications_send: {
+        title: "Dir Benachrichtigungen senden",
+        description: "Zeigt der Person, die sie nutzt, Benachrichtigungen an.",
+      },
+      clipboard_write: {
+        title: "In die Zwischenablage kopieren",
+        description: "Kopiert Text, wenn du sie darum bittest.",
+      },
+      widgets_register: {
+        title: "Widgets anbieten",
+        description: "Stellt Widgets für den Schreibtisch und die Seitenleiste bereit.",
+      },
+      appearance_manage: {
+        title: "Dein Erscheinungsbild ändern",
+        description: "Ändert dein Hintergrundbild und deine Ordnersymbole.",
+      },
+      system_metrics_read: {
+        title: "Systemzustand lesen",
+        description: "Liest Werte zu Prozessor, Arbeitsspeicher, Datenträgern und Laufzeit.",
+      },
+      system_sockets_read: {
+        title: "Offene Ports sehen",
+        description:
+          "Listet die lauschenden Netzwerkports des Servers und die Programme dahinter auf.",
+      },
+      system_network_read: {
+        title: "Netzwerkeinstellungen sehen",
+        description: "Liest Netzwerkschnittstellen, Adressen, Routen und Namensserver.",
+      },
+      system_services_read: {
+        title: "Systemdienste sehen",
+        description: "Liest, welche Dienste auf dem Server laufen und ob einer fehlgeschlagen ist.",
+      },
+      logs_read: { title: "Systemprotokolle lesen", description: "Liest das Systemjournal." },
+      storage_usage_read: {
+        title: "Ordnergrößen messen",
+        description: "Misst die Größe der Ordner, die du mit ihr teilst.",
+      },
+      network_outbound: {
+        title: "Mit erlaubten Adressen verbinden",
+        description:
+          "Verbindet sich vom Server aus mit Netzwerkadressen, die ein Administrator erlaubt.",
+      },
+      database_connect: {
+        title: "Mit Datenbanken verbinden",
+        description:
+          "Fragt von einem Administrator eingerichtete Datenbanken ab, nur lesend, sofern Schreiben nicht erlaubt ist.",
+      },
+      secrets_ssh: {
+        title: "Deine SSH-Schlüssel verwalten",
+        description: "Erstellt, importiert und speichert SSH-Schlüssel für dich.",
+      },
+      integration: {
+        title: "{{adapter}} verwenden",
+        description:
+          "Kommuniziert mit der auf diesem Server eingerichteten {{adapter}}-Integration.",
+      },
+    },
+    picker: {
+      openTitle: "Datei öffnen",
+      folderTitle: "Ordner auswählen",
+      saveTitle: "Speichern unter",
+      for: "Für {{name}}",
+      locations: "Orte",
+      empty: "Hier gibt es nichts Passendes.",
+      name: "Name",
+      replace: "„{{name}}“ existiert bereits. Ersetzen?",
+      replaceConfirm: "Ersetzen",
+      chooseFolder: "Diesen Ordner wählen",
+    },
+    frame: {
+      opening: "{{name}} wird geöffnet…",
+      failed: "{{name}} konnte nicht geöffnet werden.",
+      stopped: "{{name}} wurde angehalten, weil die App ungültige Anfragen gesendet hat.",
+      unavailable: "Diese App ist nicht installiert oder wurde deaktiviert.",
+    },
+  },
   errors: {
     BAD_REQUEST: "Die Anfrage konnte nicht verarbeitet werden.",
     VALIDATION_FAILED: "Einige der eingegebenen Angaben sind ungültig.",
@@ -4056,6 +4342,20 @@ export const de: LocaleMessages = {
       "Diese Datei lässt sich mit der angegebenen Backup-Passphrase nicht öffnen.",
     BACKUP_OFFSITE_NOT_CONFIGURED: "Es ist kein externes Backup-Ziel eingerichtet.",
     BACKUP_OFFSITE_FAILED: "Das externe Backup-Ziel war nicht erreichbar.",
+    DESKTOP_APP_APPROVAL_REQUIRED: "Die Berechtigungen dieser App müssen bestätigt werden.",
+    DESKTOP_APP_INCOMPATIBLE: "Diese App ist mit dieser EveryOS-Version nicht kompatibel.",
+    DESKTOP_APP_REVOKED:
+      "Diese App-Version wurde vom Herausgeber oder vom Verzeichnis zurückgezogen.",
+    DESKTOP_APP_REGISTRY_FAILED: "Das App-Verzeichnis konnte nicht gelesen oder überprüft werden.",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "Das App-Paket konnte nicht überprüft werden und wurde daher nicht installiert.",
+    DESKTOP_APP_BUSY: "Für diese App läuft bereits ein anderer Vorgang.",
+    DESKTOP_APP_STORAGE_FULL: "Der Speicher dieser App ist voll.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "Der Netzwerkzugriff für Apps erlaubt diese Adresse nicht. Ein Administrator kann sie im App Store erlauben.",
+    DESKTOP_APP_NETWORK_FAILED: "Die Verbindung ist fehlgeschlagen.",
+    DESKTOP_APP_DB_READ_ONLY: "Diese Datenbankverbindung kann nur lesen.",
+    DESKTOP_APP_DB_FAILED: "Der Datenbankvorgang ist fehlgeschlagen.",
     NETWORK: "Der Server ist nicht erreichbar. Prüfe deine Netzwerkverbindung.",
     UNKNOWN: "Ein unbekannter Fehler ist aufgetreten.",
   },

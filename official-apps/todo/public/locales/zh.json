@@ -1,0 +1,147 @@
+{
+  "app": {
+    "name": "待办事项",
+    "description": "支持项目、优先级、截止日期、重复、标签、子任务、提醒、进度和小组件的待办事项。"
+  },
+  "widgets": {
+    "today": {
+      "name": "今日待办",
+      "description": "今日及逾期的待办：勾选完成或添加新任务。"
+    }
+  },
+  "lists": {
+    "inbox": "收件箱",
+    "today": "今天",
+    "upcoming": "即将到来",
+    "overdue": "已逾期",
+    "all": "全部任务",
+    "completed": "已完成"
+  },
+  "backup": {
+    "import": "导入备份…",
+    "export": "导出备份…",
+    "imported_other": "已导入 {{count}} 个任务"
+  },
+  "due": {
+    "today": "今天",
+    "tomorrow": "明天",
+    "yesterday": "昨天"
+  },
+  "empty": {
+    "inbox": "收件箱是空的",
+    "today": "今天没有到期任务",
+    "upcoming": "未来 7 天没有任务",
+    "overdue": "没有逾期任务",
+    "all": "没有未完成的任务",
+    "completed": "还没有已完成的任务",
+    "list": "这里没有任务"
+  },
+  "progress": {
+    "title": "进度",
+    "chart": "最近 7 天每日完成数",
+    "done": "已完成 {{done}}/{{total}}",
+    "open": "未完成任务",
+    "week": "本周完成"
+  },
+  "projects": {
+    "title": "项目",
+    "add": "新建项目",
+    "rename": "重命名项目",
+    "delete": "删除项目",
+    "deleteTitle": "删除项目“{{name}}”？",
+    "deleteBody": "其中的任务将移到收件箱。",
+    "name": "项目名称"
+  },
+  "recurrence": {
+    "title": "重复",
+    "repeat": "重复方式",
+    "repeats": "重复",
+    "monthMode": "日期",
+    "monthDay": "每月 {{day}} 日",
+    "monthWeekday": "每月相同的{{weekday}}",
+    "next": "下次：{{date}}",
+    "weekdays": "在这些日子",
+    "units": {
+      "none": "不重复",
+      "day": "每天",
+      "weekday": "工作日（周一至周五）",
+      "week": "每周",
+      "month": "每月",
+      "year": "每年"
+    },
+    "every": {
+      "day": "每隔几天",
+      "week": "每隔几周",
+      "month": "每隔几个月",
+      "year": "每隔几年"
+    }
+  },
+  "reminder": {
+    "at": "{{time}} 到期",
+    "today": "今天到期",
+    "needsDue": "提醒需要截止日期（未设时间时为 09:00）。",
+    "none": "不提醒",
+    "options": {
+      "0": "到期时",
+      "5": "提前 5 分钟",
+      "10": "提前 10 分钟",
+      "15": "提前 15 分钟",
+      "30": "提前 30 分钟",
+      "60": "提前 1 小时",
+      "120": "提前 2 小时",
+      "1440": "提前 1 天"
+    }
+  },
+  "search": {
+    "label": "搜索任务",
+    "none": "没有匹配的任务"
+  },
+  "sort": {
+    "label": "排序",
+    "manual": "自定义顺序",
+    "due": "截止日期",
+    "priority": "优先级",
+    "title": "标题"
+  },
+  "subtasks": {
+    "title": "子任务",
+    "add": "添加子任务",
+    "delete": "删除子任务"
+  },
+  "tags": {
+    "title": "标签"
+  },
+  "task": {
+    "added": "已添加任务",
+    "complete": "标记为完成",
+    "completeNamed": "将“{{name}}”标记为完成",
+    "completed": "已完成",
+    "deleteTitle": "删除“{{name}}”？",
+    "details": "任务详情",
+    "done": "已完成",
+    "due": "截止日期",
+    "moveDown": "下移",
+    "moveUp": "上移",
+    "nextOccurrence": "已完成，已移至下一次日期。",
+    "notes": "备注",
+    "priority": "优先级",
+    "project": "项目",
+    "quickAdd": "新任务",
+    "quickAddPlaceholder": "添加任务…（支持 #标签）",
+    "reminder": "提醒",
+    "reopen": "标记为未完成",
+    "tags": "标签",
+    "tagsHint": "用空格或逗号分隔",
+    "time": "时间",
+    "title": "标题"
+  },
+  "priority": {
+    "0": "无优先级",
+    "1": "低",
+    "2": "中",
+    "3": "高"
+  },
+  "widget": {
+    "add": "添加今天的任务…"
+  }
+}

@@ -58,6 +58,7 @@ async function main(): Promise<void> {
     backupDir: config.paths.backupDir,
     secretKeyFile: config.paths.secretKeyFile,
     keysDir: join(config.paths.dataDir, "keys"),
+    desktopAppsDir: config.desktopApps.dir,
     logger,
   });
   const masterKey = loadKeyFile(config.paths.secretKeyFile, {
@@ -110,6 +111,8 @@ async function main(): Promise<void> {
   services.metrics.start();
   services.hostMonitor.start();
   services.disks.start();
+  await services.desktopApps.reconcile();
+  services.desktopApps.start();
   if (config.mode === "production") services.releaseMonitor.start();
   const startTasks = () => {
     if (config.mode === "production" && existsSync("/run/everyos-update-maintenance")) return;
@@ -187,6 +190,7 @@ async function main(): Promise<void> {
     services.widgetData.stop();
     services.hostMonitor.stop();
     services.disks.stop();
+    services.desktopApps.stop();
     services.transfers.stop();
     services.releaseMonitor.stop();
     services.terminals.stop();

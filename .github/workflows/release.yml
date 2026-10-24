@@ -4,6 +4,10 @@ on:
     tags: ["v*"]
 permissions:
   contents: read
+# The shared latest index and its sequence must advance in publication order.
+concurrency:
+  group: signed-everyos-release
+  cancel-in-progress: false
 jobs:
   # Only a commit of main that passed CI is released.
   gate:
@@ -50,12 +54,20 @@ jobs:
       - name: Verify tag and source version
         run: node -e 'if ("v" + JSON.parse(require("fs").readFileSync("package.json")).version !== process.env.GITHUB_REF_NAME) process.exit(1)'
       - run: pnpm build
+      - name: Build and test the complete official app catalog
+        run: pnpm official-apps:build
       - run: python3 scripts/package.py --arch arm64
       - run: python3 scripts/package.py --arch amd64
       - uses: actions/upload-artifact@v4
         with:
           name: unsigned-packages
           path: dist/packages/*.deb
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-official-apps
+          path: dist/official-apps/
+          if-no-files-found: error
   sign:
     needs: package
     runs-on: ubuntu-24.04
@@ -74,6 +86,21 @@ jobs:
         with:
           name: unsigned-packages
           path: dist/packages
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-official-apps
+          path: dist/official-apps
+      - name: Inspect the previous published official index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/official-apps.ts previous
+      - name: Sign the complete official app catalog
+        env:
+          EVERYOS_APP_REGISTRY_PRIVATE_KEY: ${{ secrets.EVERYOS_APP_REGISTRY_PRIVATE_KEY }}
+          EVERYOS_APP_PUBLISHER_PRIVATE_KEY: ${{ secrets.EVERYOS_APP_PUBLISHER_PRIVATE_KEY }}
+        run: pnpm official-apps:sign --sequence "$GITHUB_RUN_NUMBER" --previous-index dist/previous-official-apps.json
+      - name: Verify pinned official app signatures and release report
+        run: pnpm official-apps:verify
       - name: Sign release metadata
         env:
           EVERYOS_RELEASE_PRIVATE_KEY: ${{ secrets.EVERYOS_RELEASE_PRIVATE_KEY }}
@@ -87,4 +114,4 @@ jobs:
       - name: Publish verified release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/packages/*.deb dist/packages/release.json dist/packages/everyos-release-public.pem dist/packages/install.sh dist/packages/install.sh.sig packaging/install.py --repo "$GITHUB_REPOSITORY" --verify-tag --title "EveryOS ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md
+        run: gh release create "$GITHUB_REF_NAME" dist/packages/*.deb dist/packages/release.json dist/packages/everyos-release-public.pem dist/packages/install.sh dist/packages/install.sh.sig packaging/install.py dist/official-apps/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "EveryOS ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md

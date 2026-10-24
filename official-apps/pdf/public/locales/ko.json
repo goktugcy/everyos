@@ -1,0 +1,103 @@
+{
+  "app": {
+    "name": "PDF 뷰어",
+    "description": "PDF 파일 읽기: 페이지와 미리보기, 확대·축소와 회전, 텍스트 검색, 문서 개요와 내 북마크, 인쇄와 사본 저장."
+  },
+  "actions": {
+    "open": "PDF 열기…"
+  },
+  "pages": {
+    "label": "페이지",
+    "previous": "이전 페이지",
+    "next": "다음 페이지",
+    "current": "페이지 번호",
+    "of": "/ {{count}}",
+    "thumbnail": "{{page}}페이지"
+  },
+  "zoom": {
+    "label": "확대/축소",
+    "in": "확대",
+    "out": "축소",
+    "auto": "자동",
+    "page-width": "페이지 너비",
+    "page-fit": "전체 페이지",
+    "page-actual": "실제 크기"
+  },
+  "rotate": {
+    "left": "왼쪽으로 회전",
+    "right": "오른쪽으로 회전"
+  },
+  "find": {
+    "open": "문서에서 찾기",
+    "label": "찾기",
+    "placeholder": "문서에서 찾기…",
+    "previous": "이전 결과",
+    "next": "다음 결과",
+    "caseSensitive": "대/소문자 구분",
+    "entireWord": "단어 단위",
+    "close": "검색 닫기",
+    "searching": "검색 중…",
+    "notFound": "찾을 수 없음",
+    "position_other": "{{count}}개 중 {{current}}번째"
+  },
+  "bookmarks": {
+    "addCurrent": "이 페이지 북마크",
+    "removeCurrent": "이 페이지 북마크 삭제",
+    "defaultLabel": "{{page}}페이지",
+    "added": "{{page}}페이지를 북마크했습니다",
+    "renameTitle": "북마크 이름 바꾸기",
+    "rename": "“{{label}}” 이름 바꾸기",
+    "remove": "“{{label}}” 삭제",
+    "empty": "아직 북마크가 없습니다",
+    "emptyText": "도구 모음의 북마크 단추로 페이지를 기억하세요."
+  },
+  "print": {
+    "action": "인쇄",
+    "preparing": "인쇄 준비 중",
+    "progress": "{{total}}페이지 중 {{done}}",
+    "failed": "문서를 인쇄용으로 준비하지 못했습니다."
+  },
+  "save": {
+    "action": "사본 저장",
+    "saved": "{{name}} 사본 저장됨"
+  },
+  "sidebar": {
+    "label": "탐색",
+    "show": "사이드바 표시",
+    "hide": "사이드바 숨기기",
+    "pages": "페이지",
+    "outline": "개요",
+    "bookmarks": "북마크"
+  },
+  "outline": {
+    "label": "문서 개요",
+    "expand": "{{title}} 펼치기",
+    "collapse": "{{title}} 접기",
+    "external": "웹 페이지를 엽니다",
+    "empty": "개요 없음",
+    "emptyText": "이 문서에는 목차가 없습니다."
+  },
+  "viewer": {
+    "label": "{{name}} 페이지",
+    "opening": "여는 중…",
+    "emptyTitle": "PDF를 열어 읽어 보세요",
+    "emptyText": "문서는 북마크와 함께 마지막 위치에서 열립니다.",
+    "tryAnother": "다른 파일을 열어 보세요."
+  },
+  "recent": {
+    "title": "최근 항목",
+    "gone": "“{{name}}”을(를) 더 이상 사용할 수 없습니다."
+  },
+  "errors": {
+    "tooLarge": "{{size}}까지의 PDF를 열 수 있습니다.",
+    "invalid": "“{{name}}”은(는) PDF가 아니거나 손상되었습니다.",
+    "password": "해당 암호로 PDF를 열지 못했습니다.",
+    "open": "“{{name}}”을(를) 열지 못했습니다."
+  },
+  "password": {
+    "title": "이 PDF는 보호되어 있습니다",
+    "label": "암호",
+    "open": "열기",
+    "incorrect": "암호가 올바르지 않습니다. 다시 시도하세요."
+  }
+}

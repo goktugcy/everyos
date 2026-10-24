@@ -1,0 +1,370 @@
+import { randomBytes } from "node:crypto";
+import {
+  HOST_OPERATION_CAPABILITY,
+  type HostOperation,
+  type HostResult,
+} from "@everyos/app-sdk/protocol";
+import {
+  AppDbConnectionInputSchema,
+  AppDbQueryInputSchema,
+  AppDiskUsageInputSchema,
+  AppIntegrationDataSchema,
+  AppHostCallSchema,
+  AppMonitorHistorySchema,
+  AppMonitorIdSchema,
+  AppMonitorSaveSchema,
+  AppNetDnsInputSchema,
+  AppNetHttpInputSchema,
+  AppNetTlsInputSchema,
+  AppNotificationSchema,
+  AppSshExportSchema,
+  AppSshGenerateSchema,
+  AppSshImportSchema,
+  AppSshKeyIdSchema,
+  AppSshUpdateSchema,
+  LogQuerySchema,
+} from "@everyos/shared/schemas";
+import { Hono, type Context } from "hono";
+import { z } from "zod";
+import type { AppEnv } from "../../context.ts";
+import { agentActor, callAgent } from "../../http/agent.ts";
+import { ApiError, notFound, rateLimited } from "../../http/errors.ts";
+import { parseJsonBody, parseParams, parseQuery } from "../../http/validation.ts";
+import { requireAuth, requirePermission } from "../../middleware/auth.ts";
+import type { Services } from "../../services.ts";
+import { fileViewFor } from "../files/file-view.ts";
+import { ADAPTERS } from "../integrations/adapters.ts";
+import { AppDatabases } from "./app-databases.ts";
+import { diskUsage } from "./disk-usage.ts";
+import { instanceCall, requireCapability, type InstanceCall } from "./sdk-routes.ts";
+
+const Empty = z.strictObject({});
+const SNAPSHOT_MAX_AGE_MS = 15_000;
+
+/** Per app and person: a burst of notifications per minute, and a daily ceiling. */
+const NOTIFY_PER_MINUTE = 10;
+const NOTIFY_PER_DAY = 200;
+
+/** A refused network target is audited once per app, target and period. */
+const REFUSAL_AUDIT_MS = 10 * 60_000;
+
+/** `/api/app-sdk`: notifications and host data, each behind its capability. */
+export function appSdkHostRoutes(services: Services): Hono<AppEnv> {
+  const app = new Hono<AppEnv>();
+  app.use("*", requirePermission("apps:read"));
+  const sent = new Map<string, number[]>();
+
+  app.post("/notifications", async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, AppNotificationSchema);
+    const call = instanceCall(services, c);
+    requireCapability(call, "notifications:send");
+    const { appId } = call.instance;
+    const userId = call.auth.user.id;
+    if (!services.desktopApps.settings.notificationsEnabled(appId, userId))
+      return c.body(null, 204);
+    const now = services.now();
+    const key = `${appId}:${userId}`;
+    const recent = (sent.get(key) ?? []).filter((at) => now - at < 86_400_000);
+    if (
+      recent.length >= NOTIFY_PER_DAY ||
+      recent.filter((at) => now - at < 60_000).length >= NOTIFY_PER_MINUTE
+    )
+      throw rateLimited(60_000);
+    recent.push(now);
+    sent.set(key, recent);
+    const manifest = call.manifest;
+    services.notifications.publish({
+      kind: "app-message",
+      // Critical stays the host's: an app can at most warn.
+      severity: input.level === "critical" ? "warning" : input.level,
+      key: `${appId}:${input.tag ?? randomBytes(8).toString("hex")}`,
+      params: { app: manifest.name, appId, title: input.title, body: input.body },
+      userId,
+    });
+    return c.body(null, 204);
+  });
+
+  const { network, monitors, databases, sshKeys } = services.desktopApps;
+  const person = (call: InstanceCall) => ({
+    id: call.auth.user.id,
+    permissions: call.auth.permissions,
+  });
+  const owner = (call: InstanceCall) => [call.instance.appId, call.auth.user.id] as const;
+  const operations: {
+    [O in HostOperation]?: (
+      c: Context<AppEnv>,
+      call: InstanceCall,
+      input: unknown,
+      /** Set only by the desktop, after the person confirmed (database writes). */
+      confirmed: boolean,
+    ) => Promise<HostResult<O>> | HostResult<O>;
+  } = {
+    "system.metrics": async () => {
+      const latest = services.metrics.latest;
+      if (!latest || services.now() - latest.point.at > SNAPSHOT_MAX_AGE_MS)
+        await services.metrics.sample();
+      const snapshot = services.metrics.latest;
+      if (!snapshot) throw new ApiError(503, "AGENT_UNAVAILABLE", "No metrics available yet");
+      return snapshot;
+    },
+    "system.info": (c) => callAgent(c, services, "system.info", {}),
+    "system.sockets": (c) => callAgent(c, services, "network.sockets", {}),
+    "system.network": (c) => callAgent(c, services, "network.status", {}),
+    "system.storage": (c) => callAgent(c, services, "storage.usage", {}),
+    "system.services": (c) => callAgent(c, services, "services.list", {}),
+    "logs.query": (c, _call, input) =>
+      callAgent(c, services, "logs.query", LogQuerySchema.parse(input ?? {})),
+    "disk.usage": async (c, call, input) => {
+      const { handle, path } = AppDiskUsageInputSchema.parse(input);
+      const grant = services.desktopApps.files.find(
+        handle,
+        call.instance.appId,
+        call.auth.user.id,
+        call.instance.id,
+      );
+      if (grant.kind !== "directory") throw new ApiError(400, "VALIDATION_FAILED", "Not a folder");
+      const auth = requireAuth(c);
+      const view = fileViewFor(
+        services,
+        {
+          user: auth.user,
+          permissions: auth.permissions,
+          actor: agentActor(auth, c.get("client").ip),
+        },
+        { signal: c.req.raw.signal, logger: c.get("logger") },
+      );
+      const folder = await services.desktopApps.files.resolve(view, grant, path, "directory");
+      return diskUsage(view, grant.root, folder.path);
+    },
+    "integration.list": (_c, call) => {
+      const adapters = new Set(
+        [...call.granted]
+          .filter((capability) => capability.startsWith("integration:"))
+          .map((capability) => capability.slice("integration:".length)),
+      );
+      return {
+        integrations: services.integrations
+          .list(call.auth.permissions)
+          .filter((integration) => adapters.has(integration.adapter))
+          .map((integration) => ({
+            id: integration.id,
+            name: integration.name,
+            adapter: integration.adapter,
+            feeds: Object.keys(ADAPTERS[integration.adapter].feeds),
+          })),
+      };
+    },
+    "integration.data": async (c, call, input) => {
+      const { integration, feed } = AppIntegrationDataSchema.parse(input);
+      const view = services.integrations.get(integration);
+      if (!view) throw notFound("Integration");
+      requireCapability(call, `integration:${view.adapter}`);
+      const provider = services.widgetData.provider(`data.integration.${integration}.${feed}`);
+      // An integration the person may not see does not exist for their apps either.
+      if (!provider || !provider.permissions.every((p) => call.auth.permissions.has(p)))
+        throw notFound("Integration");
+      const now = services.now();
+      const key = `${call.instance.appId}:${call.auth.user.id}`;
+      const recent = (integrationReads.get(key) ?? []).filter((at) => now - at < 60_000);
+      if (recent.length >= 60) throw rateLimited(60_000 - (now - recent[0]!));
+      recent.push(now);
+      integrationReads.set(key, recent);
+      const result = await provider.collect(
+        AbortSignal.any([c.req.raw.signal, AbortSignal.timeout(15_000)]),
+      );
+      return { ...result, at: services.now() };
+    },
+    "net.http": (c, call, input) =>
+      network.http(...owner(call), AppNetHttpInputSchema.parse(input), c.req.raw.signal),
+    "net.dns": (_c, call, input) => network.dns(...owner(call), AppNetDnsInputSchema.parse(input)),
+    "net.tls": (_c, call, input) => network.tls(...owner(call), AppNetTlsInputSchema.parse(input)),
+    "net.monitors.list": (_c, call) => ({ monitors: monitors.list(...owner(call)) }),
+    "net.monitors.history": (_c, call, input) => {
+      const { id, since, limit } = AppMonitorHistorySchema.parse(input);
+      return { checks: monitors.history(...owner(call), id, since, limit) };
+    },
+    "net.monitors.save": async (c, call, input) => {
+      const parsed = AppMonitorSaveSchema.parse(input);
+      const saved = await monitors.save(...owner(call), parsed);
+      audit(c, call, parsed.id ? "monitor.update" : "monitor.create", "success", {
+        monitor: saved.id,
+        target: new URL(saved.url).host,
+      });
+      return saved;
+    },
+    "net.monitors.delete": (c, call, input) => {
+      const { id } = AppMonitorIdSchema.parse(input);
+      monitors.delete(...owner(call), id);
+      audit(c, call, "monitor.delete", "success", { monitor: id });
+      return null;
+    },
+    "net.monitors.check": (_c, call, input) =>
+      monitors.checkNow(...owner(call), AppMonitorIdSchema.parse(input).id),
+    "db.connections": (_c, call) => ({
+      connections: databases.usable(call.instance.appId, call.auth.permissions),
+    }),
+    "db.test": (_c, call, input) =>
+      databases.test(
+        call.instance.appId,
+        person(call),
+        AppDbConnectionInputSchema.parse(input).connection,
+      ),
+    "db.tables": (_c, call, input) =>
+      databases.tables(
+        call.instance.appId,
+        person(call),
+        AppDbConnectionInputSchema.parse(input).connection,
+      ),
+    "ssh.keys.list": (_c, call) => ({ keys: sshKeys.list(call.auth.user.id) }),
+    "ssh.keys.generate": async (c, call, input) => {
+      const key = await sshKeys.generate(call.auth.user.id, AppSshGenerateSchema.parse(input));
+      audit(c, call, "ssh-key.generate", "success", { key: key.id, fingerprint: key.fingerprint });
+      return key;
+    },
+    "ssh.keys.import": (c, call, input) => {
+      const key = sshKeys.import(call.auth.user.id, AppSshImportSchema.parse(input));
+      audit(c, call, "ssh-key.import", "success", { key: key.id, fingerprint: key.fingerprint });
+      return key;
+    },
+    "ssh.keys.update": (c, call, input) => {
+      const key = sshKeys.update(call.auth.user.id, AppSshUpdateSchema.parse(input));
+      audit(c, call, "ssh-key.update", "success", { key: key.id, fingerprint: key.fingerprint });
+      return key;
+    },
+    "ssh.keys.export": async (c, call, input, confirmed) => {
+      const parsed = AppSshExportSchema.parse(input);
+      if (!parsed.private) return sshKeys.export(call.auth.user.id, parsed, false);
+      try {
+        if (call.instance.kind !== "window")
+          throw new ApiError(403, "FORBIDDEN", "Widgets cannot export private keys");
+        const exported = await sshKeys.export(call.auth.user.id, parsed, confirmed);
+        audit(c, call, "ssh-key.export-private", "success", {
+          key: parsed.id,
+          encrypted: parsed.passphrase !== null,
+        });
+        return exported;
+      } catch (error) {
+        audit(c, call, "ssh-key.export-private", "failure", {
+          key: parsed.id,
+          code: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        });
+        throw error;
+      }
+    },
+    "ssh.keys.delete": (c, call, input, confirmed) => {
+      const { id } = AppSshKeyIdSchema.parse(input);
+      try {
+        // A private key cannot be made again; a widget cannot obtain native confirmation.
+        if (
+          sshKeys.hasPrivate(call.auth.user.id, id) &&
+          (!confirmed || call.instance.kind !== "window")
+        )
+          throw new ApiError(
+            403,
+            "FORBIDDEN",
+            "Deleting a private key needs the person's confirmation",
+            {
+              details: { confirmation: "required" },
+            },
+          );
+        sshKeys.delete(call.auth.user.id, id);
+        audit(c, call, "ssh-key.delete", "success", { key: id });
+        return null;
+      } catch (error) {
+        audit(c, call, "ssh-key.delete", "failure", {
+          key: id,
+          code: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        });
+        throw error;
+      }
+    },
+    "db.query": async (c, call, input, confirmed) => {
+      const parsed = AppDbQueryInputSchema.parse(input);
+      if (!parsed.write) return databases.query(call.instance.appId, person(call), parsed, false);
+      // Changes are audited by their fingerprint: statements may hold personal data.
+      const details = {
+        connection: parsed.connection,
+        statement: AppDatabases.fingerprint(parsed.sql),
+      };
+      try {
+        const result = await databases.query(call.instance.appId, person(call), parsed, confirmed);
+        audit(c, call, "database.write", "success", {
+          ...details,
+          command: result.command,
+          rowCount: result.rowCount,
+        });
+        return result;
+      } catch (error) {
+        audit(c, call, "database.write", "failure", {
+          ...details,
+          code: error instanceof ApiError ? error.code : "INTERNAL_ERROR",
+        });
+        throw error;
+      }
+    },
+  };
+  const audit = (
+    c: Context<AppEnv>,
+    call: InstanceCall,
+    action: string,
+    outcome: "success" | "failure",
+    details: Record<string, unknown>,
+  ) =>
+    services.audit.record({
+      action: `desktop-apps.${action}`,
+      target: call.instance.appId,
+      outcome,
+      actor: { userId: call.auth.user.id, username: call.auth.user.username },
+      ip: c.get("client").ip,
+      details,
+    });
+  const refusals = new Map<string, number>();
+  const integrationReads = new Map<string, number[]>();
+  /** The capability each operation needs (checked on the server, every call). */
+  /** The capability of each operation: the SDK's own table (one source for both sides). */
+  const capabilityOf: Partial<Record<HostOperation, string>> = HOST_OPERATION_CAPABILITY;
+
+  app.post("/host/:operation", async (c) => {
+    parseQuery(c, Empty);
+    const { operation } = parseParams(
+      c,
+      z.strictObject({ operation: z.string().regex(/^[a-z]+(\.[a-z]+){1,2}$/) }),
+    );
+    const { input, confirmed } = await parseJsonBody(c, AppHostCallSchema);
+    const run = operations[operation as HostOperation];
+    const capability = capabilityOf[operation as HostOperation];
+    if (!run || !capability) throw notFound("Operation");
+    const call = instanceCall(services, c);
+    // `integration:*`: one of the app's integrations (each read checks its own adapter).
+    requireCapability(
+      call,
+      capability === "integration:*"
+        ? ([...call.granted].find((granted) => granted.startsWith("integration:")) ?? capability)
+        : capability,
+    );
+    try {
+      return c.json({ result: await run(c, call, input, confirmed === true) });
+    } catch (error) {
+      if (error instanceof ApiError && error.code === "DESKTOP_APP_NETWORK_BLOCKED") {
+        const { host, port } = error.details as { host: string; port: number };
+        const key = `${call.instance.appId}:${host}:${port}`;
+        const now = services.now();
+        if (now - (refusals.get(key) ?? 0) > REFUSAL_AUDIT_MS) {
+          refusals.set(key, now);
+          if (refusals.size > 1000) refusals.clear();
+          audit(c, call, "network.blocked", "failure", { operation, host, port });
+        }
+      }
+      if (error instanceof z.ZodError)
+        throw new ApiError(400, "VALIDATION_FAILED", "Invalid input", {
+          details: error.issues
+            .slice(0, 5)
+            .map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+        });
+      throw error;
+    }
+  });
+
+  return app;
+}

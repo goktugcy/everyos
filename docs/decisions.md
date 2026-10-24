@@ -730,3 +730,81 @@ session cookie is SameSite=Strict, so other sites cannot trigger that GET. Files
 has not listed for an hour are tidied away, and the folder is left out of search and home backups.
 Files referenced from Files windows are never deleted by the shelf. The old upload destination
 stays in the `pulse` schema, unused, so stored preferences remain valid.
+
+### D53 — Desktop apps run in an opaque-origin sandbox, authorized per call by the server
+
+Third-party and official desktop apps are static bundles that run in `<iframe sandbox>` frames
+without `allow-same-origin`, loaded from per-version capability URLs (`/app-runtime/<key>/…`) with a
+`sandbox` CSP and no remote code. The owner reaches EveryOS by IP over plain HTTP, where neither a
+second port (cookies are not port-isolated) nor a subdomain gives a separate site, so the opaque
+origin is the isolation boundary. Apps talk to the desktop over a versioned `MessageChannel`
+protocol; the desktop forwards privileged calls with a per-instance token and the server authorizes
+every call against the installation's granted capabilities and the user's role. Packages are signed
+`.eosapp` archives verified on the server against registry-signed publisher keys; `dev.everyos.*`
+belongs to the pinned official registry. Official apps live in this repository; the community
+registry is a Cloudflare service. The feature ships in one release (see
+[App SDK architecture](app-sdk/architecture.md) and [acceptance](sdk-release-acceptance.md)).
+
+### D54 — The official SSH app exports private keys only as protected OpenSSH files
+
+The SSH Keys app requires a matching export passphrase before the desktop asks the person to
+approve the key's fingerprint. This keeps an explicit private-export feature without a plaintext
+export option in the official interface. The SDK retains its documented optional unencrypted
+export for other authorized window apps; every private export still requires desktop confirmation.
+
+The app has no app-storage or file-picking permission. Drafts and passphrases remain in memory,
+and passphrase inputs clear before export and on cancellation, suspend or permission changes.
+Names and comments are stored in the existing user vault, where private keys are encrypted by
+`SecretBox`. Public-only deletion has an app-requested EveryOS confirmation; private-key deletion
+uses the desktop's mandatory fingerprint confirmation. The app does not read host private keys.
+
+OpenSSH's askpass reader accepts at most 1,023 bytes and terminates on line breaks, so protected
+export validates the full UTF-8 passphrase length and rejects NUL, CR and LF. Generation is async,
+and one crypto slot per API service bounds generation and protected exports while metadata reads
+remain available. See [SSH key SDK contract](app-sdk/ssh-keys.md).
+
+### D55 — The official catalog contains 29 apps
+
+On 2026-10-24 the owner kept SQL Client, Video Player, Image Viewer and Gallery among the
+remaining apps, and removed API Client, Music Player, Wallpaper Studio and Icon Studio. Their
+unimplemented scaffolds and catalog entries are removed. The already implemented 25 apps stay
+in scope. The one-complete-release policy now covers 29 apps; appearance and network SDK
+capabilities remain available to third-party apps. No existing host app or service is removed.
+
+### D56 — SQL text stays in the window; media state stores references
+
+The official SQL Client uses the administrator's saved server connections and never receives
+credentials. Connection id and row/timeout limits persist, while its last 30 successful queries
+are replayable only within the current window. SQL literals, parameters and results may contain
+sensitive information, so the app does not put them in ordinary app storage. The interface names
+this session-only history and clears parameters/write authorization on replay.
+
+The selected media apps persist approved handle ids, names/settings, album indexes or playback
+positions rather than media bytes or temporary capability URLs. Gallery shards each album into
+its own bounded value. Its deletion path locks and flushes the editor before deleting the key;
+the kit's explicit flush waits for already outstanding writes too. Bounded SDK file reads enforce
+`maxBytes` while consuming chunks because restored handle size may be unknown or stale. Videos
+use native range streaming. Browser codec reports remain hints; actual decode errors are shown.
+
+### D57 — Official distribution signs measured build evidence and verifies the complete catalog
+
+The official release is built as one 29-app unit, with actual per-app tests and a committed exact
+app/widget permission policy. Build jobs have no signing secrets. A protected release job verifies
+all downloaded archives again, signs packages, the flat GitHub-compatible index and a separate
+machine-readable report, and verifies the entire signature chain before publication. Development
+CI uses ephemeral in-memory keys and an explicit development report that production verification
+rejects. Private keys are not written to disk or inherited by source/test subprocesses.
+
+The previous official index is verified against the registry pin before reuse. Its digest is
+bound into the new report; sequence/version rollback, changed bytes under a published version and
+revoked current versions are refused. Revocations survive subsequent releases. This keeps the
+same version immutability promised to independent registries and prevents a complete fresh catalog
+from silently clearing old revocations. Existing host services and release authorization stay
+outside the build script.
+
+### D58 — Official app manifests keep English as their fallback locale
+
+On 2026-10-24 the owner explicitly chose `locales.default: "en"` in official app manifests.
+This overrides the general project default for manifest metadata. All 29 manifests retain English
+as fallback, with Turkish and the other complete dictionaries selected through the host locale.
+The distribution gate enforces this declared default and all ten normalized text-key sets.

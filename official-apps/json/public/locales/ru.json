@@ -1,0 +1,110 @@
+{
+  "app": {
+    "name": "JSON Studio",
+    "description": "Проверка, форматирование и изучение JSON: дерево, запросы JSONPath, сравнение структуры и экспорт в CSV."
+  },
+  "actions": {
+    "open": "Открыть…",
+    "save": "Сохранить как…",
+    "indent": "Отступ",
+    "sortKeys": "Сортировать ключи",
+    "format": "Форматировать",
+    "minify": "Сжать",
+    "copy": "Копировать"
+  },
+  "indent": {
+    "two": "2 пробела",
+    "four": "4 пробела",
+    "tab": "Табуляция"
+  },
+  "editor": {
+    "label": "Текст JSON",
+    "placeholder": "Вставьте или введите JSON либо откройте файл…"
+  },
+  "status": {
+    "empty": "Пусто",
+    "valid": "Корректный JSON",
+    "invalid": "Ошибка",
+    "at": "Строка {{line}}, столбец {{column}}",
+    "fixFirst": "Сначала исправьте JSON: он некорректен.",
+    "emptyPanel": "Вставьте или откройте JSON",
+    "invalidPanel": "В JSON ошибка: см. редактор"
+  },
+  "problems": {
+    "unexpected-end": "Текст обрывается",
+    "unexpected-character": "Неожиданный символ",
+    "bad-string": "В строке управляющий символ (экранируйте его)",
+    "bad-escape": "Неверная escape-последовательность",
+    "bad-number": "Неверное число",
+    "trailing-comma": "Лишняя запятая в конце (в JSON запрещена)",
+    "expected-colon": "После ключа нужно «:»",
+    "expected-comma": "Нужна «,» или закрывающая скобка",
+    "expected-key": "Нужен ключ в двойных кавычках",
+    "trailing-content": "Лишний текст после значения JSON",
+    "empty": "Нечего читать"
+  },
+  "panels": {
+    "label": "Инструменты",
+    "tree": "Дерево",
+    "query": "Запрос",
+    "diff": "Сравнить",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "Дерево документа",
+    "search": "Поиск по ключам и значениям",
+    "hit": "{{current}} из {{total}}",
+    "noHits": "Нет совпадений",
+    "previous": "Предыдущее совпадение",
+    "next": "Следующее совпадение",
+    "copyPath": "Копировать путь",
+    "copyValue": "Копировать значение",
+    "members_one": "{{count}} поле",
+    "members_few": "{{count}} поля",
+    "members_many": "{{count}} полей",
+    "members_other": "{{count}} поля",
+    "items_one": "{{count}} элемент",
+    "items_few": "{{count}} элемента",
+    "items_many": "{{count}} элементов",
+    "items_other": "{{count}} элемента"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "Примеры",
+    "error": "Позиция {{position}}: {{message}}",
+    "results_one": "{{count}} результат",
+    "results_few": "{{count}} результата",
+    "results_many": "{{count}} результатов",
+    "results_other": "{{count}} результата",
+    "copy": "Копировать результаты",
+    "show": "Показать в дереве",
+    "more": "и ещё {{count}}"
+  },
+  "diff": {
+    "with": "Сравнить с другим документом JSON",
+    "open": "Открыть…",
+    "other": "JSON для сравнения",
+    "placeholder": "Вставьте другую версию сюда",
+    "same": "Документы совпадают",
+    "added_one": "добавлено: {{count}}",
+    "added_few": "добавлено: {{count}}",
+    "added_many": "добавлено: {{count}}",
+    "added_other": "добавлено: {{count}}",
+    "removed_one": "удалено: {{count}}",
+    "removed_few": "удалено: {{count}}",
+    "removed_many": "удалено: {{count}}",
+    "removed_other": "удалено: {{count}}",
+    "changed_one": "изменено: {{count}}",
+    "changed_few": "изменено: {{count}}",
+    "changed_many": "изменено: {{count}}",
+    "changed_other": "изменено: {{count}}"
+  },
+  "csv": {
+    "needsArray": "Для CSV нужен список",
+    "needsArrayText": "Документ должен быть массивом (объектов — для столбцов).",
+    "summary": "Строк: {{rows}}, столбцов: {{columns}}",
+    "copy": "Копировать CSV",
+    "export": "Экспорт в CSV…",
+    "preview": "Предпросмотр CSV"
+  }
+}

@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "颜色工作室",
+    "description": "以 HEX、RGB、HSL 和 OKLCH 取色，创建调色板、配色与渐变，检查对比度，并在 EveryOS 主题中预览。"
+  },
+  "actions": {
+    "eyedropper": "从屏幕取色"
+  },
+  "color": {
+    "section": "颜色",
+    "preview": "当前颜色 {{color}}"
+  },
+  "picker": {
+    "saturationValue": "饱和度和亮度",
+    "svValue": "饱和度 {{s}}%，亮度 {{v}}%",
+    "hue": "色相",
+    "alpha": "不透明度"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "不是颜色",
+    "copy": "复制 {{format}}"
+  },
+  "panels": {
+    "label": "工具",
+    "palette": "调色板",
+    "gradient": "渐变",
+    "contrast": "对比度",
+    "saved": "已保存",
+    "theme": "EveryOS 主题"
+  },
+  "swatch": {
+    "use": "使用 {{color}}"
+  },
+  "harmony": {
+    "label": "配色",
+    "complementary": "互补",
+    "analogous": "类似",
+    "triadic": "三角",
+    "split": "分裂互补",
+    "tetradic": "四角",
+    "monochromatic": "单色",
+    "save": "保存配色"
+  },
+  "scale": {
+    "title": "色阶",
+    "step": "色阶 {{step}}：{{color}}",
+    "copyCss": "复制为 CSS 变量",
+    "save": "保存色阶"
+  },
+  "gradient": {
+    "preview": "渐变预览",
+    "kind": "类型",
+    "linear": "线性",
+    "radial": "径向",
+    "angle": "角度：{{angle}}°",
+    "stops": "色标",
+    "useCurrent": "将色标 {{number}} 设为当前颜色",
+    "position": "色标 {{number}} 的位置",
+    "remove": "删除色标 {{number}}",
+    "hint": "点击色标的色块可设为当前颜色。渐变至少需要两个色标。",
+    "add": "添加色标",
+    "copy": "复制 CSS"
+  },
+  "contrast": {
+    "text": "文字",
+    "background": "背景",
+    "swap": "交换文字和背景",
+    "useAsText": "将当前颜色用作文字",
+    "useAsBackground": "将当前颜色用作背景",
+    "sampleLarge": "大号文字",
+    "sample": "对比度低时，普通文字更难阅读。",
+    "ratio": "对比度",
+    "aa": "AA",
+    "aaLarge": "AA 大字",
+    "aaa": "AAA",
+    "aaaLarge": "AAA 大字",
+    "pass": "通过",
+    "fail": "未通过",
+    "hint": "WCAG 2：AA 要求普通文字 4.5:1、大号文字（24 px 或 19 px 粗体）3:1；AAA 要求 7:1 和 4.5:1。"
+  },
+  "saved": {
+    "newName": "新调色板",
+    "create": "用当前颜色创建",
+    "added": "已保存调色板",
+    "addCurrent": "将当前颜色加入 {{name}}",
+    "copyCss": "将 {{name}} 复制为 CSS 变量",
+    "exportCss": "保存 CSS…",
+    "delete": "删除 {{name}}",
+    "deleteTitle": "删除调色板“{{name}}”？",
+    "removeColor": "移除 {{color}}",
+    "empty": "没有已保存的调色板",
+    "emptyText": "保存配色或色阶，或在上方创建调色板。"
+  },
+  "theme": {
+    "current": "你的主题（{{scheme}}）",
+    "schemes": {
+      "light": "浅色",
+      "dark": "深色"
+    },
+    "tokens": {
+      "accent": "强调色",
+      "accent-strong": "深强调色",
+      "text": "文字",
+      "text-muted": "次要文字",
+      "surface": "表面",
+      "inset": "内嵌",
+      "danger": "危险",
+      "success": "成功",
+      "warning": "警告"
+    },
+    "previewTitle": "将当前颜色用作强调色",
+    "button": "按钮",
+    "link": "链接",
+    "linkContrast": "链接对比度 {{ratio}}:1",
+    "hint": "强调色在“设置 → 外观”中选择。"
+  }
+}

@@ -37,7 +37,13 @@ import { systemRoutes } from "./modules/system/routes.ts";
 import { httpsRoutes } from "./modules/security/https-routes.ts";
 import { securityRoutes } from "./modules/security/routes.ts";
 import { userRoutes } from "./modules/users/routes.ts";
+import { desktopAppRoutes } from "./modules/desktop-apps/routes.ts";
+import { appSdkRoutes } from "./modules/desktop-apps/sdk-routes.ts";
+import { appMediaRoutes, appSdkFileRoutes } from "./modules/desktop-apps/sdk-files-routes.ts";
+import { appSdkHostRoutes } from "./modules/desktop-apps/sdk-host-routes.ts";
+import { appRuntimeRoutes } from "./modules/desktop-apps/runtime-routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
+import { appSdkAppearanceRoutes } from "./modules/desktop-apps/sdk-appearance-routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
 import type { Services } from "./services.ts";
 
@@ -73,6 +79,15 @@ export function createApp(services: Services): Hono<AppEnv> {
     )
       return next();
     if (c.req.method === "PUT" && c.req.path === "/api/files/text") return textBodyLimit(c, next);
+    // App file chunks are raw bytes with their own 512 KiB limit (checked by the route).
+    if (c.req.method === "POST" && /^\/api\/app-sdk\/files\/[^/]+\/write$/.test(c.req.path))
+      return next();
+    // Images apps upload stream to disk with the wallpaper limits (checked by the service).
+    if (c.req.method === "POST" && /^\/api\/app-sdk\/appearance\/images\/[a-z-]+$/.test(c.req.path))
+      return next();
+    // App storage values reach 256 KiB of JSON.
+    if (c.req.method === "POST" && c.req.path === "/api/app-sdk/storage/set")
+      return textBodyLimit(c, next);
     return jsonBodyLimit(c, next);
   };
   app.use("/api/*", enforceBodyLimit);
@@ -116,6 +131,11 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/backups", backupRoutes(services));
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
+  api.route("/desktop-apps", desktopAppRoutes(services));
+  api.route("/app-sdk/files", appSdkFileRoutes(services));
+  api.route("/app-sdk/appearance", appSdkAppearanceRoutes(services));
+  api.route("/app-sdk", appSdkHostRoutes(services));
+  api.route("/app-sdk", appSdkRoutes(services));
   api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
@@ -125,6 +145,8 @@ export function createApp(services: Services): Hono<AppEnv> {
     throw notFound("Endpoint");
   });
   app.route("/api", api);
+  app.route("/app-runtime", appRuntimeRoutes(services.desktopApps.installer));
+  app.route("/app-files", appMediaRoutes(services));
 
   if (services.config.paths.webDir) app.use("*", serveWebClient(services.config.paths.webDir));
 

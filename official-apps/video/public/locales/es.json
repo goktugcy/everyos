@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Reproductor de vídeo",
+    "description": "Reproduce vídeos con subtítulos, listas y posiciones guardadas."
+  },
+  "video": {
+    "scope": "Solo se accede a archivos elegidos. Hasta 20 listas de 100 vídeos. Se guardan posiciones y ajustes; los vídeos se transmiten desde EveryOS, sin copiarse al almacenamiento de la app.",
+    "permission": "El acceso requiere el permiso files:pick de la tienda.",
+    "add": "Añadir vídeos",
+    "openSubtitles": "Abrir subtítulos",
+    "fullscreen": "Pantalla completa",
+    "fullscreenError": "El navegador rechazó la pantalla completa. Usa los controles nativos si están disponibles.",
+    "playlist": "Lista de reproducción",
+    "defaultList": "Mis vídeos",
+    "newList": "Nueva lista",
+    "renameList": "Renombrar lista",
+    "deleteList": "Eliminar lista",
+    "referencesOnly": "Solo se eliminan referencias. Los archivos originales no se borran.",
+    "revoked": "Algunos archivos ya no están compartidos. Añádelos de nuevo para restaurar el acceso.",
+    "empty": "Ningún vídeo seleccionado",
+    "openHint": "Elige un vídeo en EveryOS. La reproducción depende de contenedores y códecs del navegador; esta app no transcodifica.",
+    "selected": "Vídeo seleccionado",
+    "previous": "Vídeo anterior",
+    "next": "Siguiente vídeo",
+    "remove": "Quitar de la lista",
+    "player": "Reproducción de vídeo",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "reload": "Recargar vídeo",
+    "speed": "Velocidad de reproducción",
+    "subtitles": "Subtítulos",
+    "showSubtitles": "Mostrar subtítulos",
+    "hideSubtitles": "Ocultar subtítulos",
+    "captionHint": "Subtítulos WebVTT o SRT de texto, hasta 1 MiB y 2.000 entradas. No se ejecutan marcas ni estilos.",
+    "badSubtitles": "No se pudieron leer los subtítulos. Usa WebVTT/SRT válido con al menos una entrada, hasta 1 MiB y 2.000 entradas.",
+    "unsupported": "No se pudo reproducir. Puede faltar soporte de códec, estar dañado el archivo o haber caducado el acceso. Recarga o prueba otro navegador/formato. No se transcodifica.",
+    "codecs": "Códecs del navegador",
+    "codecHint": "Son informes canPlayType del navegador, no una garantía para cada archivo. La reproducción real es decisiva.",
+    "probably": "Probablemente compatible",
+    "maybe": "Posiblemente compatible",
+    "notReported": "Sin compatibilidad declarada"
+  }
+}

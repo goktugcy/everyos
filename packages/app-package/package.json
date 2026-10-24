@@ -1,0 +1,17 @@
+{
+  "name": "@everyos/app-package",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The .eosapp package format for Node (servers and tooling): deterministic packing, bounded and escape-proof extraction, and Ed25519 publisher signatures over package digests.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/system": "workspace:*"
+  }
+}

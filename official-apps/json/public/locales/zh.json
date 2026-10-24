@@ -1,0 +1,92 @@
+{
+  "app": {
+    "name": "JSON 工作室",
+    "description": "验证、格式化和浏览 JSON：树形视图、JSONPath 查询、结构比较和 CSV 导出。"
+  },
+  "actions": {
+    "open": "打开…",
+    "save": "另存为…",
+    "indent": "缩进",
+    "sortKeys": "键排序",
+    "format": "格式化",
+    "minify": "压缩",
+    "copy": "复制"
+  },
+  "indent": {
+    "two": "2 个空格",
+    "four": "4 个空格",
+    "tab": "制表符"
+  },
+  "editor": {
+    "label": "JSON 文本",
+    "placeholder": "粘贴或输入 JSON，或打开文件…"
+  },
+  "status": {
+    "empty": "空",
+    "valid": "有效的 JSON",
+    "invalid": "无效",
+    "at": "第 {{line}} 行第 {{column}} 列",
+    "fixFirst": "请先修正 JSON：它无效。",
+    "emptyPanel": "粘贴或打开 JSON 以浏览",
+    "invalidPanel": "JSON 有错误：请查看编辑器"
+  },
+  "problems": {
+    "unexpected-end": "文本提前结束",
+    "unexpected-character": "意外的字符",
+    "bad-string": "字符串包含控制字符（请转义）",
+    "bad-escape": "无效的转义序列",
+    "bad-number": "无效的数字",
+    "trailing-comma": "末尾逗号（JSON 不允许）",
+    "expected-colon": "键后应为“:”",
+    "expected-comma": "应为“,”或右括号",
+    "expected-key": "应为双引号括起的键",
+    "trailing-content": "JSON 值后有多余文本",
+    "empty": "没有可读取的内容"
+  },
+  "panels": {
+    "label": "工具",
+    "tree": "树",
+    "query": "查询",
+    "diff": "比较",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "文档树",
+    "search": "搜索键和值",
+    "hit": "{{current}}/{{total}}",
+    "noHits": "无匹配",
+    "previous": "上一个匹配",
+    "next": "下一个匹配",
+    "copyPath": "复制路径",
+    "copyValue": "复制值",
+    "members_other": "{{count}} 个成员",
+    "items_other": "{{count}} 个元素"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "示例",
+    "error": "位置 {{position}}：{{message}}",
+    "results_other": "{{count}} 个结果",
+    "copy": "复制结果",
+    "show": "在树中显示",
+    "more": "还有 {{count}} 个"
+  },
+  "diff": {
+    "with": "与另一个 JSON 文档比较",
+    "open": "打开…",
+    "other": "要比较的 JSON",
+    "placeholder": "在此粘贴另一个版本",
+    "same": "文档相同",
+    "added_other": "新增 {{count}}",
+    "removed_other": "删除 {{count}}",
+    "changed_other": "修改 {{count}}"
+  },
+  "csv": {
+    "needsArray": "CSV 需要一个列表",
+    "needsArrayText": "文档必须是数组（列需要对象数组）。",
+    "summary": "{{rows}} 行，{{columns}} 列",
+    "copy": "复制 CSV",
+    "export": "导出 CSV…",
+    "preview": "CSV 预览"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.color",
+  "name": "Color Studio",
+  "version": "1.0.0",
+  "description": "Pick colors in HEX, RGB, HSL and OKLCH, build palettes, harmonies and gradients, check contrast, and preview them in the EveryOS theme.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "developer",
+  "permissions": ["storage:app", "clipboard:write", "files:save"],
+  "window": {
+    "defaultWidth": 1060,
+    "defaultHeight": 700,
+    "minWidth": 360,
+    "minHeight": 420,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/color"
+}

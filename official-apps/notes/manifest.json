@@ -1,0 +1,40 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.notes",
+  "name": "Notes",
+  "version": "1.0.0",
+  "description": "Notes in Markdown with folders, tags, pins, search, history, import and export, and a quick-note widget.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "productivity",
+  "permissions": ["storage:app", "files:pick", "files:save", "clipboard:write", "widgets:register"],
+  "window": {
+    "defaultWidth": 1080,
+    "defaultHeight": 700,
+    "minWidth": 360,
+    "minHeight": 320,
+    "instances": "single"
+  },
+  "widgets": [
+    {
+      "id": "quick",
+      "name": "Quick note",
+      "description": "Write a note without opening Notes.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium", "large"],
+      "defaultSize": "medium",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["storage:app"]
+    }
+  ],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/notes"
+}

@@ -1,0 +1,183 @@
+{
+  "app": {
+    "name": "Regex Test Aracı",
+    "description": "JavaScript düzenli ifadelerini canlı test edin: vurgulanan eşleşmeler, gruplar, bayraklar, değiştirmeler ve açıklamalar."
+  },
+  "pattern": {
+    "section": "İfade",
+    "label": "Düzenli ifade",
+    "placeholder": "Bir desen yazın…",
+    "copy": "İfadeyi kopyala"
+  },
+  "flags": {
+    "label": "Bayraklar",
+    "d": "Dizinler: her grubun nerede eşleştiğini bildirir",
+    "g": "Genel: yalnızca ilkini değil, tüm eşleşmeleri bul",
+    "i": "Büyük/küçük harfe duyarsız",
+    "m": "Çok satırlı: ^ ve $ satır sonlarında eşleşir",
+    "s": ". tümü: . satır sonlarıyla da eşleşir",
+    "u": "Unicode: kod noktaları ve \\p{…} özellikleri",
+    "v": "Unicode kümeleri: sınıflarda küme işlemleri",
+    "y": "Yapışkan: yalnızca son eşleşmenin bittiği yerde eşleşir",
+    "short": {
+      "d": "dizinler",
+      "g": "genel",
+      "i": "harf duyarsız",
+      "m": "çok satır",
+      "s": "nokta tümü",
+      "u": "unicode",
+      "v": "kümeler",
+      "y": "yapışkan"
+    }
+  },
+  "status": {
+    "empty": "Bir düzenli ifade yazın",
+    "running": "Eşleştiriliyor…",
+    "matches_one": "{{count}} eşleşme",
+    "matches_other": "{{count}} eşleşme",
+    "ms": "{{ms}} ms",
+    "timeout": "Durduruldu: ifade {{seconds}} sn'den uzun sürdü (büyük olasılıkla aşırı geri izleme).",
+    "tooLong": "Test metni {{count}} karakterden uzun.",
+    "syntax": "Geçerli bir ifade değil: {{message}}",
+    "worker": "Eşleştirme çalıştırılamadı: {{message}}"
+  },
+  "text": {
+    "label": "Test metni",
+    "highlighted": "Metindeki eşleşmeler",
+    "highlightLimit": "Yalnızca ilk 200.000 karakter vurgulanır."
+  },
+  "panels": {
+    "label": "Sonuçlar",
+    "matches": "Eşleşmeler",
+    "explain": "Açıklama",
+    "replace": "Değiştir"
+  },
+  "matches": {
+    "none": "Eşleşme yok",
+    "empty": "(boş eşleşme)",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "katılmadı",
+    "truncated": "Yalnızca ilk {{count}} eşleşme listelenir.",
+    "more": "ve {{count}} tane daha"
+  },
+  "replace": {
+    "label": "Yerine konacak",
+    "hint": "$1, $<ad>, $& (eşleşme), $` ve $' (öncesi ve sonrası), $ için $$",
+    "result": "Sonuç",
+    "copy": "Sonucu kopyala"
+  },
+  "examples": {
+    "title": "Örnekler",
+    "email": {
+      "name": "E-posta adresi",
+      "description": "Metindeki adresler için pratik bir desen (her geçerli RFC 5322 adresi değil)"
+    },
+    "url": {
+      "name": "Web adresi",
+      "description": "http ve https bağlantıları"
+    },
+    "ipv4": {
+      "name": "IPv4 adresi",
+      "description": "0 ile 255 arasında dört sayı"
+    },
+    "isoDate": {
+      "name": "ISO tarihi",
+      "description": "Adlandırılmış gruplarla YYYY-AA-GG"
+    },
+    "hexColor": {
+      "name": "Onaltılık renk",
+      "description": "#rgb veya #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "Sürüm 1–8"
+    },
+    "semver": {
+      "name": "Anlamsal sürüm",
+      "description": "Ön sürüm ve derlemeyle ana.küçük.yama"
+    },
+    "phone": {
+      "name": "Telefon numarası",
+      "description": "Boşluk, nokta, tire ya da parantezli rakamlar"
+    },
+    "slug": {
+      "name": "URL kısa adı",
+      "description": "Tirelerle birleşen küçük harfli kelimeler, satır başına bir"
+    },
+    "words": {
+      "name": "Her alfabede kelimeler",
+      "description": "Unicode özelliğine göre harfler (u gerekir)"
+    },
+    "duplicateWords": {
+      "name": "Tekrarlanan kelimeler",
+      "description": "Geri başvuruyla, art arda iki kez yazılmış kelime"
+    },
+    "trailingSpace": {
+      "name": "Satır sonu boşlukları",
+      "description": "Satır sonlarındaki boşluk ve sekmeler"
+    }
+  },
+  "saved": {
+    "title": "Kaydedilenler",
+    "save": "Kaydet",
+    "name": "Ad",
+    "done": "İfade kaydedildi",
+    "delete": "{{name}} sil"
+  },
+  "explain": {
+    "digit": "Bir rakam (0–9)",
+    "nonDigit": "Rakam dışında herhangi bir karakter",
+    "word": "Bir kelime karakteri (harf, rakam veya _)",
+    "nonWord": "Kelime karakteri dışındaki her karakter",
+    "space": "Bir boşluk karakteri",
+    "nonSpace": "Boşluk dışındaki her karakter",
+    "newline": "Satır besleme",
+    "carriageReturn": "Satır başı",
+    "tab": "Sekme",
+    "formFeed": "Sayfa besleme",
+    "verticalTab": "Dikey sekme",
+    "nul": "NUL karakteri",
+    "wordBoundary": "Kelime sınırı",
+    "nonWordBoundary": "Kelime sınırı olmayan yer",
+    "backreference": "{{number}}. grupla aynı metin",
+    "namedBackreference": "“{{name}}” grubuyla aynı metin",
+    "property": "{{name}} Unicode özelliğine sahip bir karakter",
+    "notProperty": "{{name}} Unicode özelliği olmayan bir karakter",
+    "hex": "{{char}} karakteri (onaltılık kod)",
+    "unicode": "{{char}} karakteri (Unicode kodu)",
+    "control": "Ctrl+{{letter}} kontrol karakteri",
+    "literal": "{{char}} karakteri",
+    "literals": "“{{char}}” metni",
+    "class": "Şunlardan bir karakter: {{items}}",
+    "notClass": "Şunlarda olmayan bir karakter: {{items}}",
+    "group": "{{number}}. grup: eşleşeni yakalar",
+    "namedGroup": "{{number}}. grup “{{name}}”: eşleşeni yakalar",
+    "nonCapturing": "Yakalamayan grup",
+    "lookahead": "Ardından gelen (eşleşmeye dahil değil):",
+    "negativeLookahead": "Ardından gelmeyen:",
+    "lookbehind": "Öncesinde gelen (eşleşmeye dahil değil):",
+    "negativeLookbehind": "Öncesinde gelmeyen:",
+    "modifiers": "{{flags}} bayraklı grup",
+    "groupEnd": "Grubun sonu",
+    "alternation": "Ya da",
+    "start": "Metnin başı (m ile satır başı)",
+    "end": "Metnin sonu (m ile satır sonu)",
+    "any": "Herhangi bir karakter (s yoksa satır sonları hariç)",
+    "zeroOrMore": "Sıfır ya da daha fazla kez, olabildiğince çok",
+    "zeroOrMoreLazy": "Sıfır ya da daha fazla kez, olabildiğince az",
+    "oneOrMore": "Bir ya da daha fazla kez, olabildiğince çok",
+    "oneOrMoreLazy": "Bir ya da daha fazla kez, olabildiğince az",
+    "optional": "İsteğe bağlı (bir kez ya da hiç)",
+    "optionalLazy": "İsteğe bağlı, tercihen hiç",
+    "exactly_one": "Tam {{count}} kez",
+    "exactly_other": "Tam {{count}} kez",
+    "exactlyLazy_one": "Tam {{count}} kez",
+    "exactlyLazy_other": "Tam {{count}} kez",
+    "atLeast_one": "En az {{count}} kez, olabildiğince çok",
+    "atLeast_other": "En az {{count}} kez, olabildiğince çok",
+    "atLeastLazy_one": "En az {{count}} kez, olabildiğince az",
+    "atLeastLazy_other": "En az {{count}} kez, olabildiğince az",
+    "between": "{{min}} ile {{max}} kez arası, olabildiğince çok",
+    "betweenLazy": "{{min}} ile {{max}} kez arası, olabildiğince az"
+  }
+}

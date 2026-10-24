@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "JSON Studio",
+    "description": "Validez, formatez et explorez du JSON : arbre, requêtes JSONPath, comparaison structurelle et export CSV."
+  },
+  "actions": {
+    "open": "Ouvrir…",
+    "save": "Enregistrer sous…",
+    "indent": "Indentation",
+    "sortKeys": "Trier les clés",
+    "format": "Formater",
+    "minify": "Minifier",
+    "copy": "Copier"
+  },
+  "indent": {
+    "two": "2 espaces",
+    "four": "4 espaces",
+    "tab": "Tabulations"
+  },
+  "editor": {
+    "label": "Texte JSON",
+    "placeholder": "Collez ou saisissez du JSON, ou ouvrez un fichier…"
+  },
+  "status": {
+    "empty": "Vide",
+    "valid": "JSON valide",
+    "invalid": "Invalide",
+    "at": "Ligne {{line}}, colonne {{column}}",
+    "fixFirst": "Corrigez d’abord le JSON : il n’est pas valide.",
+    "emptyPanel": "Collez ou ouvrez du JSON pour l’explorer",
+    "invalidPanel": "Le JSON contient une erreur : voir l’éditeur"
+  },
+  "problems": {
+    "unexpected-end": "Le texte se termine trop tôt",
+    "unexpected-character": "Caractère inattendu",
+    "bad-string": "Une chaîne contient un caractère de contrôle (échappez-le)",
+    "bad-escape": "Séquence d’échappement invalide",
+    "bad-number": "Nombre invalide",
+    "trailing-comma": "Virgule finale (interdite en JSON)",
+    "expected-colon": "« : » attendu après la clé",
+    "expected-comma": "« , » ou un crochet fermant attendu",
+    "expected-key": "Clé entre guillemets doubles attendue",
+    "trailing-content": "Texte inattendu après la valeur JSON",
+    "empty": "Rien à lire"
+  },
+  "panels": {
+    "label": "Outils",
+    "tree": "Arbre",
+    "query": "Requête",
+    "diff": "Comparer",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "Arbre du document",
+    "search": "Rechercher clés et valeurs",
+    "hit": "{{current}} sur {{total}}",
+    "noHits": "Aucun résultat",
+    "previous": "Résultat précédent",
+    "next": "Résultat suivant",
+    "copyPath": "Copier le chemin",
+    "copyValue": "Copier la valeur",
+    "members_one": "{{count}} membre",
+    "members_other": "{{count}} membres",
+    "items_one": "{{count}} élément",
+    "items_other": "{{count}} éléments"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "Exemples",
+    "error": "Position {{position}} : {{message}}",
+    "results_one": "{{count}} résultat",
+    "results_other": "{{count}} résultats",
+    "copy": "Copier les résultats",
+    "show": "Afficher dans l’arbre",
+    "more": "et {{count}} de plus"
+  },
+  "diff": {
+    "with": "Comparer avec un autre document JSON",
+    "open": "Ouvrir…",
+    "other": "JSON à comparer",
+    "placeholder": "Collez l’autre version ici",
+    "same": "Les documents sont identiques",
+    "added_one": "{{count}} ajouté",
+    "added_other": "{{count}} ajoutés",
+    "removed_one": "{{count}} supprimé",
+    "removed_other": "{{count}} supprimés",
+    "changed_one": "{{count}} modifié",
+    "changed_other": "{{count}} modifiés"
+  },
+  "csv": {
+    "needsArray": "Le CSV nécessite une liste",
+    "needsArrayText": "Le document doit être un tableau (d’objets, pour les colonnes).",
+    "summary": "{{rows}} lignes, {{columns}} colonnes",
+    "copy": "Copier le CSV",
+    "export": "Exporter en CSV…",
+    "preview": "Aperçu CSV"
+  }
+}

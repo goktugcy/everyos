@@ -1,0 +1,21 @@
+@import "./styles.css";
+
+main {
+  padding: 0;
+}
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  height: 100vh;
+  padding: 12px;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+}
+.summary span {
+  color: rgb(var(--everyos-text-muted, 47 60 82));
+  overflow: hidden;
+}

@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Editor de código",
+    "description": "Edita código en pestañas con resaltado de sintaxis, minimapa, buscar y reemplazar, y un explorador de archivos para la carpeta que elijas."
+  },
+  "actions": {
+    "new": "Archivo nuevo",
+    "openFile": "Abrir archivo…",
+    "openFolder": "Abrir carpeta…",
+    "save": "Guardar",
+    "saveAs": "Guardar como…",
+    "find": "Buscar y reemplazar"
+  },
+  "explorer": {
+    "label": "Archivos",
+    "show": "Mostrar archivos",
+    "hide": "Ocultar archivos",
+    "newFile": "Nuevo archivo en la carpeta",
+    "newFolder": "Nueva carpeta",
+    "refresh": "Actualizar",
+    "close": "Cerrar carpeta",
+    "newFileTitle": "Archivo nuevo",
+    "newFolderTitle": "Nueva carpeta",
+    "inFolder": "En {{folder}}",
+    "inRoot": "En {{name}}",
+    "names": {
+      "empty": "Escribe un nombre.",
+      "reserved": "«{{name}}» no se puede usar como nombre.",
+      "separator": "Los nombres no pueden contener / ni \\.",
+      "tooLong": "Ese nombre es demasiado largo.",
+      "exists": "«{{name}}» ya existe aquí."
+    },
+    "unreadable": "No se puede leer esta carpeta",
+    "unreadableShort": "ilegible",
+    "empty": "Esta carpeta está vacía",
+    "more_one": "{{count}} más sin mostrar",
+    "more_other": "{{count}} más sin mostrar"
+  },
+  "tabs": {
+    "label": "Archivos abiertos",
+    "unsaved": "Cambios sin guardar",
+    "close": "Cerrar {{name}}"
+  },
+  "editor": {
+    "label": "Contenido de {{name}}"
+  },
+  "status": {
+    "label": "Estado",
+    "position": "Lín. {{line}}, col. {{column}}",
+    "selected_one": "{{count}} seleccionado",
+    "selected_other": "{{count}} seleccionados",
+    "language": "Lenguaje",
+    "autoNamed": "{{name}} (por el nombre)",
+    "autoPlain": "Texto sin formato (por el nombre)",
+    "plain": "Texto sin formato",
+    "spaces": "Espacios: {{count}}",
+    "tabs": "Tabulación: {{count}}",
+    "eol": "Finales de línea"
+  },
+  "settings": {
+    "title": "Ajustes del editor",
+    "theme": "Tema",
+    "themes": {
+      "system": "Como EveryOS",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "contrast": "Alto contraste"
+    },
+    "fontSize": "Tamaño de letra",
+    "tabSize": "Tamaño de tabulación",
+    "insertSpaces": "Sangrar con espacios",
+    "wrap": "Ajustar líneas largas",
+    "minimap": "Mostrar el minimapa"
+  },
+  "welcome": {
+    "title": "Abre algo para editar",
+    "text": "Abre una carpeta de proyecto para ver sus archivos, abre archivos sueltos o empieza uno nuevo.",
+    "withFolder": "Elige un archivo de la carpeta de la izquierda o empieza uno nuevo."
+  },
+  "doc": {
+    "untitled": "Sin título {{number}}"
+  },
+  "open": {
+    "binary": "«{{name}}» no es un archivo de texto.",
+    "notUtf8": "«{{name}}» no es texto UTF-8. Ábrelo en el Editor de texto, que lee otras codificaciones."
+  },
+  "save": {
+    "saved": "{{name}} guardado",
+    "changedTitle": "«{{name}}» cambió en el disco",
+    "changedBody": "Este archivo cambió desde que lo abriste. Al guardar, tus cambios reemplazan esos.",
+    "overwrite": "Reemplazar"
+  },
+  "close": {
+    "title_one": "¿Cerrar con {{count}} archivo sin guardar?",
+    "title_other": "¿Cerrar con {{count}} archivos sin guardar?",
+    "body": "Los cambios sin guardar se conservan y vuelven al abrir de nuevo el Editor de código.",
+    "confirm": "Cerrar",
+    "tabTitle": "¿Descartar los cambios de «{{name}}»?",
+    "tabBody": "Se perderán los cambios que no guardaste.",
+    "discard": "Descartar"
+  },
+  "recovery": {
+    "lost": "No se pudieron recuperar estos archivos sin guardar: {{names}}"
+  }
+}

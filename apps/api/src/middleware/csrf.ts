@@ -10,12 +10,13 @@ const csrfFailed = (reason: string) =>
   new ApiError(403, "CSRF_FAILED", `CSRF check failed: ${reason}`);
 
 /**
- * Defence in depth against cross-site request forgery for state-changing
- * requests:
- *  1. Fetch metadata: browsers label cross-site requests (Sec-Fetch-Site).
- *  2. Origin must match the origin the browser used (or a configured one, or
- *     EveryOS's own Tailscale Serve address).
- *  3. Authenticated requests must echo the per-session CSRF token header.
+ * Defence in depth against cross-site request forgery:
+ *  1. Fetch metadata: browsers label cross-site requests (Sec-Fetch-Site). This applies to every
+ *     API request, reads included: sandboxed app frames have an opaque origin, and nothing they
+ *     load (an image, a frame navigation) may reach the API, not even a side-effecting GET.
+ *  2. State-changing requests: Origin must match the origin the browser used (or a configured
+ *     one, or EveryOS's own Tailscale Serve address).
+ *  3. Authenticated state-changing requests must echo the per-session CSRF token header.
  * The session cookie is additionally SameSite=Strict.
  */
 export function csrfProtection(services: Services): MiddlewareHandler<AppEnv> {
@@ -23,12 +24,12 @@ export function csrfProtection(services: Services): MiddlewareHandler<AppEnv> {
   // authority, so they need no session token (origin checks still apply).
   const tokenExempt = new Set(["/api/setup", "/api/auth/login", "/api/auth/login/totp"]);
   return async (c, next) => {
-    if (SAFE_METHODS.has(c.req.method)) return next();
-
     const fetchSite = c.req.header("sec-fetch-site");
     if (fetchSite !== undefined && fetchSite !== "same-origin" && fetchSite !== "none") {
       throw csrfFailed(`sec-fetch-site=${fetchSite}`);
     }
+    if (SAFE_METHODS.has(c.req.method)) return next();
+
     const origin = c.req.header("origin");
     if (origin !== undefined) {
       const expected = c.get("client").expectedOrigin;

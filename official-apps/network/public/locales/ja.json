@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "ネットワークツール"
+  },
+  "network": {
+    "export": "レポートを書き出す",
+    "interfaces": "ネットワークインターフェース",
+    "interface": "インターフェース",
+    "auto": "表示中は10秒ごとにホスト情報を更新",
+    "permission": "インターフェースの読み取りには system:network.read とシステムアクセスを許可するロールが必要です。管理者が App Store で権限を付与できます。",
+    "metricsPermission": "トラフィック情報には system:metrics.read とシステムアクセスを許可するロールが必要です。",
+    "loadFailed": "ネットワーク情報を読み取れませんでした。エージェントの接続を確認して再試行してください。",
+    "unsupported": "このホストではこのネットワーク情報を取得できません。",
+    "internetChecked": "ホスト接続の確認：{{at}}",
+    "internetHint": "ホストに設定された接続確認先に基づく状態です。結果は最大60秒間キャッシュされる場合があります。",
+    "ms": "{{value}} ミリ秒",
+    "noInterfaces": "ホストからインターフェースが報告されていません。",
+    "up": "稼働中",
+    "down": "停止中",
+    "addresses": "IP アドレスとプレフィックス",
+    "mac": "MAC アドレス",
+    "mtu": "MTU",
+    "speed": "報告されたリンク速度",
+    "mbps": "{{value}} Mbit/秒",
+    "receive": "受信速度",
+    "transmit": "送信速度",
+    "rate": "{{value}}/秒",
+    "routes": "デフォルトゲートウェイの概要",
+    "routesHint": "ホストが報告したデフォルトゲートウェイの概要です。上記のアドレスにはネットワークプレフィックスが含まれます。",
+    "gateway": "ゲートウェイ",
+    "noGateways": "ホストからデフォルトゲートウェイが報告されていません。",
+    "dns": "報告された DNS サーバー",
+    "noDns": "ホストから DNS サーバーが報告されていません。",
+    "traffic": "インターフェースのトラフィック",
+    "measured": "測定：{{at}}",
+    "noTraffic": "このホストではインターフェースごとの速度を取得できません。",
+    "refresh": "更新",
+    "unavailable": "取得不可",
+    "retrieved": "取得：{{at}}",
+    "family": "アドレスファミリー",
+    "stale": "更新に失敗したため、前回のデータと取得時刻を表示しています。"
+  },
+  "source": {
+    "simulatedHint": "これらは開発用ホストのシミュレーション値で、実際のホストを示しません。",
+    "host": "ホストのデータ",
+    "simulated": "シミュレーションデータ"
+  },
+  "internet": {
+    "online": "ホストの接続は利用可能",
+    "offline": "ホストの接続確認に失敗",
+    "unknown": "ホストの接続状態は不明",
+    "disabled": "ホストの接続確認は無効"
+  },
+  "kind": {
+    "ethernet": "イーサネット",
+    "wireless": "無線",
+    "loopback": "ループバック",
+    "tailscale": "Tailscale",
+    "bridge": "ブリッジ",
+    "virtual": "仮想",
+    "other": "その他"
+  },
+  "diagnostic": {
+    "title": "許可された接続先の確認",
+    "policy": "管理者が App Store で許可した HTTP 接続先に HEAD 要求を送ります。TLS と各リダイレクト先のポリシーを検証します。",
+    "permission": "接続先の確認には network:outbound が必要です。管理者が App Store で許可できます。",
+    "url": "HTTP または HTTPS URL",
+    "check": "接続先を確認",
+    "checking": "確認中…",
+    "invalid": "認証情報やフラグメントのない HTTP または HTTPS URL を入力してください。",
+    "attempt": "最終試行：{{url}} · {{at}}",
+    "responded": "HTTP 応答を受信",
+    "responseHint": "HTTP 応答は、この接続先から返答があったことを示します。ステータスはサービスの応答内容を表します。",
+    "status": "HTTP ステータス",
+    "address": "接続先アドレス",
+    "time": "確認時刻",
+    "elapsed": "応答時間",
+    "redirects": "追跡したリダイレクト"
+  }
+}

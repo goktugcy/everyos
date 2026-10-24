@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "视频播放器",
+    "description": "播放选中的视频，支持字幕、播放列表和位置记忆。"
+  },
+  "video": {
+    "scope": "仅访问选中的文件。最多 20 个列表，每个 100 个视频。保存位置和设置，视频从 EveryOS 流式播放，不复制到应用存储。",
+    "permission": "视频访问需要在应用商店授予 files:pick 权限。",
+    "add": "添加视频",
+    "openSubtitles": "打开字幕",
+    "fullscreen": "全屏",
+    "fullscreenError": "浏览器拒绝全屏。如可用，请使用视频原生控件。",
+    "playlist": "播放列表",
+    "defaultList": "我的视频",
+    "newList": "新建播放列表",
+    "renameList": "重命名播放列表",
+    "deleteList": "删除播放列表",
+    "referencesOnly": "仅移除列表引用，不删除原始文件。",
+    "revoked": "部分列表文件不再共享。请重新添加以恢复访问。",
+    "empty": "尚未选择视频",
+    "openHint": "通过 EveryOS 选择视频。播放取决于浏览器支持的容器和编码，此应用不转码。",
+    "selected": "选中的视频",
+    "previous": "上一个视频",
+    "next": "下一个视频",
+    "remove": "从列表移除",
+    "player": "视频播放",
+    "play": "播放",
+    "pause": "暂停",
+    "reload": "重新加载视频",
+    "speed": "播放速度",
+    "subtitles": "字幕",
+    "showSubtitles": "显示字幕",
+    "hideSubtitles": "隐藏字幕",
+    "captionHint": "支持纯文本 WebVTT 或 SRT 字幕，最多 1 MiB、2,000 条。不会执行标记或样式。",
+    "badSubtitles": "无法读取字幕。请使用至少一条带时间提示的有效 WebVTT/SRT，最多 1 MiB、2,000 条。",
+    "unsupported": "无法播放。可能是编码/容器不受支持、文件损坏或共享已过期。请重新加载或尝试其他浏览器/格式。不提供转码。",
+    "codecs": "浏览器编码支持",
+    "codecHint": "这些是浏览器 canPlayType 的报告，不保证某个文件一定可解码。以实际播放结果为准。",
+    "probably": "报告为很可能支持",
+    "maybe": "报告为可能支持",
+    "notReported": "未报告支持"
+  }
+}

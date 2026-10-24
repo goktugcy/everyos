@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "Inspector SSL",
+    "description": "Inspecciona certificados TLS, caducidad, identidad y cadenas de destinos permitidos."
+  },
+  "target": {
+    "host": "Nombre de host o dirección IP",
+    "port": "Puerto TLS",
+    "sni": "Nombre del servidor (SNI), opcional",
+    "hint": "Solo se inspeccionan destinos permitidos por la política de red de la app. Esto no cambia la confianza del certificado.",
+    "inspect": "Inspeccionar",
+    "working": "Inspeccionando…",
+    "invalid": "Introduce un host o IP válido, un puerto entre 1 y 65535 y, opcionalmente, un nombre DNS. No uses URL ni rutas."
+  },
+  "saved": {
+    "title": "Destinos guardados",
+    "save": "Guardar destino",
+    "empty": "Guarda un destino para inspeccionarlo después.",
+    "remove": "Quitar {{target}}",
+    "limit": "Se pueden guardar hasta 50 destinos. Quita uno para añadir otro."
+  },
+  "result": {
+    "empty": "Inspecciona un destino TLS",
+    "trusted": "Cadena verificada",
+    "untrusted": "No se pudo verificar la cadena con las raíces de confianza del servidor.",
+    "matches": "El nombre coincide con el certificado",
+    "mismatch": "El certificado no coincide con el nombre solicitado.",
+    "remote": "Dirección conectada",
+    "protocol": "Protocolo",
+    "cipher": "Conjunto de cifrado",
+    "alpn": "ALPN",
+    "time": "Tiempo de respuesta",
+    "unavailable": "No disponible",
+    "chain": "Cadena de certificados",
+    "noChain": "El destino no devolvió detalles del certificado."
+  },
+  "cert": {
+    "subject": "Sujeto",
+    "issuer": "Emisor",
+    "sans": "Nombres alternativos (SAN)",
+    "from": "Válido desde",
+    "to": "Válido hasta",
+    "serial": "Número de serie",
+    "fingerprint": "Huella SHA-256",
+    "key": "Clave pública",
+    "selfSigned": "Autofirmado"
+  },
+  "validity": {
+    "valid": "Dentro del periodo de validez",
+    "expired": "Certificado caducado",
+    "future": "El certificado aún no es válido",
+    "soon": "El certificado caduca en 30 días"
+  }
+}

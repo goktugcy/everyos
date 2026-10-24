@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Generador de cron",
+    "description": "Crea y comprueba programaciones cron: generador visual, descripciones claras, próximas ejecuciones en cualquier zona horaria y formas para systemd y EveryOS."
+  },
+  "seconds": {
+    "label": "Campo de segundos"
+  },
+  "expression": {
+    "section": "Expresión",
+    "label": "Expresión cron",
+    "copy": "Copiar la expresión"
+  },
+  "fields": {
+    "second": "Segundo",
+    "minute": "Minuto",
+    "hour": "Hora",
+    "day": "Día del mes",
+    "month": "Mes",
+    "weekday": "Día de la semana"
+  },
+  "problems": {
+    "field-count": "Una expresión cron tiene {{count}} campos separados por espacios (hay {{token}}).",
+    "empty": "{{field}} está vacío.",
+    "bad-token": "{{field}}: «{{token}}» no es un número, un nombre, * ni una lista.",
+    "out-of-range": "{{field}}: {{token}} está fuera de rango.",
+    "bad-range": "{{field}}: el rango «{{token}}» va al revés.",
+    "bad-step": "{{field}}: el paso en «{{token}}» debe ser un número mayor que 0.",
+    "reboot": "@reboot se ejecuta al iniciar, no a una hora: no hay horas que mostrar."
+  },
+  "builder": {
+    "custom": "Edita este campo en la expresión (usa una forma que el generador no muestra).",
+    "mode": "Cómo se fija {{field}}",
+    "modes": {
+      "every": "Cada",
+      "specific": "Valores concretos",
+      "range": "Rango",
+      "step": "Cada n"
+    },
+    "from": "Desde",
+    "to": "Hasta",
+    "every": "Cada",
+    "interval": "Intervalo",
+    "startingAt": "empezando en",
+    "start": "Inicio"
+  },
+  "presets": {
+    "title": "Predefinidos",
+    "everyMinute": "Cada minuto",
+    "every5Minutes": "Cada 5 minutos",
+    "every15Minutes": "Cada 15 minutos",
+    "hourly": "Cada hora",
+    "every6Hours": "Cada 6 horas",
+    "daily3am": "Cada día a las 03:00",
+    "weekdays9am": "Laborables a las 09:00",
+    "weeklySunday": "Cada domingo",
+    "monthlyFirst": "El día 1 de cada mes",
+    "quarterly": "Trimestral",
+    "yearly": "Cada año"
+  },
+  "runs": {
+    "section": "Horas de ejecución",
+    "timeZone": "Zona horaria",
+    "next": "Próximas ejecuciones",
+    "previous": "Ejecuciones anteriores",
+    "none": "Esta programación nunca se ejecuta (por ejemplo, el 30 de febrero).",
+    "invalid": "Corrige la expresión para ver las horas."
+  },
+  "export": {
+    "title": "Úsala",
+    "command": "Comando",
+    "commandPlaceholder": "/ruta/al/comando",
+    "crontab": "Línea de crontab",
+    "onCalendar": "Temporizador de systemd (OnCalendar=)",
+    "twoLines": "Cron se ejecuta si coincide cualquiera de los campos de día; systemd exige ambos, por eso hay dos líneas.",
+    "timezone": "En la zona horaria {{zone}}.",
+    "everyos": "Tareas programadas de EveryOS",
+    "compatible": "Compatible",
+    "problems": {
+      "seconds": "Las tareas programadas no tienen campo de segundos.",
+      "too-frequent": "Las tareas programadas se ejecutan como mucho cada 5 minutos (12 veces por hora)."
+    },
+    "timerFile": "Guardar un archivo .timer…",
+    "defaultDescription": "Trabajo programado",
+    "notScheduled": "El generador de cron solo crea expresiones: nunca programa nada en este servidor."
+  },
+  "saved": {
+    "title": "Guardadas",
+    "name": "Nombre",
+    "save": "Guardar la expresión",
+    "done": "Guardada",
+    "delete": "Eliminar {{name}}"
+  }
+}

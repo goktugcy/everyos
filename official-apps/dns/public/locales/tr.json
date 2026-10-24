@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "DNS Sorgulama",
+    "description": "DNS kayıtları, yanıt süreleri, çözümleyiciler ve sorgu geçmişi."
+  },
+  "query": {
+    "name": "Ad veya PTR için IP adresi",
+    "type": "Kayıt türü",
+    "common": "Yaygın türler",
+    "server": "Çözümleyici",
+    "system": "Sunucu varsayılanı",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "Özel sunucu",
+    "address": "Çözümleyici IP adresi",
+    "port": "DNS portu",
+    "run": "Sorgula",
+    "working": "Sorgulanıyor…",
+    "systemHint": "Sorgular bu sunucunun yapılandırılmış DNS çözümleyicilerini kullanır.",
+    "policyHint": "Bir yönetici, uygulamanın ağ politikasında bu çözümleyicinin adresine ve portuna izin vermelidir."
+  },
+  "validation": {
+    "empty": "Sorgulanacak bir ad girin.",
+    "tooLong": "DNS adı çok uzun (en fazla 253 ASCII karakter).",
+    "invalid": "URL, yol veya port içermeyen geçerli bir DNS adı girin.",
+    "needsAddress": "IP adresi sorgulamak için PTR seçin.",
+    "server": "Geçerli bir çözümleyici IP adresi girin.",
+    "port": "1 ile 65535 arasında bir port girin."
+  },
+  "results": {
+    "empty": "DNS kayıtlarını sorgulayın",
+    "emptyHint": "Bir ad girin, kayıt türünü ve çözümleyiciyi seçip sorgulayın.",
+    "overview": "Türe göre kayıtlar",
+    "timing": "{{ms}} ms",
+    "servers": "Çözümleyiciler: {{servers}}",
+    "records": "{{type}} kayıtları",
+    "value": "Değer",
+    "ttl": "TTL",
+    "unavailable": "Döndürülmedi",
+    "copyAll": "Tüm sonuçları kopyala"
+  },
+  "status": {
+    "ok": "Yanıtlandı",
+    "no-data": "Bu türde kayıt yok",
+    "not-found": "Ad bulunamadı",
+    "refused": "Çözümleyici sorguyu reddetti",
+    "server-failure": "Çözümleyici hatası",
+    "timeout": "Sorgu zaman aşımına uğradı",
+    "error": "Sorgu başarısız oldu"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "Doğrulama"
+  },
+  "history": {
+    "title": "Geçmiş",
+    "clear": "DNS geçmişi temizlensin mi?",
+    "empty": "Tamamlanan sorgular burada görünür. Yeniden çalıştırmak için birini seçin."
+  }
+}

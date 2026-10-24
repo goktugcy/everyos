@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "뽀모도로",
+    "description": "짧은 휴식과 긴 휴식, 세션 기록, 일일 통계, 알림, 데스크톱 위젯을 갖춘 집중 타이머."
+  },
+  "widgets": {
+    "timer": {
+      "name": "뽀모도로 타이머",
+      "description": "시작과 일시정지가 있는 집중 타이머를 한눈에."
+    }
+  },
+  "views": {
+    "label": "보기",
+    "timer": "타이머",
+    "history": "기록",
+    "stats": "통계"
+  },
+  "phases": {
+    "label": "단계",
+    "focus": "집중",
+    "short": "짧은 휴식",
+    "long": "긴 휴식"
+  },
+  "timer": {
+    "left": "남은 시간",
+    "cycle": "긴 휴식까지 {{of}}회 중 {{done}}회",
+    "label": "무엇을 하고 있나요?",
+    "labelPlaceholder": "선택 사항, 기록에 표시됩니다"
+  },
+  "status": {
+    "ready": "준비됨",
+    "paused": "일시정지됨",
+    "running": {
+      "focus": "집중하세요",
+      "short": "잠깐 쉬세요",
+      "long": "충분히 쉬세요"
+    }
+  },
+  "actions": {
+    "start": "시작",
+    "pause": "일시정지",
+    "resume": "계속",
+    "reset": "초기화",
+    "resetHint": "이 단계를 처음부터 (R)",
+    "skip": "건너뛰기",
+    "skipHint": "다음 단계로 (S)"
+  },
+  "errors": {
+    "save": "타이머를 저장하지 못했습니다. 여기서는 계속 실행됩니다."
+  },
+  "history": {
+    "empty": "아직 세션이 없습니다",
+    "emptyText": "완료한 집중 세션이 여기에 표시됩니다.",
+    "count_other": "세션 {{count}}개",
+    "clear": "기록 지우기",
+    "clearTitle": "세션 기록을 삭제할까요?",
+    "unlabelled": "집중 세션",
+    "minutes_other": "{{count}}분",
+    "stopped": "중간에 멈춤"
+  },
+  "stats": {
+    "todayMinutes": "오늘 집중한 시간",
+    "todaySessions": "오늘 세션",
+    "week": "최근 7일",
+    "streak": "연속 기록",
+    "days_other": "{{count}}일",
+    "chart": "일별 집중 시간(분)"
+  },
+  "settings": {
+    "durations": "시간",
+    "focusMinutes": "집중 (분)",
+    "shortMinutes": "짧은 휴식 (분)",
+    "longMinutes": "긴 휴식 (분)",
+    "longEvery": "긴 휴식 주기",
+    "longEveryHint": "긴 휴식 전 집중 세션 수",
+    "flow": "진행 방식",
+    "autoStartBreaks": "휴식 자동 시작",
+    "autoStartFocus": "집중 세션 자동 시작",
+    "notify": "단계가 끝나면 알림",
+    "notifyHint": "브라우저에서 EveryOS가 열려 있는 동안 (이 창 또는 위젯)",
+    "notifyDenied": "뽀모도로에 알림 권한이 없습니다. 앱 스토어에서 허용하세요."
+  },
+  "notify": {
+    "focusDone": "집중 세션 완료",
+    "breakDone": "휴식 끝",
+    "next": {
+      "focus": "{{minutes}}분 동안 집중할 시간입니다.",
+      "short": "{{minutes}}분 쉬세요.",
+      "long": "{{minutes}}분 동안 푹 쉬세요."
+    }
+  },
+  "widget": {
+    "open": "뽀모도로 열기"
+  }
+}

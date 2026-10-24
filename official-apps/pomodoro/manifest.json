@@ -1,0 +1,40 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.pomodoro",
+  "name": "Pomodoro",
+  "version": "1.0.0",
+  "description": "A focus timer with short and long breaks, session history, daily statistics, notifications and a desktop widget.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "productivity",
+  "permissions": ["storage:app", "notifications:send", "widgets:register"],
+  "window": {
+    "defaultWidth": 560,
+    "defaultHeight": 600,
+    "minWidth": 340,
+    "minHeight": 420,
+    "instances": "single"
+  },
+  "widgets": [
+    {
+      "id": "timer",
+      "name": "Pomodoro timer",
+      "description": "The focus timer at a glance, with start and pause.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium"],
+      "defaultSize": "medium",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["storage:app", "notifications:send"]
+    }
+  ],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/pomodoro"
+}

@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "Consulta DNS",
+    "description": "Registros DNS, tiempos, servidores e historial de consultas."
+  },
+  "query": {
+    "name": "Nombre o dirección IP para PTR",
+    "type": "Tipo de registro",
+    "common": "Tipos habituales",
+    "server": "Servidor DNS",
+    "system": "Predeterminado del servidor",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "Servidor personalizado",
+    "address": "IP del servidor DNS",
+    "port": "Puerto DNS",
+    "run": "Consultar",
+    "working": "Consultando…",
+    "systemHint": "Las consultas usan los servidores DNS configurados en este servidor.",
+    "policyHint": "Un administrador debe permitir la dirección y el puerto de este servidor DNS en la política de red de la app."
+  },
+  "validation": {
+    "empty": "Introduce un nombre para consultar.",
+    "tooLong": "El nombre DNS es demasiado largo (máximo 253 caracteres ASCII).",
+    "invalid": "Introduce un nombre DNS válido, sin URL, ruta ni puerto.",
+    "needsAddress": "Elige PTR para consultar una dirección IP.",
+    "server": "Introduce una IP válida del servidor DNS.",
+    "port": "Introduce un puerto de 1 a 65535."
+  },
+  "results": {
+    "empty": "Consulta registros DNS",
+    "emptyHint": "Introduce un nombre, elige un tipo y servidor DNS y consulta.",
+    "overview": "Registros por tipo",
+    "timing": "{{ms}} ms",
+    "servers": "Servidores DNS: {{servers}}",
+    "records": "Registros {{type}}",
+    "value": "Valor",
+    "ttl": "TTL",
+    "unavailable": "No devuelto",
+    "copyAll": "Copiar todos los resultados"
+  },
+  "status": {
+    "ok": "Respondida",
+    "no-data": "Sin registros de este tipo",
+    "not-found": "Nombre no encontrado",
+    "refused": "El servidor DNS rechazó la consulta",
+    "server-failure": "Error del servidor DNS",
+    "timeout": "Consulta agotada",
+    "error": "Error en la consulta"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "Verificación"
+  },
+  "history": {
+    "title": "Historial",
+    "clear": "¿Borrar el historial DNS?",
+    "empty": "Las consultas completadas aparecen aquí. Selecciona una para repetirla."
+  }
+}

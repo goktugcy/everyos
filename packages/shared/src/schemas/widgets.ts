@@ -24,10 +24,17 @@ import {
 const source = z.enum(["host", "simulated"]);
 const n = z.number().nonnegative();
 
-export const WidgetIdSchema = z
-  .string()
-  .regex(/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/)
-  .max(64);
+/** A built-in widget (`system.cpu`), or a desktop app's (`dev.everyos.pomodoro#timer`). */
+export const WidgetIdSchema = z.union([
+  z
+    .string()
+    .regex(/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/)
+    .max(64),
+  z
+    .string()
+    .regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*){2,6}#[a-z][a-z0-9-]*$/)
+    .max(200),
+]);
 
 const ConfigValueSchema = z.union([
   z.string().max(256),

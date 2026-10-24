@@ -1,0 +1,38 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.disk",
+  "name": "Disk Explorer",
+  "version": "1.0.0",
+  "description": "Permission-scoped folder sizes, largest files, file types, mounted storage and measured trends.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "system",
+  "permissions": [
+    "storage:app",
+    "files:pick",
+    "files:save",
+    "storage:usage.read",
+    "system:metrics.read"
+  ],
+  "window": {
+    "defaultWidth": 1040,
+    "defaultHeight": 720,
+    "minWidth": 360,
+    "minHeight": 320,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/logs"
+}

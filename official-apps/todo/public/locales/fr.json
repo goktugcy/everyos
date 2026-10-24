@@ -1,0 +1,148 @@
+{
+  "app": {
+    "name": "Tâches",
+    "description": "Des tâches avec projets, priorités, échéances, répétitions, étiquettes, sous-tâches, rappels, progression et un widget."
+  },
+  "widgets": {
+    "today": {
+      "name": "Tâches du jour",
+      "description": "Tâches du jour et en retard : cochez-les ou ajoutez-en."
+    }
+  },
+  "lists": {
+    "inbox": "Boîte de réception",
+    "today": "Aujourd’hui",
+    "upcoming": "À venir",
+    "overdue": "En retard",
+    "all": "Toutes les tâches",
+    "completed": "Terminées"
+  },
+  "backup": {
+    "import": "Importer une sauvegarde…",
+    "export": "Exporter une sauvegarde…",
+    "imported_one": "{{count}} tâche importée",
+    "imported_other": "{{count}} tâches importées"
+  },
+  "due": {
+    "today": "Aujourd’hui",
+    "tomorrow": "Demain",
+    "yesterday": "Hier"
+  },
+  "empty": {
+    "inbox": "Votre boîte est vide",
+    "today": "Rien à faire aujourd’hui",
+    "upcoming": "Rien dans les 7 prochains jours",
+    "overdue": "Rien en retard",
+    "all": "Aucune tâche en cours",
+    "completed": "Aucune tâche terminée",
+    "list": "Aucune tâche ici"
+  },
+  "progress": {
+    "title": "Progression",
+    "chart": "Terminées par jour, 7 derniers jours",
+    "done": "{{done}} sur {{total}} terminées",
+    "open": "Tâches en cours",
+    "week": "Terminées cette semaine"
+  },
+  "projects": {
+    "title": "Projets",
+    "add": "Nouveau projet",
+    "rename": "Renommer le projet",
+    "delete": "Supprimer le projet",
+    "deleteTitle": "Supprimer le projet « {{name}} » ?",
+    "deleteBody": "Ses tâches vont dans la boîte de réception.",
+    "name": "Nom du projet"
+  },
+  "recurrence": {
+    "title": "Répétition",
+    "repeat": "Se répète",
+    "repeats": "Se répète",
+    "monthMode": "Le",
+    "monthDay": "Le {{day}} du mois",
+    "monthWeekday": "Le même {{weekday}} du mois",
+    "next": "Prochaine : {{date}}",
+    "weekdays": "Ces jours-là",
+    "units": {
+      "none": "Ne se répète pas",
+      "day": "Chaque jour",
+      "weekday": "En semaine (lun–ven)",
+      "week": "Chaque semaine",
+      "month": "Chaque mois",
+      "year": "Chaque année"
+    },
+    "every": {
+      "day": "Tous les … jours",
+      "week": "Toutes les … semaines",
+      "month": "Tous les … mois",
+      "year": "Tous les … ans"
+    }
+  },
+  "reminder": {
+    "at": "Échéance à {{time}}",
+    "today": "À faire aujourd’hui",
+    "needsDue": "Les rappels nécessitent une échéance (09:00 sans heure).",
+    "none": "Aucun rappel",
+    "options": {
+      "0": "À l’échéance",
+      "5": "5 minutes avant",
+      "10": "10 minutes avant",
+      "15": "15 minutes avant",
+      "30": "30 minutes avant",
+      "60": "1 heure avant",
+      "120": "2 heures avant",
+      "1440": "1 jour avant"
+    }
+  },
+  "search": {
+    "label": "Rechercher des tâches",
+    "none": "Aucune tâche ne correspond"
+  },
+  "sort": {
+    "label": "Trier",
+    "manual": "Mon ordre",
+    "due": "Échéance",
+    "priority": "Priorité",
+    "title": "Titre"
+  },
+  "subtasks": {
+    "title": "Sous-tâches",
+    "add": "Ajouter une sous-tâche",
+    "delete": "Supprimer la sous-tâche"
+  },
+  "tags": {
+    "title": "Étiquettes"
+  },
+  "task": {
+    "added": "Tâche ajoutée",
+    "complete": "Marquer comme terminée",
+    "completeNamed": "Marquer « {{name}} » comme terminée",
+    "completed": "Terminée",
+    "deleteTitle": "Supprimer « {{name}} » ?",
+    "details": "Détails de la tâche",
+    "done": "Terminée",
+    "due": "Échéance",
+    "moveDown": "Descendre",
+    "moveUp": "Monter",
+    "nextOccurrence": "Terminée. Reportée à sa prochaine date.",
+    "notes": "Notes",
+    "priority": "Priorité",
+    "project": "Projet",
+    "quickAdd": "Nouvelle tâche",
+    "quickAddPlaceholder": "Ajouter une tâche… (#étiquettes acceptées)",
+    "reminder": "Rappel",
+    "reopen": "Marquer comme non terminée",
+    "tags": "Étiquettes",
+    "tagsHint": "Séparez par des espaces ou des virgules",
+    "time": "Heure",
+    "title": "Titre"
+  },
+  "priority": {
+    "0": "Aucune priorité",
+    "1": "Basse",
+    "2": "Moyenne",
+    "3": "Haute"
+  },
+  "widget": {
+    "add": "Ajouter une tâche pour aujourd’hui…"
+  }
+}

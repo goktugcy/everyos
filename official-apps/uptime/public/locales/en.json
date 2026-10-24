@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "Uptime"
+  },
+  "uptime": {
+    "auto": "This view refreshes every 15 seconds while active. Saved endpoint checks continue when the window is closed."
+  },
+  "health": {
+    "up": "Observed checks passing",
+    "down": "Failures observed",
+    "degraded": "Needs attention",
+    "unknown": "Insufficient data",
+    "hint": "The summary covers the host, reported services and enabled endpoints. It describes observed checks, not every aspect of server health.",
+    "limited": "Coverage is incomplete: data may be unavailable, stale, simulated or awaiting a check."
+  },
+  "host": {
+    "title": "Host uptime",
+    "boot": "Boot time: {{at}}",
+    "measured": "Measured: {{at}}",
+    "permission": "Host uptime needs system:metrics.read and a role allowed to read system data."
+  },
+  "endpoints": {
+    "title": "Endpoint availability",
+    "summary": "{{up}} up · {{down}} down · {{blocked}} blocked · {{pending}} pending · {{paused}} paused",
+    "scope": "Counts cover enabled endpoints owned by this app. Checks from HTTP Monitor are separate.",
+    "method": "Checks use GET, follow policy-approved redirects and always verify TLS certificates."
+  },
+  "services": {
+    "title": "Reported services",
+    "hint": "Read-only current state. This snapshot does not reconstruct service incident history.",
+    "permission": "Service state needs system:services.read and a role allowed to read services.",
+    "observed": "Observed: {{at}}",
+    "sub": "Substate",
+    "search": "Search services",
+    "name": "Service",
+    "description": "Description",
+    "state": "State",
+    "empty": "No matching services.",
+    "activeStates": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "failed": "Failed",
+      "activating": "Starting",
+      "deactivating": "Stopping",
+      "reloading": "Reloading"
+    }
+  },
+  "incidents": {
+    "title": "Incident observations",
+    "hint": "Up to 100 observed failure, policy-block and first-success transitions in loaded checks. These are check observations; the configured consecutive-failure threshold determines the monitor state.",
+    "failure": "Failure first observed",
+    "blocked": "Policy block observed",
+    "success": "Successful check observed",
+    "partial": "Earlier checks are outside the loaded history; the failure may have started earlier.",
+    "empty": "No incident transitions in the loaded history."
+  },
+  "duration": {
+    "full": "{{days}}d {{hours}}h {{minutes}}m {{seconds}}s"
+  },
+  "widgets": {
+    "health": {
+      "name": "Uptime overview",
+      "description": "Host uptime and observed endpoint and service health."
+    }
+  },
+  "widget": {
+    "limited": "Partial coverage",
+    "endpoints": "Endpoints up: {{up}}/{{total}}",
+    "open": "Open Uptime"
+  },
+  "form": {
+    "new": "New monitor",
+    "resume": "Continue draft",
+    "newTitle": "Create monitor",
+    "editTitle": "Edit monitor",
+    "name": "Name",
+    "url": "HTTP or HTTPS URL",
+    "method": "Method",
+    "interval": "Interval (seconds)",
+    "timeout": "Timeout (milliseconds)",
+    "min": "Minimum expected status",
+    "max": "Maximum expected status",
+    "keyword": "Required body text (optional)",
+    "downAfter": "Failures before marking down",
+    "verifyTls": "Verify TLS certificates",
+    "tlsWarning": "Untrusted certificates will be accepted for this monitor.",
+    "notify": "Notify on failure and recovery",
+    "enabled": "Monitoring enabled",
+    "save": "Save monitor",
+    "discard": "Discard draft",
+    "discardTitle": "Discard this draft?",
+    "discardText": "Unsaved monitor settings will be lost.",
+    "policy": "An administrator must allow the target and port in the App Store. Checks continue while this app is closed."
+  },
+  "monitor": {
+    "refresh": "Refresh",
+    "targets": "Monitors ({{count}}/50)",
+    "background": "EveryOS checks saved monitors in the background. This window refreshes every 30 seconds.",
+    "permission": "This app has no outbound network permission. An administrator can grant it in the App Store.",
+    "empty": "No monitors yet",
+    "emptyHint": "Create a monitor for an approved HTTP endpoint to start collecting checks.",
+    "never": "Not checked yet",
+    "noData": "No data",
+    "ms": "{{value}} ms",
+    "checked": "Last check: {{at}}",
+    "since": "State since: {{at}}",
+    "status": "HTTP status",
+    "latency": "Response time",
+    "uptime24": "Success rate · 24 hours",
+    "uptime7": "Success rate · 7 days",
+    "average": "Average · 24 hours",
+    "check": "Check now",
+    "wait": "Wait {{seconds}} s",
+    "edit": "Edit",
+    "pause": "Pause",
+    "enable": "Enable",
+    "delete": "Delete",
+    "deleteTitle": "Delete monitor?",
+    "deleteText": "Delete {{name}} and its check history? This cannot be undone.",
+    "schedule": "Every {{seconds}} s · Expected {{min}}–{{max}} · Down after {{failures}} consecutive failures",
+    "notifyOn": "Failure and recovery notifications are enabled, unless this app is muted in notification settings.",
+    "notifyOff": "Notifications are turned off for this monitor.",
+    "notifyMissing": "Notifications need the notifications:send permission. An administrator can grant it in the App Store."
+  },
+  "state": {
+    "pending": "Awaiting check",
+    "up": "Up",
+    "down": "Down",
+    "blocked": "Blocked by policy",
+    "paused": "Paused"
+  },
+  "history": {
+    "title": "Check history",
+    "range": "Period",
+    "day": "Last 24 hours",
+    "week": "Last 7 days",
+    "month": "Last 30 days",
+    "export": "Export CSV",
+    "limit": "{{count}} checks · Up to 5,000 checks, retained for 30 days. Rates count checks, not elapsed time.",
+    "timeline": "Latest 60 checks, oldest to newest",
+    "at": "Time",
+    "result": "Result",
+    "ok": "Success",
+    "empty": "No checks in this period.",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} of {{pages}}"
+  },
+  "validation": {
+    "name": "Enter a name of 1–80 characters.",
+    "url": "Enter an HTTP or HTTPS URL without credentials or a fragment.",
+    "interval": "Use a whole interval from 60 to 86,400 seconds.",
+    "timeout": "Use a whole timeout from 1,000 to 30,000 milliseconds.",
+    "status": "Use status codes from 100 to 599, with minimum no greater than maximum.",
+    "keyword": "Use at most 200 characters. Body text is available only with GET.",
+    "downAfter": "Use 1–5 consecutive failures."
+  },
+  "failure": {
+    "status": "Unexpected HTTP status",
+    "keyword": "Required text missing",
+    "blocked": "Target blocked by network policy",
+    "dns": "DNS lookup failed",
+    "refused": "Connection refused",
+    "unreachable": "Target unreachable",
+    "timeout": "Request timed out",
+    "reset": "Connection reset",
+    "tls": "TLS verification failed",
+    "too-many-redirects": "Too many redirects",
+    "invalid-response": "Invalid HTTP response",
+    "error": "Network request failed",
+    "other": "Check failed"
+  },
+  "source": {
+    "simulatedHint": "These values are simulated by the development host and do not describe the real host.",
+    "host": "Host data",
+    "simulated": "Simulated data"
+  }
+}

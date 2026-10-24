@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "备忘录",
+    "description": "支持文件夹、标签、置顶、搜索、版本历史、导入导出以及快速备忘小组件的 Markdown 备忘录。"
+  },
+  "widgets": {
+    "quick": { "name": "快速备忘", "description": "无需打开备忘录即可记下内容。" }
+  },
+  "views": {
+    "all": "全部备忘",
+    "pinned": "已置顶",
+    "folders": "文件夹",
+    "tags": "标签",
+    "trash": "最近删除"
+  },
+  "actions": {
+    "newNote": "新建备忘",
+    "newFolder": "新建文件夹",
+    "renameFolder": "重命名文件夹",
+    "deleteFolder": "删除文件夹",
+    "pin": "置顶",
+    "unpin": "取消置顶",
+    "copy": "复制 Markdown",
+    "exportNote": "导出为 Markdown…",
+    "exportAll": "导出全部备忘…",
+    "import": "导入备忘…",
+    "history": "版本历史",
+    "delete": "删除备忘",
+    "restore": "恢复",
+    "deleteForever": "永久删除",
+    "emptyTrash": "清空",
+    "restoreVersion": "恢复此版本",
+    "back": "返回备忘列表"
+  },
+  "list": {
+    "label": "备忘",
+    "search": "搜索备忘",
+    "sort": "排序方式",
+    "sortUpdated": "最后编辑",
+    "sortCreated": "创建日期",
+    "sortTitle": "标题",
+    "untitled": "新备忘",
+    "noText": "没有其他文字",
+    "pinned": "已置顶"
+  },
+  "empty": {
+    "title": "还没有备忘",
+    "text": "写下第一条备忘，或导入 Markdown 文件。",
+    "trash": "最近删除中没有内容",
+    "trashText": "删除的备忘会在这里保留 30 天。",
+    "search": "没有与“{{query}}”匹配的备忘",
+    "select": "选择一条备忘，或新建一条。"
+  },
+  "editor": {
+    "tools": "备忘",
+    "modes": "视图",
+    "edit": "编辑",
+    "split": "分栏",
+    "preview": "预览",
+    "saving": "正在保存…",
+    "editing": "正在编辑…",
+    "failed": "未保存",
+    "saved": "已保存",
+    "inTrash": "此备忘位于“最近删除”中，将于 {{date}} 永久删除。",
+    "folder": "文件夹",
+    "noFolder": "无文件夹",
+    "tags": "标签",
+    "tagsHint": "用逗号分隔标签",
+    "label": "备忘正文",
+    "placeholder": "开始书写。支持 Markdown：# 标题、**粗体**、- 列表、- [ ] 任务…",
+    "previewLabel": "预览",
+    "words_other": "{{count}} 个词",
+    "edited": "编辑于 {{date}}"
+  },
+  "folder": {
+    "name": "文件夹名称",
+    "exists": "已存在同名文件夹",
+    "deleteTitle": "删除文件夹“{{name}}”？",
+    "deleteBody": "其中的备忘会保留，并移出该文件夹。"
+  },
+  "trash": {
+    "deleteTitle": "永久删除“{{name}}”？",
+    "emptyTitle": "删除“最近删除”中的所有备忘？",
+    "body": "此操作无法撤销。",
+    "moved": "已移到“最近删除”",
+    "restored": "备忘已恢复"
+  },
+  "history": {
+    "title": "版本历史",
+    "empty": "还没有早期版本。编辑时，每条备忘最多保留 20 个版本。",
+    "restored": "已恢复早期版本"
+  },
+  "import": {
+    "done_other": "已导入 {{count}} 条备忘",
+    "none": "没有导入任何内容",
+    "skipped": "已跳过 {{name}}：超过 5 MB"
+  },
+  "widget": {
+    "placeholder": "写一条快速备忘…",
+    "save": "添加备忘",
+    "saved": "备忘已添加",
+    "recent": "最近",
+    "empty": "还没有备忘",
+    "open": "打开备忘录"
+  }
+}

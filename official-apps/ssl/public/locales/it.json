@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "Ispettore SSL",
+    "description": "Esamina certificati TLS, scadenza, identità e catene degli endpoint consentiti."
+  },
+  "target": {
+    "host": "Nome host o indirizzo IP",
+    "port": "Porta TLS",
+    "sni": "Nome server (SNI), facoltativo",
+    "hint": "Si possono esaminare solo gli endpoint consentiti dai criteri di rete dell’app. La verifica non modifica la fiducia nei certificati.",
+    "inspect": "Esamina",
+    "working": "Verifica in corso…",
+    "invalid": "Inserisci un host o IP valido, una porta da 1 a 65535 e un nome DNS facoltativo. Non inserire URL o percorsi."
+  },
+  "saved": {
+    "title": "Endpoint salvati",
+    "save": "Salva endpoint",
+    "empty": "Salva un endpoint per esaminarlo di nuovo.",
+    "remove": "Rimuovi {{target}}",
+    "limit": "Massimo 50 endpoint salvati. Rimuovine uno prima di aggiungerne un altro."
+  },
+  "result": {
+    "empty": "Esamina un endpoint TLS",
+    "trusted": "Catena verificata",
+    "untrusted": "Impossibile verificare la catena con le radici attendibili di questo server.",
+    "matches": "Il nome corrisponde al certificato",
+    "mismatch": "Il certificato non corrisponde al nome server richiesto.",
+    "remote": "Indirizzo connesso",
+    "protocol": "Protocollo",
+    "cipher": "Suite crittografica",
+    "alpn": "ALPN",
+    "time": "Tempo di risposta",
+    "unavailable": "Non disponibile",
+    "chain": "Catena di certificati",
+    "noChain": "L’endpoint non ha restituito dettagli del certificato."
+  },
+  "cert": {
+    "subject": "Soggetto",
+    "issuer": "Emittente",
+    "sans": "Nomi alternativi (SAN)",
+    "from": "Valido dal",
+    "to": "Valido fino al",
+    "serial": "Numero di serie",
+    "fingerprint": "Impronta SHA-256",
+    "key": "Chiave pubblica",
+    "selfSigned": "Autofirmato"
+  },
+  "validity": {
+    "valid": "Nel periodo di validità",
+    "expired": "Certificato scaduto",
+    "future": "Il certificato non è ancora valido",
+    "soon": "Il certificato scade entro 30 giorni"
+  }
+}

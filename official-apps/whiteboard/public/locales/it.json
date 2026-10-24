@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Lavagna",
+    "description": "Disegna su una tela infinita: penna, forme, testo, frecce di collegamento, annulla e zoom. Le lavagne vengono conservate e si esportano in PNG e SVG."
+  },
+  "boards": {
+    "label": "Lavagne",
+    "show": "Mostra le lavagne",
+    "hide": "Nascondi le lavagne",
+    "new": "Nuova lavagna",
+    "first": "La mia lavagna",
+    "untitled": "Lavagna {{number}}",
+    "imported": "Lavagna importata",
+    "copyName": "{{name}} (copia)",
+    "rename": "Rinomina {{name}}",
+    "renameTitle": "Rinomina lavagna",
+    "duplicate": "Duplica {{name}}",
+    "delete": "Elimina {{name}}",
+    "deleteTitle": "Eliminare «{{name}}»?",
+    "none": "Nessuna lavagna aperta"
+  },
+  "canvas": {
+    "label": "Disegno di {{name}}",
+    "welcome": "Disegna, scrivi e collega le tue idee"
+  },
+  "status": {
+    "saved": "Salvato",
+    "saving": "Salvataggio…",
+    "tooLarge": "Troppo grande per essere conservata: esportala come file",
+    "failed": "Non salvato: riprova tra poco"
+  },
+  "import": {
+    "action": "Importa una lavagna…",
+    "done": "{{name}} importato come nuova lavagna",
+    "invalid": "«{{name}}» non è un file di lavagna leggibile da questa app."
+  },
+  "export": {
+    "board": "Salva come file di lavagna (.excalidraw)…",
+    "done": "{{name}} salvato",
+    "empty": "Su questa lavagna non c’è ancora nulla da esportare."
+  },
+  "library": {
+    "tooLarge": "La tua libreria di forme è troppo grande per essere conservata."
+  },
+  "errors": {
+    "load": "Impossibile avviare la lavagna"
+  }
+}

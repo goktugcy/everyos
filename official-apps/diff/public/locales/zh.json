@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "差异查看器",
+    "description": "并排或内联比较两段文本或两个文件，支持语法高亮、忽略空白的比较、在更改之间跳转以及导出补丁。"
+  },
+  "sides": {
+    "original": "原始",
+    "changed": "修改后",
+    "typed": "输入的文本",
+    "open": "打开…",
+    "openOriginal": "打开原始文件…",
+    "openChanged": "打开修改后的文件…",
+    "placeholderOriginal": "粘贴或输入原始文本，或打开一个文件。",
+    "placeholderChanged": "粘贴或输入修改后的文本，或打开一个文件。",
+    "swap": "交换两侧",
+    "notKept": "不会保留",
+    "notKeptHint": "此侧内容过大，关闭窗口后不会保留；下次请重新打开文件。"
+  },
+  "view": {
+    "label": "视图",
+    "split": "并排",
+    "inline": "内联"
+  },
+  "options": {
+    "ignoreWhitespace": "忽略空白",
+    "collapse": "隐藏未更改的行",
+    "wrap": "自动换行",
+    "language": "高亮",
+    "auto": "自动",
+    "autoNamed": "自动（{{name}}）",
+    "plain": "纯文本"
+  },
+  "nav": {
+    "previous": "上一处更改（{{key}}）",
+    "next": "下一处更改（{{key}}）",
+    "position": "第 {{current}} / {{total}} 处",
+    "count_other": "{{count}} 处更改"
+  },
+  "stats": {
+    "added_other": "新增 {{count}} 行",
+    "removed_other": "删除 {{count}} 行"
+  },
+  "status": {
+    "empty": "暂无可比较的内容",
+    "identical": "完全相同",
+    "whitespaceOnly": "仅空白不同",
+    "approximate": "差异较大：仅近似显示",
+    "endings": "换行符不同（{{a}} / {{b}}）；比较时会忽略，补丁使用 LF。"
+  },
+  "patch": {
+    "copy": "复制补丁",
+    "save": "保存补丁…",
+    "tooDifferent": "文本差异过大，无法及时生成补丁。"
+  },
+  "files": {
+    "binary": "“{{name}}”不是文本文件。"
+  },
+  "actions": {
+    "new": "新建比较",
+    "newTitle": "开始新的比较？",
+    "newBody": "两侧都会被清空。已打开的文件不会更改。"
+  }
+}

@@ -14,7 +14,12 @@ export default tseslint.config(
       "**/node_modules/**",
       "test-results/**",
       "playwright-report/**",
+      // Runtime data of end-to-end runs (git-ignored), including files the tests create.
+      "tests/e2e/.state*/**",
       "graphify-out/**",
+      // App templates are projects of their own (checked by building and testing generated apps).
+      "packages/create-everyos-app/templates/**",
+      "**/.everyos/**",
     ],
   },
   js.configs.recommended,

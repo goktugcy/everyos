@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Generatore cron",
+    "description": "Crea e verifica pianificazioni cron: generatore visuale, descrizioni chiare, prossime esecuzioni in qualsiasi fuso orario, forme systemd ed EveryOS."
+  },
+  "seconds": {
+    "label": "Campo dei secondi"
+  },
+  "expression": {
+    "section": "Espressione",
+    "label": "Espressione cron",
+    "copy": "Copia l’espressione"
+  },
+  "fields": {
+    "second": "Secondo",
+    "minute": "Minuto",
+    "hour": "Ora",
+    "day": "Giorno del mese",
+    "month": "Mese",
+    "weekday": "Giorno della settimana"
+  },
+  "problems": {
+    "field-count": "Un’espressione cron ha {{count}} campi separati da spazi (trovati {{token}}).",
+    "empty": "{{field}} è vuoto.",
+    "bad-token": "{{field}}: «{{token}}» non è un numero, un nome, * o un elenco.",
+    "out-of-range": "{{field}}: {{token}} è fuori intervallo.",
+    "bad-range": "{{field}}: l’intervallo «{{token}}» è al contrario.",
+    "bad-step": "{{field}}: il passo in «{{token}}» deve essere un numero maggiore di 0.",
+    "reboot": "@reboot viene eseguito all’avvio, non a un’ora: nessun orario da mostrare."
+  },
+  "builder": {
+    "custom": "Modifica questo campo nell’espressione (usa una forma che il generatore non mostra).",
+    "mode": "Come si imposta {{field}}",
+    "modes": {
+      "every": "Ogni",
+      "specific": "Valori specifici",
+      "range": "Intervallo",
+      "step": "Ogni n"
+    },
+    "from": "Da",
+    "to": "A",
+    "every": "Ogni",
+    "interval": "Intervallo",
+    "startingAt": "a partire da",
+    "start": "Inizio"
+  },
+  "presets": {
+    "title": "Preimpostazioni",
+    "everyMinute": "Ogni minuto",
+    "every5Minutes": "Ogni 5 minuti",
+    "every15Minutes": "Ogni 15 minuti",
+    "hourly": "Ogni ora",
+    "every6Hours": "Ogni 6 ore",
+    "daily3am": "Ogni giorno alle 03:00",
+    "weekdays9am": "Feriali alle 09:00",
+    "weeklySunday": "Ogni domenica",
+    "monthlyFirst": "Il 1° di ogni mese",
+    "quarterly": "Ogni trimestre",
+    "yearly": "Ogni anno"
+  },
+  "runs": {
+    "section": "Orari di esecuzione",
+    "timeZone": "Fuso orario",
+    "next": "Prossime esecuzioni",
+    "previous": "Esecuzioni precedenti",
+    "none": "Questa pianificazione non viene mai eseguita (per esempio il 30 febbraio).",
+    "invalid": "Correggi l’espressione per vedere gli orari."
+  },
+  "export": {
+    "title": "Usala",
+    "command": "Comando",
+    "commandPlaceholder": "/percorso/del/comando",
+    "crontab": "Riga crontab",
+    "onCalendar": "Timer systemd (OnCalendar=)",
+    "twoLines": "Cron viene eseguito se corrisponde uno dei campi giorno; systemd li richiede entrambi, quindi due righe.",
+    "timezone": "Nel fuso orario {{zone}}.",
+    "everyos": "Attività pianificate di EveryOS",
+    "compatible": "Compatibile",
+    "problems": {
+      "seconds": "Le attività pianificate non hanno il campo dei secondi.",
+      "too-frequent": "Le attività pianificate vengono eseguite al massimo ogni 5 minuti (12 volte all’ora)."
+    },
+    "timerFile": "Salva un file .timer…",
+    "defaultDescription": "Lavoro pianificato",
+    "notScheduled": "Il generatore cron crea solo espressioni: non pianifica nulla su questo server."
+  },
+  "saved": {
+    "title": "Salvate",
+    "name": "Nome",
+    "save": "Salva l’espressione",
+    "done": "Salvata",
+    "delete": "Elimina {{name}}"
+  }
+}

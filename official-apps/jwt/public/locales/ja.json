@@ -1,0 +1,114 @@
+{
+  "app": {
+    "name": "JWT インスペクター",
+    "description": "JSON Web Token をデコードし、クレームと有効期限を確認し、自分の鍵で署名を検証し、伏せ字にしたクレームを書き出します。トークンはこのデバイスから出ません。"
+  },
+  "remember": {
+    "label": "最後のトークンを記憶",
+    "hint": "既定ではオフ。トークンはこのウィンドウ内にのみ保持され、鍵は保存されません。"
+  },
+  "token": {
+    "section": "トークン",
+    "label": "JSON Web Token",
+    "placeholder": "トークン (eyJ…) を貼り付け。「Bearer」付きでも可",
+    "parts": "ヘッダー、ペイロード、署名",
+    "privacy": "デコードはこのデバイス上で行われ、トークンはどこにも送信されません。",
+    "waiting": "トークンを貼り付けると内容を表示します",
+    "noAlg": "アルゴリズムなし",
+    "algNone": "署名なし (alg: none): 誰でも作れます"
+  },
+  "parts": {
+    "0": "ヘッダー",
+    "1": "ペイロード",
+    "2": "署名"
+  },
+  "problems": {
+    "segments": "トークンはドットで区切った 3 つの部分です",
+    "base64": "{{part}} が正しい Base64URL ではありません",
+    "json": "{{part}} が JSON ではありません",
+    "not-object": "{{part}} は JSON オブジェクトである必要があります",
+    "jwe": "暗号化されたトークン (JWE) です。秘密鍵がないと読めません"
+  },
+  "validity": {
+    "valid": "有効",
+    "expiresIn": "{{when}}に失効",
+    "expired": "{{when}}に失効済み",
+    "notYet": "まだ有効ではありません: {{when}}から有効",
+    "noExpiry": "有効期限 (exp) なし",
+    "skew": "時刻の許容差",
+    "seconds_other": "{{count}} 秒"
+  },
+  "panels": {
+    "label": "表示",
+    "decoded": "デコード",
+    "verify": "署名を検証",
+    "export": "書き出し"
+  },
+  "decoded": {
+    "header": "ヘッダー",
+    "payload": "ペイロード",
+    "claim": "クレーム",
+    "value": "値"
+  },
+  "verify": {
+    "secretHint": "このトークンは HMAC シークレットを使います。共有シークレットを貼り付けてください。",
+    "keyHint": "発行者の公開鍵を貼り付けてください: PEM (BEGIN PUBLIC KEY)、証明書、JWK、JWK セット (kid で選択)。",
+    "encoding": "シークレットの形式",
+    "encodings": {
+      "text": "テキスト",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "シークレット",
+    "key": "公開鍵",
+    "check": "署名を確認",
+    "private": "鍵はこのウィンドウでのみ使われ、保存されません。",
+    "results": {
+      "valid": "署名は有効です ({{alg}})",
+      "invalid-signature": "この鍵では署名が一致しません",
+      "alg-none": "署名なしのトークン (alg: none) は受け付けません",
+      "alg-unsupported": "アルゴリズム {{alg}} には対応していません",
+      "key-mismatch": "この種類の鍵は {{alg}} に使えません",
+      "bad-key": "鍵を読み込めませんでした",
+      "private-key": "これは秘密鍵です。公開鍵を貼り付けてください",
+      "no-matching-key": "セット内にこのトークンの kid と一致する鍵がありません"
+    }
+  },
+  "export": {
+    "hint": "人物を特定する情報を除いてトークンの内容を共有できます。隠すクレームを選んでください。",
+    "redact": "隠すクレーム",
+    "redactClaim": "{{claim}} を隠す",
+    "preview": "書き出される内容",
+    "copy": "コピー",
+    "save": "JSON として保存…"
+  },
+  "claims": {
+    "iss": "発行者",
+    "sub": "サブジェクト (対象者)",
+    "aud": "オーディエンス (受け取れる相手)",
+    "exp": "有効期限",
+    "nbf": "有効開始",
+    "iat": "発行日時",
+    "jti": "トークン ID",
+    "azp": "承認された当事者",
+    "scope": "付与されたスコープ",
+    "scp": "付与されたスコープ",
+    "client_id": "クライアント",
+    "sid": "セッション ID",
+    "nonce": "ノンス",
+    "auth_time": "サインイン日時",
+    "acr": "認証レベル",
+    "amr": "認証方法",
+    "name": "名前",
+    "given_name": "名",
+    "family_name": "姓",
+    "preferred_username": "ユーザー名",
+    "email": "メール",
+    "email_verified": "メール確認済み",
+    "phone_number": "電話番号",
+    "roles": "ロール",
+    "groups": "グループ",
+    "tid": "テナント",
+    "oid": "オブジェクト ID"
+  }
+}

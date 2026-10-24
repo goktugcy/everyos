@@ -1,0 +1,176 @@
+{
+  "app": {
+    "name": "日历",
+    "description": "规划你的日程：日、周、月视图，重复日程，提醒，搜索，多个日历，以及 iCalendar（.ics）导入导出。"
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "即将到来的日程",
+      "description": "本周接下来的日程；可在日历中打开。"
+    }
+  },
+  "calendars": {
+    "label": "日历",
+    "personal": "个人",
+    "imported": "已导入",
+    "add": "新建日历",
+    "edit": "编辑 {{name}}",
+    "editTitle": "编辑日历",
+    "export": "将 {{name}} 导出为 .ics",
+    "deleteNamed": "删除 {{name}}",
+    "delete": "删除日历",
+    "deleteTitle": "删除“{{name}}”？",
+    "deleteBody_other": "其中的 {{count}} 个日程也会被删除，且无法撤销。",
+    "name": "名称",
+    "color": "颜色",
+    "colorNumber": "颜色 {{number}}"
+  },
+  "event": {
+    "new": "新建日程",
+    "newTitle": "新建日程",
+    "editTitle": "编辑日程",
+    "title": "标题",
+    "titlePlaceholder": "要做什么？",
+    "untitled": "（无标题）",
+    "allDay": "全天",
+    "startDate": "开始日期",
+    "startTime": "开始时间",
+    "endDate": "结束日期",
+    "endTime": "结束时间",
+    "lastDay": "最后一天",
+    "zoneNote": "时间为创建此日程的 {{zone}} 时区。",
+    "location": "地点",
+    "notes": "备注",
+    "calendar": "日历",
+    "repeats": "重复",
+    "delete": "删除",
+    "deleteTitle": "删除“{{title}}”？"
+  },
+  "problems": {
+    "endBeforeStart": "结束时间早于开始时间。",
+    "untilBeforeStart": "重复在日程开始前就结束了。"
+  },
+  "repeat": {
+    "label": "重复",
+    "none": "不重复",
+    "daily": "每天",
+    "weekdays": "每个工作日（周一至周五）",
+    "weekly": "每周{{day}}",
+    "monthly": "每月 {{day}} 日",
+    "monthlyWeekday": "每月{{nth}}{{day}}",
+    "yearly": "每年{{date}}",
+    "custom": "自定义…",
+    "imported": "按其他日历中的设置",
+    "nth": {
+      "1": "第一个",
+      "2": "第二个",
+      "3": "第三个",
+      "4": "第四个",
+      "-1": "最后一个"
+    },
+    "every": "每",
+    "unit": "单位",
+    "units": {
+      "daily_other": "天",
+      "weekly_other": "周",
+      "monthly_other": "个月",
+      "yearly_other": "年"
+    },
+    "onDays": "在",
+    "monthlyOn": "在",
+    "onDay": "{{day}} 日",
+    "onWeekday": "{{nth}}{{day}}",
+    "ends": "结束",
+    "never": "从不",
+    "until": "在某日期",
+    "after": "重复一定次数后",
+    "untilDate": "最后日期",
+    "times": "次数"
+  },
+  "reminders": {
+    "label": "提醒",
+    "add": "添加提醒",
+    "remove": "移除提醒“{{label}}”",
+    "atStart": "开始时",
+    "minutes_other": "提前 {{count}} 分钟",
+    "hours_other": "提前 {{count}} 小时",
+    "days_other": "提前 {{count}} 天",
+    "weeks_other": "提前 {{count}} 周",
+    "onDay": "当天 09:00",
+    "daysBeforeAt_other": "提前 {{count}} 天的 09:00",
+    "weeksBeforeAt_other": "提前 {{count}} 周的 09:00",
+    "body": "{{date}} {{time}}",
+    "allDayBody": "{{date}}，全天"
+  },
+  "scope": {
+    "label": "哪些日程",
+    "saveTitle": "修改重复日程",
+    "deleteTitle": "删除重复日程",
+    "one": "此日程",
+    "following": "此日程及之后的日程",
+    "all": "所有日程"
+  },
+  "views": {
+    "label": "视图",
+    "day": "日",
+    "week": "周",
+    "month": "月"
+  },
+  "nav": {
+    "today": "今天",
+    "previous": {
+      "day": "前一天",
+      "week": "上一周",
+      "month": "上个月"
+    },
+    "next": {
+      "day": "后一天",
+      "week": "下一周",
+      "month": "下个月"
+    },
+    "goTo": "转到日期",
+    "keys": "按键：T 今天，D/W/M 视图，N 新建日程，← → 翻页，/ 搜索。"
+  },
+  "month": {
+    "more_other": "还有 {{count}} 个"
+  },
+  "grid": {
+    "now": "现在 {{time}}"
+  },
+  "search": {
+    "label": "搜索日程",
+    "placeholder": "搜索",
+    "title": "“{{query}}”的结果",
+    "none": "没有找到“{{query}}”",
+    "noneText": "会搜索所有日历的标题、地点和备注。",
+    "results_other": "找到 {{count}} 个日程"
+  },
+  "ics": {
+    "import": "导入 .ics…",
+    "importTitle": "导入日程",
+    "found_other": "文件中有 {{count}} 个日程。",
+    "skipped_other": "已跳过 {{count}} 个已取消或无法读取的日程。",
+    "into": "导入到",
+    "newCalendar": "新日历“{{name}}”",
+    "importAction_other": "导入 {{count}} 个日程",
+    "imported_other": "已将 {{count}} 个日程导入 {{name}}",
+    "unknownZones_other": "{{count}} 个日程使用了此设备未知的时区，将按你的时区显示。",
+    "invalid": "此文件不是 iCalendar（.ics）文件。"
+  },
+  "settings": {
+    "title": "设置",
+    "weekStart": "每周开始于",
+    "weekStartAuto": "按你的语言（{{day}}）",
+    "zone": "时间按你的时区 {{zone}} 显示。"
+  },
+  "sidebar": {
+    "show": "显示日历",
+    "hide": "隐藏日历"
+  },
+  "widget": {
+    "today": "今天",
+    "tomorrow": "明天",
+    "empty": "本周没有安排",
+    "open": "打开日历"
+  }
+}

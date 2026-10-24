@@ -1,0 +1,49 @@
+{
+  "name": "@everyos/app-ui",
+  "version": "1.0.0",
+  "description": "The visual language of EveryOS's official desktop apps: React components styled with the desktop's theme tokens, hooks for persistent settings, shortcuts and the app's texts, and helpers for importing and exporting files. Bundled into each app (no shared runtime).",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css",
+    "./markdown": "./src/markdown.ts",
+    "./testing": "./src/testing.ts",
+    "./editor": "./src/editor.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
+    "@codemirror/commands": "catalog:",
+    "@codemirror/language": "catalog:",
+    "@codemirror/language-data": "catalog:",
+    "@codemirror/search": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
+    "@lezer/highlight": "catalog:",
+    "dompurify": "catalog:",
+    "lucide-react": "catalog:",
+    "markdown-it": "catalog:"
+  },
+  "peerDependencies": {
+    "@everyos/app-sdk": "^1.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@everyos/app-testing": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@everyos/app-testing": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@everyos/app-sdk": "workspace:*",
+    "@everyos/app-testing": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  }
+}

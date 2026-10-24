@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Fark Görüntüleyici",
+    "description": "İki metni ya da dosyayı yan yana veya satır içinde karşılaştırın: sözdizimi renklendirme, boşlukları yok sayma, değişiklikler arasında gezinme ve yama dışa aktarma."
+  },
+  "sides": {
+    "original": "Özgün",
+    "changed": "Değişmiş",
+    "typed": "Yazılan metin",
+    "open": "Aç…",
+    "openOriginal": "Özgün dosyayı aç…",
+    "openChanged": "Değişmiş dosyayı aç…",
+    "placeholderOriginal": "Özgün metni yapıştırın ya da yazın veya bir dosya açın.",
+    "placeholderChanged": "Değişmiş metni yapıştırın ya da yazın veya bir dosya açın.",
+    "swap": "Tarafları değiştir",
+    "notKept": "Saklanmıyor",
+    "notKeptHint": "Bu taraf, pencere kapandıktan sonra saklanamayacak kadar büyük; bir dahaki sefere dosyayı yeniden açın."
+  },
+  "view": {
+    "label": "Görünüm",
+    "split": "Yan yana",
+    "inline": "Satır içi"
+  },
+  "options": {
+    "ignoreWhitespace": "Boşlukları yok say",
+    "collapse": "Değişmeyen satırları gizle",
+    "wrap": "Satırları kaydır",
+    "language": "Renklendirme",
+    "auto": "Otomatik",
+    "autoNamed": "Otomatik ({{name}})",
+    "plain": "Düz metin"
+  },
+  "nav": {
+    "previous": "Önceki değişiklik ({{key}})",
+    "next": "Sonraki değişiklik ({{key}})",
+    "position": "{{current}} / {{total}}",
+    "count_one": "{{count}} değişiklik",
+    "count_other": "{{count}} değişiklik"
+  },
+  "stats": {
+    "added_one": "{{count}} satır eklendi",
+    "added_other": "{{count}} satır eklendi",
+    "removed_one": "{{count}} satır silindi",
+    "removed_other": "{{count}} satır silindi"
+  },
+  "status": {
+    "empty": "Henüz karşılaştırılacak bir şey yok",
+    "identical": "Aynı",
+    "whitespaceOnly": "Yalnızca boşluklar farklı",
+    "approximate": "Büyük fark: yaklaşık gösteriliyor",
+    "endings": "Satır sonları farklı ({{a}} / {{b}}); karşılaştırma bunları yok sayar, yama LF kullanır."
+  },
+  "patch": {
+    "copy": "Yamayı kopyala",
+    "save": "Yamayı kaydet…",
+    "tooDifferent": "Metinler, zamanında yama oluşturulamayacak kadar farklı."
+  },
+  "files": {
+    "binary": "“{{name}}” bir metin dosyası değil."
+  },
+  "actions": {
+    "new": "Yeni karşılaştırma",
+    "newTitle": "Yeni bir karşılaştırma başlatılsın mı?",
+    "newBody": "Her iki taraf da temizlenir. Açtığınız dosyalar değişmez."
+  }
+}

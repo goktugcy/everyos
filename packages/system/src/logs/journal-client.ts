@@ -25,7 +25,11 @@ function filterArgs(filter: LogFilter): string[] {
   if (filter.priority !== undefined) args.push(`--priority=${filter.priority}`);
   if (filter.since !== undefined) args.push(`--since=@${Math.floor(filter.since / 1000)}`);
   if (filter.until !== undefined) args.push(`--until=@${Math.floor(filter.until / 1000)}`);
-  if (filter.grep) args.push(`--grep=${filter.grep}`, "--case-sensitive=false");
+  if (filter.grep) {
+    // The API promises literal text matching; journalctl interprets --grep as a regex.
+    const literal = filter.grep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    args.push(`--grep=${literal}`, "--case-sensitive=false");
+  }
   return args;
 }
 

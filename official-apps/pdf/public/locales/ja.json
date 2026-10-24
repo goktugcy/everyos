@@ -1,0 +1,103 @@
+{
+  "app": {
+    "name": "PDF ビューアー",
+    "description": "PDF を閲覧。ページとサムネイル、ズームと回転、テキスト検索、文書のアウトラインと自分のブックマーク、印刷、コピーの保存に対応。"
+  },
+  "actions": {
+    "open": "PDF を開く…"
+  },
+  "pages": {
+    "label": "ページ",
+    "previous": "前のページ",
+    "next": "次のページ",
+    "current": "ページ番号",
+    "of": "/ {{count}}",
+    "thumbnail": "{{page}} ページ"
+  },
+  "zoom": {
+    "label": "ズーム",
+    "in": "拡大",
+    "out": "縮小",
+    "auto": "自動",
+    "page-width": "ページ幅",
+    "page-fit": "ページ全体",
+    "page-actual": "実寸"
+  },
+  "rotate": {
+    "left": "左に回転",
+    "right": "右に回転"
+  },
+  "find": {
+    "open": "文書内を検索",
+    "label": "検索",
+    "placeholder": "文書内を検索…",
+    "previous": "前の一致",
+    "next": "次の一致",
+    "caseSensitive": "大文字と小文字を区別",
+    "entireWord": "単語単位",
+    "close": "検索を閉じる",
+    "searching": "検索中…",
+    "notFound": "見つかりません",
+    "position_other": "{{count}} 件中 {{current}} 件目"
+  },
+  "bookmarks": {
+    "addCurrent": "このページをブックマーク",
+    "removeCurrent": "このページのブックマークを削除",
+    "defaultLabel": "{{page}} ページ",
+    "added": "{{page}} ページをブックマークしました",
+    "renameTitle": "ブックマーク名を変更",
+    "rename": "「{{label}}」の名前を変更",
+    "remove": "「{{label}}」を削除",
+    "empty": "ブックマークはまだありません",
+    "emptyText": "ツールバーのブックマークボタンでページを記憶できます。"
+  },
+  "print": {
+    "action": "印刷",
+    "preparing": "印刷の準備中",
+    "progress": "{{total}} ページ中 {{done}} ページ",
+    "failed": "文書を印刷用に準備できませんでした。"
+  },
+  "save": {
+    "action": "コピーを保存",
+    "saved": "{{name}} のコピーを保存しました"
+  },
+  "sidebar": {
+    "label": "ナビゲーション",
+    "show": "サイドバーを表示",
+    "hide": "サイドバーを隠す",
+    "pages": "ページ",
+    "outline": "アウトライン",
+    "bookmarks": "ブックマーク"
+  },
+  "outline": {
+    "label": "文書のアウトライン",
+    "expand": "{{title}} を展開",
+    "collapse": "{{title}} を折りたたむ",
+    "external": "Web ページを開きます",
+    "empty": "アウトラインはありません",
+    "emptyText": "この文書には目次がありません。"
+  },
+  "viewer": {
+    "label": "{{name}} のページ",
+    "opening": "開いています…",
+    "emptyTitle": "PDF を開いて読みましょう",
+    "emptyText": "文書は前回の位置から、ブックマークとともに開きます。",
+    "tryAnother": "別のファイルを開いてみてください。"
+  },
+  "recent": {
+    "title": "最近使ったファイル",
+    "gone": "「{{name}}」は利用できなくなりました。"
+  },
+  "errors": {
+    "tooLarge": "開ける PDF は {{size}} までです。",
+    "invalid": "「{{name}}」は PDF ではないか、破損しています。",
+    "password": "そのパスワードでは PDF を開けませんでした。",
+    "open": "「{{name}}」を開けませんでした。"
+  },
+  "password": {
+    "title": "この PDF は保護されています",
+    "label": "パスワード",
+    "open": "開く",
+    "incorrect": "パスワードが違います。もう一度お試しください。"
+  }
+}

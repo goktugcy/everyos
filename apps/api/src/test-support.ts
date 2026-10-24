@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AgentClientError, type Actor, type AgentConnectionState } from "@everyos/agent-protocol";
@@ -22,6 +22,7 @@ import {
   type SystemInfo,
 } from "@everyos/shared";
 import type { Hono } from "hono";
+import { afterAll } from "vitest";
 import { createApp } from "./app.ts";
 import { loadApiConfig, type ApiConfig } from "./config.ts";
 import type { AppEnv } from "./context.ts";
@@ -218,7 +219,7 @@ export class FakeAgent implements AgentGateway {
   readonly apt = createAptSimulator(() => this.now());
   /** Disks, answered by the development simulator under a throwaway mount root. */
   readonly disks = createDiskSimulator({
-    mountRoot: mkdtempSync(join(tmpdir(), "everyos-disks-")),
+    mountRoot: temporaryDir("everyos-disks-"),
   });
 
   #defaults(op: string, params: unknown): unknown {
@@ -500,17 +501,31 @@ export interface TestContext {
   readSetupToken(): string;
 }
 
+/** The test file's installations (each holds a database) and disk mount roots, removed after its tests. */
+const testDirs: string[] = [];
+afterAll(() => {
+  for (const dir of testDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+});
+function temporaryDir(prefix = "everyos-api-"): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
+  testDirs.push(dir);
+  return dir;
+}
+
 export async function createTestContext(
   options: {
     configure?: (config: ApiConfig) => void;
     webDir?: string;
     /** Extra service test hooks (SMTP transports, the Telegram API origin). */
-    services?: Pick<ServiceDependencies, "smtp" | "telegramApi" | "google" | "s3">;
+    services?: Pick<
+      ServiceDependencies,
+      "smtp" | "telegramApi" | "google" | "s3" | "desktopAppFetcher" | "desktopAppResolve"
+    >;
     /** The server secret (another value plays another installation). */
     masterKey?: Buffer;
   } = {},
 ): Promise<TestContext> {
-  const dir = mkdtempSync(join(tmpdir(), "everyos-api-"));
+  const dir = temporaryDir();
   const config = loadApiConfig({ EVERYOS_ENV: "development", EVERYOS_DEV_ROOT: dir });
   // Small fixtures keep a real reserve without requiring an almost-empty developer disk.
   config.files.minFreeBytes = 64 * 1024 * 1024;

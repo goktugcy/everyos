@@ -2929,6 +2929,15 @@ export const it: LocaleMessages = {
         title: "Trasferimento non riuscito: {{name}}",
         body: "{{reason}}",
       },
+      "app-message": { title: "{{title}}", body: "{{app}} · {{body}}" },
+      "app-monitor-down": {
+        title: "{{name}} non risponde",
+        body: "{{app}} · {{target}} non risponde come previsto.",
+      },
+      "app-monitor-recovered": {
+        title: "{{name}} funziona di nuovo",
+        body: "{{app}} · {{target}} risponde di nuovo.",
+      },
       "disk-detached": {
         title: "Disco rimosso: {{disk}}",
         body: "{{unsafe}}",
@@ -3978,6 +3987,283 @@ export const it: LocaleMessages = {
     rateLimited: "Troppi tentativi di autenticazione Linux. Riprova tra un minuto.",
     unlinked: "Non collegato",
   },
+  desktopApps: {
+    database: {
+      title: "Database per le app",
+      description:
+        "Le app autorizzate a connettersi ai database usano solo le connessioni elencate qui, senza mai vederne le password.",
+      empty: "Nessun database è ancora connesso.",
+      add: "Connetti un database",
+      edit: "Modifica",
+      editTitle: "Modifica la connessione",
+      remove: "Rimuovi",
+      removeTitle: "Rimuovere {{name}}?",
+      removeBody: "Le app non possono più usare questo database. Il database in sé non cambia.",
+      test: "Prova",
+      testOk: "Connesso: {{version}} ({{ms}} ms)",
+      adminsOnly: "Solo un amministratore può connettere database.",
+      name: "Nome",
+      engine: "Database",
+      host: "Host",
+      port: "Porta",
+      database: "Nome del database",
+      username: "Nome utente",
+      password: "Password",
+      passwordHint: "Conservata cifrata su questo server; le app non la vedono mai.",
+      passwordKept: "Lascia vuoto per mantenere la password salvata.",
+      tls: "Cifratura",
+      accessLabel: "Accesso",
+      audienceLabel: "Chi può usarla",
+      readHint:
+        "Ogni istruzione viene eseguita in una transazione di sola lettura. Per una garanzia certa, usa un utente del database che può solo leggere.",
+      writeHint:
+        "Le app possono modificare i dati, e ogni modifica richiede la conferma della persona in una finestra disegnata da EveryOS.",
+      engines: {
+        postgres: "PostgreSQL",
+        mysql: "MySQL / MariaDB",
+      },
+      tlsModes: {
+        require: "Cifrata",
+        verify: "Cifrata, certificato verificato",
+        disable: "Non cifrata",
+      },
+      access: {
+        read: "Sola lettura",
+        write: "Lettura e modifica",
+      },
+      audience: {
+        admins: "Amministratori",
+        everyone: "Tutti quelli che possono usare l'app",
+      },
+    },
+    dialog: {
+      exportKeyTitle: "Esportare la chiave privata «{{name}}»?",
+      exportKeyBody:
+        "{{app}} riceverà questa chiave privata. Chiunque la possieda può accedere come te ovunque la chiave sia considerata attendibile, quindi conserva il file al sicuro.",
+      exportKeyConfirm: "Esporta chiave privata",
+      deleteKeyTitle: "Eliminare la chiave «{{name}}»?",
+      deleteKeyBody:
+        "{{app}} chiede di eliminare questa chiave. La sua chiave privata sparisce per sempre: i server che la considerano attendibile non ti faranno più entrare con essa.",
+      deleteKeyConfirm: "Elimina chiave",
+      hostLabel: "EveryOS chiede per {{app}}",
+      writeTitle: "Modificare i dati in {{connection}}?",
+      writeBody:
+        "{{app}} vuole eseguire questa istruzione su {{database}}. Le modifiche non si possono annullare da qui.",
+      writeConfirm: "Esegui la modifica",
+    },
+    network: {
+      title: "Accesso alla rete delle app",
+      description:
+        "Le app autorizzate a connettersi a indirizzi raggiungono solo ciò che è elencato qui. Una regola per nome host copre solo indirizzi pubblici; gli indirizzi della rete locale e questo server richiedono un intervallo di indirizzi.",
+      empty: "Nessun indirizzo è ancora consentito.",
+      add: "Consenti",
+      kind: "Tipo",
+      kinds: {
+        host: "Nome host",
+        cidr: "Intervallo di indirizzi",
+      },
+      pattern: "Indirizzo",
+      patternHostHint: "api.example.com, oppure *.example.com per tutti i suoi sottodomini",
+      patternRangeHint: "Per esempio 192.168.1.0/24, oppure 192.168.1.20/32 per un dispositivo",
+      ports: "Porte",
+      portsHint: "Separate da virgole, per esempio 80, 443",
+      portList: "Porte {{ports}}",
+      note: "Nota (facoltativa)",
+      scope: "Si applica a",
+      thisApp: "Questa app",
+      allApps: "Tutte le app",
+      onlyApp: "Solo {{name}}",
+      thisServer: "Include questo server",
+      remove: "Rimuovi",
+      removeTitle: "Rimuovere la regola per {{pattern}}?",
+      removeBody:
+        "Le app non possono più raggiungere questi indirizzi e i monitor che li usano si fermano con un avviso.",
+      adminsOnly: "Solo un amministratore può modificare l'accesso alla rete.",
+    },
+    store: {
+      restoreUnverified:
+        "I file di questa app non sono stati verificati dopo un ripristino, quindi resta disattivata. Ripara scarica di nuovo la stessa versione firmata dalla sua fonte; impostazioni e dati restano.",
+      repair: "Ripara",
+      typeFilter: "Tipo",
+      types: {
+        all: "Tutte le app",
+        docker: "App Docker",
+        desktop: "App desktop",
+        hybrid: "App ibride",
+      },
+      sourceFilter: "Fonte",
+      allSources: "Tutte le fonti",
+      sources: {
+        official: "Ufficiale",
+        community: "Community",
+        private: "Privata",
+      },
+      updatesOnly: "Solo aggiornamenti",
+      desktopBadge: "App desktop",
+      by: "di {{publisher}}",
+      version: "Versione {{version}}",
+      installed: "Installata",
+      installedSection: "App desktop",
+      updateTo: "Aggiorna a {{version}}",
+      install: "Installa",
+      open: "Apri",
+      enable: "Attiva",
+      disable: "Disattiva",
+      uninstall: "Disinstalla",
+      uninstallTitle: "Disinstallare {{name}}?",
+      uninstallBody:
+        "I suoi dati vengono eliminati per tutte le persone che l'hanno usata su questo server.",
+      permissions: "Cosa può fare questa app",
+      noPermissions: "Questa app non chiede alcuna autorizzazione.",
+      notGranted: "Non consentita per te",
+      approve:
+        "Spunta ogni autorizzazione che concedi. L'app viene installata solo quando sono tutte concesse.",
+      approveUpdate:
+        "Questo aggiornamento chiede di più. Spunta ogni nuova autorizzazione che concedi.",
+      elevatedAdmins: "Solo un amministratore può concedere le autorizzazioni evidenziate.",
+      risk: {
+        standard: "Standard",
+        sensitive: "Sensibile",
+        elevated: "Elevata",
+      },
+      state: {
+        active: "Attiva",
+        disabled: "Disattivata",
+        revoked: "Ritirata",
+      },
+      conflict:
+        "Un'altra fonte offre un'app con la stessa identità di un editore diverso. Installala solo da una fonte di cui ti fidi.",
+      incompatible: {
+        "everyos-too-old": "Questa app richiede una versione più recente di EveryOS.",
+        "sdk-unsupported":
+          "Questa app è stata creata per un SDK delle app che questo EveryOS non supporta.",
+      },
+      revoked: "Ritirata dalla sua fonte: {{reason}}",
+      languages_one: "{{count}} lingua",
+      languages_many: "{{count}} lingue",
+      languages_other: "{{count}} lingue",
+      widgets_one: "{{count}} widget",
+      widgets_many: "{{count}} widget",
+      widgets_other: "{{count}} widget",
+      license: "Licenza: {{license}}",
+      homepage: "Sito web",
+      source: "Codice sorgente",
+      versions: "Versioni e modifiche",
+      notifications: "Notifiche di questa app",
+    },
+    registries: {
+      title: "Fonti di app desktop",
+      add: "Aggiungi fonte",
+      kind: "Tipo",
+      name: "Nome",
+      url: "Indirizzo dell'indice",
+      publicKey: "Chiave pubblica",
+      fingerprint: "Impronta della chiave",
+      fingerprintHint:
+        "Confrontala con l'impronta pubblicata dalla fonte; la chiave viene accettata solo se coincidono.",
+      token: "Token di accesso (facoltativo)",
+      allowPrivate: "La fonte è nella mia rete locale",
+      synced: "Sincronizzata {{time}}",
+      never: "Non ancora sincronizzata",
+      apps_one: "{{count}} app",
+      apps_many: "{{count}} app",
+      apps_other: "{{count}} app",
+      failed: "L'ultima sincronizzazione non è riuscita ({{reason}}).",
+      sync: "Sincronizza ora",
+      remove: "Rimuovi",
+      removeTitle: "Rimuovere {{name}}?",
+      removeBody:
+        "Le app installate da questa fonte restano, ma non ne ricevono più aggiornamenti.",
+    },
+    capabilities: {
+      storage_app: {
+        title: "Conservare i propri dati",
+        description:
+          "Conserva impostazioni e documenti nel proprio spazio, separatamente per ogni persona.",
+      },
+      files_pick: {
+        title: "Aprire i file che scegli",
+        description: "Legge solo i file e le cartelle che scegli per lei.",
+      },
+      files_save: {
+        title: "Salvare dove scegli",
+        description: "Scrive solo nei file e nelle cartelle che scegli per lei.",
+      },
+      notifications_send: {
+        title: "Inviarti notifiche",
+        description: "Mostra notifiche alla persona che la usa.",
+      },
+      clipboard_write: {
+        title: "Copiare negli appunti",
+        description: "Copia testo quando glielo chiedi.",
+      },
+      widgets_register: {
+        title: "Offrire widget",
+        description: "Fornisce widget per la scrivania e la barra laterale.",
+      },
+      appearance_manage: {
+        title: "Cambiare il tuo aspetto",
+        description: "Cambia lo sfondo e le icone delle tue cartelle.",
+      },
+      system_metrics_read: {
+        title: "Leggere lo stato del sistema",
+        description: "Legge i dati di processore, memoria, dischi e tempo di attività.",
+      },
+      system_sockets_read: {
+        title: "Vedere le porte in ascolto",
+        description: "Elenca le porte di rete in ascolto del server e i programmi che le usano.",
+      },
+      system_network_read: {
+        title: "Vedere le impostazioni di rete",
+        description: "Legge interfacce di rete, indirizzi, instradamenti e server dei nomi.",
+      },
+      system_services_read: {
+        title: "Vedere i servizi di sistema",
+        description: "Legge quali servizi sono attivi sul server e se qualcuno ha avuto un errore.",
+      },
+      logs_read: { title: "Leggere i log di sistema", description: "Legge il journal di sistema." },
+      storage_usage_read: {
+        title: "Misurare le dimensioni delle cartelle",
+        description: "Misura le dimensioni delle cartelle che condividi con lei.",
+      },
+      network_outbound: {
+        title: "Connettersi agli indirizzi consentiti",
+        description:
+          "Si connette dal server agli indirizzi di rete consentiti da un amministratore.",
+      },
+      database_connect: {
+        title: "Connettersi ai database",
+        description:
+          "Interroga i database configurati da un amministratore, in sola lettura salvo che la scrittura sia consentita.",
+      },
+      secrets_ssh: {
+        title: "Gestire le tue chiavi SSH",
+        description: "Crea, importa e conserva chiavi SSH per te.",
+      },
+      integration: {
+        title: "Usare {{adapter}}",
+        description: "Comunica con l'integrazione {{adapter}} configurata su questo server.",
+      },
+    },
+    picker: {
+      openTitle: "Apri file",
+      folderTitle: "Scegli cartella",
+      saveTitle: "Salva con nome",
+      for: "Per {{name}}",
+      locations: "Posizioni",
+      empty: "Qui non c'è nulla di adatto.",
+      name: "Nome",
+      replace: '"{{name}}" esiste già. Sostituirlo?',
+      replaceConfirm: "Sostituisci",
+      chooseFolder: "Scegli questa cartella",
+    },
+    frame: {
+      opening: "Apertura di {{name}}…",
+      failed: "Impossibile aprire {{name}}.",
+      stopped: "{{name}} è stata fermata perché ha inviato richieste non valide.",
+      unavailable: "Questa app non è installata o è stata disattivata.",
+    },
+  },
   errors: {
     BAD_REQUEST: "Impossibile interpretare la richiesta.",
     VALIDATION_FAILED: "Alcune delle informazioni inserite non sono valide.",
@@ -4050,6 +4336,20 @@ export const it: LocaleMessages = {
     BACKUP_PASSPHRASE_INVALID: "La passphrase di backup non apre questo file.",
     BACKUP_OFFSITE_NOT_CONFIGURED: "Non è impostata alcuna destinazione esterna per i backup.",
     BACKUP_OFFSITE_FAILED: "Impossibile raggiungere la destinazione esterna per i backup.",
+    DESKTOP_APP_APPROVAL_REQUIRED: "È necessario approvare le autorizzazioni di questa app.",
+    DESKTOP_APP_INCOMPATIBLE: "Questa app non è compatibile con questa versione di EveryOS.",
+    DESKTOP_APP_REVOKED: "Questa versione dell'app è stata ritirata dall'editore o dal registro.",
+    DESKTOP_APP_REGISTRY_FAILED:
+      "Non è stato possibile leggere o verificare il registro delle app.",
+    DESKTOP_APP_PACKAGE_INVALID:
+      "Non è stato possibile verificare il pacchetto dell'app, quindi non è stata installata.",
+    DESKTOP_APP_BUSY: "È già in corso un'altra operazione per questa app.",
+    DESKTOP_APP_STORAGE_FULL: "Lo spazio di archiviazione di questa app è pieno.",
+    DESKTOP_APP_NETWORK_BLOCKED:
+      "L'accesso alla rete delle app non consente questo indirizzo. Un amministratore può consentirlo nell'App Store.",
+    DESKTOP_APP_NETWORK_FAILED: "La connessione non è riuscita.",
+    DESKTOP_APP_DB_READ_ONLY: "Questa connessione al database può solo leggere.",
+    DESKTOP_APP_DB_FAILED: "L'operazione sul database non è riuscita.",
     NETWORK: "Impossibile raggiungere il server. Controlla la connessione.",
     UNKNOWN: "Si è verificato un errore sconosciuto.",
   },

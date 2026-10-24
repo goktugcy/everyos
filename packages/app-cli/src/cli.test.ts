@@ -1,0 +1,373 @@
+import { execFile } from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
+import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
+import { inspectPackage, verifyPackage } from "@everyos/app-package";
+import { verifyRegistryIndex } from "@everyos/app-registry";
+import { createProject, TEMPLATES } from "../../create-everyos-app/src/create.ts";
+import { afterAll, describe, expect, it } from "vitest";
+import {
+  build,
+  dev,
+  initRegistry,
+  loadProject,
+  pack,
+  publishPackage,
+  refreshRegistry,
+  revokeVersion,
+  validateBuild,
+} from "./index.ts";
+import { htmlProblems } from "./validate.ts";
+
+const run = promisify(execFile);
+const repo = resolve(import.meta.dirname, "../../..");
+const work = await mkdtemp(join(tmpdir(), "everyos-cli-"));
+afterAll(() => rm(work, { recursive: true, force: true }));
+
+/** A generated project's node_modules, linked to this repository's packages (no npm install). */
+async function link(dir: string): Promise<void> {
+  const links: Record<string, string> = {
+    "@everyos/app-sdk": join(repo, "packages/app-sdk"),
+    "@everyos/app-testing": join(repo, "packages/app-testing"),
+    "@everyos/app-manifest": join(repo, "packages/app-manifest"),
+    react: realpathSync(join(repo, "apps/web/node_modules/react")),
+    "react-dom": realpathSync(join(repo, "apps/web/node_modules/react-dom")),
+    "@types/react": realpathSync(join(repo, "apps/web/node_modules/@types/react")),
+    "@types/react-dom": realpathSync(join(repo, "apps/web/node_modules/@types/react-dom")),
+    vitest: realpathSync(join(repo, "node_modules/vitest")),
+    "happy-dom": realpathSync(join(repo, "node_modules/happy-dom")),
+    typescript: realpathSync(join(repo, "node_modules/typescript")),
+    "@types/node": realpathSync(join(repo, "node_modules/@types/node")),
+  };
+  for (const [name, target] of Object.entries(links)) {
+    const path = join(dir, "node_modules", name);
+    await mkdir(join(path, ".."), { recursive: true });
+    await symlink(target, path, "dir");
+  }
+}
+
+describe("create-everyos-app and everyos-app", () => {
+  it.each(TEMPLATES)(
+    "the %s template builds, validates, packs, typechecks and passes its own tests",
+    async (template) => {
+      const dir = join(work, `my-${template}`);
+      const created = await createProject({
+        dir,
+        template,
+        publisherId: "com.example",
+        publisherName: "Example Ltd",
+        name: `My "${template}" app`,
+        packages: "npm",
+      });
+      expect(created.id).toBe(`com.example.my-${template}`);
+      expect(existsSync(join(dir, ".gitignore"))).toBe(true);
+      const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as {
+        name: string;
+        id: string;
+      };
+      expect(manifest).toMatchObject({ id: created.id, name: `My "${template}" app` });
+      await link(dir);
+
+      const project = await loadProject(dir);
+      const { findings } = await validateBuild(await build(project));
+      expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
+      const packed = await pack(project);
+      expect((await inspectPackage(packed.bytes)).manifest.id).toBe(created.id);
+
+      // The project's own checks, as its developer runs them.
+      await run(join(dir, "node_modules/typescript/bin/tsc"), ["-p", "tsconfig.json"], {
+        cwd: dir,
+      });
+      const reportFile = join(dir, "test-report.json");
+      await run(
+        process.execPath,
+        [
+          join(dir, "node_modules/vitest/vitest.mjs"),
+          "run",
+          "--root",
+          dir,
+          "--reporter=json",
+          `--outputFile=${reportFile}`,
+        ],
+        { cwd: dir },
+      ).catch((error: { stdout: string; stderr: string }) => {
+        throw new Error(`${error.stdout}\n${error.stderr}`);
+      });
+      // Human-readable output differs between CI reporters and terminals.
+      const report = JSON.parse(readFileSync(reportFile, "utf8")) as {
+        success: boolean;
+        numPassedTests: number;
+        numFailedTests: number;
+        numFailedTestSuites: number;
+      };
+      expect(report.success).toBe(true);
+      expect(report.numPassedTests).toBeGreaterThan(0);
+      expect(report.numFailedTests).toBe(0);
+      expect(report.numFailedTestSuites).toBe(0);
+    },
+    120_000,
+  );
+
+  it("refuses projects EveryOS would refuse, and HTML its sandbox would block", async () => {
+    expect(htmlProblems('<script src="https://cdn.example.com/x.js"></script>')).toHaveLength(1);
+    expect(htmlProblems("<script>alert(1)</script>")).toHaveLength(1);
+    expect(htmlProblems('<button onclick="go()">Go</button>')).toHaveLength(1);
+    expect(htmlProblems('<script type="module" src="app.js"></script>')).toEqual([]);
+
+    const dir = join(work, "broken");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8")) as Record<
+      string,
+      unknown
+    >;
+    writeFileSync(
+      join(dir, "manifest.json"),
+      JSON.stringify({ ...manifest, permissions: ["shell:exec"], icon: "missing.png" }),
+    );
+    writeFileSync(join(dir, "public/locales/tr.json"), JSON.stringify({ app: { name: "Bozuk" } }));
+    const project = await loadProject(dir);
+    const { findings } = await validateBuild(await build(project));
+    const messages = findings.map((finding) => `${finding.file}: ${finding.message}`).join("\n");
+    expect(messages).toContain("manifest.json: permissions.0");
+    await expect(pack(project)).rejects.toThrow(/not valid/);
+    // Fixed permissions: the missing icon and the incomplete translation remain.
+    writeFileSync(join(dir, "manifest.json"), JSON.stringify({ ...manifest, icon: "missing.png" }));
+    const second = await validateBuild(await build(await loadProject(dir)));
+    expect(second.findings.map((finding) => finding.file)).toEqual(
+      expect.arrayContaining(["missing.png", "locales/tr.json"]),
+    );
+
+    // Plural forms follow each language: Turkish needs only `_other` where English has `_one` too.
+    const texts = (extra: Record<string, string>) => ({ app: { name: "Notes" }, ...extra });
+    writeFileSync(
+      join(dir, "public/locales/en.json"),
+      JSON.stringify(texts({ notes_one: "{{count}} note", notes_other: "{{count}} notes" })),
+    );
+    writeFileSync(
+      join(dir, "public/locales/tr.json"),
+      JSON.stringify(texts({ notes_other: "{{count}} not" })),
+    );
+    const plural = await validateBuild(await build(await loadProject(dir)));
+    expect(plural.findings.filter((finding) => finding.file === "locales/tr.json")).toEqual([]);
+    writeFileSync(join(dir, "public/locales/tr.json"), JSON.stringify(texts({})));
+    const missing = await validateBuild(await build(await loadProject(dir)));
+    expect(
+      missing.findings.find((finding) => finding.file === "locales/tr.json")?.message,
+    ).toContain("notes");
+  });
+
+  it("splits code into chunks loaded on demand, and bundles workers on their own", async () => {
+    const dir = join(work, "chunks");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    writeFileSync(join(dir, "src/heavy.ts"), 'export const heavy = () => "loaded later";\n');
+    writeFileSync(
+      join(dir, "src/main.ts"),
+      'void import("./heavy.ts").then(({ heavy }) => (document.body.textContent = heavy()));\n',
+    );
+    writeFileSync(join(dir, "src/shared.ts"), "export const twice = (n: number) => n * 2;\n");
+    writeFileSync(
+      join(dir, "src/worker.ts"),
+      'import { twice } from "./shared.ts";\nonmessage = (event) => postMessage(twice(Number(event.data)));\n',
+    );
+    writeFileSync(
+      join(dir, "everyos.config.json"),
+      JSON.stringify({
+        entries: { "app.js": "src/main.ts" },
+        workers: { "worker.js": "src/worker.ts" },
+      }),
+    );
+    const out = await build(await loadProject(dir));
+    const chunks = readdirSync(join(out, "chunks"));
+    expect(
+      chunks.some((name) =>
+        readFileSync(join(out, "chunks", name), "utf8").includes("loaded later"),
+      ),
+    ).toBe(true);
+    expect(readFileSync(join(out, "app.js"), "utf8")).not.toContain("loaded later");
+    // The worker holds all of its code: no import of a chunk.
+    const worker = readFileSync(join(out, "worker.js"), "utf8");
+    expect(worker).not.toMatch(/\bimport\b|\bfrom\s*["']/);
+    expect(worker).toContain("postMessage");
+    const { findings } = await validateBuild(out);
+    expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
+  });
+
+  it("copies assets from dependencies, only the files EveryOS serves", async () => {
+    const dir = join(work, "assets");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    const library = join(dir, "node_modules/data-lib");
+    mkdirSync(join(library, "cmaps/nested"), { recursive: true });
+    writeFileSync(join(library, "cmaps/UniJIS-H.bcmap"), "cmap");
+    writeFileSync(join(library, "cmaps/nested/extra.json"), "{}");
+    writeFileSync(join(library, "cmaps/LICENSE"), "licence text");
+    writeFileSync(join(library, "cmaps/.hidden.json"), "{}");
+    writeFileSync(join(library, "decoder.wasm"), "wasm");
+    writeFileSync(
+      join(dir, "everyos.config.json"),
+      JSON.stringify({
+        assets: {
+          "lib/cmaps/": "node_modules/data-lib/cmaps",
+          "lib/decoder.wasm": "node_modules/data-lib/decoder.wasm",
+          "lib/LICENSE.txt": "node_modules/data-lib/cmaps/LICENSE",
+        },
+      }),
+    );
+    const out = await build(await loadProject(dir));
+    expect(readdirSync(join(out, "lib/cmaps")).sort()).toEqual(["UniJIS-H.bcmap", "nested"]);
+    expect(readFileSync(join(out, "lib/cmaps/nested/extra.json"), "utf8")).toBe("{}");
+    expect(readFileSync(join(out, "lib/decoder.wasm"), "utf8")).toBe("wasm");
+    // A single file is published under its package path: a licence as LICENSE.txt.
+    expect(readFileSync(join(out, "lib/LICENSE.txt"), "utf8")).toBe("licence text");
+    const { findings } = await validateBuild(out);
+    expect(findings.filter((finding) => finding.level === "error")).toEqual([]);
+
+    for (const [assets, message] of [
+      [{ "../out": "node_modules/data-lib/cmaps" }, /must be a relative package path/],
+      [{ lib: "../elsewhere" }, /must be inside the project/],
+      [{ lib: "node_modules/missing" }, /Asset source not found/],
+      [{ "lib/LICENSE": "node_modules/data-lib/cmaps/LICENSE" }, /EveryOS does not serve/],
+      [{ "lib/tool.exe": "node_modules/data-lib/decoder.wasm" }, /EveryOS does not serve/],
+    ] as const) {
+      writeFileSync(join(dir, "everyos.config.json"), JSON.stringify({ assets }));
+      await expect(loadProject(dir)).rejects.toThrow(message);
+    }
+  });
+
+  it("picks the production build of packages that ship one per mode", async () => {
+    const dir = join(work, "conditions");
+    await createProject({ dir, template: "vanilla", packages: "npm" });
+    await link(dir);
+    const library = join(dir, "node_modules/mode-lib");
+    mkdirSync(library, { recursive: true });
+    writeFileSync(
+      join(library, "package.json"),
+      JSON.stringify({
+        name: "mode-lib",
+        exports: {
+          ".": { development: "./dev.js", production: "./prod.js" },
+          "./style.css": { development: "./dev.css", production: "./prod.css" },
+        },
+      }),
+    );
+    writeFileSync(join(library, "dev.js"), 'export const mode = "development build";\n');
+    writeFileSync(join(library, "prod.js"), 'export const mode = "production build";\n');
+    writeFileSync(join(library, "dev.css"), "body { color: red; }\n");
+    writeFileSync(join(library, "prod.css"), "body { color: green; }\n");
+    writeFileSync(
+      join(dir, "src/main.ts"),
+      'import "mode-lib/style.css";\nimport { mode } from "mode-lib";\ndocument.title = mode;\n',
+    );
+    const out = await build(await loadProject(dir));
+    expect(readFileSync(join(out, "app.js"), "utf8")).toContain("production build");
+    expect(readFileSync(join(out, "app.css"), "utf8")).toContain("green");
+  });
+
+  it("serves the app under EveryOS's sandbox policy with a mock desktop page", async () => {
+    const dir = join(work, "devserver");
+    await createProject({ dir, template: "react-widget", packages: "npm" });
+    await link(dir);
+    const server = await dev(await loadProject(dir), { port: 0, log: () => undefined });
+    try {
+      const page = await fetch(`${server.url}/`);
+      expect(await page.text()).toContain("MOCK · NOT EVERYOS");
+      const state = (await (await fetch(`${server.url}/__everyos/state`)).json()) as {
+        build: { ok: boolean };
+        findings: Array<{ level: string }>;
+        manifest: { widgets: unknown[] };
+      };
+      expect(state.build.ok).toBe(true);
+      expect(state.findings.filter((finding) => finding.level === "error")).toEqual([]);
+      expect(state.manifest.widgets).toHaveLength(1);
+      const app = await fetch(`${server.url}/app/index.html`);
+      expect(app.headers.get("content-security-policy")).toContain("sandbox allow-scripts");
+      expect((await fetch(`${server.url}/app/app.js`)).status).toBe(200);
+      expect((await fetch(`${server.url}/app/../manifest.json`)).status).toBe(404);
+      const script = await (await fetch(`${server.url}/__everyos/host.js`)).text();
+      expect(script).toContain("EveryOS MOCK host");
+    } finally {
+      await server.close();
+    }
+  }, 60_000);
+
+  it("publishes to the developer's own signed registry, never changing a published version", async () => {
+    const dir = join(work, "publisher");
+    await createProject({
+      dir,
+      template: "vanilla",
+      publisherId: "com.example",
+      publisherName: "Example Ltd",
+      packages: "npm",
+    });
+    await link(dir);
+    const project = await loadProject(dir);
+    const paths = {
+      dir: join(dir, "registry"),
+      key: join(dir, "keys/registry.key"),
+      publisherKey: join(dir, "keys/publisher.key"),
+    };
+    const created = await initRegistry(paths, {
+      id: "example",
+      name: "Example apps",
+      publisherId: "com.example",
+      publisherName: "Example Ltd",
+    });
+    expect(created.fingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
+    const packed = await pack(project);
+    const published = await publishPackage(paths, packed.file, {
+      changelog: "First release",
+      iconFile: join(dir, "dist/icon.png"),
+    });
+    expect(published).toMatchObject({ version: "1.0.0", sequence: 2 });
+
+    const index = verifyRegistryIndex(
+      readFileSync(join(paths.dir, "index.json"), "utf8"),
+      created.publicKey,
+      { official: false },
+    );
+    const entry = index.apps[0]!.versions[0]!;
+    expect(entry.package.url).toBe(`packages/${packed.manifest.id}-1.0.0.eosapp`);
+    expect(existsSync(join(paths.dir, entry.package.url))).toBe(true);
+    expect(
+      verifyPackage(
+        {
+          appId: packed.manifest.id,
+          version: "1.0.0",
+          sha256: entry.package.sha256,
+          size: entry.package.size,
+        },
+        entry.package.signature,
+        index.publishers[0]!.keys[0]!,
+      ),
+    ).toBe(true);
+    // Publishing the same bytes again changes nothing; other bytes under the same version fail.
+    expect((await publishPackage(paths, packed.file)).sequence).toBe(2);
+    writeFileSync(join(dir, "src/extra.txt"), "x");
+    writeFileSync(join(dir, "public/notes.txt"), "changed");
+    const changed = await pack(project);
+    await expect(publishPackage(paths, changed.file)).rejects.toThrow(/raise the version/);
+    expect(await refreshRegistry(paths)).toBe(3);
+    await revokeVersion(paths, packed.manifest.id, "1.0.0", "Broken build");
+    const revoked = verifyRegistryIndex(
+      readFileSync(join(paths.dir, "index.json"), "utf8"),
+      created.publicKey,
+      { official: false },
+    );
+    expect(revoked.revoked).toEqual([
+      { appId: packed.manifest.id, version: "1.0.0", reason: "Broken build" },
+    ]);
+    // Private keys are the owner's only.
+    expect((await import("node:fs")).statSync(paths.key).mode & 0o077).toBe(0);
+  }, 60_000);
+});

@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Studio colori",
+    "description": "Scegli colori in HEX, RGB, HSL e OKLCH, crea palette, armonie e sfumature, verifica il contrasto e guardali nel tema di EveryOS."
+  },
+  "actions": {
+    "eyedropper": "Preleva un colore dallo schermo"
+  },
+  "color": {
+    "section": "Colore",
+    "preview": "Colore attuale {{color}}"
+  },
+  "picker": {
+    "saturationValue": "Saturazione e luminosità",
+    "svValue": "Saturazione {{s}}%, luminosità {{v}}%",
+    "hue": "Tonalità",
+    "alpha": "Opacità"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "Non è un colore",
+    "copy": "Copia {{format}}"
+  },
+  "panels": {
+    "label": "Strumenti",
+    "palette": "Palette",
+    "gradient": "Sfumatura",
+    "contrast": "Contrasto",
+    "saved": "Salvate",
+    "theme": "Tema di EveryOS"
+  },
+  "swatch": {
+    "use": "Usa {{color}}"
+  },
+  "harmony": {
+    "label": "Armonia",
+    "complementary": "Complementare",
+    "analogous": "Analoga",
+    "triadic": "Triadica",
+    "split": "Complementare divisa",
+    "tetradic": "Tetradica",
+    "monochromatic": "Monocromatica",
+    "save": "Salva armonia"
+  },
+  "scale": {
+    "title": "Scala tonale",
+    "step": "Livello {{step}}: {{color}}",
+    "copyCss": "Copia come variabili CSS",
+    "save": "Salva scala"
+  },
+  "gradient": {
+    "preview": "Anteprima sfumatura",
+    "kind": "Tipo",
+    "linear": "Lineare",
+    "radial": "Radiale",
+    "angle": "Angolo: {{angle}}°",
+    "stops": "Punti di colore",
+    "useCurrent": "Imposta il punto {{number}} sul colore attuale",
+    "position": "Posizione del punto {{number}}",
+    "remove": "Rimuovi il punto {{number}}",
+    "hint": "Fai clic sul campione di un punto per dargli il colore attuale. Una sfumatura richiede almeno due punti.",
+    "add": "Aggiungi punto",
+    "copy": "Copia CSS"
+  },
+  "contrast": {
+    "text": "Testo",
+    "background": "Sfondo",
+    "swap": "Scambia testo e sfondo",
+    "useAsText": "Usa il colore attuale per il testo",
+    "useAsBackground": "Usa il colore attuale per lo sfondo",
+    "sampleLarge": "Testo grande",
+    "sample": "Il testo normale è più difficile da leggere con poco contrasto.",
+    "ratio": "Rapporto di contrasto",
+    "aa": "AA",
+    "aaLarge": "AA grande",
+    "aaa": "AAA",
+    "aaaLarge": "AAA grande",
+    "pass": "superato",
+    "fail": "non superato",
+    "hint": "WCAG 2: AA richiede 4,5:1 per il testo normale e 3:1 per quello grande (24 px o 19 px grassetto); AAA 7:1 e 4,5:1."
+  },
+  "saved": {
+    "newName": "Nuova palette",
+    "create": "Crea con il colore attuale",
+    "added": "Palette salvata",
+    "addCurrent": "Aggiungi il colore attuale a {{name}}",
+    "copyCss": "Copia {{name}} come variabili CSS",
+    "exportCss": "Salva CSS…",
+    "delete": "Elimina {{name}}",
+    "deleteTitle": "Eliminare la palette «{{name}}»?",
+    "removeColor": "Rimuovi {{color}}",
+    "empty": "Nessuna palette salvata",
+    "emptyText": "Salva un’armonia o una scala, oppure crea una palette qui sopra."
+  },
+  "theme": {
+    "current": "Il tuo tema ({{scheme}})",
+    "schemes": {
+      "light": "chiaro",
+      "dark": "scuro"
+    },
+    "tokens": {
+      "accent": "Accento",
+      "accent-strong": "Accento forte",
+      "text": "Testo",
+      "text-muted": "Testo attenuato",
+      "surface": "Superficie",
+      "inset": "Incasso",
+      "danger": "Pericolo",
+      "success": "Successo",
+      "warning": "Avviso"
+    },
+    "previewTitle": "Il colore attuale come accento",
+    "button": "Pulsante",
+    "link": "Un link",
+    "linkContrast": "Contrasto del link {{ratio}}:1",
+    "hint": "Il colore di accento si sceglie in Impostazioni → Aspetto."
+  }
+}
