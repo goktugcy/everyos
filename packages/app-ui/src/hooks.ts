@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "./app.tsx";
 
 export interface Persisted {
@@ -16,25 +16,35 @@ export function usePersistentState<T>(
   key: string,
   initial: T,
   { delayMs = 400 }: { delayMs?: number } = {},
-): [T, (next: T | ((current: T) => T)) => void, Persisted] {
+): [T, (next: T | ((current: T) => T)) => void, Persisted & { flush: () => Promise<void> }] {
   const app = useApp();
   const [value, setValue] = useState<T>(initial);
   const [status, setStatus] = useState<Persisted>({ loaded: false, saving: false, error: null });
   const pending = useRef<{ value: T } | null>(null);
+  const writes = useRef(new Set<Promise<void>>());
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const flush = useCallback(async () => {
     clearTimeout(timer.current);
     const next = pending.current;
-    if (!next) return;
+    const prior = [...writes.current];
+    if (!next) {
+      await Promise.allSettled(prior);
+      return;
+    }
     pending.current = null;
     setStatus((current) => ({ ...current, saving: true }));
+    const write = app.storage.set(key, next.value);
+    writes.current.add(write);
     try {
-      await app.storage.set(key, next.value);
+      await write;
       setStatus((current) => ({ ...current, saving: false, error: null }));
     } catch (error) {
       setStatus((current) => ({ ...current, saving: false, error }));
+    } finally {
+      writes.current.delete(write);
     }
+    await Promise.allSettled(prior);
   }, [app, key]);
 
   useEffect(() => {
@@ -77,7 +87,8 @@ export function usePersistentState<T>(
     },
     [delayMs, flush],
   );
-  return [value, update, status];
+  const persisted = useMemo(() => ({ ...status, flush }), [status, flush]);
+  return [value, update, persisted];
 }
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);

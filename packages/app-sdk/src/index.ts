@@ -142,7 +142,10 @@ export interface EveryOSApp {
       accept?: string[];
       persist?: boolean;
     }): Promise<FileHandle | null>;
-    read(handle: FileHandle | string, options?: { signal?: AbortSignal }): Promise<ArrayBuffer>;
+    read(
+      handle: FileHandle | string,
+      options?: { signal?: AbortSignal; maxBytes?: number },
+    ): Promise<ArrayBuffer>;
     readText(handle: FileHandle | string): Promise<string>;
     write(handle: FileHandle | string, data: ArrayBuffer | Uint8Array | string): Promise<number>;
     list(handle: FileHandle | string, path?: string): Promise<DirectoryEntry[]>;
@@ -312,6 +315,11 @@ function build(connection: Connection): EveryOSApp {
         persist: options.persist ?? false,
       }),
     async read(handle, options = {}) {
+      if (
+        options.maxBytes !== undefined &&
+        (!Number.isSafeInteger(options.maxBytes) || options.maxBytes < 0)
+      )
+        throw new RangeError("Invalid file read limit");
       const chunks: Uint8Array[] = [];
       let offset = 0;
       for (;;) {
@@ -321,6 +329,8 @@ function build(connection: Connection): EveryOSApp {
           offset,
           length: MAX_CHUNK_BYTES,
         });
+        if (options.maxBytes !== undefined && offset + data.byteLength > options.maxBytes)
+          throw new RangeError(`too-large:${options.maxBytes}`);
         chunks.push(new Uint8Array(data));
         offset += data.byteLength;
         if (eof) break;

@@ -78,7 +78,10 @@ export interface EveryOSApp {
       accept?: string[];
       persist?: boolean;
     }): Promise<FileHandle | null>;
-    read(handle: FileHandle | string, options?: { signal?: AbortSignal }): Promise<ArrayBuffer>;
+    read(
+      handle: FileHandle | string,
+      options?: { signal?: AbortSignal; maxBytes?: number },
+    ): Promise<ArrayBuffer>;
     readText(handle: FileHandle | string): Promise<string>;
     write(handle: FileHandle | string, data: ArrayBuffer | Uint8Array | string): Promise<number>;
     list(handle: FileHandle | string, path?: string): Promise<DirectoryEntry[]>;
@@ -198,11 +201,21 @@ For React apps, `usePersistentState` in the kit reads, saves after an editing pa
 on suspend/pagehide. Do not expose editing controls before its `loaded` state; an edit against
 defaults can overwrite saved settings. Keep each value within the storage limit.
 
+The returned status also exposes `flush(): Promise<void>`. It sends pending writes and waits for
+already outstanding writes. Before removing an item's storage key, stop its editor, await this
+flush, then delete the key so a closing editor cannot recreate it.
+
 ## Files and the picker
 
 Requires `files:pick` for selecting/reading and `files:save` for writing. A role must also allow
 the underlying file action. There are no ambient filesystem paths. `open()` returns only handles
 the person selected; cancellation yields `[]`. `save()` returns a writable destination or null.
+
+A restored handle's size can be null. `read(handle, { maxBytes })` enforces a nonnegative integer
+byte ceiling while streaming chunks, even when the file grew since selection; it throws a
+`RangeError` if the next chunk would cross the limit. Use it for bounded metadata/text reads.
+Media players should use temporary `url()` capabilities rather than copy entire videos into the
+browser or app storage. URLs are never persisted and must be renewed after expiry or resume.
 
 - `accept` lists extensions/MIME filters; the picker remains the authority for the selection.
 - `multiple` permits selecting several files. `directory` requests a directory handle.
