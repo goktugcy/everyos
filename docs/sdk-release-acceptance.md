@@ -1,6 +1,6 @@
 # App SDK release acceptance
 
-The App SDK, the unified store and the 33 official apps ship in **one** public release. This report
+The App SDK, the unified store and the 29 official apps ship in **one** public release. This report
 tracks every gate with its evidence (test names, CI runs, measured numbers). An item is checked only
 when the implementation exists and the evidence is linked; until every item is checked, the
 `feature/app-sdk` branch is not released.
@@ -23,9 +23,9 @@ checked yet; the evidence column records what already passes, so the remaining w
 | All SDK permission checks enforced server-side                   | in progress | `desktop-apps.test.ts` › app SDK calls, app file access, notifications and host data, app network access, app databases (real PostgreSQL and MariaDB), app SSH keys (verified with ssh-keygen), app appearance; `sdk-desktop-apps.spec.ts` sets a wallpaper through the desktop |
 | App install and removal                                          | in progress | `desktop-apps.test.ts` › installation; `sdk-desktop-apps.spec.ts` installs and uninstalls through the store                                                                                                                                                                     |
 | App updates and compatibility checks                             | in progress | `desktop-apps.test.ts` › updates, revocations, incompatible SDK                                                                                                                                                                                                                 |
-| All 33 official apps implemented with working primary features   | open        |                                                                                                                                                                                                                                                                                 |
-| All 33 packages build, validate and are signed                   | open        |                                                                                                                                                                                                                                                                                 |
-| All 33 apps pass their acceptance tests                          | open        |                                                                                                                                                                                                                                                                                 |
+| All 29 official apps implemented with working primary features   | open        |                                                                                                                                                                                                                                                                                 |
+| All 29 packages build, validate and are signed                   | open        |                                                                                                                                                                                                                                                                                 |
+| All 29 apps pass their acceptance tests                          | open        |                                                                                                                                                                                                                                                                                 |
 | All official apps appear in the store                            | open        |                                                                                                                                                                                                                                                                                 |
 | App widgets integrate with the desktop                           | in progress | `sdk-desktop-apps.spec.ts` adds the probe's widget from the gallery (sandboxed, declared capabilities only); `widget-sdk.test.ts` › desktop app widgets                                                                                                                         |
 | App settings and data persist                                    | open        |                                                                                                                                                                                                                                                                                 |
@@ -48,7 +48,9 @@ checked yet; the evidence column records what already passes, so the remaining w
 
 The first sixteen apps were implemented and tested before the network-app handoff; the baseline
 verification below records their shared gate. The table now consistently marks their development
-evidence alongside the nine subsequent apps. These 25 tested apps are not a complete release.
+evidence alongside the subsequent apps. The owner's 2026-10-24 scope revision keeps 29 apps;
+SQL Client, Video Player, Image Viewer and Gallery complete their development evidence below.
+All 29 tested apps still require the remaining public-release gates.
 
 The official registry trust anchor is pinned to the GitHub release index and the owner's public
 key (see [publishing](app-sdk/publishing.md)). `anchors.test.ts` verifies the URL, fingerprint
@@ -57,41 +59,39 @@ versioned release → object redirect with public DNS pinned at every hop, crede
 across origins, and private/metadata/mapped-address redirects refused. These five focused tests
 passed on 2026-10-22. Publication, the complete signed catalog and the community anchor remain open.
 
-| #   | App              | Id                        | Status |
-| --- | ---------------- | ------------------------- | ------ |
-| 01  | Notes            | `dev.everyos.notes`       | tested |
-| 02  | Markdown Editor  | `dev.everyos.markdown`    | tested |
-| 03  | Calculator       | `dev.everyos.calculator`  | tested |
-| 04  | Calendar         | `dev.everyos.calendar`    | tested |
-| 05  | Pomodoro         | `dev.everyos.pomodoro`    | tested |
-| 06  | To-Do            | `dev.everyos.todo`        | tested |
-| 07  | PDF Viewer       | `dev.everyos.pdf`         | tested |
-| 08  | Text Editor      | `dev.everyos.text`        | tested |
-| 09  | Whiteboard       | `dev.everyos.whiteboard`  | tested |
-| 10  | Code Editor      | `dev.everyos.code`        | tested |
-| 11  | JSON Studio      | `dev.everyos.json`        | tested |
-| 12  | API Client       | `dev.everyos.apiclient`   | open   |
-| 13  | Regex Tester     | `dev.everyos.regex`       | tested |
-| 14  | SQL Client       | `dev.everyos.sql`         | open   |
-| 15  | Diff Viewer      | `dev.everyos.diff`        | tested |
-| 16  | Cron Builder     | `dev.everyos.cron`        | tested |
-| 17  | JWT Inspector    | `dev.everyos.jwt`         | tested |
-| 18  | Color Studio     | `dev.everyos.color`       | tested |
-| 19  | Port Inspector   | `dev.everyos.ports`       | tested |
-| 20  | DNS Lookup       | `dev.everyos.dns`         | tested |
-| 21  | SSL Inspector    | `dev.everyos.ssl`         | tested |
-| 22  | HTTP Monitor     | `dev.everyos.httpmonitor` | tested |
-| 23  | Log Viewer       | `dev.everyos.logs`        | tested |
-| 24  | Disk Explorer    | `dev.everyos.disk`        | tested |
-| 25  | SSH Keys         | `dev.everyos.sshkeys`     | tested |
-| 26  | Network Tools    | `dev.everyos.network`     | tested |
-| 27  | Uptime           | `dev.everyos.uptime`      | tested |
-| 28  | Music Player     | `dev.everyos.music`       | open   |
-| 29  | Video Player     | `dev.everyos.video`       | open   |
-| 30  | Image Viewer     | `dev.everyos.images`      | open   |
-| 31  | Gallery          | `dev.everyos.gallery`     | open   |
-| 32  | Wallpaper Studio | `dev.everyos.wallpapers`  | open   |
-| 33  | Icon Studio      | `dev.everyos.icons`       | open   |
+| #   | App             | Id                       | Status |
+| --- | --------------- | ------------------------ | ------ |
+| 01  | Notes           | `dev.everyos.notes`      | tested |
+| 02  | Markdown Editor | `dev.everyos.markdown`   | tested |
+| 03  | Calculator      | `dev.everyos.calculator` | tested |
+| 04  | Calendar        | `dev.everyos.calendar`   | tested |
+| 05  | Pomodoro        | `dev.everyos.pomodoro`   | tested |
+| 06  | To-Do           | `dev.everyos.todo`       | tested |
+| 07  | PDF Viewer      | `dev.everyos.pdf`        | tested |
+| 08  | Text Editor     | `dev.everyos.text`       | tested |
+| 09  | Whiteboard      | `dev.everyos.whiteboard` | tested |
+| 10  | Code Editor     | `dev.everyos.code`       | tested |
+| 11  | JSON Studio     | `dev.everyos.json`       | tested |
+
+| 12 | Regex Tester | `dev.everyos.regex` | tested |
+| 13 | SQL Client | `dev.everyos.sql` | tested |
+| 14 | Diff Viewer | `dev.everyos.diff` | tested |
+| 15 | Cron Builder | `dev.everyos.cron` | tested |
+| 16 | JWT Inspector | `dev.everyos.jwt` | tested |
+| 17 | Color Studio | `dev.everyos.color` | tested |
+| 18 | Port Inspector | `dev.everyos.ports` | tested |
+| 19 | DNS Lookup | `dev.everyos.dns` | tested |
+| 20 | SSL Inspector | `dev.everyos.ssl` | tested |
+| 21 | HTTP Monitor | `dev.everyos.httpmonitor` | tested |
+| 22 | Log Viewer | `dev.everyos.logs` | tested |
+| 23 | Disk Explorer | `dev.everyos.disk` | tested |
+| 24 | SSH Keys | `dev.everyos.sshkeys` | tested |
+| 25 | Network Tools | `dev.everyos.network` | tested |
+| 26 | Uptime | `dev.everyos.uptime` | tested |
+
+| 27 | Video Player | `dev.everyos.video` | tested |
+| 28 | Image Viewer | `dev.everyos.images` | tested |
+| 29 | Gallery | `dev.everyos.gallery` | tested |
 
 ## Measurements
 
@@ -413,11 +413,13 @@ the production build and all 18 first-run/official-app browser workflows without
 The production dependency audit reports no known vulnerabilities. The first-run and SSH Keys
 workflows also pass over plain HTTP at `everyos.lan` (2/2).
 
-## Remaining after the SSH Keys checkpoint — 2026-10-23
+## Remaining release work — updated 2026-10-24
 
-- Eight apps: API Client, SQL Client, Music Player, Video Player, Image Viewer, Gallery,
-  Wallpaper Studio and Icon Studio. Their directories contain scaffolding, not completed apps.
-- The all-33-app build, validate, sign and index pipeline; a machine-readable release report;
+SQL Client, Video Player, Image Viewer and Gallery are now implemented and tested below. The
+owner removed API Client, Music Player, Wallpaper Studio and Icon Studio; the release target is
+29 apps. The remaining release work is:
+
+- The all-29-app build, validate, sign and index pipeline; a machine-readable release report;
   protected `release` environment integration and the CI gate for that report. The owner's
   private signing keys remain in the protected environment.
 - The community service (`services/community-registry`) using Workers, R2 and D1, its local
@@ -426,6 +428,91 @@ workflows also pass over plain HTTP at `everyos.lan` (2/2).
 - Synchronize and verify the existing manifest/SDK references, finish the remaining app and
   community documentation, measure Pi/amd64 package sizes, startup and resource use, and fill
   every final acceptance gate with evidence. CI already exercises official-app workflows on
-  both architectures and over plain HTTP; final acceptance must cover the completed set of 33.
+  both architectures and over plain HTTP; final acceptance must cover the completed set of 29.
 
 The Pi remains read-only. No tag, public release or main-branch merge is part of this checkpoint.
+
+## Selected remaining apps — 2026-10-24
+
+The owner's revised scope is SQL Client, Image Viewer, Gallery and Video Player. API Client,
+Music Player, Wallpaper Studio and Icon Studio are removed from the config and workspace rather
+than left as unimplemented catalog entries. The complete public release target is 29 apps.
+The core network/appearance SDK capabilities remain available for authorized third-party apps.
+
+CI 116 for `c175fd7` did not qualify the branch. The amd64 job stopped in Whiteboard's existing
+unit test: it took a snapshot of the initial empty saved board while its 800 ms edit debounce
+was still pending. The test now waits for `BoardStore.load` to return the actual rectangle/arrow
+before snapshotting and retains all original assertions. The arm64 job passed unit tests and
+all official-app workflows but failed the protected terminal shell-exit scenario on both
+attempts. Its extra plain-HTTP pass succeeds (21 scenarios). Terminal client files and
+`tests/e2e/tools-terminal.spec.ts` remain untouched. The dependency audit succeeds. See
+[CI run 116](https://github.com/goktugcy/everyos/actions/runs/40009529232).
+
+### SQL Client
+
+Nine app tests pass for scalar parameters, safe identifier quoting, bounded preferences,
+formula-safe complete-snapshot CSV, read-only query defaults, connection testing, session history,
+real database error details and revoked late results. All 39 keys are supplied in ten locales.
+The actual PostgreSQL browser workflow passes using an owned disposable database and restricted
+login. It checks metadata, connection version, read-only write rejection, declined/approved native
+writes, complete confirmation of SQL longer than 20,000 characters, CSV, restoration privacy and
+390-pixel layout. Credentials do not reach the app. Query text/results/parameters remain transient;
+only non-secret connection/limit settings persist. Desktop/mobile screenshots were reviewed.
+
+### Image Viewer
+
+Nine logic/interface tests pass for restored references, bounded stream reads, EXIF failure,
+preview transforms, unchanged original export, selection restoration, slideshow suspend and
+revocation fences. All 26 keys are supplied in ten locales. The actual browser workflow decodes
+real synthetic PNGs, extracts an actual EXIF Make tag, verifies dimensions, zoom/pan/rotation,
+compares exported original bytes,
+restores selection and advances a mobile slideshow; damaged data has an explicit decode error.
+Unknown restored handle size is not treated as zero or oversized. The reader enforces 50 MiB
+while streaming. Temporary URLs and file bytes never enter app storage. Screenshots were reviewed.
+
+### Gallery
+
+Seven logic/interface tests pass for validated album indexes, safe relative paths, image/entry/
+folder/depth/time/byte budgets, partial scans, search/favorites, restoration, bulk reference
+removal, revoked folders and flushing pending edits before deleting album storage. All 60 keys
+are supplied in ten locales. Each album has its own value, at most 1,000 images or 210 KiB;
+thumbnail requests use four workers and pages of 40. The actual browser workflow indexes a chosen
+folder and nested image, excludes a neighboring image, verifies native thumbnail decoding,
+rescans while retaining favorites, renames/restores albums, runs a mobile slideshow and verifies
+that bulk/album removal left original files untouched. Screenshots were reviewed.
+
+### Video Player
+
+Seven logic/interface tests pass for bounded playlists/positions, plain-text WebVTT/SRT cues,
+codec hints, streaming without full-file reads, native resume, named playlist operations, decode
+errors and revoked access. All 37 keys are supplied in ten locales. Its real-browser workflow
+passes actual VP8 playback and range responses, speed/volume/mute, safe subtitle cues, fullscreen
+entry/exit, resume after close/reopen, named playlists and 390-pixel layout. The small committed
+fixture is a synthetic video generated with Chromium; CI needs no encoder or host installation.
+Screenshots were reviewed. The strengthened workflow also passes decoded seek completion,
+automatic next-video playback and stopping at the list end.
+
+### Dependency follow-up
+
+The first selected-app gate passed format, lint, typecheck, 1,442 tests, build and 22 browser
+workflows, then stopped on newly reviewed dependency advisories. Zod is pinned to 4.6.6 for
+direct and transitive v4 consumers, and Nodemailer to 10.1.4. These address the upstream
+[collection-validation advisory](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) and
+[address-parser advisories](https://github.com/nodemailer/nodemailer/releases/tag/v10.1.4).
+Installation passes the existing supply-chain policy without an exception; the production
+audit reports zero advisories at every severity after the update.
+
+### Final development gate
+
+The fresh gate with the updated dependencies passes under UTC/CI settings: format, lint,
+all package typechecks, 1,442 unit/integration tests in 167 files, production build, 22
+foundation/official-app Chromium workflows and the production audit (zero advisories).
+The official-app smoke workflow installs and launches all 29 signed development packages.
+Each selected app also passes `everyos-app validate`; SQL's elevated permission warning is
+expected and requires administrator approval. All ten locales validate for every package.
+
+An additional browser pass over plain HTTP at `everyos.lan` passes 5/5: first-run setup and
+the complete SQL Client, Image Viewer, Gallery and Video Player workflows. Desktop and
+390-pixel screenshots are reviewed. This is development evidence on the Mac, not final
+ARM64/AMD64 release qualification. The next hosted CI run must verify the complete current
+branch; CI 116's protected terminal failure remains recorded above.

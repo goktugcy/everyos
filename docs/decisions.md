@@ -762,3 +762,26 @@ OpenSSH's askpass reader accepts at most 1,023 bytes and terminates on line brea
 export validates the full UTF-8 passphrase length and rejects NUL, CR and LF. Generation is async,
 and one crypto slot per API service bounds generation and protected exports while metadata reads
 remain available. See [SSH key SDK contract](app-sdk/ssh-keys.md).
+
+### D55 — The official catalog contains 29 apps
+
+On 2026-10-24 the owner kept SQL Client, Video Player, Image Viewer and Gallery among the
+remaining apps, and removed API Client, Music Player, Wallpaper Studio and Icon Studio. Their
+unimplemented scaffolds and catalog entries are removed. The already implemented 25 apps stay
+in scope. The one-complete-release policy now covers 29 apps; appearance and network SDK
+capabilities remain available to third-party apps. No existing host app or service is removed.
+
+### D56 — SQL text stays in the window; media state stores references
+
+The official SQL Client uses the administrator's saved server connections and never receives
+credentials. Connection id and row/timeout limits persist, while its last 30 successful queries
+are replayable only within the current window. SQL literals, parameters and results may contain
+sensitive information, so the app does not put them in ordinary app storage. The interface names
+this session-only history and clears parameters/write authorization on replay.
+
+The selected media apps persist approved handle ids, names/settings, album indexes or playback
+positions rather than media bytes or temporary capability URLs. Gallery shards each album into
+its own bounded value. Its deletion path locks and flushes the editor before deleting the key;
+the kit's explicit flush waits for already outstanding writes too. Bounded SDK file reads enforce
+`maxBytes` while consuming chunks because restored handle size may be unknown or stale. Videos
+use native range streaming. Browser codec reports remain hints; actual decode errors are shown.
