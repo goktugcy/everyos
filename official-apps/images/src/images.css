@@ -1,0 +1,86 @@
+.eui-toolbar {
+  flex-wrap: wrap;
+}
+.images-main {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  min-width: 0;
+}
+.image-hint {
+  font-size: 12px;
+  color: var(--eui-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.image-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.image-tools > label {
+  min-width: 0;
+  max-width: 100%;
+}
+.image-stage {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.image-canvas {
+  height: min(55vh, 520px);
+  min-height: 240px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  background: var(--eui-inset);
+  touch-action: none;
+  cursor: grab;
+}
+.image-canvas:active {
+  cursor: grabbing;
+}
+.image-canvas img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+.image-canvas [role="alert"] {
+  padding: 18px;
+}
+.image-metadata {
+  min-width: 0;
+}
+.image-metadata h2 {
+  font-size: 15px;
+}
+.image-metadata p,
+.image-metadata dd {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.image-metadata dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+}
+.image-metadata dt {
+  color: var(--eui-muted);
+}
+.image-metadata dd {
+  margin: 4px 0;
+}
+@media (max-width: 600px) {
+  .images-main {
+    padding: 12px;
+  }
+  .image-canvas {
+    height: 340px;
+  }
+}

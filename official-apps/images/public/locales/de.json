@@ -1,0 +1,32 @@
+{
+  "image": {
+    "open": "Bilder öffnen",
+    "save": "Originalbild speichern",
+    "scope": "Zugriff nur auf ausgewählte Dateien. Bis zu 100 Bilder mit je höchstens 50 MiB. Zoom und Drehung betreffen die Vorschau; gespeichert wird das Original.",
+    "permission": "Bilderzugriff benötigt files:pick aus dem App Store.",
+    "revoked": "Einige gespeicherte Dateien sind nicht mehr freigegeben. Wähle sie erneut aus.",
+    "empty": "Kein Bild ausgewählt",
+    "openHint": "Wähle JPEG, PNG, GIF, WebP, AVIF, BMP, ICO oder SVG über EveryOS. Die Dekodierung hängt vom Browser ab.",
+    "previous": "Vorheriges Bild",
+    "next": "Nächstes Bild",
+    "selection": "Ausgewähltes Bild",
+    "slideshow": "Diashow starten",
+    "stop": "Diashow stoppen",
+    "interval": "Bildintervall",
+    "seconds": "{{value}} s",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "rotateLeft": "Links drehen",
+    "rotateRight": "Rechts drehen",
+    "fit": "Einpassen und zurücksetzen",
+    "preview": "Bildvorschau",
+    "panHint": "Zum Verschieben ziehen oder Vorschau fokussieren und Alt + Pfeiltasten nutzen. Zoom bezieht sich auf das eingepasste Bild.",
+    "unsupported": "Das Bild kann nicht dekodiert werden, überschreitet 80 Megapixel oder wird vom Browser nicht unterstützt. Probiere ein anderes Format.",
+    "metadata": "Bildmetadaten",
+    "metadataFailed": "EXIF-Daten konnten nicht gelesen werden. Dateidetails und Vorschau bleiben verfügbar."
+  },
+  "app": {
+    "name": "Bildbetrachter",
+    "description": "Ausgewählte Bilder zoomen, drehen und mit Metadaten als Diashow betrachten."
+  }
+}
