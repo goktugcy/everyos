@@ -1,8 +1,9 @@
 # Appearance for desktop apps
 
 Apps holding `appearance:manage` (a sensitive capability approved at install; the person's role
-must allow `preferences:manage`) work with the person's wallpapers and folder icons, as Wallpaper
-Studio and Icon Studio do. It runs in windows only.
+must allow `preferences:manage`) work with the person's wallpapers and folder icons. These APIs
+remain available to authorized third-party apps; the official catalog does not include separate
+wallpaper or icon studios. They run in windows only.
 
 | `app.appearance`                   | What it does                                                                       |
 | ---------------------------------- | ---------------------------------------------------------------------------------- |
@@ -22,5 +23,5 @@ Studio and Icon Studio do. It runs in windows only.
   (known presets, `#rrggbb` colors, images that exist, desktops that exist) and applies it the way
   Settings does, so the desktop changes at once.
 - Apps never load EveryOS URLs: images reach them as bytes, and they show them with `blob:` URLs.
-- SVG is not accepted. An app that imports SVG (Icon Studio) sanitizes it and draws it to PNG in
+- SVG is not accepted. An app that imports SVG sanitizes it and draws it to PNG in
   its own sandbox before uploading.

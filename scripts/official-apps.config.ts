@@ -1,5 +1,5 @@
 /**
- * The 33 official EveryOS desktop apps: their folder under official-apps/, id, icon (a lucide
+ * The 29 official EveryOS desktop apps: their folder under official-apps/, id, icon (a lucide
  * glyph on the app's colors) and category. The single list every script and test uses.
  */
 export interface OfficialApp {
@@ -99,14 +99,6 @@ export const OFFICIAL_APPS: readonly OfficialApp[] = [
     name: "JSON Studio",
     icon: "Braces",
     colors: ["#fde047", "#ca8a04"],
-    category: "developer",
-  },
-  {
-    slug: "apiclient",
-    id: "dev.everyos.apiclient",
-    name: "API Client",
-    icon: "Send",
-    colors: ["#5eead4", "#0f766e"],
     category: "developer",
   },
   {
@@ -230,14 +222,6 @@ export const OFFICIAL_APPS: readonly OfficialApp[] = [
     category: "system",
   },
   {
-    slug: "music",
-    id: "dev.everyos.music",
-    name: "Music Player",
-    icon: "Music",
-    colors: ["#f9a8d4", "#be185d"],
-    category: "media",
-  },
-  {
     slug: "video",
     id: "dev.everyos.video",
     name: "Video Player",
@@ -260,21 +244,5 @@ export const OFFICIAL_APPS: readonly OfficialApp[] = [
     icon: "Images",
     colors: ["#a5b4fc", "#4f46e5"],
     category: "media",
-  },
-  {
-    slug: "wallpapers",
-    id: "dev.everyos.wallpapers",
-    name: "Wallpaper Studio",
-    icon: "Wallpaper",
-    colors: ["#93c5fd", "#7c3aed"],
-    category: "customization",
-  },
-  {
-    slug: "icons",
-    id: "dev.everyos.icons",
-    name: "Icon Studio",
-    icon: "Shapes",
-    colors: ["#fdba74", "#db2777"],
-    category: "customization",
   },
 ];

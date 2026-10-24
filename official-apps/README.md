@@ -1,6 +1,6 @@
 # Official EveryOS apps
 
-The 33 apps EveryOS ships in its official registry (`dev.everyos.*`). Each folder is one app, built
+The 29 apps EveryOS ships in its official registry (`dev.everyos.*`). Each folder is one app, built
 with the public SDK exactly like a third-party app: it runs in EveryOS's sandbox, uses only the
 capabilities its manifest declares, and is packed and signed as an `.eosapp`. Nothing here has
 access a community app could not have.

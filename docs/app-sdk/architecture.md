@@ -221,7 +221,7 @@ permissions, publisher, versions and storage use.
 
 ## Official apps and developer tooling
 
-- `official-apps/<name>/`: the 33 official apps, each a workspace package built with
+- `official-apps/<name>/`: the 29 official apps, each a workspace package built with
   `@everyos/app-sdk` and the shared `@everyos/app-ui` kit, packed and signed by CI with the official
   key, listed in the official registry.
 - `packages/app-cli` (`everyos-app dev | build | validate | pack | sign | test | publish`) and
@@ -240,7 +240,7 @@ from its source (docs/backups.md › Desktop apps).
 ## Release gates
 
 CI adds SDK, package, registry, security and per-app test jobs on amd64 and arm64, builds and
-validates all 33 packages, and writes a machine-readable release report (app, id, version,
+validates all 29 packages, and writes a machine-readable release report (app, id, version,
 checksum, manifest, build, tests, localization completeness, permission review). The release fails
 if any official app is missing, broken, incompatible or unsigned.
 

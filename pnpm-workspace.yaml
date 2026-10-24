@@ -72,8 +72,7 @@ catalog:
   cron-parser: 5.10.1
   jose: 6.2.12
   rrule: 2.8.1
-  # Media metadata: tags and artwork (Music Player), EXIF (Image Viewer, Gallery).
-  music-metadata: 12.0.0
+  # Image metadata for Image Viewer and Gallery.
   exifr: 7.1.3
 
 saveExact: true
