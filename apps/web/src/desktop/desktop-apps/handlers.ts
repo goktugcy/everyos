@@ -121,7 +121,7 @@ export function createHandlers(context: InstanceContext): Handlers {
           database: `${connection.database} · ${connection.host}`,
         }),
         i18next.t("desktopApps.dialog.writeConfirm"),
-        value.sql.slice(0, 20_000),
+        value.sql,
       );
     }
     if (operation === "ssh.keys.export" || operation === "ssh.keys.delete") {
