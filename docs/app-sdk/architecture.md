@@ -190,11 +190,14 @@ server that syncs the index and the store explains why.
 
 `services/community-registry/` is a Cloudflare Worker with D1 (developers, apps, versions,
 submissions, reviews, reports, revocations) and R2 (packages, screenshots, the signed index).
-Developers register with a verified e-mail address and their publisher key, submit packages through
-the CLI or a web form (no pull requests), get automated checks (manifest, structure, limits,
-signature, CSP-relevant scans) and a human review, then publication signs a new index with the
-registry key (a Worker secret). Updates, revocations and abuse reports use the same service. It is
-deployed to the owner's Cloudflare account only with the owner's explicit approval.
+The operator verifies email and namespace ownership, then issues a single-use invitation. The CLI
+proves publisher-key ownership and submits packages without pull requests. Automated checks
+(manifest, archive, limits, signature, HTML policy and locales) precede human review. Approved
+versions are immutable; publication signs an immutable R2 index snapshot with a separate registry
+key (a Worker secret), and a monotonic D1 pointer selects it. Updates, revocations and abuse reports
+use the same service. The owner deploys to `everyos.goktugceyhan.dev`; the community trust anchor
+stays absent until its real production key and deployment are verified. See
+[community submissions](community.md) for the implemented API, local tests and deployment handoff.
 
 ## Server API
 

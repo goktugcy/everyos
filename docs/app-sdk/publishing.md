@@ -54,7 +54,8 @@ asset path. Every redirect, including GitHub's object-storage redirect, is DNS-c
 private, link-local and metadata addresses remain blocked. Cross-origin redirects never inherit
 a private registry's authorization header.
 
-The community anchor remains absent until the community service has its own domain and public key.
+The community domain is `everyos.goktugceyhan.dev`. The anchor remains absent until the owner
+deploys the service and verifies its separate production public key; see [community setup](community.md).
 
 ## The complete official-app release pipeline
 

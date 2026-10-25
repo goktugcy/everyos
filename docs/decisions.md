@@ -808,3 +808,25 @@ On 2026-10-24 the owner explicitly chose `locales.default: "en"` in official app
 This overrides the general project default for manifest metadata. All 29 manifests retain English
 as fallback, with Turkish and the other complete dictionaries selected through the host locale.
 The distribution gate enforces this declared default and all ten normalized text-key sets.
+
+### D59 — Community enrollment is curated; publishing uses immutable signed snapshots
+
+The owner chose `everyos.goktugceyhan.dev` for the separate Cloudflare Workers/D1/R2 community
+service. The owner deploys it; the coding agent neither provisions remote resources nor handles
+account tokens. Its own production registry key and verified deployed URL are required before
+pinning the currently absent community anchor.
+
+Email and namespace ownership are verified by the operator before a one-day enrollment invitation
+is issued. There is no implied SMTP integration or automatic email verification. A domain-separated
+Ed25519 proof binds the single-use invitation to a namespace and public key. Publisher tokens are
+hashed, scoped and expiring; local CLI credentials use context-bound `SecretBox` encryption and a
+permission-checked companion key. Recovery revokes previous tokens while retaining historical signing
+keys. Automated package checks precede mandatory human review. Approved versions remain immutable.
+
+D1 conditional batch transactions serialize enrollment, review and version publication. A
+monotonic D1 pointer selects an immutable signed R2 index snapshot, so slower concurrent signers
+cannot roll the catalog back. A storage/signing failure returns publication pending and preserves
+the previous valid index; daily maintenance retries it. Revocations survive every refresh.
+Initial publisher, artifact and version quotas bound Worker memory and the index. Artifact deletion
+is left to a future coordinated retention design rather than risking deletion during submission.
+See [community submissions](app-sdk/community.md) for the actual API, limits and owner deployment.

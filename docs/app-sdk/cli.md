@@ -19,6 +19,11 @@ app's folder (the one with `manifest.json`).
 | `registry revoke <app id> <version or *> --reason` | Revokes a version; EveryOS turns installed copies off at its next sync.                                                 |
 | `registry info`                                    | Prints the registry key's fingerprint.                                                                                  |
 
+The `community enroll`, `community submit`, `community status`, `community rotate-token`,
+`community revoke` and `community report` commands use the separate reviewed community service.
+They also work outside an app project when given package/key paths. See
+[community submissions](community.md) for credentials, images, review notes and local development.
+
 Nothing is ever published to the official EveryOS registry from the CLI.
 
 ## What `validate` checks

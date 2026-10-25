@@ -33,7 +33,7 @@ checked yet; the evidence column records what already passes, so the remaining w
 | Mobile and desktop interfaces                                    | open        |                                                                                                                                                                                                                                                                                 |
 | Localization validation (10 languages)                           | open        |                                                                                                                                                                                                                                                                                 |
 | Developer CLI                                                    | in progress | `cli.test.ts` (build, validate, pack, dev server under the runtime CSP, own signed registry, revoke, refresh)                                                                                                                                                                   |
-| Community registry (service + client)                            | open        |                                                                                                                                                                                                                                                                                 |
+| Community registry (service + client)                            | in progress | `services/community-registry/test/registry.test.ts`: actual workerd/D1/R2 and CLI; production deployment and trust anchor pending.                                                                                                                                              |     |
 | Private registry support                                         | in progress | `desktop-apps.test.ts` › an independent developer's registry (create → publish → fingerprint → install)                                                                                                                                                                         |
 | Documentation complete                                           | open        |                                                                                                                                                                                                                                                                                 |
 | No existing EveryOS functionality broken (full regression suite) | open        |                                                                                                                                                                                                                                                                                 |
@@ -541,10 +541,42 @@ versions, rollback, retained revocations and credential-free asset downloads.
 
 The complete local gate passes format, lint, all typechecks, 1,471 unit/integration tests in
 168 files, production build, the 29-app pipeline with 447 actual app tests, all 22 foundation/
-official-app Chromium workflows, and the production audit with zero advisories. Fresh hosted CI
-for the distribution changes is required; CI 117 above qualifies the prior application checkpoint.
+official-app Chromium workflows, and the production audit with zero advisories.
+[CI 118](https://github.com/goktugcy/everyos/actions/runs/40094108344) subsequently passes on
+both amd64 and arm64, including the 29-app artifact verification/report upload, regular and
+plain-HTTP browser suites, and the dependency audit. This qualifies the distribution checkpoint;
+new community changes need their own hosted run.
 
 The owner explicitly keeps `locales.default: "en"` in all official manifests; the pipeline checks
 that value and complete Turkish plus the other eight dictionaries. No production key was read or
 used locally. Production signing, publication, packaged install/upgrade qualification, community
 service and device measurements remain release gates.
+
+## Community service development — 2026-10-25
+
+The Cloudflare Worker, D1 migration, private R2 intake and developer CLI are implemented; see
+[community submissions](app-sdk/community.md) for exact limits and owner deployment. Fourteen
+integration tests run in actual Miniflare/workerd with D1 and R2. They cover authentication,
+reserved/overlapping namespaces, operator-verified invitations, Ed25519 key proof and replay,
+signed archive corruption/identity mismatch/decompression bombs, HTML/locales/raster checks,
+private pending uploads, owned artifacts, human review/rejection/resubmission, concurrent
+approval, immutable versions, updates, revocation, anonymous report limits/resolution, token
+rotation/recovery, context-bound SecretBox credentials on disk, audit redaction and scheduled refresh. The real Node CLI enrolls, submits and
+reads status through the local HTTP listener. Missing R2 objects preserve the previous valid
+catalog with publication pending; concurrent snapshots cannot lower its sequence.
+
+The final complete local gate passes format, lint, all typechecks, 1,486 tests in 170 files
+(including 14 workerd integration cases and the isolated production-config test), production
+build, Worker dry-run bundle, 29-app distribution verification with 447 app assertions, all 22
+foundation/official-app Chromium workflows, and the production audit with zero advisories.
+No production registry/admin key or Cloudflare account token was read. Fresh hosted CI for the
+community commit is still required; CI 118 above qualifies the preceding distribution checkpoint.
+
+The owner's domain is `everyos.goktugceyhan.dev`. The owner still needs to create production
+D1/R2 resources, supply separate registry/admin secrets, deploy, verify the public key and service
+round trip, then pin `COMMUNITY_APP_REGISTRY`. The development agent has not performed any of
+those remote actions. The official manifests still default to English, and all 29 apps remain
+in scope. Standalone SDK/CLI distribution (`npx` included), packaged Linux install/upgrade
+qualification, Pi/amd64 resource measurements, final
+document synchronization and the final complete-release acceptance remain open. No tag, release
+or main-branch merge is performed by this checkpoint.
