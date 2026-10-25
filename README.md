@@ -5,35 +5,64 @@
   </picture>
 </p>
 
-<h1 align="center">Your personal OS, in your browser.</h1>
+<h1 align="center">A desktop-style web GUI for Linux servers.</h1>
 
 <p align="center">
-  Your files. Your apps. Your own space.<br />
-  A personal desktop, powered by the Linux machine you control.
+  Manage your Linux server locally or remotely, right from your browser.<br />
+  Docker containers, self-hosted apps, files, terminal, services, monitoring, updates and backups in one place.
+</p>
+
+<p align="center">
+  <strong>Self-hosted · Runs on your existing Linux installation · ARM64 &amp; AMD64</strong>
 </p>
 
 <p align="center">
   <a href="#get-started">Get started</a> ·
   <a href="https://github.com/goktugcy/everyos/releases">Releases</a> ·
+  <a href="#what-is-everyos">What it is</a> ·
   <a href="#explore-everyos">Features</a> ·
   <a href="#documentation">Documentation</a>
 </p>
 
 <p align="center">
-  <img src="docs/images/everyos-desktop.png" width="1280" alt="EveryOS desktop with glass panels, app shortcuts, a dock and the mountain wallpaper" />
+  <img src="docs/images/everyos-desktop.png" width="1280" alt="EveryOS browser-based Linux server management GUI with desktop windows, app launcher and dock" />
 </p>
 
-<p align="center"><em>A workspace that feels like yours, wherever you open it.</em></p>
+<p align="center"><em>Linux server management with a familiar desktop interface.</em></p>
 
-## Meet EveryOS
+## What is EveryOS?
 
-EveryOS is a self-hosted **personal OS experience** that brings your files, applications and
-workspace together in a browser. It runs on your existing Linux installation and gives you a
-familiar desktop: windows, folders, a dock, search, settings and a space to make your own.
+**EveryOS is a self-hosted web GUI for managing Linux servers.** Install it on an existing
+Debian, Ubuntu or compatible Linux machine, then use your browser on a laptop or phone to
+manage that machine, whether it is on your desk, in your home lab or accessed remotely.
 
-Keep documents in your personal home, organize your desktop, install self-hosted apps and see
-what your machine is doing. Open the same workspace from a laptop or use the mobile interface
-from your phone. Your data lives on the machine you choose to host it on.
+It brings everyday server administration into a desktop-style interface, so you can work
+with files, Docker apps and Linux services without jumping between separate dashboards
+and terminal sessions. **EveryOS is not a new operating system or a remote desktop/VNC
+stream.** Linux continues to run underneath; EveryOS provides a browser-based management
+workspace on top of it.
+
+### What can you manage?
+
+| Area                 | From the EveryOS interface                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Linux system**     | Monitor CPU, memory, disks and networking; inspect systemd services, logs and available package updates.                                   |
+| **Docker & apps**    | Manage containers and supported Compose projects; install self-hosted apps from supported catalogs. Docker is required for these features. |
+| **Files & terminal** | Browse personal and permitted host files, work with mounted disks and open a real Linux shell in your browser.                             |
+| **Maintenance**      | Schedule tasks, configure notifications, manage backups and restore data through authenticated workflows.                                  |
+| **Your workspace**   | Arrange desktop windows and widgets; connect Home Assistant and supported AI assistants.                                                   |
+
+### How does it work?
+
+EveryOS installs as services **on the Linux machine you want to manage**. You open its web
+interface from another device on your local network, or over a remote connection you
+configure, such as Tailscale or an HTTPS reverse proxy. You are managing the real host,
+not an emulated desktop.
+
+The web API runs without root privileges. A separate agent handles a defined set of
+validated system operations, with account roles, permission checks and audit logging.
+Terminal and permitted host-file access are tied to configured Linux accounts. See the
+[architecture](docs/architecture.md) and [security model](docs/security-model.md).
 
 The interface is available in **English** (the default), **Turkish, German, Spanish, French,
 Italian, Japanese, Korean, Russian and Simplified Chinese**. Each person picks their own language.
