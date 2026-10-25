@@ -852,6 +852,8 @@ The SDK release must exercise real ARM64 and AMD64 packages in addition to stand
 A separate PR workflow owns fresh GitHub-hosted VMs for the six-scenario install/upgrade/restore
 harness. It refuses self-hosted runners, pre-existing EveryOS state and fixture accounts, then
 creates a private root-owned marker bound to repository/run/commit before any installation.
+Package-input changes trigger the workflow too, so pinning the final community anchor cannot
+silently retain qualification of earlier package bytes; manual dispatch is also available.
 The shared host guard also retains the exact disposable local VM allowlist. This prevents the
 qualification from adopting an owner's existing machine or services. Both package digests and
 the actual architecture/environment enter the sanitized receipt. Production keys remain outside CI

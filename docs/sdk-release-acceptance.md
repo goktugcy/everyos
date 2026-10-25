@@ -5,44 +5,51 @@ tracks every gate with its evidence (test names, CI runs, measured numbers). An 
 when the implementation exists and the evidence is linked; until every item is checked, the
 `feature/app-sdk` branch is not released.
 
-Status: **in development** — see [App SDK architecture](app-sdk/architecture.md). Nothing below is
-checked yet; the evidence column records what already passes, so the remaining work stays visible.
+Status: **public release blocked** — the 29-app development implementation and local regression
+gate pass. The owner has not provisioned the production community service. Production trust and
+live acceptance, physical Pi measurements, final signed artifacts and explicit release approval
+remain required. See [App SDK architecture](app-sdk/architecture.md).
+
+`dev passed` means the linked development checks ran successfully; it does not imply production
+signing, publication or approval. The dated sections below preserve prior failures and checkpoint
+limitations. The latest checkpoint is authoritative when an older section lists subsequently
+completed work as pending.
 
 ## Gates
 
-| Gate                                                             | Status      | Evidence                                                                                                                                                                                                                                                                        |
-| ---------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| EveryOS core builds                                              | open        |                                                                                                                                                                                                                                                                                 |
-| Existing Docker App Store still works                            | open        |                                                                                                                                                                                                                                                                                 |
-| Desktop App Store works                                          | open        |                                                                                                                                                                                                                                                                                 |
-| `create-everyos-app` creates a working app                       | in progress | `packages/app-cli/src/cli.test.ts`: all four templates build, validate, pack, typecheck and pass their own tests                                                                                                                                                                |
-| `.eosapp` build and validation                                   | in progress | `packages/app-package/src/package.test.ts`                                                                                                                                                                                                                                      |
-| Package signing and verification                                 | in progress | `package.test.ts`, `packages/app-registry/src/registry.test.ts`, `apps/api/src/desktop-apps.test.ts`                                                                                                                                                                            |
-| Third-party apps run isolated (opaque-origin sandbox)            | in progress | `tests/e2e/sdk-desktop-apps.spec.ts` (Chromium, also over plain HTTP): no parent DOM, cookies, origin storage or API access                                                                                                                                                     |
-| No unauthorized host access through documented capabilities      | open        |                                                                                                                                                                                                                                                                                 |
-| All SDK permission checks enforced server-side                   | in progress | `desktop-apps.test.ts` › app SDK calls, app file access, notifications and host data, app network access, app databases (real PostgreSQL and MariaDB), app SSH keys (verified with ssh-keygen), app appearance; `sdk-desktop-apps.spec.ts` sets a wallpaper through the desktop |
-| App install and removal                                          | in progress | `desktop-apps.test.ts` › installation; `sdk-desktop-apps.spec.ts` installs and uninstalls through the store                                                                                                                                                                     |
-| App updates and compatibility checks                             | in progress | `desktop-apps.test.ts` › updates, revocations, incompatible SDK                                                                                                                                                                                                                 |
-| All 29 official apps implemented with working primary features   | open        |                                                                                                                                                                                                                                                                                 |
-| All 29 packages build, validate and are signed                   | open        |                                                                                                                                                                                                                                                                                 |
-| All 29 apps pass their acceptance tests                          | open        |                                                                                                                                                                                                                                                                                 |
-| All official apps appear in the store                            | open        |                                                                                                                                                                                                                                                                                 |
-| App widgets integrate with the desktop                           | in progress | `sdk-desktop-apps.spec.ts` adds the probe's widget from the gallery (sandboxed, declared capabilities only); `widget-sdk.test.ts` › desktop app widgets                                                                                                                         |
-| App settings and data persist                                    | open        |                                                                                                                                                                                                                                                                                 |
-| Backup and restore compatibility                                 | in progress | `desktop-apps.test.ts` › desktop apps in backups (packages archived, restore staged and applied, re-verified, tampered package refused, repair)                                                                                                                                 |
-| Mobile and desktop interfaces                                    | open        |                                                                                                                                                                                                                                                                                 |
-| Localization validation (10 languages)                           | open        |                                                                                                                                                                                                                                                                                 |
-| Developer CLI                                                    | in progress | `cli.test.ts` (build, validate, pack, dev server under the runtime CSP, own signed registry, revoke, refresh)                                                                                                                                                                   |
-| Community registry (service + client)                            | in progress | `services/community-registry/test/registry.test.ts`: actual workerd/D1/R2 and CLI; production deployment and trust anchor pending.                                                                                                                                              |     |
-| Private registry support                                         | in progress | `desktop-apps.test.ts` › an independent developer's registry (create → publish → fingerprint → install)                                                                                                                                                                         |
-| Documentation complete                                           | open        |                                                                                                                                                                                                                                                                                 |
-| No existing EveryOS functionality broken (full regression suite) | open        |                                                                                                                                                                                                                                                                                 |
-| ARM64 acceptance                                                 | open        |                                                                                                                                                                                                                                                                                 |
-| AMD64 acceptance                                                 | open        |                                                                                                                                                                                                                                                                                 |
-| Security regression tests                                        | in progress | network policy: `desktop-apps.test.ts` › app network access (scoping, DNS rebinding, metadata, redirects, no credentials)                                                                                                                                                       |
-| CI green                                                         | open        |                                                                                                                                                                                                                                                                                 |
-| Release artifacts verified                                       | open        |                                                                                                                                                                                                                                                                                 |
-| Release candidate prepared                                       | open        |                                                                                                                                                                                                                                                                                 |
+| Gate                                                             | Status                         | Evidence                                                                                                                                                                                                     |
+| ---------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| EveryOS core builds                                              | dev passed                     | Full `pnpm build`; both real `.deb` packages contain 392 runtime/package files.                                                                                                                              |
+| Existing Docker App Store still works                            | dev passed                     | Full browser run including `zz-store.spec.ts` and `system-docker.spec.ts`; Store polling fallback regression.                                                                                                |
+| Desktop App Store works                                          | dev passed                     | `sdk-desktop-apps.spec.ts` installs, scopes permissions, persists data and removes apps through the store.                                                                                                   |
+| `create-everyos-app` creates a working app                       | dev passed                     | All four [standalone templates](app-sdk/distribution.md) install, typecheck, test, pack, publish and run outside the workspace.                                                                              |
+| `.eosapp` build and validation                                   | dev passed                     | `packages/app-package/src/package.test.ts`; all 29 actual artifacts independently verified by `scripts/official-apps.ts`.                                                                                    |
+| Package signing and verification                                 | dev passed; production pending | Package/registry/API security tests and ephemeral signed artifacts; production keys are used only by the protected release workflow.                                                                         |
+| Third-party apps run isolated (opaque-origin sandbox)            | dev passed                     | `sdk-desktop-apps.spec.ts` on normal and plain HTTP: no parent DOM, cookies, origin storage or direct API access.                                                                                            |
+| No unauthorized host access through documented capabilities      | dev passed                     | `desktop-apps.test.ts` denies undeclared grants, revoked instances, file/network/database/SSH/appearance scope violations.                                                                                   |
+| All SDK permission checks enforced server-side                   | dev passed                     | API tests use real PostgreSQL and MariaDB fixtures and `ssh-keygen`; browser tests exercise native approval and rejection.                                                                                   |
+| App install and removal                                          | dev passed                     | API installation tests and real store workflow.                                                                                                                                                              |
+| App updates and compatibility checks                             | dev passed                     | API update, immutable-version, revoked and incompatible-SDK tests; packaged Linux lifecycle.                                                                                                                 |
+| All 29 official apps implemented with working primary features   | dev passed                     | `official-apps/*/test/`, 447 app assertions; real browser workflows detailed below.                                                                                                                          |
+| All 29 packages build, validate and are signed                   | dev passed; production pending | Complete ephemeral-key artifact pipeline; protected production signing remains a release step.                                                                                                               |
+| All 29 apps pass their acceptance tests                          | dev passed                     | Exact positive per-app test counts enforced by `scripts/official-apps.ts` and retained in its CI artifact report.                                                                                            |
+| All official apps appear in the store                            | dev passed                     | `official-apps.spec.ts` installs and launches every one of the 29 signed development packages.                                                                                                               |
+| App widgets integrate with the desktop                           | dev passed                     | Sandboxed widget gallery, Notes/Uptime browser workflows and `widget-sdk.test.ts`.                                                                                                                           |
+| App settings and data persist                                    | dev passed                     | API storage isolation, reload/reopen browser workflows and packaged Linux app-update/restore scenarios.                                                                                                      |
+| Backup and restore compatibility                                 | dev passed                     | API archive/tamper/repair tests; real packaged authenticated backup, CLI restore and supervised restart.                                                                                                     |
+| Mobile and desktop interfaces                                    | dev passed                     | Actual Chromium desktop/mobile workflows and reviewed screenshots described per app below.                                                                                                                   |
+| Localization validation (10 languages)                           | dev passed                     | Every package's ten dictionaries validate; all 29 manifests default to `en`.                                                                                                                                 |
+| Developer CLI                                                    | dev passed                     | CLI unit/integration tests and actual installed-archive acceptance, including runtime CSP and signed registry operations.                                                                                    |
+| Community registry (service + client)                            | production blocked             | Fourteen actual workerd/D1/R2 integration tests pass; owner deployment, public-key pin and live six-step round trip remain.                                                                                  |
+| Private registry support                                         | dev passed                     | Independent developer registry API test plus standalone create/publish/refresh/revoke acceptance.                                                                                                            |
+| Documentation complete                                           | production details pending     | SDK references, distribution, publishing, community operations and this evidence ledger exist; production identity/live receipts must be added after deployment.                                             |
+| No existing EveryOS functionality broken (full regression suite) | dev passed                     | Local format/lint/types and 1,501 tests; full Chromium 95 passed plus one HTTP-only skip, plain HTTP 25 passed, without retries.                                                                             |
+| ARM64 acceptance                                                 | dev passed; Pi open            | [Native package qualification](https://github.com/goktugcy/everyos/actions/runs/40230342700): all six scenarios pass; standalone Linux/macOS acceptance passes. Physical Pi measurements remain.             |
+| AMD64 acceptance                                                 | dev passed                     | The same native Ubuntu package qualification passes all six install/update/restore/revocation scenarios.                                                                                                     |
+| Security regression tests                                        | dev passed                     | Network scoping/DNS rebinding/metadata/redirect tests, sandbox tests, signatures, tamper handling and zero production dependency advisories.                                                                 |
+| CI green                                                         | checkpoint passed              | [CI 122](https://github.com/goktugcy/everyos/actions/runs/40230342559) passes both architectures and audit for `f0e302f`; [PR #1](https://github.com/goktugcy/everyos/pull/1) tracks subsequent head checks. |
+| Release artifacts verified                                       | production pending             | SDK/app/deb development artifacts verified; final protected signatures and independent release verification remain.                                                                                          |
+| Release candidate prepared                                       | local only                     | `0.1.37` is an unpublished local candidate; `release-preflight.ts` rejects the absent community anchor. No tag, publication or main merge.                                                                   |
 
 ## Official apps
 
@@ -59,44 +66,43 @@ versioned release → object redirect with public DNS pinned at every hop, crede
 across origins, and private/metadata/mapped-address redirects refused. These five focused tests
 passed on 2026-10-22. Publication, the complete signed catalog and the community anchor remain open.
 
-| #   | App             | Id                       | Status |
-| --- | --------------- | ------------------------ | ------ |
-| 01  | Notes           | `dev.everyos.notes`      | tested |
-| 02  | Markdown Editor | `dev.everyos.markdown`   | tested |
-| 03  | Calculator      | `dev.everyos.calculator` | tested |
-| 04  | Calendar        | `dev.everyos.calendar`   | tested |
-| 05  | Pomodoro        | `dev.everyos.pomodoro`   | tested |
-| 06  | To-Do           | `dev.everyos.todo`       | tested |
-| 07  | PDF Viewer      | `dev.everyos.pdf`        | tested |
-| 08  | Text Editor     | `dev.everyos.text`       | tested |
-| 09  | Whiteboard      | `dev.everyos.whiteboard` | tested |
-| 10  | Code Editor     | `dev.everyos.code`       | tested |
-| 11  | JSON Studio     | `dev.everyos.json`       | tested |
-
-| 12 | Regex Tester | `dev.everyos.regex` | tested |
-| 13 | SQL Client | `dev.everyos.sql` | tested |
-| 14 | Diff Viewer | `dev.everyos.diff` | tested |
-| 15 | Cron Builder | `dev.everyos.cron` | tested |
-| 16 | JWT Inspector | `dev.everyos.jwt` | tested |
-| 17 | Color Studio | `dev.everyos.color` | tested |
-| 18 | Port Inspector | `dev.everyos.ports` | tested |
-| 19 | DNS Lookup | `dev.everyos.dns` | tested |
-| 20 | SSL Inspector | `dev.everyos.ssl` | tested |
-| 21 | HTTP Monitor | `dev.everyos.httpmonitor` | tested |
-| 22 | Log Viewer | `dev.everyos.logs` | tested |
-| 23 | Disk Explorer | `dev.everyos.disk` | tested |
-| 24 | SSH Keys | `dev.everyos.sshkeys` | tested |
-| 25 | Network Tools | `dev.everyos.network` | tested |
-| 26 | Uptime | `dev.everyos.uptime` | tested |
-
-| 27 | Video Player | `dev.everyos.video` | tested |
-| 28 | Image Viewer | `dev.everyos.images` | tested |
-| 29 | Gallery | `dev.everyos.gallery` | tested |
+| #   | App             | Id                        | Status |
+| --- | --------------- | ------------------------- | ------ |
+| 01  | Notes           | `dev.everyos.notes`       | tested |
+| 02  | Markdown Editor | `dev.everyos.markdown`    | tested |
+| 03  | Calculator      | `dev.everyos.calculator`  | tested |
+| 04  | Calendar        | `dev.everyos.calendar`    | tested |
+| 05  | Pomodoro        | `dev.everyos.pomodoro`    | tested |
+| 06  | To-Do           | `dev.everyos.todo`        | tested |
+| 07  | PDF Viewer      | `dev.everyos.pdf`         | tested |
+| 08  | Text Editor     | `dev.everyos.text`        | tested |
+| 09  | Whiteboard      | `dev.everyos.whiteboard`  | tested |
+| 10  | Code Editor     | `dev.everyos.code`        | tested |
+| 11  | JSON Studio     | `dev.everyos.json`        | tested |
+| 12  | Regex Tester    | `dev.everyos.regex`       | tested |
+| 13  | SQL Client      | `dev.everyos.sql`         | tested |
+| 14  | Diff Viewer     | `dev.everyos.diff`        | tested |
+| 15  | Cron Builder    | `dev.everyos.cron`        | tested |
+| 16  | JWT Inspector   | `dev.everyos.jwt`         | tested |
+| 17  | Color Studio    | `dev.everyos.color`       | tested |
+| 18  | Port Inspector  | `dev.everyos.ports`       | tested |
+| 19  | DNS Lookup      | `dev.everyos.dns`         | tested |
+| 20  | SSL Inspector   | `dev.everyos.ssl`         | tested |
+| 21  | HTTP Monitor    | `dev.everyos.httpmonitor` | tested |
+| 22  | Log Viewer      | `dev.everyos.logs`        | tested |
+| 23  | Disk Explorer   | `dev.everyos.disk`        | tested |
+| 24  | SSH Keys        | `dev.everyos.sshkeys`     | tested |
+| 25  | Network Tools   | `dev.everyos.network`     | tested |
+| 26  | Uptime          | `dev.everyos.uptime`      | tested |
+| 27  | Video Player    | `dev.everyos.video`       | tested |
+| 28  | Image Viewer    | `dev.everyos.images`      | tested |
+| 29  | Gallery         | `dev.everyos.gallery`     | tested |
 
 ## Measurements
 
-Launch time, memory, CPU, network activity and package sizes are measured on the owner's Raspberry
-Pi 5 and an amd64 runner once apps exist; nothing is estimated here.
+Actual package sizes and virtualized core startup, RSS and idle CPU samples are recorded below.
+Physical Raspberry Pi 5 and individual app launch/resource measurements remain open. The owner's
+Pi remains read-only; installing a candidate there requires the owner's explicit approval.
 
 ## Development verification — 2026-10-22
 
@@ -672,3 +678,62 @@ now preserve suite/test names and error kinds without printing assertion values.
 failed the Store browser regression above. Neither run qualifies this new checkpoint. Fresh hosted
 CI, live community acceptance, native amd64 packaged acceptance,
 physical Pi measurements and final evidence synchronization remain required before public release.
+
+## Native hosted Linux package qualification — 2026-10-25
+
+The dedicated [package workflow](https://github.com/goktugcy/everyos/actions/runs/40230342700)
+passes on **both native amd64 and arm64 Ubuntu 24.04 runners** for
+`f0e302f85c691b2f11524e57dd0d010b727d694f`. Each runner completes all six real scenarios above,
+including the published 0.1.36 installation, PAM/sudo boundary, authenticated 0.1.37 update,
+app update with persistent SDK data, verified backup/CLI restore and signed revocation.
+The preparation refuses existing EveryOS state and self-hosted machines; failure diagnostics and
+cleanup run only after that preparation succeeds. The guard has six Python regression cases,
+also exercised by `pnpm check` (1,501 tests in 174 files).
+
+Both sanitized receipts were downloaded from GitHub and their ZIP SHA-256 values checked against
+GitHub's artifact metadata before extraction:
+
+| Architecture | Receipt                                                                    | Artifact id | Artifact ZIP SHA-256                                               |
+| ------------ | -------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| amd64        | [receipt](evidence/sdk-20261025/hosted-sdk-linux-qualification-amd64.json) | 12611679776 | `43e84af4c91d8e43e9f3ef96571ab09d28b32593ab9990b9caac12a6b2826eb2` |
+| arm64        | [receipt](evidence/sdk-20261025/hosted-sdk-linux-qualification-arm64.json) | 12613075694 | `66795c42c5ad5cd3a1eb9a27cd28d39f2f7a9a97de1005bbe9caf6acc66e464c` |
+
+The actual tested candidate package digests are
+`6ada0fdf146d955f541af7d64559dfb3af8c7f4ec98cff5d3139a84eb59c7518` (amd64) and
+`2fe4a697bb74a70e92ab07f87b1e8c9984ebc49240fe211a76af303dcd4ec4f3` (arm64).
+Each receipt binds its baseline and candidate package bytes. These are independent fresh builds,
+not the earlier local VM package bytes, and use ephemeral candidate/app signing keys.
+
+| Native VM observation                    | amd64       | arm64       |
+| ---------------------------------------- | ----------- | ----------- |
+| Warm core restart to healthy             | 453.81 ms   | 459.38 ms   |
+| API RSS after restore                    | 146,332 KiB | 144,524 KiB |
+| Agent RSS after restore                  | 102,860 KiB | 98,964 KiB  |
+| API CPU in the five-second idle sample   | 0.0%        | 0.4%        |
+| Agent CPU in the five-second idle sample | 0.2%        | 0.2%        |
+
+These single samples describe virtualized core services. They are not averages, individual app
+window measurements or physical Pi results. The native AMD64 package gate is now satisfied;
+physical Pi/app measurements remain open. The main regression workflow for the same checkpoint
+is [CI 122](https://github.com/goktugcy/everyos/actions/runs/40230342559), still pending when this
+package evidence was extracted. CI 121 passed ARM64 but its AMD64 HTTP stage was cancelled by
+the subsequent push; it is not recorded as an entirely successful run.
+
+The remaining publication gates are the owner's production Cloudflare/domain deployment, pinned
+public community key and live six-step acceptance, physical device measurements, final protected
+signing/verification and explicit owner approval. No production service, tag, npm publication or
+public release was created by this qualification.
+
+The final local pre-push run passes format/lint/types, **1,501 tests in 174 files**, build and all
+**22 foundation/official-app browser workflows** without retries. Inspection of the hosted SDK
+artifacts exposed generated Python bytecode marking the source as dirty. The Mac normally disables
+bytecode generation; explicitly enabling CI's behavior reproduced the untracked caches in both
+`scripts/` and `tests/sdk-linux/`. Repository-local `__pycache__/` exclusion fixes that generated
+state without excluding source files. CI now refuses a dirty tree before recording SDK provenance;
+subsequent hosted runs must verify that clean state. Earlier dirty development receipts remain honest
+historical evidence and are not relabeled as clean release provenance.
+
+CI 122 subsequently completed successfully on both architectures, including the standalone SDK,
+29-app artifact verification, regular and plain-HTTP browser suites, plus the dependency audit.
+The final provenance/workflow/documentation follow-up retains these results as checkpoint evidence;
+its current head checks and receipts are linked from [PR #1](https://github.com/goktugcy/everyos/pull/1).

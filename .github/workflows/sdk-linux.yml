@@ -1,9 +1,26 @@
 name: SDK Linux package qualification
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - ".github/workflows/sdk-linux.yml"
+      - ".node-version"
+      - "package.json"
+      - "README.md"
+      - "LICENSE"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig*.json"
+      - "apps/**"
+      - "packages/**"
+      - "official-apps/**"
+      - "packaging/**"
+      - "patches/**"
+      - "scripts/build*.ts"
+      - "scripts/package.py"
+      - "scripts/package_inputs.py"
+      - "scripts/sign-release.ts"
       - "tests/sdk-linux/**"
       - "scripts/sdk-linux-guard.test.ts"
 

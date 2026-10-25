@@ -40,7 +40,8 @@ absence of production community acceptance. The documented observations are in
 `docs/sdk-release-acceptance.md`; physical Pi measurements remain a separate gate.
 
 The `SDK Linux package qualification` workflow runs the six scenarios on fresh Ubuntu ARM64 and
-AMD64 GitHub-hosted VMs when this harness changes. It builds both actual packages, verifies the
+AMD64 GitHub-hosted VMs when this harness or packaged inputs change, and supports manual dispatch.
+It builds both actual packages, verifies the
 published 0.1.36 baseline, uses `candidate.ts` to create test signatures, then installs/upgrades
 only the fresh EveryOS instance. Receipts are uploaded as `sdk-linux-package-<arch>`. The workflow
 does not use a production private key, touch an owner's device or adopt existing host services.

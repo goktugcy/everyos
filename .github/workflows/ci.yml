@@ -86,7 +86,13 @@ jobs:
           WRANGLER_SEND_METRICS: "false"
 
       - name: Build and verify standalone SDK archives
-        run: pnpm sdk:build && pnpm sdk:verify
+        run: |
+          if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+            git status --short
+            echo "::error::Checks must preserve clean source provenance."
+            exit 1
+          fi
+          pnpm sdk:build && pnpm sdk:verify
 
       - name: Qualify every SDK template outside the workspace
         run: pnpm sdk:check

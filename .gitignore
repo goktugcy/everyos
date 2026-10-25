@@ -4,6 +4,9 @@ coverage/
 *.tsbuildinfo
 .vite/
 
+# Python test and packaging bytecode is generated, not source provenance.
+__pycache__/
+
 # Local development state (database, secrets, sockets)
 .dev/
 
