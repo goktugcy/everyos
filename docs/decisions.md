@@ -845,3 +845,14 @@ The release package job must fail until the real community anchor and current ca
 live acceptance evidence are present, then independently verify the deployed index signature.
 Local Miniflare/D1/R2 tests do not satisfy that live gate. Choosing a hostname authorizes local
 configuration work; it does not imply that a remote service exists or authorize the agent to deploy it.
+
+### D61 — Native package acceptance uses fresh hosted CI machines
+
+The SDK release must exercise real ARM64 and AMD64 packages in addition to standalone archives.
+A separate PR workflow owns fresh GitHub-hosted VMs for the six-scenario install/upgrade/restore
+harness. It refuses self-hosted runners, pre-existing EveryOS state and fixture accounts, then
+creates a private root-owned marker bound to repository/run/commit before any installation.
+The shared host guard also retains the exact disposable local VM allowlist. This prevents the
+qualification from adopting an owner's existing machine or services. Both package digests and
+the actual architecture/environment enter the sanitized receipt. Production keys remain outside CI
+qualification; only the real baseline's public signature and ephemeral candidate signatures are used.

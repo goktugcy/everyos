@@ -13,6 +13,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from host_guard import require_disposable_host
 
 ROOT = Path('/srv/everyos-sdk-qualification')
 DATA = Path('/var/lib/everyos')
@@ -67,8 +68,9 @@ def main():
     parser.add_argument('--fixtures', type=Path, required=True)
     parser.add_argument('--resume', action='store_true', help='Reuse only this disposable run after a harness failure')
     args = parser.parse_args()
-    if os.geteuid() != 0 or socket.gethostname() != 'lima-everyos-sdk-qual-20261025':
-        parser.error('Only the dedicated disposable qualification VM is accepted')
+    environment = require_disposable_host()
+    architecture = command('dpkg', '--print-architecture').stdout.strip()
+    assert architecture in ('arm64', 'amd64')
     assert command('everyos', 'version').stdout.strip() == '0.1.36'
     credential_file = ROOT/'credentials.json'
     if args.resume:
@@ -108,7 +110,7 @@ def main():
     source = ROOT/'releases'
     version = source/'download/v0.1.37'
     version.mkdir(parents=True, exist_ok=True)
-    for name in ('release.json', 'everyos_0.1.37_arm64.deb'):
+    for name in ('release.json', f'everyos_0.1.37_{architecture}.deb'):
         (version/name).write_bytes((args.candidate/name).read_bytes())
     (source/'latest/download/release.json').write_bytes((version/'release.json').read_bytes())
     # Keep the actual old package bytes available for rollback under the same test trust root.
@@ -216,8 +218,8 @@ def main():
     for metrics in units.values():
         metrics['idleCpuPercent'] = round(100 * (counters(metrics['pid']) - metrics.pop('startCpuSeconds')) / (time.monotonic() - begin), 3)
         del metrics['pid']
-    inputs = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in {'priorPackage': source/'download/v0.1.36/everyos_0.1.36_arm64.deb', 'candidatePackage': args.candidate/'everyos_0.1.37_arm64.deb'}.items()}
-    report = {'format': 'everyos-sdk-linux-qualification/1', 'status': 'passed', 'fromVersion': '0.1.36', 'toVersion': '0.1.37', 'inputs': inputs, 'platform': {'os': 'Ubuntu 24.04', 'architecture': 'arm64', 'environment': 'disposable Lima VZ VM', 'physicalPi': False}, 'productionCommunityTested': False, 'startupToHealthyMs': startup, 'idleSampleSeconds': 5, 'services': units, 'scenarios': records}
+    inputs = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in {'priorPackage': source/f'download/v0.1.36/everyos_0.1.36_{architecture}.deb', 'candidatePackage': args.candidate/f'everyos_0.1.37_{architecture}.deb'}.items()}
+    report = {'format': 'everyos-sdk-linux-qualification/1', 'status': 'passed', 'fromVersion': '0.1.36', 'toVersion': '0.1.37', 'inputs': inputs, 'platform': {'os': 'Ubuntu 24.04', 'architecture': architecture, 'environment': environment, 'physicalPi': False}, 'productionCommunityTested': False, 'startupToHealthyMs': startup, 'idleSampleSeconds': 5, 'services': units, 'scenarios': records}
     (ROOT/'qualification.json').write_text(json.dumps(report, indent=2)+'\n')
     print('Linux qualification report saved', flush=True)
 

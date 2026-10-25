@@ -1,6 +1,6 @@
 import os, socket, subprocess, pathlib, sys, json, hashlib
-if os.geteuid() != 0 or socket.gethostname() != 'lima-everyos-sdk-qual-20261025':
-    raise SystemExit('Dedicated disposable qualification VM required')
+from host_guard import require_disposable_host
+require_disposable_host()
 root=pathlib.Path('/srv/everyos-sdk-qualification')
 if pathlib.Path('/var/lib/everyos/everyos.db').exists():
     raise SystemExit('Refusing to replace an existing installation')
