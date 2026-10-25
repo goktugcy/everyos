@@ -6,3 +6,6 @@ test-results/
 playwright-report/
 graphify-out/
 docs/research/
+
+services/community-registry/worker-configuration.d.ts
+services/community-registry/.wrangler/

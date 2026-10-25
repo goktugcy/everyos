@@ -5,6 +5,15 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: "community",
+          include: ["services/community-registry/test/**/*.test.ts"],
+          environment: "node",
+          testTimeout: 30000,
+          hookTimeout: 60000,
+        },
+      },
+      {
+        test: {
           name: "node",
           include: [
             "packages/*/src/**/*.test.ts",

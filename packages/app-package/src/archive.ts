@@ -183,6 +183,7 @@ async function collect(content: AsyncIterable<Buffer>, max: number): Promise<Buf
 export async function inspectPackage(
   bytes: Buffer,
   limits: PackageLimits = PACKAGE_LIMITS,
+  visit?: (entry: { path: string; size: number; content: AsyncIterable<Buffer> }) => Promise<void>,
 ): Promise<{ manifest: AppManifest; files: Array<{ path: string; size: number }> }> {
   const seen = new Set<string>();
   const files: Array<{ path: string; size: number }> = [];
@@ -191,8 +192,11 @@ export async function inspectPackage(
     const path = entryPath(entry, seen);
     if (path === null) continue;
     files.push({ path, size: entry.size });
-    if (path === MANIFEST)
-      manifest = readManifest(await collect(entry.content, limits.manifestBytes));
+    if (path === MANIFEST) {
+      const content = await collect(entry.content, limits.manifestBytes);
+      manifest = readManifest(content);
+      if (visit) await visit({ path, size: entry.size, content: Readable.from([content]) });
+    } else if (visit) await visit({ path, size: entry.size, content: entry.content });
   }
   if (!manifest) throw new PackageError("missing-manifest");
   checkComplete(manifest, new Set(files.map((file) => file.path)));

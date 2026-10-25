@@ -1,0 +1,47 @@
+// Local bindings only. Generate the ignored production config before owner deployment.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "everyos-community-registry",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "everyos-community",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+      "remote": false,
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ARTIFACTS",
+      "bucket_name": "everyos-community",
+      "remote": false,
+    },
+  ],
+  "vars": {
+    "PUBLIC_ORIGIN": "https://everyos.goktugceyhan.dev",
+    "ENVIRONMENT": "local",
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 0.01,
+    },
+  },
+  "triggers": {
+    "crons": ["17 3 * * *"],
+  },
+  "secrets": {
+    "required": ["ADMIN_TOKEN", "REGISTRY_PRIVATE_KEY"],
+  },
+}

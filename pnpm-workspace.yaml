@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - official-apps/*
+  - services/*
 
 # Centralized dependency versions. Workspace packages reference these with
 # "catalog:" so every package resolves the exact same version.
@@ -80,6 +81,7 @@ engineStrict: true
 # Only these packages may run install scripts (pnpm blocks all others).
 allowBuilds:
   "@parcel/watcher": false
+  workerd: false
   esbuild: true
 patchedDependencies:
   "@excalidraw/excalidraw@0.18.1": patches/@excalidraw__excalidraw@0.18.1.patch

@@ -19,6 +19,7 @@
     "@everyos/app-registry": "workspace:*",
     "@everyos/app-sdk": "workspace:*",
     "@everyos/app-testing": "workspace:*",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "@everyos/security": "workspace:*"
   }
 }

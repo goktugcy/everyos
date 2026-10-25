@@ -6,6 +6,7 @@ import { parseArgs } from "node:util";
 import { keyFingerprint } from "@everyos/app-package";
 import { build } from "./build.ts";
 import { dev } from "./dev.ts";
+import { CommunityClient, loadCommunityToken, saveCommunityToken } from "./community.ts";
 import { keygen, signPackageFile } from "./keys.ts";
 import { pack } from "./pack.ts";
 import { CliError, loadProject, type Project } from "./project.ts";
@@ -42,6 +43,14 @@ Usage: everyos-app <command> [options]
   registry init --id <id> --name <name> --publisher-id <com.example> --publisher-name <name>
                               Create your own registry (keys/registry.key signs it).
   publish [--changelog text]  Pack, sign and add this version to your registry.
+  community enroll --publisher-id <id> [--registry-url <https origin>]
+                              Enroll using EVERYOS_COMMUNITY_INVITATION and your publisher key.
+  community submit <file.eosapp> --icon <png|webp> [--screenshot <file>] [--changelog text]
+                              Submit for human review; publication requires operator approval.
+  community status            Read your submissions and review notes.
+  community rotate-token      Replace your developer token (stored locally with mode 0600).
+  community revoke <id> <version|*> --reason <text>
+  community report <id> [version] --reason <text>
   registry refresh            Sign the index again before it expires (180 days).
   registry revoke <app id> <version|*> --reason <text>
                               Revoke a version; installed copies turn off on sync.
@@ -74,6 +83,10 @@ async function main(argv: string[]): Promise<number> {
       "publisher-name": { type: "string" },
       changelog: { type: "string" },
       reason: { type: "string" },
+      "registry-url": { type: "string" },
+      "token-file": { type: "string" },
+      icon: { type: "string" },
+      screenshot: { type: "string", multiple: true },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -105,6 +118,89 @@ async function main(argv: string[]): Promise<number> {
     );
     say(`Signed ${signature.appId} ${signature.version} (${signature.fingerprint})`);
     say(`Wrote ${file}.sig.json`);
+    return 0;
+  }
+
+  if (command === "community") {
+    const [action, first, version] = positionals;
+    const origin = text("registry-url") ?? "https://everyos.goktugceyhan.dev";
+    const credentials = resolve(text("token-file") ?? ".everyos/community-token.json");
+    if (action === "enroll") {
+      const invitation = process.env.EVERYOS_COMMUNITY_INVITATION;
+      const publisherId = text("publisher-id");
+      if (!invitation || !publisherId)
+        throw new CliError("Enrollment needs --publisher-id and EVERYOS_COMMUNITY_INVITATION");
+      const result = await new CommunityClient(origin).enroll(
+        publisherId,
+        invitation,
+        await readFile(resolve(text("key") ?? "keys/publisher.key"), "utf8"),
+      );
+      await saveCommunityToken(credentials, origin, result.token);
+      say(`Enrolled ${publisherId}; credentials saved to ${credentials}`);
+      return 0;
+    }
+    if (action === "report") {
+      if (!first || !text("reason"))
+        throw new CliError("community report <id> [version] --reason <text>");
+      say(
+        JSON.stringify(
+          await new CommunityClient(origin).request(
+            "/v1/reports",
+            "POST",
+            JSON.stringify({
+              appId: first,
+              ...(version ? { version } : {}),
+              reason: text("reason"),
+            }),
+          ),
+          null,
+          2,
+        ),
+      );
+      return 0;
+    }
+    const credential =
+      process.env.EVERYOS_COMMUNITY_TOKEN ?? (await loadCommunityToken(credentials, origin));
+    const client = new CommunityClient(origin, credential);
+    if (action === "status") say(JSON.stringify(await client.request("/v1/submissions"), null, 2));
+    else if (action === "rotate-token") {
+      const result = await client.request("/v1/token", "POST", "{}");
+      await saveCommunityToken(credentials, origin, result.token);
+      say(`Replacement credentials saved to ${credentials}`);
+    } else if (action === "submit") {
+      const icon = text("icon");
+      if (!first || !icon) throw new CliError("community submit <file.eosapp> --icon <png|webp>");
+      say(
+        JSON.stringify(
+          await client.submit(
+            resolve(first),
+            resolve(text("key") ?? "keys/publisher.key"),
+            resolve(icon),
+            (Array.isArray(values.screenshot) ? values.screenshot : [])
+              .filter((path): path is string => typeof path === "string")
+              .map((path) => resolve(path)),
+            text("changelog") ?? "",
+          ),
+          null,
+          2,
+        ),
+      );
+    } else if (action === "revoke") {
+      if (!first || !version || !text("reason"))
+        throw new CliError("community revoke <id> <version|*> --reason <text>");
+      say(
+        JSON.stringify(
+          await client.request(
+            "/v1/revocations",
+            "POST",
+            JSON.stringify({ appId: first, version, reason: text("reason") }),
+          ),
+          null,
+          2,
+        ),
+      );
+    } else
+      throw new CliError("community enroll | submit | status | rotate-token | revoke | report");
     return 0;
   }
 

@@ -1,0 +1,32 @@
+{
+  "name": "@everyos/community-registry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "typecheck": "tsc -p tsconfig.json",
+    "types": "wrangler types",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "test": "vitest run --config ../../vitest.config.ts --project community",
+    "configure": "node scripts/configure.ts"
+  },
+  "dependencies": {
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/app-package": "workspace:*",
+    "@everyos/app-registry": "workspace:*",
+    "@everyos/logger": "workspace:*",
+    "hono": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261019.1",
+    "@types/node": "26.6.4",
+    "esbuild": "0.28.2",
+    "json5": "2.2.3",
+    "miniflare": "5.20261019.2-beta",
+    "typescript": "6.0.3",
+    "vitest": "5.0.3",
+    "wrangler": "4.152.0"
+  }
+}

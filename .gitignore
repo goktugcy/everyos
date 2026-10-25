@@ -29,3 +29,12 @@ graphify-out/
 # Official app packages built locally
 *.eosapp
 *.eosapp.sig.json
+
+# Community registry: local Workers state and owner-managed production configuration.
+services/community-registry/.wrangler/
+services/community-registry/.dev.vars*
+services/community-registry/.env*
+services/community-registry/wrangler.production.jsonc
+
+# Developer community credentials.
+**/.everyos/

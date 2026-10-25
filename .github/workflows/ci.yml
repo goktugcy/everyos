@@ -80,6 +80,11 @@ jobs:
         id: build
         run: pnpm build
 
+      - name: Bundle the community registry Worker without deploying
+        run: pnpm --filter @everyos/community-registry build
+        env:
+          WRANGLER_SEND_METRICS: "false"
+
       - name: Verify all official app release artifacts with ephemeral keys
         id: officialapps
         run: pnpm official-apps:check
