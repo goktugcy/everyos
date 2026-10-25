@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page } from "@playwright/test";
 import {
   CSRF_HEADER,
+  type LoginResponse,
   type PreferenceDocuments,
   type SessionInfo,
 } from "../../packages/shared/src/index.ts";
@@ -23,16 +24,22 @@ export async function signIn(
   reset = true,
   { toasts = false }: { toasts?: boolean } = {},
 ): Promise<SessionInfo> {
-  await page.goto("/");
-  await page.getByLabel(/Kullanıcı adı|Username/).fill("goktug");
-  await page.getByLabel(/^(Parola|Password)$/).fill(PASSWORD);
-  await page.getByRole("button", { name: /Giriş yap|Sign in/ }).click();
-  await expect(page.locator('[data-testid="desktop"], [data-testid="mobile-shell"]')).toBeVisible();
-  // EVERYOS_E2E_HTTP_HOST is mapped by Chromium, not Node's APIRequestContext.
-  const session = await page.evaluate(async () => {
-    const response = await fetch("/api/auth/session");
-    return (await response.json()) as SessionInfo;
-  });
+  // Reset before mounting: restored windows and lock-on-hide preferences can otherwise act on
+  // this new session while the fixture navigates away. Foundation tests exercise the login UI.
+  // Browser fetch also honors EVERYOS_E2E_HTTP_HOST, unlike Node's APIRequestContext.
+  await page.goto("/api/health");
+  const login = await page.evaluate(async (password) => {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "goktug", password }),
+    });
+    return { status: response.status, body: (await response.json()) as LoginResponse };
+  }, PASSWORD);
+  expect(login.status).toBe(200);
+  expect(login.body.status).toBe("authenticated");
+  if (login.body.status !== "authenticated") throw new Error("Fixture login did not authenticate");
+  const session = login.body.session;
   expect(
     await page.evaluate(
       async ({ header, token }) =>
@@ -47,8 +54,6 @@ export async function signIn(
     ),
   ).toBe(200);
   if (reset) {
-    // Unmount the desktop before resetting, while retaining an inert same-origin document.
-    await page.goto("/api/health");
     const statuses = await page.evaluate(
       async ({ header, token, toasts }) => {
         const headers = { "Content-Type": "application/json", [header]: token };

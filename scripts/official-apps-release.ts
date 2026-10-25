@@ -131,6 +131,7 @@ export const RELEASE_TRUST: SigningTrust = {
 export interface TestEvidence {
   byApp: Map<string, z.infer<typeof TestStatus>>;
   error: string | null;
+  diagnostics?: string[];
 }
 const json = (value: unknown) => JSON.stringify(value, null, 2) + "\n";
 const sorted = (values: readonly string[]) => [...values].sort();
@@ -214,7 +215,48 @@ export function testEvidence(text: string, plan: ReleasePlan): TestEvidence {
   return { byApp, error: parsed.data.success ? null : "The official-app test run failed" };
 }
 
-export async function runAppTests(plan: ReleasePlan): Promise<TestEvidence> {
+/** Keep failure identities visible without putting assertion values or environment data in logs. */
+export function appTestDiagnostics(text: string, root: string): string[] {
+  const report = z
+    .object({
+      testResults: z.array(
+        z.object({
+          name: z.string(),
+          status: z.string(),
+          assertionResults: z.array(
+            z.object({ status: z.string(), fullName: z.string().optional() }),
+          ),
+        }),
+      ),
+      unhandledErrors: z
+        .array(z.object({ name: z.string().optional(), type: z.string().optional() }))
+        .optional(),
+    })
+    .safeParse(JSON.parse(text) as unknown);
+  if (!report.success) return ["invalid-test-report"];
+  const lines = report.data.testResults.flatMap((suite) =>
+    suite.status === "passed"
+      ? []
+      : [
+          `${relative(root, suite.name)}: ${suite.status}`,
+          ...suite.assertionResults
+            .filter((test) => test.status !== "passed")
+            .map(
+              (test) =>
+                `${test.status}: ${(test.fullName ?? "unnamed assertion").replace(/\p{C}/gu, " ").slice(0, 240)}`,
+            ),
+        ],
+  );
+  for (const error of report.data.unhandledErrors ?? [])
+    lines.push(
+      `unhandled: ${String(error.name ?? error.type ?? "unknown")
+        .replace(/[^a-zA-Z0-9 _-]/g, "")
+        .slice(0, 80)}`,
+    );
+  return lines.slice(0, 100);
+}
+
+export async function runAppTests(plan: ReleasePlan, resultFile?: string): Promise<TestEvidence> {
   const scratch = await mkdtemp(join(tmpdir(), "everyos-official-tests-"));
   try {
     const file = join(scratch, "tests.json");
@@ -243,7 +285,13 @@ export async function runAppTests(plan: ReleasePlan): Promise<TestEvidence> {
       failed = true;
     }
     try {
-      const evidence = testEvidence(await readFile(file, "utf8"), plan);
+      const text = await readFile(file, "utf8");
+      if (resultFile) {
+        await mkdir(dirname(resultFile), { recursive: true });
+        await writeFile(resultFile, text);
+      }
+      const evidence = testEvidence(text, plan);
+      if (failed || evidence.error) evidence.diagnostics = appTestDiagnostics(text, plan.root);
       if (failed) evidence.error = "The official-app test process failed";
       return evidence;
     } catch {

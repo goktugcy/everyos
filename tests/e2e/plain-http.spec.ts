@@ -25,12 +25,24 @@ test("uploads to the shelf, the desktop and Files work over plain HTTP", async (
     }, name);
 
   // The pulse shelf.
+  const roots = Promise.withResolvers<void>();
+  await page.route("**/api/files/roots", async (route) => {
+    await roots.promise;
+    await route.continue();
+  });
+  const rootsRequested = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === "/api/files/roots",
+  );
   await page.getByTestId("pulse-trigger").click();
   await page.getByTestId("pulse-tab-shelf").click();
+  await rootsRequested;
+  await expect(page.getByTestId("pulse-dropzone")).toHaveAttribute("aria-busy", "true");
   await page.dispatchEvent('[data-testid="pulse-dropzone"]', "drop", {
     dataTransfer: await file("raf.txt"),
   });
+  roots.resolve();
   await expect(page.getByTestId("pulse-shelf-item").filter({ hasText: "raf.txt" })).toBeVisible();
+  await page.unroute("**/api/files/roots");
   await expect(page.getByText("Bilinmeyen bir hata")).toHaveCount(0);
   await page.keyboard.press("Escape");
 

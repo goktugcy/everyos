@@ -10,7 +10,7 @@ yours, the community registry, or (for EveryOS's own apps) the official one.
 ```bash
 npx https://github.com/goktugcy/everyos/releases/download/v<EveryOS version>/create-everyos-app-1.0.0.tgz my-notes --template react
 cd my-notes
-npm install
+npm install --ignore-scripts
 npm run dev
 ```
 
@@ -30,6 +30,10 @@ private keys out of version control.
 `--packages npm` names the SDK packages by version (when they are on npm); `--packages <url or
 folder>` takes their `.tgz` files from another place, by default the EveryOS release the tool came
 from.
+
+Use Node.js 26 or later. The release URLs become available when the complete ecosystem release
+is published. For a locally built archive set and the measured standalone qualification, see
+[SDK distribution](distribution.md).
 
 ## A project
 

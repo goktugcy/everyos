@@ -1,3 +1,16 @@
+EveryOS 0.1.37 adds the desktop app platform and complete official app catalog (unreleased candidate).
+
+- Install signed desktop apps from the unified Store, run them in isolated windows, and use their
+  declared file, storage, widget and host capabilities through server-enforced permissions.
+- The official catalog contains 29 apps, including SQL Client, Video Player, Image Viewer and
+  Gallery. Manifests default to English and include all ten interface languages.
+- Build third-party apps with the standalone SDK, developer CLI and four tested project templates;
+  publish signed packages through a private registry or submit them for community human review.
+- Store operation progress recovers through polling when its event stream is unavailable.
+- Files dropped immediately onto the shelf wait for the home-folder lookup instead of being lost.
+- The community service must be deployed and verified before this candidate can be published.
+  See `docs/sdk-release-acceptance.md` for open production and platform gates.
+
 EveryOS 0.1.36 makes files dropped on the pulse shelf temporary.
 
 - Files dropped on the shelf from your computer no longer land in Downloads. They wait on the

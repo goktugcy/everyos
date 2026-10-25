@@ -131,9 +131,21 @@ export function PulseShelf() {
   };
 
   const uploadAll = async (files: File[]) => {
-    if (!target) return;
+    let destination = target;
+    if (!destination) {
+      // A person can drop files before the shelf's initial root request finishes.
+      try {
+        const current = await filesApi.roots();
+        if (!current.roots.some((root) => root.id === "home" && root.available && !root.readOnly))
+          return;
+        destination = { root: "home", path: SHELF_DIRECTORY };
+      } catch (caught) {
+        setError(caught);
+        return;
+      }
+    }
     try {
-      await filesApi.mkdir({ root: target.root, path: "" }, SHELF_DIRECTORY);
+      await filesApi.mkdir({ root: destination.root, path: "" }, SHELF_DIRECTORY);
     } catch (caught) {
       if (!(caught instanceof ApiRequestError && caught.code === "CONFLICT")) {
         setError(caught);
@@ -150,10 +162,10 @@ export function PulseShelf() {
       const progress = (loaded: number, total: number) =>
         setUploads((list) => list.map((u) => (u.id === id ? { ...u, loaded, total } : u)));
       try {
-        const name = await uploadUnique(target, file, progress, t("pulse.tabs.shelf"));
+        const name = await uploadUnique(destination, file, progress, t("pulse.tabs.shelf"));
         added.push({
-          root: target.root,
-          path: [target.path, name].filter(Boolean).join("/"),
+          root: destination.root,
+          path: [destination.path, name].filter(Boolean).join("/"),
           kind: "file",
           size: file.size,
           addedAt: Date.now(),
@@ -215,7 +227,7 @@ export function PulseShelf() {
       .filter((item) => item.kind === "file" && !item.webkitGetAsEntry?.()?.isDirectory)
       .map((item) => item.getAsFile())
       .filter((file): file is File => file !== null);
-    if (files.length && canWrite && target) void uploadAll(files);
+    if (files.length && canWrite) void uploadAll(files);
   };
 
   return (
@@ -236,6 +248,7 @@ export function PulseShelf() {
           over ? "border-[rgb(var(--everyos-accent))] bg-hover/10" : "border-line bg-hover/5",
         )}
         data-testid="pulse-dropzone"
+        aria-busy={roots.loading}
       >
         <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center">
           <Upload className="size-6 text-fg-muted" aria-hidden />
@@ -243,9 +256,11 @@ export function PulseShelf() {
           <p className="text-[0.68rem] leading-snug text-fg-muted">
             {!canWrite
               ? t("pulse.shelf.readOnly")
-              : target
-                ? t("pulse.shelf.temporary")
-                : t("pulse.shelf.noTarget")}
+              : roots.loading
+                ? t("common.loading")
+                : target
+                  ? t("pulse.shelf.temporary")
+                  : t("pulse.shelf.noTarget")}
           </p>
         </div>
         {uploads.length > 0 ? (

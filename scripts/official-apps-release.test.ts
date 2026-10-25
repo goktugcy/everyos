@@ -16,6 +16,7 @@ import {
   REPORT_FILE,
   signRelease,
   testEvidence,
+  appTestDiagnostics,
   verifyRelease,
   RELEASE_TRUST,
   type ReleasePlan,
@@ -144,6 +145,32 @@ describe("Official app distribution", () => {
       );
     },
   );
+
+  it("retains failed suite and assertion names and unhandled error kinds without assertion secrets", () => {
+    const details = appTestDiagnostics(
+      JSON.stringify({
+        testResults: [
+          {
+            name: join(root, "official-apps/notes/test/app.test.ts"),
+            status: "failed",
+            assertionResults: [
+              {
+                status: "failed",
+                fullName: "Notes saves a note",
+                failureMessages: ["private assertion value"],
+              },
+            ],
+          },
+        ],
+        unhandledErrors: [{ name: "TimeoutError", message: "private environment value" }],
+      }),
+      root,
+    );
+    expect(details).toContain("official-apps/notes/test/app.test.ts: failed");
+    expect(details).toContain("failed: Notes saves a note");
+    expect(details).toContain("unhandled: TimeoutError");
+    expect(JSON.stringify(details)).not.toContain("private");
+  });
 
   it("does not accept a globally failed run or tests outside the app's directory", async () => {
     expect(evidence("passed", false).error).not.toBeNull();

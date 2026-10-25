@@ -1,7 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { previousOfficialIndex } from "./previous-official-apps.ts";
 import { generatePublisherKeys } from "../packages/app-package/src/index.ts";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
@@ -107,7 +107,9 @@ async function main(): Promise<void> {
     throw new Error(
       "A production candidate requires a clean source checkout; use check during development",
     );
-  const tests = await runAppTests(plan);
+  const tests = await runAppTests(plan, join(dirname(out), "official-apps-test-results.json"));
+  if (tests.error)
+    console.error(JSON.stringify({ error: tests.error, diagnostics: tests.diagnostics ?? [] }));
   let report = await buildRelease(plan, out, tests);
   if (command === "check") {
     const registry = generatePublisherKeys();

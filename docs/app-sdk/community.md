@@ -13,10 +13,11 @@ the service, then creates a one-day invitation. This is curated enrollment, not 
 verification service. Keep the invitation private. The CLI proves possession of your Ed25519 key;
 knowing an email address or choosing a namespace alone grants no access.
 
-The commands below are implemented in the workspace CLI. Standalone SDK/CLI package distribution
-(the public `npx` flow) remains a final release qualification gate. During development, invoke
-`node <checkout>/packages/app-cli/src/cli.ts <command>` from your app folder, or use an installed
-workspace CLI binary.
+The commands below run through the workspace CLI or the locally built, independently installed
+archives described in [SDK distribution](distribution.md). Public release URLs become available
+only with the complete EveryOS release. During development, invoke
+`node <checkout>/packages/app-cli/src/cli.ts <command>` from your app folder, use an installed
+workspace CLI binary, or install the tested standalone archives.
 
 From your generated app project:
 
@@ -112,8 +113,13 @@ wrangler.production.jsonc`, then deploy with `wrangler deploy --config wrangler.
    Compare `GET /.well-known/everyos-registry` and `/registry.pub` to the independently retained
    public key. Verify `/index.json` with `verifyRegistryIndex(..., { official: false })`.
 7. Add the verified URL, key and fingerprint to `COMMUNITY_APP_REGISTRY` in
-   `packages/app-registry-anchors`. Its current `null` value is intentional until these real
+   `apps/api/src/modules/desktop-apps/anchors.ts`. Its current `null` value is intentional until these real
    production values and a deployed submission/install/update/revocation round trip are verified.
+
+The release preflight also requires the matching live acceptance receipt and a fresh signed
+index; see [SDK distribution](distribution.md#public-release-readiness). Choosing the domain does
+not provision it. Until the owner creates the resources, deploys the Worker and verifies the
+round trip, the complete EveryOS release stays blocked.
 
 The agent never needs a Cloudflare account token. No tag, main-branch merge or public EveryOS
 release is part of this deployment handoff.

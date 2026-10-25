@@ -580,3 +580,95 @@ in scope. Standalone SDK/CLI distribution (`npx` included), packaged Linux insta
 qualification, Pi/amd64 resource measurements, final
 document synchronization and the final complete-release acceptance remain open. No tag, release
 or main-branch merge is performed by this checkpoint.
+
+## Standalone SDK and packaged ARM64 qualification — 2026-10-25
+
+The local candidate is **0.1.37**, not a published release. The owner confirmed that no community
+domain, Worker, D1 database or R2 bucket has been provisioned. The release package job now runs
+`scripts/release-preflight.ts` before signing: the absent anchor currently produces the expected
+hard failure. A matching, current live acceptance receipt and a fresh signature-verified deployed
+index are required. See [standalone distribution](app-sdk/distribution.md).
+
+The five actual npm-compatible archives install independently of this workspace. Qualification on
+macOS arm64 (Node 26.10.0) and a disposable unprivileged Linux arm64 container (Node 26.11.1) passes
+all four templates: vanilla (one test), React (one), React/widget (three) and hybrid (one). Each run
+checks real installation with scripts disabled and no workspace links, declarations/typechecking,
+tests, packaging, signed private publication/refresh/revocation and the packaged developer server.
+The widget case compiles the public UI package and renders/clicks its actual installed components.
+CI now repeats the qualification on amd64 and arm64.
+The SDK report and acceptance reports remain development evidence from a dirty feature checkout;
+they are not production signatures or final release provenance.
+
+| Archive                       | Bytes  |
+| ----------------------------- | ------ |
+| everyos-app-sdk-1.0.0.tgz     | 19,106 |
+| everyos-app-testing-1.0.0.tgz | 12,720 |
+| everyos-app-ui-1.0.0.tgz      | 36,216 |
+| everyos-app-cli-1.0.0.tgz     | 43,723 |
+| create-everyos-app-1.0.0.tgz  | 28,710 |
+
+Both OS packages build and contain 392 runtime/package files without SDK, catalog or acceptance
+artifacts: arm64 61,833,402 bytes; amd64 62,078,284 bytes. The amd64 package has not yet been
+installed in a dedicated amd64 host by this checkpoint.
+
+`tests/sdk-linux/qualification.py` runs only inside the newly created dedicated
+`lima-everyos-sdk-qual-20261025` VM (Ubuntu 24.04 ARM64, 2 vCPUs, 3 GiB RAM, no host mounts).
+It verifies six real scenarios:
+
+1. Install the published 0.1.36 baseline with its published Ed25519 signatures and package digest.
+2. Link a genuine Linux fixture account using PAM, unlock sudo, then authenticate an update to
+   0.1.37. Preserve the account login, home sentinel, owner config and API/agent keys.
+3. Install and update a real packaged Notes-derived app through an ephemeral local signed registry;
+   preserve its SDK storage across the app update.
+4. Create and verify a backup containing the installed app and account home.
+5. Change app/home data, restore through the authenticated CLI, observe the supervised API restart
+   and verify the original app/home data after reauthentication.
+6. Sync a signed revocation and verify that the installed app is revoked and cannot launch.
+
+Only the initial baseline uses the published release key. The unpublished candidate, rollback
+metadata and local app registry use clearly separate ephemeral test keys; no production private
+key is used. Candidate package digests are recorded in the Linux receipt. The VM is stopped after
+evidence extraction; pre-existing host services and the owner's Pi are untouched.
+
+One warm core restart-to-healthy sample measured **261.80 ms**. After the restore, API RSS measured
+**144,988 KiB**, agent RSS **98,984 KiB**; neither process accumulated a measurable CPU tick in the
+five-second idle sample. These are VM observations, not app window launch measurements, averages,
+physical Pi results or native amd64 benchmarks. The requested device/app resource measurements
+remain open.
+
+The full local unit/integration run passes **1,500 tests in 173 files**, with real temporary
+PostgreSQL and the existing MariaDB fixture. The 29-app ephemeral artifact pipeline passes all
+447 app assertions. Worker dry-run and the production dependency audit pass (zero advisories).
+The Store event-stream-loss browser regression passes without retries. Its finite polling fallback
+now updates running jobs every second and stops after a terminal response; delayed results from
+another job cannot overwrite the requested job.
+
+The full browser follow-up exposed fixture preparation races: the old helper mounted restored
+windows and security preferences before resetting them. A subsequent navigation could lock the
+session and leave the following test's cleanup incomplete. The helper now authenticates through
+the real same-origin API from an inert document, asserts HTTP 200 and authenticated status, resets
+preferences, then mounts the desktop once. The wrong/correct password, language and sign-out/login
+UI flows remain covered directly by `foundation.spec.ts`. All 16 affected browser workflows pass
+without retries, including secure/normal backups, Finder, desktop files, widgets and the unchanged
+terminal tests. The complete reruns below also pass with the fixture fix.
+
+The HTTP follow-up exposed a pre-existing shelf race: a drop before the initial writable-home
+lookup was silently ignored.
+The shelf now resolves that lookup before accepting the upload and reports loading with
+`aria-busy`. The HTTP regression deliberately holds the real root response until after the drop;
+setup and that deterministic regression both pass. The rebuilt candidate then passes the full
+regular browser run (**95 passed**, with the one HTTP-only conditional skip) and the full HTTP
+run (**25 passed**) without retries. Both SDK runtime qualifications, 29-app artifact verification
+and the six-scenario Linux package qualification also pass on the rebuilt candidate. The current
+ARM64 package digest is `c32ad0ebec180d1d3e64ff8f398feb18a4553854567e109c84cf135c505b6269`.
+The sanitized [development receipts](evidence/sdk-20261025/) record these local artifacts and runtime
+observations; their dirty-source marker is intentional. They do not replace clean hosted CI or
+production signing. The test VM is stopped after extracting the final receipt.
+
+[CI 119](https://github.com/goktugcy/everyos/actions/runs/40202231710) failed its separate official-app
+test subprocess on amd64; the previous script discarded its detailed JSON. Failure diagnostics
+now preserve suite/test names and error kinds without printing assertion values.
+[CI 120](https://github.com/goktugcy/everyos/actions/runs/40204669848) passed that artifact gate but
+failed the Store browser regression above. Neither run qualifies this new checkpoint. Fresh hosted
+CI, live community acceptance, native amd64 packaged acceptance,
+physical Pi measurements and final evidence synchronization remain required before public release.

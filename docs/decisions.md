@@ -830,3 +830,18 @@ the previous valid index; daily maintenance retries it. Revocations survive ever
 Initial publisher, artifact and version quotas bound Worker memory and the index. Artifact deletion
 is left to a future coordinated retention design rather than risking deletion during submission.
 See [community submissions](app-sdk/community.md) for the actual API, limits and owner deployment.
+
+### D60 — Standalone archives and live community acceptance are separate release gates
+
+The five public SDK packages are built as npm-compatible ESM/declaration archives without changing
+private workspace manifests. Their report binds every byte to source/version provenance and both
+SHA-256 and npm SHA-512 digests. Production signing uses a domain-separated OS release-key signature
+inside the existing protected job; local qualification uses no production key. Every template must
+install and run outside the workspace, with install scripts disabled, on both Linux architectures.
+Only runtime directories enter the OS package; SDK/catalog artifacts and test reports stay separate.
+
+The owner confirmed on 2026-10-25 that neither the community domain nor Cloudflare resources exist.
+The release package job must fail until the real community anchor and current candidate-specific
+live acceptance evidence are present, then independently verify the deployed index signature.
+Local Miniflare/D1/R2 tests do not satisfy that live gate. Choosing a hostname authorizes local
+configuration work; it does not imply that a remote service exists or authorize the agent to deploy it.

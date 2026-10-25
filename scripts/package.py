@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import tarfile
 import urllib.request
+from package_inputs import runtime_files
 
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
@@ -60,12 +61,8 @@ with tarfile.open(cache, "r:xz") as node:
         if handle is None:
             raise ValueError("Invalid Node runtime archive")
         entries.append((target, handle.read(), mode))
-for path in sorted(args.dist.rglob("*")):
+for path in runtime_files(args.dist):
     relative = path.relative_to(args.dist)
-    if relative.parts[0] == "packages" or path.is_dir():
-        continue
-    if path.is_symlink():
-        raise ValueError("Build output may not contain symlinks")
     entries.append((f"usr/lib/everyos/{relative.as_posix()}", path.read_bytes(), 0o644))
 entries = [entry for entry in entries if entry[0] != "usr/lib/everyos/VERSION"]
 entries.append(("usr/lib/everyos/VERSION", (args.version + "\n").encode(), 0o644))

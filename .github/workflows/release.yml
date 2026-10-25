@@ -50,10 +50,14 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Require the deployed community registry and live acceptance
+        run: node scripts/release-preflight.ts
       - run: pnpm check
       - name: Verify tag and source version
         run: node -e 'if ("v" + JSON.parse(require("fs").readFileSync("package.json")).version !== process.env.GITHUB_REF_NAME) process.exit(1)'
       - run: pnpm build
+      - name: Build and qualify the standalone SDK
+        run: pnpm sdk:build && pnpm sdk:verify && pnpm sdk:check
       - name: Build and test the complete official app catalog
         run: pnpm official-apps:build
       - run: python3 scripts/package.py --arch arm64
@@ -62,6 +66,11 @@ jobs:
         with:
           name: unsigned-packages
           path: dist/packages/*.deb
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-sdk
+          path: dist/sdk/
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
@@ -90,6 +99,10 @@ jobs:
         with:
           name: unsigned-official-apps
           path: dist/official-apps
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-sdk
+          path: dist/sdk
       - name: Inspect the previous published official index
         env:
           GH_TOKEN: ${{ github.token }}
@@ -111,7 +124,13 @@ jobs:
           printf '%s' "$EVERYOS_RELEASE_PRIVATE_KEY" > "$key_file"
           min_version=$(node -p 'JSON.parse(require("fs").readFileSync("packaging/release-policy.json")).minVersion')
           node scripts/sign-release.ts --version "${GITHUB_REF_NAME#v}" --min-version "$min_version" --key-file "$key_file" --notes-file docs/release-notes.md
+      - name: Sign the SDK distribution in the protected release environment
+        env:
+          EVERYOS_RELEASE_PRIVATE_KEY: ${{ secrets.EVERYOS_RELEASE_PRIVATE_KEY }}
+        run: node scripts/sdk.ts sign
+      - name: Verify signed SDK artifacts
+        run: node scripts/sdk.ts verify dist/sdk dist/packages/everyos-release-public.pem
       - name: Publish verified release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/packages/*.deb dist/packages/release.json dist/packages/everyos-release-public.pem dist/packages/install.sh dist/packages/install.sh.sig packaging/install.py dist/official-apps/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "EveryOS ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md
+        run: gh release create "$GITHUB_REF_NAME" dist/packages/*.deb dist/packages/release.json dist/packages/everyos-release-public.pem dist/packages/install.sh dist/packages/install.sh.sig packaging/install.py dist/official-apps/* dist/sdk/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "EveryOS ${GITHUB_REF_NAME#v}" --notes-file docs/release-notes.md

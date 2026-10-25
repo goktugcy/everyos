@@ -1,6 +1,6 @@
 {
   "name": "everyos-monorepo",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "private": true,
   "description": "EveryOS \u2014 a self-hosted personal OS for your files, apps and Linux workspace.",
   "type": "module",
@@ -27,7 +27,10 @@
     "official-apps:check": "node scripts/official-apps.ts check",
     "official-apps:build": "node scripts/official-apps.ts build",
     "official-apps:sign": "node scripts/official-apps.ts sign",
-    "official-apps:verify": "node scripts/official-apps.ts verify"
+    "official-apps:verify": "node scripts/official-apps.ts verify",
+    "sdk:build": "node scripts/sdk.ts build",
+    "sdk:verify": "node scripts/sdk.ts verify",
+    "sdk:check": "node scripts/sdk-acceptance.ts dist/sdk"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

@@ -1,0 +1,51 @@
+{
+  "format": "everyos-sdk-distribution/1",
+  "source": {
+    "commit": "08bef9c14174f510035f285c2557efcf07af4c71",
+    "dirty": true,
+    "everyosVersion": "0.1.37"
+  },
+  "sdkVersion": "1.0.0",
+  "packages": [
+    {
+      "name": "@everyos/app-sdk",
+      "version": "1.0.0",
+      "file": "everyos-app-sdk-1.0.0.tgz",
+      "size": 19106,
+      "sha256": "faf743bdc086398131603a0981205f21e4370c78f83fe2f1edafea1bddeba345",
+      "integrity": "sha512-HN9BRE82DzvZtaMoBc/qMJSHqUEDHWjauQ0dFjcEYw4AYtPk50r7krr6VAR1eAtALNuaL49t9OTrErjM0NdD/w=="
+    },
+    {
+      "name": "@everyos/app-testing",
+      "version": "1.0.0",
+      "file": "everyos-app-testing-1.0.0.tgz",
+      "size": 12720,
+      "sha256": "91b5a9607164adf07f28ab830b17cf1dfa5de0b88faf159182acf3e9d67fcaa5",
+      "integrity": "sha512-3kgDbMXeVUzogYjgAPJh0kKSIqg+C3O9W/36JULIsRzGYq7J+IQl22jL4MyAweG6D1Gp0sda2y9lexp3P28XxA=="
+    },
+    {
+      "name": "@everyos/app-ui",
+      "version": "1.0.0",
+      "file": "everyos-app-ui-1.0.0.tgz",
+      "size": 36216,
+      "sha256": "51767aa12e30ce1bc7b1129072ef817b1f59f8ba92c23df4c79fb2a1f907fe06",
+      "integrity": "sha512-yeHHY2dEBzPV86ZxswyfCHCYbYmu0GWRT3OMPTGbIdXpN8KVhfHJ6LV6WEDWttamHkjtfr4qiyQZYNBGp+j+Sg=="
+    },
+    {
+      "name": "@everyos/app-cli",
+      "version": "1.0.0",
+      "file": "everyos-app-cli-1.0.0.tgz",
+      "size": 43723,
+      "sha256": "627e60a9ea150ea6ef19ea330100b7e02b76b4b00ac62e449bb72ece075a4d88",
+      "integrity": "sha512-RTJ8J9uohEkhbAkqr3YAXYEk8G0OL7Ob5+7Z/guKtlP4ba3xbLZv5bP6j9TnUdu0sjkBYbyPVNcyiA5/XDo8pQ=="
+    },
+    {
+      "name": "create-everyos-app",
+      "version": "1.0.0",
+      "file": "create-everyos-app-1.0.0.tgz",
+      "size": 28710,
+      "sha256": "8b06984ae25920ee4c97c1431ef63b798a913c9264ab50c6e04bf875cc1ef9d3",
+      "integrity": "sha512-nvpuiDr2og2qTpLuD3Uh0Pm+b6caC/MDnBRs5GGO29gIh2r4lKxATOJwZq7KdUPSha83YCNQPAL75WxpldvFXg=="
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "format": "everyos-sdk-acceptance/1",
+  "status": "passed",
+  "source": {
+    "commit": "08bef9c14174f510035f285c2557efcf07af4c71",
+    "dirty": true,
+    "everyosVersion": "0.1.37"
+  },
+  "sdkVersion": "1.0.0",
+  "runtime": {
+    "platform": "linux",
+    "arch": "arm64",
+    "node": "v26.11.1"
+  },
+  "templates": [
+    {
+      "template": "vanilla",
+      "passed": true,
+      "tests": 1,
+      "installScripts": false,
+      "workspaceLinks": false,
+      "typecheck": "passed",
+      "package": "passed",
+      "publish": "passed",
+      "revoke": "passed",
+      "devHost": "passed"
+    },
+    {
+      "template": "react",
+      "passed": true,
+      "tests": 1,
+      "installScripts": false,
+      "workspaceLinks": false,
+      "typecheck": "passed",
+      "package": "passed",
+      "publish": "passed",
+      "revoke": "passed",
+      "devHost": "passed"
+    },
+    {
+      "template": "react-widget",
+      "passed": true,
+      "tests": 3,
+      "installScripts": false,
+      "workspaceLinks": false,
+      "typecheck": "passed",
+      "package": "passed",
+      "publish": "passed",
+      "revoke": "passed",
+      "devHost": "passed",
+      "publicUiRuntime": "passed"
+    },
+    {
+      "template": "hybrid",
+      "passed": true,
+      "tests": 1,
+      "installScripts": false,
+      "workspaceLinks": false,
+      "typecheck": "passed",
+      "package": "passed",
+      "publish": "passed",
+      "revoke": "passed",
+      "devHost": "passed"
+    }
+  ]
+}
