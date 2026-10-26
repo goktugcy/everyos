@@ -858,3 +858,14 @@ The shared host guard also retains the exact disposable local VM allowlist. This
 qualification from adopting an owner's existing machine or services. Both package digests and
 the actual architecture/environment enter the sanitized receipt. Production keys remain outside CI
 qualification; only the real baseline's public signature and ephemeral candidate signatures are used.
+
+### D62 — Public deployment inspection is separate from live community acceptance
+
+The owner gets a read-only command for the fixed community origin using an independently retained
+public key. It requires production health and matching discovery/public-key endpoints, then verifies
+the current signed community index. Public DNS checks, byte/time budgets and disabled redirects keep
+the probe on exact HTTPS endpoints. Failures expose only the failed check, never response bodies.
+The resulting deployment report cannot satisfy the six-step human-reviewed lifecycle receipt.
+Release preflight retains the missing-anchor/live-evidence gates before repeating deployment checks.
+The first Worker deployment uploads both required secrets with code via `--secrets-file`, avoiding
+dependence on an already-existing Worker version. Production setup and secrets remain owner-managed.

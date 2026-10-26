@@ -88,8 +88,23 @@ optional platform package supplies the tested runtime binary.
 
 The following production actions belong to the owner:
 
-1. Create a D1 database named `everyos-community` and a private R2 bucket in the owner's account.
+1. Confirm that `goktugceyhan.dev` is an active zone in the intended Cloudflare account, then
+   create a D1 database named `everyos-community` and a private R2 bucket in that account.
    Keep the database UUID. R2 public access stays disabled.
+
+   From `services/community-registry`, the owner can use the pinned CLI:
+
+   ```bash
+   pnpm exec wrangler login
+   pnpm exec wrangler whoami
+   pnpm exec wrangler d1 create everyos-community --update-config=false
+   pnpm exec wrangler r2 bucket create everyos-community --update-config=false
+   ```
+
+   Confirm the intended account from `whoami` before the resource-creation commands. The
+   production configuration command below needs the actual UUID returned by D1 creation;
+   these commands leave the committed local bindings unchanged.
+
 2. Generate a dedicated production Ed25519 community registry key pair and keep its private key
    outside the checkout. Keep the public key/fingerprint for independent verification. This key
    must differ from both official keys and every publisher key.
@@ -103,15 +118,29 @@ The following production actions belong to the owner:
    The command refuses a placeholder UUID and refuses to overwrite an existing configuration.
    It fixes the custom domain to `everyos.goktugceyhan.dev` and sets the environment to production.
 
-4. Add `ADMIN_TOKEN` and `REGISTRY_PRIVATE_KEY` with `wrangler secret put <name> --config
-wrangler.production.jsonc`. Enter their values through stdin or the interactive prompt.
-   Store the admin token in the owner's password manager. Never commit a token or private key.
-5. Apply the migration with `wrangler d1 migrations apply everyos-community --remote --config
-wrangler.production.jsonc`, then deploy with `wrangler deploy --config wrangler.production.jsonc`.
-   Configure the domain in the owner's Cloudflare zone and verify the deployed cron trigger.
+4. Prepare a private JSON or dotenv file **outside the checkout** containing the actual
+   `ADMIN_TOKEN` and `REGISTRY_PRIVATE_KEY`; restrict its permissions to `0600` and retain the
+   admin token in the owner's password manager. Do not send either value to the development
+   agent. The first deployment uploads both required secrets together with the code using
+   `--secrets-file`; it does not depend on secrets inherited from an earlier Worker version.
+5. Apply the migration and perform the first deployment from `services/community-registry`:
+
+   ```bash
+   pnpm exec wrangler d1 migrations apply everyos-community --remote --config wrangler.production.jsonc
+   pnpm exec wrangler deploy --config wrangler.production.jsonc --secrets-file /path/to/protected-community-secrets.json
+   ```
+
+   Review the selected account and generated configuration before running either remote command.
+   The configured `custom_domain: true` creates the subdomain's DNS record and certificate on the
+   active zone; no manually created A/CNAME record is needed for a new hostname. An existing
+   conflicting CNAME needs owner review rather than automatic deletion. Verify the deployed cron
+   trigger. Later `wrangler secret put` operations create and immediately deploy a new version;
+   use the versioned secrets workflow when staging a change instead.
+
 6. Call authenticated `POST /admin/publish` with `{}` to publish the initial signed catalog.
-   Compare `GET /.well-known/everyos-registry` and `/registry.pub` to the independently retained
-   public key. Verify `/index.json` with `verifyRegistryIndex(..., { official: false })`.
+   Verify the public deployment with the independently retained public key using the command
+   below. It checks production health, the discovery identity, `/registry.pub` and the fresh
+   signed `/index.json` together.
 7. Add the verified URL, key and fingerprint to `COMMUNITY_APP_REGISTRY` in
    `apps/api/src/modules/desktop-apps/anchors.ts`. Its current `null` value is intentional until these real
    production values and a deployed submission/install/update/revocation round trip are verified.
@@ -123,6 +152,41 @@ round trip, the complete EveryOS release stays blocked.
 
 The agent never needs a Cloudflare account token. No tag, main-branch merge or public EveryOS
 release is part of this deployment handoff.
+
+The first-deployment and DNS behavior above is verified against the pinned Wrangler help and
+Cloudflare's [secret upload](https://developers.cloudflare.com/workers/configuration/secrets/)
+and [Custom Domain](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
+documentation. The dry run is local; successful production deployment is still an owner action.
+
+## Verify the deployed public service
+
+From the repository root, after the owner has deployed and published the initial catalog:
+
+```bash
+pnpm community:inspect --public-key /path/to/independently-retained-community-public.pem
+```
+
+Only the public PEM is required. Do not download `/registry.pub` and use that same download as
+the trust input: compare against the public key retained independently when the owner generated
+the production pair. The command rejects private-key input before making requests. It sends four
+bounded GET requests to the fixed HTTPS production origin with public DNS pinned and redirects
+disabled; it sends no bearer token, cookie or request body and never calls an admin endpoint.
+Local/staging health, a changed identity/key/index URL, an expired or invalid signature and an
+unrelated registry all fail. Errors identify a fixed failed check without printing remote bodies.
+
+To retain the sanitized result in ignored local state, select a new report path:
+
+```bash
+mkdir -p .dev
+pnpm community:inspect --public-key /path/to/independently-retained-community-public.pem --out .dev/community-deployment.json
+```
+
+An existing report is never overwritten. This report uses
+`everyos-community-deployment-verification/1` and explicitly leaves `lifecycleAcceptance` required.
+It **cannot** satisfy `packaging/community-live-acceptance.json`: enrollment, submission, actual
+human review, installation, update and revocation must still be exercised and evidenced separately.
+Release preflight performs these same public deployment checks only after the real trust anchor
+and complete current live acceptance receipt pass validation. Until then publication remains blocked.
 
 ## Operator API and human review
 

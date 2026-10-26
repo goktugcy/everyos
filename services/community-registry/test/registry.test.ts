@@ -15,6 +15,8 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { generatePublisherKeys, packDirectory, sha256Hex, signPackage } from "@everyos/app-package";
 import { communityEnrollmentStatement, verifyRegistryIndex } from "@everyos/app-registry";
+import { inspectCommunityDeployment } from "../../../scripts/community-deployment.ts";
+import { COMMUNITY_ORIGIN } from "../../../scripts/community-release-gate.ts";
 
 const owner = generatePublisherKeys(),
   publisher = generatePublisherKeys();
@@ -25,6 +27,7 @@ const png = Buffer.from(
   "base64",
 );
 let mf: Miniflare, dir: string, developerToken: string;
+let workerSource: string;
 let packageHash = "",
   imageHash = "",
   submissionId = "";
@@ -133,6 +136,7 @@ beforeAll(async () => {
     external: ["node:*"],
     sourcemap: false,
   });
+  workerSource = bundled.outputFiles[0]!.text;
   mf = new Miniflare({
     cf: false,
     telemetry: { enabled: false },
@@ -144,7 +148,7 @@ beforeAll(async () => {
           compatibilityFlags: ["nodejs_compat"],
           manifest: {
             mainModule: "index.js",
-            modules: { "index.js": { type: "esm", contents: bundled.outputFiles[0]!.text } },
+            modules: { "index.js": { type: "esm", contents: workerSource } },
           },
           env: {
             ADMIN_TOKEN: { type: "text", value: adminToken },
@@ -171,6 +175,68 @@ afterAll(async () => {
 });
 
 describe("community registry in real workerd with D1 and R2", () => {
+  it("verifies a fresh production-configured deployment only after its first real catalog publication", async () => {
+    const production = new Miniflare({
+      cf: false,
+      telemetry: { enabled: false },
+      workers: [
+        {
+          config: {
+            name: "community-production-inspection-test",
+            compatibilityDate: "2026-10-25",
+            compatibilityFlags: ["nodejs_compat"],
+            manifest: {
+              mainModule: "index.js",
+              modules: { "index.js": { type: "esm", contents: workerSource } },
+            },
+            env: {
+              ADMIN_TOKEN: { type: "text", value: adminToken },
+              REGISTRY_PRIVATE_KEY: { type: "text", value: owner.privateKey },
+              PUBLIC_ORIGIN: { type: "text", value: COMMUNITY_ORIGIN },
+              ENVIRONMENT: { type: "text", value: "production" },
+              DB: { type: "d1" },
+              ARTIFACTS: { type: "r2" },
+            },
+          },
+        },
+      ],
+    });
+    try {
+      const db = await production.getD1Database("DB");
+      const migration = await readFile(
+        join(import.meta.dirname, "../migrations/0001_registry.sql"),
+        "utf8",
+      );
+      await db.exec(migration.split("\n").join(" "));
+      const fetcher = {
+        get: async (url: string, maxBytes = 512 * 1024) => {
+          expect(new URL(url).origin).toBe(COMMUNITY_ORIGIN);
+          const response = await production.dispatchFetch(url);
+          if (response.status !== 200) throw new Error("Unpublished deployment");
+          const body = Buffer.from(await response.arrayBuffer());
+          expect(body.length).toBeLessThanOrEqual(maxBytes);
+          return body;
+        },
+      };
+      await expect(inspectCommunityDeployment(owner.publicKey, { fetcher })).rejects.toMatchObject({
+        check: "signed-catalog",
+      });
+      const published = await production.dispatchFetch(`${COMMUNITY_ORIGIN}/admin/publish`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${adminToken}`, "content-type": "application/json" },
+        body: "{}",
+      });
+      expect(published.status).toBe(200);
+      expect(await inspectCommunityDeployment(owner.publicKey, { fetcher })).toMatchObject({
+        status: "passed",
+        lifecycleAcceptance: "required",
+        catalog: { apps: 0, publishers: 0 },
+      });
+    } finally {
+      await production.dispose();
+    }
+  });
+
   it("boots and protects all administration and private endpoints", async () => {
     expect((await request("/health")).status).toBe(200);
     expect((await request("/admin/submissions")).status).toBe(401);

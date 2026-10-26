@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { COMMUNITY_APP_REGISTRY } from "../apps/api/src/modules/desktop-apps/anchors.ts";
-import { createCatalogFetcher } from "../packages/catalogs/src/fetch.ts";
-import { checkCommunityIndex, checkCommunityRelease } from "./community-release-gate.ts";
+import { checkCommunityRelease } from "./community-release-gate.ts";
+import { inspectCommunityDeployment } from "./community-deployment.ts";
 
 const root = new URL("../", import.meta.url);
 const { version } = JSON.parse(await readFile(new URL("package.json", root), "utf8")) as {
@@ -14,7 +14,6 @@ const evidence: unknown = JSON.parse(
 );
 checkCommunityRelease(COMMUNITY_APP_REGISTRY, evidence, version);
 if (COMMUNITY_APP_REGISTRY) {
-  const bytes = await createCatalogFetcher().get(COMMUNITY_APP_REGISTRY.url, 12 * 1024 * 1024);
-  checkCommunityIndex(COMMUNITY_APP_REGISTRY, bytes.toString("utf8"));
+  await inspectCommunityDeployment(COMMUNITY_APP_REGISTRY.publicKey);
 }
 console.log("Public release preflight passed");

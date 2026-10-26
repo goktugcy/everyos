@@ -737,3 +737,33 @@ CI 122 subsequently completed successfully on both architectures, including the 
 29-app artifact verification, regular and plain-HTTP browser suites, plus the dependency audit.
 The final provenance/workflow/documentation follow-up retains these results as checkpoint evidence;
 its current head checks and receipts are linked from [PR #1](https://github.com/goktugcy/everyos/pull/1).
+
+## Community deployment handoff follow-up — 2026-10-26
+
+The owner now has `pnpm community:inspect --public-key <independently-retained-public.pem>` for
+read-only production health, discovery identity, published public key and signed-catalog verification.
+It uses the existing public DNS-pinned bounded transport, refuses redirects and rejects private-key
+input before any request. Its distinct deployment-report format cannot satisfy the human-reviewed
+six-step live acceptance gate. Release preflight repeats these checks after the existing anchor and
+live-evidence gates. No production probe was claimed to pass without the owner's deployment/key.
+
+The [operator handoff](app-sdk/community.md#operator-local-development-and-deployment) now describes
+the actual first deployment with both required secrets supplied using `--secrets-file`. It also
+clarifies that the Worker Custom Domain creates DNS and a certificate on the active Cloudflare zone;
+the owner does not need to pre-create an A/CNAME record for the new subdomain. No secrets, resources,
+DNS records or Worker versions were created by this local implementation.
+
+The focused checks pass **44 tests**, including **15 actual workerd/D1/R2 scenarios**. A dedicated
+fresh production-configured local Worker initially fails inspection without a published catalog,
+then passes after a real authenticated initial publication to D1/R2. Other checks refuse wrong or
+private keys, local health, identity/origin drift, changed/expired/unrelated catalogs, redirects and
+credential-bearing transport errors. These are local integration checks, not the missing deployed
+community lifecycle acceptance.
+
+The complete local pre-push gate passes format/lint/all typechecks, **1,523 tests in 175 files**,
+production build and **24 foundation/official-app/SDK browser workflows** without retries. The
+Node-only transport explicitly imports Node's URL type so the Worker test environment cannot
+substitute its incompatible ambient URL type. The absent production community anchor still causes
+the expected release-preflight failure before reading live evidence or making network requests.
+Fresh hosted checks for this follow-up are tracked by the draft PR; CI 123 above qualifies the
+preceding checkpoint.

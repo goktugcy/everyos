@@ -50,6 +50,6 @@ export function checkCommunityRelease(
     throw new Error("Release blocked: live community acceptance does not match this candidate");
 }
 
-export function checkCommunityIndex(anchor: RegistryAnchor, text: string, now = Date.now()): void {
-  verifyRegistryIndex(text, anchor.publicKey, { official: false, now });
+export function checkCommunityIndex(anchor: RegistryAnchor, text: string, now = Date.now()) {
+  return verifyRegistryIndex(text, anchor.publicKey, { official: false, now });
 }

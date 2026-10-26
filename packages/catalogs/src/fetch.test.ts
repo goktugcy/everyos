@@ -13,7 +13,7 @@ const release = "https://github.com/goktugcy/everyos/releases/download/v1.0.0/of
 const object = "https://objects.githubusercontent.com/github-production-release-asset/1/index";
 
 describe("GitHub release asset transport", () => {
-  function transport() {
+  function transport(firstRedirect = release) {
     const seen: Array<{ url: string; headers: RequestOptions["headers"]; address: string }> = [];
     request.mockImplementation(
       (url: URL, options: RequestOptions, callback: (response: IncomingMessage) => void) => {
@@ -30,7 +30,7 @@ describe("GitHub release asset transport", () => {
             const response = stream as unknown as IncomingMessage;
             response.statusCode = url.href === object ? 200 : 302;
             response.headers =
-              url.href === object ? {} : { location: url.href === index ? release : object };
+              url.href === object ? {} : { location: url.href === index ? firstRedirect : object };
             callback(response);
             if (response.statusCode === 200) stream.end("signed-index");
           },
@@ -87,6 +87,18 @@ describe("GitHub release asset transport", () => {
       });
       await expect(fetcher.get(index)).rejects.toThrow("unsafe-address");
       expect(seen.map(({ url }) => url)).toEqual([index, release]);
+    },
+  );
+
+  it.each([release, "http://example.com/index.json", "https://example.com/index.json"])(
+    "identity probes refuse a redirect to %s before resolving or connecting again",
+    async (target) => {
+      const seen = transport(target);
+      const resolve = vi.fn(() => Promise.resolve([{ address: "140.82.112.3", family: 4 }]));
+      const fetcher = createCatalogFetcher({ resolve, allowRedirects: false });
+      await expect(fetcher.get(index)).rejects.toThrow("redirect-not-allowed");
+      expect(seen.map(({ url }) => url)).toEqual([index]);
+      expect(resolve).toHaveBeenCalledTimes(1);
     },
   );
 });
