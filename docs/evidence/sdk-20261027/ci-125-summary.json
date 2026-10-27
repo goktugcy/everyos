@@ -1,0 +1,65 @@
+{
+  "headSha": "2451554006f9aa45a14e44bc9b2c84bb54260a00",
+  "testedMergeSha": "1a27003c2c1679bba3d571c37d925729b636d538",
+  "ciRunId": 40433524906,
+  "ciConclusion": "success",
+  "nativeRunId": 40433524915,
+  "nativeConclusion": "success",
+  "architectures": {
+    "arm64": {
+      "unitTestsPassed": 1529,
+      "unitFilesPassed": 176,
+      "regularBrowser": {
+        "passed": 95,
+        "skipped": 1,
+        "flaky": 0,
+        "failed": 0
+      },
+      "plainHttpBrowser": {
+        "passed": 25,
+        "skipped": 0,
+        "flaky": 0,
+        "failed": 0
+      },
+      "officialApps": 29,
+      "officialAssertions": 447,
+      "nativeScenariosPassed": 6
+    },
+    "amd64": {
+      "unitTestsPassed": 1529,
+      "unitFilesPassed": 176,
+      "regularBrowser": {
+        "passed": 94,
+        "skipped": 1,
+        "flaky": 1,
+        "failed": 0
+      },
+      "plainHttpBrowser": {
+        "passed": 25,
+        "skipped": 0,
+        "flaky": 0,
+        "failed": 0
+      },
+      "officialApps": 29,
+      "officialAssertions": 447,
+      "nativeScenariosPassed": 6
+    }
+  },
+  "skipReason": "The plain-HTTP-only test is intentionally skipped in the regular browser pass and executed in the plain-HTTP pass.",
+  "flakyObservation": {
+    "test": "tests/e2e/tools-terminal.spec.ts:120",
+    "assertionLine": 158,
+    "expected": "ended",
+    "received": "connected",
+    "firstAttemptTimeoutMs": 5000,
+    "retryPassed": true,
+    "protectedFilesChanged": false,
+    "cause": "not established",
+    "localFocusedDiagnostic": {
+      "passed": 2,
+      "retries": 0
+    }
+  },
+  "productionCommunityAcceptance": false,
+  "physicalPiCandidateTested": false
+}
