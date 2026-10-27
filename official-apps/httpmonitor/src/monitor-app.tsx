@@ -93,7 +93,7 @@ export function HttpMonitorApp() {
       limit: 5000,
     });
     return { id: selected.id, range, checks: result.checks.toSorted((a, b) => b.at - a.at) };
-  }, [app, allowed, selected?.id, range, revision]);
+  }, [app, allowed, selected?.id, selected?.checkedAt, range, revision]);
   // useAsync retains previous data while loading; do not display another endpoint's history.
   const checks =
     allowed && history.data?.id === selected?.id && history.data?.range === range

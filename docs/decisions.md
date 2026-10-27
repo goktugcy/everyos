@@ -891,6 +891,8 @@ ten-second manual rate limit; the interface must still show the scheduled result
 for its ordinary thirty-second refresh. While the selected monitor is pending, refresh after one
 second, waiting for current list/history reads to settle before starting another refresh. Return to
 thirty seconds once the monitor leaves pending, and stop polling while suspended or unauthorized.
+History also follows the selected monitor's last-check timestamp: parallel list/history reads may
+straddle completion, so a new timestamp requires a fresh history read even when the id is unchanged.
 
 Browser acceptance uses a distinct Code Editor project directory for each attempt, so replaying the
 serial suite cannot turn an earlier HTTP Monitor failure into an unrelated directory conflict. CI

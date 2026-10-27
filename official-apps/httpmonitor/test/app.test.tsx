@@ -83,12 +83,20 @@ describe("HTTP Monitor", () => {
   it("shows the first scheduled check after a manual check is rate limited", async () => {
     let monitor = fixture({ state: "pending", checkedAt: null, lastStatus: null });
     let checks: NetMonitorCheck[] = [];
+    let oldSnapshotReturned = false;
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
     try {
       await start({
         host: {
           "net.monitors.list": () => ({ monitors: [monitor] }),
-          "net.monitors.history": () => ({ checks }),
+          "net.monitors.history": () => {
+            // This read can precede completion while the parallel list read sees the new check.
+            if (checks.length && !oldSnapshotReturned) {
+              oldSnapshotReturned = true;
+              return { checks: [] };
+            }
+            return { checks };
+          },
           "net.monitors.check": () => {
             throw new BridgeError("RATE_LIMITED", "A scheduled check is already running");
           },
@@ -109,6 +117,7 @@ describe("HTTP Monitor", () => {
         else environment.IS_REACT_ACT_ENVIRONMENT = previous;
       }
       await vi.waitFor(() => expect(document.querySelector("tbody")?.textContent).toContain("200"));
+      expect(oldSnapshotReturned).toBe(true);
     } finally {
       vi.useRealTimers();
     }
