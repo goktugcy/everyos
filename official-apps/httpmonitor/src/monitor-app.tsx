@@ -83,6 +83,8 @@ export function HttpMonitorApp() {
   );
   const monitors = allowed ? (list.data ?? []) : [];
   const selected = monitors.find((m) => m.id === selectedId) ?? monitors[0] ?? null;
+  // A scheduled first check can win the race with Check now; show its result promptly.
+  const pollMs = selected?.state === "pending" ? 1000 : 30000;
   const history = useAsync(async () => {
     if (!allowed || !selected) return { id: null, range, checks: [] as NetMonitorCheck[] };
     const result = await app.host.call("net.monitors.history", {
@@ -121,14 +123,14 @@ export function HttpMonitorApp() {
     };
   }, [app]);
   useEffect(() => {
-    if (!visible || !allowed || busy) return;
-    const poll = setInterval(() => setRevision((n) => n + 1), 30000);
+    if (!visible || !allowed || busy || list.loading || history.loading) return;
+    const poll = setInterval(() => setRevision((n) => n + 1), pollMs);
     const clock = setInterval(() => setNow(Date.now()), 1000);
     return () => {
       clearInterval(poll);
       clearInterval(clock);
     };
-  }, [visible, allowed, busy]);
+  }, [visible, allowed, busy, pollMs, list.loading, history.loading]);
 
   const run = async (action: () => Promise<void>) => {
     if (busy) return;

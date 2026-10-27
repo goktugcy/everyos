@@ -883,3 +883,16 @@ The development server serves a fixed in-memory allowlist of the signed index an
 never a general directory tree. `pnpm dev` owns its lifecycle; `pnpm dev:apps` supports an already
 running stack. Standalone helpers yield when a new development process replaces their anchor and
 remove only their own generated build. Normal API sync and package verification remain enabled.
+
+### D64 — Refresh pending HTTP checks without weakening server rate limits
+
+A first scheduled monitor check can overlap the person's manual check. The server keeps its
+ten-second manual rate limit; the interface must still show the scheduled result without waiting
+for its ordinary thirty-second refresh. While the selected monitor is pending, refresh after one
+second, waiting for current list/history reads to settle before starting another refresh. Return to
+thirty seconds once the monitor leaves pending, and stop polling while suspended or unauthorized.
+
+Browser acceptance uses a distinct Code Editor project directory for each attempt, so replaying the
+serial suite cannot turn an earlier HTTP Monitor failure into an unrelated directory conflict. CI
+also keeps regular and plain-HTTP browser output in separate directories; the second run must not
+erase the first run's failure traces.
