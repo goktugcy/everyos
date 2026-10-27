@@ -4,8 +4,7 @@ The community service lives in `services/community-registry`. It accepts indepen
 submissions without repository access or pull requests. Its production origin is
 `https://everyos.goktugceyhan.dev`. The owner-authorized Worker, D1 database and private R2 bucket
 are deployed; [public deployment verification](../evidence/community-20261026/deployment-verification.json)
-passes against the independently retained public key. EveryOS enables this source only after
-the real human-reviewed enrollment/install/update/revocation acceptance and trust-anchor pin.
+passes against the independently retained public key. The [real human-reviewed lifecycle](../evidence/community-20261027/live-lifecycle.json) now passes enrollment, submission, human review, installation, data-preserving update and signed revocation. The public production key is pinned in EveryOS; the built-in community source remains disabled until its administrator enables it.
 The local workerd/D1/R2 development gate creates no production resources or signing keys.
 
 ## Register and submit
@@ -143,14 +142,17 @@ The following production actions belong to the owner:
    Verify the public deployment with the independently retained public key using the command
    below. It checks production health, the discovery identity, `/registry.pub` and the fresh
    signed `/index.json` together.
-7. Add the verified URL, key and fingerprint to `COMMUNITY_APP_REGISTRY` in
-   `apps/api/src/modules/desktop-apps/anchors.ts`. Its current `null` value is intentional until these real
-   production values and a deployed submission/install/update/revocation round trip are verified.
+7. Pin the verified URL and public key in `COMMUNITY_APP_REGISTRY` in
+   `apps/api/src/modules/desktop-apps/anchors.ts`, with its independently retained fingerprint checked
+   in `anchors.test.ts`. This production pin is now present following the real human-reviewed
+   submission/install/update/revocation round trip. A changed deployment key requires repeating
+   independent verification and the matching live acceptance before replacing the pin.
 
-The release preflight also requires the matching live acceptance receipt and a fresh signed
-index; see [SDK distribution](distribution.md#public-release-readiness). Choosing the domain does
-not provision it. Until the owner creates the resources, deploys the Worker and verifies the
-round trip, the complete EveryOS release stays blocked.
+The release preflight requires the matching live acceptance receipt and a fresh signed index; see
+[SDK distribution](distribution.md#public-release-readiness). The current production receipt is
+`packaging/community-live-acceptance.json`, linked to immutable public evidence and the exact
+0.1.37 candidate/key. This completes the community integration gate; protected production artifact
+signing, independent verification and explicit owner release approval remain separate publication gates.
 
 The agent never needs a Cloudflare account token. No tag, main-branch merge or public EveryOS
 release is part of this deployment handoff.

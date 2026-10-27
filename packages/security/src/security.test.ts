@@ -37,7 +37,10 @@ describe("SecretBox", () => {
   it("rejects tampered data and wrong keys", () => {
     const box = new SecretBox(key);
     const sealed = box.seal("secret", "ctx");
-    const tampered = sealed.slice(0, -2) + (sealed.endsWith("A") ? "BB" : "AA");
+    // Changing base64 text can touch only unused padding bits, leaving authenticated bytes intact.
+    const changed = Buffer.from(sealed.slice("v1.".length), "base64url");
+    changed[changed.length - 1] = changed[changed.length - 1]! ^ 1;
+    const tampered = "v1." + changed.toString("base64url");
     expect(() => box.open(tampered, "ctx")).toThrow(SecretBoxError);
     expect(() => new SecretBox(Buffer.alloc(32, 8)).open(sealed, "ctx")).toThrow(SecretBoxError);
   });

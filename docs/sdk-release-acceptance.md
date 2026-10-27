@@ -8,8 +8,9 @@ when the implementation exists and the evidence is linked; until every item is c
 Status: **public release blocked** — the 29-app development implementation and regression gate
 pass. The production community service is deployed, and ordinary default-resolver inspection passes
 production health, identity, public-key and signed-catalog verification. Temporary physical Pi core
-measurements and native Linux app observations are recorded. Production trust and live acceptance,
-final signed artifacts and explicit release approval remain required. See [App SDK architecture](app-sdk/architecture.md).
+measurements and native Linux app observations are recorded. The real human-reviewed production
+community lifecycle passes and its public trust anchor is pinned. Final signed artifacts and explicit
+release approval remain required. See [App SDK architecture](app-sdk/architecture.md).
 
 `dev passed` means the linked development checks ran successfully; it does not imply production
 signing, publication or approval. The dated sections below preserve prior failures and checkpoint
@@ -18,39 +19,39 @@ completed work as pending.
 
 ## Gates
 
-| Gate                                                             | Status                         | Evidence                                                                                                                                                                                              |
-| ---------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| EveryOS core builds                                              | dev passed                     | Full `pnpm build`; both real `.deb` packages contain 392 runtime/package files.                                                                                                                       |
-| Existing Docker App Store still works                            | dev passed                     | Full browser run including `zz-store.spec.ts` and `system-docker.spec.ts`; Store polling fallback regression.                                                                                         |
-| Desktop App Store works                                          | dev passed                     | `sdk-desktop-apps.spec.ts` installs, scopes permissions, persists data and removes apps through the store.                                                                                            |
-| `create-everyos-app` creates a working app                       | dev passed                     | All four [standalone templates](app-sdk/distribution.md) install, typecheck, test, pack, publish and run outside the workspace.                                                                       |
-| `.eosapp` build and validation                                   | dev passed                     | `packages/app-package/src/package.test.ts`; all 29 actual artifacts independently verified by `scripts/official-apps.ts`.                                                                             |
-| Package signing and verification                                 | dev passed; production pending | Package/registry/API security tests and ephemeral signed artifacts; production keys are used only by the protected release workflow.                                                                  |
-| Third-party apps run isolated (opaque-origin sandbox)            | dev passed                     | `sdk-desktop-apps.spec.ts` on normal and plain HTTP: no parent DOM, cookies, origin storage or direct API access.                                                                                     |
-| No unauthorized host access through documented capabilities      | dev passed                     | `desktop-apps.test.ts` denies undeclared grants, revoked instances, file/network/database/SSH/appearance scope violations.                                                                            |
-| All SDK permission checks enforced server-side                   | dev passed                     | API tests use real PostgreSQL and MariaDB fixtures and `ssh-keygen`; browser tests exercise native approval and rejection.                                                                            |
-| App install and removal                                          | dev passed                     | API installation tests and real store workflow.                                                                                                                                                       |
-| App updates and compatibility checks                             | dev passed                     | API update, immutable-version, revoked and incompatible-SDK tests; packaged Linux lifecycle.                                                                                                          |
-| All 29 official apps implemented with working primary features   | dev passed                     | `official-apps/*/test/`, 447 app assertions; real browser workflows detailed below.                                                                                                                   |
-| All 29 packages build, validate and are signed                   | dev passed; production pending | Complete ephemeral-key artifact pipeline; protected production signing remains a release step.                                                                                                        |
-| All 29 apps pass their acceptance tests                          | dev passed                     | Exact positive per-app test counts enforced by `scripts/official-apps.ts` and retained in its CI artifact report.                                                                                     |
-| All official apps appear in the store                            | dev passed                     | `official-apps.spec.ts` installs and launches every one of the 29 signed development packages.                                                                                                        |
-| App widgets integrate with the desktop                           | dev passed                     | Sandboxed widget gallery, Notes/Uptime browser workflows and `widget-sdk.test.ts`.                                                                                                                    |
-| App settings and data persist                                    | dev passed                     | API storage isolation, reload/reopen browser workflows and packaged Linux app-update/restore scenarios.                                                                                               |
-| Backup and restore compatibility                                 | dev passed                     | API archive/tamper/repair tests; real packaged authenticated backup, CLI restore and supervised restart.                                                                                              |
-| Mobile and desktop interfaces                                    | dev passed                     | Actual Chromium desktop/mobile workflows and reviewed screenshots described per app below.                                                                                                            |
-| Localization validation (10 languages)                           | dev passed                     | Every package's ten dictionaries validate; all 29 manifests default to `en`.                                                                                                                          |
-| Developer CLI                                                    | dev passed                     | CLI unit/integration tests and actual installed-archive acceptance, including runtime CSP and signed registry operations.                                                                             |
-| Community registry (service + client)                            | deployed; live gate pending    | Fifteen actual workerd/D1/R2 integration tests; [ordinary production verification](evidence/community-20261026/deployment-verification.json). Public-key pin and six-step live round trip remain.     |
-| Private registry support                                         | dev passed                     | Independent developer registry API test plus standalone create/publish/refresh/revoke acceptance.                                                                                                     |
-| Documentation complete                                           | live acceptance pending        | SDK references and [production identity/DNS evidence](evidence/community-20261026/dns-migration.json) exist; human lifecycle receipts remain required.                                                |
-| No existing EveryOS functionality broken (full regression suite) | dev passed; one hosted flake   | CI 125: format/lint/types, 1,529 tests in 176 files on each architecture; ARM regular Chromium 95 passed, AMD 94 passed plus one retry pass; both have one HTTP-only skip. Plain HTTP 25 passed each. |
-| ARM64 acceptance                                                 | dev passed; Pi core observed   | [Native package workflow 4](https://github.com/goktugcy/everyos/actions/runs/40433524915): all six scenarios pass on ARM64 and AMD64; owner-approved temporary Pi core observation and cleanup below. |
-| AMD64 acceptance                                                 | dev passed                     | The same native Ubuntu package qualification passes all six install/update/restore/revocation scenarios.                                                                                              |
-| Security regression tests                                        | dev passed                     | Network scoping/DNS rebinding/metadata/redirect tests, sandbox tests, signatures, tamper handling and zero production dependency advisories.                                                          |
-| CI green                                                         | checkpoint passed              | [CI 125](https://github.com/goktugcy/everyos/actions/runs/40433524906) passes both architectures and audit for `2451554` (clean PR test merge `1a27003`); the AMD terminal retry is recorded below.   |
-| Release artifacts verified                                       | production pending             | SDK/app/deb development artifacts verified; final protected signatures and independent release verification remain.                                                                                   |
-| Release candidate prepared                                       | local only                     | `0.1.37` is an unpublished local candidate; `release-preflight.ts` rejects the absent community anchor. No tag, publication or main merge.                                                            |
+| Gate                                                             | Status                         | Evidence                                                                                                                                                                                                                                               |
+| ---------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| EveryOS core builds                                              | dev passed                     | Full `pnpm build`; both real `.deb` packages contain 392 runtime/package files.                                                                                                                                                                        |
+| Existing Docker App Store still works                            | dev passed                     | Full browser run including `zz-store.spec.ts` and `system-docker.spec.ts`; Store polling fallback regression.                                                                                                                                          |
+| Desktop App Store works                                          | dev passed                     | `sdk-desktop-apps.spec.ts` installs, scopes permissions, persists data and removes apps through the store.                                                                                                                                             |
+| `create-everyos-app` creates a working app                       | dev passed                     | All four [standalone templates](app-sdk/distribution.md) install, typecheck, test, pack, publish and run outside the workspace.                                                                                                                        |
+| `.eosapp` build and validation                                   | dev passed                     | `packages/app-package/src/package.test.ts`; all 29 actual artifacts independently verified by `scripts/official-apps.ts`.                                                                                                                              |
+| Package signing and verification                                 | dev passed; production pending | Package/registry/API security tests and ephemeral signed artifacts; production keys are used only by the protected release workflow.                                                                                                                   |
+| Third-party apps run isolated (opaque-origin sandbox)            | dev passed                     | `sdk-desktop-apps.spec.ts` on normal and plain HTTP: no parent DOM, cookies, origin storage or direct API access.                                                                                                                                      |
+| No unauthorized host access through documented capabilities      | dev passed                     | `desktop-apps.test.ts` denies undeclared grants, revoked instances, file/network/database/SSH/appearance scope violations.                                                                                                                             |
+| All SDK permission checks enforced server-side                   | dev passed                     | API tests use real PostgreSQL and MariaDB fixtures and `ssh-keygen`; browser tests exercise native approval and rejection.                                                                                                                             |
+| App install and removal                                          | dev passed                     | API installation tests and real store workflow.                                                                                                                                                                                                        |
+| App updates and compatibility checks                             | dev passed                     | API update, immutable-version, revoked and incompatible-SDK tests; packaged Linux lifecycle.                                                                                                                                                           |
+| All 29 official apps implemented with working primary features   | dev passed                     | `official-apps/*/test/`, 447 app assertions; real browser workflows detailed below.                                                                                                                                                                    |
+| All 29 packages build, validate and are signed                   | dev passed; production pending | Complete ephemeral-key artifact pipeline; protected production signing remains a release step.                                                                                                                                                         |
+| All 29 apps pass their acceptance tests                          | dev passed                     | Exact positive per-app test counts enforced by `scripts/official-apps.ts` and retained in its CI artifact report.                                                                                                                                      |
+| All official apps appear in the store                            | dev passed                     | `official-apps.spec.ts` installs and launches every one of the 29 signed development packages.                                                                                                                                                         |
+| App widgets integrate with the desktop                           | dev passed                     | Sandboxed widget gallery, Notes/Uptime browser workflows and `widget-sdk.test.ts`.                                                                                                                                                                     |
+| App settings and data persist                                    | dev passed                     | API storage isolation, reload/reopen browser workflows and packaged Linux app-update/restore scenarios.                                                                                                                                                |
+| Backup and restore compatibility                                 | dev passed                     | API archive/tamper/repair tests; real packaged authenticated backup, CLI restore and supervised restart.                                                                                                                                               |
+| Mobile and desktop interfaces                                    | dev passed                     | Actual Chromium desktop/mobile workflows and reviewed screenshots described per app below.                                                                                                                                                             |
+| Localization validation (10 languages)                           | dev passed                     | Every package's ten dictionaries validate; all 29 manifests default to `en`.                                                                                                                                                                           |
+| Developer CLI                                                    | dev passed                     | CLI unit/integration tests and actual installed-archive acceptance, including runtime CSP and signed registry operations.                                                                                                                              |
+| Community registry (service + client)                            | live passed                    | Fifteen actual workerd/D1/R2 integration tests; [ordinary production verification](evidence/community-20261026/deployment-verification.json). The public-key pin and [six-step live round trip](evidence/community-20261027/live-lifecycle.json) pass. |
+| Private registry support                                         | dev passed                     | Independent developer registry API test plus standalone create/publish/refresh/revoke acceptance.                                                                                                                                                      |
+| Documentation complete                                           | integration passed             | SDK references and [production identity/DNS evidence](evidence/community-20261026/dns-migration.json) and [human lifecycle evidence](evidence/community-20261027/live-lifecycle.json) are retained.                                                    |
+| No existing EveryOS functionality broken (full regression suite) | dev passed; one hosted flake   | CI 125: format/lint/types, 1,529 tests in 176 files on each architecture; ARM regular Chromium 95 passed, AMD 94 passed plus one retry pass; both have one HTTP-only skip. Plain HTTP 25 passed each.                                                  |
+| ARM64 acceptance                                                 | dev passed; Pi core observed   | [Native package workflow 4](https://github.com/goktugcy/everyos/actions/runs/40433524915): all six scenarios pass on ARM64 and AMD64; owner-approved temporary Pi core observation and cleanup below.                                                  |
+| AMD64 acceptance                                                 | dev passed                     | The same native Ubuntu package qualification passes all six install/update/restore/revocation scenarios.                                                                                                                                               |
+| Security regression tests                                        | dev passed                     | Network scoping/DNS rebinding/metadata/redirect tests, sandbox tests, signatures, tamper handling and zero production dependency advisories.                                                                                                           |
+| CI green                                                         | checkpoint passed              | [CI 125](https://github.com/goktugcy/everyos/actions/runs/40433524906) passes both architectures and audit for `2451554` (clean PR test merge `1a27003`); the AMD terminal retry is recorded below.                                                    |
+| Release artifacts verified                                       | production pending             | SDK/app/deb development artifacts verified; final protected signatures and independent release verification remain.                                                                                                                                    |
+| Release candidate prepared                                       | local only                     | `0.1.37` is an unpublished local candidate; the pinned community anchor and matching live receipt are present. No tag, publication or main merge.                                                                                                      |
 
 ## Official apps
 
@@ -62,10 +63,10 @@ All 29 tested apps still require the remaining public-release gates.
 
 The official registry trust anchor is pinned to the GitHub release index and the owner's public
 key (see [publishing](app-sdk/publishing.md)). `anchors.test.ts` verifies the URL, fingerprint
-and absent community anchor; `packages/catalogs/src/fetch.test.ts` verifies GitHub's latest →
+and independently retained community key; `packages/catalogs/src/fetch.test.ts` verifies GitHub's latest →
 versioned release → object redirect with public DNS pinned at every hop, credentials dropped
 across origins, and private/metadata/mapped-address redirects refused. These five focused tests
-passed on 2026-10-22. Publication, the complete signed catalog and the community anchor remain open.
+passed on 2026-10-22. Production official-artifact publication and the complete signed official catalog remain open; the community anchor is now pinned after the real live lifecycle.
 
 | #   | App             | Id                        | Status |
 | --- | --------------- | ------------------------- | ------ |
@@ -958,3 +959,54 @@ review, the live production enrollment/install/update/revocation round trip, and
 community trust pin and evidence. Final protected signing, independent release verification and
 explicit release approval remain separate publication gates. No main merge, tag or npm/public
 EveryOS release has occurred.
+
+## Human-reviewed live community acceptance — 2026-10-27
+
+The owner confirmed control of the publisher identity, ran real invitation/key-proof enrollment and
+submitted two actual `dev.goktugceyhan.acceptancenotes` packages. Both exact remote package hashes
+and inspected manifests were compared with the retained review bytes. The owner then inspected
+the packages/source and entered the digest-bound approval phrase in their own terminal. Both
+server-side submissions were independently confirmed approved before the browser lifecycle began.
+No production registry private key or operator token was printed or committed.
+
+The [sanitized public receipt](evidence/community-20261027/live-lifecycle.json) records all six real
+steps. At `2026-10-27T11:19:24.864Z`, a dedicated disposable EveryOS 0.1.37 instance had installed
+1.0.0 from the actual public community catalog, saved a note in a real sandbox/browser and updated
+to the independently approved 1.0.1 while preserving that note. The old runtime returned 404.
+Only these two dedicated acceptance versions were then revoked through the publisher API. The
+signed public index reached sequence **6**, retaining both revocations; syncing disabled the
+installation, and new instances, both retired runtime/package paths were denied. This fixture is
+a working note for acceptance, not an additional official app. Its host-data agent is explicitly
+simulated; the registry, package transport, signatures, browser, SQLite storage and revocations are real.
+
+The temporary API, agent and browser stopped, and port 17840 is free. Existing host installations
+and services were not modified. Both test versions remain intentionally revoked. Production
+health, identity, public key and signed-index inspection pass after this lifecycle.
+
+`COMMUNITY_APP_REGISTRY` now pins the independently retained production public key and HTTPS index
+URL. `anchors.test.ts` checks that exact endpoint/fingerprint and refuses implicit private-network
+trust. The former null-anchor expectation represented the undeployed state and is replaced by
+these real deployment assertions; the separate release-gate tests still reject absent anchors,
+wrong/private keys, incomplete/local/expired evidence and invalid indexes. The community source
+continues to default to disabled until its administrator enables it.
+
+`packaging/community-live-acceptance.json` binds all six passed checks to this exact 0.1.37 candidate,
+public-key fingerprint and immutable evidence commit `de7a4c8`. The community integration gate is
+complete. The complete local gate after this pin passes format, lint, all workspace types, **1,530 tests in
+176 files**, production build, **24 regular browser workflows** and **25 plain-HTTP workflows**,
+with both database fixtures required and browser retries disabled. [PR #1](https://github.com/goktugcy/everyos/pull/1)
+tracks the exact final-head hosted checks and merge state. No tag, npm publication or public EveryOS
+release is part of these integration checks. Protected final
+artifact signing, independent verification and explicit release approval remain publication gates.
+
+### Deterministic tamper-test correction
+
+The first full regression after the community pin reached **1,529 passed / one failed** in 176 files.
+`SecretBox`'s existing tamper test sometimes changed only unused Base64url padding bits, so the
+decoded authenticated bytes stayed identical and successful decryption was correct. A bounded local
+reproduction found this case after 188 seals. The test now flips one decoded authentication-tag byte
+and re-encodes it canonically; its rejection and wrong-key assertions remain unchanged. Production
+cryptography and stored-secret compatibility are unchanged. The focused security suite passes all
+13 tests. The fresh complete gate also passes all **1,530 tests in 176 files**, format/lint/all
+workspace types, production build, **24 regular browser workflows** and **25 plain-HTTP workflows**
+without retries. Both database fixtures are required. Fresh hosted runs are tracked by PR #1.

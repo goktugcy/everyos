@@ -1,0 +1,17 @@
+{
+  "format": "everyos-community-live-acceptance/1",
+  "everyosVersion": "0.1.37",
+  "origin": "https://everyos.goktugceyhan.dev",
+  "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+  "verifiedAt": "2026-10-27T11:19:24.864Z",
+  "evidenceUrl": "https://github.com/goktugcy/everyos/blob/de7a4c88756b9d4195c68bbc606d3d55524da062/docs/evidence/community-20261027/live-lifecycle.json",
+  "live": true,
+  "checks": {
+    "enrollment": "passed",
+    "submission": "passed",
+    "humanReview": "passed",
+    "installation": "passed",
+    "update": "passed",
+    "revocation": "passed"
+  }
+}
