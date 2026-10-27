@@ -8,6 +8,7 @@ import type { MockHostOptions } from "@everyos/app-testing";
 import { byRole, byText, typeInto } from "@everyos/app-testing/dom";
 import { renderApp, type RenderedApp } from "@everyos/app-ui/testing";
 import { join } from "node:path";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HttpMonitorApp } from "../src/monitor-app.tsx";
 import { EMPTY_DRAFT } from "../src/monitor.ts";
@@ -79,6 +80,49 @@ async function start(options: MockHostOptions = {}) {
 }
 
 describe("HTTP Monitor", () => {
+  it("shows the first scheduled check after a manual check is rate limited", async () => {
+    let monitor = fixture({ state: "pending", checkedAt: null, lastStatus: null });
+    let checks: NetMonitorCheck[] = [];
+    let oldSnapshotReturned = false;
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      await start({
+        host: {
+          "net.monitors.list": () => ({ monitors: [monitor] }),
+          "net.monitors.history": () => {
+            // This read can precede completion while the parallel list read sees the new check.
+            if (checks.length && !oldSnapshotReturned) {
+              oldSnapshotReturned = true;
+              return { checks: [] };
+            }
+            return { checks };
+          },
+          "net.monitors.check": () => {
+            throw new BridgeError("RATE_LIMITED", "A scheduled check is already running");
+          },
+        },
+      });
+      await vi.waitFor(() => expect(byText("Awaiting check")).not.toBeNull());
+      await click("Check now");
+      await vi.waitFor(() => expect(byRole("alert")).not.toBeNull());
+      monitor = fixture({ checkedAt: Date.now() });
+      checks = [{ at: Date.now(), ok: true, status: 200, ms: 12, error: null }];
+      const environment = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+      const previous = environment.IS_REACT_ACT_ENVIRONMENT;
+      environment.IS_REACT_ACT_ENVIRONMENT = true;
+      try {
+        await act(async () => vi.advanceTimersByTimeAsync(1000));
+      } finally {
+        if (previous === undefined) delete environment.IS_REACT_ACT_ENVIRONMENT;
+        else environment.IS_REACT_ACT_ENVIRONMENT = previous;
+      }
+      await vi.waitFor(() => expect(document.querySelector("tbody")?.textContent).toContain("200"));
+      expect(oldSnapshotReturned).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("does not show the previous endpoint's history while another endpoint is loading", async () => {
     let resolveHistory: ((value: { checks: NetMonitorCheck[] }) => void) | undefined;
     await start({

@@ -275,33 +275,39 @@ test.describe("Code Editor", () => {
   }) => {
     test.setTimeout(90_000);
     await install(page, code);
+    const project = `kod-projesi-${test.info().retry}-${Date.now()}`;
     for (const [path, name] of [
-      ["Belgeler", "kod-projesi"],
-      ["Belgeler/kod-projesi", "src"],
+      ["Belgeler", project],
+      [`Belgeler/${project}`, "src"],
     ])
       expect(
         (await api(page, "POST", "/api/files/mkdir", { root: "home", path, name })).status,
       ).toBe(201);
     expect(
-      await page.evaluate(async (header) => {
-        const session = (await (await fetch("/api/auth/session")).json()) as { csrfToken: string };
-        const response = await fetch(
-          "/api/files/upload?root=home&path=Belgeler/kod-projesi/src&name=main.ts",
-          {
-            method: "POST",
-            headers: { [header]: session.csrfToken },
-            body: "export const answer = 42;\n",
-          },
-        );
-        return response.status;
-      }, CSRF_HEADER),
+      await page.evaluate(
+        async ({ header, project }) => {
+          const session = (await (await fetch("/api/auth/session")).json()) as {
+            csrfToken: string;
+          };
+          const response = await fetch(
+            `/api/files/upload?root=home&path=Belgeler/${project}/src&name=main.ts`,
+            {
+              method: "POST",
+              headers: { [header]: session.csrfToken },
+              body: "export const answer = 42;\n",
+            },
+          );
+          return response.status;
+        },
+        { header: CSRF_HEADER, project },
+      ),
     ).toBe(201);
 
     const { window, frame } = await open(page, code.name, code.id);
     await frame.getByRole("button", { name: "Klasör aç…" }).first().click();
     const picker = window.getByTestId("desktop-app-file-picker");
     await expect(picker).toContainText("Klasör seç");
-    await picker.getByRole("option", { name: "kod-projesi" }).click();
+    await picker.getByRole("option", { name: project }).click();
     await picker.getByRole("button", { name: "Bu klasörü seç" }).click();
 
     await frame.getByRole("treeitem", { name: "src" }).click();
@@ -326,12 +332,12 @@ test.describe("Code Editor", () => {
     await expect(frame.getByRole("tab", { name: "main.ts", exact: true })).toBeVisible();
     await expect
       .poll(() =>
-        page.evaluate(async () => {
+        page.evaluate(async (project) => {
           const response = await fetch(
-            "/api/files/text?root=home&path=Belgeler/kod-projesi/src/main.ts",
+            `/api/files/text?root=home&path=Belgeler/${project}/src/main.ts`,
           );
           return ((await response.json()) as { content: string }).content;
-        }),
+        }, project),
       )
       .toBe("export const answer = 42;\n// e2e");
   });
