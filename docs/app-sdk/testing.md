@@ -31,6 +31,10 @@ and lets the next `mountMockHost()` connect again, so one test file can start th
 
 ### Interfaces
 
+The workspace and all four project templates pin `happy-dom` to 21.0.4, which fixes the
+[ESM compiler injection advisory](https://github.com/capricorn86/happy-dom/security/advisories/GHSA-834v-8h66-3h79).
+Keep the template pins aligned with the workspace when updating this test dependency.
+
 `@everyos/app-testing/dom` has small helpers for a test DOM: `typeInto` (React sees the change),
 `pressKey` (`mod` is Ctrl), `byText`, `allByText`, `byRole` (role and accessible name) and
 `servePackageFiles(publicDir)`, which answers the app's requests for its own files (locales) as

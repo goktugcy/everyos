@@ -167,5 +167,5 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level high
+      - name: Audit production and development dependencies
+        run: pnpm audit --audit-level high
