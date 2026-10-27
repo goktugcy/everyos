@@ -898,3 +898,18 @@ Browser acceptance uses a distinct Code Editor project directory for each attemp
 serial suite cannot turn an earlier HTTP Monitor failure into an unrelated directory conflict. CI
 also keeps regular and plain-HTTP browser output in separate directories; the second run must not
 erase the first run's failure traces.
+
+### D65 — Move the community origin without breaking installed clients
+
+The owner acquired `everyos.net` and selected Cloudflare DNS. The canonical community origin is
+`https://registry.everyos.net`; `https://everyos.goktugceyhan.dev` remains a direct custom-domain
+alias on the same Worker. Keep the existing D1, R2, secrets and Ed25519 trust anchor. Do not redirect
+authenticated publisher requests: the CLI refuses redirects and encrypts credentials for an exact
+origin. Existing credentials can continue using the explicit legacy origin; new credentials use the
+new default. The OS and standalone CLI default to the new address.
+
+Preserve the historical lifecycle receipt and its original review date/origin. A separate read-only
+proof verifies production health, discovery, public-key continuity and byte-identical signed catalogs
+on both domains. The release gate accepts the historical origin only with a complete, fresh migration
+receipt for the exact origins and pinned key. This grants no new human review, submission approval
+or lifecycle acceptance, and does not relax the candidate-version or thirty-day freshness gates.

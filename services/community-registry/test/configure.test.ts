@@ -33,10 +33,13 @@ it("generates an owner-reviewed production config only with a non-placeholder id
     await run(process.execPath, args);
     const config = JSON.parse(await readFile(join(dir, "wrangler.production.jsonc"), "utf8"));
     expect(config.vars).toEqual({
-      PUBLIC_ORIGIN: "https://everyos.goktugceyhan.dev",
+      PUBLIC_ORIGIN: "https://registry.everyos.net",
       ENVIRONMENT: "production",
     });
-    expect(config.routes).toEqual([{ pattern: "everyos.goktugceyhan.dev", custom_domain: true }]);
+    expect(config.routes).toEqual([
+      { pattern: "registry.everyos.net", custom_domain: true },
+      { pattern: "everyos.goktugceyhan.dev", custom_domain: true },
+    ]);
     expect(config.d1_databases[0].database_id).toBe(args[2]);
     expect(config.d1_databases[0].remote).toBeUndefined();
     expect(config.r2_buckets[0].bucket_name).toBe("test-community");

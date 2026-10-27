@@ -66,7 +66,7 @@ six-step lifecycle passes. The current receipt binds EveryOS 0.1.37 to
 [immutable live evidence](../evidence/community-20261027/live-lifecycle.json). Standalone SDK tests
 remain one part of the complete release gate.
 
-`https://everyos.goktugceyhan.dev/index.json` and its independently retained key are pinned in
+`https://registry.everyos.net/index.json` and its independently retained key are pinned in
 `apps/api/src/modules/desktop-apps/anchors.ts`. The actual enrollment, submission, human review,
 installation, update and revocation results are recorded in
 `packaging/community-live-acceptance.json`, following `CommunityReleaseEvidence` in
@@ -74,3 +74,8 @@ installation, update and revocation results are recorded in
 and key fingerprint, link its supporting HTTPS evidence, and be no more than 30 days old. Local
 workerd evidence cannot substitute for this receipt. The protected workflow signs and verifies the
 final OS, SDK and official app artifacts together before publishing the complete release.
+
+The original lifecycle receipt retains the origin on which the human review actually occurred.
+After the 2026-10-28 domain change it also requires fresh migration evidence for the exact old/new
+origins, the same signing key and identical signed catalogs from both endpoints. Migration evidence
+does not replace the six lifecycle checks, their candidate-version binding or their freshness limit.

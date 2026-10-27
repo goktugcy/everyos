@@ -24,7 +24,7 @@
     },
   ],
   "vars": {
-    "PUBLIC_ORIGIN": "https://everyos.goktugceyhan.dev",
+    "PUBLIC_ORIGIN": "https://registry.everyos.net",
     "ENVIRONMENT": "local",
   },
   "observability": {

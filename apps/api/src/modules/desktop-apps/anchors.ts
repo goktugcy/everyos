@@ -21,7 +21,7 @@ MCowBQYDK2VwAyEAjauU9Ml5GADdAg33tB83gcZ1/+9+1zfQ+Vd8SHT3mXA=
 };
 
 export const COMMUNITY_APP_REGISTRY: RegistryAnchor = {
-  url: "https://everyos.goktugceyhan.dev/index.json",
+  url: "https://registry.everyos.net/index.json",
   publicKey: `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEA+pJMxzRwIh2LCEjOanK4oH/mSxAz1OW1dcH7kohOIk0=
 -----END PUBLIC KEY-----`,

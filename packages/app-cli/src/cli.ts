@@ -123,7 +123,7 @@ async function main(argv: string[]): Promise<number> {
 
   if (command === "community") {
     const [action, first, version] = positionals;
-    const origin = text("registry-url") ?? "https://everyos.goktugceyhan.dev";
+    const origin = text("registry-url") ?? "https://registry.everyos.net";
     const credentials = resolve(text("token-file") ?? ".everyos/community-token.json");
     if (action === "enroll") {
       const invitation = process.env.EVERYOS_COMMUNITY_INVITATION;

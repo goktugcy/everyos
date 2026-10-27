@@ -5,6 +5,7 @@ import {
   checkCommunityIndex,
   checkCommunityRelease,
   COMMUNITY_ORIGIN,
+  LEGACY_COMMUNITY_ORIGIN,
 } from "./community-release-gate.ts";
 
 const key = generatePublisherKeys();
@@ -44,6 +45,43 @@ describe("Community public release gate", () => {
     expect(() =>
       checkCommunityRelease({ ...anchor, allowPrivate: true }, evidence, "0.1.37", now),
     ).toThrow("endpoint");
+  });
+  it("retains historical lifecycle evidence only with a fresh verified migration of the same key", () => {
+    const legacy = { ...evidence, origin: LEGACY_COMMUNITY_ORIGIN };
+    const migration = {
+      format: "everyos-community-origin-migration/1",
+      from: LEGACY_COMMUNITY_ORIGIN,
+      to: COMMUNITY_ORIGIN,
+      registryFingerprint: evidence.registryFingerprint,
+      verifiedAt: evidence.verifiedAt,
+      evidenceUrl: "https://github.com/goktugcy/everyos/blob/main/docs/evidence/migration.json",
+      checks: {
+        legacyEndpoint: "passed",
+        newEndpoint: "passed",
+        sameSigningKey: "passed",
+        sameSignedCatalog: "passed",
+      },
+    };
+    expect(() => checkCommunityRelease(anchor, legacy, "0.1.37", now)).toThrow("migration");
+    expect(() =>
+      checkCommunityRelease(anchor, { ...legacy, originMigration: migration }, "0.1.37", now),
+    ).not.toThrow();
+    for (const changed of [
+      { from: "https://unrelated.example" },
+      { to: "https://unrelated.example" },
+      { registryFingerprint: "sha256:" + "0".repeat(64) },
+      { verifiedAt: "2026-09-01T12:00:00Z" },
+      { verifiedAt: "2026-11-01T12:00:00Z" },
+      { checks: { ...migration.checks, sameSignedCatalog: "pending" } },
+    ])
+      expect(() =>
+        checkCommunityRelease(
+          anchor,
+          { ...legacy, originMigration: { ...migration, ...changed } },
+          "0.1.37",
+          now,
+        ),
+      ).toThrow();
   });
   it("requires the live index to have a valid current signature", () => {
     const index = signRegistryIndex(

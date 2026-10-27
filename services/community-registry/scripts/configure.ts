@@ -26,7 +26,10 @@ const base = JSON5.parse<Record<string, unknown>>(
 );
 const production = {
   ...base,
-  routes: [{ pattern: "everyos.goktugceyhan.dev", custom_domain: true }],
+  routes: [
+    { pattern: "registry.everyos.net", custom_domain: true },
+    { pattern: "everyos.goktugceyhan.dev", custom_domain: true },
+  ],
   d1_databases: [
     {
       binding: "DB",
@@ -36,7 +39,7 @@ const production = {
     },
   ],
   r2_buckets: [{ binding: "ARTIFACTS", bucket_name: bucket }],
-  vars: { PUBLIC_ORIGIN: "https://everyos.goktugceyhan.dev", ENVIRONMENT: "production" },
+  vars: { PUBLIC_ORIGIN: "https://registry.everyos.net", ENVIRONMENT: "production" },
 };
 await writeFile(
   new URL("../wrangler.production.jsonc", import.meta.url),

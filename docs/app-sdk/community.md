@@ -2,10 +2,22 @@
 
 The community service lives in `services/community-registry`. It accepts independent publisher
 submissions without repository access or pull requests. Its production origin is
-`https://everyos.goktugceyhan.dev`. The owner-authorized Worker, D1 database and private R2 bucket
-are deployed; [public deployment verification](../evidence/community-20261026/deployment-verification.json)
+`https://registry.everyos.net`. The owner-authorized Worker, D1 database and private R2 bucket
+are deployed; [original public deployment verification](../evidence/community-20261026/deployment-verification.json)
 passes against the independently retained public key. The [real human-reviewed lifecycle](../evidence/community-20261027/live-lifecycle.json) now passes enrollment, submission, human review, installation, data-preserving update and signed revocation. The public production key is pinned in EveryOS; the built-in community source remains disabled until its administrator enables it.
 The local workerd/D1/R2 development gate creates no production resources or signing keys.
+
+The [2026-10-28 origin migration](../evidence/community-20261028/origin-migration.json) retains the
+same Worker, D1 database, R2 bucket and independently pinned signing key. Both origins serve the
+same signed catalog directly, without redirects. `https://everyos.goktugceyhan.dev` remains an alias
+for existing EveryOS installations and publisher credentials. The discovery endpoint advertises
+`https://registry.everyos.net/index.json` as the canonical index.
+
+Publisher credentials are encrypted for an exact origin. When using a credential saved for the
+legacy origin with an updated CLI, keep passing `--registry-url https://everyos.goktugceyhan.dev`.
+Changing the default does not silently rebind or expose the credential. New enrollments use the
+new origin. The service is an API; check `/health` or `/.well-known/everyos-registry` rather than
+expecting a website at `/`.
 
 ## Register and submit
 
@@ -117,7 +129,8 @@ The following production actions belong to the owner:
    ```
 
    The command refuses a placeholder UUID and refuses to overwrite an existing configuration.
-   It fixes the custom domain to `everyos.goktugceyhan.dev` and sets the environment to production.
+   It fixes the canonical custom domain to `registry.everyos.net`, retains
+   `everyos.goktugceyhan.dev` as a compatibility alias and sets the environment to production.
 
 4. Prepare a private JSON or dotenv file **outside the checkout** containing the actual
    `ADMIN_TOKEN` and `REGISTRY_PRIVATE_KEY`; restrict its permissions to `0600` and retain the
