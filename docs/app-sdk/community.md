@@ -1,10 +1,12 @@
 # Community submissions
 
 The community service lives in `services/community-registry`. It accepts independent publisher
-submissions without repository access or pull requests. Its intended production origin is
-`https://everyos.goktugceyhan.dev`. Local implementation and workerd/D1/R2 tests exist; the owner
-still deploys it and supplies the real public trust anchor before EveryOS enables this source.
-No production Cloudflare resources or signing keys are created by the development gate.
+submissions without repository access or pull requests. Its production origin is
+`https://everyos.goktugceyhan.dev`. The owner-authorized Worker, D1 database and private R2 bucket
+are deployed; [public deployment verification](../evidence/community-20261026/deployment-verification.json)
+passes against the independently retained public key. EveryOS enables this source only after
+the real human-reviewed enrollment/install/update/revocation acceptance and trust-anchor pin.
+The local workerd/D1/R2 development gate creates no production resources or signing keys.
 
 ## Register and submit
 

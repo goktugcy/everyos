@@ -14,6 +14,7 @@ import { startTlsFixture } from "./tls-fixture.ts";
 import { startHttpFixture } from "./http-fixture.ts";
 import { startSqlFixture } from "./database-fixture.ts";
 import { makeImage } from "./image-fixture.ts";
+import { appMeasurementEnvironment, measureAppLaunch } from "./app-measurements.ts";
 
 /*
  * EveryOS's official apps (official-apps/*), built and signed into the fixture's official registry,
@@ -90,26 +91,58 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test("every official app installs, starts in its sandbox and shows no error", async ({ page }) => {
+test("every official app installs, starts in its sandbox and shows no error", async ({
+  page,
+  browser,
+}) => {
   test.setTimeout(60_000 + OFFICIAL.length * 20_000);
   const errors: string[] = [];
+  const measurements: {
+    appId: string;
+    observation: Awaited<ReturnType<ReturnType<typeof measureAppLaunch>["ready"]>>;
+  }[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   for (const app of OFFICIAL) {
     await test.step(app.slug, async () => {
       await install(page, app);
+      const measurement =
+        process.env.EVERYOS_APP_MEASUREMENTS === "1" ? measureAppLaunch(page) : null;
       try {
         const { window, frame } = await open(page, app.name, app.id);
         await expect(frame.locator("#app > *").first()).toBeVisible();
         await expect(frame.getByTestId("error-state")).toHaveCount(0);
         await expect(frame.locator("body")).not.toContainText("EveryOS did not connect");
+        if (measurement)
+          measurements.push({ appId: app.id, observation: await measurement.ready(window) });
         await window.getByRole("button", { name: "Kapat" }).first().click();
         await expect(window).toHaveCount(0);
       } finally {
+        measurement?.stop();
         await api(page, "DELETE", `/api/desktop-apps/installed/${app.id}`, { confirm: true });
       }
     });
   }
   expect(errors).toEqual([]);
+  if (process.env.EVERYOS_APP_MEASUREMENTS === "1") {
+    expect(measurements).toHaveLength(OFFICIAL.length);
+    const path = test.info().outputPath("official-app-measurements.json");
+    writeFileSync(
+      path,
+      JSON.stringify(
+        {
+          format: "everyos-official-app-measurements/1",
+          observedAt: new Date().toISOString(),
+          environment: appMeasurementEnvironment(browser.version()),
+          measurements,
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+    await test
+      .info()
+      .attach("official-app-measurements", { path, contentType: "application/json" });
+  }
 });
 
 test.describe("Notes", () => {

@@ -869,3 +869,17 @@ The resulting deployment report cannot satisfy the six-step human-reviewed lifec
 Release preflight retains the missing-anchor/live-evidence gates before repeating deployment checks.
 The first Worker deployment uploads both required secrets with code via `--secrets-file`, avoiding
 dependence on an already-existing Worker version. Production setup and secrets remain owner-managed.
+
+### D63 — Local development serves real signed official app builds
+
+The built-in production index is a GitHub release asset and does not exist before the first SDK
+release. Local development must therefore build the actual official apps with `official-apps:check`
+and serve the verified artifacts on loopback. Its registry and publisher keys are ephemeral; no
+production signing credentials are required or passed to the build. Only the generated public
+anchor is loaded from `.dev/official-app-registry.json`, and only in development mode. Explicit
+operator configuration has priority. Production ignores the file and retains its pinned trust.
+
+The development server serves a fixed in-memory allowlist of the signed index and its app assets,
+never a general directory tree. `pnpm dev` owns its lifecycle; `pnpm dev:apps` supports an already
+running stack. Standalone helpers yield when a new development process replaces their anchor and
+remove only their own generated build. Normal API sync and package verification remain enabled.

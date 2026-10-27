@@ -1,0 +1,15 @@
+{
+  "format": "everyos-community-initial-publication/1",
+  "status": "passed",
+  "origin": "https://everyos.goktugceyhan.dev",
+  "verifiedAt": "2026-10-26T13:14:12.644Z",
+  "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+  "endpointAddress": "104.21.40.248",
+  "tlsCertificateVerified": true,
+  "independentIdentityVerifiedBeforeAuthentication": true,
+  "redirectsFollowed": false,
+  "publicationHttpStatus": 200,
+  "indexHttpStatus": 200,
+  "indexSha256": "e5c05f3488830c9a7df5b520fe3a7b55b1244d6cb399afec3ec276f64488e7e6",
+  "note": "TLS endpoint pinned to an address observed from Google DNS during partial DNS propagation. Full deployment inspection remains required."
+}

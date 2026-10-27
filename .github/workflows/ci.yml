@@ -128,7 +128,16 @@ jobs:
       - name: End-to-end tests
         run: pnpm test:e2e
         env:
+          EVERYOS_APP_MEASUREMENTS: "1"
           EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
+
+      - name: Upload measured official app observations
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-app-measurements-${{ matrix.arch }}
+          path: test-results/**/official-app-measurements.json
+          if-no-files-found: error
+          retention-days: 7
 
       # Browsers give plain-HTTP pages opened by host name no secure-context APIs (randomUUID…).
       - name: End-to-end tests over plain HTTP

@@ -9,6 +9,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { startDevAppRegistry } from "./dev-app-registry.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const devRoot = join(root, ".dev");
@@ -19,6 +20,8 @@ if (process.getuid?.() === 0) {
   console.error("Refusing to start the development environment as root.");
   process.exit(1);
 }
+
+const appRegistry = await startDevAppRegistry(root, devRoot);
 
 const env = {
   ...process.env,
@@ -60,6 +63,7 @@ function shutdown(code: number): void {
   if (exiting) return;
   exiting = true;
   for (const child of children) child.kill("SIGTERM");
+  void appRegistry.close();
   setTimeout(() => process.exit(code), 1_500).unref();
 }
 

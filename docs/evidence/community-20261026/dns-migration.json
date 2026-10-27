@@ -1,0 +1,158 @@
+{
+  "format": "everyos-community-dns-migration/1",
+  "domain": "goktugceyhan.dev",
+  "date": "2026-10-26",
+  "zoneStatus": "active, confirmed in Cloudflare dashboard",
+  "nameservers": ["arushi.ns.cloudflare.com", "tate.ns.cloudflare.com"],
+  "sourceRecords": [
+    {
+      "name": "@",
+      "type": "CAA",
+      "value": "0 issue \"pki.goog\"",
+      "ttl": 60
+    },
+    {
+      "name": "@",
+      "type": "CAA",
+      "value": "0 issue \"sectigo.com\"",
+      "ttl": 60
+    },
+    {
+      "name": "*",
+      "type": "ALIAS",
+      "value": "cname.vercel-dns-017.com.",
+      "ttl": 60
+    },
+    {
+      "name": "@",
+      "type": "ALIAS",
+      "value": "d11a5ab83a74e51f.vercel-dns-017.com",
+      "ttl": 60
+    },
+    {
+      "name": "@",
+      "type": "CAA",
+      "value": "0 issue \"letsencrypt.org\"",
+      "ttl": 60
+    }
+  ],
+  "targetDnsOnlyCnames": {
+    "@": "d11a5ab83a74e51f.vercel-dns-017.com",
+    "*": "cname.vercel-dns-017.com",
+    "_domainconnect": "_domainconnect.vercel-dns.com"
+  },
+  "caaLogicalRecordsPreserved": true,
+  "preactivationChecks": [
+    {
+      "nameserver": "arushi.ns.cloudflare.com",
+      "host": "goktugceyhan.dev",
+      "type": "A",
+      "answer": "216.198.79.65\n64.29.17.65",
+      "expected": null,
+      "passed": true
+    },
+    {
+      "nameserver": "tate.ns.cloudflare.com",
+      "host": "goktugceyhan.dev",
+      "type": "A",
+      "answer": "64.29.17.1\n216.198.79.1",
+      "expected": null,
+      "passed": true
+    },
+    {
+      "nameserver": "arushi.ns.cloudflare.com",
+      "host": "www.goktugceyhan.dev",
+      "type": "CNAME",
+      "answer": "cname.vercel-dns-017.com.",
+      "expected": "cname.vercel-dns-017.com.",
+      "passed": true
+    },
+    {
+      "nameserver": "tate.ns.cloudflare.com",
+      "host": "www.goktugceyhan.dev",
+      "type": "CNAME",
+      "answer": "cname.vercel-dns-017.com.",
+      "expected": "cname.vercel-dns-017.com.",
+      "passed": true
+    },
+    {
+      "nameserver": "arushi.ns.cloudflare.com",
+      "host": "worker-safety.goktugceyhan.dev",
+      "type": "CNAME",
+      "answer": "cname.vercel-dns-017.com.",
+      "expected": "cname.vercel-dns-017.com.",
+      "passed": true
+    },
+    {
+      "nameserver": "tate.ns.cloudflare.com",
+      "host": "worker-safety.goktugceyhan.dev",
+      "type": "CNAME",
+      "answer": "cname.vercel-dns-017.com.",
+      "expected": "cname.vercel-dns-017.com.",
+      "passed": true
+    },
+    {
+      "nameserver": "arushi.ns.cloudflare.com",
+      "host": "_domainconnect.goktugceyhan.dev",
+      "type": "CNAME",
+      "answer": "_domainconnect.vercel-dns.com.",
+      "expected": "_domainconnect.vercel-dns.com.",
+      "passed": true
+    },
+    {
+      "nameserver": "tate.ns.cloudflare.com",
+      "host": "_domainconnect.goktugceyhan.dev",
+      "type": "CNAME",
+      "answer": "_domainconnect.vercel-dns.com.",
+      "expected": "_domainconnect.vercel-dns.com.",
+      "passed": true
+    },
+    {
+      "host": "goktugceyhan.dev",
+      "mode": "current",
+      "exit": 0,
+      "result": "200 TLSverify=0"
+    },
+    {
+      "host": "goktugceyhan.dev",
+      "mode": "prepared-target",
+      "exit": 0,
+      "result": "200 TLSverify=0"
+    },
+    {
+      "host": "www.goktugceyhan.dev",
+      "mode": "current",
+      "exit": 0,
+      "result": "200 TLSverify=0"
+    },
+    {
+      "host": "www.goktugceyhan.dev",
+      "mode": "prepared-target",
+      "exit": 0,
+      "result": "200 TLSverify=0"
+    }
+  ],
+  "parentDelegation": [
+    {
+      "server": "ns-tld1.charlestonroadregistry.com",
+      "nameservers": ["arushi.ns.cloudflare.com.", "tate.ns.cloudflare.com."]
+    },
+    {
+      "server": "ns-tld2.charlestonroadregistry.com",
+      "nameservers": ["arushi.ns.cloudflare.com.", "tate.ns.cloudflare.com."]
+    },
+    {
+      "server": "ns-tld3.charlestonroadregistry.com",
+      "nameservers": ["arushi.ns.cloudflare.com.", "tate.ns.cloudflare.com."]
+    },
+    {
+      "server": "ns-tld4.charlestonroadregistry.com",
+      "nameservers": ["arushi.ns.cloudflare.com.", "tate.ns.cloudflare.com."]
+    },
+    {
+      "server": "ns-tld5.charlestonroadregistry.com",
+      "nameservers": ["arushi.ns.cloudflare.com.", "tate.ns.cloudflare.com."]
+    }
+  ],
+  "limitation": "Some recursive resolvers still return cached Vercel data. The default public inspection did not pass; production endpoint verification explicitly used Google DNS."
+}

@@ -208,6 +208,18 @@ function parsePort(value: string | undefined): number | undefined {
   return port;
 }
 
+function readDevelopmentAppRegistry(
+  devRoot: string,
+): z.infer<typeof RegistryAnchorSchema> | undefined {
+  const path = join(devRoot, "official-app-registry.json");
+  if (!existsSync(path)) return undefined;
+  try {
+    return RegistryAnchorSchema.parse(JSON.parse(readFileSync(path, "utf8")));
+  } catch {
+    throw new ConfigError("Invalid development app registry configuration");
+  }
+}
+
 /**
  * Resolves configuration from (highest precedence first) environment
  * variables, the YAML config file, and mode-specific defaults. Defaults bind
@@ -230,6 +242,11 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   if (mode === "development" && !devRoot) {
     throw new ConfigError("Development mode requires EVERYOS_DEV_ROOT (set by `pnpm dev`)");
   }
+  // Generated loopback trust is confined to unprivileged development, behind explicit config.
+  const developmentRegistry =
+    mode === "development" && !file.desktopApps?.officialRegistry
+      ? readDevelopmentAppRegistry(devRoot!)
+      : undefined;
   const defaults =
     mode === "production"
       ? {
@@ -316,7 +333,8 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     },
     desktopApps: {
       dir: join(dataDir, "desktop-apps"),
-      officialRegistry: file.desktopApps?.officialRegistry ?? OFFICIAL_APP_REGISTRY,
+      officialRegistry:
+        file.desktopApps?.officialRegistry ?? developmentRegistry ?? OFFICIAL_APP_REGISTRY,
       communityRegistry: file.desktopApps?.communityRegistry ?? COMMUNITY_APP_REGISTRY,
     },
     supervised: mode === "production" && Boolean(env.INVOCATION_ID),
