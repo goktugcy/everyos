@@ -1,6 +1,7 @@
 import { renderApp, type RenderedApp } from "@everyos/app-ui/testing";
 import { byRole, byText, typeInto } from "@everyos/app-testing/dom";
 import { join } from "node:path";
+import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { runMatch, type MatchRequest } from "../src/match-core.ts";
 import type { WorkerLike } from "../src/matcher.ts";
@@ -48,11 +49,26 @@ const marks = () =>
 describe("Regex Tester", () => {
   it("highlights matches and lists groups as you type", async () => {
     await start();
-    typeInto(pattern(), String.raw`(\d+)-(\d+)`);
-    typeInto(text(), "10-20 and 3-4");
-    await vi.waitFor(() => expect(marks()).toEqual(["10-20", "3-4"]));
-    expect(byText("2 matches", "[role=status]")).not.toBeNull();
-    expect(document.querySelectorAll(".rx-groups tr")).toHaveLength(4);
+    const environment = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+    const previous = environment.IS_REACT_ACT_ENVIRONMENT;
+    environment.IS_REACT_ACT_ENVIRONMENT = true;
+    vi.useFakeTimers();
+    try {
+      act(() => {
+        typeInto(pattern(), String.raw`(\d+)-(\d+)`);
+        typeInto(text(), "10-20 and 3-4");
+      });
+      // Flush the debounce, then the worker reply after React commits the request.
+      await act(async () => vi.advanceTimersByTimeAsync(200));
+      await act(async () => vi.advanceTimersByTimeAsync(1));
+      expect(marks()).toEqual(["10-20", "3-4"]);
+      expect(byText("2 matches", "[role=status]")).not.toBeNull();
+      expect(document.querySelectorAll(".rx-groups tr")).toHaveLength(4);
+    } finally {
+      vi.useRealTimers();
+      if (previous === undefined) delete environment.IS_REACT_ACT_ENVIRONMENT;
+      else environment.IS_REACT_ACT_ENVIRONMENT = previous;
+    }
   });
 
   it("toggles flags, explains the pattern and previews replacements", async () => {

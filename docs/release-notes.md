@@ -1,4 +1,4 @@
-EveryOS 0.1.37 adds the desktop app platform and complete official app catalog (unreleased candidate).
+EveryOS 0.1.37 adds the desktop app platform and complete official app catalog.
 
 - Install signed desktop apps from the unified Store, run them in isolated windows, and use their
   declared file, storage, widget and host capabilities through server-enforced permissions.
@@ -8,8 +8,11 @@ EveryOS 0.1.37 adds the desktop app platform and complete official app catalog (
   publish signed packages through a private registry or submit them for community human review.
 - Store operation progress recovers through polling when its event stream is unavailable.
 - Files dropped immediately onto the shelf wait for the home-folder lookup instead of being lost.
-- The community service must be deployed and verified before this candidate can be published.
-  See `docs/sdk-release-acceptance.md` for open production and platform gates.
+- The community registry is deployed with a pinned public key and a verified human-reviewed
+  submission, installation, data-preserving update and revocation workflow. Administrators can
+  enable it in the Store; it starts disabled.
+- Local development serves real signed official packages and forwards their runtime assets, so
+  installed apps open with their icons before the public catalog is released.
 
 EveryOS 0.1.36 makes files dropped on the pulse shelf temporary.
 
