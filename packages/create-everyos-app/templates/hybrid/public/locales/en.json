@@ -1,0 +1,18 @@
+{
+  "app": {
+    "name": "%%APP_NAME%%"
+  },
+  "monitors": {
+    "title": "Monitors",
+    "source": "Uptime Kuma",
+    "none": "No Uptime Kuma is connected yet. Install it from the App Store (or use your own), then an administrator adds it under Settings → Integrations.",
+    "unavailable": "Uptime Kuma does not answer right now.",
+    "summary": "{{up}} up · {{down}} down",
+    "states": {
+      "up": "Up",
+      "down": "Down",
+      "pending": "Pending",
+      "maintenance": "Maintenance"
+    }
+  }
+}

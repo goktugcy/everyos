@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Renk Stüdyosu",
+    "description": "HEX, RGB, HSL ve OKLCH'de renk seçin; palet, uyum ve geçişler oluşturun, kontrastı denetleyin ve EveryOS temasında önizleyin."
+  },
+  "actions": {
+    "eyedropper": "Ekrandan renk seç"
+  },
+  "color": {
+    "section": "Renk",
+    "preview": "Geçerli renk {{color}}"
+  },
+  "picker": {
+    "saturationValue": "Doygunluk ve parlaklık",
+    "svValue": "Doygunluk %{{s}}, parlaklık %{{v}}",
+    "hue": "Ton",
+    "alpha": "Opaklık"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "Renk değil",
+    "copy": "{{format}} kopyala"
+  },
+  "panels": {
+    "label": "Araçlar",
+    "palette": "Palet",
+    "gradient": "Geçiş",
+    "contrast": "Kontrast",
+    "saved": "Kaydedilenler",
+    "theme": "EveryOS teması"
+  },
+  "swatch": {
+    "use": "{{color}} kullan"
+  },
+  "harmony": {
+    "label": "Uyum",
+    "complementary": "Tamamlayıcı",
+    "analogous": "Benzer",
+    "triadic": "Üçlü",
+    "split": "Bölünmüş tamamlayıcı",
+    "tetradic": "Dörtlü",
+    "monochromatic": "Tek renkli",
+    "save": "Uyumu kaydet"
+  },
+  "scale": {
+    "title": "Ton ölçeği",
+    "step": "Adım {{step}}: {{color}}",
+    "copyCss": "CSS değişkenleri olarak kopyala",
+    "save": "Ölçeği kaydet"
+  },
+  "gradient": {
+    "preview": "Geçiş önizlemesi",
+    "kind": "Tür",
+    "linear": "Doğrusal",
+    "radial": "Dairesel",
+    "angle": "Açı: {{angle}}°",
+    "stops": "Renk durakları",
+    "useCurrent": "{{number}}. durağı geçerli renk yap",
+    "position": "{{number}}. durağın konumu",
+    "remove": "{{number}}. durağı kaldır",
+    "hint": "Bir durağa geçerli rengi vermek için örneğine tıklayın. Bir geçiş en az iki durak ister.",
+    "add": "Durak ekle",
+    "copy": "CSS'yi kopyala"
+  },
+  "contrast": {
+    "text": "Metin",
+    "background": "Arka plan",
+    "swap": "Metin ve arka planı değiştir",
+    "useAsText": "Geçerli rengi metin yap",
+    "useAsBackground": "Geçerli rengi arka plan yap",
+    "sampleLarge": "Büyük metin",
+    "sample": "Normal metin düşük kontrastla daha zor okunur.",
+    "ratio": "Kontrast oranı",
+    "aa": "AA",
+    "aaLarge": "AA büyük",
+    "aaa": "AAA",
+    "aaaLarge": "AAA büyük",
+    "pass": "geçer",
+    "fail": "geçmez",
+    "hint": "WCAG 2: AA, normal metin için 4,5:1, büyük metin (24 px ya da 19 px kalın) için 3:1 ister; AAA 7:1 ve 4,5:1 ister."
+  },
+  "saved": {
+    "newName": "Yeni palet",
+    "create": "Geçerli renkle oluştur",
+    "added": "Palet kaydedildi",
+    "addCurrent": "Geçerli rengi {{name}} paletine ekle",
+    "copyCss": "{{name}} paletini CSS değişkenleri olarak kopyala",
+    "exportCss": "CSS kaydet…",
+    "delete": "{{name}} sil",
+    "deleteTitle": "“{{name}}” paleti silinsin mi?",
+    "removeColor": "{{color}} kaldır",
+    "empty": "Kayıtlı palet yok",
+    "emptyText": "Bir uyumu ya da ölçeği kaydedin veya yukarıdan bir palet oluşturun."
+  },
+  "theme": {
+    "current": "Temanız ({{scheme}})",
+    "schemes": {
+      "light": "açık",
+      "dark": "koyu"
+    },
+    "tokens": {
+      "accent": "Vurgu",
+      "accent-strong": "Güçlü vurgu",
+      "text": "Metin",
+      "text-muted": "Soluk metin",
+      "surface": "Yüzey",
+      "inset": "İç yüzey",
+      "danger": "Tehlike",
+      "success": "Başarı",
+      "warning": "Uyarı"
+    },
+    "previewTitle": "Geçerli renk vurgu olarak",
+    "button": "Düğme",
+    "link": "Bir bağlantı",
+    "linkContrast": "Bağlantı kontrastı {{ratio}}:1",
+    "hint": "Vurgu renginiz Ayarlar → Görünüm'de seçilir."
+  }
+}

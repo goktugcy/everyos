@@ -1,0 +1,39 @@
+{
+  "format": "everyos-readonly-host-observation/1",
+  "candidateInstalled": false,
+  "readOnly": true,
+  "observedAt": "2026-10-26T23:34:17Z",
+  "architecture": "aarch64",
+  "kernel": "7.0.0-1020-raspi",
+  "model": "Raspberry Pi 5 Model B Rev 1.1",
+  "os": "Ubuntu 26.04.1 LTS",
+  "memoryKiB": {
+    "MemTotal": 8055968,
+    "MemAvailable": 4962544
+  },
+  "installedVersion": "0.1.36",
+  "services": {
+    "everyos-api.service": {
+      "LoadState": "loaded",
+      "ActiveState": "active",
+      "MemoryCurrent": "120991744"
+    },
+    "everyos-agent.service": {
+      "LoadState": "loaded",
+      "ActiveState": "active",
+      "MemoryCurrent": "202702848"
+    }
+  },
+  "sampleSeconds": 5.0,
+  "processSamples": {
+    "everyos-api.service": {
+      "rssKiB": 142768,
+      "cpuPercentOneCore": 0.0
+    },
+    "everyos-agent.service": {
+      "rssKiB": 97904,
+      "cpuPercentOneCore": 0.0
+    }
+  },
+  "limitation": "Existing EveryOS 0.1.36 only; no candidate startup or app measurement. A zero 5-second CPU sample is quantized, not a guarantee of zero sustained usage."
+}

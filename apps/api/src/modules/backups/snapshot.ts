@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { constants, createReadStream, createWriteStream, existsSync } from "node:fs";
 import { lstat, mkdir, open, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -232,6 +232,94 @@ async function swapDirectory(dir: string, replacement: string): Promise<void> {
   await rm(old, { recursive: true, force: true });
 }
 
+/* ---------------------------------------------------------- desktop apps */
+
+/** A kept package of an installed desktop app: `<app id>@<version>.eosapp`. */
+const PACKAGE_NAME =
+  /^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*){2,6}@\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\.eosapp$/;
+
+export interface ArchivedDesktopApp {
+  id: string;
+  version: string;
+  sha256: string;
+}
+
+/**
+ * Archives the packages EveryOS keeps for its installed desktop apps (regular files named
+ * `<app id>@<version>.eosapp`). A restore unpacks them again only after verifying each one.
+ */
+export async function archiveDesktopApps(
+  packagesDir: string,
+  target: string,
+): Promise<ArchivedDesktopApp[]> {
+  const names = (await readdir(packagesDir).catch(() => [] as string[])).filter((name) =>
+    PACKAGE_NAME.test(name),
+  );
+  const files: Array<
+    { name: string; path: string; size: number; mtime: number } & ArchivedDesktopApp
+  > = [];
+  for (const name of names.sort()) {
+    const path = join(packagesDir, name);
+    const info = await lstat(path);
+    if (!info.isFile()) continue;
+    const hash = createHash("sha256");
+    for await (const chunk of createReadStream(path)) hash.update(chunk as Buffer);
+    const at = name.lastIndexOf("@");
+    files.push({
+      name: `desktop-apps/${name}`,
+      path,
+      size: info.size,
+      mtime: info.mtimeMs,
+      id: name.slice(0, at),
+      version: name.slice(at + 1, -".eosapp".length),
+      sha256: hash.digest("hex"),
+    });
+  }
+  if (files.length === 0) return [];
+  // Packages are compressed already.
+  const gzip = createGzip({ level: 1 });
+  const done = pipeline(gzip, createWriteStream(target, { flags: "wx", mode: 0o600 }));
+  const writer = new TarWriter(sinkTo(gzip));
+  for (const file of files) {
+    const handle = await open(file.path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    try {
+      await writer.file(
+        { name: file.name, size: file.size, mode: 0o600, mtime: file.mtime },
+        handle.createReadStream({ autoClose: false }),
+      );
+    } finally {
+      await handle.close();
+    }
+  }
+  await writer.end();
+  gzip.end();
+  await done;
+  return files.map(({ id, version, sha256 }) => ({ id, version, sha256 }));
+}
+
+/** Extracts archived desktop app packages into `target` (well-named regular files only). */
+export async function extractDesktopApps(archive: string, target: string): Promise<number> {
+  await mkdir(target, { recursive: true, mode: 0o750 });
+  const gunzip = createGunzip();
+  const source = createReadStream(archive);
+  source.on("error", (error) => gunzip.destroy(error));
+  source.pipe(gunzip);
+  let count = 0;
+  for await (const entry of readTar(gunzip, { maxEntries: 2000, maxBytes: 64 * 1024 ** 3 })) {
+    const name = safeRelativePath(entry.name);
+    const file = name?.startsWith("desktop-apps/") ? name.slice("desktop-apps/".length) : null;
+    if (entry.type !== "file" || !file || !PACKAGE_NAME.test(file)) continue;
+    const handle = await open(join(target, file), "wx", 0o640);
+    try {
+      for await (const chunk of entry.content) await handle.write(chunk);
+    } finally {
+      await handle.close();
+    }
+    count += 1;
+  }
+  return count;
+}
+
 /* -------------------------------------------------------- desktop restore */
 
 /**
@@ -344,6 +432,8 @@ export async function stageDatabaseRestore(options: {
   dataDir: string;
   snapshotGz: string;
   wallpapersArchive: string | null;
+  /** The backup's desktop app packages, when it has any. */
+  desktopAppsArchive?: string | null;
   /** The backup's server secret, when it is not the current one. */
   secretKey?: Buffer | null;
   pending: PendingRestore;
@@ -357,6 +447,11 @@ export async function stageDatabaseRestore(options: {
       await pipeline(
         createReadStream(options.wallpapersArchive),
         createWriteStream(join(dir, "wallpapers.tar.gz"), { flags: "wx", mode: 0o600 }),
+      );
+    if (options.desktopAppsArchive)
+      await pipeline(
+        createReadStream(options.desktopAppsArchive),
+        createWriteStream(join(dir, "desktop-apps.tar.gz"), { flags: "wx", mode: 0o600 }),
       );
     if (options.secretKey) writeKeyFile(join(dir, "secret.key"), options.secretKey);
     // The marker last: a half-staged restore is never applied.
@@ -392,6 +487,11 @@ export async function applyPendingRestore(options: {
   backupDir: string;
   secretKeyFile: string;
   keysDir: string;
+  /**
+   * The desktop apps' directory: its packages are replaced by the backup's, and the unpacked
+   * apps removed, to be unpacked again from verified packages when the API starts.
+   */
+  desktopAppsDir?: string;
   logger: Logger;
   now?: number;
 }): Promise<(PendingRestore & { previous: string | null }) | null> {
@@ -463,6 +563,18 @@ export async function applyPendingRestore(options: {
     await swapDirectory(wallpapers, replacement);
   } else {
     await rm(wallpapers, { recursive: true, force: true });
+  }
+  if (options.desktopAppsDir) {
+    const packages = join(options.desktopAppsDir, "packages");
+    const apps = join(options.desktopAppsDir, "apps");
+    const packagesArchive = join(dir, "desktop-apps.tar.gz");
+    await mkdir(options.desktopAppsDir, { recursive: true, mode: 0o750 });
+    if (await lstat(packagesArchive).catch(() => null)) {
+      const replacement = join(options.desktopAppsDir, `.packages-restore-${stamp}`);
+      await extractDesktopApps(packagesArchive, replacement);
+      await swapDirectory(packages, replacement);
+    } else await rm(packages, { recursive: true, force: true });
+    await rm(apps, { recursive: true, force: true });
   }
   await rm(dir, { recursive: true, force: true });
   options.logger.info("Restored the database from a backup", {

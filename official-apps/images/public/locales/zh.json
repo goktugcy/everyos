@@ -1,0 +1,32 @@
+{
+  "image": {
+    "open": "打开图片",
+    "save": "保存原始图片",
+    "scope": "仅访问您选择的文件。最多 100 张，每张不超过 50 MiB。缩放和旋转仅影响预览，保存会复制原始文件。",
+    "permission": "图片访问需要在应用商店授予 files:pick 权限。",
+    "revoked": "部分已保存文件不再共享。请重新选择以恢复访问。",
+    "empty": "尚未选择图片",
+    "openHint": "通过 EveryOS 选择 JPEG、PNG、GIF、WebP、AVIF、BMP、ICO 或 SVG 图片。实际解码支持取决于浏览器。",
+    "previous": "上一张图片",
+    "next": "下一张图片",
+    "selection": "选中的图片",
+    "slideshow": "开始幻灯片",
+    "stop": "停止幻灯片",
+    "interval": "幻灯片间隔",
+    "seconds": "{{value}} 秒",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "rotateLeft": "向左旋转",
+    "rotateRight": "向右旋转",
+    "fit": "适应并重置",
+    "preview": "图片预览",
+    "panHint": "拖动以平移，或聚焦预览并使用 Alt + 方向键。缩放比例相对于适应窗口的图片。",
+    "unsupported": "此图片无法解码、超过 8,000 万像素预览上限，或浏览器不支持。请尝试其他格式。",
+    "metadata": "图片元数据",
+    "metadataFailed": "无法读取 EXIF 元数据，仍可查看文件详情和预览。"
+  },
+  "app": {
+    "name": "图片查看器",
+    "description": "查看选中的图片，支持缩放、旋转、元数据和幻灯片。"
+  }
+}

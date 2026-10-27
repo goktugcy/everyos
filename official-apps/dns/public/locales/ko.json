@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "DNS 조회",
+    "description": "DNS 레코드, 응답 시간, 리졸버 및 조회 기록."
+  },
+  "query": {
+    "name": "이름 또는 PTR용 IP 주소",
+    "type": "레코드 유형",
+    "common": "일반 유형",
+    "server": "리졸버",
+    "system": "서버 기본값",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "사용자 지정 서버",
+    "address": "리졸버 IP 주소",
+    "port": "DNS 포트",
+    "run": "조회",
+    "working": "조회 중…",
+    "systemHint": "이 서버에 설정된 DNS 리졸버를 사용합니다.",
+    "policyHint": "관리자가 앱의 네트워크 정책에서 이 리졸버의 주소와 포트를 허용해야 합니다."
+  },
+  "validation": {
+    "empty": "조회할 이름을 입력하세요.",
+    "tooLong": "DNS 이름이 너무 깁니다(ASCII 최대 253자).",
+    "invalid": "URL, 경로, 포트 없이 유효한 DNS 이름을 입력하세요.",
+    "needsAddress": "IP 주소를 조회하려면 PTR을 선택하세요.",
+    "server": "유효한 리졸버 IP 주소를 입력하세요.",
+    "port": "1~65535 사이의 포트를 입력하세요."
+  },
+  "results": {
+    "empty": "DNS 레코드 조회",
+    "emptyHint": "이름, 레코드 유형, 리졸버를 선택한 후 조회하세요.",
+    "overview": "유형별 레코드",
+    "timing": "{{ms}}ms",
+    "servers": "리졸버: {{servers}}",
+    "records": "{{type}} 레코드",
+    "value": "값",
+    "ttl": "TTL",
+    "unavailable": "반환되지 않음",
+    "copyAll": "모든 결과 복사"
+  },
+  "status": {
+    "ok": "응답됨",
+    "no-data": "이 유형의 레코드 없음",
+    "not-found": "이름을 찾을 수 없음",
+    "refused": "리졸버가 조회를 거부함",
+    "server-failure": "리졸버 오류",
+    "timeout": "조회 시간 초과",
+    "error": "조회 실패"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "인증"
+  },
+  "history": {
+    "title": "기록",
+    "clear": "DNS 기록을 지울까요?",
+    "empty": "완료한 조회가 여기에 표시됩니다. 선택하면 다시 조회합니다."
+  }
+}

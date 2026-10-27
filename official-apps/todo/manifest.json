@@ -1,0 +1,46 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.todo",
+  "name": "To-Do",
+  "version": "1.0.0",
+  "description": "Tasks with projects, priorities, due dates, repeats, tags, subtasks, reminders, progress and a widget.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "productivity",
+  "permissions": [
+    "storage:app",
+    "notifications:send",
+    "widgets:register",
+    "files:pick",
+    "files:save"
+  ],
+  "window": {
+    "defaultWidth": 1040,
+    "defaultHeight": 680,
+    "minWidth": 360,
+    "minHeight": 420,
+    "instances": "single"
+  },
+  "widgets": [
+    {
+      "id": "today",
+      "name": "Today's tasks",
+      "description": "Tasks due today and overdue: check them off or add one.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium", "large"],
+      "defaultSize": "medium",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["storage:app", "notifications:send"]
+    }
+  ],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/todo"
+}

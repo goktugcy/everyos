@@ -1,0 +1,317 @@
+import { isAppCapability } from "@everyos/app-manifest";
+import {
+  DesktopAppIdParamSchema,
+  DesktopAppDbConnectionCreateSchema,
+  DesktopAppDbConnectionIdSchema,
+  DesktopAppDbConnectionUpdateSchema,
+  DesktopAppInstallSchema,
+  DesktopAppNetworkRuleCreateSchema,
+  DesktopAppNetworkRuleIdSchema,
+  DesktopAppRegistryCreateSchema,
+  DesktopAppRegistryIdSchema,
+  DesktopAppRegistryUpdateSchema,
+  DesktopAppStateSchema,
+  DesktopAppUninstallSchema,
+  DesktopAppUpdateSchema,
+  DesktopAppUserSettingsSchema,
+} from "@everyos/shared/schemas";
+import { Hono, type Context } from "hono";
+import { z } from "zod";
+import type { AppEnv } from "../../context.ts";
+import { ApiError, notFound } from "../../http/errors.ts";
+import { parseJsonBody, parseParams, parseQuery } from "../../http/validation.ts";
+import { requireAuth, requirePermission } from "../../middleware/auth.ts";
+import type { Services } from "../../services.ts";
+
+const Empty = z.strictObject({});
+const RegistryParam = z.strictObject({ id: DesktopAppRegistryIdSchema });
+const ListingParam = DesktopAppIdParamSchema.extend({ registryId: DesktopAppRegistryIdSchema });
+
+/** `/api/desktop-apps`: registries (administrators), the store, and installations. */
+export function desktopAppRoutes(services: Services): Hono<AppEnv> {
+  const app = new Hono<AppEnv>();
+  const { registries, installer, assets, instances, network, databases } = services.desktopApps;
+  const manageRegistries = requirePermission("catalogs:manage");
+  const read = requirePermission("apps:read");
+  const manage = requirePermission("apps:manage");
+
+  const audited = async <T>(
+    c: Context<AppEnv>,
+    action: string,
+    target: string,
+    run: () => T | Promise<T>,
+    details?: Record<string, unknown>,
+  ): Promise<T> => {
+    const { user } = requireAuth(c);
+    const record = (outcome: "success" | "failure", extra?: Record<string, unknown>) =>
+      services.audit.record({
+        action: `desktop-apps.${action}`,
+        target,
+        outcome,
+        actor: { userId: user.id, username: user.username },
+        ip: c.get("client").ip,
+        ...(details || extra ? { details: { ...details, ...extra } } : {}),
+      });
+    try {
+      const result = await run();
+      record("success");
+      return result;
+    } catch (error) {
+      record("failure", { code: error instanceof ApiError ? error.code : "INTERNAL_ERROR" });
+      throw error;
+    }
+  };
+  const capabilities = (list: string[]) => {
+    if (!list.every(isAppCapability))
+      throw new ApiError(400, "VALIDATION_FAILED", "Unknown capability");
+    return list;
+  };
+
+  /* ------------------------------------------------------------ registries */
+
+  app.get("/registries", manageRegistries, (c) => {
+    parseQuery(c, Empty);
+    return c.json({ registries: registries.list() });
+  });
+  app.post("/registries", manageRegistries, async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, DesktopAppRegistryCreateSchema);
+    const created = await audited(c, "registry.create", input.url, () => registries.create(input), {
+      kind: input.kind,
+      fingerprint: input.fingerprint,
+    });
+    return c.json(created, 201);
+  });
+  app.patch("/registries/:id", manageRegistries, async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, RegistryParam);
+    const input = await parseJsonBody(c, DesktopAppRegistryUpdateSchema);
+    return c.json(
+      await audited(c, "registry.update", id, () => registries.update(id, input), {
+        ...(input.enabled !== undefined ? { enabled: input.enabled } : {}),
+        ...(input.token !== undefined ? { token: input.token === null ? "removed" : "set" } : {}),
+      }),
+    );
+  });
+  app.delete("/registries/:id", manageRegistries, async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, RegistryParam);
+    await parseJsonBody(c, Empty);
+    await audited(c, "registry.delete", id, () => registries.remove(id));
+    return c.body(null, 204);
+  });
+  app.post("/registries/:id/sync", manageRegistries, async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, RegistryParam);
+    await parseJsonBody(c, Empty);
+    const view = await audited(c, "registry.sync", id, () => registries.sync(id));
+    for (const appId of installer.applyRevocations()) instances.closeApp(appId);
+    return c.json(view);
+  });
+
+  /* -------------------------------------------------------- network policy */
+
+  /** What apps holding network:outbound may reach; only administrators change it. */
+  app.get("/network-rules", requirePermission("apps:manage"), (c) => {
+    const { appId } = parseQuery(
+      c,
+      z.strictObject({ appId: DesktopAppIdParamSchema.shape.appId.optional() }),
+    );
+    return c.json({ rules: network.rules(appId) });
+  });
+  app.post("/network-rules", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, DesktopAppNetworkRuleCreateSchema);
+    const rule = await audited(
+      c,
+      "network-rule.create",
+      input.pattern,
+      () => network.addRule(input, requireAuth(c).user.id),
+      { kind: input.kind, ports: input.ports, appId: input.appId },
+    );
+    return c.json(rule, 201);
+  });
+  app.delete("/network-rules/:id", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppNetworkRuleIdSchema);
+    await parseJsonBody(c, Empty);
+    await audited(c, "network-rule.delete", id, () => {
+      if (!network.removeRule(id)) throw notFound("Rule");
+    });
+    return c.body(null, 204);
+  });
+
+  /* ---------------------------------------------------- database connections */
+
+  /** Databases apps holding database:connect may use; passwords never leave the server. */
+  app.get("/db-connections", requirePermission("apps:manage"), (c) => {
+    const { appId } = parseQuery(
+      c,
+      z.strictObject({ appId: DesktopAppIdParamSchema.shape.appId.optional() }),
+    );
+    return c.json({ connections: databases.list(appId) });
+  });
+  app.post("/db-connections", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, DesktopAppDbConnectionCreateSchema);
+    const created = await audited(
+      c,
+      "db-connection.create",
+      input.name,
+      () => databases.create(input, requireAuth(c).user.id),
+      { engine: input.engine, host: input.host, access: input.access, appId: input.appId },
+    );
+    return c.json(created, 201);
+  });
+  app.put("/db-connections/:id", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppDbConnectionIdSchema);
+    const input = await parseJsonBody(c, DesktopAppDbConnectionUpdateSchema);
+    return c.json(
+      await audited(c, "db-connection.update", id, () => databases.update(id, input), {
+        host: input.host,
+        access: input.access,
+        password: input.password === undefined ? "kept" : input.password ? "set" : "removed",
+      }),
+    );
+  });
+  app.delete("/db-connections/:id", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppDbConnectionIdSchema);
+    await parseJsonBody(c, Empty);
+    await audited(c, "db-connection.delete", id, () => {
+      if (!databases.remove(id)) throw notFound("Connection");
+    });
+    return c.body(null, 204);
+  });
+  app.post("/db-connections/:id/test", requirePermission("settings:manage"), async (c) => {
+    parseQuery(c, Empty);
+    const { id } = parseParams(c, DesktopAppDbConnectionIdSchema);
+    await parseJsonBody(c, Empty);
+    return c.json(await databases.testById(id));
+  });
+
+  /* ----------------------------------------------------------------- store */
+
+  app.get("/catalog", read, (c) => {
+    parseQuery(c, Empty);
+    return c.json({ apps: installer.listings() });
+  });
+  const image = async (
+    c: Context<AppEnv>,
+    which: { kind: "icon" } | { kind: "screenshot"; index: number },
+  ) => {
+    const { registryId, appId } = parseParams(
+      c,
+      ListingParam.extend({ index: z.string().optional() }),
+    );
+    const registry = registries.usable().find((record) => record.id === registryId);
+    if (!registry) throw notFound("Registry");
+    const { content, contentType } = await assets.get(registry, appId, which);
+    return c.body(new Uint8Array(content), 200, {
+      "Content-Type": contentType,
+      "Cache-Control": "private, max-age=3600",
+      // SVG documents could carry script: never run anything they contain.
+      "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+    });
+  };
+  app.get("/catalog/:registryId/:appId/icon", read, (c) => {
+    parseQuery(c, Empty);
+    return image(c, { kind: "icon" });
+  });
+  app.get("/catalog/:registryId/:appId/screenshots/:index", read, (c) => {
+    parseQuery(c, Empty);
+    const { index } = parseParams(
+      c,
+      ListingParam.extend({ index: z.coerce.number().int().min(0).max(7) }),
+    );
+    return image(c, { kind: "screenshot", index });
+  });
+
+  /* ---------------------------------------------------------- installations */
+
+  app.get("/installed", read, (c) => {
+    parseQuery(c, Empty);
+    return c.json({ apps: installer.installations() });
+  });
+  app.post("/installed", manage, async (c) => {
+    parseQuery(c, Empty);
+    const input = await parseJsonBody(c, DesktopAppInstallSchema);
+    const auth = requireAuth(c);
+    const installed = await audited(
+      c,
+      "install",
+      input.appId,
+      () =>
+        installer.install(
+          { ...input, approve: capabilities(input.approve) },
+          { userId: auth.user.id, permissions: auth.permissions },
+        ),
+      { registry: input.registryId, approved: input.approve },
+    );
+    return c.json(installed, 201);
+  });
+  app.post("/installed/:appId/update", manage, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    const input = await parseJsonBody(c, DesktopAppUpdateSchema);
+    const auth = requireAuth(c);
+    return c.json(
+      await audited(
+        c,
+        "update",
+        appId,
+        () =>
+          installer.update(
+            appId,
+            { ...input, approve: capabilities(input.approve) },
+            { userId: auth.user.id, permissions: auth.permissions },
+          ),
+        { approved: input.approve },
+      ).finally(() => instances.closeApp(appId)),
+    );
+  });
+  /** Each person's own choices for an installed app. */
+  app.get("/installed/:appId/settings", read, (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    if (!installer.installation(appId)) throw notFound("App");
+    return c.json(services.desktopApps.settings.get(appId, requireAuth(c).user.id));
+  });
+  app.put("/installed/:appId/settings", read, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    const settings = await parseJsonBody(c, DesktopAppUserSettingsSchema);
+    if (!installer.installation(appId)) throw notFound("App");
+    services.desktopApps.settings.set(appId, requireAuth(c).user.id, settings);
+    return c.json(settings);
+  });
+  app.post("/installed/:appId/repair", manage, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    await parseJsonBody(c, Empty);
+    return c.json(await audited(c, "repair", appId, () => installer.repair(appId)));
+  });
+  app.patch("/installed/:appId", manage, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    const { enabled } = await parseJsonBody(c, DesktopAppStateSchema);
+    return c.json(
+      await audited(c, enabled ? "enable" : "disable", appId, () => {
+        const view = installer.setEnabled(appId, enabled);
+        if (!enabled) instances.closeApp(appId);
+        return view;
+      }),
+    );
+  });
+  app.delete("/installed/:appId", manage, async (c) => {
+    parseQuery(c, Empty);
+    const { appId } = parseParams(c, DesktopAppIdParamSchema);
+    await parseJsonBody(c, DesktopAppUninstallSchema);
+    await audited(c, "uninstall", appId, () => installer.uninstall(appId));
+    instances.closeApp(appId);
+    return c.body(null, 204);
+  });
+
+  return app;
+}

@@ -1,0 +1,153 @@
+.eui-toolbar {
+  flex-wrap: wrap;
+}
+.disk-main {
+  display: grid;
+  gap: 16px;
+  max-width: 1440px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 18px;
+}
+.disk-main h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
+.disk-hint,
+.disk-meta {
+  color: var(--eui-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+.disk-meta,
+.disk-path,
+.disk-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.disk-path .eui-button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.disk-panel {
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  padding: 16px;
+  min-width: 0;
+}
+.disk-panel > .disk-hint {
+  margin-bottom: 12px;
+}
+.disk-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 18px;
+}
+.disk-stats dt,
+.disk-mount-meta dt {
+  color: var(--eui-muted);
+  font-size: 12px;
+}
+.disk-stats dd {
+  margin: 6px 0 0;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.disk-mount-meta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 0;
+}
+.disk-mount-meta dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.disk-meter,
+.disk-bar {
+  display: block;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--eui-hover);
+  height: 7px;
+}
+.disk-meter > span,
+.disk-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--eui-accent);
+  border-radius: inherit;
+}
+.disk-size {
+  min-width: 100px;
+  font-variant-numeric: tabular-nums;
+}
+.disk-size > span:first-child {
+  display: block;
+  margin-bottom: 6px;
+}
+.disk-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+.disk-table {
+  overflow: auto;
+  max-width: 100%;
+}
+.disk-table td {
+  overflow-wrap: anywhere;
+  max-width: 440px;
+}
+.disk-folder {
+  white-space: normal;
+  text-align: start;
+  max-width: 100%;
+}
+.disk-pagination {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.disk-warning {
+  color: var(--eui-warning);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+.disk-trend svg {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  color: var(--eui-accent);
+}
+@media (max-width: 760px) {
+  .disk-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .disk-main {
+    padding: 12px;
+  }
+  .disk-panel {
+    padding: 12px;
+  }
+}
+@media (max-width: 420px) {
+  .disk-stats {
+    gap: 8px;
+  }
+  .disk-stats dd {
+    font-size: 17px;
+  }
+  .disk-mount-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

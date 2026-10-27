@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Pizarra",
+    "description": "Dibuja en un lienzo infinito: lápiz, formas, texto, flechas que conectan, deshacer y zoom. Las pizarras se guardan y se exportan a PNG y SVG."
+  },
+  "boards": {
+    "label": "Pizarras",
+    "show": "Mostrar pizarras",
+    "hide": "Ocultar pizarras",
+    "new": "Nueva pizarra",
+    "first": "Mi pizarra",
+    "untitled": "Pizarra {{number}}",
+    "imported": "Pizarra importada",
+    "copyName": "{{name}} (copia)",
+    "rename": "Renombrar {{name}}",
+    "renameTitle": "Renombrar pizarra",
+    "duplicate": "Duplicar {{name}}",
+    "delete": "Eliminar {{name}}",
+    "deleteTitle": "¿Eliminar «{{name}}»?",
+    "none": "No hay ninguna pizarra abierta"
+  },
+  "canvas": {
+    "label": "Dibujo de {{name}}",
+    "welcome": "Dibuja, escribe y conecta tus ideas"
+  },
+  "status": {
+    "saved": "Guardado",
+    "saving": "Guardando…",
+    "tooLarge": "Demasiado grande para guardarla: expórtala como archivo",
+    "failed": "No se guardó: inténtalo de nuevo en un momento"
+  },
+  "import": {
+    "action": "Importar una pizarra…",
+    "done": "{{name}} importado como pizarra nueva",
+    "invalid": "«{{name}}» no es un archivo de pizarra que esta app pueda leer."
+  },
+  "export": {
+    "board": "Guardar como archivo de pizarra (.excalidraw)…",
+    "done": "{{name}} guardado",
+    "empty": "Aún no hay nada que exportar en esta pizarra."
+  },
+  "library": {
+    "tooLarge": "Tu biblioteca de formas es demasiado grande para guardarla."
+  },
+  "errors": {
+    "load": "No se pudo iniciar la pizarra"
+  }
+}

@@ -1,4 +1,6 @@
 import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
+import { requestClose } from "../windows/close-guards.ts";
+import { appTitle } from "../apps/app-title.ts";
 import { ArrowDownUp, ChevronLeft, Lock, LogOut, Power, RotateCcw, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -47,7 +49,7 @@ export function MobileShell() {
   useAutoLock();
 
   const apps = useMemo(
-    () => allowedApps(permissions).map((app) => ({ ...app, title: t(app.titleKey) })),
+    () => allowedApps(permissions).map((app) => ({ ...app, title: appTitle(app, t) })),
     [permissions, t],
   );
   const visible = searchEntries(
@@ -100,7 +102,7 @@ export function MobileShell() {
             <>
               <button
                 type="button"
-                onClick={() => setOpen(null)}
+                onClick={() => void requestClose("mobile", () => setOpen(null))}
                 className="flex h-9 items-center gap-1 rounded-everyos-sm pr-2 text-sm text-fg hover:bg-hover/10"
                 aria-label={t("mobile.back")}
               >
@@ -108,7 +110,7 @@ export function MobileShell() {
                 {t("mobile.home")}
               </button>
               <h1 className="min-w-0 flex-1 truncate text-center text-sm font-semibold">
-                {open.title || t(manifest.titleKey)}
+                {open.title || appTitle(manifest, t)}
               </h1>
               <span className="flex w-20 justify-end">
                 {storage}

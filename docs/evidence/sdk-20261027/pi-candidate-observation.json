@@ -1,0 +1,46 @@
+{
+  "format": "everyos-temporary-pi-candidate-observation/1",
+  "observedAt": "2026-10-27T07:44:39Z",
+  "candidateVersion": "0.1.37",
+  "archiveSha256": "385767f5f452bf9798348352b689dc50d26aa3b9f1b0502406d4c3c3d6bf7f9d",
+  "nodeVersion": "v26.11.1",
+  "physicalPi": true,
+  "model": "Raspberry Pi 5 Model B Rev 1.1",
+  "architecture": "aarch64",
+  "disposableVmValidation": false,
+  "installedCandidate": false,
+  "environment": "unprivileged temporary development processes; existing host services unchanged",
+  "method": "one startup-to-HTTP-health observation and five-second idle main-process sample; no browser",
+  "health": {
+    "status": "ok",
+    "checks": {
+      "database": "ok",
+      "agent": "connected"
+    }
+  },
+  "startupToHealthyMs": 659.01,
+  "sampleSeconds": 5.0,
+  "mainProcesses": {
+    "api": {
+      "rssKiB": 151168,
+      "idleCpuPercentOneCore": 0.4
+    },
+    "agent": {
+      "rssKiB": 108248,
+      "idleCpuPercentOneCore": 0.4
+    }
+  },
+  "status": "passed",
+  "provenance": {
+    "archiveSource": {
+      "sha256": "385767f5f452bf9798348352b689dc50d26aa3b9f1b0502406d4c3c3d6bf7f9d",
+      "bytes": 8362872,
+      "sourceHead": "f67f18a4e015c0240a19e17dfdbf4c689f7b6ab2",
+      "sourceDirty": true,
+      "candidateVersion": "0.1.37"
+    },
+    "contentEquivalentToBuildAtHead": "2451554006f9aa45a14e44bc9b2c84bb54260a00",
+    "comparedRegularFiles": 371,
+    "comparison": "Every archived regular file matched the existing final local dist bytes; the prepared archive was not rebuilt or relabeled as a clean build."
+  }
+}

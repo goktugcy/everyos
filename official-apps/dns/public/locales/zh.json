@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "DNS 查询",
+    "description": "DNS 记录、响应时间、解析服务器和查询历史。"
+  },
+  "query": {
+    "name": "域名或用于 PTR 的 IP 地址",
+    "type": "记录类型",
+    "common": "常见类型",
+    "server": "解析服务器",
+    "system": "服务器默认值",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "自定义服务器",
+    "address": "解析服务器 IP 地址",
+    "port": "DNS 端口",
+    "run": "查询",
+    "working": "正在查询…",
+    "systemHint": "查询使用此服务器配置的 DNS 解析器。",
+    "policyHint": "管理员需在此应用的网络策略中允许该解析服务器的地址和端口。"
+  },
+  "validation": {
+    "empty": "请输入要查询的域名。",
+    "tooLong": "DNS 名称过长（最多 253 个 ASCII 字符）。",
+    "invalid": "请输入有效的 DNS 名称，不含网址、路径或端口。",
+    "needsAddress": "查询 IP 地址时请选择 PTR。",
+    "server": "请输入有效的解析服务器 IP 地址。",
+    "port": "请输入 1 到 65535 之间的端口。"
+  },
+  "results": {
+    "empty": "查询 DNS 记录",
+    "emptyHint": "输入域名，选择记录类型和解析服务器后查询。",
+    "overview": "按类型统计的记录",
+    "timing": "{{ms}} 毫秒",
+    "servers": "解析服务器：{{servers}}",
+    "records": "{{type}} 记录",
+    "value": "值",
+    "ttl": "TTL",
+    "unavailable": "未返回",
+    "copyAll": "复制所有结果"
+  },
+  "status": {
+    "ok": "已响应",
+    "no-data": "没有此类型的记录",
+    "not-found": "未找到该域名",
+    "refused": "解析服务器拒绝了查询",
+    "server-failure": "解析服务器故障",
+    "timeout": "查询超时",
+    "error": "查询失败"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "验证"
+  },
+  "history": {
+    "title": "历史",
+    "clear": "清除 DNS 历史？",
+    "empty": "已完成的查询将显示在此处。选择一项可重新查询。"
+  }
+}

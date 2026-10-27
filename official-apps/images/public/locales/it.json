@@ -1,0 +1,32 @@
+{
+  "image": {
+    "open": "Apri immagini",
+    "save": "Salva immagine originale",
+    "scope": "Sono accessibili solo i file scelti. Fino a 100 immagini di 50 MiB ciascuna. Zoom e rotazione riguardano l’anteprima; il salvataggio copia l’originale.",
+    "permission": "L’accesso richiede il permesso files:pick nell’App Store.",
+    "revoked": "Alcuni file non sono più condivisi. Selezionali nuovamente.",
+    "empty": "Nessuna immagine selezionata",
+    "openHint": "Scegli immagini JPEG, PNG, GIF, WebP, AVIF, BMP, ICO o SVG tramite EveryOS. La decodifica dipende dal browser.",
+    "previous": "Immagine precedente",
+    "next": "Immagine successiva",
+    "selection": "Immagine selezionata",
+    "slideshow": "Avvia presentazione",
+    "stop": "Ferma presentazione",
+    "interval": "Intervallo diapositive",
+    "seconds": "{{value}} s",
+    "zoomIn": "Ingrandisci",
+    "zoomOut": "Riduci",
+    "rotateLeft": "Ruota a sinistra",
+    "rotateRight": "Ruota a destra",
+    "fit": "Adatta e reimposta",
+    "preview": "Anteprima immagine",
+    "panHint": "Trascina per spostare o usa Alt + frecce nell’anteprima. Lo zoom è relativo all’immagine adattata.",
+    "unsupported": "L’immagine non è decodificabile, supera 80 megapixel o non è supportata dal browser. Prova un altro formato.",
+    "metadata": "Metadati immagine",
+    "metadataFailed": "Impossibile leggere i metadati EXIF. Dettagli e anteprima restano disponibili."
+  },
+  "app": {
+    "name": "Visualizzatore immagini",
+    "description": "Visualizza immagini selezionate con zoom, rotazione, metadati e presentazione."
+  }
+}

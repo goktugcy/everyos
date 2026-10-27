@@ -26,7 +26,26 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 45
+    # Real database servers for the desktop apps' database connector tests.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin-secret-1
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U admin" --health-interval 2s --health-timeout 5s
+          --health-retries 30
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: admin-secret-1
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized" --health-interval 2s
+          --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@v5
 
@@ -51,22 +70,82 @@ jobs:
 
       - name: Unit and integration tests
         run: pnpm test
+        env:
+          # The database connector tests must run here, never skip.
+          EVERYOS_REQUIRE_DB_TESTS: "1"
+          EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
+          EVERYOS_TEST_MYSQL: 127.0.0.1:3306:root:admin-secret-1
 
       - name: Build
+        id: build
         run: pnpm build
 
+      - name: Bundle the community registry Worker without deploying
+        run: pnpm --filter @everyos/community-registry build
+        env:
+          WRANGLER_SEND_METRICS: "false"
+
+      - name: Build and verify standalone SDK archives
+        run: |
+          if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+            git status --short
+            echo "::error::Checks must preserve clean source provenance."
+            exit 1
+          fi
+          pnpm sdk:build && pnpm sdk:verify
+
+      - name: Qualify every SDK template outside the workspace
+        run: pnpm sdk:check
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdk-acceptance-${{ matrix.arch }}
+          path: |
+            dist/sdk/sdk-report.json
+            dist/sdk-acceptance.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Verify all official app release artifacts with ephemeral keys
+        id: officialapps
+        run: pnpm official-apps:check
+
+      - name: Upload official app development report
+        if: ${{ !cancelled() && (steps.officialapps.outcome == 'success' || steps.officialapps.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-apps-report-${{ matrix.arch }}
+          path: |
+            dist/official-apps-check/official-apps-report.json
+            dist/official-apps-test-results.json
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Install Playwright browser
+        id: browser
         run: pnpm exec playwright install --with-deps --only-shell chromium
 
       - name: End-to-end tests
         run: pnpm test:e2e
+        env:
+          EVERYOS_APP_MEASUREMENTS: "1"
+          EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
+
+      - name: Upload measured official app observations
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-app-measurements-${{ matrix.arch }}
+          path: test-results/**/official-app-measurements.json
+          if-no-files-found: error
+          retention-days: 7
 
       # Browsers give plain-HTTP pages opened by host name no secure-context APIs (randomUUID…).
       - name: End-to-end tests over plain HTTP
-        if: ${{ !cancelled() }}
-        run: pnpm test:e2e foundation.spec.ts:9 plain-http.spec.ts
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.browser.outcome == 'success' }}
+        run: pnpm test:e2e foundation.spec.ts:9 plain-http.spec.ts sdk-desktop-apps.spec.ts official-apps.spec.ts
         env:
           EVERYOS_E2E_HTTP_HOST: everyos.lan
+          EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
 
       - name: Upload Playwright traces
         if: failure()

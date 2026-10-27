@@ -1,0 +1,147 @@
+{
+  "app": {
+    "name": "To-Do",
+    "description": "プロジェクト、優先度、期限、繰り返し、タグ、サブタスク、リマインダー、進捗、ウィジェットを備えたタスク管理。"
+  },
+  "widgets": {
+    "today": {
+      "name": "今日のタスク",
+      "description": "今日と期限切れのタスク。完了にしたり追加したりできます。"
+    }
+  },
+  "lists": {
+    "inbox": "受信箱",
+    "today": "今日",
+    "upcoming": "今後の予定",
+    "overdue": "期限切れ",
+    "all": "すべてのタスク",
+    "completed": "完了済み"
+  },
+  "backup": {
+    "import": "バックアップを読み込む…",
+    "export": "バックアップを書き出す…",
+    "imported_other": "{{count}} 件のタスクを読み込みました"
+  },
+  "due": {
+    "today": "今日",
+    "tomorrow": "明日",
+    "yesterday": "昨日"
+  },
+  "empty": {
+    "inbox": "受信箱は空です",
+    "today": "今日のタスクはありません",
+    "upcoming": "今後 7 日間の予定はありません",
+    "overdue": "期限切れのタスクはありません",
+    "all": "未完了のタスクはありません",
+    "completed": "完了したタスクはまだありません",
+    "list": "タスクはありません"
+  },
+  "progress": {
+    "title": "進捗",
+    "chart": "過去 7 日間の日別完了数",
+    "done": "{{total}} 件中 {{done}} 件完了",
+    "open": "未完了",
+    "week": "今週の完了数"
+  },
+  "projects": {
+    "title": "プロジェクト",
+    "add": "新規プロジェクト",
+    "rename": "プロジェクト名を変更",
+    "delete": "プロジェクトを削除",
+    "deleteTitle": "プロジェクト「{{name}}」を削除しますか?",
+    "deleteBody": "タスクは受信箱に移動します。",
+    "name": "プロジェクト名"
+  },
+  "recurrence": {
+    "title": "繰り返し",
+    "repeat": "繰り返し",
+    "repeats": "繰り返し",
+    "monthMode": "日付",
+    "monthDay": "毎月 {{day}} 日",
+    "monthWeekday": "毎月同じ週の{{weekday}}",
+    "next": "次回: {{date}}",
+    "weekdays": "曜日",
+    "units": {
+      "none": "繰り返さない",
+      "day": "毎日",
+      "weekday": "平日 (月〜金)",
+      "week": "毎週",
+      "month": "毎月",
+      "year": "毎年"
+    },
+    "every": {
+      "day": "何日ごと",
+      "week": "何週ごと",
+      "month": "何か月ごと",
+      "year": "何年ごと"
+    }
+  },
+  "reminder": {
+    "at": "{{time}} が期限です",
+    "today": "今日が期限です",
+    "needsDue": "リマインダーには期限が必要です (時刻がなければ 9:00)。",
+    "none": "リマインダーなし",
+    "options": {
+      "0": "期限の時刻",
+      "5": "5 分前",
+      "10": "10 分前",
+      "15": "15 分前",
+      "30": "30 分前",
+      "60": "1 時間前",
+      "120": "2 時間前",
+      "1440": "1 日前"
+    }
+  },
+  "search": {
+    "label": "タスクを検索",
+    "none": "一致するタスクはありません"
+  },
+  "sort": {
+    "label": "並べ替え",
+    "manual": "手動",
+    "due": "期限",
+    "priority": "優先度",
+    "title": "タイトル"
+  },
+  "subtasks": {
+    "title": "サブタスク",
+    "add": "サブタスクを追加",
+    "delete": "サブタスクを削除"
+  },
+  "tags": {
+    "title": "タグ"
+  },
+  "task": {
+    "added": "タスクを追加しました",
+    "complete": "完了にする",
+    "completeNamed": "「{{name}}」を完了にする",
+    "completed": "完了しました",
+    "deleteTitle": "「{{name}}」を削除しますか?",
+    "details": "タスクの詳細",
+    "done": "完了",
+    "due": "期限",
+    "moveDown": "下へ移動",
+    "moveUp": "上へ移動",
+    "nextOccurrence": "完了。次の日付に移動しました。",
+    "notes": "メモ",
+    "priority": "優先度",
+    "project": "プロジェクト",
+    "quickAdd": "新しいタスク",
+    "quickAddPlaceholder": "タスクを追加… (#タグも使えます)",
+    "reminder": "リマインダー",
+    "reopen": "未完了に戻す",
+    "tags": "タグ",
+    "tagsHint": "スペースかカンマで区切る",
+    "time": "時刻",
+    "title": "タイトル"
+  },
+  "priority": {
+    "0": "優先度なし",
+    "1": "低",
+    "2": "中",
+    "3": "高"
+  },
+  "widget": {
+    "add": "今日のタスクを追加…"
+  }
+}

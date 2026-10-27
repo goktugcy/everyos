@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Color Studio",
+    "description": "Pick colors in HEX, RGB, HSL and OKLCH, build palettes, harmonies and gradients, check contrast, and preview them in the EveryOS theme."
+  },
+  "actions": {
+    "eyedropper": "Pick a color from the screen"
+  },
+  "color": {
+    "section": "Color",
+    "preview": "Current color {{color}}"
+  },
+  "picker": {
+    "saturationValue": "Saturation and brightness",
+    "svValue": "Saturation {{s}}%, brightness {{v}}%",
+    "hue": "Hue",
+    "alpha": "Opacity"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "Not a color",
+    "copy": "Copy {{format}}"
+  },
+  "panels": {
+    "label": "Tools",
+    "palette": "Palette",
+    "gradient": "Gradient",
+    "contrast": "Contrast",
+    "saved": "Saved",
+    "theme": "EveryOS theme"
+  },
+  "swatch": {
+    "use": "Use {{color}}"
+  },
+  "harmony": {
+    "label": "Harmony",
+    "complementary": "Complementary",
+    "analogous": "Analogous",
+    "triadic": "Triadic",
+    "split": "Split complementary",
+    "tetradic": "Tetradic",
+    "monochromatic": "Monochromatic",
+    "save": "Save harmony"
+  },
+  "scale": {
+    "title": "Tonal scale",
+    "step": "Step {{step}}: {{color}}",
+    "copyCss": "Copy as CSS variables",
+    "save": "Save scale"
+  },
+  "gradient": {
+    "preview": "Gradient preview",
+    "kind": "Type",
+    "linear": "Linear",
+    "radial": "Radial",
+    "angle": "Angle: {{angle}}°",
+    "stops": "Color stops",
+    "useCurrent": "Set stop {{number}} to the current color",
+    "position": "Position of stop {{number}}",
+    "remove": "Remove stop {{number}}",
+    "hint": "Click a stop's swatch to give it the current color. A gradient needs at least two stops.",
+    "add": "Add stop",
+    "copy": "Copy CSS"
+  },
+  "contrast": {
+    "text": "Text",
+    "background": "Background",
+    "swap": "Swap text and background",
+    "useAsText": "Use current color as text",
+    "useAsBackground": "Use current color as background",
+    "sampleLarge": "Large text",
+    "sample": "Normal text is harder to read with low contrast.",
+    "ratio": "Contrast ratio",
+    "aa": "AA",
+    "aaLarge": "AA large",
+    "aaa": "AAA",
+    "aaaLarge": "AAA large",
+    "pass": "passes",
+    "fail": "fails",
+    "hint": "WCAG 2: AA needs 4.5:1 for normal text and 3:1 for large text (24 px, or 19 px bold); AAA needs 7:1 and 4.5:1."
+  },
+  "saved": {
+    "newName": "New palette",
+    "create": "Create with the current color",
+    "added": "Palette saved",
+    "addCurrent": "Add the current color to {{name}}",
+    "copyCss": "Copy {{name}} as CSS variables",
+    "exportCss": "Save CSS…",
+    "delete": "Delete {{name}}",
+    "deleteTitle": "Delete the palette “{{name}}”?",
+    "removeColor": "Remove {{color}}",
+    "empty": "No saved palettes",
+    "emptyText": "Save a harmony or a scale, or create a palette above."
+  },
+  "theme": {
+    "current": "Your theme ({{scheme}})",
+    "schemes": {
+      "light": "light",
+      "dark": "dark"
+    },
+    "tokens": {
+      "accent": "Accent",
+      "accent-strong": "Strong accent",
+      "text": "Text",
+      "text-muted": "Muted text",
+      "surface": "Surface",
+      "inset": "Inset",
+      "danger": "Danger",
+      "success": "Success",
+      "warning": "Warning"
+    },
+    "previewTitle": "The current color as an accent",
+    "button": "Button",
+    "link": "A link",
+    "linkContrast": "Link contrast {{ratio}}:1",
+    "hint": "Your accent color is chosen in Settings → Appearance."
+  }
+}

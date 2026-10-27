@@ -1,0 +1,85 @@
+{
+  "app": {
+    "name": "文本编辑器",
+    "description": "以标签页编辑纯文本文件，支持查找替换、字符编码、换行符和未保存内容恢复。"
+  },
+  "actions": {
+    "new": "新建文档",
+    "open": "打开…",
+    "recent": "最近的文件",
+    "save": "保存",
+    "saveAs": "另存为…",
+    "find": "查找和替换"
+  },
+  "close": {
+    "title_other": "有 {{count}} 个文件未保存，仍要关闭吗？",
+    "body": "更改仍可在此恢复，但尚未写入文件。",
+    "confirm": "关闭",
+    "tabTitle": "不保存就关闭“{{name}}”？",
+    "tabBody": "未保存的更改将丢失。",
+    "discard": "放弃更改"
+  },
+  "doc": {
+    "untitled": "未命名 {{number}}"
+  },
+  "editor": {
+    "label": "{{name}} 的内容"
+  },
+  "encoding": {
+    "change": "更改编码",
+    "title": "以编码重新打开",
+    "hint": "如果字符显示异常，文件可能使用了其他编码。",
+    "reopen": "重新打开",
+    "reopenTitle": "重新打开并丢失未保存的更改？",
+    "reopenBody": "将重新读取该文件。",
+    "saveTitle": "以编码保存",
+    "saveHint": "Unicode 可保留所有字符。",
+    "saveWith": "以其他编码保存…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode（UTF-16 小端）",
+      "utf-16be": "Unicode（UTF-16 大端）",
+      "windows-1252": "西欧（Windows）",
+      "iso-8859-1": "西欧（ISO）",
+      "windows-1254": "土耳其语（Windows）",
+      "iso-8859-9": "土耳其语（ISO）",
+      "windows-1250": "中欧（Windows）",
+      "iso-8859-2": "中欧（ISO）",
+      "windows-1251": "西里尔文（Windows）",
+      "koi8-r": "西里尔文（KOI8-R）",
+      "shift_jis": "日语（Shift_JIS，只读）",
+      "euc-kr": "韩语（EUC-KR，只读）",
+      "gb18030": "中文（GB18030，只读）"
+    }
+  },
+  "eol": {
+    "label": "换行符"
+  },
+  "open": {
+    "binary": "{{name}} 不是文本文件。"
+  },
+  "recent": {
+    "empty": "没有最近的文件"
+  },
+  "recovery": {
+    "lost": "无法恢复以下未保存的文本：{{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} 只能读取不能写入：已保存为 UTF-8。",
+    "saved": "已保存 {{name}}",
+    "unencodable": "第 {{line}} 行的“{{char}}”无法以 {{encoding}} 写入，请选择其他编码。"
+  },
+  "status": {
+    "label": "状态",
+    "lineNumbers": "行号",
+    "position": "第 {{line}} 行，第 {{column}} 列",
+    "selected_other": "已选 {{count}} 个字符",
+    "words_other": "{{count}} 个词",
+    "wrap": "自动换行"
+  },
+  "tabs": {
+    "close": "关闭 {{name}}",
+    "label": "已打开的文档",
+    "unsaved": "有未保存的更改"
+  }
+}

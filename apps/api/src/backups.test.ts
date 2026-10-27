@@ -125,6 +125,22 @@ function fakeApp(ctx: TestContext) {
   return { id, state };
 }
 
+/** Where a member's content sits in a ustar archive (so a test can damage exactly that member). */
+function tarMember(tar: Buffer, name: string): { start: number; size: number } {
+  for (let offset = 0; offset + 512 <= tar.length;) {
+    const header = tar.subarray(offset, offset + 512);
+    if (header.every((byte) => byte === 0)) break;
+    const entry = header.subarray(0, 100).toString("utf8").split("\0")[0]!;
+    const size = parseInt(
+      header.subarray(124, 136).toString("ascii").split("\0")[0]!.trim() || "0",
+      8,
+    );
+    if (entry === name || entry.endsWith(`/${name}`)) return { start: offset + 512, size };
+    offset += 512 + Math.ceil(size / 512) * 512;
+  }
+  throw new Error(`${name} is not in the archive`);
+}
+
 describe("backups", () => {
   it("imports and restores a legacy archive with the original database and key identity", async () => {
     const { ctx, admin } = await withRoles();
@@ -456,7 +472,9 @@ describe("backups", () => {
     expect((await admin.delete(`/api/backups/${id}`)).status).toBe(204);
     // A flipped byte inside the database snapshot is caught by its checksum.
     const tampered = Buffer.from(archive);
-    tampered[tampered.length - 1500] = tampered[tampered.length - 1500]! ^ 0xff;
+    const snapshot = tarMember(archive, "everyos.db.gz");
+    const flipped = snapshot.start + Math.floor(snapshot.size / 2);
+    tampered[flipped] = tampered[flipped]! ^ 0xff;
     const bad = await upload(tampered);
     expect(bad.status).toBe(400);
     expect((await bad.json()) as object).toMatchObject({ error: { code: "BACKUP_INVALID" } });

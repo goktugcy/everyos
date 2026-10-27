@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "网络工具"
+  },
+  "network": {
+    "export": "导出报告",
+    "interfaces": "网络接口",
+    "interface": "接口",
+    "auto": "活动时每 10 秒刷新主机数据",
+    "permission": "读取网络接口需要 system:network.read 权限及允许系统访问的角色。管理员可在应用商店授予权限。",
+    "metricsPermission": "流量数据需要 system:metrics.read 权限及允许系统访问的角色。",
+    "loadFailed": "无法读取网络数据。请检查代理连接后重试。",
+    "unsupported": "主机无法提供此网络数据。",
+    "internetChecked": "主机连通性检查时间：{{at}}",
+    "internetHint": "此状态基于主机配置的连通性检查目标，结果可能缓存 60 秒。",
+    "ms": "{{value}} 毫秒",
+    "noInterfaces": "主机未报告任何接口。",
+    "up": "启用",
+    "down": "停用",
+    "addresses": "IP 地址和前缀",
+    "mac": "MAC 地址",
+    "mtu": "MTU",
+    "speed": "报告的链路速率",
+    "mbps": "{{value}} Mbit/秒",
+    "receive": "接收速率",
+    "transmit": "发送速率",
+    "rate": "{{value}}/秒",
+    "routes": "默认网关摘要",
+    "routesHint": "此路由摘要列出主机报告的默认网关。上方接口地址包含网络前缀。",
+    "gateway": "网关",
+    "noGateways": "主机未报告默认网关。",
+    "dns": "报告的 DNS 服务器",
+    "noDns": "主机未报告 DNS 服务器。",
+    "traffic": "接口流量",
+    "measured": "测量时间：{{at}}",
+    "noTraffic": "此主机无法提供各接口的流量速率。",
+    "refresh": "刷新",
+    "unavailable": "不可用",
+    "retrieved": "获取时间：{{at}}",
+    "family": "地址族",
+    "stale": "刷新失败。仍显示先前快照及其获取时间。"
+  },
+  "source": {
+    "simulatedHint": "这些值由开发主机模拟，不代表真实主机。",
+    "host": "主机数据",
+    "simulated": "模拟数据"
+  },
+  "internet": {
+    "online": "主机连接可用",
+    "offline": "主机连通性检查失败",
+    "unknown": "主机连接状态未知",
+    "disabled": "主机连通性检测已禁用"
+  },
+  "kind": {
+    "ethernet": "以太网",
+    "wireless": "无线",
+    "loopback": "环回",
+    "tailscale": "Tailscale",
+    "bridge": "网桥",
+    "virtual": "虚拟",
+    "other": "其他"
+  },
+  "diagnostic": {
+    "title": "检查获准目标",
+    "policy": "向管理员在应用商店批准的 HTTP 目标发送 HEAD 请求。验证 TLS，并按策略检查每个重定向目标。",
+    "permission": "目标检查需要 network:outbound 权限。管理员可在应用商店授予。",
+    "url": "HTTP 或 HTTPS 地址",
+    "check": "检查目标",
+    "checking": "正在检查…",
+    "invalid": "请输入不含凭据或片段的 HTTP 或 HTTPS 地址。",
+    "attempt": "最近尝试：{{url}} · {{at}}",
+    "responded": "已收到 HTTP 响应",
+    "responseHint": "HTTP 响应表示此目标已应答。状态码描述服务响应。",
+    "status": "HTTP 状态",
+    "address": "远端地址",
+    "time": "检查时间",
+    "elapsed": "响应时间",
+    "redirects": "已跟随的重定向"
+  }
+}

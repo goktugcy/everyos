@@ -1,0 +1,228 @@
+{
+  "app": {
+    "name": "Calcolatrice",
+    "description": "Calcolatrice standard e scientifica con decimali esatti, cronologia, memoria e conversione di unità."
+  },
+  "modes": {
+    "label": "Modalità",
+    "standard": "Standard",
+    "scientific": "Scientifica",
+    "converter": "Convertitore"
+  },
+  "angle": {
+    "toggle": "Passa tra gradi e radianti",
+    "deg": "Gradi",
+    "rad": "Radianti"
+  },
+  "history": {
+    "toggle": "Mostra cronologia",
+    "title": "Cronologia",
+    "clear": "Cancella cronologia",
+    "clearTitle": "Cancellare la cronologia dei calcoli?",
+    "empty": "Ancora nessun calcolo",
+    "useExpression": "Usa questa espressione",
+    "useResult": "Usa questo risultato"
+  },
+  "memory": {
+    "label": "Memoria",
+    "value": "Valore in memoria"
+  },
+  "display": {
+    "expression": "Espressione",
+    "result": "Risultato"
+  },
+  "actions": {
+    "copy": "Copia risultato"
+  },
+  "errors": {
+    "syntax": "Questa espressione è incompleta o non valida",
+    "divide-by-zero": "Impossibile dividere per zero",
+    "domain": "Fuori dal dominio della funzione",
+    "overflow": "Il risultato è troppo grande",
+    "factorial-range": "Il fattoriale accetta interi fino a 3000",
+    "unknown-name": "Nome sconosciuto nell’espressione",
+    "empty": "Digita un’espressione"
+  },
+  "converter": {
+    "category": "Grandezza",
+    "value": "Valore",
+    "from": "Da",
+    "to": "A",
+    "swap": "Scambia unità",
+    "result": "Valore convertito",
+    "all": "In tutte le unità"
+  },
+  "categories": {
+    "length": "Lunghezza",
+    "area": "Area",
+    "volume": "Volume",
+    "mass": "Massa",
+    "temperature": "Temperatura",
+    "speed": "Velocità",
+    "time": "Tempo",
+    "data": "Dati",
+    "pressure": "Pressione",
+    "energy": "Energia",
+    "angle": "Angolo"
+  },
+  "units": {
+    "length": {
+      "mm": "Millimetri",
+      "cm": "Centimetri",
+      "m": "Metri",
+      "km": "Chilometri",
+      "in": "Pollici",
+      "ft": "Piedi",
+      "yd": "Iarde",
+      "mi": "Miglia",
+      "nmi": "Miglia nautiche",
+      "um": "Micrometri"
+    },
+    "area": {
+      "mm2": "Millimetri quadrati",
+      "cm2": "Centimetri quadrati",
+      "m2": "Metri quadrati",
+      "ha": "Ettari",
+      "km2": "Chilometri quadrati",
+      "in2": "Pollici quadrati",
+      "ft2": "Piedi quadrati",
+      "yd2": "Iarde quadrate",
+      "acre": "Acri",
+      "mi2": "Miglia quadrate"
+    },
+    "volume": {
+      "ml": "Millilitri",
+      "cl": "Centilitri",
+      "l": "Litri",
+      "m3": "Metri cubi",
+      "cm3": "Centimetri cubi",
+      "tsp": "Cucchiaini (USA)",
+      "tbsp": "Cucchiai (USA)",
+      "floz": "Once liquide (USA)",
+      "cup": "Tazze (USA)",
+      "pt": "Pinte (USA)",
+      "qt": "Quarti (USA)",
+      "gal": "Galloni (USA)",
+      "ukgal": "Galloni (UK)"
+    },
+    "mass": {
+      "mg": "Milligrammi",
+      "g": "Grammi",
+      "kg": "Chilogrammi",
+      "t": "Tonnellate",
+      "oz": "Once",
+      "lb": "Libbre",
+      "st": "Stone",
+      "ct": "Carati"
+    },
+    "temperature": {
+      "c": "Celsius",
+      "f": "Fahrenheit",
+      "k": "Kelvin"
+    },
+    "speed": {
+      "mps": "Metri al secondo",
+      "kph": "Chilometri orari",
+      "mph": "Miglia orarie",
+      "knot": "Nodi",
+      "fps": "Piedi al secondo"
+    },
+    "time": {
+      "ms": "Millisecondi",
+      "s": "Secondi",
+      "min": "Minuti",
+      "h": "Ore",
+      "d": "Giorni",
+      "wk": "Settimane",
+      "yr": "Anni (365,25 giorni)"
+    },
+    "data": {
+      "bit": "Bit",
+      "B": "Byte",
+      "kB": "Kilobyte",
+      "MB": "Megabyte",
+      "GB": "Gigabyte",
+      "TB": "Terabyte",
+      "KiB": "Kibibyte",
+      "MiB": "Mebibyte",
+      "GiB": "Gibibyte",
+      "TiB": "Tebibyte",
+      "kbit": "Kilobit",
+      "Mbit": "Megabit",
+      "Gbit": "Gigabit"
+    },
+    "pressure": {
+      "Pa": "Pascal",
+      "kPa": "Kilopascal",
+      "bar": "Bar",
+      "atm": "Atmosfere",
+      "psi": "Libbre per pollice quadrato",
+      "mmHg": "Millimetri di mercurio"
+    },
+    "energy": {
+      "J": "Joule",
+      "kJ": "Kilojoule",
+      "cal": "Calorie",
+      "kcal": "Chilocalorie",
+      "Wh": "Wattora",
+      "kWh": "Chilowattora",
+      "eV": "Elettronvolt",
+      "BTU": "Unità termiche britanniche"
+    },
+    "angle": {
+      "deg": "Gradi",
+      "rad": "Radianti",
+      "grad": "Gradi centesimali",
+      "turn": "Giri",
+      "arcmin": "Primi d’arco",
+      "arcsec": "Secondi d’arco"
+    }
+  },
+  "keys": {
+    "clear": "Cancella",
+    "backspace": "Elimina l’ultimo carattere",
+    "percent": "Percentuale",
+    "divide": "Dividi",
+    "multiply": "Moltiplica",
+    "subtract": "Sottrai",
+    "add": "Somma",
+    "negate": "Cambia segno",
+    "decimal": "Separatore decimale",
+    "equals": "Uguale",
+    "memoryClear": "Cancella memoria",
+    "memoryRecall": "Richiama memoria",
+    "memoryAdd": "Aggiungi alla memoria",
+    "memorySubtract": "Sottrai dalla memoria",
+    "memoryStore": "Salva in memoria",
+    "sin": "Seno",
+    "cos": "Coseno",
+    "tan": "Tangente",
+    "asin": "Arcoseno",
+    "acos": "Arcocoseno",
+    "atan": "Arcotangente",
+    "sinh": "Seno iperbolico",
+    "cosh": "Coseno iperbolico",
+    "tanh": "Tangente iperbolica",
+    "open": "Parentesi aperta",
+    "close": "Parentesi chiusa",
+    "pi": "Pi greco",
+    "e": "Numero di Nepero",
+    "square": "Quadrato",
+    "cube": "Cubo",
+    "power": "Potenza",
+    "sqrt": "Radice quadrata",
+    "cbrt": "Radice cubica",
+    "root": "Radice: root(x, n)",
+    "reciprocal": "Reciproco",
+    "ln": "Logaritmo naturale",
+    "log": "Logaritmo in base 10",
+    "logb": "Logaritmo: logb(x, base)",
+    "factorial": "Fattoriale",
+    "abs": "Valore assoluto",
+    "exp": "e elevato a x",
+    "exponent": "Per dieci elevato a (1,5e3)",
+    "ans": "Ultimo risultato",
+    "random": "Numero casuale tra 0 e 1",
+    "comma": "Separatore di argomenti"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "JSON Studio",
+    "description": "JSON prüfen, formatieren und erkunden: Baumansicht, JSONPath-Abfragen, struktureller Vergleich und CSV-Export."
+  },
+  "actions": {
+    "open": "Öffnen…",
+    "save": "Speichern unter…",
+    "indent": "Einrückung",
+    "sortKeys": "Schlüssel sortieren",
+    "format": "Formatieren",
+    "minify": "Minimieren",
+    "copy": "Kopieren"
+  },
+  "indent": {
+    "two": "2 Leerzeichen",
+    "four": "4 Leerzeichen",
+    "tab": "Tabulatoren"
+  },
+  "editor": {
+    "label": "JSON-Text",
+    "placeholder": "JSON einfügen, eingeben oder Datei öffnen…"
+  },
+  "status": {
+    "empty": "Leer",
+    "valid": "Gültiges JSON",
+    "invalid": "Ungültig",
+    "at": "Zeile {{line}}, Spalte {{column}}",
+    "fixFirst": "Zuerst das JSON korrigieren: es ist ungültig.",
+    "emptyPanel": "JSON einfügen oder öffnen, um es zu erkunden",
+    "invalidPanel": "Das JSON enthält einen Fehler: siehe Editor"
+  },
+  "problems": {
+    "unexpected-end": "Der Text endet zu früh",
+    "unexpected-character": "Unerwartetes Zeichen",
+    "bad-string": "Eine Zeichenkette enthält ein Steuerzeichen (maskieren)",
+    "bad-escape": "Ungültige Escape-Sequenz",
+    "bad-number": "Ungültige Zahl",
+    "trailing-comma": "Komma am Ende (in JSON nicht erlaubt)",
+    "expected-colon": "Nach dem Schlüssel wird „:“ erwartet",
+    "expected-comma": "„,“ oder eine schließende Klammer erwartet",
+    "expected-key": "Schlüssel in doppelten Anführungszeichen erwartet",
+    "trailing-content": "Unerwarteter Text nach dem JSON-Wert",
+    "empty": "Nichts zu lesen"
+  },
+  "panels": {
+    "label": "Werkzeuge",
+    "tree": "Baum",
+    "query": "Abfrage",
+    "diff": "Vergleichen",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "Dokumentbaum",
+    "search": "Schlüssel und Werte durchsuchen",
+    "hit": "{{current}} von {{total}}",
+    "noHits": "Keine Treffer",
+    "previous": "Vorheriger Treffer",
+    "next": "Nächster Treffer",
+    "copyPath": "Pfad kopieren",
+    "copyValue": "Wert kopieren",
+    "members_one": "{{count}} Eintrag",
+    "members_other": "{{count}} Einträge",
+    "items_one": "{{count}} Element",
+    "items_other": "{{count}} Elemente"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "Beispiele",
+    "error": "Bei {{position}}: {{message}}",
+    "results_one": "{{count}} Ergebnis",
+    "results_other": "{{count}} Ergebnisse",
+    "copy": "Ergebnisse kopieren",
+    "show": "Im Baum zeigen",
+    "more": "und {{count}} weitere"
+  },
+  "diff": {
+    "with": "Mit einem anderen JSON-Dokument vergleichen",
+    "open": "Öffnen…",
+    "other": "Zu vergleichendes JSON",
+    "placeholder": "Die andere Version hier einfügen",
+    "same": "Die Dokumente sind gleich",
+    "added_one": "{{count}} hinzugefügt",
+    "added_other": "{{count}} hinzugefügt",
+    "removed_one": "{{count}} entfernt",
+    "removed_other": "{{count}} entfernt",
+    "changed_one": "{{count}} geändert",
+    "changed_other": "{{count}} geändert"
+  },
+  "csv": {
+    "needsArray": "CSV braucht eine Liste",
+    "needsArrayText": "Das Dokument muss ein Array sein (aus Objekten, für Spalten).",
+    "summary": "{{rows}} Zeilen, {{columns}} Spalten",
+    "copy": "CSV kopieren",
+    "export": "CSV exportieren…",
+    "preview": "CSV-Vorschau"
+  }
+}

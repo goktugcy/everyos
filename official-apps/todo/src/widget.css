@@ -1,0 +1,55 @@
+body {
+  background: transparent;
+}
+.todo-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100vh;
+  padding: 10px;
+}
+.todo-widget-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.todo-widget-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+.todo-widget-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+.todo-widget-list button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: start;
+  cursor: pointer;
+}
+.todo-widget-list button > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.todo-widget .todo-quick {
+  padding: 0;
+}
+.todo-widget .eui-state {
+  padding: 8px;
+}

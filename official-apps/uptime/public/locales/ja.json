@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "稼働時間"
+  },
+  "uptime": {
+    "auto": "表示中は15秒ごとに更新します。保存済みのエンドポイント確認はウィンドウを閉じても続きます。"
+  },
+  "health": {
+    "up": "確認した項目は正常",
+    "down": "障害を確認",
+    "degraded": "確認が必要",
+    "unknown": "データ不足",
+    "hint": "ホスト、報告されたサービス、有効なエンドポイントをまとめます。観測した確認結果であり、サーバー全体の健全性を保証するものではありません。",
+    "limited": "対象が一部欠けています。未取得、古いデータ、模擬データ、未確認の項目があります。"
+  },
+  "host": {
+    "title": "ホスト稼働時間",
+    "boot": "起動日時：{{at}}",
+    "measured": "計測日時：{{at}}",
+    "permission": "稼働時間には system:metrics.read と、システムデータを読める役割が必要です。"
+  },
+  "endpoints": {
+    "title": "エンドポイントの稼働状況",
+    "summary": "稼働 {{up}} · 障害 {{down}} · ブロック {{blocked}} · 未確認 {{pending}} · 停止 {{paused}}",
+    "scope": "このアプリの有効なエンドポイントのみ数えます。HTTP Monitor の確認結果とは別です。",
+    "method": "GET で確認し、許可された転送先だけをたどり、TLS 証明書を常に検証します。"
+  },
+  "services": {
+    "title": "報告されたサービス",
+    "hint": "現在の状態を読み取り専用で表示します。この情報から過去のサービス障害を推測しません。",
+    "permission": "サービスの状態には system:services.read と、サービスを読める役割が必要です。",
+    "observed": "取得日時：{{at}}",
+    "sub": "詳細状態",
+    "search": "サービスを検索",
+    "name": "サービス",
+    "description": "説明",
+    "state": "状態",
+    "empty": "一致するサービスはありません。",
+    "activeStates": {
+      "active": "アクティブ",
+      "inactive": "非アクティブ",
+      "failed": "失敗",
+      "activating": "開始中",
+      "deactivating": "停止中",
+      "reloading": "再読み込み中"
+    }
+  },
+  "incidents": {
+    "title": "障害の観測記録",
+    "hint": "読み込んだ確認結果から、障害・ポリシーによるブロック・最初の成功への遷移を最大100件表示します。監視状態は設定した連続失敗のしきい値で決まります。",
+    "failure": "最初の失敗を確認",
+    "blocked": "ポリシーによるブロックを確認",
+    "success": "確認の成功を観測",
+    "partial": "それ以前の確認結果は読み込まれていません。障害はこの時刻より前から続いていた可能性があります。",
+    "empty": "読み込んだ履歴に障害の遷移はありません。"
+  },
+  "duration": {
+    "full": "{{days}}日 {{hours}}時間 {{minutes}}分 {{seconds}}秒"
+  },
+  "widgets": {
+    "health": {
+      "name": "稼働状況の概要",
+      "description": "ホストの稼働時間と、観測したエンドポイント・サービスの状態。"
+    }
+  },
+  "widget": {
+    "limited": "一部のみ確認",
+    "endpoints": "稼働中の対象：{{up}}/{{total}}",
+    "open": "稼働時間を開く"
+  },
+  "form": {
+    "new": "モニターを追加",
+    "resume": "下書きを続ける",
+    "newTitle": "モニターを作成",
+    "editTitle": "モニターを編集",
+    "name": "名前",
+    "url": "HTTP または HTTPS URL",
+    "method": "メソッド",
+    "interval": "間隔（秒）",
+    "timeout": "タイムアウト（ミリ秒）",
+    "min": "期待する最小ステータス",
+    "max": "期待する最大ステータス",
+    "keyword": "本文に必要な文字列（任意）",
+    "downAfter": "停止と判定する連続失敗数",
+    "verifyTls": "TLS 証明書を検証",
+    "tlsWarning": "このモニターは信頼されていない証明書を受け入れます。",
+    "notify": "停止と復旧を通知",
+    "enabled": "監視を有効にする",
+    "save": "モニターを保存",
+    "discard": "下書きを破棄",
+    "discardTitle": "この下書きを破棄しますか？",
+    "discardText": "未保存のモニター設定は失われます。",
+    "policy": "管理者が App Store で接続先とポートを許可する必要があります。アプリを閉じても監視は続きます。"
+  },
+  "monitor": {
+    "refresh": "更新",
+    "targets": "モニター（{{count}}/50）",
+    "background": "EveryOS がバックグラウンドで監視します。この画面は30秒ごとに更新されます。",
+    "permission": "外部ネットワーク権限がありません。管理者が App Store で許可できます。",
+    "empty": "モニターはありません",
+    "emptyHint": "許可された HTTP 接続先のモニターを作成してください。",
+    "never": "未確認",
+    "noData": "データなし",
+    "ms": "{{value}} ミリ秒",
+    "checked": "最終確認：{{at}}",
+    "since": "現在の状態の開始：{{at}}",
+    "status": "HTTP ステータス",
+    "latency": "応答時間",
+    "uptime24": "成功率・24時間",
+    "uptime7": "成功率・7日間",
+    "average": "平均・24時間",
+    "check": "今すぐ確認",
+    "wait": "{{seconds}} 秒お待ちください",
+    "edit": "編集",
+    "pause": "一時停止",
+    "enable": "有効にする",
+    "delete": "削除",
+    "deleteTitle": "モニターを削除しますか？",
+    "deleteText": "{{name}} と確認履歴を削除しますか？この操作は取り消せません。",
+    "schedule": "{{seconds}} 秒ごと・期待値 {{min}}–{{max}}・{{failures}} 回連続失敗で停止",
+    "notifyOn": "通知設定でミュートされていなければ、停止と復旧が通知されます。",
+    "notifyOff": "このモニターの通知は無効です。",
+    "notifyMissing": "通知には notifications:send 権限が必要です。管理者が App Store で許可できます。"
+  },
+  "state": {
+    "pending": "確認待ち",
+    "up": "稼働中",
+    "down": "停止中",
+    "blocked": "ポリシーによりブロック",
+    "paused": "一時停止中"
+  },
+  "history": {
+    "title": "確認履歴",
+    "range": "期間",
+    "day": "過去24時間",
+    "week": "過去7日間",
+    "month": "過去30日間",
+    "export": "CSV を書き出す",
+    "limit": "{{count}} 件・最大5,000件、30日間保存。成功率は経過時間ではなく確認回数に基づきます。",
+    "timeline": "最新60件（古い順）",
+    "at": "時刻",
+    "result": "結果",
+    "ok": "成功",
+    "empty": "この期間の確認はありません。",
+    "previous": "前へ",
+    "next": "次へ",
+    "page": "{{page}} / {{pages}} ページ"
+  },
+  "validation": {
+    "name": "1～80文字の名前を入力してください。",
+    "url": "認証情報やフラグメントを含まない HTTP または HTTPS URL を入力してください。",
+    "interval": "間隔は60～86,400秒の整数にしてください。",
+    "timeout": "タイムアウトは1,000～30,000ミリ秒の整数にしてください。",
+    "status": "100～599のコードを使用し、最小値を最大値以下にしてください。",
+    "keyword": "200文字以内にしてください。本文の検査は GET でのみ利用できます。",
+    "downAfter": "連続失敗数は1～5にしてください。"
+  },
+  "failure": {
+    "status": "予期しない HTTP ステータス",
+    "keyword": "必要な文字列がありません",
+    "blocked": "ネットワークポリシーでブロック",
+    "dns": "DNS 解決に失敗",
+    "refused": "接続が拒否されました",
+    "unreachable": "接続先に到達できません",
+    "timeout": "タイムアウト",
+    "reset": "接続がリセットされました",
+    "tls": "TLS 検証に失敗",
+    "too-many-redirects": "リダイレクトが多すぎます",
+    "invalid-response": "無効な HTTP 応答",
+    "error": "ネットワーク要求に失敗",
+    "other": "確認に失敗"
+  },
+  "source": {
+    "simulatedHint": "これらは開発用ホストのシミュレーション値で、実際のホストを示しません。",
+    "host": "ホストのデータ",
+    "simulated": "シミュレーションデータ"
+  }
+}

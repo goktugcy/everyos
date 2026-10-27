@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "端口查看器"
+  },
+  "ports": {
+    "refresh": "刷新",
+    "export": "导出 CSV",
+    "readOnly": "只读显示主机监听端口，不发起连接或扫描。绑定地址不代表可穿过防火墙访问。",
+    "permission": "此应用需要读取主机套接字的权限。管理员可在应用商店授予权限，您的角色也必须允许系统访问。",
+    "unavailable": "此主机无法提供监听套接字数据。收集器需要 Linux 和可读取的 /proc 数据。",
+    "loadFailed": "无法读取主机套接字。请检查代理连接后重试。",
+    "host": "主机数据",
+    "simulated": "模拟数据",
+    "simulatedHint": "这些监听信息由开发主机模拟，不代表真实开放端口。",
+    "retrieved": "获取时间：{{at}}",
+    "stale": "刷新失败。仍显示先前快照及其获取时间。",
+    "listening": "监听套接字",
+    "established": "已建立的 TCP",
+    "timeWait": "TCP TIME_WAIT",
+    "other": "其他 TCP 状态",
+    "search": "搜索监听信息",
+    "searchHint": "地址、端口或进程",
+    "protocol": "协议",
+    "family": "地址族",
+    "scope": "绑定范围",
+    "all": "全部",
+    "reset": "重置筛选",
+    "showing": "共 {{total}} 个监听项，匹配 {{shown}} 个",
+    "limit": "最多返回 2,000 个监听项。代理可能缓存结果 30 秒。端口按升序排列。",
+    "empty": "没有匹配的监听项",
+    "emptyHint": "请更改或重置筛选以查看返回的快照。",
+    "address": "地址",
+    "port": "端口",
+    "process": "进程",
+    "unknown": "不可用",
+    "processHint": "仅在代理可读取时显示进程名称，不根据端口号推测。",
+    "previous": "上一页",
+    "next": "下一页",
+    "page": "第 {{page}} 页，共 {{pages}} 页"
+  },
+  "scope": {
+    "all": "全部范围",
+    "wildcard": "全部接口",
+    "loopback": "环回",
+    "specific": "指定地址"
+  }
+}

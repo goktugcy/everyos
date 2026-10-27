@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "Notes",
+    "description": "Notes in Markdown with folders, tags, pins, search, history, import and export, and a quick-note widget."
+  },
+  "widgets": {
+    "quick": { "name": "Quick note", "description": "Write a note without opening Notes." }
+  },
+  "views": {
+    "all": "All notes",
+    "pinned": "Pinned",
+    "folders": "Folders",
+    "tags": "Tags",
+    "trash": "Recently deleted"
+  },
+  "actions": {
+    "newNote": "New note",
+    "newFolder": "New folder",
+    "renameFolder": "Rename folder",
+    "deleteFolder": "Delete folder",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "copy": "Copy Markdown",
+    "exportNote": "Export as Markdown…",
+    "exportAll": "Export all notes…",
+    "import": "Import notes…",
+    "history": "Version history",
+    "delete": "Delete note",
+    "restore": "Restore",
+    "deleteForever": "Delete permanently",
+    "emptyTrash": "Empty",
+    "restoreVersion": "Restore this version",
+    "back": "Back to notes"
+  },
+  "list": {
+    "label": "Notes",
+    "search": "Search notes",
+    "sort": "Sort by",
+    "sortUpdated": "Last edited",
+    "sortCreated": "Date created",
+    "sortTitle": "Title",
+    "untitled": "New note",
+    "noText": "No additional text",
+    "pinned": "Pinned"
+  },
+  "empty": {
+    "title": "No notes yet",
+    "text": "Write your first note, or import Markdown files.",
+    "trash": "Nothing in Recently deleted",
+    "trashText": "Deleted notes stay here for 30 days.",
+    "search": "No notes match “{{query}}”",
+    "select": "Choose a note, or start a new one."
+  },
+  "editor": {
+    "tools": "Note",
+    "modes": "View",
+    "edit": "Edit",
+    "split": "Split",
+    "preview": "Preview",
+    "saving": "Saving…",
+    "editing": "Editing…",
+    "failed": "Not saved",
+    "saved": "Saved",
+    "inTrash": "This note is in Recently deleted and will be removed for good on {{date}}.",
+    "folder": "Folder",
+    "noFolder": "No folder",
+    "tags": "Tags",
+    "tagsHint": "Separate tags with commas",
+    "label": "Note text",
+    "placeholder": "Start writing. Markdown works: # headings, **bold**, - lists, - [ ] tasks…",
+    "previewLabel": "Preview",
+    "words_one": "{{count}} word",
+    "words_other": "{{count}} words",
+    "edited": "Edited {{date}}"
+  },
+  "folder": {
+    "name": "Folder name",
+    "exists": "A folder with this name already exists",
+    "deleteTitle": "Delete the folder “{{name}}”?",
+    "deleteBody": "Its notes are kept and move out of the folder."
+  },
+  "trash": {
+    "deleteTitle": "Delete “{{name}}” permanently?",
+    "emptyTitle": "Delete every note in Recently deleted?",
+    "body": "This cannot be undone.",
+    "moved": "Moved to Recently deleted",
+    "restored": "Note restored"
+  },
+  "history": {
+    "title": "Version history",
+    "empty": "No earlier versions yet. Notes keeps up to 20 versions of each note as you edit.",
+    "restored": "Earlier version restored"
+  },
+  "import": {
+    "done_one": "{{count}} note imported",
+    "done_other": "{{count}} notes imported",
+    "none": "Nothing was imported",
+    "skipped": "{{name}} was skipped: it is larger than 5 MB"
+  },
+  "widget": {
+    "placeholder": "Write a quick note…",
+    "save": "Add note",
+    "saved": "Note added",
+    "recent": "Recent",
+    "empty": "No notes yet",
+    "open": "Open Notes"
+  }
+}

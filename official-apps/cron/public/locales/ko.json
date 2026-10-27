@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Cron 빌더",
+    "description": "cron 일정 만들기와 확인. 시각적 빌더, 쉬운 설명, 원하는 시간대의 다음 실행, systemd 및 EveryOS 형식."
+  },
+  "seconds": {
+    "label": "초 필드"
+  },
+  "expression": {
+    "section": "식",
+    "label": "cron 식",
+    "copy": "식 복사"
+  },
+  "fields": {
+    "second": "초",
+    "minute": "분",
+    "hour": "시",
+    "day": "일",
+    "month": "월",
+    "weekday": "요일"
+  },
+  "problems": {
+    "field-count": "cron 식은 공백으로 구분된 {{count}}개 필드입니다 ({{token}}개 발견).",
+    "empty": "{{field}}이(가) 비어 있습니다.",
+    "bad-token": "{{field}}: “{{token}}”은(는) 숫자, 이름, *, 목록이 아닙니다.",
+    "out-of-range": "{{field}}: {{token}}은(는) 범위를 벗어났습니다.",
+    "bad-range": "{{field}}: 범위 “{{token}}”이(가) 거꾸로입니다.",
+    "bad-step": "{{field}}: “{{token}}”의 간격은 0보다 큰 숫자여야 합니다.",
+    "reboot": "@reboot는 시각이 아닌 부팅 시 실행되므로 표시할 실행 시각이 없습니다."
+  },
+  "builder": {
+    "custom": "이 필드는 식에서 편집하세요 (빌더가 표시하지 않는 형식입니다).",
+    "mode": "{{field}} 설정 방식",
+    "modes": {
+      "every": "매",
+      "specific": "특정 값",
+      "range": "범위",
+      "step": "n마다"
+    },
+    "from": "시작",
+    "to": "끝",
+    "every": "매",
+    "interval": "간격",
+    "startingAt": "시작값",
+    "start": "시작"
+  },
+  "presets": {
+    "title": "프리셋",
+    "everyMinute": "매분",
+    "every5Minutes": "5분마다",
+    "every15Minutes": "15분마다",
+    "hourly": "매시간",
+    "every6Hours": "6시간마다",
+    "daily3am": "매일 03:00",
+    "weekdays9am": "평일 09:00",
+    "weeklySunday": "매주 일요일",
+    "monthlyFirst": "매월 1일",
+    "quarterly": "분기마다",
+    "yearly": "매년"
+  },
+  "runs": {
+    "section": "실행 시각",
+    "timeZone": "시간대",
+    "next": "다음 실행",
+    "previous": "이전 실행",
+    "none": "이 일정은 실행되지 않습니다 (예: 2월 30일).",
+    "invalid": "실행 시각을 보려면 식을 고치세요."
+  },
+  "export": {
+    "title": "사용하기",
+    "command": "명령",
+    "commandPlaceholder": "/path/to/command",
+    "crontab": "crontab 줄",
+    "onCalendar": "systemd 타이머 (OnCalendar=)",
+    "twoLines": "cron은 날짜 필드 중 하나만 맞아도 실행되지만 systemd는 둘 다 필요하므로 두 줄이 됩니다.",
+    "timezone": "시간대 {{zone}}.",
+    "everyos": "EveryOS 예약 작업",
+    "compatible": "호환",
+    "problems": {
+      "seconds": "예약 작업에는 초 필드가 없습니다.",
+      "too-frequent": "예약 작업은 최대 5분마다(시간당 12회) 실행됩니다."
+    },
+    "timerFile": ".timer 파일 저장…",
+    "defaultDescription": "예약 작업",
+    "notScheduled": "Cron 빌더는 식만 만들며 이 서버에서 아무것도 예약하지 않습니다."
+  },
+  "saved": {
+    "title": "저장됨",
+    "name": "이름",
+    "save": "식 저장",
+    "done": "저장했습니다",
+    "delete": "{{name}} 삭제"
+  }
+}

@@ -11,6 +11,9 @@
   "dependencies": {
     "@hono/node-server": "catalog:",
     "@everyos/agent-protocol": "workspace:*",
+    "@everyos/app-manifest": "workspace:*",
+    "@everyos/app-package": "workspace:*",
+    "@everyos/app-registry": "workspace:*",
     "@everyos/auth": "workspace:*",
     "@everyos/catalogs": "workspace:*",
     "@everyos/database": "workspace:*",
@@ -25,9 +28,17 @@
     "@everyos/widget-sdk": "workspace:*",
     "@everyos/system": "workspace:*",
     "@everyos/release": "workspace:*",
-    "nodemailer": "catalog:"
+    "nodemailer": "catalog:",
+    "@everyos/app-sdk": "workspace:*",
+    "pg": "catalog:",
+    "mysql2": "catalog:",
+    "pg-cursor": "catalog:"
   },
   "devDependencies": {
-    "@types/ws": "catalog:"
+    "@types/ws": "catalog:",
+    "@types/pg": "catalog:",
+    "@everyos/theme": "workspace:*",
+    "@everyos/app-cli": "workspace:*",
+    "create-everyos-app": "workspace:*"
   }
 }

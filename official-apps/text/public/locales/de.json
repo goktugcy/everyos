@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Texteditor",
+    "description": "Textdateien in Tabs, mit Suchen und Ersetzen, Zeichenkodierungen, Zeilenenden und Wiederherstellung ungespeicherter Arbeit."
+  },
+  "actions": {
+    "new": "Neues Dokument",
+    "open": "Öffnen…",
+    "recent": "Zuletzt verwendet",
+    "save": "Speichern",
+    "saveAs": "Speichern unter…",
+    "find": "Suchen und ersetzen"
+  },
+  "close": {
+    "title_one": "Mit {{count}} ungespeicherten Datei schließen?",
+    "title_other": "Mit {{count}} ungespeicherten Dateien schließen?",
+    "body": "Ihre Änderungen bleiben hier wiederherstellbar, sind aber nicht in den Dateien.",
+    "confirm": "Schließen",
+    "tabTitle": "„{{name}}“ ohne Speichern schließen?",
+    "tabBody": "Ungespeicherte Änderungen gehen verloren.",
+    "discard": "Änderungen verwerfen"
+  },
+  "doc": {
+    "untitled": "Unbenannt {{number}}"
+  },
+  "editor": {
+    "label": "Text von {{name}}"
+  },
+  "encoding": {
+    "change": "Kodierung ändern",
+    "title": "Mit Kodierung neu öffnen",
+    "hint": "Wenn Zeichen falsch aussehen, nutzt die Datei vielleicht eine andere Kodierung.",
+    "reopen": "Neu öffnen",
+    "reopenTitle": "Neu öffnen und ungespeicherte Änderungen verlieren?",
+    "reopenBody": "Die Datei wird neu gelesen.",
+    "saveTitle": "Mit Kodierung speichern",
+    "saveHint": "Unicode erhält jedes Zeichen.",
+    "saveWith": "Mit anderer Kodierung speichern…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16, Little Endian)",
+      "utf-16be": "Unicode (UTF-16, Big Endian)",
+      "windows-1252": "Westeuropäisch (Windows)",
+      "iso-8859-1": "Westeuropäisch (ISO)",
+      "windows-1254": "Türkisch (Windows)",
+      "iso-8859-9": "Türkisch (ISO)",
+      "windows-1250": "Mitteleuropäisch (Windows)",
+      "iso-8859-2": "Mitteleuropäisch (ISO)",
+      "windows-1251": "Kyrillisch (Windows)",
+      "koi8-r": "Kyrillisch (KOI8-R)",
+      "shift_jis": "Japanisch (Shift_JIS, nur lesen)",
+      "euc-kr": "Koreanisch (EUC-KR, nur lesen)",
+      "gb18030": "Chinesisch (GB18030, nur lesen)"
+    }
+  },
+  "eol": {
+    "label": "Zeilenenden"
+  },
+  "open": {
+    "binary": "{{name}} ist keine Textdatei."
+  },
+  "recent": {
+    "empty": "Keine zuletzt verwendeten Dateien"
+  },
+  "recovery": {
+    "lost": "Ungespeicherter Text konnte nicht wiederhergestellt werden: {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} kann gelesen, aber nicht geschrieben werden: als UTF-8 gespeichert.",
+    "saved": "{{name}} gespeichert",
+    "unencodable": "„{{char}}“ in Zeile {{line}} lässt sich nicht in {{encoding}} schreiben. Wählen Sie eine andere Kodierung."
+  },
+  "status": {
+    "label": "Status",
+    "lineNumbers": "Zeilennummern",
+    "position": "Z. {{line}}, Sp. {{column}}",
+    "selected_one": "{{count}} ausgewählt",
+    "selected_other": "{{count}} ausgewählt",
+    "words_one": "{{count}} Wort",
+    "words_other": "{{count}} Wörter",
+    "wrap": "Zeilenumbruch"
+  },
+  "tabs": {
+    "close": "{{name}} schließen",
+    "label": "Geöffnete Dokumente",
+    "unsaved": "Ungespeicherte Änderungen"
+  }
+}

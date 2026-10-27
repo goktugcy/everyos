@@ -1,0 +1,176 @@
+{
+  "app": {
+    "name": "캘린더",
+    "description": "일, 주, 월 보기와 반복 일정, 알림, 검색, 여러 캘린더, iCalendar(.ics) 가져오기·내보내기로 하루를 계획하세요."
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "다가오는 일정",
+      "description": "이번 주 다음 일정. 캘린더에서 열 수 있습니다."
+    }
+  },
+  "calendars": {
+    "label": "캘린더",
+    "personal": "개인",
+    "imported": "가져온 항목",
+    "add": "새 캘린더",
+    "edit": "{{name}} 편집",
+    "editTitle": "캘린더 편집",
+    "export": "{{name}}을(를) .ics로 내보내기",
+    "deleteNamed": "{{name}} 삭제",
+    "delete": "캘린더 삭제",
+    "deleteTitle": "“{{name}}”을(를) 삭제할까요?",
+    "deleteBody_other": "일정 {{count}}개도 삭제됩니다. 되돌릴 수 없습니다.",
+    "name": "이름",
+    "color": "색상",
+    "colorNumber": "색상 {{number}}"
+  },
+  "event": {
+    "new": "새 일정",
+    "newTitle": "새 일정",
+    "editTitle": "일정 편집",
+    "title": "제목",
+    "titlePlaceholder": "무슨 일정인가요?",
+    "untitled": "(제목 없음)",
+    "allDay": "종일",
+    "startDate": "시작일",
+    "startTime": "시작 시간",
+    "endDate": "종료일",
+    "endTime": "종료 시간",
+    "lastDay": "마지막 날",
+    "zoneNote": "시간은 이 일정을 만든 {{zone}} 기준입니다.",
+    "location": "장소",
+    "notes": "메모",
+    "calendar": "캘린더",
+    "repeats": "반복",
+    "delete": "삭제",
+    "deleteTitle": "“{{title}}”을(를) 삭제할까요?"
+  },
+  "problems": {
+    "endBeforeStart": "종료가 시작보다 이릅니다.",
+    "untilBeforeStart": "반복이 일정 시작 전에 끝납니다."
+  },
+  "repeat": {
+    "label": "반복",
+    "none": "반복 안 함",
+    "daily": "매일",
+    "weekdays": "평일마다 (월–금)",
+    "weekly": "매주 {{day}}",
+    "monthly": "매월 {{day}}일",
+    "monthlyWeekday": "매월 {{nth}} {{day}}",
+    "yearly": "매년 {{date}}",
+    "custom": "사용자 지정…",
+    "imported": "다른 캘린더에서 설정한 대로",
+    "nth": {
+      "1": "첫째",
+      "2": "둘째",
+      "3": "셋째",
+      "4": "넷째",
+      "-1": "마지막"
+    },
+    "every": "간격",
+    "unit": "단위",
+    "units": {
+      "daily_other": "일",
+      "weekly_other": "주",
+      "monthly_other": "개월",
+      "yearly_other": "년"
+    },
+    "onDays": "요일",
+    "monthlyOn": "기준",
+    "onDay": "{{day}}일",
+    "onWeekday": "{{nth}} {{day}}",
+    "ends": "종료",
+    "never": "안 함",
+    "until": "날짜에",
+    "after": "횟수 후",
+    "untilDate": "마지막 날짜",
+    "times": "횟수"
+  },
+  "reminders": {
+    "label": "알림",
+    "add": "알림 추가",
+    "remove": "알림 “{{label}}” 삭제",
+    "atStart": "시작할 때",
+    "minutes_other": "{{count}}분 전",
+    "hours_other": "{{count}}시간 전",
+    "days_other": "{{count}}일 전",
+    "weeks_other": "{{count}}주 전",
+    "onDay": "당일 09:00",
+    "daysBeforeAt_other": "{{count}}일 전 09:00",
+    "weeksBeforeAt_other": "{{count}}주 전 09:00",
+    "body": "{{date}} {{time}}",
+    "allDayBody": "{{date}}, 종일"
+  },
+  "scope": {
+    "label": "적용할 일정",
+    "saveTitle": "반복 일정 변경",
+    "deleteTitle": "반복 일정 삭제",
+    "one": "이 일정",
+    "following": "이 일정과 이후 일정",
+    "all": "모든 일정"
+  },
+  "views": {
+    "label": "보기",
+    "day": "일",
+    "week": "주",
+    "month": "월"
+  },
+  "nav": {
+    "today": "오늘",
+    "previous": {
+      "day": "이전 날",
+      "week": "이전 주",
+      "month": "이전 달"
+    },
+    "next": {
+      "day": "다음 날",
+      "week": "다음 주",
+      "month": "다음 달"
+    },
+    "goTo": "날짜로 이동",
+    "keys": "단축키: T 오늘, D/W/M 보기, N 새 일정, ← → 이동, / 검색"
+  },
+  "month": {
+    "more_other": "{{count}}개 더"
+  },
+  "grid": {
+    "now": "지금 {{time}}"
+  },
+  "search": {
+    "label": "일정 검색",
+    "placeholder": "검색",
+    "title": "“{{query}}” 검색 결과",
+    "none": "“{{query}}”에 대한 결과가 없습니다",
+    "noneText": "모든 캘린더의 제목, 장소, 메모를 검색합니다.",
+    "results_other": "일정 {{count}}개"
+  },
+  "ics": {
+    "import": ".ics 가져오기…",
+    "importTitle": "일정 가져오기",
+    "found_other": "파일에 일정 {{count}}개가 있습니다.",
+    "skipped_other": "취소되었거나 읽을 수 없는 일정 {{count}}개는 제외합니다.",
+    "into": "가져올 위치",
+    "newCalendar": "새 캘린더 “{{name}}”",
+    "importAction_other": "일정 {{count}}개 가져오기",
+    "imported_other": "{{name}}에 일정 {{count}}개를 가져왔습니다",
+    "unknownZones_other": "일정 {{count}}개가 이 기기에 없는 시간대를 사용해 내 시간대로 표시합니다.",
+    "invalid": "이 파일은 iCalendar(.ics) 파일이 아닙니다."
+  },
+  "settings": {
+    "title": "설정",
+    "weekStart": "한 주의 시작",
+    "weekStartAuto": "언어 설정에 따름 ({{day}})",
+    "zone": "시간은 내 시간대({{zone}})로 표시됩니다."
+  },
+  "sidebar": {
+    "show": "캘린더 표시",
+    "hide": "캘린더 숨기기"
+  },
+  "widget": {
+    "today": "오늘",
+    "tomorrow": "내일",
+    "empty": "이번 주 일정이 없습니다",
+    "open": "캘린더 열기"
+  }
+}

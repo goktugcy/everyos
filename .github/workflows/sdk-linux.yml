@@ -1,0 +1,90 @@
+name: SDK Linux package qualification
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/sdk-linux.yml"
+      - ".node-version"
+      - "package.json"
+      - "README.md"
+      - "LICENSE"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig*.json"
+      - "apps/**"
+      - "packages/**"
+      - "official-apps/**"
+      - "packaging/**"
+      - "patches/**"
+      - "scripts/build*.ts"
+      - "scripts/package.py"
+      - "scripts/package_inputs.py"
+      - "scripts/sign-release.ts"
+      - "tests/sdk-linux/**"
+      - "scripts/sdk-linux-guard.test.ts"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdk-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Real package upgrade and restore (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Verify the disposable host safety checks
+        run: python3 -m unittest discover -s tests/sdk-linux -p host_guard_test.py
+      - run: pnpm build
+      - run: python3 scripts/package.py --arch arm64
+      - run: python3 scripts/package.py --arch amd64
+      - name: Download the immutable published upgrade baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download v0.1.36 --repo goktugcy/everyos --dir dist/sdk-linux-prior
+      - name: Prepare ephemeral signed candidate and app fixtures
+        run: |
+          node tests/sdk-linux/candidate.ts
+          node tests/sdk-linux/fixtures.ts
+      - name: Refuse existing host state before preparing the fresh CI VM
+        id: prepare
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_SHA python3 tests/sdk-linux/prepare-ci.py
+      - name: Install the verified published baseline
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_SHA python3 tests/sdk-linux/install-prior.py "$GITHUB_WORKSPACE/dist/sdk-linux-prior"
+      - name: Exercise authenticated update, app lifecycle, backup and restore
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_SHA python3 tests/sdk-linux/qualification.py --disposable-host --candidate "$GITHUB_WORKSPACE/dist/packages" --fixtures "$GITHUB_WORKSPACE/dist/sdk-linux-fixture"
+      - name: Extract the sanitized receipt
+        run: sudo install -m 0644 /srv/everyos-sdk-qualification/qualification.json "dist/sdk-linux-qualification-${{ matrix.arch }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdk-linux-package-${{ matrix.arch }}
+          path: dist/sdk-linux-qualification-${{ matrix.arch }}.json
+          if-no-files-found: error
+      - name: Diagnose only the qualification services on failure
+        if: ${{ failure() && steps.prepare.outcome == 'success' }}
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,GITHUB_REPOSITORY,GITHUB_RUN_ID,GITHUB_SHA python3 tests/sdk-linux/diagnose.py
+      - name: Stop only the EveryOS services created by this qualification
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        run: |
+          if [ -f /run/everyos-sdk-qualification.json ]; then
+            sudo systemctl stop everyos-api everyos-agent everyos-update
+          fi

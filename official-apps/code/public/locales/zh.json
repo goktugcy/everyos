@@ -1,0 +1,102 @@
+{
+  "app": {
+    "name": "代码编辑器",
+    "description": "在标签页中编辑代码，支持语法高亮、缩略图、查找替换，以及所选文件夹的文件资源管理器。"
+  },
+  "actions": {
+    "new": "新建文件",
+    "openFile": "打开文件…",
+    "openFolder": "打开文件夹…",
+    "save": "保存",
+    "saveAs": "另存为…",
+    "find": "查找和替换"
+  },
+  "explorer": {
+    "label": "文件",
+    "show": "显示文件",
+    "hide": "隐藏文件",
+    "newFile": "在文件夹中新建文件",
+    "newFolder": "新建文件夹",
+    "refresh": "刷新",
+    "close": "关闭文件夹",
+    "newFileTitle": "新建文件",
+    "newFolderTitle": "新建文件夹",
+    "inFolder": "位于 {{folder}}",
+    "inRoot": "位于 {{name}}",
+    "names": {
+      "empty": "请输入名称。",
+      "reserved": "“{{name}}”不能用作名称。",
+      "separator": "名称不能包含 / 或 \\。",
+      "tooLong": "名称过长。",
+      "exists": "此处已存在“{{name}}”。"
+    },
+    "unreadable": "无法读取此文件夹",
+    "unreadableShort": "无法读取",
+    "empty": "此文件夹为空",
+    "more_other": "另有 {{count}} 项未显示"
+  },
+  "tabs": {
+    "label": "打开的文件",
+    "unsaved": "未保存的更改",
+    "close": "关闭 {{name}}"
+  },
+  "editor": {
+    "label": "{{name}} 的内容"
+  },
+  "status": {
+    "label": "状态",
+    "position": "第 {{line}} 行，第 {{column}} 列",
+    "selected_other": "已选择 {{count}} 个",
+    "language": "语言",
+    "autoNamed": "{{name}}（根据文件名）",
+    "autoPlain": "纯文本（根据文件名）",
+    "plain": "纯文本",
+    "spaces": "空格：{{count}}",
+    "tabs": "制表符宽度：{{count}}",
+    "eol": "换行符"
+  },
+  "settings": {
+    "title": "编辑器设置",
+    "theme": "主题",
+    "themes": {
+      "system": "跟随 EveryOS",
+      "light": "浅色",
+      "dark": "深色",
+      "contrast": "高对比度"
+    },
+    "fontSize": "字号",
+    "tabSize": "制表符宽度",
+    "insertSpaces": "使用空格缩进",
+    "wrap": "长行自动换行",
+    "minimap": "显示缩略图"
+  },
+  "welcome": {
+    "title": "打开要编辑的内容",
+    "text": "打开项目文件夹浏览其中的文件，或打开单个文件，或新建一个文件。",
+    "withFolder": "在左侧文件夹中选择文件，或新建一个文件。"
+  },
+  "doc": {
+    "untitled": "未命名 {{number}}"
+  },
+  "open": {
+    "binary": "“{{name}}”不是文本文件。",
+    "notUtf8": "“{{name}}”不是 UTF-8 文本。请用可读取其他编码的文本编辑器打开。"
+  },
+  "save": {
+    "saved": "已保存 {{name}}",
+    "changedTitle": "“{{name}}”已在磁盘上更改",
+    "changedBody": "此文件在你打开后已被更改。保存将用你的内容替换那些更改。",
+    "overwrite": "替换"
+  },
+  "close": {
+    "title_other": "有 {{count}} 个未保存的文件，要关闭吗？",
+    "body": "未保存的更改会被保留，再次打开代码编辑器时会恢复。",
+    "confirm": "关闭",
+    "tabTitle": "放弃对“{{name}}”的更改？",
+    "tabBody": "未保存的更改将丢失。",
+    "discard": "放弃"
+  },
+  "recovery": {
+    "lost": "无法恢复这些未保存的文件：{{names}}"
+  }
+}

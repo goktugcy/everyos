@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Code Editor",
+    "description": "Edit code in tabs with syntax highlighting, a minimap, search and replace, and a file explorer for a folder you choose."
+  },
+  "actions": {
+    "new": "New file",
+    "openFile": "Open file…",
+    "openFolder": "Open folder…",
+    "save": "Save",
+    "saveAs": "Save as…",
+    "find": "Find and replace"
+  },
+  "explorer": {
+    "label": "Files",
+    "show": "Show files",
+    "hide": "Hide files",
+    "newFile": "New file in folder",
+    "newFolder": "New folder",
+    "refresh": "Refresh",
+    "close": "Close folder",
+    "newFileTitle": "New file",
+    "newFolderTitle": "New folder",
+    "inFolder": "In {{folder}}",
+    "inRoot": "In {{name}}",
+    "names": {
+      "empty": "Enter a name.",
+      "reserved": "“{{name}}” cannot be used as a name.",
+      "separator": "Names cannot contain / or \\.",
+      "tooLong": "That name is too long.",
+      "exists": "“{{name}}” already exists here."
+    },
+    "unreadable": "This folder cannot be read",
+    "unreadableShort": "unreadable",
+    "empty": "This folder is empty",
+    "more_one": "{{count}} more not shown",
+    "more_other": "{{count}} more not shown"
+  },
+  "tabs": {
+    "label": "Open files",
+    "unsaved": "Unsaved changes",
+    "close": "Close {{name}}"
+  },
+  "editor": {
+    "label": "Contents of {{name}}"
+  },
+  "status": {
+    "label": "Status",
+    "position": "Ln {{line}}, Col {{column}}",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "language": "Language",
+    "autoNamed": "{{name}} (from the file name)",
+    "autoPlain": "Plain text (from the file name)",
+    "plain": "Plain text",
+    "spaces": "Spaces: {{count}}",
+    "tabs": "Tab size: {{count}}",
+    "eol": "Line endings"
+  },
+  "settings": {
+    "title": "Editor settings",
+    "theme": "Theme",
+    "themes": {
+      "system": "Like EveryOS",
+      "light": "Light",
+      "dark": "Dark",
+      "contrast": "High contrast"
+    },
+    "fontSize": "Font size",
+    "tabSize": "Tab size",
+    "insertSpaces": "Indent with spaces",
+    "wrap": "Wrap long lines",
+    "minimap": "Show the minimap"
+  },
+  "welcome": {
+    "title": "Open something to edit",
+    "text": "Open a project folder to browse its files, open single files, or start a new one.",
+    "withFolder": "Pick a file in the folder on the left, or start a new one."
+  },
+  "doc": {
+    "untitled": "Untitled {{number}}"
+  },
+  "open": {
+    "binary": "“{{name}}” is not a text file.",
+    "notUtf8": "“{{name}}” is not UTF-8 text. Open it in the Text Editor, which reads other encodings."
+  },
+  "save": {
+    "saved": "Saved {{name}}",
+    "changedTitle": "“{{name}}” changed on disk",
+    "changedBody": "Someone or something changed this file since you opened it. Saving replaces those changes with yours.",
+    "overwrite": "Replace"
+  },
+  "close": {
+    "title_one": "Close with {{count}} unsaved file?",
+    "title_other": "Close with {{count}} unsaved files?",
+    "body": "Unsaved changes are kept and come back when you open the Code Editor again.",
+    "confirm": "Close",
+    "tabTitle": "Discard changes to “{{name}}”?",
+    "tabBody": "The changes you have not saved will be lost.",
+    "discard": "Discard"
+  },
+  "recovery": {
+    "lost": "These unsaved files could not be restored: {{names}}"
+  }
+}

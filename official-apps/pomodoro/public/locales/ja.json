@@ -1,0 +1,95 @@
+{
+  "app": {
+    "name": "ポモドーロ",
+    "description": "短い休憩と長い休憩、セッション履歴、日々の統計、通知、デスクトップウィジェットを備えた集中タイマー。"
+  },
+  "widgets": {
+    "timer": {
+      "name": "ポモドーロタイマー",
+      "description": "集中タイマーをひと目で。開始と一時停止つき。"
+    }
+  },
+  "views": {
+    "label": "表示",
+    "timer": "タイマー",
+    "history": "履歴",
+    "stats": "統計"
+  },
+  "phases": {
+    "label": "フェーズ",
+    "focus": "集中",
+    "short": "短い休憩",
+    "long": "長い休憩"
+  },
+  "timer": {
+    "left": "残り時間",
+    "cycle": "長い休憩まで {{of}} 回中 {{done}} 回",
+    "label": "何に取り組んでいますか?",
+    "labelPlaceholder": "任意。履歴に表示されます"
+  },
+  "status": {
+    "ready": "準備完了",
+    "paused": "一時停止中",
+    "running": {
+      "focus": "集中しましょう",
+      "short": "少し休みましょう",
+      "long": "ゆっくり休みましょう"
+    }
+  },
+  "actions": {
+    "start": "開始",
+    "pause": "一時停止",
+    "resume": "再開",
+    "reset": "リセット",
+    "resetHint": "このフェーズをやり直す (R)",
+    "skip": "スキップ",
+    "skipHint": "次のフェーズへ (S)"
+  },
+  "errors": {
+    "save": "タイマーを保存できませんでした。この画面では動作を続けます。"
+  },
+  "history": {
+    "empty": "まだセッションはありません",
+    "emptyText": "完了した集中セッションがここに表示されます。",
+    "count_other": "{{count}} セッション",
+    "clear": "履歴を消去",
+    "clearTitle": "セッション履歴を削除しますか?",
+    "unlabelled": "集中セッション",
+    "minutes_other": "{{count}} 分",
+    "stopped": "途中で停止"
+  },
+  "stats": {
+    "todayMinutes": "今日の集中時間",
+    "todaySessions": "今日のセッション",
+    "week": "過去 7 日間",
+    "streak": "連続日数",
+    "days_other": "{{count}} 日",
+    "chart": "日ごとの集中時間 (分)"
+  },
+  "settings": {
+    "durations": "時間",
+    "focusMinutes": "集中 (分)",
+    "shortMinutes": "短い休憩 (分)",
+    "longMinutes": "長い休憩 (分)",
+    "longEvery": "長い休憩までの回数",
+    "longEveryHint": "長い休憩までの集中セッション数",
+    "flow": "進め方",
+    "autoStartBreaks": "休憩を自動で開始",
+    "autoStartFocus": "集中セッションを自動で開始",
+    "notify": "フェーズ終了時に通知",
+    "notifyHint": "EveryOS をブラウザーで開いている間 (このウィンドウかウィジェット)",
+    "notifyDenied": "ポモドーロに通知の送信が許可されていません。App Store で許可してください。"
+  },
+  "notify": {
+    "focusDone": "集中セッション完了",
+    "breakDone": "休憩終了",
+    "next": {
+      "focus": "{{minutes}} 分間集中しましょう。",
+      "short": "{{minutes}} 分間休憩しましょう。",
+      "long": "{{minutes}} 分間ゆっくり休みましょう。"
+    }
+  },
+  "widget": {
+    "open": "ポモドーロを開く"
+  }
+}

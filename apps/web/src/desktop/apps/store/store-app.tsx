@@ -1,4 +1,12 @@
-import type { AppJobView, CatalogAppView, CatalogView, InstalledAppView } from "@everyos/shared";
+import type {
+  AppJobView,
+  CatalogAppView,
+  CatalogView,
+  DesktopAppInstallationView,
+  DesktopAppListing,
+  DesktopAppRegistryView,
+  InstalledAppView,
+} from "@everyos/shared";
 import { Package, Store } from "lucide-react";
 import { Tabs } from "radix-ui";
 import { useCallback, useState } from "react";
@@ -17,8 +25,15 @@ import { localized, Progress } from "./parts.tsx";
 import { offerFor } from "../../widgets/offer.tsx";
 import { widgetUi } from "../../widgets/ui-store.ts";
 import { api } from "../../../lib/api.ts";
+import { DesktopAppDialog } from "./desktop-app-dialog.tsx";
+import { AddRegistryDialog, RegistryCard } from "./desktop-registries.tsx";
+import { DbConnections } from "./db-connections.tsx";
+import { NetworkRules } from "./network-rules.tsx";
+import { useDesktopApps } from "../../desktop-apps/store.ts";
 
 const TABS = ["browse", "installed", "catalogs"] as const;
+const TYPES = ["all", "docker", "desktop", "hybrid"] as const;
+const SOURCES = ["all", "official", "community", "private"] as const;
 export default function StoreApp() {
   const { t, i18n } = useTranslation();
   const canCatalog = usePermissions().includes("catalogs:manage");
@@ -30,7 +45,28 @@ export default function StoreApp() {
   const [adding, setAdding] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobNoticeHidden, setJobNoticeHidden] = useState(false);
+  const [type, setType] = useState<(typeof TYPES)[number]>("all");
+  const [source, setSource] = useState<(typeof SOURCES)[number]>("all");
+  const [updatesOnly, setUpdatesOnly] = useState(false);
+  const [desktopSelected, setDesktopSelected] = useState<{
+    listing: DesktopAppListing | null;
+    installation: DesktopAppInstallationView | null;
+  } | null>(null);
+  const [addingRegistry, setAddingRegistry] = useState(false);
+  const names = useDesktopApps((state) => state.names);
   const apps = useApiResource<{ apps: CatalogAppView[] }>("/catalogs/apps", 60_000);
+  const desktopListings = useApiResource<{ apps: DesktopAppListing[] }>(
+    "/desktop-apps/catalog",
+    60_000,
+  );
+  const desktopInstalled = useApiResource<{ apps: DesktopAppInstallationView[] }>(
+    "/desktop-apps/installed",
+    10_000,
+  );
+  const registries = useApiResource<{ registries: DesktopAppRegistryView[] }>(
+    canCatalog ? "/desktop-apps/registries" : null,
+    60_000,
+  );
   const installed = useApiResource<{ apps: InstalledAppView[] }>("/apps", 5000);
   const catalogs = useApiResource<{ catalogs: CatalogView[] }>(
     canCatalog ? "/catalogs" : null,
@@ -40,7 +76,31 @@ export default function StoreApp() {
     apps.reload();
     catalogs.reload();
     installed.reload();
+    desktopListings.reload();
+    desktopInstalled.reload();
+    registries.reload();
   };
+  const installationOf = (appId: string) =>
+    desktopInstalled.data?.apps.find((entry) => entry.appId === appId) ?? null;
+  const listingOf = (installation: DesktopAppInstallationView) =>
+    desktopListings.data?.apps.find(
+      (entry) =>
+        entry.appId === installation.appId && entry.registry.id === installation.registry?.id,
+    ) ?? null;
+  const term = search.toLocaleLowerCase(i18n.language);
+  const desktopFiltered = (desktopListings.data?.apps ?? []).filter((listing) => {
+    const hybrid = listing.permissions.some((p) => p.capability.startsWith("integration:"));
+    return (
+      (type === "all" || (type === "hybrid" ? hybrid : type === "desktop" && !hybrid)) &&
+      (source === "all" || listing.registry.kind === source) &&
+      (!updatesOnly || listing.updateAvailable !== null) &&
+      (!category || listing.category === category) &&
+      `${listing.name} ${listing.description} ${listing.publisher.name}`
+        .toLocaleLowerCase(i18n.language)
+        .includes(term)
+    );
+  });
+  const showDocker = (type === "all" || type === "docker") && source === "all" && !updatesOnly;
   const onJob = (job: AppJobView) => {
     setJobId(job.id);
     setJobNoticeHidden(false);
@@ -57,7 +117,12 @@ export default function StoreApp() {
       })
       .catch(() => undefined);
   }, []);
-  const categories = [...new Set((apps.data?.apps ?? []).flatMap((app) => app.categories))].sort();
+  const categories = [
+    ...new Set([
+      ...(apps.data?.apps ?? []).flatMap((app) => app.categories),
+      ...(desktopListings.data?.apps ?? []).map((listing) => listing.category),
+    ]),
+  ].sort();
   const filtered = (apps.data?.apps ?? []).filter(
     (app) =>
       (!category || app.categories.includes(category)) &&
@@ -99,6 +164,39 @@ export default function StoreApp() {
           </div>
         ) : null}
         <Tabs.Content value="browse" className="outline-none">
+          <div className="mb-3 flex flex-wrap items-end gap-3">
+            <Select
+              label={t("desktopApps.store.typeFilter")}
+              value={type}
+              onChange={(value) => setType(value)}
+              options={TYPES.map((value) => ({
+                value,
+                label: t(`desktopApps.store.types.${value}`),
+              }))}
+            />
+            <Select
+              label={t("desktopApps.store.sourceFilter")}
+              value={source}
+              onChange={(value) => setSource(value)}
+              options={SOURCES.map((value) => ({
+                value,
+                label: t(
+                  value === "all"
+                    ? "desktopApps.store.allSources"
+                    : `desktopApps.store.sources.${value}`,
+                ),
+              }))}
+            />
+            <label className="flex h-10 items-center gap-2 text-sm text-fg">
+              <input
+                type="checkbox"
+                checked={updatesOnly}
+                onChange={(event) => setUpdatesOnly(event.target.checked)}
+                className="size-4 accent-[rgb(var(--everyos-accent))]"
+              />
+              {t("desktopApps.store.updatesOnly")}
+            </label>
+          </div>
           <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_200px]">
             <Field
               label={t("appStore.search")}
@@ -121,8 +219,60 @@ export default function StoreApp() {
               ]}
             />
           </div>
-          <ResourceError error={apps.error} />
-          {apps.loading ? (
+          <ResourceError error={desktopListings.error} />
+          {desktopFiltered.length ? (
+            <div
+              className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+              data-testid="desktop-app-listings"
+            >
+              {desktopFiltered.map((listing) => (
+                <button
+                  key={`${listing.registry.id}:${listing.appId}`}
+                  type="button"
+                  data-testid="desktop-app-listing"
+                  data-app-id={listing.appId}
+                  onClick={() =>
+                    setDesktopSelected({ listing, installation: installationOf(listing.appId) })
+                  }
+                  className="glass-inset flex items-start gap-3 rounded-everyos-md p-4 text-left outline-none transition-colors hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <img
+                    loading="lazy"
+                    src={`/api/desktop-apps/catalog/${listing.registry.id}/${listing.appId}/icon`}
+                    alt=""
+                    className="size-11 shrink-0 rounded-everyos-sm object-contain"
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold">{names[listing.appId] ?? listing.name}</h3>
+                    <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-fg-muted">
+                      {listing.description}
+                    </p>
+                    <p className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                      <span className="rounded-full bg-[rgb(var(--everyos-accent)/0.15)] px-2 py-0.5 text-[rgb(var(--everyos-accent))]">
+                        {t(`desktopApps.store.sources.${listing.registry.kind}`)}
+                      </span>
+                      <span className="text-fg-subtle">
+                        {listing.publisher.name} · {listing.version}
+                      </span>
+                    </p>
+                    {listing.installed ? (
+                      <p className="mt-1 text-xs text-success">
+                        {listing.updateAvailable
+                          ? t("desktopApps.store.updateTo", { version: listing.updateAvailable })
+                          : t("desktopApps.store.installed")}
+                      </p>
+                    ) : null}
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <ResourceError error={showDocker ? apps.error : null} />
+          {!showDocker ? (
+            desktopFiltered.length ? null : (
+              <p className="py-10 text-center text-sm text-fg-muted">{t("appStore.noResults")}</p>
+            )
+          ) : apps.loading ? (
             <LoadingBlock />
           ) : !filtered.length ? (
             <p className="py-10 text-center text-sm text-fg-muted">
@@ -172,7 +322,7 @@ export default function StoreApp() {
               ))}
             </div>
           )}
-          {filtered.length > limit ? (
+          {showDocker && filtered.length > limit ? (
             <Button
               variant="secondary"
               className="mt-4"
@@ -183,6 +333,43 @@ export default function StoreApp() {
           ) : null}
         </Tabs.Content>
         <Tabs.Content value="installed" className="flex flex-col gap-3 outline-none">
+          {desktopInstalled.data?.apps.length ? (
+            <section className="flex flex-col gap-2" data-testid="desktop-apps-installed">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">
+                {t("desktopApps.store.installedSection")}
+              </h3>
+              {desktopInstalled.data.apps.map((installation) => (
+                <button
+                  key={installation.appId}
+                  type="button"
+                  onClick={() =>
+                    setDesktopSelected({ listing: listingOf(installation), installation })
+                  }
+                  className="glass-inset flex items-center gap-3 rounded-everyos-md p-3 text-left outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <img
+                    src={`${installation.runtimeUrl}${installation.icon}`}
+                    alt=""
+                    className="size-9 shrink-0 rounded-everyos-sm object-contain"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">
+                      {names[installation.appId] ?? installation.name}
+                    </span>
+                    <span className="block text-xs text-fg-muted">
+                      {installation.version}
+                      {installation.state !== "active"
+                        ? ` · ${t(`desktopApps.store.state.${installation.state}`)}`
+                        : ""}
+                      {listingOf(installation)?.updateAvailable
+                        ? ` · ${t("desktopApps.store.updateTo", { version: listingOf(installation)!.updateAvailable })}`
+                        : ""}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </section>
+          ) : null}
           <ResourceError error={installed.error} />
           {installed.loading ? (
             <LoadingBlock />
@@ -210,6 +397,22 @@ export default function StoreApp() {
                 <CatalogCard key={catalog.id} catalog={catalog} onChanged={reload} />
               ))
             )}
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-fg">{t("desktopApps.registries.title")}</h3>
+              <Button variant="secondary" onClick={() => setAddingRegistry(true)}>
+                {t("desktopApps.registries.add")}
+              </Button>
+            </div>
+            <ResourceError error={registries.error} />
+            {registries.data?.registries.map((registry) => (
+              <RegistryCard key={registry.id} registry={registry} onChanged={reload} />
+            ))}
+            <div className="mt-4">
+              <NetworkRules />
+            </div>
+            <div className="mt-4">
+              <DbConnections />
+            </div>
           </Tabs.Content>
         ) : null}
       </div>
@@ -222,6 +425,24 @@ export default function StoreApp() {
         />
       ) : null}
       {adding ? <AddCatalog onClose={() => setAdding(false)} onChanged={reload} /> : null}
+      {addingRegistry ? (
+        <AddRegistryDialog onClose={() => setAddingRegistry(false)} onChanged={reload} />
+      ) : null}
+      {desktopSelected ? (
+        <DesktopAppDialog
+          key={`${desktopSelected.listing?.appId ?? desktopSelected.installation?.appId}`}
+          listing={desktopSelected.listing}
+          installation={desktopSelected.installation}
+          onClose={() => setDesktopSelected(null)}
+          onChanged={(installation) => {
+            reload();
+            // Stays open on the app as it is now, so it can be opened right after installing.
+            setDesktopSelected((current) =>
+              installation && current ? { ...current, installation } : null,
+            );
+          }}
+        />
+      ) : null}
     </Tabs.Root>
   );
 }

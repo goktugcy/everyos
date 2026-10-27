@@ -1,0 +1,253 @@
+.json-app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  min-height: 0;
+}
+.json-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.json-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 0;
+}
+.json-body[data-narrow] {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.json-editor-pane {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+  border-right: 1px solid var(--eui-line);
+}
+.json-editor {
+  min-height: 0;
+}
+.json-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-top: 1px solid var(--eui-line);
+  font-size: 0.8rem;
+  color: var(--eui-subtle);
+  min-height: 30px;
+}
+.json-error {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--eui-danger);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.json-panel {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 8px;
+  min-height: 0;
+  padding: 8px 10px;
+}
+.json-panel-body {
+  min-height: 0;
+  overflow: hidden;
+}
+.json-tree {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 6px;
+  height: 100%;
+}
+.json-tree-tools,
+.json-tree-actions,
+.json-query-head,
+.json-diff-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.json-tree-tools .eui-search {
+  flex: 1;
+}
+.json-count {
+  font-size: 0.8rem;
+  color: var(--eui-subtle);
+  white-space: nowrap;
+}
+.json-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--eui-muted);
+}
+.json-tree-rows {
+  position: relative;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-sm);
+  font:
+    0.85rem/1 ui-monospace,
+    "SF Mono",
+    Menlo,
+    Consolas,
+    monospace;
+}
+.json-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: default;
+}
+.json-row[aria-selected="true"] {
+  background: rgb(var(--everyos-accent, 2 132 199) / 0.16);
+}
+.json-row[data-hit] {
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+.json-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  color: var(--eui-subtle);
+}
+.json-key {
+  color: var(--eui-code-property);
+}
+.json-index {
+  color: var(--eui-subtle);
+}
+.json-colon {
+  color: var(--eui-subtle);
+}
+.json-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.json-value[data-type="string"] {
+  color: var(--eui-code-string);
+}
+.json-value[data-type="number"] {
+  color: var(--eui-code-number);
+}
+.json-value[data-type="boolean"],
+.json-value[data-type="null"] {
+  color: var(--eui-code-keyword);
+}
+.json-value[data-type="object"],
+.json-value[data-type="array"] {
+  color: var(--eui-subtle);
+  font-style: italic;
+}
+.json-query,
+.json-diff,
+.json-csv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+.json-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.json-chip {
+  padding: 2px 8px;
+  border: 1px solid var(--eui-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--eui-muted);
+  font:
+    0.78rem ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
+  cursor: pointer;
+}
+.json-results,
+.json-differences {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+}
+.json-results button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.json-results button:hover {
+  background: var(--eui-hover);
+}
+.json-results span,
+.json-differences span {
+  font:
+    0.8rem ui-monospace,
+    Menlo,
+    Consolas,
+    monospace;
+  color: var(--eui-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.json-diff-input {
+  min-height: 120px;
+  max-height: 35%;
+}
+.json-diff-summary {
+  margin: 0;
+}
+.json-differences li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 8px;
+  border-left: 3px solid transparent;
+}
+.json-differences li[data-kind="added"] {
+  border-color: var(--eui-success);
+}
+.json-differences li[data-kind="removed"] {
+  border-color: var(--eui-danger);
+}
+.json-differences li[data-kind="changed"] {
+  border-color: var(--eui-warning);
+}
+.json-differences .json-before {
+  text-decoration: line-through;
+}
+.json-csv-table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}

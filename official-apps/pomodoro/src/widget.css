@@ -1,0 +1,56 @@
+body {
+  background: transparent;
+}
+.pomo-widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100vh;
+  padding: 10px 14px;
+}
+.pomo-widget-open {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.pomo-widget-clock {
+  font-size: 1.05rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.pomo-widget-side {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pomo-widget-phase {
+  font-weight: 600;
+}
+.pomo-widget-status {
+  font-size: 0.8rem;
+  color: var(--eui-subtle);
+}
+.pomo-widget-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+/* Small widgets: the ring and its button only. */
+@media (max-width: 200px) {
+  .pomo-widget {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .pomo-widget-phase,
+  .pomo-widget-status {
+    display: none;
+  }
+  .pomo-widget-actions {
+    margin: 0;
+  }
+}

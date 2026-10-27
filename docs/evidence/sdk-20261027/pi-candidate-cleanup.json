@@ -1,0 +1,12 @@
+{
+  "temporaryDirectoryAbsent": true,
+  "temporaryCandidateProcessesAbsent": true,
+  "fallbackProcessTerminations": 0,
+  "fallbackDirectoryRemoval": false,
+  "format": "everyos-temporary-pi-cleanup/1",
+  "observedAt": "2026-10-27T07:44:47Z",
+  "existingServicePidsUnchanged": true,
+  "existingServicesActive": true,
+  "installedVersion": "0.1.36",
+  "measurementPortFree": true
+}

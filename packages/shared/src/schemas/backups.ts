@@ -14,7 +14,7 @@ const AppIdsSchema = z
 
 /** Names a backup may contain (anything else in an archive is rejected). */
 export const BACKUP_FILE_NAME =
-  /^(?:manifest\.json|(?:everyos|otuken)\.db\.gz|config\.yaml|wallpapers\.tar\.gz|homes\.tar\.gz|apps\/[0-9a-f-]{36}\.data\.tar\.gz)$/;
+  /^(?:manifest\.json|(?:everyos|otuken)\.db\.gz|config\.yaml|wallpapers\.tar\.gz|homes\.tar\.gz|desktop-apps\.tar\.gz|apps\/[0-9a-f-]{36}\.data\.tar\.gz)$/;
 
 const BackupManifestV1Schema = z
   .strictObject({
@@ -61,6 +61,17 @@ const BackupManifestV1Schema = z
           }),
         )
         .max(100),
+      /** Desktop app packages in `desktop-apps.tar.gz` (verified again when restored). */
+      desktopApps: z
+        .array(
+          z.strictObject({
+            id: z.string().max(128),
+            version: z.string().max(64),
+            sha256: Sha256Schema,
+          }),
+        )
+        .max(1000)
+        .default([]),
     }),
     files: z
       .array(

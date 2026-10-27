@@ -2,6 +2,7 @@ import { lookup } from "node:dns/promises";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { BlockList, isIP } from "node:net";
+import { URL } from "node:url";
 
 export class CatalogError extends Error {
   readonly reason: string;
@@ -84,6 +85,11 @@ export function createCatalogFetcher(
     ) => Promise<{ address: string; family: number }[]>;
     maxTotalBytes?: number;
     deadlineMs?: number;
+    /** Identity probes must remain on their exact HTTPS endpoints. */
+    allowRedirects?: boolean;
+    /** A credential for one origin (a private app registry); never sent after a cross-origin redirect. */
+    authorization?: { origin: string; value: string };
+    userAgent?: string;
   } = {},
 ): CatalogFetcher {
   let remaining = options.maxTotalBytes ?? 32 * 1024 * 1024;
@@ -134,7 +140,10 @@ export function createCatalogFetcher(
               headers: {
                 Accept: "*/*",
                 "Accept-Encoding": "identity",
-                "User-Agent": "EveryOS-Catalog/1",
+                "User-Agent": options.userAgent ?? "EveryOS-Catalog/1",
+                ...(options.authorization && url.origin === options.authorization.origin
+                  ? { Authorization: options.authorization.value }
+                  : {}),
               },
               lookup: (_hostname, _options, callback) =>
                 callback(null, pinned.address, pinned.family),
@@ -143,6 +152,8 @@ export function createCatalogFetcher(
               if ([301, 302, 303, 307, 308].includes(response.statusCode ?? 0)) {
                 const location = response.headers.location;
                 response.destroy();
+                if (options.allowRedirects === false)
+                  return reject(new CatalogError("redirect-not-allowed"));
                 if (!location) return reject(new CatalogError("invalid-redirect"));
                 try {
                   resolve(new URL(location, url));

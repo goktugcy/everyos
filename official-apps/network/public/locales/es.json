@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Herramientas de red"
+  },
+  "network": {
+    "export": "Exportar informe",
+    "interfaces": "Interfaces de red",
+    "interface": "Interfaz",
+    "auto": "Actualizar datos del host cada 10 segundos mientras está activo",
+    "permission": "Leer interfaces requiere system:network.read y un rol con acceso al sistema. Un administrador puede conceder permisos en la tienda.",
+    "metricsPermission": "Los datos de tráfico requieren system:metrics.read y un rol con acceso al sistema.",
+    "loadFailed": "No se pudieron leer los datos de red. Comprueba la conexión del agente y reintenta.",
+    "unsupported": "El host no puede proporcionar estos datos de red.",
+    "internetChecked": "Conectividad del host comprobada: {{at}}",
+    "internetHint": "Este estado se basa en los destinos de conectividad configurados en el host. Las comprobaciones pueden guardarse 60 segundos.",
+    "ms": "{{value}} ms",
+    "noInterfaces": "El host no ha informado de interfaces.",
+    "up": "Activa",
+    "down": "Inactiva",
+    "addresses": "Direcciones IP y prefijos",
+    "mac": "Dirección MAC",
+    "mtu": "MTU",
+    "speed": "Velocidad de enlace informada",
+    "mbps": "{{value}} Mbit/s",
+    "receive": "Velocidad de recepción",
+    "transmit": "Velocidad de transmisión",
+    "rate": "{{value}}/s",
+    "routes": "Resumen de puertas de enlace",
+    "routesHint": "Este resumen muestra las puertas de enlace predeterminadas informadas por el host. Las direcciones de interfaz incluyen sus prefijos.",
+    "gateway": "Puerta de enlace",
+    "noGateways": "El host no ha informado de puertas de enlace predeterminadas.",
+    "dns": "Servidores DNS informados",
+    "noDns": "El host no ha informado de servidores DNS.",
+    "traffic": "Tráfico por interfaz",
+    "measured": "Medido: {{at}}",
+    "noTraffic": "Las velocidades por interfaz no están disponibles en este host.",
+    "refresh": "Actualizar",
+    "unavailable": "No disponible",
+    "retrieved": "Obtenido: {{at}}",
+    "family": "Familia de direcciones",
+    "stale": "Falló la actualización. Sigue visible la instantánea anterior con su hora de obtención."
+  },
+  "source": {
+    "simulatedHint": "Estos valores están simulados por el host de desarrollo y no describen el host real.",
+    "host": "Datos del host",
+    "simulated": "Datos simulados"
+  },
+  "internet": {
+    "online": "Host con conectividad",
+    "offline": "Falló la comprobación de conectividad",
+    "unknown": "Conectividad del host desconocida",
+    "disabled": "Comprobación de conectividad desactivada"
+  },
+  "kind": {
+    "ethernet": "Ethernet",
+    "wireless": "Inalámbrica",
+    "loopback": "Bucle local",
+    "tailscale": "Tailscale",
+    "bridge": "Puente",
+    "virtual": "Virtual",
+    "other": "Otra"
+  },
+  "diagnostic": {
+    "title": "Comprobar destino autorizado",
+    "policy": "Envía HEAD a un destino HTTP autorizado en la tienda. Se verifica TLS y cada destino de redirección se comprueba con la política.",
+    "permission": "Las comprobaciones requieren network:outbound. Un administrador puede concederlo en la tienda.",
+    "url": "URL HTTP o HTTPS",
+    "check": "Comprobar destino",
+    "checking": "Comprobando…",
+    "invalid": "Introduce una URL HTTP o HTTPS sin credenciales ni fragmento.",
+    "attempt": "Último intento: {{url}} · {{at}}",
+    "responded": "Respuesta HTTP recibida",
+    "responseHint": "Una respuesta HTTP indica que este destino respondió. El estado describe la respuesta del servicio.",
+    "status": "Estado HTTP",
+    "address": "Dirección remota",
+    "time": "Hora de comprobación",
+    "elapsed": "Tiempo de respuesta",
+    "redirects": "Redirecciones seguidas"
+  }
+}

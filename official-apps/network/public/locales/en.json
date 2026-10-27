@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Network Tools"
+  },
+  "network": {
+    "export": "Export report",
+    "interfaces": "Network interfaces",
+    "interface": "Interface",
+    "auto": "Refresh host data every 10 seconds while active",
+    "permission": "Reading network interfaces requires system:network.read and a role that allows system access. An administrator can grant app permissions in the App Store.",
+    "metricsPermission": "Traffic data requires system:metrics.read and a role that allows system access.",
+    "loadFailed": "Could not read network data. Check the agent connection and retry.",
+    "unsupported": "The host cannot provide this network data.",
+    "internetChecked": "Host connectivity checked: {{at}}",
+    "internetHint": "This state follows the host’s configured connectivity endpoints. Its checks may be cached for 60 seconds.",
+    "ms": "{{value}} ms",
+    "noInterfaces": "No interfaces reported by the host.",
+    "up": "Up",
+    "down": "Down",
+    "addresses": "IP addresses and prefixes",
+    "mac": "MAC address",
+    "mtu": "MTU",
+    "speed": "Reported link speed",
+    "mbps": "{{value}} Mbit/s",
+    "receive": "Receive rate",
+    "transmit": "Transmit rate",
+    "rate": "{{value}}/s",
+    "routes": "Default gateway summary",
+    "routesHint": "This route summary lists the host’s reported default gateways. Interface addresses above include their network prefixes.",
+    "gateway": "Gateway",
+    "noGateways": "No default gateways reported by the host.",
+    "dns": "Reported DNS servers",
+    "noDns": "No DNS servers reported by the host.",
+    "traffic": "Interface traffic",
+    "measured": "Measured: {{at}}",
+    "noTraffic": "Per-interface traffic rates are unavailable on this host.",
+    "refresh": "Refresh",
+    "unavailable": "Unavailable",
+    "retrieved": "Retrieved: {{at}}",
+    "family": "Address family",
+    "stale": "Refresh failed. The previous snapshot remains visible with its retrieval time."
+  },
+  "source": {
+    "simulatedHint": "These values are simulated by the development host and do not describe the real host.",
+    "host": "Host data",
+    "simulated": "Simulated data"
+  },
+  "internet": {
+    "online": "Host connectivity available",
+    "offline": "Host connectivity check failed",
+    "unknown": "Host connectivity unknown",
+    "disabled": "Host connectivity probe disabled"
+  },
+  "kind": {
+    "ethernet": "Ethernet",
+    "wireless": "Wireless",
+    "loopback": "Loopback",
+    "tailscale": "Tailscale",
+    "bridge": "Bridge",
+    "virtual": "Virtual",
+    "other": "Other"
+  },
+  "diagnostic": {
+    "title": "Approved endpoint check",
+    "policy": "Send a HEAD request to an HTTP endpoint approved by an administrator in the App Store. TLS is verified; every redirect target is checked against the policy.",
+    "permission": "Endpoint checks need network:outbound. An administrator can grant it in the App Store.",
+    "url": "HTTP or HTTPS URL",
+    "check": "Check endpoint",
+    "checking": "Checking…",
+    "invalid": "Enter an HTTP or HTTPS URL without credentials or a fragment.",
+    "attempt": "Last attempt: {{url}} · {{at}}",
+    "responded": "HTTP response received",
+    "responseHint": "An HTTP response shows that this endpoint answered. Its status describes the service response.",
+    "status": "HTTP status",
+    "address": "Remote address",
+    "time": "Check time",
+    "elapsed": "Response time",
+    "redirects": "Redirects followed"
+  }
+}

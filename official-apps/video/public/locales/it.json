@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Lettore video",
+    "description": "Riproduci video selezionati con sottotitoli, playlist e ripresa."
+  },
+  "video": {
+    "scope": "Sono accessibili solo i file scelti. Fino a 20 playlist da 100 video. Posizioni e impostazioni sono salvate; i video sono trasmessi da EveryOS, mai copiati nell’app.",
+    "permission": "L’accesso richiede il permesso files:pick nell’App Store.",
+    "add": "Aggiungi video",
+    "openSubtitles": "Apri sottotitoli",
+    "fullscreen": "Schermo intero",
+    "fullscreenError": "Il browser ha rifiutato lo schermo intero. Usa i controlli nativi se disponibili.",
+    "playlist": "Playlist",
+    "defaultList": "I miei video",
+    "newList": "Nuova playlist",
+    "renameList": "Rinomina playlist",
+    "deleteList": "Elimina playlist",
+    "referencesOnly": "Vengono rimossi solo i riferimenti. Gli originali non vengono eliminati.",
+    "revoked": "Alcuni file non sono più condivisi. Aggiungili nuovamente.",
+    "empty": "Nessun video selezionato",
+    "openHint": "Scegli un video tramite EveryOS. La riproduzione dipende da contenitori e codec del browser; l’app non transcodifica.",
+    "selected": "Video selezionato",
+    "previous": "Video precedente",
+    "next": "Video successivo",
+    "remove": "Rimuovi dalla playlist",
+    "player": "Riproduzione video",
+    "play": "Riproduci",
+    "pause": "Pausa",
+    "reload": "Ricarica video",
+    "speed": "Velocità di riproduzione",
+    "subtitles": "Sottotitoli",
+    "showSubtitles": "Mostra sottotitoli",
+    "hideSubtitles": "Nascondi sottotitoli",
+    "captionHint": "Sottotitoli WebVTT o SRT testuali, fino a 1 MiB e 2.000 voci. Markup e stili non vengono eseguiti.",
+    "badSubtitles": "Sottotitoli illeggibili. Usa WebVTT/SRT valido con almeno una voce temporizzata, massimo 1 MiB e 2.000 voci.",
+    "unsupported": "Riproduzione non riuscita: codec non supportato, file danneggiato o accesso scaduto. Ricarica o prova un altro browser/formato. Nessuna transcodifica.",
+    "codecs": "Codec del browser",
+    "codecHint": "Sono indicazioni canPlayType del browser, non una garanzia per ogni file. Conta la riproduzione effettiva.",
+    "probably": "Probabilmente supportato",
+    "maybe": "Forse supportato",
+    "notReported": "Nessun supporto dichiarato"
+  }
+}

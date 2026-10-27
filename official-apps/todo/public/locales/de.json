@@ -1,0 +1,148 @@
+{
+  "app": {
+    "name": "Aufgaben",
+    "description": "Aufgaben mit Projekten, Prioritäten, Fälligkeiten, Wiederholungen, Tags, Unteraufgaben, Erinnerungen, Fortschritt und Widget."
+  },
+  "widgets": {
+    "today": {
+      "name": "Heutige Aufgaben",
+      "description": "Heute fällige und überfällige Aufgaben: abhaken oder neue hinzufügen."
+    }
+  },
+  "lists": {
+    "inbox": "Eingang",
+    "today": "Heute",
+    "upcoming": "Demnächst",
+    "overdue": "Überfällig",
+    "all": "Alle Aufgaben",
+    "completed": "Erledigt"
+  },
+  "backup": {
+    "import": "Sicherung importieren…",
+    "export": "Sicherung exportieren…",
+    "imported_one": "{{count}} Aufgabe importiert",
+    "imported_other": "{{count}} Aufgaben importiert"
+  },
+  "due": {
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "yesterday": "Gestern"
+  },
+  "empty": {
+    "inbox": "Ihr Eingang ist leer",
+    "today": "Heute ist nichts fällig",
+    "upcoming": "Nichts in den nächsten 7 Tagen",
+    "overdue": "Nichts überfällig",
+    "all": "Keine offenen Aufgaben",
+    "completed": "Noch nichts erledigt",
+    "list": "Hier sind keine Aufgaben"
+  },
+  "progress": {
+    "title": "Fortschritt",
+    "chart": "Erledigt pro Tag, letzte 7 Tage",
+    "done": "{{done}} von {{total}} erledigt",
+    "open": "Offene Aufgaben",
+    "week": "Diese Woche erledigt"
+  },
+  "projects": {
+    "title": "Projekte",
+    "add": "Neues Projekt",
+    "rename": "Projekt umbenennen",
+    "delete": "Projekt löschen",
+    "deleteTitle": "Projekt „{{name}}“ löschen?",
+    "deleteBody": "Die Aufgaben wandern in den Eingang.",
+    "name": "Projektname"
+  },
+  "recurrence": {
+    "title": "Wiederholung",
+    "repeat": "Wiederholt sich",
+    "repeats": "Wiederholt sich",
+    "monthMode": "Am",
+    "monthDay": "Am {{day}}. des Monats",
+    "monthWeekday": "Am selben {{weekday}} im Monat",
+    "next": "Nächstes Mal: {{date}}",
+    "weekdays": "An diesen Tagen",
+    "units": {
+      "none": "Keine Wiederholung",
+      "day": "Täglich",
+      "weekday": "Werktags (Mo–Fr)",
+      "week": "Wöchentlich",
+      "month": "Monatlich",
+      "year": "Jährlich"
+    },
+    "every": {
+      "day": "Alle … Tage",
+      "week": "Alle … Wochen",
+      "month": "Alle … Monate",
+      "year": "Alle … Jahre"
+    }
+  },
+  "reminder": {
+    "at": "Fällig um {{time}}",
+    "today": "Heute fällig",
+    "needsDue": "Erinnerungen brauchen ein Fälligkeitsdatum (ohne Uhrzeit 09:00).",
+    "none": "Keine Erinnerung",
+    "options": {
+      "0": "Zur Fälligkeit",
+      "5": "5 Minuten vorher",
+      "10": "10 Minuten vorher",
+      "15": "15 Minuten vorher",
+      "30": "30 Minuten vorher",
+      "60": "1 Stunde vorher",
+      "120": "2 Stunden vorher",
+      "1440": "1 Tag vorher"
+    }
+  },
+  "search": {
+    "label": "Aufgaben durchsuchen",
+    "none": "Keine passenden Aufgaben"
+  },
+  "sort": {
+    "label": "Sortieren",
+    "manual": "Eigene Reihenfolge",
+    "due": "Fälligkeit",
+    "priority": "Priorität",
+    "title": "Titel"
+  },
+  "subtasks": {
+    "title": "Unteraufgaben",
+    "add": "Unteraufgabe hinzufügen",
+    "delete": "Unteraufgabe löschen"
+  },
+  "tags": {
+    "title": "Tags"
+  },
+  "task": {
+    "added": "Aufgabe hinzugefügt",
+    "complete": "Als erledigt markieren",
+    "completeNamed": "„{{name}}“ als erledigt markieren",
+    "completed": "Erledigt",
+    "deleteTitle": "„{{name}}“ löschen?",
+    "details": "Aufgabendetails",
+    "done": "Erledigt",
+    "due": "Fällig am",
+    "moveDown": "Nach unten",
+    "moveUp": "Nach oben",
+    "nextOccurrence": "Erledigt. Auf den nächsten Termin verschoben.",
+    "notes": "Notizen",
+    "priority": "Priorität",
+    "project": "Projekt",
+    "quickAdd": "Neue Aufgabe",
+    "quickAddPlaceholder": "Aufgabe hinzufügen… (#Tags möglich)",
+    "reminder": "Erinnerung",
+    "reopen": "Als offen markieren",
+    "tags": "Tags",
+    "tagsHint": "Mit Leerzeichen oder Kommas trennen",
+    "time": "Uhrzeit",
+    "title": "Titel"
+  },
+  "priority": {
+    "0": "Keine Priorität",
+    "1": "Niedrig",
+    "2": "Mittel",
+    "3": "Hoch"
+  },
+  "widget": {
+    "add": "Aufgabe für heute hinzufügen…"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "app": {
+    "name": "PDF 查看器",
+    "description": "阅读 PDF 文件：页面与缩略图、缩放与旋转、文本搜索、文档大纲和你自己的书签、打印和保存副本。"
+  },
+  "actions": {
+    "open": "打开 PDF…"
+  },
+  "pages": {
+    "label": "页面",
+    "previous": "上一页",
+    "next": "下一页",
+    "current": "页码",
+    "of": "/ {{count}}",
+    "thumbnail": "第 {{page}} 页"
+  },
+  "zoom": {
+    "label": "缩放",
+    "in": "放大",
+    "out": "缩小",
+    "auto": "自动",
+    "page-width": "适合页宽",
+    "page-fit": "整页",
+    "page-actual": "实际大小"
+  },
+  "rotate": {
+    "left": "向左旋转",
+    "right": "向右旋转"
+  },
+  "find": {
+    "open": "在文档中查找",
+    "label": "查找",
+    "placeholder": "在文档中查找…",
+    "previous": "上一个匹配",
+    "next": "下一个匹配",
+    "caseSensitive": "区分大小写",
+    "entireWord": "全词匹配",
+    "close": "关闭搜索",
+    "searching": "正在搜索…",
+    "notFound": "未找到",
+    "position_other": "第 {{current}} 个，共 {{count}} 个匹配"
+  },
+  "bookmarks": {
+    "addCurrent": "为此页添加书签",
+    "removeCurrent": "移除此页的书签",
+    "defaultLabel": "第 {{page}} 页",
+    "added": "已为第 {{page}} 页添加书签",
+    "renameTitle": "重命名书签",
+    "rename": "重命名“{{label}}”",
+    "remove": "移除“{{label}}”",
+    "empty": "还没有书签",
+    "emptyText": "使用工具栏中的书签按钮记住页面。"
+  },
+  "print": {
+    "action": "打印",
+    "preparing": "正在准备打印",
+    "progress": "第 {{done}} 页，共 {{total}} 页",
+    "failed": "无法准备打印文档。"
+  },
+  "save": {
+    "action": "保存副本",
+    "saved": "已保存 {{name}} 的副本"
+  },
+  "sidebar": {
+    "label": "导航",
+    "show": "显示侧栏",
+    "hide": "隐藏侧栏",
+    "pages": "页面",
+    "outline": "大纲",
+    "bookmarks": "书签"
+  },
+  "outline": {
+    "label": "文档大纲",
+    "expand": "展开 {{title}}",
+    "collapse": "折叠 {{title}}",
+    "external": "打开网页",
+    "empty": "没有大纲",
+    "emptyText": "此文档没有目录。"
+  },
+  "viewer": {
+    "label": "{{name}} 的页面",
+    "opening": "正在打开…",
+    "emptyTitle": "打开 PDF 开始阅读",
+    "emptyText": "文档会从你上次离开的位置打开，并保留书签。",
+    "tryAnother": "请尝试打开其他文件。"
+  },
+  "recent": {
+    "title": "最近",
+    "gone": "“{{name}}”已不可用。"
+  },
+  "errors": {
+    "tooLarge": "可打开不超过 {{size}} 的 PDF 文件。",
+    "invalid": "“{{name}}”不是 PDF 或已损坏。",
+    "password": "无法用该密码打开此 PDF。",
+    "open": "无法打开“{{name}}”。"
+  },
+  "password": {
+    "title": "此 PDF 受保护",
+    "label": "密码",
+    "open": "打开",
+    "incorrect": "密码不正确，请重试。"
+  }
+}

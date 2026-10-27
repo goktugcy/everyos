@@ -1,0 +1,98 @@
+{
+  "app": {
+    "name": "JSON Stüdyosu",
+    "description": "JSON doğrulayın, biçimlendirin ve keşfedin: ağaç görünümü, JSONPath sorguları, yapısal karşılaştırma ve CSV dışa aktarma."
+  },
+  "actions": {
+    "open": "Aç…",
+    "save": "Farklı kaydet…",
+    "indent": "Girinti",
+    "sortKeys": "Anahtarları sırala",
+    "format": "Biçimlendir",
+    "minify": "Küçült",
+    "copy": "Kopyala"
+  },
+  "indent": {
+    "two": "2 boşluk",
+    "four": "4 boşluk",
+    "tab": "Sekmeler"
+  },
+  "editor": {
+    "label": "JSON metni",
+    "placeholder": "JSON yapıştırın, yazın ya da bir dosya açın…"
+  },
+  "status": {
+    "empty": "Boş",
+    "valid": "Geçerli JSON",
+    "invalid": "Geçersiz",
+    "at": "Satır {{line}}, sütun {{column}}",
+    "fixFirst": "Önce JSON'u düzeltin: geçerli değil.",
+    "emptyPanel": "Keşfetmek için JSON yapıştırın ya da açın",
+    "invalidPanel": "JSON'da hata var: düzenleyiciye bakın"
+  },
+  "problems": {
+    "unexpected-end": "Metin erken bitiyor",
+    "unexpected-character": "Beklenmeyen karakter",
+    "bad-string": "Bir dizgede kontrol karakteri var (kaçış kullanın)",
+    "bad-escape": "Geçersiz kaçış dizisi",
+    "bad-number": "Geçersiz sayı",
+    "trailing-comma": "Sondaki virgül (JSON'da izin verilmez)",
+    "expected-colon": "Anahtardan sonra “:” bekleniyor",
+    "expected-comma": "“,” ya da kapanış parantezi bekleniyor",
+    "expected-key": "Çift tırnak içinde anahtar bekleniyor",
+    "trailing-content": "JSON değerinden sonra beklenmeyen metin",
+    "empty": "Okunacak bir şey yok"
+  },
+  "panels": {
+    "label": "Araçlar",
+    "tree": "Ağaç",
+    "query": "Sorgu",
+    "diff": "Karşılaştır",
+    "csv": "CSV"
+  },
+  "tree": {
+    "label": "Belge ağacı",
+    "search": "Anahtar ve değerlerde ara",
+    "hit": "{{current}} / {{total}}",
+    "noHits": "Eşleşme yok",
+    "previous": "Önceki eşleşme",
+    "next": "Sonraki eşleşme",
+    "copyPath": "Yolu kopyala",
+    "copyValue": "Değeri kopyala",
+    "members_one": "{{count}} üye",
+    "members_other": "{{count}} üye",
+    "items_one": "{{count}} öğe",
+    "items_other": "{{count}} öğe"
+  },
+  "query": {
+    "label": "JSONPath",
+    "examples": "Örnekler",
+    "error": "{{position}}. konumda: {{message}}",
+    "results_one": "{{count}} sonuç",
+    "results_other": "{{count}} sonuç",
+    "copy": "Sonuçları kopyala",
+    "show": "Ağaçta göster",
+    "more": "ve {{count}} tane daha"
+  },
+  "diff": {
+    "with": "Başka bir JSON belgesiyle karşılaştır",
+    "open": "Aç…",
+    "other": "Karşılaştırılacak JSON",
+    "placeholder": "Diğer sürümü buraya yapıştırın",
+    "same": "Belgeler aynı",
+    "added_one": "{{count}} eklendi",
+    "added_other": "{{count}} eklendi",
+    "removed_one": "{{count}} kaldırıldı",
+    "removed_other": "{{count}} kaldırıldı",
+    "changed_one": "{{count}} değişti",
+    "changed_other": "{{count}} değişti"
+  },
+  "csv": {
+    "needsArray": "CSV için bir liste gerekir",
+    "needsArrayText": "Belge bir dizi olmalı (sütunlar için nesnelerden oluşan).",
+    "summary": "{{rows}} satır, {{columns}} sütun",
+    "copy": "CSV'yi kopyala",
+    "export": "CSV olarak dışa aktar…",
+    "preview": "CSV önizlemesi"
+  }
+}

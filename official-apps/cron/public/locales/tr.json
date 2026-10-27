@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Cron Oluşturucu",
+    "description": "Cron zamanlamaları oluşturun ve denetleyin: görsel oluşturucu, anlaşılır açıklamalar, her saat diliminde sonraki çalışmalar, systemd ve EveryOS biçimleri."
+  },
+  "seconds": {
+    "label": "Saniye alanı"
+  },
+  "expression": {
+    "section": "İfade",
+    "label": "Cron ifadesi",
+    "copy": "İfadeyi kopyala"
+  },
+  "fields": {
+    "second": "Saniye",
+    "minute": "Dakika",
+    "hour": "Saat",
+    "day": "Ayın günü",
+    "month": "Ay",
+    "weekday": "Haftanın günü"
+  },
+  "problems": {
+    "field-count": "Bir cron ifadesinde boşlukla ayrılmış {{count}} alan olur ({{token}} bulundu).",
+    "empty": "{{field}} boş.",
+    "bad-token": "{{field}}: “{{token}}” bir sayı, ad, * ya da liste değil.",
+    "out-of-range": "{{field}}: {{token}} aralık dışında.",
+    "bad-range": "{{field}}: “{{token}}” aralığı ters yönde.",
+    "bad-step": "{{field}}: “{{token}}” içindeki adım 0'dan büyük bir sayı olmalı.",
+    "reboot": "@reboot zamana göre değil, açılışta çalışır: gösterilecek çalışma zamanı yok."
+  },
+  "builder": {
+    "custom": "Bu alanı ifadede düzenleyin (oluşturucunun göstermediği bir biçim kullanıyor).",
+    "mode": "{{field}} nasıl ayarlanır",
+    "modes": {
+      "every": "Her",
+      "specific": "Belirli değerler",
+      "range": "Aralık",
+      "step": "Her n"
+    },
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "every": "Her",
+    "interval": "Aralık",
+    "startingAt": "başlangıç",
+    "start": "Başlangıç"
+  },
+  "presets": {
+    "title": "Hazır ayarlar",
+    "everyMinute": "Her dakika",
+    "every5Minutes": "5 dakikada bir",
+    "every15Minutes": "15 dakikada bir",
+    "hourly": "Saatte bir",
+    "every6Hours": "6 saatte bir",
+    "daily3am": "Her gün 03:00",
+    "weekdays9am": "Hafta içi 09:00",
+    "weeklySunday": "Her pazar",
+    "monthlyFirst": "Her ayın 1'i",
+    "quarterly": "Üç ayda bir",
+    "yearly": "Yılda bir"
+  },
+  "runs": {
+    "section": "Çalışma zamanları",
+    "timeZone": "Saat dilimi",
+    "next": "Sonraki çalışmalar",
+    "previous": "Önceki çalışmalar",
+    "none": "Bu zamanlama hiç çalışmaz (örneğin 30 Şubat).",
+    "invalid": "Çalışma zamanlarını görmek için ifadeyi düzeltin."
+  },
+  "export": {
+    "title": "Kullanın",
+    "command": "Komut",
+    "commandPlaceholder": "/komut/yolu",
+    "crontab": "crontab satırı",
+    "onCalendar": "systemd zamanlayıcısı (OnCalendar=)",
+    "twoLines": "Cron, gün alanlarından biri eşleşince çalışır; systemd ikisini birden ister, bu yüzden zamanlayıcıda iki satır olur.",
+    "timezone": "{{zone}} saat diliminde.",
+    "everyos": "EveryOS Zamanlanmış Görevler",
+    "compatible": "Uyumlu",
+    "problems": {
+      "seconds": "Zamanlanmış Görevlerde saniye alanı yoktur.",
+      "too-frequent": "Zamanlanmış Görevler en sık 5 dakikada bir (saatte 12 kez) çalışır."
+    },
+    "timerFile": "Bir .timer dosyası kaydet…",
+    "defaultDescription": "Zamanlanmış iş",
+    "notScheduled": "Cron Oluşturucu yalnızca ifade oluşturur: bu sunucuda hiçbir şeyi zamanlamaz."
+  },
+  "saved": {
+    "title": "Kaydedilenler",
+    "name": "Ad",
+    "save": "İfadeyi kaydet",
+    "done": "Kaydedildi",
+    "delete": "{{name}} sil"
+  }
+}

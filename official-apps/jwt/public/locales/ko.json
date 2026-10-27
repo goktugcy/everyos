@@ -1,0 +1,114 @@
+{
+  "app": {
+    "name": "JWT 검사기",
+    "description": "JSON Web Token을 디코딩하고 클레임과 만료를 확인하며, 직접 가진 키로 서명을 검증하고 가린 클레임을 내보냅니다. 토큰은 이 기기를 벗어나지 않습니다."
+  },
+  "remember": {
+    "label": "마지막 토큰 기억",
+    "hint": "기본값은 꺼짐: 토큰은 이 창에만 있으며 키는 저장되지 않습니다."
+  },
+  "token": {
+    "section": "토큰",
+    "label": "JSON Web Token",
+    "placeholder": "토큰(eyJ…)을 붙여넣으세요. “Bearer”가 있어도 됩니다",
+    "parts": "헤더, 페이로드, 서명",
+    "privacy": "디코딩은 이 기기에서 이루어지며 토큰은 어디에도 전송되지 않습니다.",
+    "waiting": "토큰을 붙여넣으면 검사합니다",
+    "noAlg": "알고리즘 없음",
+    "algNone": "서명 없음 (alg: none): 누구나 만들 수 있습니다"
+  },
+  "parts": {
+    "0": "헤더",
+    "1": "페이로드",
+    "2": "서명"
+  },
+  "problems": {
+    "segments": "토큰은 점으로 구분된 세 부분입니다",
+    "base64": "{{part}}이(가) 올바른 Base64URL이 아닙니다",
+    "json": "{{part}}이(가) JSON이 아닙니다",
+    "not-object": "{{part}}은(는) JSON 객체여야 합니다",
+    "jwe": "암호화된 토큰(JWE)입니다. 개인 키 없이는 읽을 수 없습니다"
+  },
+  "validity": {
+    "valid": "유효",
+    "expiresIn": "{{when}} 만료",
+    "expired": "{{when}} 만료됨",
+    "notYet": "아직 유효하지 않음: {{when}} 시작",
+    "noExpiry": "만료 없음 (exp)",
+    "skew": "시계 허용 오차",
+    "seconds_other": "{{count}}초"
+  },
+  "panels": {
+    "label": "보기",
+    "decoded": "디코딩",
+    "verify": "서명 검증",
+    "export": "내보내기"
+  },
+  "decoded": {
+    "header": "헤더",
+    "payload": "페이로드",
+    "claim": "클레임",
+    "value": "값"
+  },
+  "verify": {
+    "secretHint": "이 토큰은 HMAC 비밀 값을 사용합니다. 공유 비밀 값을 붙여넣으세요.",
+    "keyHint": "발급자의 공개 키를 붙여넣으세요: PEM(BEGIN PUBLIC KEY), 인증서, JWK 또는 JWK 세트(kid로 선택).",
+    "encoding": "비밀 값 형식",
+    "encodings": {
+      "text": "텍스트",
+      "base64": "Base64",
+      "base64url": "Base64URL"
+    },
+    "secret": "비밀 값",
+    "key": "공개 키",
+    "check": "서명 확인",
+    "private": "키는 이 창에서만 사용되며 저장되지 않습니다.",
+    "results": {
+      "valid": "서명 유효 ({{alg}})",
+      "invalid-signature": "이 키와 서명이 일치하지 않습니다",
+      "alg-none": "서명 없는 토큰(alg: none)은 허용되지 않습니다",
+      "alg-unsupported": "{{alg}} 알고리즘은 지원하지 않습니다",
+      "key-mismatch": "이 종류의 키는 {{alg}}에 맞지 않습니다",
+      "bad-key": "키를 읽지 못했습니다",
+      "private-key": "개인 키입니다. 대신 공개 키를 붙여넣으세요",
+      "no-matching-key": "세트에 이 토큰의 kid와 맞는 키가 없습니다"
+    }
+  },
+  "export": {
+    "hint": "사람을 식별하는 정보 없이 토큰 내용을 공유하세요. 숨길 클레임을 선택하세요.",
+    "redact": "숨길 클레임",
+    "redactClaim": "{{claim}} 숨기기",
+    "preview": "내보낼 내용",
+    "copy": "복사",
+    "save": "JSON으로 저장…"
+  },
+  "claims": {
+    "iss": "발급자",
+    "sub": "주체 (토큰 대상)",
+    "aud": "대상 (수락할 수 있는 곳)",
+    "exp": "만료 시각",
+    "nbf": "유효 시작",
+    "iat": "발급 시각",
+    "jti": "토큰 ID",
+    "azp": "권한 있는 당사자",
+    "scope": "허용된 범위",
+    "scp": "허용된 범위",
+    "client_id": "클라이언트",
+    "sid": "세션 ID",
+    "nonce": "논스",
+    "auth_time": "로그인 시각",
+    "acr": "인증 수준",
+    "amr": "인증 방법",
+    "name": "이름",
+    "given_name": "이름",
+    "family_name": "성",
+    "preferred_username": "사용자 이름",
+    "email": "이메일",
+    "email_verified": "이메일 확인됨",
+    "phone_number": "전화번호",
+    "roles": "역할",
+    "groups": "그룹",
+    "tid": "테넌트",
+    "oid": "개체 ID"
+  }
+}

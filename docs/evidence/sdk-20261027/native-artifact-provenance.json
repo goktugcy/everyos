@@ -1,0 +1,18 @@
+{
+  "headSha": "2451554006f9aa45a14e44bc9b2c84bb54260a00",
+  "runId": 40433524915,
+  "artifacts": [
+    {
+      "id": 12703525442,
+      "name": "sdk-linux-package-amd64",
+      "digest": "sha256:2895f9a68ab0ef8ab468ac0f3a7d24686160489df617ab3d61a7c0dcc3c6e0b2",
+      "size": 876
+    },
+    {
+      "id": 12702419202,
+      "name": "sdk-linux-package-arm64",
+      "digest": "sha256:5278be825d93dd8cc8c392fafe143a452e4ff67c7766ea05d9dfade3fd4f0ff2",
+      "size": 882
+    }
+  ]
+}

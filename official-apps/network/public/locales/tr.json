@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Ağ Araçları"
+  },
+  "network": {
+    "export": "Raporu dışa aktar",
+    "interfaces": "Ağ arayüzleri",
+    "interface": "Arayüz",
+    "auto": "Etkin durumdayken host verisini 10 saniyede bir yenile",
+    "permission": "Ağ arayüzlerini okumak için system:network.read izni ve sistem erişimi olan bir rol gerekir. Bir yönetici, Uygulama Mağazası’ndan uygulama izinlerini verebilir.",
+    "metricsPermission": "Trafik verisi için system:metrics.read izni ve sistem erişimi olan bir rol gerekir.",
+    "loadFailed": "Ağ verisi okunamadı. Agent bağlantısını kontrol edip yeniden dene.",
+    "unsupported": "Host bu ağ verisini sağlayamıyor.",
+    "internetChecked": "Host bağlantı kontrolü: {{at}}",
+    "internetHint": "Bu durum, hostta ayarlanan bağlantı hedeflerine göre ölçülür. Kontroller 60 saniye önbellekte tutulabilir.",
+    "ms": "{{value}} ms",
+    "noInterfaces": "Host herhangi bir arayüz bildirmedi.",
+    "up": "Etkin",
+    "down": "Etkin değil",
+    "addresses": "IP adresleri ve önekler",
+    "mac": "MAC adresi",
+    "mtu": "MTU",
+    "speed": "Bildirilen bağlantı hızı",
+    "mbps": "{{value}} Mbit/sn",
+    "receive": "Alım hızı",
+    "transmit": "Gönderim hızı",
+    "rate": "{{value}}/sn",
+    "routes": "Varsayılan ağ geçitleri özeti",
+    "routesHint": "Bu yönlendirme özeti, hostun bildirdiği varsayılan ağ geçitlerini listeler. Yukarıdaki arayüz adresleri ağ öneklerini içerir.",
+    "gateway": "Ağ geçidi",
+    "noGateways": "Host varsayılan ağ geçidi bildirmedi.",
+    "dns": "Bildirilen DNS sunucuları",
+    "noDns": "Host DNS sunucusu bildirmedi.",
+    "traffic": "Arayüz trafiği",
+    "measured": "Ölçüm zamanı: {{at}}",
+    "noTraffic": "Bu hostta arayüz bazında trafik hızları kullanılamıyor.",
+    "refresh": "Yenile",
+    "unavailable": "Kullanılamıyor",
+    "retrieved": "Alınma zamanı: {{at}}",
+    "family": "Adres ailesi",
+    "stale": "Yenileme başarısız. Önceki anlık görüntü, alınma zamanı ile gösterilmeye devam ediyor."
+  },
+  "source": {
+    "simulatedHint": "Bu değerler geliştirme hostu tarafından simüle edilir ve gerçek hostu göstermez.",
+    "host": "Host verisi",
+    "simulated": "Simüle veri"
+  },
+  "internet": {
+    "online": "Host bağlantısı var",
+    "offline": "Host bağlantı kontrolü başarısız",
+    "unknown": "Host bağlantısı bilinmiyor",
+    "disabled": "Host bağlantı kontrolü kapalı"
+  },
+  "kind": {
+    "ethernet": "Ethernet",
+    "wireless": "Kablosuz",
+    "loopback": "Geri döngü",
+    "tailscale": "Tailscale",
+    "bridge": "Köprü",
+    "virtual": "Sanal",
+    "other": "Diğer"
+  },
+  "diagnostic": {
+    "title": "İzin verilen hedef kontrolü",
+    "policy": "Uygulama Mağazası’nda bir yöneticinin izin verdiği HTTP hedefine HEAD isteği gönderilir. TLS doğrulanır; her yönlendirme hedefi politikayla kontrol edilir.",
+    "permission": "Hedef kontrolleri için network:outbound izni gerekir. Bir yönetici, Uygulama Mağazası’ndan izin verebilir.",
+    "url": "HTTP veya HTTPS adresi",
+    "check": "Hedefi kontrol et",
+    "checking": "Kontrol ediliyor…",
+    "invalid": "Kimlik bilgisi ve parça işareti içermeyen bir HTTP veya HTTPS adresi gir.",
+    "attempt": "Son deneme: {{url}} · {{at}}",
+    "responded": "HTTP yanıtı alındı",
+    "responseHint": "HTTP yanıtı, bu hedefin cevap verdiğini gösterir. Durum kodu, servisin yanıtını açıklar.",
+    "status": "HTTP durumu",
+    "address": "Uzak adres",
+    "time": "Kontrol zamanı",
+    "elapsed": "Yanıt süresi",
+    "redirects": "İzlenen yönlendirmeler"
+  }
+}

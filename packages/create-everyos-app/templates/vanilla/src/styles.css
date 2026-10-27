@@ -1,0 +1,56 @@
+:root {
+  color-scheme: light dark;
+  font-family: var(--everyos-font-family, system-ui, sans-serif);
+  font-size: calc(14px * var(--everyos-font-scale, 1));
+}
+body {
+  margin: 0;
+  background: rgb(var(--everyos-surface, 248 250 252));
+  color: rgb(var(--everyos-text, 11 18 32));
+}
+main {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100vh;
+  padding: 16px;
+}
+h1 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+textarea {
+  flex: 1;
+  resize: none;
+  padding: 12px;
+  border: 1px solid rgb(var(--everyos-border, 15 23 42) / var(--everyos-border-opacity, 0.1));
+  border-radius: var(--everyos-radius-md, 14px);
+  background: rgb(var(--everyos-inset, 255 255 255) / var(--everyos-inset-opacity, 0.6));
+  color: inherit;
+  font: inherit;
+}
+button {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--everyos-radius-sm, 10px);
+  background: rgb(var(--everyos-accent, 2 132 199));
+  color: rgb(var(--everyos-accent-contrast, 255 255 255));
+  font: inherit;
+  cursor: pointer;
+}
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid rgb(var(--everyos-accent, 2 132 199));
+  outline-offset: 2px;
+}
+.status {
+  margin: 0;
+  color: rgb(var(--everyos-text-muted, 47 60 82));
+  font-size: 0.85rem;
+}
+[data-everyos-reduced-motion] * {
+  transition: none !important;
+  animation: none !important;
+}

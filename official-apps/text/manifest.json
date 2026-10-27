@@ -1,0 +1,29 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.text",
+  "name": "Text Editor",
+  "version": "1.0.0",
+  "description": "Plain text files in tabs, with find and replace, encodings, line endings and recovery of unsaved work.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "productivity",
+  "permissions": ["storage:app", "files:pick", "files:save"],
+  "window": {
+    "defaultWidth": 900,
+    "defaultHeight": 640,
+    "minWidth": 360,
+    "minHeight": 320,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/text"
+}

@@ -1,0 +1,11 @@
+{
+  "headSha": "2451554006f9aa45a14e44bc9b2c84bb54260a00",
+  "runId": 40433524906,
+  "artifact": {
+    "id": 12703429241,
+    "name": "official-app-measurements-arm64",
+    "size": 2146,
+    "digest": "sha256:01b61c32be75013d265798502220fff8528329dcdf23157802431177e3aa5b03"
+  },
+  "testedMergeSha": "1a27003c2c1679bba3d571c37d925729b636d538"
+}

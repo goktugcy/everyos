@@ -1,0 +1,228 @@
+{
+  "app": {
+    "name": "计算器",
+    "description": "支持精确小数、历史记录、存储和单位换算的标准与科学计算器。"
+  },
+  "modes": {
+    "label": "模式",
+    "standard": "标准",
+    "scientific": "科学",
+    "converter": "换算"
+  },
+  "angle": {
+    "toggle": "在角度和弧度之间切换",
+    "deg": "角度",
+    "rad": "弧度"
+  },
+  "history": {
+    "toggle": "显示历史记录",
+    "title": "历史记录",
+    "clear": "清除历史记录",
+    "clearTitle": "清除计算历史记录？",
+    "empty": "还没有计算记录",
+    "useExpression": "使用此表达式",
+    "useResult": "使用此结果"
+  },
+  "memory": {
+    "label": "存储",
+    "value": "存储中的值"
+  },
+  "display": {
+    "expression": "表达式",
+    "result": "结果"
+  },
+  "actions": {
+    "copy": "复制结果"
+  },
+  "errors": {
+    "syntax": "此表达式不完整或无效",
+    "divide-by-zero": "不能除以零",
+    "domain": "超出函数定义域",
+    "overflow": "结果太大",
+    "factorial-range": "阶乘仅支持不超过 3000 的整数",
+    "unknown-name": "表达式中有未知名称",
+    "empty": "请输入表达式"
+  },
+  "converter": {
+    "category": "物理量",
+    "value": "数值",
+    "from": "从",
+    "to": "到",
+    "swap": "交换单位",
+    "result": "换算结果",
+    "all": "所有单位"
+  },
+  "categories": {
+    "length": "长度",
+    "area": "面积",
+    "volume": "体积",
+    "mass": "质量",
+    "temperature": "温度",
+    "speed": "速度",
+    "time": "时间",
+    "data": "数据",
+    "pressure": "压力",
+    "energy": "能量",
+    "angle": "角度"
+  },
+  "units": {
+    "length": {
+      "mm": "毫米",
+      "cm": "厘米",
+      "m": "米",
+      "km": "千米",
+      "in": "英寸",
+      "ft": "英尺",
+      "yd": "码",
+      "mi": "英里",
+      "nmi": "海里",
+      "um": "微米"
+    },
+    "area": {
+      "mm2": "平方毫米",
+      "cm2": "平方厘米",
+      "m2": "平方米",
+      "ha": "公顷",
+      "km2": "平方千米",
+      "in2": "平方英寸",
+      "ft2": "平方英尺",
+      "yd2": "平方码",
+      "acre": "英亩",
+      "mi2": "平方英里"
+    },
+    "volume": {
+      "ml": "毫升",
+      "cl": "厘升",
+      "l": "升",
+      "m3": "立方米",
+      "cm3": "立方厘米",
+      "tsp": "茶匙（美制）",
+      "tbsp": "汤匙（美制）",
+      "floz": "液量盎司（美制）",
+      "cup": "杯（美制）",
+      "pt": "品脱（美制）",
+      "qt": "夸脱（美制）",
+      "gal": "加仑（美制）",
+      "ukgal": "加仑（英制）"
+    },
+    "mass": {
+      "mg": "毫克",
+      "g": "克",
+      "kg": "千克",
+      "t": "吨",
+      "oz": "盎司",
+      "lb": "磅",
+      "st": "英石",
+      "ct": "克拉"
+    },
+    "temperature": {
+      "c": "摄氏度",
+      "f": "华氏度",
+      "k": "开尔文"
+    },
+    "speed": {
+      "mps": "米每秒",
+      "kph": "千米每小时",
+      "mph": "英里每小时",
+      "knot": "节",
+      "fps": "英尺每秒"
+    },
+    "time": {
+      "ms": "毫秒",
+      "s": "秒",
+      "min": "分钟",
+      "h": "小时",
+      "d": "天",
+      "wk": "周",
+      "yr": "年（365.25 天）"
+    },
+    "data": {
+      "bit": "比特",
+      "B": "字节",
+      "kB": "千字节",
+      "MB": "兆字节",
+      "GB": "吉字节",
+      "TB": "太字节",
+      "KiB": "千位二进制字节",
+      "MiB": "兆位二进制字节",
+      "GiB": "吉位二进制字节",
+      "TiB": "太位二进制字节",
+      "kbit": "千比特",
+      "Mbit": "兆比特",
+      "Gbit": "吉比特"
+    },
+    "pressure": {
+      "Pa": "帕斯卡",
+      "kPa": "千帕",
+      "bar": "巴",
+      "atm": "标准大气压",
+      "psi": "磅每平方英寸",
+      "mmHg": "毫米汞柱"
+    },
+    "energy": {
+      "J": "焦耳",
+      "kJ": "千焦",
+      "cal": "卡路里",
+      "kcal": "千卡",
+      "Wh": "瓦时",
+      "kWh": "千瓦时",
+      "eV": "电子伏特",
+      "BTU": "英热单位"
+    },
+    "angle": {
+      "deg": "度",
+      "rad": "弧度",
+      "grad": "百分度",
+      "turn": "圈",
+      "arcmin": "角分",
+      "arcsec": "角秒"
+    }
+  },
+  "keys": {
+    "clear": "清除",
+    "backspace": "删除最后一个字符",
+    "percent": "百分比",
+    "divide": "除",
+    "multiply": "乘",
+    "subtract": "减",
+    "add": "加",
+    "negate": "切换正负号",
+    "decimal": "小数点",
+    "equals": "等于",
+    "memoryClear": "清除存储",
+    "memoryRecall": "读取存储",
+    "memoryAdd": "累加到存储",
+    "memorySubtract": "从存储中减去",
+    "memoryStore": "存入存储",
+    "sin": "正弦",
+    "cos": "余弦",
+    "tan": "正切",
+    "asin": "反正弦",
+    "acos": "反余弦",
+    "atan": "反正切",
+    "sinh": "双曲正弦",
+    "cosh": "双曲余弦",
+    "tanh": "双曲正切",
+    "open": "左括号",
+    "close": "右括号",
+    "pi": "圆周率",
+    "e": "自然常数 e",
+    "square": "平方",
+    "cube": "立方",
+    "power": "乘方",
+    "sqrt": "平方根",
+    "cbrt": "立方根",
+    "root": "开方：root(x, n)",
+    "reciprocal": "倒数",
+    "ln": "自然对数",
+    "log": "常用对数",
+    "logb": "对数：logb(x, 底数)",
+    "factorial": "阶乘",
+    "abs": "绝对值",
+    "exp": "e 的 x 次方",
+    "exponent": "乘以 10 的幂（1.5e3）",
+    "ans": "上次结果",
+    "random": "0 到 1 之间的随机数",
+    "comma": "参数分隔符"
+  }
+}

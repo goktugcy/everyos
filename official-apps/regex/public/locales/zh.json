@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "正则表达式测试器",
+    "description": "实时测试 JavaScript 正则表达式：高亮匹配、分组、标志、替换和解释。"
+  },
+  "pattern": {
+    "section": "表达式",
+    "label": "正则表达式",
+    "placeholder": "输入模式…",
+    "copy": "复制表达式"
+  },
+  "flags": {
+    "label": "标志",
+    "d": "索引：报告每个分组的匹配位置",
+    "g": "全局：查找所有匹配，而非仅第一个",
+    "i": "忽略大小写",
+    "m": "多行：^ 和 $ 匹配行首行尾",
+    "s": "dotAll：. 也匹配换行",
+    "u": "Unicode：码位和 \\p{…} 属性",
+    "v": "Unicode 集合：字符类中的集合运算",
+    "y": "粘连：仅从上次匹配结束处匹配",
+    "short": {
+      "d": "索引",
+      "g": "全局",
+      "i": "忽略大小写",
+      "m": "多行",
+      "s": "dotAll",
+      "u": "Unicode",
+      "v": "集合",
+      "y": "粘连"
+    }
+  },
+  "status": {
+    "empty": "输入正则表达式",
+    "running": "匹配中…",
+    "matches_other": "{{count}} 处匹配",
+    "ms": "{{ms}} 毫秒",
+    "timeout": "已停止：表达式耗时超过 {{seconds}} 秒（可能是灾难性回溯）。",
+    "tooLong": "测试文本超过 {{count}} 个字符。",
+    "syntax": "表达式无效：{{message}}",
+    "worker": "无法执行匹配：{{message}}"
+  },
+  "text": {
+    "label": "测试文本",
+    "highlighted": "文本中的匹配",
+    "highlightLimit": "仅高亮前 200,000 个字符。"
+  },
+  "panels": {
+    "label": "结果",
+    "matches": "匹配",
+    "explain": "解释",
+    "replace": "替换"
+  },
+  "matches": {
+    "none": "没有匹配",
+    "empty": "（空匹配）",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "未参与",
+    "truncated": "仅列出前 {{count}} 个匹配。",
+    "more": "还有 {{count}} 个"
+  },
+  "replace": {
+    "label": "替换为",
+    "hint": "$1、$<name>、$&（匹配）、$` 和 $'（前后），$ 写作 $$",
+    "result": "结果",
+    "copy": "复制结果"
+  },
+  "examples": {
+    "title": "示例",
+    "email": {
+      "name": "电子邮件地址",
+      "description": "适用于文本中地址的实用模式（并非所有 RFC 5322 地址）"
+    },
+    "url": {
+      "name": "网址",
+      "description": "http 和 https 链接"
+    },
+    "ipv4": {
+      "name": "IPv4 地址",
+      "description": "四个 0 到 255 的数字"
+    },
+    "isoDate": {
+      "name": "ISO 日期",
+      "description": "带命名分组的 YYYY-MM-DD"
+    },
+    "hexColor": {
+      "name": "十六进制颜色",
+      "description": "#rgb 或 #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "版本 1 到 8"
+    },
+    "semver": {
+      "name": "语义化版本",
+      "description": "主版本.次版本.修订号（含预发布和构建）"
+    },
+    "phone": {
+      "name": "电话号码",
+      "description": "带空格、点、短横线或括号的数字"
+    },
+    "slug": {
+      "name": "URL 别名",
+      "description": "用短横线连接的小写单词，每行一个"
+    },
+    "words": {
+      "name": "任意文字的单词",
+      "description": "按 Unicode 属性匹配字母（需要 u）"
+    },
+    "duplicateWords": {
+      "name": "重复的单词",
+      "description": "使用反向引用查找连续写了两次的单词"
+    },
+    "trailingSpace": {
+      "name": "行尾空白",
+      "description": "行尾的空格和制表符"
+    }
+  },
+  "saved": {
+    "title": "已保存",
+    "save": "保存",
+    "name": "名称",
+    "done": "已保存表达式",
+    "delete": "删除 {{name}}"
+  },
+  "explain": {
+    "digit": "一个数字（0–9）",
+    "nonDigit": "非数字的任意字符",
+    "word": "单词字符（字母、数字或 _）",
+    "nonWord": "非单词字符",
+    "space": "空白字符",
+    "nonSpace": "非空白字符",
+    "newline": "换行符",
+    "carriageReturn": "回车符",
+    "tab": "制表符",
+    "formFeed": "换页符",
+    "verticalTab": "垂直制表符",
+    "nul": "NUL 字符",
+    "wordBoundary": "单词边界",
+    "nonWordBoundary": "非单词边界",
+    "backreference": "与第 {{number}} 组相同的文本",
+    "namedBackreference": "与“{{name}}”组相同的文本",
+    "property": "具有 Unicode 属性 {{name}} 的字符",
+    "notProperty": "不具有 Unicode 属性 {{name}} 的字符",
+    "hex": "字符 {{char}}（十六进制码）",
+    "unicode": "字符 {{char}}（Unicode 码）",
+    "control": "控制字符 Ctrl+{{letter}}",
+    "literal": "字符 {{char}}",
+    "literals": "文本“{{char}}”",
+    "class": "以下任一字符：{{items}}",
+    "notClass": "不在以下范围的字符：{{items}}",
+    "group": "第 {{number}} 组：捕获匹配内容",
+    "namedGroup": "第 {{number}} 组“{{name}}”：捕获匹配内容",
+    "nonCapturing": "非捕获组",
+    "lookahead": "后面跟着（不计入匹配）：",
+    "negativeLookahead": "后面不跟着：",
+    "lookbehind": "前面是（不计入匹配）：",
+    "negativeLookbehind": "前面不是：",
+    "modifiers": "带有标志 {{flags}} 的组",
+    "groupEnd": "组结束",
+    "alternation": "或",
+    "start": "文本开头（使用 m 时为行首）",
+    "end": "文本结尾（使用 m 时为行尾）",
+    "any": "任意字符（无 s 时不含换行）",
+    "zeroOrMore": "零次或多次（尽可能多）",
+    "zeroOrMoreLazy": "零次或多次（尽可能少）",
+    "oneOrMore": "一次或多次（尽可能多）",
+    "oneOrMoreLazy": "一次或多次（尽可能少）",
+    "optional": "可选（零次或一次）",
+    "optionalLazy": "可选（倾向于零次）",
+    "exactly_other": "恰好 {{count}} 次",
+    "exactlyLazy_other": "恰好 {{count}} 次",
+    "atLeast_other": "至少 {{count}} 次（尽可能多）",
+    "atLeastLazy_other": "至少 {{count}} 次（尽可能少）",
+    "between": "{{min}} 到 {{max}} 次（尽可能多）",
+    "betweenLazy": "{{min}} 到 {{max}} 次（尽可能少）"
+  }
+}

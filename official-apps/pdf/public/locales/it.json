@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "Visualizzatore PDF",
+    "description": "Leggi file PDF: pagine e miniature, zoom e rotazione, ricerca nel testo, struttura del documento e i tuoi segnalibri, stampa e salvataggio di una copia."
+  },
+  "actions": {
+    "open": "Apri PDF…"
+  },
+  "pages": {
+    "label": "Pagine",
+    "previous": "Pagina precedente",
+    "next": "Pagina successiva",
+    "current": "Numero di pagina",
+    "of": "di {{count}}",
+    "thumbnail": "Pagina {{page}}"
+  },
+  "zoom": {
+    "label": "Zoom",
+    "in": "Ingrandisci",
+    "out": "Riduci",
+    "auto": "Automatico",
+    "page-width": "Larghezza pagina",
+    "page-fit": "Pagina intera",
+    "page-actual": "Dimensioni reali"
+  },
+  "rotate": {
+    "left": "Ruota a sinistra",
+    "right": "Ruota a destra"
+  },
+  "find": {
+    "open": "Trova nel documento",
+    "label": "Trova",
+    "placeholder": "Trova nel documento…",
+    "previous": "Risultato precedente",
+    "next": "Risultato successivo",
+    "caseSensitive": "Maiuscole/minuscole",
+    "entireWord": "Parole intere",
+    "close": "Chiudi la ricerca",
+    "searching": "Ricerca…",
+    "notFound": "Non trovato",
+    "position_one": "{{current}} di {{count}} risultato",
+    "position_other": "{{current}} di {{count}} risultati"
+  },
+  "bookmarks": {
+    "addCurrent": "Aggiungi segnalibro a questa pagina",
+    "removeCurrent": "Rimuovi il segnalibro da questa pagina",
+    "defaultLabel": "Pagina {{page}}",
+    "added": "Segnalibro aggiunto a pagina {{page}}",
+    "renameTitle": "Rinomina segnalibro",
+    "rename": "Rinomina «{{label}}»",
+    "remove": "Rimuovi «{{label}}»",
+    "empty": "Ancora nessun segnalibro",
+    "emptyText": "Usa il pulsante segnalibro nella barra per ricordare una pagina."
+  },
+  "print": {
+    "action": "Stampa",
+    "preparing": "Preparazione della stampa",
+    "progress": "Pagina {{done}} di {{total}}",
+    "failed": "Impossibile preparare il documento per la stampa."
+  },
+  "save": {
+    "action": "Salva una copia",
+    "saved": "Copia di {{name}} salvata"
+  },
+  "sidebar": {
+    "label": "Navigazione",
+    "show": "Mostra la barra laterale",
+    "hide": "Nascondi la barra laterale",
+    "pages": "Pagine",
+    "outline": "Struttura",
+    "bookmarks": "Segnalibri"
+  },
+  "outline": {
+    "label": "Struttura del documento",
+    "expand": "Espandi {{title}}",
+    "collapse": "Comprimi {{title}}",
+    "external": "Apre una pagina web",
+    "empty": "Nessuna struttura",
+    "emptyText": "Questo documento non ha un indice."
+  },
+  "viewer": {
+    "label": "Pagine di {{name}}",
+    "opening": "Apertura…",
+    "emptyTitle": "Apri un PDF per leggerlo",
+    "emptyText": "I documenti si aprono dove li avevi lasciati, con i tuoi segnalibri.",
+    "tryAnother": "Prova ad aprire un altro file."
+  },
+  "recent": {
+    "title": "Recenti",
+    "gone": "«{{name}}» non è più disponibile."
+  },
+  "errors": {
+    "tooLarge": "Si possono aprire PDF fino a {{size}}.",
+    "invalid": "«{{name}}» non è un PDF o è danneggiato.",
+    "password": "Impossibile aprire il PDF con quella password.",
+    "open": "Impossibile aprire «{{name}}»."
+  },
+  "password": {
+    "title": "Questo PDF è protetto",
+    "label": "Password",
+    "open": "Apri",
+    "incorrect": "Password errata. Riprova."
+  }
+}

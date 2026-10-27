@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Farbstudio",
+    "description": "Farben in HEX, RGB, HSL und OKLCH wählen, Paletten, Harmonien und Verläufe bauen, Kontrast prüfen und im EveryOS-Design ansehen."
+  },
+  "actions": {
+    "eyedropper": "Farbe vom Bildschirm aufnehmen"
+  },
+  "color": {
+    "section": "Farbe",
+    "preview": "Aktuelle Farbe {{color}}"
+  },
+  "picker": {
+    "saturationValue": "Sättigung und Helligkeit",
+    "svValue": "Sättigung {{s}} %, Helligkeit {{v}} %",
+    "hue": "Farbton",
+    "alpha": "Deckkraft"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "Keine Farbe",
+    "copy": "{{format}} kopieren"
+  },
+  "panels": {
+    "label": "Werkzeuge",
+    "palette": "Palette",
+    "gradient": "Verlauf",
+    "contrast": "Kontrast",
+    "saved": "Gespeichert",
+    "theme": "EveryOS-Design"
+  },
+  "swatch": {
+    "use": "{{color}} verwenden"
+  },
+  "harmony": {
+    "label": "Harmonie",
+    "complementary": "Komplementär",
+    "analogous": "Analog",
+    "triadic": "Triadisch",
+    "split": "Geteilt komplementär",
+    "tetradic": "Tetradisch",
+    "monochromatic": "Monochrom",
+    "save": "Harmonie speichern"
+  },
+  "scale": {
+    "title": "Tonleiter",
+    "step": "Stufe {{step}}: {{color}}",
+    "copyCss": "Als CSS-Variablen kopieren",
+    "save": "Skala speichern"
+  },
+  "gradient": {
+    "preview": "Verlaufsvorschau",
+    "kind": "Art",
+    "linear": "Linear",
+    "radial": "Radial",
+    "angle": "Winkel: {{angle}}°",
+    "stops": "Farbstopps",
+    "useCurrent": "Stopp {{number}} auf die aktuelle Farbe setzen",
+    "position": "Position von Stopp {{number}}",
+    "remove": "Stopp {{number}} entfernen",
+    "hint": "Auf die Farbfläche eines Stopps klicken, um ihm die aktuelle Farbe zu geben. Ein Verlauf braucht mindestens zwei Stopps.",
+    "add": "Stopp hinzufügen",
+    "copy": "CSS kopieren"
+  },
+  "contrast": {
+    "text": "Text",
+    "background": "Hintergrund",
+    "swap": "Text und Hintergrund tauschen",
+    "useAsText": "Aktuelle Farbe als Text",
+    "useAsBackground": "Aktuelle Farbe als Hintergrund",
+    "sampleLarge": "Großer Text",
+    "sample": "Normaler Text ist bei wenig Kontrast schwerer lesbar.",
+    "ratio": "Kontrastverhältnis",
+    "aa": "AA",
+    "aaLarge": "AA groß",
+    "aaa": "AAA",
+    "aaaLarge": "AAA groß",
+    "pass": "bestanden",
+    "fail": "nicht bestanden",
+    "hint": "WCAG 2: AA verlangt 4,5:1 für normalen und 3:1 für großen Text (24 px oder 19 px fett); AAA 7:1 und 4,5:1."
+  },
+  "saved": {
+    "newName": "Neue Palette",
+    "create": "Mit aktueller Farbe anlegen",
+    "added": "Palette gespeichert",
+    "addCurrent": "Aktuelle Farbe zu {{name}} hinzufügen",
+    "copyCss": "{{name}} als CSS-Variablen kopieren",
+    "exportCss": "CSS speichern…",
+    "delete": "{{name}} löschen",
+    "deleteTitle": "Palette „{{name}}“ löschen?",
+    "removeColor": "{{color}} entfernen",
+    "empty": "Keine gespeicherten Paletten",
+    "emptyText": "Harmonie oder Skala speichern oder oben eine Palette anlegen."
+  },
+  "theme": {
+    "current": "Ihr Design ({{scheme}})",
+    "schemes": {
+      "light": "hell",
+      "dark": "dunkel"
+    },
+    "tokens": {
+      "accent": "Akzent",
+      "accent-strong": "Starker Akzent",
+      "text": "Text",
+      "text-muted": "Gedämpfter Text",
+      "surface": "Fläche",
+      "inset": "Einlage",
+      "danger": "Gefahr",
+      "success": "Erfolg",
+      "warning": "Warnung"
+    },
+    "previewTitle": "Die aktuelle Farbe als Akzent",
+    "button": "Schaltfläche",
+    "link": "Ein Link",
+    "linkContrast": "Link-Kontrast {{ratio}}:1",
+    "hint": "Die Akzentfarbe wählen Sie in Einstellungen → Darstellung."
+  }
+}

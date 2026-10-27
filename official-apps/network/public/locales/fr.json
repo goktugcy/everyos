@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Outils réseau"
+  },
+  "network": {
+    "export": "Exporter le rapport",
+    "interfaces": "Interfaces réseau",
+    "interface": "Interface",
+    "auto": "Actualiser les données de l’hôte toutes les 10 secondes quand la fenêtre est active",
+    "permission": "Lire les interfaces nécessite system:network.read et un rôle autorisant l’accès au système. Un administrateur peut accorder les droits dans la boutique.",
+    "metricsPermission": "Les données de trafic nécessitent system:metrics.read et un rôle avec accès au système.",
+    "loadFailed": "Impossible de lire les données réseau. Vérifiez la connexion de l’agent et réessayez.",
+    "unsupported": "L’hôte ne peut pas fournir ces données réseau.",
+    "internetChecked": "Connectivité de l’hôte vérifiée : {{at}}",
+    "internetHint": "Cet état suit les cibles de connectivité configurées sur l’hôte. Les vérifications peuvent être conservées 60 secondes.",
+    "ms": "{{value}} ms",
+    "noInterfaces": "Aucune interface signalée par l’hôte.",
+    "up": "Active",
+    "down": "Inactive",
+    "addresses": "Adresses IP et préfixes",
+    "mac": "Adresse MAC",
+    "mtu": "MTU",
+    "speed": "Débit de liaison signalé",
+    "mbps": "{{value}} Mbit/s",
+    "receive": "Débit reçu",
+    "transmit": "Débit émis",
+    "rate": "{{value}}/s",
+    "routes": "Résumé des passerelles par défaut",
+    "routesHint": "Ce résumé présente les passerelles par défaut signalées par l’hôte. Les adresses des interfaces incluent leurs préfixes réseau.",
+    "gateway": "Passerelle",
+    "noGateways": "Aucune passerelle par défaut signalée par l’hôte.",
+    "dns": "Serveurs DNS signalés",
+    "noDns": "Aucun serveur DNS signalé par l’hôte.",
+    "traffic": "Trafic par interface",
+    "measured": "Mesuré : {{at}}",
+    "noTraffic": "Les débits par interface sont indisponibles sur cet hôte.",
+    "refresh": "Actualiser",
+    "unavailable": "Indisponible",
+    "retrieved": "Récupéré : {{at}}",
+    "family": "Famille d’adresses",
+    "stale": "Échec de l’actualisation. L’instantané précédent reste affiché avec son heure de récupération."
+  },
+  "source": {
+    "simulatedHint": "Ces valeurs sont simulées par l’hôte de développement et ne décrivent pas l’hôte réel.",
+    "host": "Données de l’hôte",
+    "simulated": "Données simulées"
+  },
+  "internet": {
+    "online": "Connectivité de l’hôte disponible",
+    "offline": "Échec du test de connectivité de l’hôte",
+    "unknown": "Connectivité de l’hôte inconnue",
+    "disabled": "Test de connectivité de l’hôte désactivé"
+  },
+  "kind": {
+    "ethernet": "Ethernet",
+    "wireless": "Sans fil",
+    "loopback": "Boucle locale",
+    "tailscale": "Tailscale",
+    "bridge": "Pont",
+    "virtual": "Virtuelle",
+    "other": "Autre"
+  },
+  "diagnostic": {
+    "title": "Vérifier une cible autorisée",
+    "policy": "Envoie une requête HEAD à une cible HTTP autorisée dans la boutique. TLS est vérifié et chaque redirection est soumise à la politique.",
+    "permission": "Les vérifications nécessitent network:outbound. Un administrateur peut l’accorder dans la boutique.",
+    "url": "URL HTTP ou HTTPS",
+    "check": "Vérifier la cible",
+    "checking": "Vérification…",
+    "invalid": "Saisissez une URL HTTP ou HTTPS sans identifiants ni fragment.",
+    "attempt": "Dernière tentative : {{url}} · {{at}}",
+    "responded": "Réponse HTTP reçue",
+    "responseHint": "Une réponse HTTP indique que cette cible a répondu. Le statut décrit la réponse du service.",
+    "status": "Statut HTTP",
+    "address": "Adresse distante",
+    "time": "Heure de vérification",
+    "elapsed": "Temps de réponse",
+    "redirects": "Redirections suivies"
+  }
+}

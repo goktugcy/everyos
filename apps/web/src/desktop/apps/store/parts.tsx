@@ -13,6 +13,8 @@ export function operationReason(error: unknown): string | null {
     : null;
 }
 
+const running = (job: AppJobView) => job.stage !== "succeeded" && job.stage !== "failed";
+
 export function Progress({
   id,
   onChanged,
@@ -28,17 +30,20 @@ export function Progress({
   onDismiss?: () => void;
 }) {
   const { t } = useTranslation();
-  const resource = useApiResource<AppJobView>(`/apps/jobs/${id}`, 5000);
+  const resource = useApiResource<AppJobView>(`/apps/jobs/${id}`, 1000, undefined, running);
   const [event, setEvent] = useState<AppJobView | null>(null);
+  // Resource data and SSE state may still belong to the preceding action during a job switch.
+  const currentResource = resource.data?.id === id ? resource.data : null;
+  const currentEvent = event?.id === id ? event : null;
   const job =
-    resource.data?.stage === "succeeded" || resource.data?.stage === "failed"
-      ? resource.data
-      : (event ?? resource.data);
-  const finished = job?.stage === "succeeded" || job?.stage === "failed" ? job : null;
-  const reported = useRef(false);
+    currentResource && !running(currentResource)
+      ? currentResource
+      : (currentEvent ?? currentResource);
+  const finished = job && !running(job) ? job : null;
+  const reported = useRef<string | null>(null);
   useEffect(() => {
-    if (!finished || reported.current) return;
-    reported.current = true;
+    if (!finished || reported.current === finished.id) return;
+    reported.current = finished.id;
     onChanged();
     onFinished?.(finished);
   }, [finished, onChanged, onFinished]);
@@ -46,6 +51,7 @@ export function Progress({
     const stream = new EventSource(`/api/apps/jobs/${id}/events`, { withCredentials: true });
     stream.addEventListener("progress", (message) => {
       const data = JSON.parse((message as MessageEvent<string>).data) as AppJobView;
+      if (data.id !== id) return;
       setEvent(data);
       onChanged();
       if (data.stage === "succeeded" || data.stage === "failed") stream.close();

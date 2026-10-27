@@ -69,6 +69,7 @@ import {
 } from "./backup-store.ts";
 import {
   archiveWallpapers,
+  archiveDesktopApps,
   inspectSnapshot,
   restoreDesktop,
   schemaVersionOf,
@@ -131,6 +132,8 @@ export interface BackupServiceDependencies {
   now: () => number;
   dir: string;
   dataDir: string;
+  /** Where desktop apps live (their kept packages go into backups). */
+  desktopAppsDir?: string;
   configFile: string | null;
   reserveBytes: number;
   maxUploadBytes: number;
@@ -422,6 +425,12 @@ export class BackupService {
           join(this.#deps.dataDir, "wallpapers"),
           join(work, "wallpapers.tar.gz"),
         )) > 0;
+      const desktopApps = this.#deps.desktopAppsDir
+        ? await archiveDesktopApps(
+            join(this.#deps.desktopAppsDir, "packages"),
+            join(work, "desktop-apps.tar.gz"),
+          )
+        : [];
       const apps: BackupAppContent[] = [];
       const homes = await this.#deps.files.withHomesLocked(
         summary.users.map((user) => user.id),
@@ -449,6 +458,7 @@ export class BackupService {
         ...(config ? ["config.yaml"] : []),
         ...(wallpapers ? ["wallpapers.tar.gz"] : []),
         ...(homes.length ? ["homes.tar.gz"] : []),
+        ...(desktopApps.length ? ["desktop-apps.tar.gz"] : []),
         ...apps.filter((app) => app.data).map((app) => `apps/${app.id}.data.tar.gz`),
       ]) {
         const path = join(work, name);
@@ -466,7 +476,7 @@ export class BackupService {
         schemaVersion,
         hostname: hostname().slice(0, 255),
         keyId: this.#deps.keyring.currentId,
-        contents: { database: true, config, wallpapers, apps, homes },
+        contents: { database: true, config, wallpapers, apps, homes, desktopApps },
         files,
       };
       await this.#store.publish(work, manifest, {
@@ -892,6 +902,9 @@ export class BackupService {
             dataDir: this.#deps.dataDir,
             snapshotGz: await this.#store.databaseFile(id),
             wallpapersArchive: wallpapers,
+            desktopAppsArchive: (await this.#store.manifest(id)).contents.desktopApps?.length
+              ? this.#store.file(id, "desktop-apps.tar.gz")
+              : null,
             secretKey:
               keyId === this.#deps.keyring.currentId ? null : this.#deps.keyring.get(keyId),
             pending: { backupId: id, requestedBy: actor.username, requestedAt: this.#deps.now() },

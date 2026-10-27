@@ -326,9 +326,35 @@ export const BUILT_IN_WIDGETS: readonly WidgetManifest[] = [
 ];
 
 const BY_ID = new Map(BUILT_IN_WIDGETS.map((manifest) => [manifest.id, manifest]));
+/** Widgets of the installed desktop apps (`<app id>#<widget id>`), set by the desktop. */
+let desktopAppWidgets = new Map<string, WidgetManifest>();
+
+/** Separates a desktop app's id from its widget's id in a widget id. */
+export const DESKTOP_APP_WIDGET_SEPARATOR = "#";
+
+export function desktopAppWidgetId(appId: string, widgetId: string): string {
+  return `${appId}${DESKTOP_APP_WIDGET_SEPARATOR}${widgetId}`;
+}
+
+export function parseDesktopAppWidgetId(id: string): { appId: string; widgetId: string } | null {
+  const at = id.indexOf(DESKTOP_APP_WIDGET_SEPARATOR);
+  return at > 0 && at < id.length - 1
+    ? { appId: id.slice(0, at), widgetId: id.slice(at + 1) }
+    : null;
+}
+
+/** Replaces the desktop app widgets (on load, install, update, removal). */
+export function setDesktopAppWidgets(manifests: readonly WidgetManifest[]): void {
+  desktopAppWidgets = new Map(manifests.map((manifest) => [manifest.id, manifest]));
+}
 
 export function getWidget(id: string): WidgetManifest | undefined {
-  return BY_ID.get(id);
+  return BY_ID.get(id) ?? desktopAppWidgets.get(id);
+}
+
+/** Every widget that can be added: the built-in ones, then the desktop apps' ones. */
+export function allWidgets(): WidgetManifest[] {
+  return [...BUILT_IN_WIDGETS, ...desktopAppWidgets.values()];
 }
 
 /** i18n key segment for a widget id ("system.cpu" → "system_cpu"). */

@@ -1,0 +1,194 @@
+{
+  "app": {
+    "name": "Kalender",
+    "description": "Planen Sie Ihre Tage: Tages-, Wochen- und Monatsansicht, Serientermine, Erinnerungen, Suche, mehrere Kalender sowie iCalendar-Import und -Export (.ics)."
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "Anstehende Termine",
+      "description": "Ihre nächsten Termine dieser Woche – öffnen Sie einen im Kalender."
+    }
+  },
+  "calendars": {
+    "label": "Kalender",
+    "personal": "Privat",
+    "imported": "Importiert",
+    "add": "Neuer Kalender",
+    "edit": "{{name}} bearbeiten",
+    "editTitle": "Kalender bearbeiten",
+    "export": "{{name}} als .ics exportieren",
+    "deleteNamed": "{{name}} löschen",
+    "delete": "Kalender löschen",
+    "deleteTitle": "„{{name}}“ löschen?",
+    "deleteBody_one": "Sein {{count}} Termin wird ebenfalls gelöscht. Das lässt sich nicht rückgängig machen.",
+    "deleteBody_other": "Seine {{count}} Termine werden ebenfalls gelöscht. Das lässt sich nicht rückgängig machen.",
+    "name": "Name",
+    "color": "Farbe",
+    "colorNumber": "Farbe {{number}}"
+  },
+  "event": {
+    "new": "Neuer Termin",
+    "newTitle": "Neuer Termin",
+    "editTitle": "Termin bearbeiten",
+    "title": "Titel",
+    "titlePlaceholder": "Was steht an?",
+    "untitled": "(Ohne Titel)",
+    "allDay": "Ganztägig",
+    "startDate": "Beginn",
+    "startTime": "um",
+    "endDate": "Ende",
+    "endTime": "um",
+    "lastDay": "Letzter Tag",
+    "zoneNote": "Die Zeiten gelten für {{zone}}, wo der Termin erstellt wurde.",
+    "location": "Ort",
+    "notes": "Notizen",
+    "calendar": "Kalender",
+    "repeats": "Wiederholt sich",
+    "delete": "Löschen",
+    "deleteTitle": "„{{title}}“ löschen?"
+  },
+  "problems": {
+    "endBeforeStart": "Das Ende liegt vor dem Beginn.",
+    "untilBeforeStart": "Die Wiederholung endet vor dem Beginn."
+  },
+  "repeat": {
+    "label": "Wiederholen",
+    "none": "Keine Wiederholung",
+    "daily": "Täglich",
+    "weekdays": "An jedem Werktag (Montag bis Freitag)",
+    "weekly": "Jede Woche am {{day}}",
+    "monthly": "Jeden Monat am {{day}}.",
+    "monthlyWeekday": "Jeden Monat am {{nth}} {{day}}",
+    "yearly": "Jedes Jahr am {{date}}",
+    "custom": "Benutzerdefiniert…",
+    "imported": "Wie in einem anderen Kalender festgelegt",
+    "nth": {
+      "1": "ersten",
+      "2": "zweiten",
+      "3": "dritten",
+      "4": "vierten",
+      "-1": "letzten"
+    },
+    "every": "Alle",
+    "unit": "Einheit",
+    "units": {
+      "daily_one": "Tag",
+      "daily_other": "Tage",
+      "weekly_one": "Woche",
+      "weekly_other": "Wochen",
+      "monthly_one": "Monat",
+      "monthly_other": "Monate",
+      "yearly_one": "Jahr",
+      "yearly_other": "Jahre"
+    },
+    "onDays": "An",
+    "monthlyOn": "Am",
+    "onDay": "Am {{day}}.",
+    "onWeekday": "Am {{nth}} {{day}}",
+    "ends": "Endet",
+    "never": "Nie",
+    "until": "An einem Datum",
+    "after": "Nach einer Anzahl",
+    "untilDate": "Letztes Datum",
+    "times": "Mal"
+  },
+  "reminders": {
+    "label": "Erinnerungen",
+    "add": "Erinnerung hinzufügen",
+    "remove": "Erinnerung „{{label}}“ entfernen",
+    "atStart": "Bei Beginn",
+    "minutes_one": "{{count}} Minute vorher",
+    "minutes_other": "{{count}} Minuten vorher",
+    "hours_one": "{{count}} Stunde vorher",
+    "hours_other": "{{count}} Stunden vorher",
+    "days_one": "{{count}} Tag vorher",
+    "days_other": "{{count}} Tage vorher",
+    "weeks_one": "{{count}} Woche vorher",
+    "weeks_other": "{{count}} Wochen vorher",
+    "onDay": "Am Tag um 09:00",
+    "daysBeforeAt_one": "Am Vortag um 09:00",
+    "daysBeforeAt_other": "{{count}} Tage vorher um 09:00",
+    "weeksBeforeAt_one": "Eine Woche vorher um 09:00",
+    "weeksBeforeAt_other": "{{count}} Wochen vorher um 09:00",
+    "body": "{{date}}, {{time}}",
+    "allDayBody": "{{date}}, ganztägig"
+  },
+  "scope": {
+    "label": "Welche Termine",
+    "saveTitle": "Serientermin ändern",
+    "deleteTitle": "Serientermin löschen",
+    "one": "Dieser Termin",
+    "following": "Dieser und alle folgenden",
+    "all": "Alle Termine"
+  },
+  "views": {
+    "label": "Ansicht",
+    "day": "Tag",
+    "week": "Woche",
+    "month": "Monat"
+  },
+  "nav": {
+    "today": "Heute",
+    "previous": {
+      "day": "Vorheriger Tag",
+      "week": "Vorherige Woche",
+      "month": "Vorheriger Monat"
+    },
+    "next": {
+      "day": "Nächster Tag",
+      "week": "Nächste Woche",
+      "month": "Nächster Monat"
+    },
+    "goTo": "Zu Datum",
+    "keys": "Tasten: T heute, D/W/M Ansichten, N neuer Termin, ← → blättern, / suchen."
+  },
+  "month": {
+    "more_one": "{{count}} weiterer",
+    "more_other": "{{count}} weitere"
+  },
+  "grid": {
+    "now": "Jetzt, {{time}}"
+  },
+  "search": {
+    "label": "Termine suchen",
+    "placeholder": "Suchen",
+    "title": "Ergebnisse für „{{query}}“",
+    "none": "Nichts gefunden für „{{query}}“",
+    "noneText": "Gesucht wird in Titeln, Orten und Notizen aller Kalender.",
+    "results_one": "{{count}} Termin gefunden",
+    "results_other": "{{count}} Termine gefunden"
+  },
+  "ics": {
+    "import": ".ics importieren…",
+    "importTitle": "Termine importieren",
+    "found_one": "Die Datei enthält {{count}} Termin.",
+    "found_other": "Die Datei enthält {{count}} Termine.",
+    "skipped_one": "{{count}} abgesagter oder unlesbarer Termin wird ausgelassen.",
+    "skipped_other": "{{count}} abgesagte oder unlesbare Termine werden ausgelassen.",
+    "into": "Importieren in",
+    "newCalendar": "Einen neuen Kalender „{{name}}“",
+    "importAction_one": "{{count}} Termin importieren",
+    "importAction_other": "{{count}} Termine importieren",
+    "imported_one": "{{count}} Termin in {{name}} importiert",
+    "imported_other": "{{count}} Termine in {{name}} importiert",
+    "unknownZones_one": "{{count}} Termin nutzt eine unbekannte Zeitzone und wird in Ihrer angezeigt.",
+    "unknownZones_other": "{{count}} Termine nutzen eine unbekannte Zeitzone und werden in Ihrer angezeigt.",
+    "invalid": "Diese Datei ist keine iCalendar-Datei (.ics)."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "weekStart": "Woche beginnt am",
+    "weekStartAuto": "Wie in Ihrer Sprache ({{day}})",
+    "zone": "Zeiten werden in Ihrer Zeitzone angezeigt: {{zone}}."
+  },
+  "sidebar": {
+    "show": "Kalender einblenden",
+    "hide": "Kalender ausblenden"
+  },
+  "widget": {
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "empty": "Diese Woche ist nichts geplant",
+    "open": "Kalender öffnen"
+  }
+}

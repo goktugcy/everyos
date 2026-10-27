@@ -1,4 +1,6 @@
 import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
+import { i18next } from "../../app/i18n.ts";
+import { clearDesktopApps, loadDesktopApps } from "../desktop-apps/store.ts";
 import { reassignDesktops } from "@everyos/widget-sdk";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -230,7 +232,14 @@ export function DesktopShell() {
   useEffect(() => {
     if (!permissions || ready || locked) return;
     const controller = new AbortController();
-    void loadPreferences({ t, permissions }, controller.signal)
+    // Desktop apps first: restoring windows and shortcuts needs to know which apps are installed.
+    // A failed listing leaves them out for this session rather than blocking the desktop.
+    void (
+      permissions.includes("apps:read")
+        ? loadDesktopApps(i18next.language, controller.signal).catch(() => undefined)
+        : Promise.resolve()
+    )
+      .then(() => loadPreferences({ t, permissions }, controller.signal))
       .then(() => {
         if (controller.signal.aborted) return;
         // Drop shortcuts to apps this user can no longer open (e.g. after a role change).
@@ -263,6 +272,7 @@ export function DesktopShell() {
       unregister();
       discardPending();
       clearInstalledApps();
+      clearDesktopApps();
       wm().hydrate(
         { version: 1, viewport: { width: 1, height: 1 }, activeDesktopId: "d1", windows: [] },
         () => null,

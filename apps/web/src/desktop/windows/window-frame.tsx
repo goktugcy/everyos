@@ -1,4 +1,6 @@
 import { effectiveRect } from "@everyos/window-manager";
+import { requestClose } from "./close-guards.ts";
+import { appTitle } from "../apps/app-title.ts";
 import { Copy, Maximize2, Minimize2, Minus, PanelLeft, PanelRight, Square, X } from "lucide-react";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -97,7 +99,7 @@ export const WindowFrame = memo(function WindowFrame({
 
   const rect = effectiveRect(window, viewport);
   const hidden = window.minimized || window.desktopId !== activeDesktopId;
-  const title = window.title || t(manifest.titleKey);
+  const title = window.title || appTitle(manifest, t);
   const maximized = window.layout === "maximized";
   const fullscreen = window.layout === "fullscreen";
   const floating = window.layout === "floating";
@@ -163,7 +165,7 @@ export const WindowFrame = memo(function WindowFrame({
       label: t("window.close"),
       icon: <X />,
       shortcut: "Ctrl+Alt+W",
-      onSelect: () => wm().close(id),
+      onSelect: () => void requestClose(id, () => wm().close(id)),
     },
   ];
 
@@ -208,7 +210,11 @@ export const WindowFrame = memo(function WindowFrame({
             className="everyos-traffic-group relative z-10 flex items-center gap-2"
             data-active={focused}
           >
-            <TrafficLight kind="close" label={t("window.close")} onClick={() => wm().close(id)}>
+            <TrafficLight
+              kind="close"
+              label={t("window.close")}
+              onClick={() => void requestClose(id, () => wm().close(id))}
+            >
               <X />
             </TrafficLight>
             <TrafficLight

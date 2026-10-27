@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "SSL-Inspektor",
+    "description": "TLS-Zertifikate, Ablauf, Identität und Zertifikatsketten erlaubter Ziele prüfen."
+  },
+  "target": {
+    "host": "Hostname oder IP-Adresse",
+    "port": "TLS-Port",
+    "sni": "Servername (SNI), optional",
+    "hint": "Nur in der Netzwerkrichtlinie dieser App erlaubte Ziele können geprüft werden. Das Zertifikatsvertrauen bleibt unverändert.",
+    "inspect": "Prüfen",
+    "working": "Wird geprüft…",
+    "invalid": "Gültigen Hostnamen oder IP, Port 1–65535 und optionalen DNS-Servernamen eingeben. Keine URL oder Pfade."
+  },
+  "saved": {
+    "title": "Gespeicherte Ziele",
+    "save": "Ziel speichern",
+    "empty": "Ein Ziel speichern, um es später erneut zu prüfen.",
+    "remove": "{{target}} entfernen",
+    "limit": "Höchstens 50 gespeicherte Ziele. Vor dem Hinzufügen eines entfernen."
+  },
+  "result": {
+    "empty": "TLS-Ziel prüfen",
+    "trusted": "Kette verifiziert",
+    "untrusted": "Die Kette konnte nicht mit den vertrauenswürdigen Stammzertifikaten dieses Servers verifiziert werden.",
+    "matches": "Name passt zum Zertifikat",
+    "mismatch": "Das Zertifikat passt nicht zum angefragten Servernamen.",
+    "remote": "Verbundene Adresse",
+    "protocol": "Protokoll",
+    "cipher": "Verschlüsselungsverfahren",
+    "alpn": "ALPN",
+    "time": "Antwortzeit",
+    "unavailable": "Nicht verfügbar",
+    "chain": "Zertifikatskette",
+    "noChain": "Das Ziel hat keine Zertifikatsdetails geliefert."
+  },
+  "cert": {
+    "subject": "Inhaber",
+    "issuer": "Aussteller",
+    "sans": "Alternative Namen (SAN)",
+    "from": "Gültig ab",
+    "to": "Gültig bis",
+    "serial": "Seriennummer",
+    "fingerprint": "SHA-256-Fingerabdruck",
+    "key": "Öffentlicher Schlüssel",
+    "selfSigned": "Selbstsigniert"
+  },
+  "validity": {
+    "valid": "Innerhalb der Gültigkeit",
+    "expired": "Zertifikat abgelaufen",
+    "future": "Zertifikat noch nicht gültig",
+    "soon": "Zertifikat läuft innerhalb von 30 Tagen ab"
+  }
+}

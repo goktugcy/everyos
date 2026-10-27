@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Editor di testo",
+    "description": "File di testo in schede, con trova e sostituisci, codifiche, fine riga e recupero del lavoro non salvato."
+  },
+  "actions": {
+    "new": "Nuovo documento",
+    "open": "Apri…",
+    "recent": "File recenti",
+    "save": "Salva",
+    "saveAs": "Salva con nome…",
+    "find": "Trova e sostituisci"
+  },
+  "close": {
+    "title_one": "Chiudere con {{count}} file non salvato?",
+    "title_other": "Chiudere con {{count}} file non salvati?",
+    "body": "Le modifiche restano recuperabili qui, ma non sono nei file.",
+    "confirm": "Chiudi",
+    "tabTitle": "Chiudere «{{name}}» senza salvare?",
+    "tabBody": "Le modifiche non salvate andranno perse.",
+    "discard": "Scarta modifiche"
+  },
+  "doc": {
+    "untitled": "Senza titolo {{number}}"
+  },
+  "editor": {
+    "label": "Testo di {{name}}"
+  },
+  "encoding": {
+    "change": "Cambia codifica",
+    "title": "Riapri con codifica",
+    "hint": "Se i caratteri sembrano errati, il file potrebbe usare un’altra codifica.",
+    "reopen": "Riapri",
+    "reopenTitle": "Riaprire e perdere le modifiche non salvate?",
+    "reopenBody": "Il file viene riletto.",
+    "saveTitle": "Salva con codifica",
+    "saveHint": "Unicode conserva ogni carattere.",
+    "saveWith": "Salva con un’altra codifica…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16, little-endian)",
+      "utf-16be": "Unicode (UTF-16, big-endian)",
+      "windows-1252": "Europeo occidentale (Windows)",
+      "iso-8859-1": "Europeo occidentale (ISO)",
+      "windows-1254": "Turco (Windows)",
+      "iso-8859-9": "Turco (ISO)",
+      "windows-1250": "Europa centrale (Windows)",
+      "iso-8859-2": "Europa centrale (ISO)",
+      "windows-1251": "Cirillico (Windows)",
+      "koi8-r": "Cirillico (KOI8-R)",
+      "shift_jis": "Giapponese (Shift_JIS, sola lettura)",
+      "euc-kr": "Coreano (EUC-KR, sola lettura)",
+      "gb18030": "Cinese (GB18030, sola lettura)"
+    }
+  },
+  "eol": {
+    "label": "Fine riga"
+  },
+  "open": {
+    "binary": "{{name}} non è un file di testo."
+  },
+  "recent": {
+    "empty": "Nessun file recente"
+  },
+  "recovery": {
+    "lost": "Impossibile recuperare il testo non salvato di: {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} si può leggere ma non scrivere: salvato come UTF-8.",
+    "saved": "{{name}} salvato",
+    "unencodable": "«{{char}}» alla riga {{line}} non si può scrivere in {{encoding}}. Scegli un’altra codifica."
+  },
+  "status": {
+    "label": "Stato",
+    "lineNumbers": "Numeri di riga",
+    "position": "Riga {{line}}, Col {{column}}",
+    "selected_one": "{{count}} selezionato",
+    "selected_other": "{{count}} selezionati",
+    "words_one": "{{count}} parola",
+    "words_other": "{{count}} parole",
+    "wrap": "A capo automatico"
+  },
+  "tabs": {
+    "close": "Chiudi {{name}}",
+    "label": "Documenti aperti",
+    "unsaved": "Modifiche non salvate"
+  }
+}

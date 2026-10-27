@@ -1,0 +1,104 @@
+{
+  "app": {
+    "name": "Visor de PDF",
+    "description": "Lee archivos PDF: páginas y miniaturas, zoom y giro, búsqueda de texto, el esquema del documento y tus marcadores, imprimir y guardar una copia."
+  },
+  "actions": {
+    "open": "Abrir PDF…"
+  },
+  "pages": {
+    "label": "Páginas",
+    "previous": "Página anterior",
+    "next": "Página siguiente",
+    "current": "Número de página",
+    "of": "de {{count}}",
+    "thumbnail": "Página {{page}}"
+  },
+  "zoom": {
+    "label": "Zoom",
+    "in": "Acercar",
+    "out": "Alejar",
+    "auto": "Automático",
+    "page-width": "Ancho de página",
+    "page-fit": "Página completa",
+    "page-actual": "Tamaño real"
+  },
+  "rotate": {
+    "left": "Girar a la izquierda",
+    "right": "Girar a la derecha"
+  },
+  "find": {
+    "open": "Buscar en el documento",
+    "label": "Buscar",
+    "placeholder": "Buscar en el documento…",
+    "previous": "Coincidencia anterior",
+    "next": "Coincidencia siguiente",
+    "caseSensitive": "Coincidir mayúsculas",
+    "entireWord": "Palabras completas",
+    "close": "Cerrar búsqueda",
+    "searching": "Buscando…",
+    "notFound": "No encontrado",
+    "position_one": "{{current}} de {{count}} coincidencia",
+    "position_other": "{{current}} de {{count}} coincidencias"
+  },
+  "bookmarks": {
+    "addCurrent": "Marcar esta página",
+    "removeCurrent": "Quitar el marcador de esta página",
+    "defaultLabel": "Página {{page}}",
+    "added": "Página {{page}} marcada",
+    "renameTitle": "Cambiar nombre del marcador",
+    "rename": "Renombrar «{{label}}»",
+    "remove": "Quitar «{{label}}»",
+    "empty": "Aún no hay marcadores",
+    "emptyText": "Usa el botón de marcador de la barra para recordar una página."
+  },
+  "print": {
+    "action": "Imprimir",
+    "preparing": "Preparando la impresión",
+    "progress": "Página {{done}} de {{total}}",
+    "failed": "No se pudo preparar el documento para imprimir."
+  },
+  "save": {
+    "action": "Guardar una copia",
+    "saved": "Copia de {{name}} guardada"
+  },
+  "sidebar": {
+    "label": "Navegación",
+    "show": "Mostrar la barra lateral",
+    "hide": "Ocultar la barra lateral",
+    "pages": "Páginas",
+    "outline": "Esquema",
+    "bookmarks": "Marcadores"
+  },
+  "outline": {
+    "label": "Esquema del documento",
+    "expand": "Expandir {{title}}",
+    "collapse": "Contraer {{title}}",
+    "external": "Abre una página web",
+    "empty": "Sin esquema",
+    "emptyText": "Este documento no tiene índice."
+  },
+  "viewer": {
+    "label": "Páginas de {{name}}",
+    "opening": "Abriendo…",
+    "emptyTitle": "Abre un PDF para leerlo",
+    "emptyText": "Los documentos se abren donde los dejaste, con tus marcadores.",
+    "tryAnother": "Prueba con otro archivo."
+  },
+  "recent": {
+    "title": "Recientes",
+    "gone": "«{{name}}» ya no está disponible."
+  },
+  "errors": {
+    "tooLarge": "Se pueden abrir PDF de hasta {{size}}.",
+    "invalid": "«{{name}}» no es un PDF o está dañado.",
+    "password": "No se pudo abrir el PDF con esa contraseña.",
+    "open": "No se pudo abrir «{{name}}»."
+  },
+  "password": {
+    "title": "Este PDF está protegido",
+    "label": "Contraseña",
+    "open": "Abrir",
+    "incorrect": "La contraseña no es correcta. Inténtalo de nuevo."
+  }
+}

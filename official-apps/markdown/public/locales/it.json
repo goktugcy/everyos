@@ -1,0 +1,62 @@
+{
+  "app": {
+    "name": "Editor Markdown",
+    "description": "Scrivi in Markdown con anteprima dal vivo, codice evidenziato, struttura, trova e sostituisci ed esportazione HTML."
+  },
+  "doc": {
+    "untitled": "Senza titolo"
+  },
+  "actions": {
+    "new": "Nuovo documento",
+    "open": "Apri…",
+    "recent": "File recenti",
+    "save": "Salva",
+    "saveAs": "Salva con nome…",
+    "exportMarkdown": "Esporta Markdown…",
+    "exportHtml": "Esporta HTML…",
+    "copyHtml": "Copia HTML",
+    "find": "Trova e sostituisci",
+    "outline": "Struttura"
+  },
+  "close": {
+    "title": "Chiudere con modifiche non salvate?",
+    "body": "La bozza resta recuperabile qui, ma il file non ha le modifiche.",
+    "confirm": "Chiudi"
+  },
+  "replace": {
+    "title": "Lasciare «{{name}}» senza salvare?",
+    "body": "Le modifiche non salvate andranno perse.",
+    "confirm": "Scarta modifiche"
+  },
+  "save": {
+    "saved": "{{name}} salvato"
+  },
+  "modes": {
+    "label": "Vista",
+    "edit": "Editor",
+    "split": "Editor e anteprima",
+    "preview": "Anteprima"
+  },
+  "outline": {
+    "title": "Struttura",
+    "empty": "I titoli (# Titolo) compaiono qui."
+  },
+  "editor": {
+    "label": "Testo Markdown",
+    "placeholder": "Inizia a scrivere in Markdown…"
+  },
+  "recent": {
+    "empty": "Nessun file recente"
+  },
+  "status": {
+    "label": "Statistiche",
+    "unsaved": "Modifiche non salvate",
+    "words_one": "{{count}} parola",
+    "words_other": "{{count}} parole",
+    "characters_one": "{{count}} carattere",
+    "characters_other": "{{count}} caratteri",
+    "reading_one": "{{count}} min di lettura",
+    "reading_other": "{{count}} min di lettura",
+    "noRecovery": "Troppo lungo per una copia di recupero: salva il file."
+  }
+}

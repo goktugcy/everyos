@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Kod Düzenleyici",
+    "description": "Kodu sekmelerde düzenleyin: sözdizimi renklendirme, mini harita, bul ve değiştir, seçtiğiniz bir klasör için dosya gezgini."
+  },
+  "actions": {
+    "new": "Yeni dosya",
+    "openFile": "Dosya aç…",
+    "openFolder": "Klasör aç…",
+    "save": "Kaydet",
+    "saveAs": "Farklı kaydet…",
+    "find": "Bul ve değiştir"
+  },
+  "explorer": {
+    "label": "Dosyalar",
+    "show": "Dosyaları göster",
+    "hide": "Dosyaları gizle",
+    "newFile": "Klasörde yeni dosya",
+    "newFolder": "Yeni klasör",
+    "refresh": "Yenile",
+    "close": "Klasörü kapat",
+    "newFileTitle": "Yeni dosya",
+    "newFolderTitle": "Yeni klasör",
+    "inFolder": "{{folder}} içinde",
+    "inRoot": "{{name}} içinde",
+    "names": {
+      "empty": "Bir ad girin.",
+      "reserved": "“{{name}}” ad olarak kullanılamaz.",
+      "separator": "Adlar / ya da \\ içeremez.",
+      "tooLong": "Bu ad çok uzun.",
+      "exists": "“{{name}}” burada zaten var."
+    },
+    "unreadable": "Bu klasör okunamıyor",
+    "unreadableShort": "okunamıyor",
+    "empty": "Bu klasör boş",
+    "more_one": "{{count}} öğe daha gösterilmiyor",
+    "more_other": "{{count}} öğe daha gösterilmiyor"
+  },
+  "tabs": {
+    "label": "Açık dosyalar",
+    "unsaved": "Kaydedilmemiş değişiklikler",
+    "close": "{{name}} dosyasını kapat"
+  },
+  "editor": {
+    "label": "{{name}} içeriği"
+  },
+  "status": {
+    "label": "Durum",
+    "position": "Sat {{line}}, Süt {{column}}",
+    "selected_one": "{{count}} seçili",
+    "selected_other": "{{count}} seçili",
+    "language": "Dil",
+    "autoNamed": "{{name}} (dosya adından)",
+    "autoPlain": "Düz metin (dosya adından)",
+    "plain": "Düz metin",
+    "spaces": "Boşluk: {{count}}",
+    "tabs": "Sekme genişliği: {{count}}",
+    "eol": "Satır sonları"
+  },
+  "settings": {
+    "title": "Düzenleyici ayarları",
+    "theme": "Tema",
+    "themes": {
+      "system": "EveryOS ile aynı",
+      "light": "Açık",
+      "dark": "Koyu",
+      "contrast": "Yüksek karşıtlık"
+    },
+    "fontSize": "Yazı boyutu",
+    "tabSize": "Sekme genişliği",
+    "insertSpaces": "Boşluklarla girintile",
+    "wrap": "Uzun satırları kaydır",
+    "minimap": "Mini haritayı göster"
+  },
+  "welcome": {
+    "title": "Düzenlemek için bir şey açın",
+    "text": "Dosyalarına göz atmak için bir proje klasörü açın, tek dosyalar açın ya da yeni bir dosya başlatın.",
+    "withFolder": "Soldaki klasörden bir dosya seçin ya da yeni bir dosya başlatın."
+  },
+  "doc": {
+    "untitled": "Adsız {{number}}"
+  },
+  "open": {
+    "binary": "“{{name}}” bir metin dosyası değil.",
+    "notUtf8": "“{{name}}” UTF-8 metin değil. Başka kodlamaları okuyabilen Metin Düzenleyici ile açın."
+  },
+  "save": {
+    "saved": "{{name}} kaydedildi",
+    "changedTitle": "“{{name}}” diskte değişti",
+    "changedBody": "Siz açtıktan sonra bu dosya değiştirildi. Kaydetmek o değişikliklerin yerine sizinkileri yazar.",
+    "overwrite": "Üzerine yaz"
+  },
+  "close": {
+    "title_one": "{{count}} kaydedilmemiş dosyayla kapatılsın mı?",
+    "title_other": "{{count}} kaydedilmemiş dosyayla kapatılsın mı?",
+    "body": "Kaydedilmemiş değişiklikler saklanır ve Kod Düzenleyici'yi yeniden açtığınızda geri gelir.",
+    "confirm": "Kapat",
+    "tabTitle": "“{{name}}” değişiklikleri atılsın mı?",
+    "tabBody": "Kaydetmediğiniz değişiklikler kaybolur.",
+    "discard": "At"
+  },
+  "recovery": {
+    "lost": "Şu kaydedilmemiş dosyalar geri getirilemedi: {{names}}"
+  }
+}

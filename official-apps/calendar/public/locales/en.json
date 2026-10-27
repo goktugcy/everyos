@@ -1,0 +1,194 @@
+{
+  "app": {
+    "name": "Calendar",
+    "description": "Plan your days: day, week and month views, repeating events, reminders, search, several calendars and iCalendar (.ics) import and export."
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "Upcoming events",
+      "description": "Your next events this week; open one in the Calendar."
+    }
+  },
+  "calendars": {
+    "label": "Calendars",
+    "personal": "Personal",
+    "imported": "Imported",
+    "add": "New calendar",
+    "edit": "Edit {{name}}",
+    "editTitle": "Edit calendar",
+    "export": "Export {{name}} as .ics",
+    "deleteNamed": "Delete {{name}}",
+    "delete": "Delete calendar",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteBody_one": "Its {{count}} event is deleted too. This cannot be undone.",
+    "deleteBody_other": "Its {{count}} events are deleted too. This cannot be undone.",
+    "name": "Name",
+    "color": "Colour",
+    "colorNumber": "Colour {{number}}"
+  },
+  "event": {
+    "new": "New event",
+    "newTitle": "New event",
+    "editTitle": "Edit event",
+    "title": "Title",
+    "titlePlaceholder": "What is happening?",
+    "untitled": "(No title)",
+    "allDay": "All day",
+    "startDate": "Starts",
+    "startTime": "at",
+    "endDate": "Ends",
+    "endTime": "at",
+    "lastDay": "Last day",
+    "zoneNote": "Times are in {{zone}}, where this event was made.",
+    "location": "Location",
+    "notes": "Notes",
+    "calendar": "Calendar",
+    "repeats": "Repeats",
+    "delete": "Delete",
+    "deleteTitle": "Delete “{{title}}”?"
+  },
+  "problems": {
+    "endBeforeStart": "The end is before the start.",
+    "untilBeforeStart": "The repeat ends before the event starts."
+  },
+  "repeat": {
+    "label": "Repeat",
+    "none": "Does not repeat",
+    "daily": "Every day",
+    "weekdays": "Every weekday (Monday to Friday)",
+    "weekly": "Every week on {{day}}",
+    "monthly": "Every month on day {{day}}",
+    "monthlyWeekday": "Every month on the {{nth}} {{day}}",
+    "yearly": "Every year on {{date}}",
+    "custom": "Custom…",
+    "imported": "As set in another calendar",
+    "nth": {
+      "1": "first",
+      "2": "second",
+      "3": "third",
+      "4": "fourth",
+      "-1": "last"
+    },
+    "every": "Every",
+    "unit": "Unit",
+    "units": {
+      "daily_one": "day",
+      "daily_other": "days",
+      "weekly_one": "week",
+      "weekly_other": "weeks",
+      "monthly_one": "month",
+      "monthly_other": "months",
+      "yearly_one": "year",
+      "yearly_other": "years"
+    },
+    "onDays": "On",
+    "monthlyOn": "On",
+    "onDay": "Day {{day}}",
+    "onWeekday": "The {{nth}} {{day}}",
+    "ends": "Ends",
+    "never": "Never",
+    "until": "On a date",
+    "after": "After a number of times",
+    "untilDate": "Last date",
+    "times": "Times"
+  },
+  "reminders": {
+    "label": "Reminders",
+    "add": "Add a reminder",
+    "remove": "Remove the reminder “{{label}}”",
+    "atStart": "When it starts",
+    "minutes_one": "{{count}} minute before",
+    "minutes_other": "{{count}} minutes before",
+    "hours_one": "{{count}} hour before",
+    "hours_other": "{{count}} hours before",
+    "days_one": "{{count}} day before",
+    "days_other": "{{count}} days before",
+    "weeks_one": "{{count}} week before",
+    "weeks_other": "{{count}} weeks before",
+    "onDay": "On the day at 09:00",
+    "daysBeforeAt_one": "The day before at 09:00",
+    "daysBeforeAt_other": "{{count}} days before at 09:00",
+    "weeksBeforeAt_one": "A week before at 09:00",
+    "weeksBeforeAt_other": "{{count}} weeks before at 09:00",
+    "body": "{{time}}, {{date}}",
+    "allDayBody": "All day, {{date}}"
+  },
+  "scope": {
+    "label": "Which events",
+    "saveTitle": "Change a repeating event",
+    "deleteTitle": "Delete a repeating event",
+    "one": "This event",
+    "following": "This and following events",
+    "all": "All events"
+  },
+  "views": {
+    "label": "View",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month"
+  },
+  "nav": {
+    "today": "Today",
+    "previous": {
+      "day": "Previous day",
+      "week": "Previous week",
+      "month": "Previous month"
+    },
+    "next": {
+      "day": "Next day",
+      "week": "Next week",
+      "month": "Next month"
+    },
+    "goTo": "Go to date",
+    "keys": "Keys: T today, D/W/M views, N new event, ← → move, / search."
+  },
+  "month": {
+    "more_one": "{{count}} more",
+    "more_other": "{{count}} more"
+  },
+  "grid": {
+    "now": "Now, {{time}}"
+  },
+  "search": {
+    "label": "Search events",
+    "placeholder": "Search",
+    "title": "Results for “{{query}}”",
+    "none": "Nothing found for “{{query}}”",
+    "noneText": "Titles, places and notes of all calendars are searched.",
+    "results_one": "{{count}} event found",
+    "results_other": "{{count}} events found"
+  },
+  "ics": {
+    "import": "Import .ics…",
+    "importTitle": "Import events",
+    "found_one": "The file has {{count}} event.",
+    "found_other": "The file has {{count}} events.",
+    "skipped_one": "{{count}} cancelled or unreadable event is left out.",
+    "skipped_other": "{{count}} cancelled or unreadable events are left out.",
+    "into": "Import into",
+    "newCalendar": "A new calendar “{{name}}”",
+    "importAction_one": "Import {{count}} event",
+    "importAction_other": "Import {{count}} events",
+    "imported_one": "{{count}} event imported into {{name}}",
+    "imported_other": "{{count}} events imported into {{name}}",
+    "unknownZones_one": "{{count}} event uses a time zone this device does not know; it is shown in yours.",
+    "unknownZones_other": "{{count}} events use a time zone this device does not know; they are shown in yours.",
+    "invalid": "This file is not an iCalendar (.ics) file."
+  },
+  "settings": {
+    "title": "Settings",
+    "weekStart": "Week starts on",
+    "weekStartAuto": "As in your language ({{day}})",
+    "zone": "Times are shown in your time zone, {{zone}}."
+  },
+  "sidebar": {
+    "show": "Show calendars",
+    "hide": "Hide calendars"
+  },
+  "widget": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "empty": "Nothing planned this week",
+    "open": "Open the Calendar"
+  }
+}

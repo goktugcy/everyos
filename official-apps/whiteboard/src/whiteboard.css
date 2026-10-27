@@ -1,0 +1,91 @@
+.wb-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.wb-status {
+  font-size: 0.78rem;
+  color: var(--eui-subtle);
+}
+.wb-status[data-status="tooLarge"],
+.wb-status[data-status="failed"] {
+  color: var(--eui-danger);
+}
+.wb-body {
+  position: relative;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+}
+.wb-body[data-sidebar] {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+.wb-app[data-narrow] .wb-body[data-sidebar] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.wb-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-right: 1px solid var(--eui-line);
+  overflow: auto;
+}
+.wb-app[data-narrow] .wb-boards {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 10;
+  width: min(280px, 86%);
+  background: var(--eui-surface);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25);
+}
+.wb-boards ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-boards li {
+  display: flex;
+  align-items: center;
+  border-radius: var(--eui-radius-sm);
+}
+.wb-boards li[data-current] {
+  background: var(--eui-hover-strong);
+}
+.wb-board {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.wb-board-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+}
+.wb-board-date {
+  font-size: 0.72rem;
+  color: var(--eui-subtle);
+}
+.wb-main {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+.wb-canvas {
+  position: absolute;
+  inset: 0;
+}
+/* Libraries from the web cannot be added from inside EveryOS: the link is left out. */
+.wb-canvas .library-menu-browse-button {
+  display: none;
+}

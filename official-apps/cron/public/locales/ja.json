@@ -1,0 +1,94 @@
+{
+  "app": {
+    "name": "Cron ビルダー",
+    "description": "cron スケジュールの作成と確認。ビジュアルビルダー、わかりやすい説明、任意のタイムゾーンでの次回実行、systemd と EveryOS 形式。"
+  },
+  "seconds": {
+    "label": "秒フィールド"
+  },
+  "expression": {
+    "section": "式",
+    "label": "cron 式",
+    "copy": "式をコピー"
+  },
+  "fields": {
+    "second": "秒",
+    "minute": "分",
+    "hour": "時",
+    "day": "日",
+    "month": "月",
+    "weekday": "曜日"
+  },
+  "problems": {
+    "field-count": "cron 式は空白で区切った {{count}} 個のフィールドです ({{token}} 個あります)。",
+    "empty": "{{field}} が空です。",
+    "bad-token": "{{field}}: 「{{token}}」は数値、名前、*、リストのいずれでもありません。",
+    "out-of-range": "{{field}}: {{token}} は範囲外です。",
+    "bad-range": "{{field}}: 範囲「{{token}}」が逆順です。",
+    "bad-step": "{{field}}: 「{{token}}」の間隔は 0 より大きい数値にしてください。",
+    "reboot": "@reboot は時刻ではなく起動時に実行されるため、表示する実行時刻はありません。"
+  },
+  "builder": {
+    "custom": "この項目は式で編集してください (ビルダーで表示できない形式です)。",
+    "mode": "{{field}} の指定方法",
+    "modes": {
+      "every": "毎",
+      "specific": "指定した値",
+      "range": "範囲",
+      "step": "n ごと"
+    },
+    "from": "開始",
+    "to": "終了",
+    "every": "間隔",
+    "interval": "間隔",
+    "startingAt": "開始値",
+    "start": "開始"
+  },
+  "presets": {
+    "title": "プリセット",
+    "everyMinute": "毎分",
+    "every5Minutes": "5 分ごと",
+    "every15Minutes": "15 分ごと",
+    "hourly": "毎時",
+    "every6Hours": "6 時間ごと",
+    "daily3am": "毎日 3:00",
+    "weekdays9am": "平日 9:00",
+    "weeklySunday": "毎週日曜",
+    "monthlyFirst": "毎月 1 日",
+    "quarterly": "四半期ごと",
+    "yearly": "毎年"
+  },
+  "runs": {
+    "section": "実行時刻",
+    "timeZone": "タイムゾーン",
+    "next": "次回の実行",
+    "previous": "前回の実行",
+    "none": "このスケジュールは実行されません (2 月 30 日など)。",
+    "invalid": "実行時刻を見るには式を修正してください。"
+  },
+  "export": {
+    "title": "使う",
+    "command": "コマンド",
+    "commandPlaceholder": "/path/to/command",
+    "crontab": "crontab の行",
+    "onCalendar": "systemd タイマー (OnCalendar=)",
+    "twoLines": "cron はどちらかの日付フィールドが一致すれば実行しますが、systemd は両方を必要とするため 2 行になります。",
+    "timezone": "タイムゾーン {{zone}}。",
+    "everyos": "EveryOS のスケジュールタスク",
+    "compatible": "対応",
+    "problems": {
+      "seconds": "スケジュールタスクに秒フィールドはありません。",
+      "too-frequent": "スケジュールタスクの実行間隔は最短 5 分 (1 時間に 12 回) です。"
+    },
+    "timerFile": ".timer ファイルを保存…",
+    "defaultDescription": "スケジュールされたジョブ",
+    "notScheduled": "Cron ビルダーは式を作るだけで、このサーバーで何かをスケジュールすることはありません。"
+  },
+  "saved": {
+    "title": "保存済み",
+    "name": "名前",
+    "save": "式を保存",
+    "done": "保存しました",
+    "delete": "{{name}} を削除"
+  }
+}

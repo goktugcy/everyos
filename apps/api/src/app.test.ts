@@ -239,6 +239,25 @@ describe("CSRF protection", () => {
     expect(login.status).toBe(403);
   });
 
+  it("refuses reads from other sites and from sandboxed (opaque-origin) app frames", async () => {
+    const { admin } = await setupWithAdmin();
+    for (const site of ["cross-site", "same-site"]) {
+      const read = await admin.request("GET", "/api/auth/session", {
+        headers: { "sec-fetch-site": site, "sec-fetch-dest": "image" },
+      });
+      expect(read.status, site).toBe(403);
+      expect(await errorCode(read)).toBe("CSRF_FAILED");
+    }
+    for (const site of ["same-origin", "none"])
+      expect(
+        (await admin.request("GET", "/api/auth/session", { headers: { "sec-fetch-site": site } }))
+          .status,
+        site,
+      ).toBe(200);
+    // Clients without fetch metadata (scripts, older browsers) still read.
+    expect((await admin.get("/api/auth/session")).status).toBe(200);
+  });
+
   it("accepts configured public origins", async () => {
     const ctx = await createTestContext({
       configure: (config) => (config.server.publicOrigins = ["https://everyos.tail.ts.net"]),

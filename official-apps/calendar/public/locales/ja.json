@@ -1,0 +1,176 @@
+{
+  "app": {
+    "name": "カレンダー",
+    "description": "日・週・月の表示、繰り返し予定、リマインダー、検索、複数のカレンダー、iCalendar (.ics) の読み込みと書き出しで予定を管理します。"
+  },
+  "widgets": {
+    "upcoming": {
+      "name": "今後の予定",
+      "description": "今週の次の予定。カレンダーで開けます。"
+    }
+  },
+  "calendars": {
+    "label": "カレンダー",
+    "personal": "個人",
+    "imported": "読み込み済み",
+    "add": "新しいカレンダー",
+    "edit": "{{name}} を編集",
+    "editTitle": "カレンダーを編集",
+    "export": "{{name}} を .ics で書き出す",
+    "deleteNamed": "{{name}} を削除",
+    "delete": "カレンダーを削除",
+    "deleteTitle": "「{{name}}」を削除しますか?",
+    "deleteBody_other": "{{count}} 件の予定も削除されます。元に戻せません。",
+    "name": "名前",
+    "color": "色",
+    "colorNumber": "色 {{number}}"
+  },
+  "event": {
+    "new": "新しい予定",
+    "newTitle": "新しい予定",
+    "editTitle": "予定を編集",
+    "title": "タイトル",
+    "titlePlaceholder": "何の予定ですか?",
+    "untitled": "(タイトルなし)",
+    "allDay": "終日",
+    "startDate": "開始日",
+    "startTime": "開始時刻",
+    "endDate": "終了日",
+    "endTime": "終了時刻",
+    "lastDay": "最終日",
+    "zoneNote": "時刻は予定が作成された {{zone}} のものです。",
+    "location": "場所",
+    "notes": "メモ",
+    "calendar": "カレンダー",
+    "repeats": "繰り返し",
+    "delete": "削除",
+    "deleteTitle": "「{{title}}」を削除しますか?"
+  },
+  "problems": {
+    "endBeforeStart": "終了が開始より前になっています。",
+    "untilBeforeStart": "繰り返しが予定の開始前に終わります。"
+  },
+  "repeat": {
+    "label": "繰り返し",
+    "none": "繰り返さない",
+    "daily": "毎日",
+    "weekdays": "平日 (月曜日〜金曜日)",
+    "weekly": "毎週{{day}}",
+    "monthly": "毎月{{day}}日",
+    "monthlyWeekday": "毎月{{nth}}{{day}}",
+    "yearly": "毎年{{date}}",
+    "custom": "カスタム…",
+    "imported": "別のカレンダーでの設定どおり",
+    "nth": {
+      "1": "第1",
+      "2": "第2",
+      "3": "第3",
+      "4": "第4",
+      "-1": "最終"
+    },
+    "every": "間隔",
+    "unit": "単位",
+    "units": {
+      "daily_other": "日",
+      "weekly_other": "週",
+      "monthly_other": "か月",
+      "yearly_other": "年"
+    },
+    "onDays": "曜日",
+    "monthlyOn": "日付",
+    "onDay": "{{day}}日",
+    "onWeekday": "{{nth}}{{day}}",
+    "ends": "終了",
+    "never": "なし",
+    "until": "日付で終了",
+    "after": "回数で終了",
+    "untilDate": "最終日",
+    "times": "回数"
+  },
+  "reminders": {
+    "label": "リマインダー",
+    "add": "リマインダーを追加",
+    "remove": "リマインダー「{{label}}」を削除",
+    "atStart": "開始時",
+    "minutes_other": "{{count}} 分前",
+    "hours_other": "{{count}} 時間前",
+    "days_other": "{{count}} 日前",
+    "weeks_other": "{{count}} 週間前",
+    "onDay": "当日 09:00",
+    "daysBeforeAt_other": "{{count}} 日前の 09:00",
+    "weeksBeforeAt_other": "{{count}} 週間前の 09:00",
+    "body": "{{date}} {{time}}",
+    "allDayBody": "{{date}}（終日）"
+  },
+  "scope": {
+    "label": "対象の予定",
+    "saveTitle": "繰り返し予定を変更",
+    "deleteTitle": "繰り返し予定を削除",
+    "one": "この予定",
+    "following": "この予定以降すべて",
+    "all": "すべての予定"
+  },
+  "views": {
+    "label": "表示",
+    "day": "日",
+    "week": "週",
+    "month": "月"
+  },
+  "nav": {
+    "today": "今日",
+    "previous": {
+      "day": "前の日",
+      "week": "前の週",
+      "month": "前の月"
+    },
+    "next": {
+      "day": "次の日",
+      "week": "次の週",
+      "month": "次の月"
+    },
+    "goTo": "日付へ移動",
+    "keys": "キー: T 今日、D/W/M 表示、N 新しい予定、← → 移動、/ 検索"
+  },
+  "month": {
+    "more_other": "ほか {{count}} 件"
+  },
+  "grid": {
+    "now": "現在 {{time}}"
+  },
+  "search": {
+    "label": "予定を検索",
+    "placeholder": "検索",
+    "title": "「{{query}}」の検索結果",
+    "none": "「{{query}}」は見つかりませんでした",
+    "noneText": "すべてのカレンダーのタイトル、場所、メモを検索します。",
+    "results_other": "{{count}} 件の予定"
+  },
+  "ics": {
+    "import": ".ics を読み込む…",
+    "importTitle": "予定を読み込む",
+    "found_other": "ファイルには {{count}} 件の予定があります。",
+    "skipped_other": "キャンセル済みまたは読めない {{count}} 件は除外します。",
+    "into": "読み込み先",
+    "newCalendar": "新しいカレンダー「{{name}}」",
+    "importAction_other": "{{count}} 件を読み込む",
+    "imported_other": "{{name}} に {{count}} 件を読み込みました",
+    "unknownZones_other": "{{count}} 件の予定はこのデバイスにないタイムゾーンを使うため、あなたのタイムゾーンで表示します。",
+    "invalid": "このファイルは iCalendar (.ics) ファイルではありません。"
+  },
+  "settings": {
+    "title": "設定",
+    "weekStart": "週の始まり",
+    "weekStartAuto": "言語の設定に合わせる ({{day}})",
+    "zone": "時刻はあなたのタイムゾーン ({{zone}}) で表示されます。"
+  },
+  "sidebar": {
+    "show": "カレンダーを表示",
+    "hide": "カレンダーを隠す"
+  },
+  "widget": {
+    "today": "今日",
+    "tomorrow": "明日",
+    "empty": "今週の予定はありません",
+    "open": "カレンダーを開く"
+  }
+}

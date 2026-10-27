@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "마크다운 편집기",
+    "description": "실시간 미리 보기, 코드 강조, 개요, 찾기 및 바꾸기, HTML 내보내기를 지원하는 마크다운 편집기."
+  },
+  "doc": {
+    "untitled": "제목 없음"
+  },
+  "actions": {
+    "new": "새 문서",
+    "open": "열기…",
+    "recent": "최근 파일",
+    "save": "저장",
+    "saveAs": "다른 이름으로 저장…",
+    "exportMarkdown": "마크다운 내보내기…",
+    "exportHtml": "HTML 내보내기…",
+    "copyHtml": "HTML 복사",
+    "find": "찾기 및 바꾸기",
+    "outline": "개요"
+  },
+  "close": {
+    "title": "저장하지 않은 변경 사항이 있습니다. 닫을까요?",
+    "body": "초안은 여기에 남지만 파일에는 변경 사항이 없습니다.",
+    "confirm": "닫기"
+  },
+  "replace": {
+    "title": "“{{name}}”을(를) 저장하지 않고 닫을까요?",
+    "body": "저장하지 않은 변경 사항이 사라집니다.",
+    "confirm": "변경 사항 버리기"
+  },
+  "save": {
+    "saved": "{{name}} 저장됨"
+  },
+  "modes": {
+    "label": "보기",
+    "edit": "편집기",
+    "split": "편집기와 미리 보기",
+    "preview": "미리 보기"
+  },
+  "outline": {
+    "title": "개요",
+    "empty": "제목(# 제목)이 여기에 표시됩니다."
+  },
+  "editor": {
+    "label": "마크다운 텍스트",
+    "placeholder": "마크다운 작성을 시작하세요…"
+  },
+  "recent": {
+    "empty": "최근 파일이 없습니다"
+  },
+  "status": {
+    "label": "통계",
+    "unsaved": "저장하지 않은 변경 사항",
+    "words_other": "{{count}}단어",
+    "characters_other": "{{count}}자",
+    "reading_other": "{{count}}분 분량",
+    "noRecovery": "자동 복구 사본을 만들기엔 너무 깁니다. 파일에 저장하세요."
+  }
+}

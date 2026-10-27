@@ -14,6 +14,8 @@ export default defineConfig({
     proxy: {
       // Keep the browser's Host/Origin so the API's same-origin checks apply as in production.
       "/api": { target: apiTarget, changeOrigin: false, ws: true },
+      // Installed app documents, modules, locales and icons are served by the API too.
+      "/app-runtime": { target: apiTarget, changeOrigin: false },
     },
   },
   build: {

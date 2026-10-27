@@ -1,4 +1,6 @@
 import type { MenubarModuleId } from "@everyos/shared";
+import { requestClose } from "../windows/close-guards.ts";
+import { appTitle } from "../apps/app-title.ts";
 import { useState, type ReactNode } from "react";
 import {
   AppWindow,
@@ -288,7 +290,7 @@ export function Menubar() {
       icon: <X />,
       shortcut: "Ctrl+Alt+W",
       disabled: !focused,
-      onSelect: () => focused && wm().close(focused.id),
+      onSelect: () => focused && void requestClose(focused.id, () => wm().close(focused.id)),
     },
   ];
   const userMenu: MenuEntry[] = user
@@ -393,7 +395,7 @@ export function Menubar() {
                 className={cn(menubarButton, "font-semibold")}
                 data-testid="menubar-app"
               >
-                {focusedApp ? focused?.title || t(focusedApp.titleKey) : t("desktop.workspace")}
+                {focusedApp ? focused?.title || appTitle(focusedApp, t) : t("desktop.workspace")}
               </button>
             }
           />

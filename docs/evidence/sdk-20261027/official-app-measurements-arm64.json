@@ -1,0 +1,428 @@
+{
+  "format": "everyos-official-app-measurements/1",
+  "observedAt": "2026-10-27T01:49:54.421Z",
+  "environment": {
+    "platform": "linux",
+    "architecture": "arm64",
+    "kernel": "6.17.0-1022-azure",
+    "browserVersion": "156.0.8078.4",
+    "physicalPi": false,
+    "hardwareModel": null,
+    "cpuModel": "unknown",
+    "logicalCpus": 4,
+    "hostMemoryBytes": 16722010112,
+    "hostData": "simulated-agent",
+    "method": "single sequential first launch from the command palette; warm desktop; uncontrolled cache",
+    "cpu": "Chromium task time during a 3-second idle window; renderer scope is explicit per sample",
+    "memory": "JavaScript heap without forced collection; excludes native/browser and host service memory",
+    "network": "encoded runtime response bodies from launch through idle sample; excludes install and API traffic"
+  },
+  "measurements": [
+    {
+      "appId": "dev.everyos.calculator",
+      "observation": {
+        "launchToContentMs": 1255.37,
+        "idleSampleMs": 3004,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.6,
+        "jsHeapUsedBytes": 24442776,
+        "jsHeapTotalBytes": 47726592,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 324510,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.calendar",
+      "observation": {
+        "launchToContentMs": 1686.92,
+        "idleSampleMs": 3003,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.21,
+        "jsHeapUsedBytes": 55118288,
+        "jsHeapTotalBytes": 72314880,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 403675,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.code",
+      "observation": {
+        "launchToContentMs": 1696.15,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.14,
+        "jsHeapUsedBytes": 36214580,
+        "jsHeapTotalBytes": 72261632,
+        "runtimeRequests": 7,
+        "runtimeResponseBodyBytes": 763152,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.color",
+      "observation": {
+        "launchToContentMs": 1173.67,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.12,
+        "jsHeapUsedBytes": 37231224,
+        "jsHeapTotalBytes": 95014912,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 318053,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.cron",
+      "observation": {
+        "launchToContentMs": 1611.76,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.18,
+        "jsHeapUsedBytes": 59374636,
+        "jsHeapTotalBytes": 102301696,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 640514,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.diff",
+      "observation": {
+        "launchToContentMs": 1645.94,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.21,
+        "jsHeapUsedBytes": 60029312,
+        "jsHeapTotalBytes": 106442752,
+        "runtimeRequests": 7,
+        "runtimeResponseBodyBytes": 759513,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.disk",
+      "observation": {
+        "launchToContentMs": 1170.06,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.36,
+        "jsHeapUsedBytes": 83642052,
+        "jsHeapTotalBytes": 120283136,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 313998,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.dns",
+      "observation": {
+        "launchToContentMs": 1107.76,
+        "idleSampleMs": 3004,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.04,
+        "jsHeapUsedBytes": 64894344,
+        "jsHeapTotalBytes": 127569920,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 305738,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.gallery",
+      "observation": {
+        "launchToContentMs": 1186.3,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.14,
+        "jsHeapUsedBytes": 87725720,
+        "jsHeapTotalBytes": 131186688,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 387885,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.httpmonitor",
+      "observation": {
+        "launchToContentMs": 1124.01,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.2,
+        "jsHeapUsedBytes": 83674920,
+        "jsHeapTotalBytes": 132444160,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 311594,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.images",
+      "observation": {
+        "launchToContentMs": 1174.53,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.17,
+        "jsHeapUsedBytes": 106976896,
+        "jsHeapTotalBytes": 148381696,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 375644,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.json",
+      "observation": {
+        "launchToContentMs": 1657.42,
+        "idleSampleMs": 3003,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.8,
+        "jsHeapUsedBytes": 77906956,
+        "jsHeapTotalBytes": 152784896,
+        "runtimeRequests": 8,
+        "runtimeResponseBodyBytes": 789583,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.jwt",
+      "observation": {
+        "launchToContentMs": 1125.34,
+        "idleSampleMs": 3001,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.29,
+        "jsHeapUsedBytes": 81337008,
+        "jsHeapTotalBytes": 157450240,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 325324,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.logs",
+      "observation": {
+        "launchToContentMs": 1241.54,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.57,
+        "jsHeapUsedBytes": 112543908,
+        "jsHeapTotalBytes": 161067008,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 312172,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.markdown",
+      "observation": {
+        "launchToContentMs": 1690.69,
+        "idleSampleMs": 3004,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.42,
+        "jsHeapUsedBytes": 95726832,
+        "jsHeapTotalBytes": 161538048,
+        "runtimeRequests": 12,
+        "runtimeResponseBodyBytes": 1167181,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.network",
+      "observation": {
+        "launchToContentMs": 1199.02,
+        "idleSampleMs": 3001,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.3,
+        "jsHeapUsedBytes": 102831464,
+        "jsHeapTotalBytes": 163844096,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 307006,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.notes",
+      "observation": {
+        "launchToContentMs": 1235.15,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.3,
+        "jsHeapUsedBytes": 110692980,
+        "jsHeapTotalBytes": 172703744,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 462518,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.pdf",
+      "observation": {
+        "launchToContentMs": 1166.14,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.28,
+        "jsHeapUsedBytes": 137420160,
+        "jsHeapTotalBytes": 182349824,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 444715,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.pomodoro",
+      "observation": {
+        "launchToContentMs": 1605.23,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 2.79,
+        "jsHeapUsedBytes": 104836204,
+        "jsHeapTotalBytes": 189374464,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 311559,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.ports",
+      "observation": {
+        "launchToContentMs": 1206.44,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.24,
+        "jsHeapUsedBytes": 110324004,
+        "jsHeapTotalBytes": 191942656,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 301088,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.regex",
+      "observation": {
+        "launchToContentMs": 1160.12,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.22,
+        "jsHeapUsedBytes": 136571596,
+        "jsHeapTotalBytes": 194772992,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 318192,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.sql",
+      "observation": {
+        "launchToContentMs": 1629.39,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.37,
+        "jsHeapUsedBytes": 129589092,
+        "jsHeapTotalBytes": 190787584,
+        "runtimeRequests": 9,
+        "runtimeResponseBodyBytes": 790677,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.sshkeys",
+      "observation": {
+        "launchToContentMs": 1138.56,
+        "idleSampleMs": 3001,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.63,
+        "jsHeapUsedBytes": 134909208,
+        "jsHeapTotalBytes": 200957952,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 305504,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.ssl",
+      "observation": {
+        "launchToContentMs": 1122.25,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.15,
+        "jsHeapUsedBytes": 161932272,
+        "jsHeapTotalBytes": 210079744,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 302157,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.text",
+      "observation": {
+        "launchToContentMs": 1111.94,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.59,
+        "jsHeapUsedBytes": 114483100,
+        "jsHeapTotalBytes": 215269376,
+        "runtimeRequests": 7,
+        "runtimeResponseBodyBytes": 725466,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.todo",
+      "observation": {
+        "launchToContentMs": 1136.81,
+        "idleSampleMs": 3001,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.19,
+        "jsHeapUsedBytes": 137933484,
+        "jsHeapTotalBytes": 218886144,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 336171,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.uptime",
+      "observation": {
+        "launchToContentMs": 1152.51,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 1.49,
+        "jsHeapUsedBytes": 115683896,
+        "jsHeapTotalBytes": 196026368,
+        "runtimeRequests": 6,
+        "runtimeResponseBodyBytes": 319958,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.video",
+      "observation": {
+        "launchToContentMs": 1137.2,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 4.44,
+        "jsHeapUsedBytes": 96668256,
+        "jsHeapTotalBytes": 194400256,
+        "runtimeRequests": 5,
+        "runtimeResponseBodyBytes": 304654,
+        "failedRuntimeRequests": 0
+      }
+    },
+    {
+      "appId": "dev.everyos.whiteboard",
+      "observation": {
+        "launchToContentMs": 1659.93,
+        "idleSampleMs": 3002,
+        "rendererScope": "desktop-renderer-including-app",
+        "idleTaskPercentOneCore": 2.62,
+        "jsHeapUsedBytes": 129269232,
+        "jsHeapTotalBytes": 195395584,
+        "runtimeRequests": 24,
+        "runtimeResponseBodyBytes": 1726950,
+        "failedRuntimeRequests": 0
+      }
+    }
+  ]
+}

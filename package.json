@@ -1,8 +1,8 @@
 {
   "name": "everyos-monorepo",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "private": true,
-  "description": "EveryOS — a self-hosted personal OS for your files, apps and Linux workspace.",
+  "description": "EveryOS \u2014 a self-hosted personal OS for your files, apps and Linux workspace.",
   "type": "module",
   "packageManager": "pnpm@12.6.0",
   "engines": {
@@ -14,6 +14,7 @@
   },
   "scripts": {
     "dev": "node scripts/dev.ts",
+    "dev:apps": "node scripts/dev-app-registry.ts",
     "build": "pnpm --filter @everyos/web build && node scripts/build.ts",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -23,20 +24,32 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p tsconfig.json && pnpm -r --parallel typecheck",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "official-apps:check": "node scripts/official-apps.ts check",
+    "official-apps:build": "node scripts/official-apps.ts build",
+    "official-apps:sign": "node scripts/official-apps.ts sign",
+    "official-apps:verify": "node scripts/official-apps.ts verify",
+    "sdk:build": "node scripts/sdk.ts build",
+    "sdk:verify": "node scripts/sdk.ts verify",
+    "sdk:check": "node scripts/sdk-acceptance.ts dist/sdk",
+    "community:inspect": "node scripts/community-inspect.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.64.0",
     "@types/node": "26.6.4",
+    "@types/pg": "catalog:",
     "esbuild": "0.28.2",
     "eslint": "10.12.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
+    "happy-dom": "20.14.5",
+    "pg": "catalog:",
     "prettier": "3.9.9",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.1",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "zod": "catalog:"
   }
 }

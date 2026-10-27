@@ -21,6 +21,8 @@ export function useApiResource<T>(
   refreshMs: number | null,
   /** Any value; a change refetches immediately (e.g. a Docker change counter). */
   refreshKey?: unknown,
+  /** Stop interval requests after a terminal response (visibility/manual reloads still work). */
+  continuePolling?: (data: T) => boolean,
 ): ApiResource<T> {
   const [state, setState] = useState<Omit<ApiResource<T>, "reload">>({
     data: null,
@@ -36,6 +38,7 @@ export function useApiResource<T>(
     let controller: AbortController | null = null;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let disposed = false;
+    let latest: T | null = null;
 
     const load = async () => {
       if (document.visibilityState !== "visible") return;
@@ -44,7 +47,10 @@ export function useApiResource<T>(
       setState((previous) => ({ ...previous, refreshing: previous.data !== null }));
       try {
         const data = await api<T>(path, { signal: controller.signal });
-        if (!disposed) setState({ data, error: null, loading: false, refreshing: false });
+        if (!disposed) {
+          latest = data;
+          setState({ data, error: null, loading: false, refreshing: false });
+        }
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
         if (!disposed)
@@ -52,7 +58,12 @@ export function useApiResource<T>(
       }
     };
     const schedule = () => {
-      if (refreshMs === null || disposed) return;
+      if (
+        refreshMs === null ||
+        disposed ||
+        (latest !== null && continuePolling && !continuePolling(latest))
+      )
+        return;
       timer = setTimeout(() => void load().finally(schedule), refreshMs);
     };
     const onVisibility = () => {
@@ -67,7 +78,7 @@ export function useApiResource<T>(
       if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [path, refreshMs, generation, refreshKey]);
+  }, [path, refreshMs, generation, refreshKey, continuePolling]);
 
   return { ...state, reload };
 }

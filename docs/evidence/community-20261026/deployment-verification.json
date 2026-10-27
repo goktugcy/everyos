@@ -1,0 +1,23 @@
+{
+  "format": "everyos-community-deployment-verification/1",
+  "status": "passed",
+  "origin": "https://everyos.goktugceyhan.dev",
+  "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+  "verifiedAt": "2026-10-26T18:03:08.895Z",
+  "checks": {
+    "productionHealth": "passed",
+    "registryIdentity": "passed",
+    "publicKey": "passed",
+    "signedCatalog": "passed"
+  },
+  "catalog": {
+    "sha256": "e5c05f3488830c9a7df5b520fe3a7b55b1244d6cb399afec3ec276f64488e7e6",
+    "sequence": 1,
+    "publishedAt": 1793020451811,
+    "expiresAt": 1795612451811,
+    "publishers": 0,
+    "apps": 0,
+    "revocations": 0
+  },
+  "lifecycleAcceptance": "required"
+}

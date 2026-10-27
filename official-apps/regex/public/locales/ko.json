@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "정규식 테스터",
+    "description": "JavaScript 정규식을 실시간으로 테스트하세요. 일치 강조, 그룹, 플래그, 바꾸기, 설명."
+  },
+  "pattern": {
+    "section": "식",
+    "label": "정규식",
+    "placeholder": "패턴 입력…",
+    "copy": "식 복사"
+  },
+  "flags": {
+    "label": "플래그",
+    "d": "인덱스: 각 그룹이 일치한 위치 제공",
+    "g": "전역: 첫 번째만이 아니라 모든 일치 찾기",
+    "i": "대소문자 무시",
+    "m": "여러 줄: ^와 $가 줄바꿈에서 일치",
+    "s": "dotAll: .이 줄바꿈과도 일치",
+    "u": "유니코드: 코드 포인트와 \\p{…} 속성",
+    "v": "유니코드 집합: 클래스 안의 집합 연산",
+    "y": "고정: 마지막 일치가 끝난 위치에서만",
+    "short": {
+      "d": "인덱스",
+      "g": "전역",
+      "i": "대소문자 무시",
+      "m": "여러 줄",
+      "s": "dotAll",
+      "u": "유니코드",
+      "v": "집합",
+      "y": "고정"
+    }
+  },
+  "status": {
+    "empty": "정규식을 입력하세요",
+    "running": "일치 확인 중…",
+    "matches_other": "{{count}}개 일치",
+    "ms": "{{ms}}ms",
+    "timeout": "중지됨: {{seconds}}초를 넘었습니다 (치명적인 역추적일 가능성이 높습니다).",
+    "tooLong": "테스트 텍스트가 {{count}}자를 넘습니다.",
+    "syntax": "올바른 식이 아닙니다: {{message}}",
+    "worker": "일치 확인을 실행하지 못했습니다: {{message}}"
+  },
+  "text": {
+    "label": "테스트 텍스트",
+    "highlighted": "텍스트의 일치 항목",
+    "highlightLimit": "처음 200,000자만 강조됩니다."
+  },
+  "panels": {
+    "label": "결과",
+    "matches": "일치",
+    "explain": "설명",
+    "replace": "바꾸기"
+  },
+  "matches": {
+    "none": "일치 항목 없음",
+    "empty": "(빈 일치)",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "참여하지 않음",
+    "truncated": "처음 {{count}}개만 표시합니다.",
+    "more": "외 {{count}}개"
+  },
+  "replace": {
+    "label": "바꿀 내용",
+    "hint": "$1, $<이름>, $& (일치), $`와 $' (앞뒤), $는 $$",
+    "result": "결과",
+    "copy": "결과 복사"
+  },
+  "examples": {
+    "title": "예시",
+    "email": {
+      "name": "이메일 주소",
+      "description": "텍스트 속 주소용 실용 패턴 (모든 RFC 5322 주소는 아님)"
+    },
+    "url": {
+      "name": "웹 주소",
+      "description": "http 및 https 링크"
+    },
+    "ipv4": {
+      "name": "IPv4 주소",
+      "description": "0~255 사이의 숫자 네 개"
+    },
+    "isoDate": {
+      "name": "ISO 날짜",
+      "description": "이름 있는 그룹으로 YYYY-MM-DD"
+    },
+    "hexColor": {
+      "name": "16진수 색상",
+      "description": "#rgb 또는 #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "버전 1~8"
+    },
+    "semver": {
+      "name": "유의적 버전",
+      "description": "주.부.패치 (프리릴리스와 빌드 포함)"
+    },
+    "phone": {
+      "name": "전화번호",
+      "description": "공백, 점, 하이픈, 괄호가 있는 숫자"
+    },
+    "slug": {
+      "name": "URL 슬러그",
+      "description": "하이픈으로 이은 소문자 단어 (줄마다 하나)"
+    },
+    "words": {
+      "name": "모든 문자 체계의 단어",
+      "description": "유니코드 속성의 문자 (u 필요)"
+    },
+    "duplicateWords": {
+      "name": "반복된 단어",
+      "description": "역참조로 연달아 두 번 쓴 단어"
+    },
+    "trailingSpace": {
+      "name": "줄 끝 공백",
+      "description": "줄 끝의 공백과 탭"
+    }
+  },
+  "saved": {
+    "title": "저장됨",
+    "save": "저장",
+    "name": "이름",
+    "done": "식을 저장했습니다",
+    "delete": "{{name}} 삭제"
+  },
+  "explain": {
+    "digit": "숫자 (0–9)",
+    "nonDigit": "숫자가 아닌 문자",
+    "word": "단어 문자 (영문자, 숫자, _)",
+    "nonWord": "단어 문자가 아닌 문자",
+    "space": "공백 문자",
+    "nonSpace": "공백이 아닌 문자",
+    "newline": "줄바꿈 (LF)",
+    "carriageReturn": "캐리지 리턴 (CR)",
+    "tab": "탭",
+    "formFeed": "폼 피드",
+    "verticalTab": "세로 탭",
+    "nul": "NUL 문자",
+    "wordBoundary": "단어 경계",
+    "nonWordBoundary": "단어 경계가 아닌 곳",
+    "backreference": "그룹 {{number}}과 같은 텍스트",
+    "namedBackreference": "그룹 “{{name}}”과 같은 텍스트",
+    "property": "유니코드 속성 {{name}}을 가진 문자",
+    "notProperty": "유니코드 속성 {{name}}이 없는 문자",
+    "hex": "문자 {{char}} (16진 코드)",
+    "unicode": "문자 {{char}} (유니코드)",
+    "control": "제어 문자 Ctrl+{{letter}}",
+    "literal": "문자 {{char}}",
+    "literals": "텍스트 “{{char}}”",
+    "class": "다음 중 한 문자: {{items}}",
+    "notClass": "다음에 없는 한 문자: {{items}}",
+    "group": "그룹 {{number}}: 일치 부분 캡처",
+    "namedGroup": "그룹 {{number}} “{{name}}”: 일치 부분 캡처",
+    "nonCapturing": "캡처하지 않는 그룹",
+    "lookahead": "뒤에 오는 것 (일치에 포함 안 됨):",
+    "negativeLookahead": "뒤에 오지 않는 것:",
+    "lookbehind": "앞에 오는 것 (일치에 포함 안 됨):",
+    "negativeLookbehind": "앞에 오지 않는 것:",
+    "modifiers": "플래그 {{flags}}가 있는 그룹",
+    "groupEnd": "그룹 끝",
+    "alternation": "또는",
+    "start": "텍스트 시작 (m이면 줄 시작)",
+    "end": "텍스트 끝 (m이면 줄 끝)",
+    "any": "임의의 문자 (s가 없으면 줄바꿈 제외)",
+    "zeroOrMore": "0회 이상, 최대한 많이",
+    "zeroOrMoreLazy": "0회 이상, 최소한으로",
+    "oneOrMore": "1회 이상, 최대한 많이",
+    "oneOrMoreLazy": "1회 이상, 최소한으로",
+    "optional": "선택 (한 번 또는 없음)",
+    "optionalLazy": "선택, 가능하면 없음",
+    "exactly_other": "정확히 {{count}}회",
+    "exactlyLazy_other": "정확히 {{count}}회",
+    "atLeast_other": "{{count}}회 이상, 최대한 많이",
+    "atLeastLazy_other": "{{count}}회 이상, 최소한으로",
+    "between": "{{min}}~{{max}}회, 최대한 많이",
+    "betweenLazy": "{{min}}~{{max}}회, 최소한으로"
+  }
+}

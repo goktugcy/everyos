@@ -1,0 +1,59 @@
+{
+  "app": {
+    "name": "Markdown 编辑器",
+    "description": "支持实时预览、代码高亮、大纲、查找替换和 HTML 导出的 Markdown 编辑器。"
+  },
+  "doc": {
+    "untitled": "未命名"
+  },
+  "actions": {
+    "new": "新建文档",
+    "open": "打开…",
+    "recent": "最近的文件",
+    "save": "保存",
+    "saveAs": "另存为…",
+    "exportMarkdown": "导出 Markdown…",
+    "exportHtml": "导出 HTML…",
+    "copyHtml": "复制 HTML",
+    "find": "查找和替换",
+    "outline": "大纲"
+  },
+  "close": {
+    "title": "有未保存的更改，仍要关闭吗？",
+    "body": "草稿会保留在此，但文件中没有这些更改。",
+    "confirm": "关闭"
+  },
+  "replace": {
+    "title": "不保存就离开“{{name}}”？",
+    "body": "未保存的更改将丢失。",
+    "confirm": "放弃更改"
+  },
+  "save": {
+    "saved": "已保存 {{name}}"
+  },
+  "modes": {
+    "label": "视图",
+    "edit": "编辑器",
+    "split": "编辑器和预览",
+    "preview": "预览"
+  },
+  "outline": {
+    "title": "大纲",
+    "empty": "标题（# 标题）会显示在这里。"
+  },
+  "editor": {
+    "label": "Markdown 文本",
+    "placeholder": "开始编写 Markdown…"
+  },
+  "recent": {
+    "empty": "没有最近的文件"
+  },
+  "status": {
+    "label": "统计",
+    "unsaved": "有未保存的更改",
+    "words_other": "{{count}} 个词",
+    "characters_other": "{{count}} 个字符",
+    "reading_other": "阅读约 {{count}} 分钟",
+    "noRecovery": "内容过长，无法自动保留恢复副本，请保存到文件。"
+  }
+}

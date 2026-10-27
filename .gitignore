@@ -4,6 +4,9 @@ coverage/
 *.tsbuildinfo
 .vite/
 
+# Python test and packaging bytecode is generated, not source provenance.
+__pycache__/
+
 # Local development state (database, secrets, sockets)
 .dev/
 
@@ -25,3 +28,16 @@ packaging/out/
 
 # Generated knowledge graph (local tooling)
 graphify-out/
+
+# Official app packages built locally
+*.eosapp
+*.eosapp.sig.json
+
+# Community registry: local Workers state and owner-managed production configuration.
+services/community-registry/.wrangler/
+services/community-registry/.dev.vars*
+services/community-registry/.env*
+services/community-registry/wrangler.production.jsonc
+
+# Developer community credentials.
+**/.everyos/

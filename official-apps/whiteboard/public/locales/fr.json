@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Tableau blanc",
+    "description": "Dessinez sur une toile infinie : crayon, formes, texte, flèches de liaison, annulation et zoom. Les tableaux sont conservés et s’exportent en PNG et SVG."
+  },
+  "boards": {
+    "label": "Tableaux",
+    "show": "Afficher les tableaux",
+    "hide": "Masquer les tableaux",
+    "new": "Nouveau tableau",
+    "first": "Mon tableau",
+    "untitled": "Tableau {{number}}",
+    "imported": "Tableau importé",
+    "copyName": "{{name}} (copie)",
+    "rename": "Renommer {{name}}",
+    "renameTitle": "Renommer le tableau",
+    "duplicate": "Dupliquer {{name}}",
+    "delete": "Supprimer {{name}}",
+    "deleteTitle": "Supprimer « {{name}} » ?",
+    "none": "Aucun tableau ouvert"
+  },
+  "canvas": {
+    "label": "Dessin de {{name}}",
+    "welcome": "Dessinez, écrivez et reliez vos idées"
+  },
+  "status": {
+    "saved": "Enregistré",
+    "saving": "Enregistrement…",
+    "tooLarge": "Trop volumineux pour être conservé : exportez-le en fichier",
+    "failed": "Non enregistré : réessayez dans un instant"
+  },
+  "import": {
+    "action": "Importer un tableau…",
+    "done": "{{name}} importé comme nouveau tableau",
+    "invalid": "« {{name}} » n’est pas un fichier de tableau lisible par cette app."
+  },
+  "export": {
+    "board": "Enregistrer en fichier de tableau (.excalidraw)…",
+    "done": "{{name}} enregistré",
+    "empty": "Ce tableau ne contient encore rien à exporter."
+  },
+  "library": {
+    "tooLarge": "Votre bibliothèque de formes est trop volumineuse pour être conservée."
+  },
+  "errors": {
+    "load": "Le tableau blanc n’a pas pu démarrer"
+  }
+}

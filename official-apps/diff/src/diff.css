@@ -1,0 +1,150 @@
+.diff-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  --diff-removed: rgb(var(--everyos-danger, 185 28 28));
+  --diff-added: rgb(var(--everyos-success, 4 120 87));
+}
+.diff-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--eui-line);
+}
+.diff-options .eui-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.diff-options .eui-select {
+  max-width: 220px;
+}
+.diff-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.diff-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.diff-added {
+  color: var(--diff-added);
+  font-weight: 600;
+}
+.diff-removed {
+  color: var(--diff-removed);
+  font-weight: 600;
+}
+.diff-position {
+  min-width: 7.5em;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--eui-muted);
+  font-variant-numeric: tabular-nums;
+}
+.diff-note {
+  margin: 0;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--eui-line);
+}
+.diff-sides {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--eui-line);
+}
+.diff-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.diff-side-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.diff-side[data-side="left"] .diff-side-label {
+  color: var(--diff-removed);
+}
+.diff-side[data-side="right"] .diff-side-label {
+  color: var(--diff-added);
+}
+.diff-side-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+.diff-surface {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+.diff-surface > .cm-mergeView,
+.diff-surface > .cm-editor {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.diff-surface > .cm-mergeView {
+  overflow-y: auto;
+}
+.diff-surface .cm-mergeViewEditor {
+  min-width: 0;
+}
+.diff-surface .cm-mergeViewEditor + .cm-mergeViewEditor {
+  border-left: 1px solid var(--eui-line);
+}
+
+/* Change colors from the EveryOS theme (light and dark), stronger than the merge view's own. */
+.diff-surface .cm-editor.cm-merge-a .cm-changedLine,
+.diff-surface .cm-editor .cm-deletedChunk {
+  background-color: rgb(var(--everyos-danger, 185 28 28) / 0.09);
+}
+.diff-surface .cm-editor.cm-merge-b .cm-changedLine,
+.diff-surface .cm-editor .cm-inlineChangedLine {
+  background-color: rgb(var(--everyos-success, 4 120 87) / 0.09);
+}
+.diff-surface .cm-editor.cm-merge-a .cm-changedText,
+.diff-surface .cm-editor .cm-deletedChunk .cm-deletedText {
+  background: rgb(var(--everyos-danger, 185 28 28) / 0.24);
+  border-radius: 2px;
+}
+.diff-surface .cm-editor.cm-merge-b .cm-changedText {
+  background: rgb(var(--everyos-success, 4 120 87) / 0.24);
+  border-radius: 2px;
+}
+.diff-surface .cm-editor.cm-merge-a .cm-changedLineGutter,
+.diff-surface .cm-editor .cm-deletedLineGutter {
+  background: var(--diff-removed);
+}
+.diff-surface .cm-editor.cm-merge-b .cm-changedLineGutter,
+.diff-surface .cm-editor .cm-inlineChangedLineGutter {
+  background: var(--diff-added);
+}
+.diff-surface .cm-editor .cm-collapsedLines {
+  color: var(--eui-muted);
+  background: var(--eui-hover);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .diff-sides {
+    grid-template-columns: 1fr;
+  }
+  .diff-sides > .eui-icon-button {
+    justify-self: center;
+  }
+}

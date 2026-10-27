@@ -1,0 +1,271 @@
+{
+  "format": "everyos-official-package-observations/1",
+  "observedAt": "2026-10-27T01:32:14.319Z",
+  "sourceHead": "f67f18a4e015c0240a19e17dfdbf4c689f7b6ab2",
+  "sourceDirty": true,
+  "signing": "ephemeral development keys; no production signatures",
+  "registryFingerprint": "sha256:2ad7173b0a09d93619fe76ac63d506d9970c70dbff390fc34b0a97364849e27d",
+  "observations": [
+    {
+      "appId": "dev.everyos.notes",
+      "version": "1.0.0",
+      "packedBytes": 172679,
+      "unpackedBytes": 518188,
+      "files": 19,
+      "sha256": "284e04f45b49232865e64dfc72d7189e891adaf06c02e421b8e6de21c5af0af9",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.markdown",
+      "version": "1.0.0",
+      "packedBytes": 769571,
+      "unpackedBytes": 2228564,
+      "files": 139,
+      "sha256": "d623ccebaff2d5a963342b06a9cfb3fe313d6b54bea3df530999d4a9c3137253",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.calculator",
+      "version": "1.0.0",
+      "packedBytes": 115681,
+      "unpackedBytes": 382733,
+      "files": 15,
+      "sha256": "7b526eea2ef74191d65412c34d26daef2f924b0e1b5353e0cd0a47b8277de3a7",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.calendar",
+      "version": "1.0.0",
+      "packedBytes": 146695,
+      "unpackedBytes": 489829,
+      "files": 19,
+      "sha256": "fe17e0387fb13bf6fc04674143f3ec19e456f22667d58893c2bcc932e02ce8db",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.pomodoro",
+      "version": "1.0.0",
+      "packedBytes": 111002,
+      "unpackedBytes": 361619,
+      "files": 19,
+      "sha256": "b68206cef4c1e9d06f9c560ea7d1c78ce7d2b3174d69217e9189daf041faa2a5",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.todo",
+      "version": "1.0.0",
+      "packedBytes": 120934,
+      "unpackedBytes": 398583,
+      "files": 19,
+      "sha256": "b6cad6a675fb9e9cffe43a6260f887ca3464a995337f551d7e3c840d9f91d43f",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.pdf",
+      "version": "1.0.0",
+      "packedBytes": 2309294,
+      "unpackedBytes": 4787651,
+      "files": 246,
+      "sha256": "d398aaad4c41b69aac42def4dba754e616216099353f1ca0dd2efca6a63c402a",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.text",
+      "version": "1.0.0",
+      "packedBytes": 693770,
+      "unpackedBytes": 2023481,
+      "files": 139,
+      "sha256": "31ac8bd4bd61b094efc6a7c88f215a093218145c62d74f2d3faa62940756146a",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.whiteboard",
+      "version": "1.0.0",
+      "packedBytes": 15891385,
+      "unpackedBytes": 21993686,
+      "files": 435,
+      "sha256": "79e07d5c81de99f1808e82bac2bb021f61866f5669b84fe91707f0b592477617",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.code",
+      "version": "1.0.0",
+      "packedBytes": 706711,
+      "unpackedBytes": 2066504,
+      "files": 139,
+      "sha256": "902ccf92691e78f1b0fdcf91a0b7af040b0ac0243a8a20ff16a991bff800f345",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.json",
+      "version": "1.0.0",
+      "packedBytes": 705529,
+      "unpackedBytes": 2058818,
+      "files": 139,
+      "sha256": "780492c470e4a21a554c5c3a288cd71a52346f64ab4bfcb58f4546d650cc24fc",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.regex",
+      "version": "1.0.0",
+      "packedBytes": 116714,
+      "unpackedBytes": 383925,
+      "files": 16,
+      "sha256": "b29ff92bde4968f4b8b1f046a9b1728a6f31940aac2b7010c462bf104409053f",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.sql",
+      "version": "1.0.0",
+      "packedBytes": 692427,
+      "unpackedBytes": 2016145,
+      "files": 139,
+      "sha256": "46131dfdc3d6071dfce4041b212cb6de77162a6271d726f849abfecac96d0691",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.diff",
+      "version": "1.0.0",
+      "packedBytes": 704016,
+      "unpackedBytes": 2051197,
+      "files": 139,
+      "sha256": "77a9014e9c2cae9c2f0cacc9df0c17bcc2d026d4082434d2473fe6847cc32c71",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.cron",
+      "version": "1.0.0",
+      "packedBytes": 171320,
+      "unpackedBytes": 674553,
+      "files": 15,
+      "sha256": "217773db2bd3de48abded962dd59ce9eff9f1c0c8cc9e2147fe09de096f1c3bf",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.jwt",
+      "version": "1.0.0",
+      "packedBytes": 114191,
+      "unpackedBytes": 367192,
+      "files": 15,
+      "sha256": "d7294a71ce8cae05c1f021afa3cfc514e188b5eeace6f00d93203d19968daa16",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.color",
+      "version": "1.0.0",
+      "packedBytes": 109270,
+      "unpackedBytes": 356060,
+      "files": 15,
+      "sha256": "7cc56c348a27bcd5f0caa56248cfde2074f84a6832e00fead6a26bc4b82196c9",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.ports",
+      "version": "1.0.0",
+      "packedBytes": 103051,
+      "unpackedBytes": 325574,
+      "files": 15,
+      "sha256": "3e68a480274c8ba334cb13e50a14818b026fd34d3f56de39f608ac43f627e0a8",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.dns",
+      "version": "1.0.0",
+      "packedBytes": 102910,
+      "unpackedBytes": 329208,
+      "files": 15,
+      "sha256": "449ac65bc697acbc4ccb68b747994aa76c42e286234f1a89157605a7d1c96cd9",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.ssl",
+      "version": "1.0.0",
+      "packedBytes": 101861,
+      "unpackedBytes": 324126,
+      "files": 15,
+      "sha256": "44e8183fb29f39cea3db92598c84a464cacfdec13598a7976c0aca7b7e27fb20",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.httpmonitor",
+      "version": "1.0.0",
+      "packedBytes": 111197,
+      "unpackedBytes": 357415,
+      "files": 15,
+      "sha256": "e94be5efbaa7778c2aafba01edea18b1903b1dcaf6c684ab64c49f3e2d476d69",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.logs",
+      "version": "1.0.0",
+      "packedBytes": 111769,
+      "unpackedBytes": 356812,
+      "files": 15,
+      "sha256": "3ee8b050d5c09f3fe83f9e0b689ef33dc2be0c36c6ee5f1a2cef4efb246b752d",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.disk",
+      "version": "1.0.0",
+      "packedBytes": 111001,
+      "unpackedBytes": 353088,
+      "files": 15,
+      "sha256": "0c95c1bca4dcbef34b2e6717098f8842c0f8a57d8f010f9bc3a735f69c002026",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.sshkeys",
+      "version": "1.0.0",
+      "packedBytes": 107262,
+      "unpackedBytes": 342041,
+      "files": 15,
+      "sha256": "61dec33a010ed4d6ada1820f94cac4d65b52bdfb1d828a2e3d894f7bdfa6df74",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.network",
+      "version": "1.0.0",
+      "packedBytes": 106885,
+      "unpackedBytes": 344822,
+      "files": 15,
+      "sha256": "fbe91e32ac54896151a5edeb504c57bc66b58ad03744a766daa8b734822a077c",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.uptime",
+      "version": "1.0.0",
+      "packedBytes": 127150,
+      "unpackedBytes": 412098,
+      "files": 19,
+      "sha256": "25cc6481c9da67f209ba10969953cc2562fb419ef9bf5e1ff07ad748279c780b",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.video",
+      "version": "1.0.0",
+      "packedBytes": 104890,
+      "unpackedBytes": 330779,
+      "files": 15,
+      "sha256": "f57cf46b8149746fac5e3ad943656ea6117a54cf08b285d79141ee5e0e38bdba",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.images",
+      "version": "1.0.0",
+      "packedBytes": 127293,
+      "unpackedBytes": 394407,
+      "files": 15,
+      "sha256": "66b704cf4a13fd05d60147ef54553ce3b946c8f610c2fd5ef19c209146bd90c3",
+      "signatureVerified": true
+    },
+    {
+      "appId": "dev.everyos.gallery",
+      "version": "1.0.0",
+      "packedBytes": 135956,
+      "unpackedBytes": 424162,
+      "files": 15,
+      "sha256": "dd5255d01216327d19fe229201ba2bdfa84a277dce9cfa3ba6490136c787394d",
+      "signatureVerified": true
+    }
+  ]
+}

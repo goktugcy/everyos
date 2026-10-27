@@ -1,0 +1,3 @@
+{
+  "entries": { "app.js": "src/main.tsx", "widget.js": "src/widget.tsx" }
+}

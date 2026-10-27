@@ -1,0 +1,85 @@
+{
+  "app": {
+    "name": "テキストエディタ",
+    "description": "タブで開くテキストファイル。検索と置換、文字コード、改行コード、未保存作業の復元に対応。"
+  },
+  "actions": {
+    "new": "新規ドキュメント",
+    "open": "開く…",
+    "recent": "最近のファイル",
+    "save": "保存",
+    "saveAs": "名前を付けて保存…",
+    "find": "検索と置換"
+  },
+  "close": {
+    "title_other": "未保存のファイルが {{count}} 件あります。閉じますか?",
+    "body": "変更はここで復元できますが、ファイルには保存されていません。",
+    "confirm": "閉じる",
+    "tabTitle": "「{{name}}」を保存せずに閉じますか?",
+    "tabBody": "未保存の変更は失われます。",
+    "discard": "変更を破棄"
+  },
+  "doc": {
+    "untitled": "無題 {{number}}"
+  },
+  "editor": {
+    "label": "{{name}} の本文"
+  },
+  "encoding": {
+    "change": "文字コードを変更",
+    "title": "文字コードを指定して開き直す",
+    "hint": "文字化けしている場合は、別の文字コードかもしれません。",
+    "reopen": "開き直す",
+    "reopenTitle": "開き直すと未保存の変更は失われます。続けますか?",
+    "reopenBody": "ファイルを読み直します。",
+    "saveTitle": "文字コードを指定して保存",
+    "saveHint": "Unicode ならすべての文字を保持できます。",
+    "saveWith": "別の文字コードで保存…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16 リトルエンディアン)",
+      "utf-16be": "Unicode (UTF-16 ビッグエンディアン)",
+      "windows-1252": "西ヨーロッパ (Windows)",
+      "iso-8859-1": "西ヨーロッパ (ISO)",
+      "windows-1254": "トルコ語 (Windows)",
+      "iso-8859-9": "トルコ語 (ISO)",
+      "windows-1250": "中央ヨーロッパ (Windows)",
+      "iso-8859-2": "中央ヨーロッパ (ISO)",
+      "windows-1251": "キリル文字 (Windows)",
+      "koi8-r": "キリル文字 (KOI8-R)",
+      "shift_jis": "日本語 (Shift_JIS、読み取り専用)",
+      "euc-kr": "韓国語 (EUC-KR、読み取り専用)",
+      "gb18030": "中国語 (GB18030、読み取り専用)"
+    }
+  },
+  "eol": {
+    "label": "改行コード"
+  },
+  "open": {
+    "binary": "{{name}} はテキストファイルではありません。"
+  },
+  "recent": {
+    "empty": "最近のファイルはありません"
+  },
+  "recovery": {
+    "lost": "次の未保存のテキストを復元できませんでした: {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} は読み込みのみ対応のため UTF-8 で保存しました。",
+    "saved": "{{name}} を保存しました",
+    "unencodable": "{{line}} 行目の「{{char}}」は {{encoding}} で保存できません。別の文字コードを選んでください。"
+  },
+  "status": {
+    "label": "ステータス",
+    "lineNumbers": "行番号",
+    "position": "{{line}} 行、{{column}} 列",
+    "selected_other": "{{count}} 文字選択",
+    "words_other": "{{count}} 語",
+    "wrap": "折り返し"
+  },
+  "tabs": {
+    "close": "{{name}} を閉じる",
+    "label": "開いているドキュメント",
+    "unsaved": "未保存の変更"
+  }
+}

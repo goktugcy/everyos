@@ -1,0 +1,88 @@
+{
+  "app": {
+    "name": "Éditeur de texte",
+    "description": "Fichiers texte en onglets, avec rechercher-remplacer, encodages, fins de ligne et récupération du travail non enregistré."
+  },
+  "actions": {
+    "new": "Nouveau document",
+    "open": "Ouvrir…",
+    "recent": "Fichiers récents",
+    "save": "Enregistrer",
+    "saveAs": "Enregistrer sous…",
+    "find": "Rechercher et remplacer"
+  },
+  "close": {
+    "title_one": "Fermer avec {{count}} fichier non enregistré ?",
+    "title_other": "Fermer avec {{count}} fichiers non enregistrés ?",
+    "body": "Vos modifications restent récupérables ici, mais ne sont pas dans les fichiers.",
+    "confirm": "Fermer",
+    "tabTitle": "Fermer « {{name}} » sans enregistrer ?",
+    "tabBody": "Les modifications non enregistrées seront perdues.",
+    "discard": "Abandonner les modifications"
+  },
+  "doc": {
+    "untitled": "Sans titre {{number}}"
+  },
+  "editor": {
+    "label": "Texte de {{name}}"
+  },
+  "encoding": {
+    "change": "Changer l’encodage",
+    "title": "Rouvrir avec l’encodage",
+    "hint": "Si des caractères s’affichent mal, le fichier utilise peut-être un autre encodage.",
+    "reopen": "Rouvrir",
+    "reopenTitle": "Rouvrir et perdre les modifications non enregistrées ?",
+    "reopenBody": "Le fichier est relu.",
+    "saveTitle": "Enregistrer avec l’encodage",
+    "saveHint": "Unicode conserve tous les caractères.",
+    "saveWith": "Enregistrer avec un autre encodage…",
+    "names": {
+      "utf-8": "Unicode (UTF-8)",
+      "utf-16le": "Unicode (UTF-16, petit-boutiste)",
+      "utf-16be": "Unicode (UTF-16, gros-boutiste)",
+      "windows-1252": "Europe occidentale (Windows)",
+      "iso-8859-1": "Europe occidentale (ISO)",
+      "windows-1254": "Turc (Windows)",
+      "iso-8859-9": "Turc (ISO)",
+      "windows-1250": "Europe centrale (Windows)",
+      "iso-8859-2": "Europe centrale (ISO)",
+      "windows-1251": "Cyrillique (Windows)",
+      "koi8-r": "Cyrillique (KOI8-R)",
+      "shift_jis": "Japonais (Shift_JIS, lecture seule)",
+      "euc-kr": "Coréen (EUC-KR, lecture seule)",
+      "gb18030": "Chinois (GB18030, lecture seule)"
+    }
+  },
+  "eol": {
+    "label": "Fins de ligne"
+  },
+  "open": {
+    "binary": "{{name}} n’est pas un fichier texte."
+  },
+  "recent": {
+    "empty": "Aucun fichier récent"
+  },
+  "recovery": {
+    "lost": "Le texte non enregistré n’a pas pu être récupéré pour : {{names}}"
+  },
+  "save": {
+    "convertedToUtf8": "{{encoding}} peut être lu mais pas écrit : enregistré en UTF-8.",
+    "saved": "{{name}} enregistré",
+    "unencodable": "« {{char}} » à la ligne {{line}} ne peut pas être écrit en {{encoding}}. Choisissez un autre encodage."
+  },
+  "status": {
+    "label": "État",
+    "lineNumbers": "Numéros de ligne",
+    "position": "Ln {{line}}, Col {{column}}",
+    "selected_one": "{{count}} sélectionné",
+    "selected_other": "{{count}} sélectionnés",
+    "words_one": "{{count}} mot",
+    "words_other": "{{count}} mots",
+    "wrap": "Retour à la ligne"
+  },
+  "tabs": {
+    "close": "Fermer {{name}}",
+    "label": "Documents ouverts",
+    "unsaved": "Modifications non enregistrées"
+  }
+}

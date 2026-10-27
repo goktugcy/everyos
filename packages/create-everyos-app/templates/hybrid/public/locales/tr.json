@@ -1,0 +1,18 @@
+{
+  "app": {
+    "name": "%%APP_NAME%%"
+  },
+  "monitors": {
+    "title": "İzleyiciler",
+    "source": "Uptime Kuma",
+    "none": "Henüz bağlı bir Uptime Kuma yok. Uygulama Mağazası'ndan kurun (ya da kendinizinkini kullanın), ardından bir yönetici Ayarlar → Entegrasyonlar'dan ekler.",
+    "unavailable": "Uptime Kuma şu anda yanıt vermiyor.",
+    "summary": "{{up}} çalışıyor · {{down}} çalışmıyor",
+    "states": {
+      "up": "Çalışıyor",
+      "down": "Çalışmıyor",
+      "pending": "Bekliyor",
+      "maintenance": "Bakımda"
+    }
+  }
+}

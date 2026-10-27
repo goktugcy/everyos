@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Ispettore porte"
+  },
+  "ports": {
+    "refresh": "Aggiorna",
+    "export": "Esporta CSV",
+    "readOnly": "Porte dell’host in sola lettura. Nessuna connessione o scansione. Gli indirizzi non indicano l’accessibilità attraverso il firewall.",
+    "permission": "Questa app richiede il permesso di leggere i socket dell’host. Un amministratore può concederlo nello Store; anche il ruolo deve consentire l’accesso al sistema.",
+    "unavailable": "I socket in ascolto non sono disponibili su questo host. Il raccoglitore richiede Linux e dati /proc leggibili.",
+    "loadFailed": "Impossibile leggere i socket. Controlla la connessione dell’agente e riprova.",
+    "host": "Dati dell’host",
+    "simulated": "Dati simulati",
+    "simulatedHint": "Queste porte sono simulate dall’host di sviluppo. Non descrivono porte reali aperte.",
+    "retrieved": "Recuperato: {{at}}",
+    "stale": "Aggiornamento fallito. Rimane visibile l’istantanea precedente con l’ora di recupero.",
+    "listening": "Socket in ascolto",
+    "established": "TCP stabilite",
+    "timeWait": "TCP in attesa",
+    "other": "Altri stati TCP",
+    "search": "Cerca socket",
+    "searchHint": "Indirizzo, porta o processo",
+    "protocol": "Protocollo",
+    "family": "Famiglia indirizzi",
+    "scope": "Ambito di associazione",
+    "all": "Tutti",
+    "reset": "Reimposta filtri",
+    "showing": "{{shown}} di {{total}} socket corrispondono",
+    "limit": "Vengono restituiti fino a 2.000 socket. L’agente può memorizzare i risultati per 30 secondi. Le porte sono in ordine crescente.",
+    "empty": "Nessun socket corrispondente",
+    "emptyHint": "Modifica o reimposta i filtri per vedere l’istantanea ricevuta.",
+    "address": "Indirizzo",
+    "port": "Porta",
+    "process": "Processo",
+    "unknown": "Non disponibile",
+    "processHint": "I nomi dei processi compaiono solo se leggibili dall’agente. Non vengono dedotti dai numeri di porta.",
+    "previous": "Precedente",
+    "next": "Successivo",
+    "page": "Pagina {{page}} di {{pages}}"
+  },
+  "scope": {
+    "all": "Tutti gli ambiti",
+    "wildcard": "Tutte le interfacce",
+    "loopback": "Loopback",
+    "specific": "Indirizzo specifico"
+  }
+}

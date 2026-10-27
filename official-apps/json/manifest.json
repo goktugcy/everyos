@@ -1,0 +1,29 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.json",
+  "name": "JSON Studio",
+  "version": "1.0.0",
+  "description": "Validate, format and explore JSON: a tree, JSONPath queries, structural diff and CSV export.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "developer",
+  "permissions": ["storage:app", "files:pick", "files:save", "clipboard:write"],
+  "window": {
+    "defaultWidth": 1100,
+    "defaultHeight": 680,
+    "minWidth": 360,
+    "minHeight": 360,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": { "id": "dev.everyos", "name": "EveryOS" },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/json"
+}

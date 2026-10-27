@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "Videoplayer",
+    "description": "Ausgewählte Videos mit Untertiteln, Wiedergabelisten und gespeicherten Positionen abspielen."
+  },
+  "video": {
+    "scope": "Nur ausgewählte Dateien sind zugänglich. Bis zu 20 Listen mit je 100 Videos. Positionen und Einstellungen werden gespeichert; Videos werden von EveryOS gestreamt, nie im App-Speicher kopiert.",
+    "permission": "Videozugriff benötigt files:pick aus dem App Store.",
+    "add": "Videos hinzufügen",
+    "openSubtitles": "Untertitel öffnen",
+    "fullscreen": "Vollbild",
+    "fullscreenError": "Der Browser hat Vollbild abgelehnt. Nutze gegebenenfalls die nativen Videosteuerungen.",
+    "playlist": "Wiedergabeliste",
+    "defaultList": "Meine Videos",
+    "newList": "Neue Wiedergabeliste",
+    "renameList": "Liste umbenennen",
+    "deleteList": "Liste löschen",
+    "referencesOnly": "Nur Listenverweise werden entfernt. Originaldateien werden nicht gelöscht.",
+    "revoked": "Einige Listendateien sind nicht mehr freigegeben. Füge sie erneut hinzu.",
+    "empty": "Kein Video ausgewählt",
+    "openHint": "Wähle ein Video über EveryOS. Die Wiedergabe hängt von Containern und Codecs des Browsers ab; diese App transkodiert nicht.",
+    "selected": "Ausgewähltes Video",
+    "previous": "Vorheriges Video",
+    "next": "Nächstes Video",
+    "remove": "Aus Liste entfernen",
+    "player": "Videowiedergabe",
+    "play": "Abspielen",
+    "pause": "Pausieren",
+    "reload": "Video neu laden",
+    "speed": "Wiedergabegeschwindigkeit",
+    "subtitles": "Untertitel",
+    "showSubtitles": "Untertitel anzeigen",
+    "hideSubtitles": "Untertitel ausblenden",
+    "captionHint": "WebVTT- oder SRT-Untertitel als Text, bis zu 1 MiB und 2.000 Einträge. Markup und Stile werden nicht ausgeführt.",
+    "badSubtitles": "Untertitel unlesbar. Nutze gültiges WebVTT/SRT mit mindestens einem zeitlich markierten Eintrag, höchstens 1 MiB und 2.000 Einträgen.",
+    "unsupported": "Datei nicht abspielbar. Codec/Container möglicherweise nicht unterstützt, Datei beschädigt oder Freigabe abgelaufen. Lade neu oder nutze einen anderen Browser/ein anderes Format. Keine Transkodierung.",
+    "codecs": "Codec-Unterstützung des Browsers",
+    "codecHint": "Dies sind canPlayType-Angaben des Browsers, keine Garantie für eine bestimmte Datei. Entscheidend ist die tatsächliche Wiedergabe.",
+    "probably": "Wahrscheinlich unterstützt",
+    "maybe": "Möglicherweise unterstützt",
+    "notReported": "Keine Unterstützung gemeldet"
+  }
+}

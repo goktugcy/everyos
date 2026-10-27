@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Port Inspector"
+  },
+  "ports": {
+    "refresh": "Refresh",
+    "export": "Export CSV",
+    "readOnly": "Read-only host listeners. No connections or scans are made. Bind addresses do not establish firewall reachability.",
+    "permission": "This app needs permission to read host sockets. An administrator can grant it in the App Store; your role must also allow system access.",
+    "unavailable": "Listening socket data is unavailable on this host. The collector requires Linux and readable /proc data.",
+    "loadFailed": "Could not read host sockets. Check the agent connection and try again.",
+    "host": "Host data",
+    "simulated": "Simulated data",
+    "simulatedHint": "These listeners are simulated by the development host. They do not describe real open ports.",
+    "retrieved": "Retrieved: {{at}}",
+    "stale": "Refresh failed. The previous snapshot remains visible with its retrieval time.",
+    "listening": "Listening sockets",
+    "established": "Established TCP",
+    "timeWait": "TCP time-wait",
+    "other": "Other TCP states",
+    "search": "Search listeners",
+    "searchHint": "Address, port or process",
+    "protocol": "Protocol",
+    "family": "Address family",
+    "scope": "Bind scope",
+    "all": "All",
+    "reset": "Reset filters",
+    "showing": "{{shown}} of {{total}} listeners match",
+    "limit": "Up to 2,000 listeners are returned. The agent may cache results for 30 seconds. Ports are ordered ascending.",
+    "empty": "No matching listeners",
+    "emptyHint": "Change or reset the filters to inspect the returned snapshot.",
+    "address": "Address",
+    "port": "Port",
+    "process": "Process",
+    "unknown": "Unavailable",
+    "processHint": "Process names are shown only when readable by the agent. Missing names are not inferred from service port numbers.",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{page}} of {{pages}}"
+  },
+  "scope": {
+    "all": "All scopes",
+    "wildcard": "All interfaces",
+    "loopback": "Loopback",
+    "specific": "Specific address"
+  }
+}

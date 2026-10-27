@@ -1,0 +1,109 @@
+body {
+  background: transparent;
+}
+/*
+ * Small: the note field. Medium (wide and short): recent notes beside it. Large (tall): recent
+ * notes below it, and a link to the app.
+ */
+.quick {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  height: 100vh;
+  padding: 10px;
+}
+.quick-text {
+  min-height: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-sm);
+  background: var(--eui-inset);
+  color: inherit;
+  font: inherit;
+  resize: none;
+}
+.quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.quick-message {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--eui-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quick-recent h2 {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eui-subtle);
+}
+.quick-recent ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.quick-recent p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--eui-subtle);
+}
+.quick-recent button,
+.quick-open {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.quick-recent button:hover,
+.quick-open:hover {
+  background: var(--eui-hover);
+}
+.quick-open {
+  justify-content: center;
+  color: var(--eui-accent);
+  font-size: 0.85rem;
+}
+.quick-recent,
+.quick-open {
+  display: none;
+}
+@media (min-width: 240px) and (max-height: 219px) {
+  .quick {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+  .quick-recent {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    overflow: hidden;
+  }
+}
+@media (min-height: 220px) {
+  .quick {
+    grid-template-rows: minmax(0, 1fr) auto auto auto;
+  }
+  .quick-recent {
+    display: block;
+  }
+  .quick-open {
+    display: flex;
+  }
+}

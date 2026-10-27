@@ -1,0 +1,63 @@
+{
+  "app": {
+    "name": "DNS Lookup",
+    "description": "DNS records, timing, resolvers and query history."
+  },
+  "query": {
+    "name": "Name or IP address for PTR",
+    "type": "Record type",
+    "common": "Common types",
+    "server": "Resolver",
+    "system": "Server default",
+    "cloudflare": "Cloudflare (1.1.1.1)",
+    "google": "Google (8.8.8.8)",
+    "quad9": "Quad9 (9.9.9.9)",
+    "custom": "Custom server",
+    "address": "Resolver IP address",
+    "port": "DNS port",
+    "run": "Look up",
+    "working": "Looking up…",
+    "systemHint": "Queries use this server’s configured DNS resolvers.",
+    "policyHint": "An administrator must allow this resolver’s address and port in the app’s network policy."
+  },
+  "validation": {
+    "empty": "Enter a name to look up.",
+    "tooLong": "The DNS name is too long (at most 253 ASCII characters).",
+    "invalid": "Enter a valid DNS name, without a URL, path or port.",
+    "needsAddress": "Choose PTR to look up an IP address.",
+    "server": "Enter a valid resolver IP address.",
+    "port": "Enter a port from 1 to 65535."
+  },
+  "results": {
+    "empty": "Look up DNS records",
+    "emptyHint": "Enter a name, choose a record type and resolver, then look it up.",
+    "overview": "Records by type",
+    "timing": "{{ms}} ms",
+    "servers": "Resolvers: {{servers}}",
+    "records": "{{type}} records",
+    "value": "Value",
+    "ttl": "TTL",
+    "unavailable": "Not returned",
+    "copyAll": "Copy all results"
+  },
+  "status": {
+    "ok": "Answered",
+    "no-data": "No records of this type",
+    "not-found": "Name not found",
+    "refused": "Resolver refused the query",
+    "server-failure": "Resolver failure",
+    "timeout": "Query timed out",
+    "error": "Query failed"
+  },
+  "txt": {
+    "spf": "SPF",
+    "dmarc": "DMARC",
+    "dkim": "DKIM",
+    "verification": "Verification"
+  },
+  "history": {
+    "title": "History",
+    "clear": "Clear DNS history?",
+    "empty": "Completed queries appear here. Select one to run it again."
+  }
+}

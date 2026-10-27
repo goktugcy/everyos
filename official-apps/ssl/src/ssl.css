@@ -1,0 +1,122 @@
+.ssl-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.ssl-main,
+.ssl-saved {
+  padding: 16px;
+  overflow: auto;
+  min-width: 0;
+}
+.ssl-saved {
+  border-left: 1px solid var(--eui-line);
+}
+.ssl-saved > h2,
+.ssl-results > h2 {
+  font-size: 16px;
+}
+.ssl-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+.ssl-form .eui-field {
+  flex: 1 1 200px;
+}
+.ssl-form .eui-field:nth-child(2) {
+  flex: 0 1 100px;
+}
+.ssl-hint {
+  font-size: 12px;
+  color: var(--eui-muted);
+}
+.ssl-main h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.ssl-main h2 small {
+  display: block;
+  color: var(--eui-muted);
+  font-weight: 400;
+}
+.ssl-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.ssl-warning {
+  color: var(--eui-warning);
+}
+.ssl-warning code {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+}
+.ssl-valid {
+  color: var(--eui-success);
+}
+.ssl-details {
+  display: grid;
+  grid-template-columns: minmax(100px, 150px) minmax(0, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+.ssl-details dt {
+  color: var(--eui-muted);
+}
+.ssl-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ssl-details ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.ssl-certificate {
+  border: 1px solid var(--eui-line);
+  border-radius: var(--eui-radius-md);
+  margin-block: 12px;
+  padding: 12px;
+}
+.ssl-certificate h3 {
+  font-size: 14px;
+  margin-top: 0;
+  overflow-wrap: anywhere;
+}
+.ssl-endpoint {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.ssl-endpoint > .eui-item {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .ssl-layout {
+    display: block;
+    overflow: auto;
+  }
+  .ssl-main,
+  .ssl-saved {
+    overflow: visible;
+  }
+  .ssl-saved {
+    border-left: 0;
+    border-top: 1px solid var(--eui-line);
+  }
+}
+@media (max-width: 420px) {
+  .ssl-details {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .ssl-details dd {
+    margin-bottom: 12px;
+  }
+}

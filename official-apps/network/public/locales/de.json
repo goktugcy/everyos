@@ -1,0 +1,80 @@
+{
+  "app": {
+    "name": "Netzwerkwerkzeuge"
+  },
+  "network": {
+    "export": "Bericht exportieren",
+    "interfaces": "Netzwerkschnittstellen",
+    "interface": "Schnittstelle",
+    "auto": "Host-Daten im aktiven Fenster alle 10 Sekunden aktualisieren",
+    "permission": "Netzwerkschnittstellen erfordern system:network.read und eine Rolle mit Systemzugriff. Ein Administrator kann App-Rechte im App Store erteilen.",
+    "metricsPermission": "Verkehrsdaten erfordern system:metrics.read und eine Rolle mit Systemzugriff.",
+    "loadFailed": "Netzwerkdaten konnten nicht gelesen werden. Prüfe die Agent-Verbindung und versuche es erneut.",
+    "unsupported": "Der Host kann diese Netzwerkdaten nicht liefern.",
+    "internetChecked": "Host-Verbindung geprüft: {{at}}",
+    "internetHint": "Dieser Zustand folgt den konfigurierten Verbindungszielen des Hosts. Prüfungen können 60 Sekunden zwischengespeichert werden.",
+    "ms": "{{value}} ms",
+    "noInterfaces": "Der Host meldet keine Schnittstellen.",
+    "up": "Aktiv",
+    "down": "Inaktiv",
+    "addresses": "IP-Adressen und Präfixe",
+    "mac": "MAC-Adresse",
+    "mtu": "MTU",
+    "speed": "Gemeldete Verbindungsgeschwindigkeit",
+    "mbps": "{{value}} Mbit/s",
+    "receive": "Empfangsrate",
+    "transmit": "Senderate",
+    "rate": "{{value}}/s",
+    "routes": "Standardgateway-Übersicht",
+    "routesHint": "Diese Routenübersicht zeigt die vom Host gemeldeten Standardgateways. Die Schnittstellenadressen oben enthalten ihre Netzwerkpräfixe.",
+    "gateway": "Gateway",
+    "noGateways": "Der Host meldet keine Standardgateways.",
+    "dns": "Gemeldete DNS-Server",
+    "noDns": "Der Host meldet keine DNS-Server.",
+    "traffic": "Schnittstellenverkehr",
+    "measured": "Gemessen: {{at}}",
+    "noTraffic": "Verkehrsraten pro Schnittstelle sind auf diesem Host nicht verfügbar.",
+    "refresh": "Aktualisieren",
+    "unavailable": "Nicht verfügbar",
+    "retrieved": "Abgerufen: {{at}}",
+    "family": "Adressfamilie",
+    "stale": "Aktualisierung fehlgeschlagen. Der vorherige Stand bleibt mit Abrufzeit sichtbar."
+  },
+  "source": {
+    "simulatedHint": "Diese Werte werden vom Entwicklungshost simuliert und beschreiben nicht den echten Host.",
+    "host": "Host-Daten",
+    "simulated": "Simulierte Daten"
+  },
+  "internet": {
+    "online": "Host-Verbindung verfügbar",
+    "offline": "Host-Verbindungsprüfung fehlgeschlagen",
+    "unknown": "Host-Verbindung unbekannt",
+    "disabled": "Host-Verbindungsprüfung deaktiviert"
+  },
+  "kind": {
+    "ethernet": "Ethernet",
+    "wireless": "Drahtlos",
+    "loopback": "Loopback",
+    "tailscale": "Tailscale",
+    "bridge": "Brücke",
+    "virtual": "Virtuell",
+    "other": "Andere"
+  },
+  "diagnostic": {
+    "title": "Erlaubtes Ziel prüfen",
+    "policy": "Sendet eine HEAD-Anfrage an ein im App Store erlaubtes HTTP-Ziel. TLS wird geprüft; jedes Weiterleitungsziel muss die Richtlinie erfüllen.",
+    "permission": "Zielprüfungen benötigen network:outbound. Ein Administrator kann dies im App Store erlauben.",
+    "url": "HTTP- oder HTTPS-URL",
+    "check": "Ziel prüfen",
+    "checking": "Wird geprüft…",
+    "invalid": "Gib eine HTTP- oder HTTPS-URL ohne Zugangsdaten und Fragment ein.",
+    "attempt": "Letzter Versuch: {{url}} · {{at}}",
+    "responded": "HTTP-Antwort empfangen",
+    "responseHint": "Eine HTTP-Antwort zeigt, dass dieses Ziel geantwortet hat. Der Status beschreibt die Dienstantwort.",
+    "status": "HTTP-Status",
+    "address": "Gegenstellenadresse",
+    "time": "Prüfzeit",
+    "elapsed": "Antwortzeit",
+    "redirects": "Gefolgte Weiterleitungen"
+  }
+}

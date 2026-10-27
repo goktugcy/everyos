@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Éditeur de code",
+    "description": "Modifiez du code dans des onglets avec coloration syntaxique, minimap, rechercher-remplacer et un explorateur pour le dossier de votre choix."
+  },
+  "actions": {
+    "new": "Nouveau fichier",
+    "openFile": "Ouvrir un fichier…",
+    "openFolder": "Ouvrir un dossier…",
+    "save": "Enregistrer",
+    "saveAs": "Enregistrer sous…",
+    "find": "Rechercher et remplacer"
+  },
+  "explorer": {
+    "label": "Fichiers",
+    "show": "Afficher les fichiers",
+    "hide": "Masquer les fichiers",
+    "newFile": "Nouveau fichier dans le dossier",
+    "newFolder": "Nouveau dossier",
+    "refresh": "Actualiser",
+    "close": "Fermer le dossier",
+    "newFileTitle": "Nouveau fichier",
+    "newFolderTitle": "Nouveau dossier",
+    "inFolder": "Dans {{folder}}",
+    "inRoot": "Dans {{name}}",
+    "names": {
+      "empty": "Saisissez un nom.",
+      "reserved": "« {{name}} » ne peut pas servir de nom.",
+      "separator": "Les noms ne peuvent pas contenir / ou \\.",
+      "tooLong": "Ce nom est trop long.",
+      "exists": "« {{name}} » existe déjà ici."
+    },
+    "unreadable": "Ce dossier est illisible",
+    "unreadableShort": "illisible",
+    "empty": "Ce dossier est vide",
+    "more_one": "{{count}} autre non affiché",
+    "more_other": "{{count}} autres non affichés"
+  },
+  "tabs": {
+    "label": "Fichiers ouverts",
+    "unsaved": "Modifications non enregistrées",
+    "close": "Fermer {{name}}"
+  },
+  "editor": {
+    "label": "Contenu de {{name}}"
+  },
+  "status": {
+    "label": "État",
+    "position": "Ln {{line}}, col {{column}}",
+    "selected_one": "{{count}} sélectionné",
+    "selected_other": "{{count}} sélectionnés",
+    "language": "Langage",
+    "autoNamed": "{{name}} (d’après le nom)",
+    "autoPlain": "Texte brut (d’après le nom)",
+    "plain": "Texte brut",
+    "spaces": "Espaces : {{count}}",
+    "tabs": "Tabulation : {{count}}",
+    "eol": "Fins de ligne"
+  },
+  "settings": {
+    "title": "Réglages de l’éditeur",
+    "theme": "Thème",
+    "themes": {
+      "system": "Comme EveryOS",
+      "light": "Clair",
+      "dark": "Sombre",
+      "contrast": "Contraste élevé"
+    },
+    "fontSize": "Taille de police",
+    "tabSize": "Taille de tabulation",
+    "insertSpaces": "Indenter avec des espaces",
+    "wrap": "Renvoyer les longues lignes",
+    "minimap": "Afficher la minimap"
+  },
+  "welcome": {
+    "title": "Ouvrez quelque chose à modifier",
+    "text": "Ouvrez un dossier de projet pour parcourir ses fichiers, ouvrez des fichiers isolés ou commencez-en un nouveau.",
+    "withFolder": "Choisissez un fichier dans le dossier à gauche ou commencez-en un nouveau."
+  },
+  "doc": {
+    "untitled": "Sans titre {{number}}"
+  },
+  "open": {
+    "binary": "« {{name}} » n’est pas un fichier texte.",
+    "notUtf8": "« {{name}} » n’est pas du texte UTF-8. Ouvrez-le dans l’Éditeur de texte, qui lit d’autres encodages."
+  },
+  "save": {
+    "saved": "{{name}} enregistré",
+    "changedTitle": "« {{name}} » a changé sur le disque",
+    "changedBody": "Ce fichier a changé depuis son ouverture. Enregistrer remplace ces modifications par les vôtres.",
+    "overwrite": "Remplacer"
+  },
+  "close": {
+    "title_one": "Fermer avec {{count}} fichier non enregistré ?",
+    "title_other": "Fermer avec {{count}} fichiers non enregistrés ?",
+    "body": "Les modifications non enregistrées sont conservées et reviennent à la prochaine ouverture.",
+    "confirm": "Fermer",
+    "tabTitle": "Abandonner les modifications de « {{name}} » ?",
+    "tabBody": "Les modifications non enregistrées seront perdues.",
+    "discard": "Abandonner"
+  },
+  "recovery": {
+    "lost": "Ces fichiers non enregistrés n’ont pas pu être restaurés : {{names}}"
+  }
+}

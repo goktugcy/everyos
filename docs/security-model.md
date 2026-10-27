@@ -126,12 +126,15 @@ without storing secrets or image content in event details.
 
 ## CSRF and browser hardening **[P1]**
 
+Every API request, reads included, whose `Sec-Fetch-Site` is not `same-origin` or `none` is
+rejected. Sandboxed desktop app frames have an opaque origin, so nothing they load (an image, a frame
+navigation) can reach the API with the user's cookies, not even a side-effecting GET.
+
 For state-changing requests:
 
-1. Requests whose `Sec-Fetch-Site` is not `same-origin` or `none` are rejected.
-2. If `Origin` is present, it must equal the origin the browser used (derived from `Host`, or from
+1. If `Origin` is present, it must equal the origin the browser used (derived from `Host`, or from
    trusted forwarded headers) or one of `server.publicOrigins`.
-3. Authenticated requests must send `X-EveryOS-CSRF`, whose value is
+2. Authenticated requests must send `X-EveryOS-CSRF`, whose value is
    HMAC(server key, session id). The credential-submission endpoints (setup, login) need no token
    but still pass the origin checks.
 

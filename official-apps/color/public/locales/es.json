@@ -1,0 +1,121 @@
+{
+  "app": {
+    "name": "Estudio de color",
+    "description": "Elige colores en HEX, RGB, HSL y OKLCH, crea paletas, armonías y degradados, comprueba el contraste y míralos en el tema de EveryOS."
+  },
+  "actions": {
+    "eyedropper": "Tomar un color de la pantalla"
+  },
+  "color": {
+    "section": "Color",
+    "preview": "Color actual {{color}}"
+  },
+  "picker": {
+    "saturationValue": "Saturación y brillo",
+    "svValue": "Saturación {{s}} %, brillo {{v}} %",
+    "hue": "Tono",
+    "alpha": "Opacidad"
+  },
+  "formats": {
+    "hex": "HEX",
+    "rgb": "RGB",
+    "hsl": "HSL",
+    "oklch": "OKLCH",
+    "invalid": "No es un color",
+    "copy": "Copiar {{format}}"
+  },
+  "panels": {
+    "label": "Herramientas",
+    "palette": "Paleta",
+    "gradient": "Degradado",
+    "contrast": "Contraste",
+    "saved": "Guardadas",
+    "theme": "Tema de EveryOS"
+  },
+  "swatch": {
+    "use": "Usar {{color}}"
+  },
+  "harmony": {
+    "label": "Armonía",
+    "complementary": "Complementaria",
+    "analogous": "Análoga",
+    "triadic": "Triádica",
+    "split": "Complementaria dividida",
+    "tetradic": "Tetrádica",
+    "monochromatic": "Monocromática",
+    "save": "Guardar armonía"
+  },
+  "scale": {
+    "title": "Escala tonal",
+    "step": "Paso {{step}}: {{color}}",
+    "copyCss": "Copiar como variables CSS",
+    "save": "Guardar escala"
+  },
+  "gradient": {
+    "preview": "Vista previa del degradado",
+    "kind": "Tipo",
+    "linear": "Lineal",
+    "radial": "Radial",
+    "angle": "Ángulo: {{angle}}°",
+    "stops": "Paradas de color",
+    "useCurrent": "Poner la parada {{number}} en el color actual",
+    "position": "Posición de la parada {{number}}",
+    "remove": "Quitar la parada {{number}}",
+    "hint": "Haz clic en la muestra de una parada para darle el color actual. Un degradado necesita al menos dos paradas.",
+    "add": "Añadir parada",
+    "copy": "Copiar CSS"
+  },
+  "contrast": {
+    "text": "Texto",
+    "background": "Fondo",
+    "swap": "Intercambiar texto y fondo",
+    "useAsText": "Usar el color actual como texto",
+    "useAsBackground": "Usar el color actual como fondo",
+    "sampleLarge": "Texto grande",
+    "sample": "El texto normal cuesta más de leer con poco contraste.",
+    "ratio": "Relación de contraste",
+    "aa": "AA",
+    "aaLarge": "AA grande",
+    "aaa": "AAA",
+    "aaaLarge": "AAA grande",
+    "pass": "cumple",
+    "fail": "no cumple",
+    "hint": "WCAG 2: AA exige 4,5:1 para texto normal y 3:1 para texto grande (24 px o 19 px en negrita); AAA exige 7:1 y 4,5:1."
+  },
+  "saved": {
+    "newName": "Nueva paleta",
+    "create": "Crear con el color actual",
+    "added": "Paleta guardada",
+    "addCurrent": "Añadir el color actual a {{name}}",
+    "copyCss": "Copiar {{name}} como variables CSS",
+    "exportCss": "Guardar CSS…",
+    "delete": "Eliminar {{name}}",
+    "deleteTitle": "¿Eliminar la paleta «{{name}}»?",
+    "removeColor": "Quitar {{color}}",
+    "empty": "No hay paletas guardadas",
+    "emptyText": "Guarda una armonía o una escala, o crea una paleta arriba."
+  },
+  "theme": {
+    "current": "Tu tema ({{scheme}})",
+    "schemes": {
+      "light": "claro",
+      "dark": "oscuro"
+    },
+    "tokens": {
+      "accent": "Acento",
+      "accent-strong": "Acento fuerte",
+      "text": "Texto",
+      "text-muted": "Texto atenuado",
+      "surface": "Superficie",
+      "inset": "Interior",
+      "danger": "Peligro",
+      "success": "Éxito",
+      "warning": "Advertencia"
+    },
+    "previewTitle": "El color actual como acento",
+    "button": "Botón",
+    "link": "Un enlace",
+    "linkContrast": "Contraste del enlace {{ratio}}:1",
+    "hint": "El color de acento se elige en Ajustes → Apariencia."
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "app": {
+    "name": "Diff-Viewer",
+    "description": "Zwei Texte oder Dateien nebeneinander oder eingebettet vergleichen – mit Syntaxhervorhebung, Vergleich ohne Leerraum, Navigation zwischen Änderungen und Patch-Export."
+  },
+  "sides": {
+    "original": "Original",
+    "changed": "Geändert",
+    "typed": "Eingegebener Text",
+    "open": "Öffnen…",
+    "openOriginal": "Originaldatei öffnen…",
+    "openChanged": "Geänderte Datei öffnen…",
+    "placeholderOriginal": "Originaltext einfügen oder eingeben oder eine Datei öffnen.",
+    "placeholderChanged": "Geänderten Text einfügen oder eingeben oder eine Datei öffnen.",
+    "swap": "Seiten tauschen",
+    "notKept": "Nicht gespeichert",
+    "notKeptHint": "Diese Seite ist zu groß, um nach dem Schließen gespeichert zu werden; öffnen Sie die Datei beim nächsten Mal erneut."
+  },
+  "view": {
+    "label": "Ansicht",
+    "split": "Nebeneinander",
+    "inline": "Eingebettet"
+  },
+  "options": {
+    "ignoreWhitespace": "Leerraum ignorieren",
+    "collapse": "Unveränderte Zeilen ausblenden",
+    "wrap": "Zeilen umbrechen",
+    "language": "Hervorhebung",
+    "auto": "Automatisch",
+    "autoNamed": "Automatisch ({{name}})",
+    "plain": "Nur Text"
+  },
+  "nav": {
+    "previous": "Vorherige Änderung ({{key}})",
+    "next": "Nächste Änderung ({{key}})",
+    "position": "{{current}} von {{total}}",
+    "count_one": "{{count}} Änderung",
+    "count_other": "{{count}} Änderungen"
+  },
+  "stats": {
+    "added_one": "{{count}} Zeile hinzugefügt",
+    "added_other": "{{count}} Zeilen hinzugefügt",
+    "removed_one": "{{count}} Zeile entfernt",
+    "removed_other": "{{count}} Zeilen entfernt"
+  },
+  "status": {
+    "empty": "Noch nichts zu vergleichen",
+    "identical": "Identisch",
+    "whitespaceOnly": "Nur Leerraum unterscheidet sich",
+    "approximate": "Großer Unterschied: ungefähr dargestellt",
+    "endings": "Zeilenenden unterscheiden sich ({{a}} / {{b}}); der Vergleich ignoriert sie, ein Patch verwendet LF."
+  },
+  "patch": {
+    "copy": "Patch kopieren",
+    "save": "Patch speichern…",
+    "tooDifferent": "Die Texte sind zu unterschiedlich, um rechtzeitig einen Patch zu erstellen."
+  },
+  "files": {
+    "binary": "„{{name}}“ ist keine Textdatei."
+  },
+  "actions": {
+    "new": "Neuer Vergleich",
+    "newTitle": "Neuen Vergleich beginnen?",
+    "newBody": "Beide Seiten werden geleert. Geöffnete Dateien bleiben unverändert."
+  }
+}

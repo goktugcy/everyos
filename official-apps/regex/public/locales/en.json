@@ -1,0 +1,183 @@
+{
+  "app": {
+    "name": "Regex Tester",
+    "description": "Test JavaScript regular expressions live: highlighted matches, groups, flags, replacements and explanations."
+  },
+  "pattern": {
+    "section": "Expression",
+    "label": "Regular expression",
+    "placeholder": "Type a pattern…",
+    "copy": "Copy the expression"
+  },
+  "flags": {
+    "label": "Flags",
+    "d": "Indices: report where each group matched",
+    "g": "Global: find every match, not just the first",
+    "i": "Ignore case",
+    "m": "Multiline: ^ and $ match at line breaks",
+    "s": "Dot all: . also matches line breaks",
+    "u": "Unicode: code points and \\p{…} properties",
+    "v": "Unicode sets: set operations in classes",
+    "y": "Sticky: match only where the last match ended",
+    "short": {
+      "d": "indices",
+      "g": "global",
+      "i": "ignore case",
+      "m": "multiline",
+      "s": "dot all",
+      "u": "unicode",
+      "v": "sets",
+      "y": "sticky"
+    }
+  },
+  "status": {
+    "empty": "Type a regular expression",
+    "running": "Matching…",
+    "matches_one": "{{count}} match",
+    "matches_other": "{{count}} matches",
+    "ms": "{{ms}} ms",
+    "timeout": "Stopped: the expression took longer than {{seconds}} s (probably catastrophic backtracking).",
+    "tooLong": "The test text is longer than {{count}} characters.",
+    "syntax": "Not a valid expression: {{message}}",
+    "worker": "Matching could not run: {{message}}"
+  },
+  "text": {
+    "label": "Test text",
+    "highlighted": "Matches in the text",
+    "highlightLimit": "Only the first 200,000 characters are highlighted."
+  },
+  "panels": {
+    "label": "Results",
+    "matches": "Matches",
+    "explain": "Explanation",
+    "replace": "Replace"
+  },
+  "matches": {
+    "none": "No matches",
+    "empty": "(empty match)",
+    "range": "{{start}}–{{end}}",
+    "unmatched": "did not take part",
+    "truncated": "Only the first {{count}} matches are listed.",
+    "more": "and {{count}} more"
+  },
+  "replace": {
+    "label": "Replacement",
+    "hint": "$1, $<name>, $& (the match), $` and $' (before and after it), $$ for $",
+    "result": "Result",
+    "copy": "Copy the result"
+  },
+  "examples": {
+    "title": "Examples",
+    "email": {
+      "name": "Email address",
+      "description": "A practical pattern for addresses in text (not every valid RFC 5322 address)"
+    },
+    "url": {
+      "name": "Web address",
+      "description": "http and https links"
+    },
+    "ipv4": {
+      "name": "IPv4 address",
+      "description": "Four numbers from 0 to 255"
+    },
+    "isoDate": {
+      "name": "ISO date",
+      "description": "YYYY-MM-DD with named groups"
+    },
+    "hexColor": {
+      "name": "Hex color",
+      "description": "#rgb or #rrggbb"
+    },
+    "uuid": {
+      "name": "UUID",
+      "description": "Versions 1 to 8"
+    },
+    "semver": {
+      "name": "Semantic version",
+      "description": "major.minor.patch with pre-release and build"
+    },
+    "phone": {
+      "name": "Phone number",
+      "description": "Digits with spaces, dots, dashes or parentheses"
+    },
+    "slug": {
+      "name": "URL slug",
+      "description": "Lowercase words joined by dashes, one per line"
+    },
+    "words": {
+      "name": "Words in any script",
+      "description": "Letters by Unicode property (needs u)"
+    },
+    "duplicateWords": {
+      "name": "Repeated words",
+      "description": "A word immediately written twice, with a backreference"
+    },
+    "trailingSpace": {
+      "name": "Trailing whitespace",
+      "description": "Spaces and tabs at the end of lines"
+    }
+  },
+  "saved": {
+    "title": "Saved",
+    "save": "Save",
+    "name": "Name",
+    "done": "Expression saved",
+    "delete": "Delete {{name}}"
+  },
+  "explain": {
+    "digit": "A digit (0–9)",
+    "nonDigit": "Any character except a digit",
+    "word": "A word character (letter, digit or _)",
+    "nonWord": "Any character except a word character",
+    "space": "A whitespace character",
+    "nonSpace": "Any character except whitespace",
+    "newline": "A line feed",
+    "carriageReturn": "A carriage return",
+    "tab": "A tab",
+    "formFeed": "A form feed",
+    "verticalTab": "A vertical tab",
+    "nul": "The NUL character",
+    "wordBoundary": "A word boundary",
+    "nonWordBoundary": "Not a word boundary",
+    "backreference": "The same text as group {{number}}",
+    "namedBackreference": "The same text as the group “{{name}}”",
+    "property": "A character with the Unicode property {{name}}",
+    "notProperty": "A character without the Unicode property {{name}}",
+    "hex": "The character {{char}} (hexadecimal code)",
+    "unicode": "The character {{char}} (Unicode code)",
+    "control": "The control character Ctrl+{{letter}}",
+    "literal": "The character {{char}}",
+    "literals": "The text “{{char}}”",
+    "class": "One character of: {{items}}",
+    "notClass": "One character not in: {{items}}",
+    "group": "Group {{number}}: captures what it matches",
+    "namedGroup": "Group {{number}} “{{name}}”: captures what it matches",
+    "nonCapturing": "A group that does not capture",
+    "lookahead": "Followed by (not part of the match):",
+    "negativeLookahead": "Not followed by:",
+    "lookbehind": "Preceded by (not part of the match):",
+    "negativeLookbehind": "Not preceded by:",
+    "modifiers": "A group with the flags {{flags}}",
+    "groupEnd": "End of the group",
+    "alternation": "Or",
+    "start": "Start of the text (or line, with m)",
+    "end": "End of the text (or line, with m)",
+    "any": "Any character (except line breaks, unless s)",
+    "zeroOrMore": "Zero or more times, as many as possible",
+    "zeroOrMoreLazy": "Zero or more times, as few as possible",
+    "oneOrMore": "One or more times, as many as possible",
+    "oneOrMoreLazy": "One or more times, as few as possible",
+    "optional": "Optional (once or not at all)",
+    "optionalLazy": "Optional, preferring not at all",
+    "exactly_one": "Exactly {{count}} time",
+    "exactly_other": "Exactly {{count}} times",
+    "exactlyLazy_one": "Exactly {{count}} time",
+    "exactlyLazy_other": "Exactly {{count}} times",
+    "atLeast_one": "At least {{count}} time, as many as possible",
+    "atLeast_other": "At least {{count}} times, as many as possible",
+    "atLeastLazy_one": "At least {{count}} time, as few as possible",
+    "atLeastLazy_other": "At least {{count}} times, as few as possible",
+    "between": "Between {{min}} and {{max}} times, as many as possible",
+    "betweenLazy": "Between {{min}} and {{max}} times, as few as possible"
+  }
+}

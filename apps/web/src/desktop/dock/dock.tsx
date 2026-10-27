@@ -1,3 +1,4 @@
+import { requestClose } from "../windows/close-guards.ts";
 import {
   closestCenter,
   DndContext,
@@ -205,7 +206,7 @@ function DockItem({
             id: "close",
             label: t("dock.closeAll"),
             icon: <XCircle />,
-            onSelect: () => own.forEach((w) => wm().close(w.id)),
+            onSelect: () => own.forEach((w) => void requestClose(w.id, () => wm().close(w.id))),
           },
         ]
       : []),
@@ -286,7 +287,7 @@ function TaskbarWindow({ window, focused }: { window: DockWindow; focused: boole
         )}
       >
         <AppIcon manifest={manifest} size={20} />
-        <span className="truncate">{window.title || t(manifest.titleKey)}</span>
+        <span className="truncate">{window.title || appTitle(manifest, t)}</span>
       </button>
     </li>
   );

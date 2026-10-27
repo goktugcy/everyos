@@ -1,0 +1,32 @@
+{
+  "image": {
+    "open": "Ouvrir des images",
+    "save": "Enregistrer l’image originale",
+    "scope": "Seuls les fichiers choisis sont accessibles. Jusqu’à 100 images de 50 Mio chacune. Zoom et rotation concernent l’aperçu ; l’enregistrement copie l’original.",
+    "permission": "L’accès nécessite la permission files:pick dans la boutique.",
+    "revoked": "Certains fichiers ne sont plus partagés. Sélectionnez-les à nouveau.",
+    "empty": "Aucune image sélectionnée",
+    "openHint": "Choisissez des images JPEG, PNG, GIF, WebP, AVIF, BMP, ICO ou SVG via EveryOS. Le décodage dépend du navigateur.",
+    "previous": "Image précédente",
+    "next": "Image suivante",
+    "selection": "Image sélectionnée",
+    "slideshow": "Démarrer le diaporama",
+    "stop": "Arrêter le diaporama",
+    "interval": "Intervalle des images",
+    "seconds": "{{value}} s",
+    "zoomIn": "Agrandir",
+    "zoomOut": "Réduire",
+    "rotateLeft": "Tourner à gauche",
+    "rotateRight": "Tourner à droite",
+    "fit": "Ajuster et réinitialiser",
+    "preview": "Aperçu de l’image",
+    "panHint": "Faites glisser ou utilisez Alt + flèches sur l’aperçu. Le zoom est relatif à l’image ajustée.",
+    "unsupported": "Cette image est illisible, dépasse 80 mégapixels ou n’est pas prise en charge par ce navigateur. Essayez un autre format.",
+    "metadata": "Métadonnées de l’image",
+    "metadataFailed": "Les métadonnées EXIF sont illisibles. Les détails du fichier et l’aperçu restent disponibles."
+  },
+  "app": {
+    "name": "Visionneuse d’images",
+    "description": "Affichez les images choisies avec zoom, rotation, métadonnées et diaporama."
+  }
+}

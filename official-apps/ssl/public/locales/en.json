@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "SSL Inspector",
+    "description": "Inspect TLS certificates, expiry, identity and certificate chains of approved endpoints."
+  },
+  "target": {
+    "host": "Host name or IP address",
+    "port": "TLS port",
+    "sni": "Server name (SNI), optional",
+    "hint": "Only targets approved in this app’s network policy can be inspected. This does not change certificate trust.",
+    "inspect": "Inspect",
+    "working": "Inspecting…",
+    "invalid": "Enter a valid host name or IP, port 1–65535 and an optional DNS server name. Do not enter a URL or path."
+  },
+  "saved": {
+    "title": "Saved endpoints",
+    "save": "Save endpoint",
+    "empty": "Save an endpoint to inspect it again later.",
+    "remove": "Remove {{target}}",
+    "limit": "At most 50 saved endpoints. Remove one before adding another."
+  },
+  "result": {
+    "empty": "Inspect a TLS endpoint",
+    "trusted": "Chain verified",
+    "untrusted": "The chain could not be verified against this server’s trusted roots.",
+    "matches": "Name matches certificate",
+    "mismatch": "The certificate does not match the requested server name.",
+    "remote": "Connected address",
+    "protocol": "Protocol",
+    "cipher": "Cipher suite",
+    "alpn": "ALPN",
+    "time": "Response time",
+    "unavailable": "Not available",
+    "chain": "Certificate chain",
+    "noChain": "The endpoint did not return certificate details."
+  },
+  "cert": {
+    "subject": "Subject",
+    "issuer": "Issuer",
+    "sans": "Alternative names (SAN)",
+    "from": "Valid from",
+    "to": "Valid until",
+    "serial": "Serial number",
+    "fingerprint": "SHA-256 fingerprint",
+    "key": "Public key",
+    "selfSigned": "Self-signed"
+  },
+  "validity": {
+    "valid": "Within validity period",
+    "expired": "Certificate expired",
+    "future": "Certificate is not valid yet",
+    "soon": "Certificate expires within 30 days"
+  }
+}

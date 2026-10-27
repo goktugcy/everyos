@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "화이트보드",
+    "description": "무한 캔버스에 그리세요: 펜, 도형, 텍스트, 연결 화살표, 실행 취소와 확대/축소. 보드는 저장되며 PNG와 SVG로 내보낼 수 있습니다."
+  },
+  "boards": {
+    "label": "보드",
+    "show": "보드 표시",
+    "hide": "보드 숨기기",
+    "new": "새 보드",
+    "first": "내 보드",
+    "untitled": "보드 {{number}}",
+    "imported": "가져온 보드",
+    "copyName": "{{name}} (사본)",
+    "rename": "{{name}} 이름 바꾸기",
+    "renameTitle": "보드 이름 바꾸기",
+    "duplicate": "{{name}} 복제",
+    "delete": "{{name}} 삭제",
+    "deleteTitle": "“{{name}}”을(를) 삭제할까요?",
+    "none": "열린 보드가 없습니다"
+  },
+  "canvas": {
+    "label": "{{name}} 그림",
+    "welcome": "아이디어를 그리고, 쓰고, 연결하세요"
+  },
+  "status": {
+    "saved": "저장됨",
+    "saving": "저장 중…",
+    "tooLarge": "너무 커서 보관할 수 없습니다. 보드 파일로 내보내세요",
+    "failed": "저장하지 못했습니다. 잠시 후 다시 시도하세요"
+  },
+  "import": {
+    "action": "보드 가져오기…",
+    "done": "{{name}}을(를) 새 보드로 가져왔습니다",
+    "invalid": "“{{name}}”은(는) 이 앱이 읽을 수 있는 보드 파일이 아닙니다."
+  },
+  "export": {
+    "board": "보드 파일로 저장(.excalidraw)…",
+    "done": "{{name}} 저장됨",
+    "empty": "이 보드에는 아직 내보낼 내용이 없습니다."
+  },
+  "library": {
+    "tooLarge": "도형 라이브러리가 너무 커서 보관할 수 없습니다."
+  },
+  "errors": {
+    "load": "화이트보드를 시작하지 못했습니다"
+  }
+}

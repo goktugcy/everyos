@@ -1,0 +1,108 @@
+{
+  "app": {
+    "name": "Notes",
+    "description": "Des notes en Markdown avec dossiers, étiquettes, épinglage, recherche, historique des versions, import et export, et un widget de note rapide."
+  },
+  "widgets": {
+    "quick": { "name": "Note rapide", "description": "Écrire une note sans ouvrir Notes." }
+  },
+  "views": {
+    "all": "Toutes les notes",
+    "pinned": "Épinglées",
+    "folders": "Dossiers",
+    "tags": "Étiquettes",
+    "trash": "Supprimées récemment"
+  },
+  "actions": {
+    "newNote": "Nouvelle note",
+    "newFolder": "Nouveau dossier",
+    "renameFolder": "Renommer le dossier",
+    "deleteFolder": "Supprimer le dossier",
+    "pin": "Épingler",
+    "unpin": "Désépingler",
+    "copy": "Copier le Markdown",
+    "exportNote": "Exporter en Markdown…",
+    "exportAll": "Exporter toutes les notes…",
+    "import": "Importer des notes…",
+    "history": "Historique des versions",
+    "delete": "Supprimer la note",
+    "restore": "Restaurer",
+    "deleteForever": "Supprimer définitivement",
+    "emptyTrash": "Vider",
+    "restoreVersion": "Restaurer cette version",
+    "back": "Retour aux notes"
+  },
+  "list": {
+    "label": "Notes",
+    "search": "Rechercher dans les notes",
+    "sort": "Trier par",
+    "sortUpdated": "Dernière modification",
+    "sortCreated": "Date de création",
+    "sortTitle": "Titre",
+    "untitled": "Nouvelle note",
+    "noText": "Pas d’autre texte",
+    "pinned": "Épinglée"
+  },
+  "empty": {
+    "title": "Aucune note pour l’instant",
+    "text": "Écrivez votre première note ou importez des fichiers Markdown.",
+    "trash": "Rien dans Supprimées récemment",
+    "trashText": "Les notes supprimées restent ici 30 jours.",
+    "search": "Aucune note ne correspond à « {{query}} »",
+    "select": "Choisissez une note ou commencez-en une nouvelle."
+  },
+  "editor": {
+    "tools": "Note",
+    "modes": "Affichage",
+    "edit": "Modifier",
+    "split": "Partagé",
+    "preview": "Aperçu",
+    "saving": "Enregistrement…",
+    "editing": "Modification…",
+    "failed": "Non enregistrée",
+    "saved": "Enregistrée",
+    "inTrash": "Cette note est dans Supprimées récemment et sera effacée définitivement le {{date}}.",
+    "folder": "Dossier",
+    "noFolder": "Aucun dossier",
+    "tags": "Étiquettes",
+    "tagsHint": "Séparez les étiquettes par des virgules",
+    "label": "Texte de la note",
+    "placeholder": "Commencez à écrire. Le Markdown fonctionne : # titres, **gras**, - listes, - [ ] tâches…",
+    "previewLabel": "Aperçu",
+    "words_one": "{{count}} mot",
+    "words_other": "{{count}} mots",
+    "edited": "Modifiée : {{date}}"
+  },
+  "folder": {
+    "name": "Nom du dossier",
+    "exists": "Un dossier portant ce nom existe déjà",
+    "deleteTitle": "Supprimer le dossier « {{name}} » ?",
+    "deleteBody": "Ses notes sont conservées et sortent du dossier."
+  },
+  "trash": {
+    "deleteTitle": "Supprimer « {{name}} » définitivement ?",
+    "emptyTitle": "Supprimer toutes les notes de Supprimées récemment ?",
+    "body": "Cette action est irréversible.",
+    "moved": "Déplacée dans Supprimées récemment",
+    "restored": "Note restaurée"
+  },
+  "history": {
+    "title": "Historique des versions",
+    "empty": "Pas encore de version antérieure. Notes conserve jusqu’à 20 versions de chaque note pendant que vous écrivez.",
+    "restored": "Version antérieure restaurée"
+  },
+  "import": {
+    "done_one": "{{count}} note importée",
+    "done_other": "{{count}} notes importées",
+    "none": "Rien n’a été importé",
+    "skipped": "{{name}} a été ignoré : plus de 5 Mo"
+  },
+  "widget": {
+    "placeholder": "Écrire une note rapide…",
+    "save": "Ajouter la note",
+    "saved": "Note ajoutée",
+    "recent": "Récentes",
+    "empty": "Aucune note pour l’instant",
+    "open": "Ouvrir Notes"
+  }
+}

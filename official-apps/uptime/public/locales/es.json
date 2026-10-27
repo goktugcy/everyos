@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "Disponibilidad"
+  },
+  "uptime": {
+    "auto": "Esta vista se actualiza cada 15 segundos mientras está activa. Las comprobaciones guardadas continúan con la ventana cerrada."
+  },
+  "health": {
+    "up": "Comprobaciones observadas correctas",
+    "down": "Fallos observados",
+    "degraded": "Requiere atención",
+    "unknown": "Datos insuficientes",
+    "hint": "El resumen cubre el host, los servicios informados y los puntos activos. Describe comprobaciones observadas, no toda la salud del servidor.",
+    "limited": "La cobertura es incompleta: puede haber datos no disponibles, antiguos, simulados o pendientes."
+  },
+  "host": {
+    "title": "Tiempo activo del host",
+    "boot": "Inicio: {{at}}",
+    "measured": "Medido: {{at}}",
+    "permission": "El tiempo activo requiere system:metrics.read y un rol con acceso a datos del sistema."
+  },
+  "endpoints": {
+    "title": "Disponibilidad de puntos",
+    "summary": "{{up}} activos · {{down}} caídos · {{blocked}} bloqueados · {{pending}} pendientes · {{paused}} pausados",
+    "scope": "Los recuentos incluyen puntos activos de esta app. Las comprobaciones de HTTP Monitor son independientes.",
+    "method": "Las comprobaciones usan GET, siguen redirecciones permitidas y siempre verifican los certificados TLS."
+  },
+  "services": {
+    "title": "Servicios informados",
+    "hint": "Estado actual de solo lectura. Esta instantánea no reconstruye incidentes anteriores de los servicios.",
+    "permission": "El estado de servicios requiere system:services.read y un rol con permiso para leer servicios.",
+    "observed": "Observado: {{at}}",
+    "sub": "Subestado",
+    "search": "Buscar servicios",
+    "name": "Servicio",
+    "description": "Descripción",
+    "state": "Estado",
+    "empty": "No hay servicios que coincidan.",
+    "activeStates": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "failed": "Fallido",
+      "activating": "Iniciando",
+      "deactivating": "Deteniendo",
+      "reloading": "Recargando"
+    }
+  },
+  "incidents": {
+    "title": "Observaciones de incidentes",
+    "hint": "Hasta 100 transiciones observadas de fallo, bloqueo y primer éxito en los datos cargados. El umbral de fallos consecutivos determina el estado del monitor.",
+    "failure": "Primer fallo observado",
+    "blocked": "Bloqueo de política observado",
+    "success": "Comprobación correcta observada",
+    "partial": "Las comprobaciones anteriores quedan fuera del historial cargado; el fallo pudo comenzar antes.",
+    "empty": "No hay transiciones de incidentes en el historial cargado."
+  },
+  "duration": {
+    "full": "{{days}}d {{hours}}h {{minutes}}min {{seconds}}s"
+  },
+  "widgets": {
+    "health": {
+      "name": "Resumen de disponibilidad",
+      "description": "Tiempo activo del host y estado observado de puntos y servicios."
+    }
+  },
+  "widget": {
+    "limited": "Cobertura parcial",
+    "endpoints": "Puntos disponibles: {{up}}/{{total}}",
+    "open": "Abrir Disponibilidad"
+  },
+  "form": {
+    "new": "Nuevo monitor",
+    "resume": "Continuar borrador",
+    "newTitle": "Crear monitor",
+    "editTitle": "Editar monitor",
+    "name": "Nombre",
+    "url": "URL HTTP o HTTPS",
+    "method": "Método",
+    "interval": "Intervalo (segundos)",
+    "timeout": "Tiempo límite (milisegundos)",
+    "min": "Estado mínimo esperado",
+    "max": "Estado máximo esperado",
+    "keyword": "Texto requerido en la respuesta (opcional)",
+    "downAfter": "Fallos antes de marcar caída",
+    "verifyTls": "Verificar certificados TLS",
+    "tlsWarning": "Este monitor aceptará certificados no confiables.",
+    "notify": "Notificar caída y recuperación",
+    "enabled": "Monitorización activa",
+    "save": "Guardar monitor",
+    "discard": "Descartar borrador",
+    "discardTitle": "¿Descartar este borrador?",
+    "discardText": "Se perderán los ajustes no guardados.",
+    "policy": "Un administrador debe permitir el destino y el puerto en la tienda. Las comprobaciones continúan con la app cerrada."
+  },
+  "monitor": {
+    "refresh": "Actualizar",
+    "targets": "Monitores ({{count}}/50)",
+    "background": "EveryOS comprueba los monitores en segundo plano. Esta ventana se actualiza cada 30 segundos.",
+    "permission": "Esta app no tiene permiso de red saliente. Un administrador puede concederlo en la tienda.",
+    "empty": "Aún no hay monitores",
+    "emptyHint": "Crea un monitor para un destino HTTP autorizado y empieza a recopilar comprobaciones.",
+    "never": "Aún sin comprobar",
+    "noData": "Sin datos",
+    "ms": "{{value}} ms",
+    "checked": "Última comprobación: {{at}}",
+    "since": "Estado desde: {{at}}",
+    "status": "Estado HTTP",
+    "latency": "Tiempo de respuesta",
+    "uptime24": "Éxito · 24 horas",
+    "uptime7": "Éxito · 7 días",
+    "average": "Promedio · 24 horas",
+    "check": "Comprobar ahora",
+    "wait": "Espera {{seconds}} s",
+    "edit": "Editar",
+    "pause": "Pausar",
+    "enable": "Activar",
+    "delete": "Eliminar",
+    "deleteTitle": "¿Eliminar monitor?",
+    "deleteText": "¿Eliminar {{name}} y su historial? No se puede deshacer.",
+    "schedule": "Cada {{seconds}} s · Esperado {{min}}–{{max}} · Caída tras {{failures}} fallos seguidos",
+    "notifyOn": "Se notifican caídas y recuperaciones, salvo que la app esté silenciada en los ajustes.",
+    "notifyOff": "Las notificaciones de este monitor están desactivadas.",
+    "notifyMissing": "Las notificaciones requieren el permiso notifications:send. Un administrador puede concederlo en la tienda."
+  },
+  "state": {
+    "pending": "Pendiente de comprobación",
+    "up": "Disponible",
+    "down": "Caído",
+    "blocked": "Bloqueado por política",
+    "paused": "Pausado"
+  },
+  "history": {
+    "title": "Historial de comprobaciones",
+    "range": "Período",
+    "day": "Últimas 24 horas",
+    "week": "Últimos 7 días",
+    "month": "Últimos 30 días",
+    "export": "Exportar CSV",
+    "limit": "{{count}} comprobaciones · Hasta 5.000, conservadas 30 días. Las tasas cuentan comprobaciones, no tiempo.",
+    "timeline": "Últimas 60 comprobaciones, de antigua a reciente",
+    "at": "Hora",
+    "result": "Resultado",
+    "ok": "Correcto",
+    "empty": "No hay comprobaciones en este período.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {{page}} de {{pages}}"
+  },
+  "validation": {
+    "name": "Introduce un nombre de 1–80 caracteres.",
+    "url": "Introduce una URL HTTP o HTTPS sin credenciales ni fragmento.",
+    "interval": "Usa un intervalo entero de 60 a 86.400 segundos.",
+    "timeout": "Usa un tiempo límite entero de 1.000 a 30.000 milisegundos.",
+    "status": "Usa códigos de 100 a 599; el mínimo no puede superar al máximo.",
+    "keyword": "Usa hasta 200 caracteres. El texto de respuesta solo está disponible con GET.",
+    "downAfter": "Usa de 1 a 5 fallos consecutivos."
+  },
+  "failure": {
+    "status": "Estado HTTP inesperado",
+    "keyword": "Falta el texto requerido",
+    "blocked": "Destino bloqueado por política de red",
+    "dns": "Falló la consulta DNS",
+    "refused": "Conexión rechazada",
+    "unreachable": "Destino inaccesible",
+    "timeout": "Tiempo de espera agotado",
+    "reset": "Conexión restablecida",
+    "tls": "Falló la verificación TLS",
+    "too-many-redirects": "Demasiadas redirecciones",
+    "invalid-response": "Respuesta HTTP no válida",
+    "error": "Falló la solicitud de red",
+    "other": "Comprobación fallida"
+  },
+  "source": {
+    "simulatedHint": "Estos valores están simulados por el host de desarrollo y no describen el host real.",
+    "host": "Datos del host",
+    "simulated": "Datos simulados"
+  }
+}

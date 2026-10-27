@@ -1,0 +1,66 @@
+{
+  "format": "everyos-sdk-linux-qualification/1",
+  "status": "passed",
+  "fromVersion": "0.1.36",
+  "toVersion": "0.1.37",
+  "inputs": {
+    "priorPackage": "dcb07f7398ca3244e1f984399a8bd0efaad4095cc70f536ce737288fcae7c6b7",
+    "candidatePackage": "c32ad0ebec180d1d3e64ff8f398feb18a4553854567e109c84cf135c505b6269"
+  },
+  "platform": {
+    "os": "Ubuntu 24.04",
+    "architecture": "arm64",
+    "environment": "disposable Lima VZ VM",
+    "physicalPi": false
+  },
+  "productionCommunityTested": false,
+  "startupToHealthyMs": 261.8,
+  "idleSampleSeconds": 5,
+  "services": {
+    "everyos-api": {
+      "rssKiB": 144988,
+      "idleCpuPercent": 0.0
+    },
+    "everyos-agent": {
+      "rssKiB": 98984,
+      "idleCpuPercent": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "scenario": "published-0.1.36-install-and-account-home",
+      "passed": true,
+      "details": {
+        "architecture": "arm64"
+      }
+    },
+    {
+      "scenario": "authenticated-0.1.36-to-0.1.37-update-preserves-account-home-config-and-keys",
+      "passed": true,
+      "details": {
+        "candidateTrust": "ephemeral-test-key",
+        "jobState": "succeeded"
+      }
+    },
+    {
+      "scenario": "packaged-sdk-install-update-and-app-storage-persistence",
+      "passed": true,
+      "details": null
+    },
+    {
+      "scenario": "verified-backup-with-installed-sdk-app-and-account-home",
+      "passed": true,
+      "details": null
+    },
+    {
+      "scenario": "authenticated-cli-restore-recovers-sdk-data-home-and-restarts-supervised-api",
+      "passed": true,
+      "details": null
+    },
+    {
+      "scenario": "packaged-sdk-revocation-blocks-launch",
+      "passed": true,
+      "details": null
+    }
+  ]
+}

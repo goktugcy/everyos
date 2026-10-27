@@ -1,0 +1,54 @@
+{
+  "app": {
+    "name": "SSL 检查器",
+    "description": "检查获准端点的 TLS 证书、有效期、身份和证书链。"
+  },
+  "target": {
+    "host": "主机名或 IP 地址",
+    "port": "TLS 端口",
+    "sni": "服务器名称（SNI，可选）",
+    "hint": "只能检查此应用网络策略允许的目标。检查不会更改证书信任设置。",
+    "inspect": "检查",
+    "working": "正在检查…",
+    "invalid": "请输入有效的主机名或 IP、1–65535 之间的端口以及可选的 DNS 服务器名称。请勿输入网址或路径。"
+  },
+  "saved": {
+    "title": "已保存的端点",
+    "save": "保存端点",
+    "empty": "保存端点以便稍后再次检查。",
+    "remove": "移除 {{target}}",
+    "limit": "最多可保存 50 个端点。请先移除一个再添加。"
+  },
+  "result": {
+    "empty": "检查 TLS 端点",
+    "trusted": "证书链已验证",
+    "untrusted": "无法根据此服务器的受信任根证书验证该证书链。",
+    "matches": "名称与证书匹配",
+    "mismatch": "证书与请求的服务器名称不匹配。",
+    "remote": "连接地址",
+    "protocol": "协议",
+    "cipher": "密码套件",
+    "alpn": "ALPN",
+    "time": "响应时间",
+    "unavailable": "不可用",
+    "chain": "证书链",
+    "noChain": "端点未返回证书详细信息。"
+  },
+  "cert": {
+    "subject": "主体",
+    "issuer": "颁发者",
+    "sans": "备用名称（SAN）",
+    "from": "生效时间",
+    "to": "到期时间",
+    "serial": "序列号",
+    "fingerprint": "SHA-256 指纹",
+    "key": "公钥",
+    "selfSigned": "自签名"
+  },
+  "validity": {
+    "valid": "在有效期内",
+    "expired": "证书已过期",
+    "future": "证书尚未生效",
+    "soon": "证书将在 30 天内到期"
+  }
+}

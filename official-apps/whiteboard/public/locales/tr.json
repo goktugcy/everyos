@@ -1,0 +1,48 @@
+{
+  "app": {
+    "name": "Beyaz Tahta",
+    "description": "Sonsuz bir tuvalde çizin: kalem, şekiller, metin, bağlayan oklar, geri alma ve yakınlaştırma. Tahtalar sizin için saklanır, PNG ve SVG olarak dışa aktarılır."
+  },
+  "boards": {
+    "label": "Tahtalar",
+    "show": "Tahtaları göster",
+    "hide": "Tahtaları gizle",
+    "new": "Yeni tahta",
+    "first": "Tahtam",
+    "untitled": "Tahta {{number}}",
+    "imported": "İçe aktarılan tahta",
+    "copyName": "{{name}} (kopya)",
+    "rename": "{{name}} adını değiştir",
+    "renameTitle": "Tahtayı yeniden adlandır",
+    "duplicate": "{{name}} çoğalt",
+    "delete": "{{name}} sil",
+    "deleteTitle": "“{{name}}” silinsin mi?",
+    "none": "Açık tahta yok"
+  },
+  "canvas": {
+    "label": "{{name}} çizimi",
+    "welcome": "Fikirlerinizi çizin, yazın ve birbirine bağlayın"
+  },
+  "status": {
+    "saved": "Kaydedildi",
+    "saving": "Kaydediliyor…",
+    "tooLarge": "Saklanamayacak kadar büyük: tahta dosyası olarak dışa aktarın",
+    "failed": "Kaydedilemedi: biraz sonra yeniden deneyin"
+  },
+  "import": {
+    "action": "Tahta içe aktar…",
+    "done": "{{name}} yeni bir tahta olarak içe aktarıldı",
+    "invalid": "“{{name}}” bu uygulamanın okuyabildiği bir tahta dosyası değil."
+  },
+  "export": {
+    "board": "Tahta dosyası olarak kaydet (.excalidraw)…",
+    "done": "{{name}} kaydedildi",
+    "empty": "Bu tahtada henüz dışa aktarılacak bir şey yok."
+  },
+  "library": {
+    "tooLarge": "Şekil kitaplığınız saklanamayacak kadar büyük."
+  },
+  "errors": {
+    "load": "Beyaz tahta başlatılamadı"
+  }
+}

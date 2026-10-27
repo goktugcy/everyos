@@ -1,0 +1,50 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.uptime",
+  "name": "Uptime",
+  "version": "1.0.0",
+  "description": "Host uptime, approved endpoint availability, service state, observed incidents and a desktop health widget.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "system",
+  "permissions": [
+    "storage:app",
+    "network:outbound",
+    "system:metrics.read",
+    "system:services.read",
+    "notifications:send",
+    "widgets:register"
+  ],
+  "window": {
+    "defaultWidth": 1040,
+    "defaultHeight": 720,
+    "minWidth": 360,
+    "minHeight": 320,
+    "instances": "single"
+  },
+  "widgets": [
+    {
+      "id": "health",
+      "name": "Uptime overview",
+      "description": "Host uptime and the observed health of approved endpoints and services.",
+      "entry": "widget.html",
+      "sizes": ["small", "medium"],
+      "defaultSize": "medium",
+      "placements": ["desktop", "sidebar"],
+      "permissions": ["system:metrics.read", "system:services.read", "network:outbound"]
+    }
+  ],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/pomodoro"
+}

@@ -1,0 +1,46 @@
+.uptime-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  height: 100%;
+  padding: 6px;
+  overflow: auto;
+}
+.uptime-widget-open {
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: start;
+  display: grid;
+  cursor: pointer;
+  padding: 0;
+}
+.uptime-widget-data {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.uptime-widget-meta {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.uptime-widget-open strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.uptime-widget .uptime-hint {
+  color: var(--eui-muted);
+  font-size: 11px;
+}
+@media (max-width: 200px) {
+  .uptime-widget-time {
+    display: none;
+  }
+  .uptime-widget-open strong {
+    font-size: 15px;
+  }
+}
