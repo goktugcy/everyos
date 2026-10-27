@@ -13,7 +13,7 @@ it("pins the official release index to the owner's Ed25519 key", () => {
 });
 
 it("pins the human-reviewed live community service to its independently retained key", () => {
-  expect(COMMUNITY_APP_REGISTRY.url).toBe("https://everyos.goktugceyhan.dev/index.json");
+  expect(COMMUNITY_APP_REGISTRY.url).toBe("https://registry.everyos.net/index.json");
   expect(keyFingerprint(COMMUNITY_APP_REGISTRY.publicKey)).toBe(
     "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
   );

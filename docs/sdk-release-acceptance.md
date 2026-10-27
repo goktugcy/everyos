@@ -1012,3 +1012,18 @@ cryptography and stored-secret compatibility are unchanged. The focused security
 13 tests. The fresh complete gate also passes all **1,530 tests in 176 files**, format/lint/all
 workspace types, production build, **24 regular browser workflows** and **25 plain-HTTP workflows**
 without retries. Both database fixtures are required. Fresh hosted runs are tracked by PR #1.
+
+## 2026-10-28 community origin migration
+
+The canonical community origin is now `https://registry.everyos.net`. Both it and the legacy
+`https://everyos.goktugceyhan.dev` domain invoke the same production Worker directly. The same D1
+database, private R2 bucket and independently retained Ed25519 signing key remain in use.
+[Read-only migration evidence](evidence/community-20261028/origin-migration.json) verifies both
+production endpoints, the canonical discovery URL, signing-key continuity and byte-identical signed
+catalogs. No publisher enrollment, approval, review or revocation was performed for this migration.
+
+The 0.1.37 lifecycle receipt retains its original origin and date and links the separate immutable
+migration evidence. The gate requires complete migration checks, the exact origins, the original key
+and a fresh timestamp before accepting this historical origin. The original six lifecycle checks
+and candidate-version/freshness limits still apply. Published EveryOS 0.1.37 and existing publisher
+credentials continue through the legacy alias; subsequent OS/CLI builds default to the new domain.

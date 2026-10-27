@@ -195,8 +195,9 @@ proves publisher-key ownership and submits packages without pull requests. Autom
 (manifest, archive, limits, signature, HTML policy and locales) precede human review. Approved
 versions are immutable; publication signs an immutable R2 index snapshot with a separate registry
 key (a Worker secret), and a monotonic D1 pointer selects it. Updates, revocations and abuse reports
-use the same service. The owner deploys to `everyos.goktugceyhan.dev`; the community trust anchor
-stays absent until its real production key and deployment are verified. See
+use the same service. The owner deploys to `registry.everyos.net`; the verified community public
+key remains pinned across the origin migration. The old origin remains a direct compatibility
+alias for existing installations and origin-bound publisher credentials. See
 [community submissions](community.md) for the implemented API, local tests and deployment handoff.
 
 ## Server API
