@@ -5,12 +5,14 @@ tracks every gate with its evidence (test names, CI runs, measured numbers). An 
 when the implementation exists and the evidence is linked; until every item is checked, the
 `feature/app-sdk` branch is not released.
 
-Status: **public release blocked** — the 29-app development implementation and regression gate
+This is the **pre-publication qualification record for 0.1.37**. The 29-app implementation and regression gate
 pass. The production community service is deployed, and ordinary default-resolver inspection passes
 production health, identity, public-key and signed-catalog verification. Temporary physical Pi core
 measurements and native Linux app observations are recorded. The real human-reviewed production
-community lifecycle passes and its public trust anchor is pinned. Final signed artifacts and explicit
-release approval remain required. See [App SDK architecture](app-sdk/architecture.md).
+community lifecycle passes and its public trust anchor is pinned. Final artifact signing and
+publication run in the tag-restricted protected release environment. Current publication state and signed
+assets are recorded on the [0.1.37 release](https://github.com/goktugcy/everyos/releases/tag/v0.1.37).
+See [App SDK architecture](app-sdk/architecture.md).
 
 `dev passed` means the linked development checks ran successfully; it does not imply production
 signing, publication or approval. The dated sections below preserve prior failures and checkpoint

@@ -61,15 +61,16 @@ identity. Production private keys are only supplied to the protected signing job
 
 The package job runs `node scripts/release-preflight.ts` before any signing. An absent community
 anchor, a missing live acceptance receipt or an invalid/expired live signed index blocks publication.
-At this checkpoint the owner has not created the Cloudflare resources or domain; this check is
-expected to fail. No public release is ready merely because standalone SDK tests pass.
+The production service and independent public-key pin are present, and the real human-reviewed
+six-step lifecycle passes. The current receipt binds EveryOS 0.1.37 to
+[immutable live evidence](../evidence/community-20261027/live-lifecycle.json). Standalone SDK tests
+remain one part of the complete release gate.
 
-After the owner deploys and independently verifies the community key, pin
-`https://everyos.goktugceyhan.dev/index.json` in
-`apps/api/src/modules/desktop-apps/anchors.ts`. Record the actual live enrollment, submission,
-human review, installation, update and revocation results in
+`https://everyos.goktugceyhan.dev/index.json` and its independently retained key are pinned in
+`apps/api/src/modules/desktop-apps/anchors.ts`. The actual enrollment, submission, human review,
+installation, update and revocation results are recorded in
 `packaging/community-live-acceptance.json`, following `CommunityReleaseEvidence` in
-`scripts/community-release-gate.ts`. The receipt must match the candidate version and key fingerprint,
-link its supporting HTTPS evidence, and be no more than 30 days old. Local workerd evidence cannot
-substitute for this receipt. The remaining [complete release gates](../sdk-release-acceptance.md)
-still apply.
+`scripts/community-release-gate.ts`. For each release the receipt must match the candidate version
+and key fingerprint, link its supporting HTTPS evidence, and be no more than 30 days old. Local
+workerd evidence cannot substitute for this receipt. The protected workflow signs and verifies the
+final OS, SDK and official app artifacts together before publishing the complete release.
