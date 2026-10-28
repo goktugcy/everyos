@@ -2,7 +2,7 @@
 
 The SDK is distributed as five npm-compatible archives attached to the complete EveryOS release:
 `@everyos/app-sdk`, `@everyos/app-testing`, `@everyos/app-ui`, `@everyos/app-cli` and
-`create-everyos-app`. SDK version 1.0.0 is independent of the EveryOS version. Publication to npm
+`create-everyos-app`. SDK version 1.0.1 is independent of the EveryOS version. Publication to npm
 is optional and has not been performed by the development workflow.
 
 ```bash
@@ -37,7 +37,7 @@ CI runs this qualification on both Linux architectures; failures remain release 
 To try a local build without publication:
 
 ```bash
-npm exec --yes --package ./dist/sdk/create-everyos-app-1.0.0.tgz -- create-everyos-app /tmp/my-everyos-app --template react --packages "$PWD/dist/sdk"
+npm exec --yes --package ./dist/sdk/create-everyos-app-1.0.1.tgz -- create-everyos-app /tmp/my-everyos-app --template react --packages "$PWD/dist/sdk"
 cd /tmp/my-everyos-app
 npm install --ignore-scripts
 npm run typecheck

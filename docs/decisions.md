@@ -913,3 +913,15 @@ proof verifies production health, discovery, public-key continuity and byte-iden
 on both domains. The release gate accepts the historical origin only with a complete, fresh migration
 receipt for the exact origins and pinned key. This grants no new human review, submission approval
 or lifecycle acceptance, and does not relax the candidate-version or thirty-day freshness gates.
+
+### D66 — Respect a new focus target while Quick Settings finishes closing
+
+Radix restores focus from a closed popover on a deferred task. After Escape, a person can select
+an application input before that task runs; restoring the trigger then steals keyboard input and
+can reopen Quick Settings on Enter. Preserve a connected focus target outside the closing content,
+while retaining normal Escape restoration when focus has returned to the document body.
+
+A browser regression holds the close task until another app input is selected, verifies focus and
+real shell exit, and separately checks ordinary keyboard restoration. The existing terminal tests
+and terminal client remain unchanged. SDK packages advance together to 1.0.1 so the new CLI
+registry default does not reuse already published 1.0.0 archive versions.

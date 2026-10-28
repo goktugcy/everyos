@@ -8,7 +8,7 @@ export const RANGE_PATTERN =
   /^(?:\*|(?:\^|~|>=)?(0|[1-9]\d{0,8})\.(0|[1-9]\d{0,8})\.(0|[1-9]\d{0,8})(?:-[0-9A-Za-z.-]+)?)$/;
 
 /** The bridge protocol this EveryOS speaks; apps declare the SDK range they were built for. */
-export const APP_SDK_VERSION = "1.0.0";
+export const APP_SDK_VERSION = "1.0.1";
 
 interface Parsed {
   core: [number, number, number];

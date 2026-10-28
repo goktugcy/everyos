@@ -51,6 +51,17 @@ export function QuickSettings() {
           collisionPadding={8}
           className="glass-strong everyos-enter z-[8000] flex w-80 flex-col gap-4 rounded-everyos-lg p-4 text-sm text-fg"
           aria-label={t("menubar.quickSettings")}
+          onCloseAutoFocus={(event) => {
+            const active = document.activeElement;
+            // A deferred close must not steal focus from an app selected in the meantime.
+            if (
+              active &&
+              active !== document.body &&
+              event.target instanceof HTMLElement &&
+              !event.target.contains(active)
+            )
+              event.preventDefault();
+          }}
         >
           <section className="flex flex-col gap-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">
