@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Real package upgrade and SDK lifecycle, exclusively in our disposable qualification VM."""
 import argparse
+import base64
 import hashlib
 import http.cookiejar
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import socket
@@ -108,9 +110,13 @@ def main():
     # The published baseline was verified with its real key by install-prior.py. The unreleased
     # candidate uses an explicitly ephemeral trust root; production private keys are never used.
     source = ROOT/'releases'
-    version = source/'download/v0.1.37'
+    candidate_envelope = json.loads((args.candidate/'release.json').read_text())
+    candidate_payload = json.loads(base64.b64decode(candidate_envelope['payload'], validate=True))
+    candidate_version = candidate_payload['version']
+    assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.-]+)?', candidate_version)
+    version = source/f'download/v{candidate_version}'
     version.mkdir(parents=True, exist_ok=True)
-    for name in ('release.json', f'everyos_0.1.37_{architecture}.deb'):
+    for name in ('release.json', f'everyos_{candidate_version}_{architecture}.deb'):
         (version/name).write_bytes((args.candidate/name).read_bytes())
     (source/'latest/download/release.json').write_bytes((version/'release.json').read_bytes())
     # Keep the actual old package bytes available for rollback under the same test trust root.
@@ -123,7 +129,7 @@ def main():
     command('systemctl', 'restart', 'everyos-api', 'everyos-update')
     wait(lambda: request('/health')['status'] == 'ok')
     available = request('/self-update/check', {})
-    assert available['available']['version'] == '0.1.37'
+    assert available['available']['version'] == candidate_version
     prepared = request('/self-update/prepare', {})
     def backed_up():
         view = request('/backups/job')
@@ -131,19 +137,19 @@ def main():
         return backup_job if backup_job and backup_job['id'] == prepared['id'] and backup_job['status'] != 'running' else None
     prepared = wait(backed_up)
     assert prepared['status'] == 'succeeded'
-    job = request('/self-update/install', {'version': '0.1.37', 'backupId': prepared['backupId'], 'password': credentials['password'], 'confirm': True})
+    job = request('/self-update/install', {'version': candidate_version, 'backupId': prepared['backupId'], 'password': credentials['password'], 'confirm': True})
     assert job['id']
     def completed():
         current = json.loads(Path('/var/lib/everyos-updates/job.json').read_text())['job']
         return current if current['id'] == job['id'] and current['finishedAt'] is not None else None
     finished = wait(completed, 300)
     assert finished['state'] == 'succeeded', finished.get('error')
-    wait(lambda: request('/bootstrap')['version'] == '0.1.37')
-    assert command('everyos', 'version').stdout.strip() == '0.1.37'
+    wait(lambda: request('/bootstrap')['version'] == candidate_version)
+    assert command('everyos', 'version').stdout.strip() == candidate_version
     for name, digest in original.items():
         assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == digest
     assert request('/auth/login', credentials)['status'] == 'authenticated'
-    record('authenticated-0.1.36-to-0.1.37-update-preserves-account-home-config-and-keys', {'candidateTrust': 'ephemeral-test-key', 'jobState': finished['state']})
+    record(f'authenticated-0.1.36-to-{candidate_version}-update-preserves-account-home-config-and-keys', {'candidateTrust': 'ephemeral-test-key', 'jobState': finished['state']})
 
     fixtures = ROOT/'app-fixtures'
     fixtures.mkdir(exist_ok=True)
@@ -218,8 +224,8 @@ def main():
     for metrics in units.values():
         metrics['idleCpuPercent'] = round(100 * (counters(metrics['pid']) - metrics.pop('startCpuSeconds')) / (time.monotonic() - begin), 3)
         del metrics['pid']
-    inputs = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in {'priorPackage': source/f'download/v0.1.36/everyos_0.1.36_{architecture}.deb', 'candidatePackage': args.candidate/f'everyos_0.1.37_{architecture}.deb'}.items()}
-    report = {'format': 'everyos-sdk-linux-qualification/1', 'status': 'passed', 'fromVersion': '0.1.36', 'toVersion': '0.1.37', 'inputs': inputs, 'platform': {'os': 'Ubuntu 24.04', 'architecture': architecture, 'environment': environment, 'physicalPi': False}, 'productionCommunityTested': False, 'startupToHealthyMs': startup, 'idleSampleSeconds': 5, 'services': units, 'scenarios': records}
+    inputs = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in {'priorPackage': source/f'download/v0.1.36/everyos_0.1.36_{architecture}.deb', 'candidatePackage': args.candidate/f'everyos_{candidate_version}_{architecture}.deb'}.items()}
+    report = {'format': 'everyos-sdk-linux-qualification/1', 'status': 'passed', 'fromVersion': '0.1.36', 'toVersion': candidate_version, 'inputs': inputs, 'platform': {'os': 'Ubuntu 24.04', 'architecture': architecture, 'environment': environment, 'physicalPi': False}, 'productionCommunityTested': False, 'startupToHealthyMs': startup, 'idleSampleSeconds': 5, 'services': units, 'scenarios': records}
     (ROOT/'qualification.json').write_text(json.dumps(report, indent=2)+'\n')
     print('Linux qualification report saved', flush=True)
 

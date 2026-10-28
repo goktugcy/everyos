@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { SignedReleaseSchema, verifyRelease } from "../../packages/release/src/manifest.ts";
+import { EVERYOS_VERSION } from "../../packages/shared/src/index.ts";
 
 const root = resolve(import.meta.dirname, "../..");
 const prior = join(root, "dist/sdk-linux-prior");
@@ -33,7 +34,7 @@ await promisify(execFile)(
   [
     "scripts/sign-release.ts",
     "--version",
-    "0.1.37",
+    EVERYOS_VERSION,
     "--min-version",
     "0.1.0",
     "--key-file",

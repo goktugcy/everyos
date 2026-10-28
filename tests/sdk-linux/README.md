@@ -23,7 +23,7 @@ ephemeral and are written only under ignored `dist/sdk-linux-fixture/`. They are
 `qualification.py --disposable-host --candidate /path/to/candidate --fixtures /path/to/app-fixtures`
 requires a fresh baseline and a candidate directory containing:
 
-- `everyos_0.1.37_<arch>.deb` built from the actual candidate source;
+- `everyos_<candidate-version>_<arch>.deb` built from the actual candidate source;
 - `release.json` signed with a newly generated test key, and its `everyos-release-public.pem`;
 - `signed-prior.json`, the exact published baseline payload signed with that same test key.
 
@@ -45,5 +45,7 @@ It builds both actual packages, verifies the
 published 0.1.36 baseline, uses `candidate.ts` to create test signatures, then installs/upgrades
 only the fresh EveryOS instance. Receipts are uploaded as `sdk-linux-package-<arch>`. The workflow
 does not use a production private key, touch an owner's device or adopt existing host services.
-The fixed 0.1.36 → 0.1.37 baseline is qualification for this SDK release; update the harness when
-qualifying a subsequent release, rather than bypassing expiry/version checks.
+The published 0.1.36 baseline stays pinned. Candidate signing reads the coordinated source version,
+and upgrade checks read the signed candidate manifest rather than a hardcoded release number.
+Review the pinned baseline when qualifying a subsequent release, rather than bypassing
+expiry/version checks.
