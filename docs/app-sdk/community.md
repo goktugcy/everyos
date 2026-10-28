@@ -4,7 +4,7 @@ The community service lives in `services/community-registry`. It accepts indepen
 submissions without repository access or pull requests. Its production origin is
 `https://registry.everyos.net`. The owner-authorized Worker, D1 database and private R2 bucket
 are deployed; [original public deployment verification](../evidence/community-20261026/deployment-verification.json)
-passes against the independently retained public key. The [real human-reviewed lifecycle](../evidence/community-20261027/live-lifecycle.json) now passes enrollment, submission, human review, installation, data-preserving update and signed revocation. The public production key is pinned in EveryOS; the built-in community source remains disabled until its administrator enables it.
+passes against the independently retained public key. The [real human-reviewed lifecycle](../evidence/community-20261028/live-lifecycle.json) now passes enrollment, submission, human review, installation, data-preserving update and signed revocation. The public production key is pinned in EveryOS; the built-in community source remains disabled until its administrator enables it.
 The local workerd/D1/R2 development gate creates no production resources or signing keys.
 
 The [2026-10-28 origin migration](../evidence/community-20261028/origin-migration.json) retains the
@@ -164,7 +164,7 @@ The following production actions belong to the owner:
 The release preflight requires the matching live acceptance receipt and a fresh signed index; see
 [SDK distribution](distribution.md#public-release-readiness). The current production receipt is
 `packaging/community-live-acceptance.json`, linked to immutable public evidence and the exact
-0.1.37 candidate/key. This completes the community integration gate; protected production artifact
+0.1.38 candidate/key. This completes the community integration gate; protected production artifact
 signing, independent verification and explicit owner release approval remain separate publication gates.
 
 The agent never needs a Cloudflare account token. No tag, main-branch merge or public EveryOS

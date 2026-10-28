@@ -1027,3 +1027,20 @@ migration evidence. The gate requires complete migration checks, the exact origi
 and a fresh timestamp before accepting this historical origin. The original six lifecycle checks
 and candidate-version/freshness limits still apply. Published EveryOS 0.1.37 and existing publisher
 credentials continue through the legacy alias; subsequent OS/CLI builds default to the new domain.
+
+## 2026-10-28 candidate 0.1.38 live acceptance
+
+The [fresh public receipt](evidence/community-20261028/live-lifecycle.json) records the real
+0.1.38 round trip at `2026-10-28T08:15:53.435Z`. The existing owner-verified publisher submitted
+new immutable versions 1.0.2 and 1.0.3. The owner reviewed their exact source and extracted
+packages and entered the digest-bound approval phrase. Installation from `registry.everyos.net`,
+an update preserving the saved note, and signed revocation all passed. Only those two temporary
+versions were revoked; their packages and runtimes became inaccessible. Existing origin-bound
+publisher credentials continued through the legacy alias. The disposable API, agent and browser
+stopped and port 17840 was free afterward. No installed host services were changed.
+
+The matching release receipt references this immutable proof. Startup now immediately refreshes
+enabled app registries in the background, including after an update. Integration tests exercise
+a newer signed catalog, an unavailable endpoint and an untrusted index; cached verified data,
+disabled sources and installed app versions are preserved. Native package qualification also
+requires the catalog to appear before any manual sync request.

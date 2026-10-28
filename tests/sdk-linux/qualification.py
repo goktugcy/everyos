@@ -159,6 +159,10 @@ def main():
     identity = json.loads((fixtures/'identity.json').read_text())
     config.write_text(config.read_text() + '\ndesktopApps:\n  officialRegistry:\n    url: http://127.0.0.1:8931/index.json\n    allowPrivate: true\n    publicKey: |\n' + ''.join('      ' + line + '\n' for line in identity['publicKey'].splitlines()))
     command('systemd-run', '--unit=everyos-sdk-fixture', '--property=WorkingDirectory='+str(fixtures/'registry'), '/usr/bin/python3', '-m', 'http.server', '8931', '--bind', '127.0.0.1')
+    def fixture_ready():
+        with urllib.request.urlopen('http://127.0.0.1:8931/index.json', timeout=2) as response:
+            return response.status == 200
+    wait(fixture_ready, 10)
     started = time.monotonic()
     command('systemctl', 'restart', 'everyos-api', 'everyos-agent')
     wait(lambda: request('/health')['status'] == 'ok')
