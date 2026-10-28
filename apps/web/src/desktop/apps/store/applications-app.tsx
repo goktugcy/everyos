@@ -1,6 +1,6 @@
-import type { AppJobView, InstalledAppView } from "@everyos/shared";
+import type { AppJobView, InstalledAppView, DesktopAppInstallationView } from "@everyos/shared";
 import type { Point, Rect } from "@everyos/window-manager";
-import { Info, MonitorUp, Pin, PinOff, RefreshCw, Trash2 } from "lucide-react";
+import { AppWindow, Info, MonitorUp, Pin, PinOff, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { workArea } from "@everyos/window-manager";
 import { useTranslation } from "react-i18next";
@@ -28,6 +28,19 @@ import { useThemeStore } from "../../theme/theme-store.ts";
 import { installedAppId, rememberInstalledApps } from "./installed-apps-store.ts";
 import { requestAppAction } from "./app-action.ts";
 
+import {
+  desktopAppWindowId,
+  refreshDesktopApps,
+  useDesktopApps,
+} from "../../desktop-apps/store.ts";
+import { desktop } from "../../state/controller.ts";
+import { useAppMenu } from "../app-menu.tsx";
+import { DesktopAppDialog } from "./desktop-app-dialog.tsx";
+
+type Application =
+  | { kind: "managed"; id: string; name: string; value: InstalledAppView }
+  | { kind: "desktop"; id: string; name: string; value: DesktopAppInstallationView };
+
 /** A live folder of managed applications; never copies or relocates host app data. */
 export default function ApplicationsApp() {
   const { t, i18n } = useTranslation();
@@ -40,6 +53,10 @@ export default function ApplicationsApp() {
   const activeDesktopId = useWindowManager((state) => state.activeDesktopId);
   const viewport = useWindowManager((state) => state.viewport);
   const iconSize = useThemeStore((state) => state.theme.iconSize);
+  const desktopApps = useDesktopApps();
+  const appMenu = useAppMenu();
+  const [desktopDetails, setDesktopDetails] = useState<string | null>(null);
+  const desktopInstallation = desktopApps.apps.find((app) => app.appId === desktopDetails);
   const resource = useApiResource<{ apps: InstalledAppView[] }>("/apps", 5000);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
@@ -59,18 +76,24 @@ export default function ApplicationsApp() {
     additive: boolean;
     toggle: boolean;
   } | null>(null);
-  const apps = (resource.data?.apps ?? [])
+  const apps: Application[] = [
+    ...(resource.data?.apps ?? []).map((app) => ({
+      kind: "managed" as const,
+      id: app.id,
+      name: localized(app.name, i18n.language),
+      value: app,
+    })),
+    ...desktopApps.apps.map((app) => ({
+      kind: "desktop" as const,
+      id: desktopAppWindowId(app.appId),
+      name: desktopApps.names[app.appId] ?? app.name,
+      value: app,
+    })),
+  ]
     .filter((app) =>
-      localized(app.name, i18n.language)
-        .toLocaleLowerCase(i18n.language)
-        .includes(query.toLocaleLowerCase(i18n.language)),
+      app.name.toLocaleLowerCase(i18n.language).includes(query.toLocaleLowerCase(i18n.language)),
     )
-    .sort((a, b) =>
-      localized(a.name, i18n.language).localeCompare(
-        localized(b.name, i18n.language),
-        i18n.language,
-      ),
-    );
+    .sort((a, b) => a.name.localeCompare(b.name, i18n.language));
   const selection = apps.filter((app) => selected.has(app.id));
   useEffect(() => {
     if (resource.data && !resource.error && permissions.includes("apps:read"))
@@ -85,7 +108,17 @@ export default function ApplicationsApp() {
     }
     setDetailsId(id);
   };
-  const open = (app: InstalledAppView) => {
+  const showApplicationDetails = (app: Application) => {
+    if (app.kind === "desktop") setDesktopDetails(app.value.appId);
+    else showDetails(app.value.id);
+  };
+  const open = (entry: Application) => {
+    if (entry.kind === "desktop") {
+      if (entry.value.state === "active") desktop.openApp(desktopAppWindowId(entry.value.appId));
+      else showApplicationDetails(entry);
+      return;
+    }
+    const app = entry.value;
     const link = appLaunchLinks(app, window.location.hostname)[0];
     if (link) window.open(link.href, "_blank", "noopener,noreferrer");
     else showDetails(app.id);
@@ -108,7 +141,7 @@ export default function ApplicationsApp() {
       setPending(null);
     }
   };
-  const menu = (app: InstalledAppView): MenuEntry[] => {
+  const managedMenu = (app: InstalledAppView): MenuEntry[] => {
     const id = installedAppId(app.id);
     const isPinned = pinned.includes(id);
     const onDesktop = desktopDoc.items.some(
@@ -119,6 +152,19 @@ export default function ApplicationsApp() {
         item.folderId === null,
     );
     return [
+      {
+        kind: "item",
+        id: "open",
+        label: t("common.open"),
+        icon: <AppWindow />,
+        onSelect: () =>
+          open({
+            kind: "managed",
+            id: app.id,
+            name: localized(app.name, i18n.language),
+            value: app,
+          }),
+      },
       {
         kind: "item",
         id: "dock",
@@ -192,6 +238,20 @@ export default function ApplicationsApp() {
       },
     ];
   };
+  const menu = (entry: Application): MenuEntry[] =>
+    entry.kind === "managed"
+      ? managedMenu(entry.value)
+      : [
+          ...appMenu.menu(entry.id, entry.value),
+          { kind: "separator", id: "details" },
+          {
+            kind: "item",
+            id: "info",
+            label: t("applications.menu.info"),
+            icon: <Info />,
+            onSelect: () => showApplicationDetails(entry),
+          },
+        ];
   const begin = (event: PointerEvent<HTMLDivElement>) => {
     if (
       event.button !== 0 ||
@@ -276,7 +336,7 @@ export default function ApplicationsApp() {
           variant="ghost"
           size="sm"
           disabled={selection.length !== 1}
-          onClick={() => showDetails(selection[0]!.id)}
+          onClick={() => showApplicationDetails(selection[0]!)}
         >
           <Info className="size-4" aria-hidden />
           {t("applications.details")}
@@ -284,7 +344,10 @@ export default function ApplicationsApp() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={resource.reload}
+          onClick={() => {
+            resource.reload();
+            void refreshDesktopApps();
+          }}
           aria-label={t("common.refresh")}
         >
           <RefreshCw className="size-4" aria-hidden />
@@ -292,6 +355,7 @@ export default function ApplicationsApp() {
       </div>
       <div className="px-3 pt-3">
         <ResourceError error={resource.error} />
+        <ResourceError error={appMenu.error} />
         <ResourceError error={actionError} onDismiss={() => setActionError(null)} />
         {jobId ? (
           <Progress
@@ -330,11 +394,15 @@ export default function ApplicationsApp() {
           }
         }}
       >
-        {resource.loading ? (
+        {resource.loading && !desktopApps.apps.length ? (
           <LoadingBlock />
-        ) : resource.error && !resource.data ? null : !apps.length ? (
+        ) : resource.error && !resource.data && !desktopApps.apps.length ? null : !apps.length ? (
           <p className="p-8 text-center text-sm text-fg-muted">
-            {t(resource.data?.apps.length ? "appStore.noResults" : "applications.empty")}
+            {t(
+              resource.data?.apps.length || desktopApps.apps.length
+                ? "appStore.noResults"
+                : "applications.empty",
+            )}
           </p>
         ) : (
           <div
@@ -345,7 +413,7 @@ export default function ApplicationsApp() {
             className="grid grid-cols-[repeat(auto-fill,minmax(116px,1fr))] content-start gap-2 p-3"
           >
             {apps.map((app) => {
-              const name = localized(app.name, i18n.language);
+              const name = app.name;
               return (
                 <ContextMenuArea key={app.id} entries={() => menu(app)}>
                   <button
@@ -385,13 +453,29 @@ export default function ApplicationsApp() {
                     }}
                   >
                     <span className="grid size-[68px] place-items-center rounded-xl">
-                      <InstalledAppIcon app={app} />
+                      {app.kind === "managed" ? (
+                        <InstalledAppIcon app={app.value} />
+                      ) : app.value.state === "active" ? (
+                        <img
+                          aria-hidden
+                          alt=""
+                          draggable={false}
+                          src={`${app.value.runtimeUrl}${app.value.icon}`}
+                          className="size-14 rounded-xl object-contain"
+                        />
+                      ) : (
+                        <AppWindow className="size-10 text-fg-muted" aria-hidden />
+                      )}
                     </span>
                     <IconLabel text={name} />
                     <span className="text-[0.65rem] text-fg-muted">
-                      {t(`appStore.states.${app.state}`)}
+                      {app.kind === "managed"
+                        ? t(`appStore.states.${app.value.state}`)
+                        : app.value.state === "active"
+                          ? ""
+                          : t(`desktopApps.store.state.${app.value.state}`)}
                     </span>
-                    <SimulatedBadge source={app.source} />
+                    {app.kind === "managed" ? <SimulatedBadge source={app.value.source} /> : null}
                   </button>
                 </ContextMenuArea>
               );
@@ -415,6 +499,16 @@ export default function ApplicationsApp() {
         {t("applications.count", { count: apps.length })}
         {selection.length ? " · " + t("files.selectedCount", { count: selection.length }) : ""}
       </footer>
+      {desktopInstallation ? (
+        <DesktopAppDialog
+          listing={null}
+          installation={desktopInstallation}
+          onClose={() => setDesktopDetails(null)}
+          onChanged={(next) => {
+            if (!next) setDesktopDetails(null);
+          }}
+        />
+      ) : null}
       {details ? (
         <Dialog
           open

@@ -10,6 +10,7 @@ import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
 import { Dialog } from "../../../components/ui/dialog.tsx";
 import { api } from "../../../lib/api.ts";
+import { uninstallDesktopApp } from "../../desktop-apps/uninstall.ts";
 import { cn } from "../../../lib/cn.ts";
 import { formatDateTime } from "../../../lib/format.ts";
 import { usePermissions } from "../../../stores/session-store.ts";
@@ -220,11 +221,7 @@ export function DesktopAppDialog({
     )
       return;
     // Closes the dialog once it is gone; an error stays visible here.
-    await run(() =>
-      api(`/desktop-apps/installed/${appId}`, { method: "DELETE", body: { confirm: true } }).then(
-        () => null,
-      ),
-    );
+    await run(() => uninstallDesktopApp(appId).then(() => null));
   };
   const toggleNotifications = async (enabled: boolean) => {
     setNotifications(enabled);

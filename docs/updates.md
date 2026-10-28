@@ -26,6 +26,13 @@ restarts and recovers the prior package **and database** after a failed upgrade.
 trust configuration and a verified previous package are required; development mode cannot install
 host packages. See [packaging.md](packaging.md) for installation, release signing and recovery.
 
+The signed-in desktop watches update status even while both update panels are closed. Once the
+worker reports a finished, successful job and the API reports that job's target version, a tab
+running an older bundle flushes pending preferences and reloads once. A session-storage receipt
+prevents the retained completed job from causing a reload loop; a current bundle never reloads.
+Polling and visibility recovery cover missed events during API restarts. Failed, unfinished and
+rolled-back jobs do not trigger this refresh.
+
 The default release source is `https://github.com/goktugcy/everyos/releases`. The verified
 installer records this source and the independently supplied publisher public key in root-owned
 `/etc/everyos/release.json`. The one-command `install.sh` bootstrap embeds the same public key;
