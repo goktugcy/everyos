@@ -142,7 +142,7 @@ jobs:
       # Browsers give plain-HTTP pages opened by host name no secure-context APIs (randomUUID…).
       - name: End-to-end tests over plain HTTP
         if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.browser.outcome == 'success' }}
-        run: pnpm test:e2e foundation.spec.ts:9 plain-http.spec.ts sdk-desktop-apps.spec.ts official-apps.spec.ts --output=test-results/plain-http
+        run: pnpm test:e2e foundation.spec.ts:9 plain-http.spec.ts sdk-desktop-apps.spec.ts official-apps.spec.ts quick-settings-focus.spec.ts --output=test-results/plain-http
         env:
           EVERYOS_E2E_HTTP_HOST: everyos.lan
           EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1

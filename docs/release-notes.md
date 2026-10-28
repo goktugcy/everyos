@@ -1,3 +1,17 @@
+EveryOS 0.1.38 fixes keyboard focus after closing Quick Settings and moves the community registry.
+
+- Closing Quick Settings preserves an app input selected before delayed focus restoration.
+  Terminal commands keep reaching the shell after theme changes; ordinary Escape navigation
+  still returns focus to the Quick Settings button.
+- The canonical community registry is now `https://registry.everyos.net`. The legacy
+  `https://everyos.goktugceyhan.dev` alias continues serving installed clients and existing
+  origin-bound publisher credentials with the same signing key.
+- The coordinated SDK 1.0.1 distribution includes the new CLI registry default and keeps
+  protocol 1 compatibility with existing apps.
+- The official app catalog syncs in the background immediately after an update or restart,
+  retries after 30 seconds and refreshes every six hours. Failed fetches retain the last
+  verified catalog; disabled sources stay disabled and installed app versions stay unchanged.
+
 EveryOS 0.1.37 adds the desktop app platform and complete official app catalog.
 
 - Install signed desktop apps from the unified Store, run them in isolated windows, and use their

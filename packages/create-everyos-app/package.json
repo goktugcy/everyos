@@ -1,6 +1,6 @@
 {
   "name": "create-everyos-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Creates an EveryOS desktop app from a template: vanilla TypeScript, React, React with a widget, or a hybrid app that reads an EveryOS integration.",
   "type": "module",
   "license": "MIT",

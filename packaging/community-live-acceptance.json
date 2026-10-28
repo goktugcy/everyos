@@ -1,10 +1,10 @@
 {
   "format": "everyos-community-live-acceptance/1",
-  "everyosVersion": "0.1.37",
-  "origin": "https://everyos.goktugceyhan.dev",
+  "everyosVersion": "0.1.38",
+  "origin": "https://registry.everyos.net",
   "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
-  "verifiedAt": "2026-10-27T11:19:24.864Z",
-  "evidenceUrl": "https://github.com/goktugcy/everyos/blob/de7a4c88756b9d4195c68bbc606d3d55524da062/docs/evidence/community-20261027/live-lifecycle.json",
+  "verifiedAt": "2026-10-28T08:15:53.435Z",
+  "evidenceUrl": "https://github.com/goktugcy/everyos/blob/6d52677f74348c0cb53b5844ab6c7b1e0f53cc49/docs/evidence/community-20261028/live-lifecycle.json",
   "live": true,
   "checks": {
     "enrollment": "passed",
@@ -13,19 +13,5 @@
     "installation": "passed",
     "update": "passed",
     "revocation": "passed"
-  },
-  "originMigration": {
-    "format": "everyos-community-origin-migration/1",
-    "from": "https://everyos.goktugceyhan.dev",
-    "to": "https://registry.everyos.net",
-    "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
-    "verifiedAt": "2026-10-27T21:15:50.268Z",
-    "checks": {
-      "legacyEndpoint": "passed",
-      "newEndpoint": "passed",
-      "sameSigningKey": "passed",
-      "sameSignedCatalog": "passed"
-    },
-    "evidenceUrl": "https://github.com/goktugcy/everyos/blob/887bbcbe09cbedab6ad778fa1bdb383ff0f8db1e/docs/evidence/community-20261028/origin-migration.json"
   }
 }

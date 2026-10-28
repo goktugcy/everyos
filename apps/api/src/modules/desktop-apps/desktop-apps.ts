@@ -16,7 +16,7 @@ import { AppInstances } from "./instances.ts";
 import { DesktopAppRegistries, type FetcherFactory } from "./registries.ts";
 
 const REFRESH_INTERVAL_MS = 6 * 3_600_000;
-const FIRST_REFRESH_MS = 30_000;
+const STARTUP_RETRY_MS = 30_000;
 
 /** Desktop apps: registries, the installer and store assets, refreshed in the background. */
 export class DesktopAppsService {
@@ -124,7 +124,9 @@ export class DesktopAppsService {
 
   start(): void {
     const run = () => void this.refresh().catch(() => undefined);
-    this.#timers = [setTimeout(run, FIRST_REFRESH_MS), setInterval(run, REFRESH_INTERVAL_MS)];
+    // Updates restart the API: refresh the catalog immediately without delaying startup.
+    run();
+    this.#timers = [setTimeout(run, STARTUP_RETRY_MS), setInterval(run, REFRESH_INTERVAL_MS)];
     for (const timer of this.#timers) timer.unref();
     this.monitors.start();
   }

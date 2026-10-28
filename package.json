@@ -1,6 +1,6 @@
 {
   "name": "everyos-monorepo",
-  "version": "0.1.37",
+  "version": "0.1.38",
   "private": true,
   "description": "EveryOS \u2014 a self-hosted personal OS for your files, apps and Linux workspace.",
   "type": "module",

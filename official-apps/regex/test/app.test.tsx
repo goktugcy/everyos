@@ -49,15 +49,17 @@ const marks = () =>
 describe("Regex Tester", () => {
   it("highlights matches and lists groups as you type", async () => {
     await start();
+    // Mounting is concurrent: settle the initial worker/render before switching clocks.
+    await vi.waitFor(() => expect(marks()).toEqual(["ada@example.com", "grace@navy.com"]));
     const environment = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
     const previous = environment.IS_REACT_ACT_ENVIRONMENT;
     environment.IS_REACT_ACT_ENVIRONMENT = true;
     vi.useFakeTimers();
     try {
-      act(() => {
-        typeInto(pattern(), String.raw`(\d+)-(\d+)`);
-        typeInto(text(), "10-20 and 3-4");
-      });
+      act(() => typeInto(pattern(), String.raw`(\d+)-(\d+)`));
+      act(() => typeInto(text(), "10-20 and 3-4"));
+      expect(pattern().value).toBe(String.raw`(\d+)-(\d+)`);
+      expect(text().value).toBe("10-20 and 3-4");
       // Flush the debounce, then the worker reply after React commits the request.
       await act(async () => vi.advanceTimersByTimeAsync(200));
       await act(async () => vi.advanceTimersByTimeAsync(1));
