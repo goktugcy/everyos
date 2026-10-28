@@ -254,6 +254,78 @@ const code = async (response: Response) => (await json<ApiErrorBody>(response)).
 const sync = (client: TestClient) => client.post("/api/desktop-apps/registries/official/sync", {});
 
 describe("desktop app registries", () => {
+  it.each(["available", "unavailable", "untrusted"] as const)(
+    "refreshes the official catalog immediately after restart when the new index is %s",
+    async (state) => {
+      const { ctx, admin, viewer, registry } = await setup();
+      const notes = await buildApp(
+        "dev.everyos.notes",
+        "1.0.0",
+        ["storage:app"],
+        officialKeys.privateKey,
+      );
+      publish(registry, index([{ id: "dev.everyos.notes", versions: [notes] }]), [notes]);
+      expect((await sync(admin)).status).toBe(200);
+      expect(
+        (
+          await admin.post("/api/desktop-apps/installed", {
+            registryId: "official",
+            appId: "dev.everyos.notes",
+            approve: [],
+          })
+        ).status,
+      ).toBe(201);
+      const disabled = ctx.services.desktopApps.registries.create({
+        kind: "community",
+        name: "Disabled source",
+        url: `${registry.base}/disabled.json`,
+        publicKey: registryKeys.publicKey,
+        fingerprint: keyFingerprint(registryKeys.publicKey),
+        allowPrivate: true,
+      });
+      ctx.services.desktopApps.registries.update(disabled.id, { enabled: false });
+      if (state === "unavailable") registry.files.delete("/index.json");
+      else if (state === "untrusted")
+        registry.files.set("/index.json", Buffer.from("untrusted index"));
+      else {
+        const update = await buildApp(
+          "dev.everyos.notes",
+          "1.1.0",
+          ["storage:app"],
+          officialKeys.privateKey,
+        );
+        publish(
+          registry,
+          index([{ id: "dev.everyos.notes", versions: [notes, update] }], { sequence: 2 }),
+          [notes, update],
+        );
+      }
+      ctx.services.desktopApps.start();
+      try {
+        await vi.waitFor(() => {
+          const view = ctx.services.desktopApps.registries.view("official");
+          if (state === "available") expect(view.sequence).toBe(2);
+          else {
+            expect(view.lastError).not.toBeNull();
+            expect(view.sequence).toBe(1);
+          }
+        });
+        const { apps } = await json<{ apps: DesktopAppListing[] }>(
+          await viewer.get("/api/desktop-apps/catalog"),
+        );
+        expect(apps).toHaveLength(1);
+        expect(apps[0]?.version).toBe(state === "available" ? "1.1.0" : "1.0.0");
+        const installed = await json<{ apps: DesktopAppInstallationView[] }>(
+          await viewer.get("/api/desktop-apps/installed"),
+        );
+        expect(installed.apps[0]).toMatchObject({ version: "1.0.0", state: "active" });
+        expect(registry.requests.some((request) => request.path === "/disabled.json")).toBe(false);
+      } finally {
+        ctx.services.desktopApps.stop();
+      }
+    },
+  );
+
   it("syncs the official registry and lists its apps with permissions and a sniffed icon", async () => {
     const { admin, viewer, registry } = await setup();
     const notes = await buildApp(

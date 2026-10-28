@@ -33,6 +33,8 @@ its own Linux account, sets its fixture password through stdin, authenticates PA
 normal EveryOS API and performs the upgrade, app lifecycle, backup and supervised restore. Credentials
 remain in a root-only file in this VM. `--resume` is exclusively for diagnosing a harness failure
 before the core upgrade, using that same saved fixture account; it does not skip product assertions.
+The packaged runtime must load the signed official fixture catalog automatically after restart,
+within ten seconds and before any manual sync request.
 
 The measured report is `/srv/everyos-sdk-qualification/qualification.json`. Copy it out before stopping
 this newly created VM. It binds both package digests and explicitly identifies virtualization and the

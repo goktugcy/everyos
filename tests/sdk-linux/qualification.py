@@ -167,8 +167,10 @@ def main():
     csrf = session['csrfToken']
     assert request('/account/linux')['account']['name'] == 'sdk-qualification'
     request('/account/linux/unlock', {'linuxPassword': credentials['password']})
-    request('/desktop-apps/registries/official/sync', {})
     app_id = 'com.example.qualification'
+    catalog = wait(lambda: request('/desktop-apps/catalog')['apps'], 10)
+    assert any(app['appId'] == app_id and app['version'] == '1.0.0' for app in catalog)
+    record('packaged-official-catalog-syncs-automatically-after-restart')
     installed = request('/desktop-apps/installed', {'appId': app_id, 'registryId': 'official', 'approve': []})
     assert installed['version'] == '1.0.0'
     token = request('/app-sdk/instances', {'appId': app_id, 'kind': 'window'})['token']

@@ -8,6 +8,9 @@ EveryOS 0.1.38 fixes keyboard focus after closing Quick Settings and moves the c
   origin-bound publisher credentials with the same signing key.
 - The coordinated SDK 1.0.1 distribution includes the new CLI registry default and keeps
   protocol 1 compatibility with existing apps.
+- The official app catalog syncs in the background immediately after an update or restart,
+  retries after 30 seconds and refreshes every six hours. Failed fetches retain the last
+  verified catalog; disabled sources stay disabled and installed app versions stay unchanged.
 
 EveryOS 0.1.37 adds the desktop app platform and complete official app catalog.
 
