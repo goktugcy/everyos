@@ -1049,3 +1049,9 @@ The AMD64 official-app gate exposed a Regex Tester test race: the initial concur
 had not settled when the test switched to fake timers. The test now waits for the initial matches,
 commits each input change separately and checks both input values before advancing the debounce
 and worker reply. Its match/group assertions stay intact; the shipped app and worker are unchanged.
+
+The subsequent AMD64 regular browser run found an unrelated HTTPS fixture collision: the test
+picked an unchecked random port in the outbound ephemeral range. The API correctly reported
+`port-in-use`. The test now reserves an available port below that default range until the UI is
+ready to enable HTTPS, and its teardown disables the owned listener even after a failed assertion.
+This preserves the real CA download, trusted TLS health request and listener shutdown assertions.
