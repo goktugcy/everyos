@@ -1044,3 +1044,8 @@ enabled app registries in the background, including after an update. Integration
 a newer signed catalog, an unavailable endpoint and an untrusted index; cached verified data,
 disabled sources and installed app versions are preserved. Native package qualification also
 requires the catalog to appear before any manual sync request.
+
+The AMD64 official-app gate exposed a Regex Tester test race: the initial concurrent worker render
+had not settled when the test switched to fake timers. The test now waits for the initial matches,
+commits each input change separately and checks both input values before advancing the debounce
+and worker reply. Its match/group assertions stay intact; the shipped app and worker are unchanged.
