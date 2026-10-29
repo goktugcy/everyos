@@ -27,8 +27,11 @@ async function start(options: MockHostOptions = {}) {
   return rendered;
 }
 async function click(name: string) {
-  await new Promise((done) => setTimeout(done));
-  expect(byRole("button", name)).not.toBeNull();
+  await vi.waitFor(() => {
+    const button = byRole("button", name) as HTMLButtonElement | null;
+    expect(button).not.toBeNull();
+    expect(button?.disabled).toBe(false);
+  });
   byRole("button", name)!.click();
 }
 const cards = () => document.querySelectorAll(".gallery-photo");
