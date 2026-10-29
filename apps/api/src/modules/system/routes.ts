@@ -5,6 +5,8 @@ import {
   MetricsHistoryQuerySchema,
   PowerRequestSchema,
   ProcessQuerySchema,
+  ProcessInspectQuerySchema,
+  ProcessPidParamsSchema,
 } from "@everyos/shared/schemas";
 import type { TailscaleOverview } from "@everyos/shared";
 import { Hono } from "hono";
@@ -12,7 +14,7 @@ import type { AppEnv } from "../../context.ts";
 import { agentActor, callAgent } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import { confirmPassword } from "../../http/reauth.ts";
-import { parseJsonBody, parseQuery } from "../../http/validation.ts";
+import { parseJsonBody, parseParams, parseQuery } from "../../http/validation.ts";
 import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import { powerBlockers } from "./power.ts";
 import { analyzeTailscale } from "./tailscale.ts";
@@ -147,6 +149,12 @@ export function systemRoutes(services: Services): Hono<AppEnv> {
   app.get("/processes", async (c) => {
     const query = parseQuery(c, ProcessQuerySchema);
     return c.json(await callAgent(c, services, "processes.list", query));
+  });
+
+  app.get("/processes/:pid", async (c) => {
+    const params = parseParams(c, ProcessPidParamsSchema);
+    const query = parseQuery(c, ProcessInspectQuerySchema);
+    return c.json(await callAgent(c, services, "processes.get", { ...params, ...query }));
   });
 
   return app;

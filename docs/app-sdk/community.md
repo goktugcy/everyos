@@ -277,3 +277,7 @@ indexes and audit details. Access tokens and invitation secrets are stored only 
 Registry/admin secrets use Cloudflare secret bindings. Back up D1 and private R2 together, retain
 the registry key separately, and preserve `registry_state` and immutable index snapshots to avoid
 sequence rollback after restoration.
+
+The 0.1.39 live acceptance repeated installation, data-preserving update and signed revocation
+with the owner-reviewed acceptance versions 1.0.4 and 1.0.5. Both versions were then revoked;
+see the [public lifecycle evidence](../evidence/community-20261029/live-lifecycle.json).

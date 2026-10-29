@@ -29,7 +29,9 @@ import { DesktopAppDialog } from "./desktop-app-dialog.tsx";
 import { AddRegistryDialog, RegistryCard } from "./desktop-registries.tsx";
 import { DbConnections } from "./db-connections.tsx";
 import { NetworkRules } from "./network-rules.tsx";
-import { useDesktopApps } from "../../desktop-apps/store.ts";
+import { desktopAppWindowId, useDesktopApps } from "../../desktop-apps/store.ts";
+import { useAppMenu } from "../app-menu.tsx";
+import { ContextMenuArea } from "../../menus/menus.tsx";
 
 const TABS = ["browse", "installed", "catalogs"] as const;
 const TYPES = ["all", "docker", "desktop", "hybrid"] as const;
@@ -63,6 +65,7 @@ export default function StoreApp() {
     "/desktop-apps/installed",
     10_000,
   );
+  const appMenu = useAppMenu(() => desktopInstalled.reload());
   const registries = useApiResource<{ registries: DesktopAppRegistryView[] }>(
     canCatalog ? "/desktop-apps/registries" : null,
     60_000,
@@ -333,40 +336,45 @@ export default function StoreApp() {
           ) : null}
         </Tabs.Content>
         <Tabs.Content value="installed" className="flex flex-col gap-3 outline-none">
+          <ResourceError error={appMenu.error} />
           {desktopInstalled.data?.apps.length ? (
             <section className="flex flex-col gap-2" data-testid="desktop-apps-installed">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-fg-subtle">
                 {t("desktopApps.store.installedSection")}
               </h3>
               {desktopInstalled.data.apps.map((installation) => (
-                <button
+                <ContextMenuArea
                   key={installation.appId}
-                  type="button"
-                  onClick={() =>
-                    setDesktopSelected({ listing: listingOf(installation), installation })
-                  }
-                  className="glass-inset flex items-center gap-3 rounded-everyos-md p-3 text-left outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+                  entries={() => appMenu.menu(desktopAppWindowId(installation.appId), installation)}
                 >
-                  <img
-                    src={`${installation.runtimeUrl}${installation.icon}`}
-                    alt=""
-                    className="size-9 shrink-0 rounded-everyos-sm object-contain"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">
-                      {names[installation.appId] ?? installation.name}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDesktopSelected({ listing: listingOf(installation), installation })
+                    }
+                    className="glass-inset flex items-center gap-3 rounded-everyos-md p-3 text-left outline-none hover:bg-hover/8 focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    <img
+                      src={`${installation.runtimeUrl}${installation.icon}`}
+                      alt=""
+                      className="size-9 shrink-0 rounded-everyos-sm object-contain"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">
+                        {names[installation.appId] ?? installation.name}
+                      </span>
+                      <span className="block text-xs text-fg-muted">
+                        {installation.version}
+                        {installation.state !== "active"
+                          ? ` · ${t(`desktopApps.store.state.${installation.state}`)}`
+                          : ""}
+                        {listingOf(installation)?.updateAvailable
+                          ? ` · ${t("desktopApps.store.updateTo", { version: listingOf(installation)!.updateAvailable })}`
+                          : ""}
+                      </span>
                     </span>
-                    <span className="block text-xs text-fg-muted">
-                      {installation.version}
-                      {installation.state !== "active"
-                        ? ` · ${t(`desktopApps.store.state.${installation.state}`)}`
-                        : ""}
-                      {listingOf(installation)?.updateAvailable
-                        ? ` · ${t("desktopApps.store.updateTo", { version: listingOf(installation)!.updateAvailable })}`
-                        : ""}
-                    </span>
-                  </span>
-                </button>
+                  </button>
+                </ContextMenuArea>
               ))}
             </section>
           ) : null}

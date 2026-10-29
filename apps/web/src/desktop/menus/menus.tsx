@@ -113,10 +113,12 @@ export function ContextMenuArea({
   entries,
   children,
   disabled,
+  onCloseAutoFocus,
 }: {
   entries: () => MenuEntry[];
   children: ReactNode;
   disabled?: boolean;
+  onCloseAutoFocus?: (event: Event) => void;
 }) {
   // Entries are built only while the menu is open.
   const [open, setOpen] = useState(false);
@@ -151,16 +153,28 @@ export function ContextMenuArea({
       >
         {children}
       </CM.Trigger>
-      <CM.Portal>{open ? <ContextMenuBody entries={entries} /> : null}</CM.Portal>
+      <CM.Portal>
+        {open ? <ContextMenuBody entries={entries} onCloseAutoFocus={onCloseAutoFocus} /> : null}
+      </CM.Portal>
     </CM.Root>
   );
 }
 
-function ContextMenuBody({ entries }: { entries: () => MenuEntry[] }) {
+function ContextMenuBody({
+  entries,
+  onCloseAutoFocus,
+}: {
+  entries: () => MenuEntry[];
+  onCloseAutoFocus: ((event: Event) => void) | undefined;
+}) {
   const items = usePermittedEntries(entries());
   if (items.length === 0) return null;
   return (
-    <CM.Content className={contentClass} collisionPadding={8}>
+    <CM.Content
+      className={contentClass}
+      collisionPadding={8}
+      {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
+    >
       <Entries P={CM} entries={items} />
     </CM.Content>
   );

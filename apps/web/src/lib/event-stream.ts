@@ -46,6 +46,16 @@ let retryTimer: ReturnType<typeof setTimeout> | null = null;
 let reconcileTimer: ReturnType<typeof setTimeout> | null = null;
 let retryDelay = 1_000;
 let listening = false;
+let releaseSnapshot: { sessionId: string; value: unknown } | null = null;
+
+function releaseSessionId(): string | null {
+  const state = useSessionStore.getState();
+  return state.phase === "authenticated" &&
+    !state.locked &&
+    state.session?.permissions.includes("system:read")
+    ? state.session.session.id
+    : null;
+}
 
 function setStatus(status: StreamStatus): void {
   for (const subscription of subscriptions) subscription.status?.(status);
@@ -67,6 +77,7 @@ function close(): void {
 }
 
 function open(topics: string): void {
+  const sessionId = releaseSessionId();
   openTopics = topics;
   setStatus("connecting");
   const events = new EventSource(`/api/events?topics=${topics}`);
@@ -102,6 +113,13 @@ function open(topics: string): void {
         } catch {
           return;
         }
+        if (
+          name === "release.status" &&
+          sessionId !== null &&
+          sessionId === releaseSessionId() &&
+          [...subscriptions].some((item) => item.topic === "release")
+        )
+          releaseSnapshot = { sessionId, value: data };
         for (const subscription of subscriptions) {
           if (subscription.topic === topic) subscription.events?.[name]?.(data);
         }
@@ -144,6 +162,12 @@ function listenOnce(): void {
   listening = true;
   document.addEventListener("visibilitychange", reconcile);
   useSessionStore.subscribe((state, previous) => {
+    if (releaseSnapshot?.sessionId !== releaseSessionId()) releaseSnapshot = null;
+    if (state.session?.session.id !== previous.session?.session.id) {
+      close();
+      reconcile();
+      return;
+    }
     if (state.locked !== previous.locked || state.phase !== previous.phase) reconcile();
   });
 }
@@ -153,9 +177,13 @@ export function subscribeTopic(topic: string, handlers: TopicHandlers): () => vo
   listenOnce();
   const subscription: Subscription = { topic, ...handlers };
   subscriptions.add(subscription);
+  // The shared stream may already have delivered its initial snapshot before a window opens.
+  if (topic === "release" && releaseSnapshot && releaseSnapshot.sessionId === releaseSessionId())
+    handlers.events?.["release.status"]?.(releaseSnapshot.value);
   scheduleReconcile();
   return () => {
     subscriptions.delete(subscription);
+    if (![...subscriptions].some((item) => item.topic === "release")) releaseSnapshot = null;
     scheduleReconcile();
   };
 }

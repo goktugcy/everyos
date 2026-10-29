@@ -117,6 +117,7 @@ import {
 } from "./icon-grid.ts";
 import { ICON_PIXELS } from "@everyos/theme";
 import { isDesktopShortcut } from "../shortcut-keys.ts";
+import { useDesktopApps } from "../desktop-apps/store.ts";
 import {
   iconsInRect,
   moveSelection,
@@ -335,6 +336,7 @@ export function DesktopSurface() {
   const { t, i18n } = useTranslation();
   const trashMenu = useTrashMenu();
   const installedApps = useInstalledApps((state) => state.apps);
+  const desktopApps = useDesktopApps((state) => state.apps);
   const permissions = usePermissions();
   const desktopDoc = usePreferences((state) => state.desktop);
   const pinned = usePreferences((state) => state.dock.pinned);
@@ -380,12 +382,12 @@ export function DesktopSurface() {
   const allowed = useMemo(
     () =>
       new Set<string>([
-        ...allowedApps(permissions, { includeHidden: true }).map((app) => app.id),
+        ...allowedApps(permissions, { includeHidden: true, desktopApps }).map((app) => app.id),
         ...(permissions.includes("apps:read")
           ? installedApps.map((app) => installedAppId(app.id))
           : []),
       ]),
-    [permissions, installedApps],
+    [permissions, installedApps, desktopApps],
   );
   const icons = useMemo<Icon[]>(
     () => [

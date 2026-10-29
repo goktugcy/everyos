@@ -59,11 +59,13 @@ export function ChatTranscript({
   kind,
   compact = false,
   empty,
+  showUserMessages = true,
 }: {
   chat: Chat;
   kind: AiAgentKind;
   compact?: boolean;
   empty: ReactNode;
+  showUserMessages?: boolean;
 }) {
   const { t } = useTranslation();
   const scroll = useRef<HTMLDivElement>(null);
@@ -81,10 +83,12 @@ export function ChatTranscript({
       data-testid="ai-chat-messages"
     >
       {!chat.conversation?.messages.length && !chat.sending ? empty : null}
-      {chat.conversation?.messages.map((message, index) => (
-        <ChatMessage key={index} message={message} kind={kind} compact={compact} />
-      ))}
-      {chat.sending ? (
+      {chat.conversation?.messages
+        .filter((message) => showUserMessages || message.role === "assistant")
+        .map((message, index) => (
+          <ChatMessage key={index} message={message} kind={kind} compact={compact} />
+        ))}
+      {chat.sending && showUserMessages ? (
         <ChatMessage
           message={{ role: "user", content: chat.sending }}
           kind={kind}

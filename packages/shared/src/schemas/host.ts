@@ -289,25 +289,23 @@ export type TailscalePeers = z.infer<typeof TailscalePeersSchema>;
 
 /* ----------------------------- processes ----------------------------- */
 
+export const ProcessInfoSchema = z.object({
+  pid: z.number().int().positive(),
+  name: z.string().max(64),
+  user: z.string().max(64).nullable(),
+  state: z.string().max(4),
+  cpuPercent: n,
+  memoryBytes: n,
+  threads: n,
+  command: z.string().max(512),
+  startedAt: z.number().nullable(),
+});
+
 export const ProcessListSchema = z.object({
   source,
   sampledAt: n,
   total: n,
-  processes: z
-    .array(
-      z.object({
-        pid: z.number().int().positive(),
-        name: z.string().max(64),
-        user: z.string().max(64).nullable(),
-        state: z.string().max(4),
-        cpuPercent: n,
-        memoryBytes: n,
-        threads: n,
-        command: z.string().max(512),
-        startedAt: z.number().nullable(),
-      }),
-    )
-    .max(500),
+  processes: z.array(ProcessInfoSchema).max(500),
 });
 
 export type ProcessList = z.infer<typeof ProcessListSchema>;
@@ -323,6 +321,28 @@ export const UnitNameSchema = z
   .string()
   .regex(UNIT_NAME_PATTERN, "unit-name")
   .refine((v) => !v.includes(".."));
+
+export const ProcessInspectRequestSchema = z.strictObject({
+  pid: z.coerce.number().int().positive().max(2_147_483_647),
+  startedAt: z.coerce.number().nonnegative().optional(),
+});
+export const ProcessInspectQuerySchema = ProcessInspectRequestSchema.omit({ pid: true });
+export const ProcessPidParamsSchema = ProcessInspectRequestSchema.pick({ pid: true });
+export const ProcessDetailSchema = ProcessInfoSchema.extend({
+  source,
+  sampledAt: n,
+  parentPid: z.number().int().nonnegative().nullable(),
+  virtualMemoryBytes: n.nullable(),
+  threads: n.nullable(),
+  executable: z.string().max(4096).nullable(),
+  workingDirectory: z.string().max(4096).nullable(),
+  serviceUnit: UnitNameSchema.nullable(),
+  containerId: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .nullable(),
+});
+export type ProcessDetail = z.infer<typeof ProcessDetailSchema>;
 
 export const ServiceUnitSchema = z.object({
   name: z.string().max(256),

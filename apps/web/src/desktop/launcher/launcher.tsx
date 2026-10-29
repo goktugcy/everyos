@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 import { appTitle } from "../apps/app-title.ts";
 import { Dialog } from "radix-ui";
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../lib/cn.ts";
 import { usePermissions } from "../../stores/session-store.ts";
@@ -12,9 +12,14 @@ import { formatShortcut } from "../menus/menu-model.ts";
 import { desktop } from "../state/controller.ts";
 import { useLauncher } from "./launcher-store.ts";
 import { searchEntries } from "./search.ts";
+import { useDesktopApps } from "../desktop-apps/store.ts";
+import { useAppMenu } from "../apps/app-menu.tsx";
+import { ContextMenuArea } from "../menus/menus.tsx";
+import { ResourceError } from "../apps/system/parts.tsx";
 
 interface Result {
   id: string;
+  appId?: string;
   title: string;
   keywords: readonly string[];
   section: "apps" | "commands";
@@ -31,17 +36,27 @@ export function Launcher() {
   const permissions = usePermissions();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  const input = useRef<HTMLInputElement>(null);
+  const desktopApps = useDesktopApps();
+  const appMenu = useAppMenu(() => {
+    close();
+    setQuery("");
+    setActive(0);
+  });
 
   const all = useMemo<Result[]>(() => {
     if (!isOpen) return [];
-    const apps: Result[] = allowedApps(permissions).map((app) => ({
-      id: `app:${app.id}`,
-      title: appTitle(app, t),
-      keywords: app.keywords ?? [],
-      section: "apps",
-      icon: <AppIcon manifest={app} size={28} />,
-      run: () => desktop.openApp(app.id),
-    }));
+    const apps: Result[] = allowedApps(permissions, { desktopApps: desktopApps.apps }).map(
+      (app) => ({
+        id: `app:${app.id}`,
+        appId: app.id,
+        title: appTitle(app, t),
+        keywords: app.keywords ?? [],
+        section: "apps",
+        icon: <AppIcon manifest={app} size={28} />,
+        run: () => desktop.openApp(app.id),
+      }),
+    );
     const commands: Result[] = buildCommands(t).map((command) => ({
       id: `cmd:${command.id}`,
       title: command.title,
@@ -56,7 +71,7 @@ export function Launcher() {
       run: command.run,
     }));
     return [...apps, ...commands];
-  }, [isOpen, permissions, t]);
+  }, [isOpen, permissions, t, desktopApps]);
 
   const results = useMemo(() => {
     const matched = searchEntries(all, query, 30);
@@ -77,7 +92,23 @@ export function Launcher() {
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === "ArrowDown") {
+    if (event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey)) {
+      const result = results[active];
+      if (!result?.appId) return;
+      event.preventDefault();
+      const target = document.getElementById(`launcher-${result.id}`);
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      target.dispatchEvent(
+        new MouseEvent("contextmenu", {
+          bubbles: true,
+          cancelable: true,
+          button: 2,
+          clientX: rect.left + 16,
+          clientY: rect.bottom,
+        }),
+      );
+    } else if (event.key === "ArrowDown") {
       event.preventDefault();
       setActive((index) => Math.min(results.length - 1, index + 1));
     } else if (event.key === "ArrowUp") {
@@ -116,6 +147,7 @@ export function Launcher() {
           <div className="flex items-center gap-3 border-b border-line px-4">
             <Search className="size-5 shrink-0 text-fg-subtle" aria-hidden />
             <input
+              ref={input}
               autoFocus
               value={query}
               onChange={(event) => {
@@ -138,6 +170,7 @@ export function Launcher() {
             aria-label={t("launcher.title")}
             className="overflow-y-auto p-2"
           >
+            <ResourceError error={appMenu.error} />
             {results.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-fg-muted">
                 {t("launcher.noResults")}
@@ -158,28 +191,37 @@ export function Launcher() {
                     index++;
                     const position = index;
                     return (
-                      <div
+                      <ContextMenuArea
                         key={result.id}
-                        id={`launcher-${result.id}`}
-                        role="option"
-                        aria-selected={position === active}
-                        onPointerMove={() => setActive(position)}
-                        onClick={() => run(result)}
-                        className={cn(
-                          "flex cursor-default items-center gap-3 rounded-everyos-md px-3 py-2 text-sm",
-                          position === active
-                            ? "bg-[rgb(var(--everyos-accent)/0.2)] text-fg"
-                            : "text-fg-muted",
-                        )}
+                        disabled={!result.appId}
+                        entries={() => (result.appId ? appMenu.menu(result.appId) : [])}
+                        onCloseAutoFocus={(event) => {
+                          event.preventDefault();
+                          if (useLauncher.getState().isOpen) input.current?.focus();
+                        }}
                       >
-                        {result.icon}
-                        <span className="flex-1 truncate">{result.title}</span>
-                        {result.shortcut ? (
-                          <kbd className="font-sans text-xs text-fg-subtle">
-                            {formatShortcut(result.shortcut)}
-                          </kbd>
-                        ) : null}
-                      </div>
+                        <div
+                          id={`launcher-${result.id}`}
+                          role="option"
+                          aria-selected={position === active}
+                          onPointerMove={() => setActive(position)}
+                          onClick={() => run(result)}
+                          className={cn(
+                            "flex cursor-default items-center gap-3 rounded-everyos-md px-3 py-2 text-sm",
+                            position === active
+                              ? "bg-[rgb(var(--everyos-accent)/0.2)] text-fg"
+                              : "text-fg-muted",
+                          )}
+                        >
+                          {result.icon}
+                          <span className="flex-1 truncate">{result.title}</span>
+                          {result.shortcut ? (
+                            <kbd className="font-sans text-xs text-fg-subtle">
+                              {formatShortcut(result.shortcut)}
+                            </kbd>
+                          ) : null}
+                        </div>
+                      </ContextMenuArea>
                     );
                   })}
                 </div>

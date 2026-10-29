@@ -1,3 +1,4 @@
+import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
 
 /** Simplified Chinese. */
@@ -1688,6 +1689,7 @@ export const zh: LocaleMessages = {
       health: "警告",
     },
     processes: {
+      ...en.monitor.processes,
       pid: "PID",
       name: "名称",
       user: "用户",

@@ -25,6 +25,7 @@ import { Dialog } from "../../components/ui/dialog.tsx";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { WallpaperView } from "../wallpaper/wallpaper-view.tsx";
 import { AppContent } from "../windows/app-content.tsx";
+import { useDesktopApps } from "../desktop-apps/store.ts";
 
 interface OpenApp {
   appId: AppId;
@@ -39,6 +40,7 @@ interface OpenApp {
 export function MobileShell() {
   const { t } = useTranslation();
   const permissions = usePermissions();
+  const desktopApps = useDesktopApps();
   const user = useSessionStore((state) => state.session?.user);
   const locked = useSessionStore((state) => state.locked);
   const lock = useSessionStore((state) => state.lock);
@@ -49,8 +51,12 @@ export function MobileShell() {
   useAutoLock();
 
   const apps = useMemo(
-    () => allowedApps(permissions).map((app) => ({ ...app, title: appTitle(app, t) })),
-    [permissions, t],
+    () =>
+      allowedApps(permissions, { desktopApps: desktopApps.apps }).map((app) => ({
+        ...app,
+        title: appTitle(app, t),
+      })),
+    [permissions, t, desktopApps],
   );
   const visible = searchEntries(
     apps.map((app) => ({ ...app, id: app.id, keywords: app.keywords ?? [] })),

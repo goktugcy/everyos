@@ -49,6 +49,7 @@ import { useWindowManager, wm } from "../state/window-store.ts";
 import { gridMetrics } from "../surface/icon-grid.ts";
 import { useThemeStore } from "../theme/theme-store.ts";
 import { workArea } from "@everyos/window-manager";
+import { useDesktopApps } from "../desktop-apps/store.ts";
 
 interface DockWindow {
   id: string;
@@ -243,8 +244,8 @@ function DockItem({
                 : "bottom center",
             }}
             onClick={() => activateApp(appId, windows)}
-            {...attributes}
-            {...listeners}
+            {...(sortable ? attributes : {})}
+            {...(sortable ? listeners : {})}
           >
             <AppIcon manifest={manifest} size={Math.round(dock.iconSize * 0.86)} />
           </button>
@@ -296,6 +297,7 @@ function TaskbarWindow({ window, focused }: { window: DockWindow; focused: boole
 export function Dock() {
   const { t } = useTranslation();
   useInstalledApps((state) => state.apps);
+  useDesktopApps();
   const dock = usePreferences((state) => state.dock);
   const permissions = usePermissions();
   const windows = useDockWindows();

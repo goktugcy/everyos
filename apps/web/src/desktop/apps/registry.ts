@@ -430,11 +430,10 @@ function desktopAppManifest(app: DesktopAppInstallationView): DesktopAppManifest
   };
 }
 
-function desktopApps(): DesktopAppManifest[] {
-  return useDesktopApps
-    .getState()
-    .apps.filter((app) => app.state === "active")
-    .map(desktopAppManifest);
+function desktopApps(
+  apps: readonly DesktopAppInstallationView[] = useDesktopApps.getState().apps,
+): DesktopAppManifest[] {
+  return apps.filter((app) => app.state === "active").map(desktopAppManifest);
 }
 
 export function getApp(id: string): DesktopAppManifest | undefined {
@@ -464,9 +463,9 @@ export function isAppAllowed(
 /** Apps the user may see, in registry order. */
 export function allowedApps(
   permissions: readonly Permission[],
-  options: { includeHidden?: boolean } = {},
+  options: { includeHidden?: boolean; desktopApps?: readonly DesktopAppInstallationView[] } = {},
 ): DesktopAppManifest[] {
-  return [...APP_MANIFESTS, ...desktopApps()].filter(
+  return [...APP_MANIFESTS, ...desktopApps(options.desktopApps)].filter(
     (manifest) =>
       isAppAllowed(manifest, permissions) && (options.includeHidden || !manifest.hidden),
   );

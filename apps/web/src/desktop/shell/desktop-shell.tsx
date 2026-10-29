@@ -61,6 +61,7 @@ import { useNotificationStream } from "../notifications/store.ts";
 import { Pulse } from "../pulse/pulse.tsx";
 import { WindowLayer } from "../windows/window-layer.tsx";
 import { MobileShell } from "./mobile-shell.tsx";
+import { useUpdateReload } from "../../features/updates/use-update-reload.ts";
 
 /** Restores the window session once and keeps the viewport in sync. */
 function useWindowSession(): void {
@@ -173,6 +174,7 @@ export function DesktopShell() {
   const sessionId = useSessionStore((state) => state.session?.session.id);
   const locked = useSessionStore((state) => state.locked);
   const mobile = useMediaQuery("(max-width: 767px)");
+  useUpdateReload(ready && !locked && Boolean(permissions?.includes("system:read")));
   useNotificationStream(ready && !locked && Boolean(permissions?.includes("notifications:read")));
   useLiveDisksStream(ready && !locked && Boolean(permissions?.includes("system:read")));
   useTransfersStream(ready && !locked && Boolean(permissions?.includes("files:read")));
