@@ -24,20 +24,20 @@ export function useUpdateReload(enabled: boolean): void {
     let controller: AbortController | null = null;
     const accept = (value: SelfUpdateStatus) => {
       revision++;
-      controller?.abort();
       void observe.current?.(value);
     };
     const refresh = async () => {
-      if (document.visibilityState !== "visible") return;
-      controller?.abort();
+      if (document.visibilityState !== "visible" || controller !== null) return;
       controller = new AbortController();
-      const signal = controller.signal;
+      const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]);
       const requestRevision = ++revision;
       try {
         const value = await api<SelfUpdateStatus>("/self-update", { signal, quiet401: true });
         if (!disposed && !signal.aborted && revision === requestRevision) accept(value);
       } catch {
         /* Expected while the API restarts; a later read must prove completion. */
+      } finally {
+        controller = null;
       }
     };
     const unsubscribe = subscribeTopic("release", {

@@ -33,6 +33,11 @@ prevents the retained completed job from causing a reload loop; a current bundle
 Polling and visibility recovery cover missed events during API restarts. Failed, unfinished and
 rolled-back jobs do not trigger this refresh.
 
+The shared release stream retains its latest status for windows opened later in the same unlocked
+session with `system:read`. Locking, signing out, changing sessions or losing that permission clears
+the snapshot. Recovery reads run one at a time with a bounded timeout; a newer stream status
+invalidates an older HTTP response without aborting a healthy request.
+
 The default release source is `https://github.com/goktugcy/everyos/releases`. The verified
 installer records this source and the independently supplied publisher public key in root-owned
 `/etc/everyos/release.json`. The one-command `install.sh` bootstrap embeds the same public key;
