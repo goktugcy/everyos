@@ -4,6 +4,7 @@ export * from "./collect/hardware.ts";
 export * from "./collect/metrics.ts";
 export * from "./collect/network.ts";
 export * from "./collect/processes.ts";
+export * from "./collect/process-detail.ts";
 export * from "./collect/sockets.ts";
 export * from "./collect/storage.ts";
 export * from "./docker/client.ts";

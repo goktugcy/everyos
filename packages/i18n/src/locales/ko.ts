@@ -1,3 +1,4 @@
+import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
 
 /** Korean. */
@@ -1743,6 +1744,7 @@ export const ko: LocaleMessages = {
       health: "경고",
     },
     processes: {
+      ...en.monitor.processes,
       pid: "PID",
       name: "이름",
       user: "사용자",

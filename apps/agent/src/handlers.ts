@@ -15,6 +15,7 @@ import {
   collectMetrics,
   collectNetwork,
   collectProcesses,
+  collectProcessDetail,
   collectSockets,
   collectStorage,
   collectSystemInfo,
@@ -58,6 +59,7 @@ export interface HandlerDependencies {
   paths?: HostPaths;
   now?: () => number;
   collect?: () => Promise<SystemInfo>;
+  inspectProcess?: typeof collectProcessDetail;
   tailscaleSockets?: readonly string[];
   /** Concurrent `journalctl --follow` processes across all connections. */
   maxLogFollows?: number;
@@ -374,6 +376,16 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
         processes: showCommands ? processes : processes.map((p) => ({ ...p, command: p.name })),
       };
       return result;
+    },
+
+    "processes.get": async ({ pid, startedAt }, { actor }) => {
+      const detail = await (deps.inspectProcess ?? collectProcessDetail)(pid, { paths, now });
+      if (!detail || (startedAt !== undefined && detail.startedAt !== startedAt))
+        throw new OperationError("not_found", "Process exited or its PID was reused");
+      const privileged = actor.kind === "user" && roleHasPermission(actor.role, "system:manage");
+      return privileged
+        ? detail
+        : { ...detail, command: detail.name, executable: null, workingDirectory: null };
     },
 
     "services.list": (_params, { signal }) =>

@@ -65,6 +65,7 @@ export type {
   MetricsSample,
   NetworkStatus,
   ProcessList,
+  ProcessDetail,
   ServiceDetail,
   ServiceList,
   ServiceUnit,

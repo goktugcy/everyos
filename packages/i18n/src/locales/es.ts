@@ -1,3 +1,4 @@
+import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
 
 /** Spanish. */
@@ -1784,6 +1785,7 @@ export const es: LocaleMessages = {
       health: "Advertencias",
     },
     processes: {
+      ...en.monitor.processes,
       pid: "PID",
       name: "Nombre",
       user: "Usuario",
