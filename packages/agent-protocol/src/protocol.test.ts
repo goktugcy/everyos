@@ -123,6 +123,7 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "tailscale.serve": notUsed,
     "tailscale.peers": notUsed,
     "processes.list": notUsed,
+    "processes.get": notUsed,
     "services.list": notUsed,
     "services.get": notUsed,
     "services.control": notUsed,

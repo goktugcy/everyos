@@ -1,3 +1,4 @@
+import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
 
 /** Italian. */
@@ -1786,6 +1787,7 @@ export const it: LocaleMessages = {
       health: "Avvisi",
     },
     processes: {
+      ...en.monitor.processes,
       pid: "PID",
       name: "Nome",
       user: "Utente",

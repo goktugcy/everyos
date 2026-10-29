@@ -169,6 +169,14 @@ committed. Updates keep the previous version until the new one is active, so a f
 back; uninstall removes files, storage, grants and widgets after confirmation. The installed
 `.eosapp` is kept so backups and restores do not depend on the registry.
 
+The Applications folder lists installed SDK apps alongside managed host apps. Its context menu
+and the launcher offer Open, Add to Desktop and Pin/Unpin Dock; the Store's installed SDK list
+offers the same actions. Installed SDK apps additionally
+offer confirmed uninstall. Permission filtering is a UI hint; the existing API still authorizes
+removal. Desktop, Dock and launcher subscribe to the SDK installation store so a newly installed
+app's shortcut and icon appear immediately without reloading the page. Successful uninstall
+closes its windows and removes this person's saved shortcuts and Dock pins.
+
 ## Registries
 
 A registry is an HTTPS (or allowlisted HTTP) URL serving a signed index (`{payload, signature}`, the

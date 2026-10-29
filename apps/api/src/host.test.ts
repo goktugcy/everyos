@@ -123,6 +123,22 @@ describe("metrics hub", () => {
 });
 
 describe("system endpoints", () => {
+  it("validates process identity and query fields before sending an inspection to the agent", async () => {
+    const { ctx, viewer } = await withRoles();
+    ctx.agent.handlers.set("processes.get", () => ({ pid: 42, startedAt: 100 }));
+    expect((await viewer.get("/api/system/processes/42?startedAt=100")).status).toBe(200);
+    expect(ctx.agent.calls.at(-1)).toMatchObject({
+      op: "processes.get",
+      params: { pid: 42, startedAt: 100 },
+      actor: { role: "viewer" },
+    });
+    const before = ctx.agent.calls.length;
+    for (const path of ["0", "-1", "nope", "42?command=kill", "42?startedAt=-1"])
+      expect((await viewer.get(`/api/system/processes/${path}`)).status, path).toBe(400);
+    expect(ctx.agent.calls).toHaveLength(before);
+    const anonymous = new TestClient(ctx);
+    expect((await anonymous.get("/api/system/processes/42")).status).toBe(401);
+  });
   it("serves host data to every role with system:read", async () => {
     const { viewer } = await withRoles();
     for (const path of ["storage", "hardware", "power", "network", "tailscale", "processes"]) {

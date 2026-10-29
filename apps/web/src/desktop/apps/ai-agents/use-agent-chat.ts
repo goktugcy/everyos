@@ -76,8 +76,8 @@ export function useAgentChat(kind: AiAgentKind) {
     setInput("");
     setError(null);
   };
-  const send = async () => {
-    const content = input.trim();
+  const send = async (providedContent?: string) => {
+    const content = (providedContent ?? input).trim();
     if (!content || pending || reading || locked) return;
     request.current?.abort();
     const controller = new AbortController();

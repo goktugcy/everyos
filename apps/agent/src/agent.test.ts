@@ -1,9 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Actor } from "@everyos/agent-protocol";
 import { silentLogger } from "@everyos/logger";
-import type { SystemInfo } from "@everyos/shared";
+import type { ProcessDetail, SystemInfo } from "@everyos/shared";
 import {
   createDockerClient,
   createDockerSimulator,
@@ -292,6 +293,42 @@ describe("unit protection and policy", () => {
 });
 
 describe("host operation handlers", () => {
+  it("protects process paths and arguments and rejects an exited or reused PID", async () => {
+    const detail: ProcessDetail = {
+      source: "host",
+      sampledAt: 1000,
+      pid: 42,
+      parentPid: 1,
+      name: "worker",
+      user: "www",
+      state: "S",
+      cpuPercent: 1,
+      memoryBytes: 1024,
+      virtualMemoryBytes: 2048,
+      threads: 2,
+      command: `worker --token=${randomUUID()}`,
+      executable: "/private/bin/worker",
+      workingDirectory: "/private/data",
+      startedAt: 100,
+      serviceUnit: "worker.service",
+      containerId: null,
+    };
+    const inspectProcess = vi.fn().mockResolvedValue(detail);
+    const handlers = createHandlers(deps({ inspectProcess }));
+    expect(
+      await handlers["processes.get"]({ pid: 42, startedAt: 100 }, contextFor(operator)),
+    ).toMatchObject({ command: "worker", executable: null, workingDirectory: null });
+    expect(await handlers["processes.get"]({ pid: 42, startedAt: 100 }, contextFor(admin))).toEqual(
+      detail,
+    );
+    await expect(
+      handlers["processes.get"]({ pid: 42, startedAt: 99 }, contextFor(admin)),
+    ).rejects.toMatchObject({ code: "not_found" });
+    inspectProcess.mockResolvedValue(null);
+    await expect(handlers["processes.get"]({ pid: 42 }, contextFor(admin))).rejects.toMatchObject({
+      code: "not_found",
+    });
+  });
   it("hides process command lines from actors who cannot manage the system", async () => {
     const handlers = createHandlers(deps());
     const asOperator = await handlers["processes.list"](

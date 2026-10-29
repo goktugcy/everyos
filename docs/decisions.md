@@ -925,3 +925,7 @@ A browser regression holds the close task until another app input is selected, v
 real shell exit, and separately checks ordinary keyboard restoration. The existing terminal tests
 and terminal client remain unchanged. SDK packages advance together to 1.0.1 so the new CLI
 registry default does not reuse already published 1.0.0 archive versions.
+
+## Process controls use the supervisor
+
+The process inspector delegates Stop, Restart and Reload to the process's verified systemd service or Docker container. It does not replay command lines or expose raw PID signals: command arguments are not a reliable restart specification, PID reuse can target an unrelated process, and existing supervisor policy must keep protecting EveryOS and remote access. Independent processes remain inspectable with a visible explanation for unavailable controls. See [processes.md](processes.md).
