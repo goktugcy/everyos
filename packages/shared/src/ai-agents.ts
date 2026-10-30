@@ -5,6 +5,16 @@ import { SUPPORTED_LOCALES } from "./locale.ts";
 export const AI_AGENT_KINDS = ["local", "hermes", "openclaw"] as const;
 export const AI_AGENT_CATALOG_ID = "2d17f74b-a6bf-4bc1-a6e0-cece08c09f07";
 export type AiAgentKind = (typeof AI_AGENT_KINDS)[number];
+
+/** A one-off process explanation; it does not become an assistant conversation. */
+export interface ProcessExplanationResult {
+  answer: string;
+  model: AiModelRef | null;
+  name: string;
+  pid: number;
+  startedAt: number | null;
+  source: "host" | "simulated";
+}
 /** `ollama` is the EveryOS-installed Ollama, reached by managed agents over a private network. */
 export const AI_PROVIDERS = ["openrouter", "openai", "ollama", "custom"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];

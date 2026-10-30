@@ -2,7 +2,7 @@
 
 The SDK is distributed as five npm-compatible archives attached to the complete EveryOS release:
 `@everyos/app-sdk`, `@everyos/app-testing`, `@everyos/app-ui`, `@everyos/app-cli` and
-`create-everyos-app`. SDK version 1.0.2 is independent of the EveryOS version. Publication to npm
+`create-everyos-app`. SDK version 1.0.3 is independent of the EveryOS version. Publication to npm
 is optional and has not been performed by the development workflow.
 
 ```bash
@@ -37,7 +37,7 @@ CI runs this qualification on both Linux architectures; failures remain release 
 To try a local build without publication:
 
 ```bash
-npm exec --yes --package ./dist/sdk/create-everyos-app-1.0.2.tgz -- create-everyos-app /tmp/my-everyos-app --template react --packages "$PWD/dist/sdk"
+npm exec --yes --package ./dist/sdk/create-everyos-app-1.0.3.tgz -- create-everyos-app /tmp/my-everyos-app --template react --packages "$PWD/dist/sdk"
 cd /tmp/my-everyos-app
 npm install --ignore-scripts
 npm run typecheck
@@ -62,8 +62,8 @@ identity. Production private keys are only supplied to the protected signing job
 The package job runs `node scripts/release-preflight.ts` before any signing. An absent community
 anchor, a missing live acceptance receipt or an invalid/expired live signed index blocks publication.
 The production service and independent public-key pin are present, and the real human-reviewed
-six-step lifecycle passes. The current receipt binds EveryOS 0.1.39 to
-[immutable live evidence](../evidence/community-20261028/live-lifecycle.json). Standalone SDK tests
+six-step lifecycle passes. The current receipt binds EveryOS 0.1.40 to
+[immutable live evidence](../evidence/community-20261030/live-lifecycle.json). Standalone SDK tests
 remain one part of the complete release gate.
 
 `https://registry.everyos.net/index.json` and its independently retained key are pinned in
@@ -78,7 +78,7 @@ final OS, SDK and official app artifacts together before publishing the complete
 Historical lifecycle receipts retain the origin on which the human review actually occurred.
 After the 2026-10-28 domain change a receipt from the legacy origin also requires fresh migration
 evidence for the exact old/new origins, the same signing key and identical signed catalogs from both
-endpoints. The fresh 0.1.39 lifecycle uses the canonical origin for installation, update and
+endpoints. The fresh 0.1.40 lifecycle uses the canonical origin for installation, update and
 revocation checks, while retaining the existing owner-verified publisher and its origin-bound
 credential on the legacy alias. Migration evidence does not replace the six lifecycle checks,
 their candidate-version binding or their freshness limit.

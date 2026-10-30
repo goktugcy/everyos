@@ -28,6 +28,8 @@ import { DEFAULT_LOCAL_BEHAVIOR, EVERYOS_AI_NETWORK } from "../packages/shared/s
 import { localRequest } from "../apps/api/src/modules/ai-agents/behavior.ts";
 import { streamAgentChat } from "../apps/api/src/modules/ai-agents/chat-client.ts";
 import { NativeAgents } from "../apps/agent/src/native-agents.ts";
+import { processExplanationTask } from "../apps/api/src/modules/ai-agents/process-explanation.ts";
+import type { ProcessDetail } from "../packages/shared/src/index.ts";
 
 const RUNTIMES: readonly AgentRuntime[] = ["hermes", "openclaw"];
 /** The smallest Ollama library model (~270 MB); its answers only need to be non-empty. */
@@ -46,7 +48,11 @@ async function privilegedFixture(args: string[]) {
   });
 }
 const key = randomBytes(32).toString("hex");
-const calls: Array<{ tools?: Array<{ function?: { name?: string } }>; model?: string }> = [];
+const calls: Array<{
+  tools?: Array<{ function?: { name?: string } }>;
+  model?: string;
+  messages?: unknown;
+}> = [];
 const handle = async (request: IncomingMessage, response: ServerResponse) => {
   if (request.url === "/v1/models") {
     response.setHeader("Content-Type", "application/json");
@@ -64,6 +70,7 @@ const handle = async (request: IncomingMessage, response: ServerResponse) => {
     stream?: boolean;
     tools?: Array<{ function?: { name?: string } }>;
     model?: string;
+    messages?: unknown;
   };
   calls.push(input);
   const base = {
@@ -208,6 +215,50 @@ try {
   if (!tuned.trim())
     throw new Error("ollama: native chat with behavior options returned no answer");
   console.log("ollama: native streamed chat with instructions and behavior options verified");
+  const processSample: ProcessDetail = {
+    source: "simulated",
+    sampledAt: Date.now(),
+    pid: 42001,
+    parentPid: 1,
+    name: "nginx",
+    user: null,
+    state: "S",
+    cpuPercent: 1.5,
+    memoryBytes: 1024 ** 2 * 32,
+    virtualMemoryBytes: null,
+    threads: 2,
+    startedAt: null,
+    serviceUnit: "nginx.service",
+    containerId: null,
+    command: "nginx",
+    executable: null,
+    workingDirectory: null,
+  };
+  const processTask = processExplanationTask(processSample, "en");
+  const explanation = await streamAgentChat({
+    url: `${ollamaUrl}/api/chat`,
+    key: "",
+    model: TINY_MODEL,
+    user: `everyos-process-${randomUUID()}`,
+    messages: [
+      { role: "system", content: processTask.system },
+      { role: "user", content: processTask.content },
+    ],
+    protocol: "ollama",
+    parameters: { temperature: 0.2, num_predict: 400, num_ctx: 4096 },
+    signal: AbortSignal.timeout(180_000),
+    onDelta: () => Promise.resolve(),
+  });
+  if (!explanation.trim()) throw new Error("ollama: process diagnostic returned no answer");
+  console.log(
+    JSON.stringify({
+      check: "real local process explanation transport",
+      model: TINY_MODEL,
+      source: "simulated",
+      answer: explanation.slice(0, 1500),
+      semanticQualityAsserted: false,
+    }),
+  );
 
   for (const kind of RUNTIMES) {
     const id = randomUUID(),
@@ -275,6 +326,33 @@ try {
         throw new Error(`${kind}: tools-off configuration still exposes tools`);
       console.log(
         `${kind}: real API, configured model, streamed answer and disabled tools verified`,
+      );
+      const previousCalls = calls.length;
+      const processAnswer = await streamAgentChat({
+        url: `${baseUrl}/v1/chat/completions`,
+        key,
+        model: AGENT_MODELS[kind],
+        user: `everyos-process-${randomUUID()}`,
+        messages: [
+          { role: "system", content: processTask.system },
+          { role: "user", content: processTask.content },
+        ],
+        fields: { tool_choice: "none" },
+        signal: AbortSignal.timeout(120_000),
+        onDelta: () => Promise.resolve(),
+      });
+      const taskForwarded = calls.slice(previousCalls).some((call) => {
+        const messages = JSON.stringify(call.messages ?? []);
+        return (
+          messages.includes("operating-system process") &&
+          messages.includes("nginx") &&
+          messages.includes("42001")
+        );
+      });
+      if (!processAnswer.includes("runtime-smoke-ok") || !taskForwarded)
+        throw new Error(`${kind}: process task context was not forwarded to the model provider`);
+      console.log(
+        `${kind}: process-specific instructions and snapshot reach the model provider through the real runtime`,
       );
       await command([...cli, "down", "--remove-orphans"]);
       await privilegedFixture(["chown", "-R", `${process.getuid!()}:${process.getgid!()}`, data]);

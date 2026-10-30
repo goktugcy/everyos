@@ -16,6 +16,9 @@ import {
   type AiModelRef,
   type AppJobView,
   type LocalBehavior,
+  type Locale,
+  type ProcessDetail,
+  type ProcessExplanationResult,
 } from "@everyos/shared";
 import type { AiAgentSettingsSchema } from "@everyos/shared/schemas";
 import { z } from "zod";
@@ -32,6 +35,7 @@ import {
 } from "../integrations/http.ts";
 import { localRequest } from "./behavior.ts";
 import { AgentRunError, streamAgentChat } from "./chat-client.ts";
+import { processExplanationTask } from "./process-explanation.ts";
 import type { LocalModelService } from "./local-models.ts";
 import {
   AGENT_MODELS,
@@ -951,6 +955,7 @@ export class AiAgentService {
       signal: AbortSignal;
       onDelta: (text: string) => Promise<void>;
       behavior?: LocalBehavior;
+      processInstructions?: string;
     },
   ): Promise<string> {
     const local = row.kind === "local";
@@ -961,19 +966,95 @@ export class AiAgentService {
     // Hermes answers with another model when a request names it together with its provider.
     const chosen = row.kind === "hermes" ? stored.chatModel : null;
     const turns = messages.map(({ role, content }) => ({ role, content }));
+    const system = options.processInstructions ?? request?.system;
+    const parameters = options.processInstructions
+      ? {
+          ...request?.parameters,
+          temperature: 0.2,
+          ...(protocol === "ollama" ? { num_predict: 1200 } : { max_tokens: 1200 }),
+        }
+      : request?.parameters;
     return streamAgentChat({
       url: joinUrl(base, protocol === "ollama" ? "/api/chat" : "/v1/chat/completions"),
       key: stored.gatewayKey,
       model: chosen?.model ?? stored.settings.apiModel,
       user: options.user,
-      messages: request ? [{ role: "system", content: request.system }, ...turns] : turns,
+      messages: system ? [{ role: "system", content: system }, ...turns] : turns,
       signal: options.signal,
       onDelta: options.onDelta,
       redactSecrets: [stored.providerKey],
-      ...(chosen?.provider ? { fields: { provider: chosen.provider } } : {}),
-      ...(request ? { protocol, parameters: request.parameters } : {}),
+      fields: {
+        ...(chosen?.provider ? { provider: chosen.provider } : {}),
+        ...(options.processInstructions ? { tool_choice: "none" } : {}),
+      },
+      ...(parameters ? { protocol, parameters } : {}),
       ...(this.#resolve ? { resolve: this.#resolve } : {}),
     });
+  }
+  /** A fresh diagnostic turn, isolated from chat history and general conversation personas. */
+  beginProcessExplanation(
+    userId: string,
+    kind: AiAgentKind,
+    detail: ProcessDetail,
+    locale: Locale,
+    actor: Actor,
+  ) {
+    this.#assertFree(userId, kind);
+    const row = this.#row(userId, kind);
+    if (!row) throw new ApiError(409, "CONFLICT", "Configure the agent first");
+    const task = processExplanationTask(detail, locale);
+    const key = this.#key(userId, kind);
+    return async (
+      signal: AbortSignal,
+      onDelta: (text: string) => Promise<void>,
+    ): Promise<ProcessExplanationResult> => {
+      this.#assertFree(userId, kind);
+      if (signal.aborted) throw new ApiError(409, "CONFLICT", "Explanation cancelled");
+      if (this.#row(userId, kind)?.sealed_settings !== row.sealed_settings)
+        throw new ApiError(409, "CONFLICT", "Agent settings changed before execution");
+      this.#busy.add(key);
+      try {
+        const stored = this.#stored(row);
+        const base = await this.#base(row, actor);
+        const answer = await this.#stream(
+          row,
+          stored,
+          base,
+          [{ role: "user", content: task.content }],
+          {
+            user: `everyos-${userId}-process-${randomUUID()}`,
+            signal,
+            onDelta,
+            processInstructions: task.system,
+          },
+        );
+        if (signal.aborted) throw new ApiError(409, "CONFLICT", "Explanation cancelled");
+        if (!answer.trim()) throw new IntegrationHttpError("invalid", "Empty process explanation");
+        this.#event("process-explanation", actor, kind, "success", { pid: detail.pid });
+        return {
+          answer,
+          model: this.#chatModel(userId, kind, stored).ref,
+          name: detail.name,
+          pid: detail.pid,
+          startedAt: detail.startedAt,
+          source: detail.source,
+        };
+      } catch (error) {
+        this.#event("process-explanation", actor, kind, "failure", {
+          pid: detail.pid,
+          cancelled: signal.aborted,
+        });
+        if (error instanceof ApiError) throw error;
+        throw new ApiError(502, "AGENT_OPERATION_FAILED", "Process explanation failed", {
+          details:
+            error instanceof AgentRunError
+              ? { reason: "agent-error", message: error.detail }
+              : { reason: error instanceof IntegrationHttpError ? error.kind : "offline" },
+        });
+      } finally {
+        this.#busy.delete(key);
+      }
+    };
   }
   /** Ollama's own API also applies memory and repetition; other servers get OpenAI fields. */
   async #protocol(row: ConfigRow, base: string): Promise<"openai" | "ollama"> {

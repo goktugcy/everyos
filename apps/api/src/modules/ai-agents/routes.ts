@@ -11,11 +11,12 @@ import {
   LocalServerIdSchema,
   NativeAgentIdSchema,
   OllamaSetupRequestSchema,
+  ProcessExplanationRequestSchema,
 } from "@everyos/shared/schemas";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { AppEnv } from "../../context.ts";
-import { agentActor } from "../../http/agent.ts";
+import { agentActor, callAgent } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
 import { openEventStream } from "../../http/event-stream.ts";
 import { parseJsonBody, parseParams, parseQuery } from "../../http/validation.ts";
@@ -256,6 +257,30 @@ export function aiAgentRoutes(services: Services): Hono<AppEnv> {
       async run({ signal, send }) {
         const answer = await run(signal, (text) => send("delta", { text }));
         if (!signal.aborted) await send("complete", { answer });
+      },
+    });
+  });
+  app.post("/:kind/process-explanation", requirePermission("system:read"), async (c) => {
+    parseQuery(c, Empty);
+    const { kind } = parseParams(c, Kind);
+    const input = await parseJsonBody(c, ProcessExplanationRequestSchema);
+    const detail = await callAgent(c, services, "processes.get", {
+      pid: input.pid,
+      ...(input.startedAt === undefined ? {} : { startedAt: input.startedAt }),
+    });
+    const run = services.aiAgents.beginProcessExplanation(
+      requireAuth(c).user.id,
+      kind,
+      detail,
+      input.locale,
+      actor(c),
+    );
+    return openEventStream(c, services, {
+      permissions: ["apps:manage", "terminal:access", "system:read"],
+      describeError: chatError,
+      async run({ signal, send }) {
+        const result = await run(signal, (text) => send("delta", { text }));
+        if (!signal.aborted) await send("complete", result);
       },
     });
   });

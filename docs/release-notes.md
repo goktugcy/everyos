@@ -1,21 +1,19 @@
-EveryOS 0.1.39 adds process inspection, assistant explanations and responsive desktop actions.
+EveryOS 0.1.40 fixes process explanations in System Monitor.
 
-- Select a process in System Monitor to inspect its CPU, memory, threads, parent PID, start time
-  and supervisor in a side panel within the same window. Right-click and Shift+F10 expose its
-  context menu. Supported service/container controls require confirmation and preserve existing
-  permissions, audit events and protected-system rules; independent processes remain read-only.
-- Ask an available Hermes Agent, OpenClaw or local model to explain a process with one click.
-  Replies stream into the panel. The request includes process identity and measurements, with
-  command arguments, private filesystem paths and environment variables excluded.
-- Newly installed desktop apps and their icons appear immediately. Adding a desktop shortcut
-  from the Dock no longer requires a page refresh.
-- Application lists and the launcher offer Open, Add to Desktop, Pin/Unpin Dock and confirmed
-  removal of installed apps. Removing an app also clears its saved shortcuts and open windows.
-- A completed system update refreshes an older web client once after the new API confirms the
-  installed version. Background recovery covers missed restart events even with Updates closed.
-- Update the catalog field validator to `re2js` 2.8.7, which fixes
-  [GHSA-gg6h-894w-4m9c](https://github.com/advisories/GHSA-gg6h-894w-4m9c).
-- The coordinated SDK advances to 1.0.2 and the official catalog retains all 29 apps.
+- A running assistant stays listed while it is busy. Starting an explanation no longer shows a
+  false missing-connection message. Initial connection loading and actual unavailable states
+  remain distinct, and the selected model is visible in the inspector.
+- Explanations focus on the selected process's name, PID and usual purpose before interpreting
+  its resource use and service/container association. Each click reads a fresh process snapshot
+  and starts an isolated diagnostic request, instead of continuing a general assistant chat.
+- Hermes Agent, OpenClaw and direct local models receive the same process-specific task context.
+  General chat history and local chat personas no longer dilute the diagnostic request. Local
+  explanations use the interface language and a sufficient answer budget for a detailed response.
+- Private command arguments, account names, filesystem paths and environment variables are
+  excluded. Exited or reused processes, connection errors, cancellation and session locks remain
+  visible and enforced. Diagnostic requests do not fill the assistant's chat history.
+- The five standalone SDK packages advance together to 1.0.3 for this core release. The official
+  catalog retains all 29 applications.
 
 29 Ekim Cumhuriyet Bayramımız kutlu olsun! Cumhuriyetimizin kurucusu Gazi Mustafa Kemal Atatürk’ü
 ve silah arkadaşlarını saygı, minnet ve özlemle anıyoruz. Yaşasın Cumhuriyet!

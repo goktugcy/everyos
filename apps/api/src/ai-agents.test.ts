@@ -11,6 +11,7 @@ import type {
   AiConversation,
   AiModelCatalog,
   AppJobView,
+  ProcessDetail,
 } from "@everyos/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -60,6 +61,7 @@ async function gateway(
     error?: boolean;
     echoKey?: boolean;
     agentFailure?: boolean;
+    ollama?: boolean;
     /** Ids `/v1/models` lists; the agent's API model by default. */
     models?: string[];
     /** Hermes's `/api/model/options` body; absent answers 404 like an older Hermes. */
@@ -76,6 +78,11 @@ async function gateway(
   const urls: string[] = [];
   let disconnected = false;
   const handle = async (request: IncomingMessage, response: ServerResponse) => {
+    if (options.ollama && request.url === "/api/version") {
+      response.setHeader("Content-Type", "application/json");
+      response.end(JSON.stringify({ version: "0.12.0" }));
+      return;
+    }
     if (request.headers.authorization !== "Bearer fixture-agent-key") {
       response.writeHead(401);
       response.end();
@@ -94,7 +101,11 @@ async function gateway(
       response.end(JSON.stringify(options.modelOptions));
       return;
     }
-    if (request.url !== "/v1/chat/completions" || request.method !== "POST") {
+    if (
+      (request.url !== "/v1/chat/completions" &&
+        !(options.ollama && request.url === "/api/chat")) ||
+      request.method !== "POST"
+    ) {
       response.writeHead(404);
       response.end();
       return;
@@ -102,6 +113,17 @@ async function gateway(
     const parts: Buffer[] = [];
     for await (const raw of request) parts.push(raw as Buffer);
     requests.push(JSON.parse(Buffer.concat(parts).toString()) as (typeof requests)[number]);
+    if (options.ollama && request.url === "/api/chat") {
+      response.writeHead(200, { "Content-Type": "application/x-ndjson" });
+      response.write(
+        JSON.stringify({
+          message: { content: "Merhaba 🌍\n<script>literal</script>" },
+          done: false,
+        }) + "\n",
+      );
+      response.end(JSON.stringify({ done: true }) + "\n");
+      return;
+    }
     if (options.error) {
       response.writeHead(500);
       response.end("private-upstream-token-should-never-leak");
@@ -158,12 +180,132 @@ async function gateway(
 function external(kind: AiAgentKind, baseUrl: string) {
   return { ...agentDefaults(kind), mode: "external", baseUrl, gatewayKey: "fixture-agent-key" };
 }
+function processSnapshot(): ProcessDetail {
+  return {
+    source: "host",
+    sampledAt: 1000,
+    pid: 42,
+    parentPid: 1,
+    name: "nginx",
+    user: "private-user",
+    state: "S",
+    cpuPercent: 5,
+    memoryBytes: 4096,
+    virtualMemoryBytes: 8192,
+    threads: 2,
+    startedAt: 100,
+    serviceUnit: "nginx.service",
+    containerId: null,
+    command: "nginx with-private-arguments",
+    executable: "/private/bin/nginx",
+    workingDirectory: "/private/data",
+  };
+}
 async function finished(ctx: TestContext, job: AppJobView) {
   await vi.waitFor(() => expect(ctx.services.apps.job(job.id)?.stage).toMatch(/succeeded|failed/));
   return ctx.services.apps.job(job.id)!;
 }
 
 describe("AI agent integrations", () => {
+  it.each([
+    { kind: "hermes", protocol: "openai" },
+    { kind: "openclaw", protocol: "openai" },
+    { kind: "local", protocol: "openai" },
+    { kind: "local", protocol: "ollama" },
+  ] as const)(
+    "sends $kind/$protocol a fresh process-focused system task without chat history or private process data",
+    async ({ kind, protocol }) => {
+      const { ctx, admin, operator } = await roles();
+      const fixture = await gateway(kind === "local" ? "hermes" : kind, {
+        models: [kind === "local" ? "fixture-model" : AGENT_MODELS[kind]],
+        ollama: protocol === "ollama",
+      });
+      const configured = await put(admin, `/api/ai-agents/${kind}`, {
+        ...external(kind, fixture.baseUrl),
+        ...(kind === "local"
+          ? {
+              apiModel: "fixture-model",
+              behavior: {
+                preset: "custom",
+                instructions: "Introduce the host platform",
+                language: "en",
+                creativity: 100,
+                length: "short",
+                memory: "2k",
+                repetition: 20,
+              },
+            }
+          : {}),
+      });
+      expect(configured.status).toBe(200);
+      const detail = processSnapshot();
+      ctx.agent.handlers.set("processes.get", () => detail);
+      const endpoint = `/api/ai-agents/${kind}/process-explanation`;
+      const input = { pid: 42, startedAt: 100, locale: "tr" };
+      expect((await operator.post(endpoint, input)).status).toBe(403);
+      expect((await admin.post(endpoint, { ...input, command: "client supplied" })).status).toBe(
+        400,
+      );
+      expect((await admin.post(endpoint, { ...input, locale: "invalid" })).status).toBe(400);
+      const history = await json(await admin.get(`/api/ai-agents/${kind}/conversations`));
+      const response = await admin.post(endpoint, input);
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain('"answer":"Merhaba');
+      const first = fixture.requests.at(-1)!;
+      expect(first).toMatchObject(
+        protocol === "ollama"
+          ? { stream: true, options: { temperature: 0.2, num_predict: 1200, num_ctx: 2048 } }
+          : { stream: true, temperature: 0.2, max_tokens: 1200, tool_choice: "none" },
+      );
+      const messages = first.messages as Array<{ role: string; content: string }>;
+      expect(messages).toHaveLength(2);
+      expect(messages[0]).toMatchObject({
+        role: "system",
+        content: expect.stringContaining("usual purpose"),
+      });
+      expect(messages[0]!.content).toContain("Turkish");
+      expect(messages[1]).toMatchObject({
+        role: "user",
+        content: expect.stringContaining('"nginx" (PID 42)'),
+      });
+      expect(JSON.stringify(messages)).not.toMatch(/private|Introduce the host platform/);
+      expect(await json(await admin.get(`/api/ai-agents/${kind}/conversations`))).toEqual(history);
+      expect(ctx.agent.calls).toContainEqual(
+        expect.objectContaining({ op: "processes.get", params: { pid: 42, startedAt: 100 } }),
+      );
+      expect((await json<AiAgentView>(await admin.get(`/api/ai-agents/${kind}`))).busy).toBe(false);
+      await (await admin.post(endpoint, input)).text();
+      expect(fixture.requests.at(-1)!.messages).toHaveLength(2);
+      if (protocol === "openai") expect(fixture.requests.at(-1)!.user).not.toBe(first.user);
+      expect(
+        ctx.services.audit
+          .query({ limit: 10 })
+          .events.some((event) => event.action === "ai-agent.process-explanation"),
+      ).toBe(true);
+    },
+  );
+  it("cancels a diagnostic on session lock, releases the assistant and never creates a chat", async () => {
+    const { ctx, admin } = await roles();
+    ctx.services.eventStreamHeartbeatMs = 15;
+    const fixture = await gateway("hermes", { hold: true });
+    await put(admin, "/api/ai-agents/hermes", external("hermes", fixture.baseUrl));
+    ctx.agent.handlers.set("processes.get", processSnapshot);
+    const endpoint = "/api/ai-agents/hermes/process-explanation";
+    const input = { pid: 42, startedAt: 100, locale: "en" };
+    const response = await admin.post(endpoint, input);
+    const reading = response.text();
+    await vi.waitFor(() => expect(fixture.requests).toHaveLength(1));
+    expect((await admin.post(endpoint, input)).status).toBe(409);
+    await admin.post("/api/auth/lock");
+    await reading;
+    await vi.waitFor(() => expect(fixture.disconnected()).toBe(true));
+    const owner = ctx.services.users.findByUsername("admin")!;
+    const actor = ctx.agent.calls.find((call) => call.op === "processes.get")!.actor;
+    await vi.waitFor(async () =>
+      expect((await ctx.services.aiAgents.view(owner.id, "hermes", actor)).busy).toBe(false),
+    );
+    expect(ctx.services.aiAgents.conversations(owner.id, "hermes")).toEqual([]);
+  });
   it("releases a cancelled turn even when the upstream DNS lookup never resolves", async () => {
     const controller = new AbortController();
     const result = streamAgentChat({
