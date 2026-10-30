@@ -12,6 +12,19 @@ repeated checks preserve read/dismiss state. Popup preferences are honored. Its 
 Settings → About, which also displays the real last-check time and automatic-check cadence.
 Discovery never installs an update.
 
+GitHub release descriptions and the update panel's signed notes are separate. To correct wording
+for the current release, review and merge `docs/release-notes.md`. Create a
+`v-notes-<version>-<sequence>` maintenance tag on the merged, CI-qualified source commit, then
+dispatch **Amend signed release notes** on that tag with the version. The tag must be on `main`,
+match its current file tree and have successful CI. Maintenance tags do not publish a new
+EveryOS version. This preserves the signing environment's existing tag-only policy.
+The protected release environment verifies the
+existing signature and signs only the amended notes with the same key. Package identities,
+compatibility, publication time and expiry remain unchanged. The workflow backs up the original
+metadata, verifies the published amendment and restores the original if publication fails.
+Existing installations receive the correction on their next update check; administrators can
+also use **Check for updates** in Settings → About. This does not install a package.
+
 Settings → About and Updates → EveryOS share the same version-update panel, showing the real
 installed/available version, signed release notes and supervised job progress. Administrators
 can check and install directly from either screen without entering the EveryOS password again.
