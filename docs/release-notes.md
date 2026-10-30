@@ -14,6 +14,3 @@ EveryOS 0.1.40 fixes process explanations in System Monitor.
   visible and enforced. Diagnostic requests do not fill the assistant's chat history.
 - The five standalone SDK packages advance together to 1.0.3 for this core release. The official
   catalog retains all 29 applications.
-
-29 Ekim Cumhuriyet Bayramımız kutlu olsun! Cumhuriyetimizin kurucusu Gazi Mustafa Kemal Atatürk’ü
-ve silah arkadaşlarını saygı, minnet ve özlemle anıyoruz. Yaşasın Cumhuriyet!
