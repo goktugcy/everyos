@@ -1,7 +1,7 @@
 name: Signed EveryOS release
 on:
   push:
-    tags: ["v*"]
+    tags: ["v*", "!v-notes-*"]
 permissions:
   contents: read
 # The shared latest index and its sequence must advance in publication order.

@@ -1,0 +1,155 @@
+name: Amend signed release notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing current release version whose reviewed notes should be amended
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Serialize metadata edits with ordinary publication of the shared latest release.
+concurrency:
+  group: signed-everyos-release
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: startsWith(github.ref, 'refs/tags/v-notes-')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Require a merged and CI-qualified maintenance tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const match = /^v-notes-(\d+\.\d+\.\d+)-[1-9]\d*$/.exec(process.env.GITHUB_REF_NAME);
+          assert(match, 'Use a v-notes-<version>-<sequence> maintenance tag');
+          assert.equal(match[1], process.env.VERSION);
+          JS
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          test "$(git rev-parse HEAD^{tree})" = "$(git rev-parse origin/main^{tree})"
+          qualified=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" --limit 20 --json status,conclusion --jq 'map(select(.status == "completed" and .conclusion == "success")) | length > 0')
+          test "$qualified" = true
+  amend:
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Validate the current release version
+        run: |
+          node --input-type=module - "$VERSION" <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          assert.match(process.argv[2], /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
+          assert.equal(JSON.parse(readFileSync('package.json', 'utf8')).version, process.argv[2]);
+          JS
+      - name: Back up the existing signed metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/everyos-release-notes"
+          mkdir -p "$work/original" "$work/amended" "$work/published"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$VERSION" > "$work/release-before.json"
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern release.json --pattern everyos-release-public.pem --dir "$work/original"
+      - name: Amend only the reviewed notes and sign with the existing key
+        env:
+          EVERYOS_RELEASE_PRIVATE_KEY: ${{ secrets.EVERYOS_RELEASE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key_file=$(mktemp)
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s' "$EVERYOS_RELEASE_PRIVATE_KEY" > "$key_file"
+          work="$RUNNER_TEMP/everyos-release-notes"
+          node scripts/amend-release-notes.ts --version "$VERSION" --manifest "$work/original/release.json" --public-key "$work/original/everyos-release-public.pem" --notes docs/release-notes.md --key "$key_file" --out "$work/amended/release.json" --receipt "$work/amendment-plan.json"
+      - name: Replace only release.json with rollback on upload failure
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/everyos-release-notes"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$VERSION" > "$work/release-current.json"
+          node --input-type=module - "$work" <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          const work = process.argv[2];
+          const before = JSON.parse(readFileSync(`${work}/release-before.json`, 'utf8'));
+          const current = JSON.parse(readFileSync(`${work}/release-current.json`, 'utf8'));
+          assert.equal(before.tag_name, `v${process.env.VERSION}`);
+          assert.equal(before.draft, false);
+          assert.equal(before.prerelease, false);
+          const assets = release => release.assets.map(a => ({ id: a.id, name: a.name, size: a.size, digest: a.digest })).sort((a, b) => a.name.localeCompare(b.name));
+          assert.deepEqual(assets(current), assets(before), 'Release assets changed during amendment');
+          const asset = before.assets.find(a => a.name === 'release.json');
+          assert.equal(asset.digest, 'sha256:' + createHash('sha256').update(readFileSync(`${work}/original/release.json`)).digest('hex'));
+          JS
+          if ! gh release upload "v$VERSION" "$work/amended/release.json" --repo "$GITHUB_REPOSITORY" --clobber; then
+            gh release upload "v$VERSION" "$work/original/release.json" --repo "$GITHUB_REPOSITORY" --clobber
+            exit 1
+          fi
+      - name: Verify the published signature and unchanged release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/everyos-release-notes"
+          gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern release.json --dir "$work/published"
+          node scripts/amend-release-notes.ts --version "$VERSION" --manifest "$work/original/release.json" --public-key "$work/original/everyos-release-public.pem" --notes docs/release-notes.md --verify "$work/published/release.json"
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$VERSION" > "$work/release-after.json"
+          node --input-type=module - "$work" <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          const work = process.argv[2];
+          const before = JSON.parse(readFileSync(`${work}/release-before.json`, 'utf8'));
+          const after = JSON.parse(readFileSync(`${work}/release-after.json`, 'utf8'));
+          const assets = release => release.assets.filter(a => a.name !== 'release.json').map(a => ({ id: a.id, name: a.name, size: a.size, digest: a.digest })).sort((a, b) => a.name.localeCompare(b.name));
+          assert.equal(after.tag_name, before.tag_name);
+          assert.equal(after.draft, false);
+          assert.equal(after.prerelease, false);
+          assert.deepEqual(assets(after), assets(before), 'Non-metadata assets changed');
+          const plan = JSON.parse(readFileSync(`${work}/amendment-plan.json`, 'utf8'));
+          const asset = after.assets.find(a => a.name === 'release.json');
+          const digest = createHash('sha256').update(readFileSync(`${work}/published/release.json`)).digest('hex');
+          assert.equal(digest, plan.amendedSha256);
+          assert.equal(asset.digest, `sha256:${digest}`);
+          writeFileSync(`${work}/amendment-receipt.json`, JSON.stringify({ ...plan, status: 'passed', releaseId: after.id, assetId: asset.id, workflowRunId: process.env.GITHUB_RUN_ID }, null, 2) + '\n');
+          JS
+      - name: Restore the original signed metadata if publication verification fails
+        if: failure() && steps.publish.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v$VERSION" "$RUNNER_TEMP/everyos-release-notes/original/release.json" --repo "$GITHUB_REPOSITORY" --clobber
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes-amendment-${{ inputs.version }}
+          path: ${{ runner.temp }}/everyos-release-notes/amendment-receipt.json
+          if-no-files-found: error
