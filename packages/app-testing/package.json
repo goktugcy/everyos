@@ -1,6 +1,6 @@
 {
   "name": "@everyos/app-testing",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A clearly labelled MOCK EveryOS desktop for developing and testing desktop apps: it answers the app bridge from memory (storage, files, permissions, dialogs, notifications, host data) and never talks to EveryOS. Real integration testing uses a developer EveryOS instance.",
   "type": "module",
   "license": "MIT",

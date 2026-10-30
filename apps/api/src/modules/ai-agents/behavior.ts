@@ -7,7 +7,7 @@ import { DEFAULT_LOCAL_BEHAVIOR, type LocalBehavior, type Locale } from "@everyo
 export const DEFAULT_INSTRUCTIONS =
   "You are a helpful and honest assistant. Answer clearly and to the point. If you are not sure about something, say so instead of guessing, and never invent facts, names or numbers.";
 /** Each interface language by its English name, the language of the instructions themselves. */
-const LANGUAGE_NAMES: Record<Locale, string> = {
+export const LANGUAGE_NAMES: Record<Locale, string> = {
   tr: "Turkish",
   en: "English",
   de: "German",

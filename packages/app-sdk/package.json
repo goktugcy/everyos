@@ -1,6 +1,6 @@
 {
   "name": "@everyos/app-sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "The EveryOS App SDK: what a desktop app running in its sandboxed EveryOS window uses to talk to the desktop (windows, storage, files, notifications, dialogs, theme, clipboard, widgets, lifecycle, localization and host data). Zero dependencies; the protocol module is shared with the desktop.",
   "type": "module",

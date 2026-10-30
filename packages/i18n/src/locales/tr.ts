@@ -1749,6 +1749,7 @@ export const tr = {
       managementUnavailable:
         "Bağlı hizmet veya konteynerin yönetimi şu anda kullanılamıyor. Gerekli okuma ve yönetim yetkilerini ve bağlantıyı kontrol edin.",
       explainTitle: "Yapay zekâ ile işlem açıklaması",
+      explanationFor: "Seçilen işlem: {{name}} (PID {{pid}})",
       assistant: "Asistan",
       explain: "Bu işlemi ayrıntılı açıkla",
       explainPrivacy:

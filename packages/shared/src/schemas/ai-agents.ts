@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SUPPORTED_LOCALES } from "../locale.ts";
 import {
   AI_AGENT_KINDS,
   AI_PROVIDERS,
@@ -67,6 +68,11 @@ export const AiAgentSettingsSchema = SettingsBase.refine(
 export const AiChatRequestSchema = z.strictObject({
   conversationId: z.string().uuid(),
   content: z.string().trim().min(1).max(16_000),
+});
+export const ProcessExplanationRequestSchema = z.strictObject({
+  pid: z.number().int().positive().max(2_147_483_647),
+  startedAt: z.number().nonnegative().optional(),
+  locale: z.enum(SUPPORTED_LOCALES),
 });
 const ListedId = (max: number) =>
   z

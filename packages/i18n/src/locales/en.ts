@@ -1717,6 +1717,7 @@ export const en: Messages = {
       managementUnavailable:
         "The associated service or container cannot currently be managed. Check the required read and management permissions and the connection.",
       explainTitle: "AI process explanation",
+      explanationFor: "Selected process: {{name}} (PID {{pid}})",
       assistant: "Assistant",
       explain: "Explain this process in detail",
       explainPrivacy:

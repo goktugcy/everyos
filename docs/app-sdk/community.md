@@ -281,3 +281,5 @@ sequence rollback after restoration.
 The 0.1.39 live acceptance repeated installation, data-preserving update and signed revocation
 with the owner-reviewed acceptance versions 1.0.4 and 1.0.5. Both versions were then revoked;
 see the [public lifecycle evidence](../evidence/community-20261029/live-lifecycle.json).
+
+The 0.1.40 [live acceptance](../evidence/community-20261030/live-lifecycle.json) used the owner-reviewed versions 1.0.6 and 1.0.7. It verified installation, a data-preserving update and signed revocation on a disposable development instance against the real public registry. Only those two prepared versions were revoked.

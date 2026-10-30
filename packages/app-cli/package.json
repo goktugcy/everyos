@@ -1,6 +1,6 @@
 {
   "name": "@everyos/app-cli",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "everyos-app: build, validate, pack, sign, test and publish EveryOS desktop apps, with a development server that runs the app in the same sandbox as EveryOS against a clearly labelled mock desktop, or as a signed development registry for a real EveryOS.",
   "type": "module",
   "license": "MIT",

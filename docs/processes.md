@@ -11,7 +11,7 @@ hosts use a read-only `ps` query and have no supervisor mapping.
 fields are strictly validated. The agent reads only bounded procfs files and symlinks and checks
 process identity before and after collecting metadata. An exited or reused PID returns not found.
 Command arguments, executable paths and working directories require `system:manage`; environment
-variables are never read. No process metadata is added to audit details.
+variables are never read. Diagnostic audit details contain only the requested PID and outcome.
 
 ## Supervisor actions
 
@@ -30,19 +30,43 @@ enable another process's controls.
 ## Assistant explanations
 
 Users with `apps:manage` and `terminal:access` can select a configured, ready local model, Hermes
-Agent or OpenClaw. The initial choice prefers the local model. It stays selected during an answer
-even if the assistant becomes busy. An explicit Explain click sends a bounded metadata snapshot
-through the existing authenticated conversation and streaming-chat APIs; opening a row sends no
-AI message. The resulting explanation stays in the panel and in that user's AI Chat history.
-Requests can be cancelled and end when the inspector closes or the session locks.
+Agent or OpenClaw. Initial status loading is distinct from having no configured connection. The
+initial choice prefers an idle local model. A running, busy assistant stays listed and selected;
+its own pending explanation never produces the missing-connection message. The model chip shows
+the current model and allows an explicit switch while idle.
+
+An Explain click posts only PID, optional start time and interface locale to
+`POST /api/ai-agents/:kind/process-explanation`. The endpoint additionally requires `system:read`,
+strictly validates its input and reads a fresh process snapshot through the existing validated
+`processes.get` operation. Client-supplied process descriptions and prompts are rejected. Opening
+a row sends no AI message. Requests can be cancelled and end when the inspector closes or the
+session locks; permissions are rechecked during streaming.
+
+Each explanation is a separate diagnostic turn with a process-specific system message and one
+user message. It neither loads nor writes general conversation history and does not consume its
+conversation quota. A unique upstream user identifier separates gateway sessions. The task starts
+with the selected process's name, PID and usual purpose, then interprets measurements and supervisor
+associations while identifying uncertainty. Local models receive a 1,200-token answer budget and
+temperature 0.2; their general chat persona, short-answer setting and forced chat language do not
+override this task. Other local sampling and context-window settings remain in effect. Ordinary
+chats keep their existing behavior.
 
 The snapshot includes the PID, name, parent PID, state, measurements, timestamps and supervisor
-identity. It excludes command arguments, filesystem paths, account names and environment data.
+identity, plus the executable basename when authorized. Timestamps use ISO dates and resident
+memory includes an explicit MiB value. It excludes command arguments, filesystem paths, account
+names and environment data.
 The prompt treats process metadata as untrusted data, asks for observations to be distinguished
 from inferences, and requests an explanation without running tools or actions. The assistant's
 existing connection determines where the snapshot is sent; no model server or agent is installed
 automatically. Provider errors remain visible, and no ready provider produces an explicit empty
-state. Test providers and status fixtures are marked `source: "simulated"`.
+state. Busy and unavailable states remain distinct. Test providers and status fixtures are marked
+`source: "simulated"`.
+
+Gateway-specific permissions remain in force: a system message and `tool_choice: "none"` do not
+replace an upstream agent's native tool policy. EveryOS exposes no action tools in this request.
+Hermes layers client system messages over its own prompt; OpenClaw scopes its HTTP tool-choice
+contract to client-supplied tools. See the [Hermes API server documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/api-server)
+and [OpenClaw chat API documentation](https://docs.openclaw.ai/gateway/openai-http-api).
 
 Turkish and English inspector strings are complete. Other interface languages retain their
 existing process translations and use English for the new inspector copy.

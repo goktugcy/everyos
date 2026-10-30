@@ -1,0 +1,96 @@
+{
+  "live": true,
+  "status": "passed",
+  "origin": "https://registry.everyos.net",
+  "everyosVersion": "0.1.40",
+  "verifiedAt": "2026-10-30T14:11:47.378Z",
+  "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+  "appId": "dev.goktugceyhan.acceptancenotes",
+  "observations": [
+    {
+      "check": "installation",
+      "version": "1.0.6",
+      "digest": "19e3d9f2e648efbf195562b5a2656ed8a9eb51aa41b61345ff87d8e1e2c631b7",
+      "passed": true
+    },
+    {
+      "check": "update",
+      "version": "1.0.7",
+      "digest": "f83698fbe174e0c26cf1b87bb2277979a6c72c384190d3fa8a14f5a51fe1d6cd",
+      "savedNotePreserved": true,
+      "oldRuntimeDenied": true,
+      "passed": true
+    },
+    {
+      "check": "revocation",
+      "versions": ["1.0.6", "1.0.7"],
+      "signedSequence": 18,
+      "installationDisabled": true,
+      "instancesDenied": true,
+      "runtimeDenied": true,
+      "publicPackagesDenied": true,
+      "passed": true
+    }
+  ],
+  "deployment": {
+    "format": "everyos-community-deployment-verification/1",
+    "status": "passed",
+    "origin": "https://registry.everyos.net",
+    "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+    "verifiedAt": "2026-10-30T14:11:46.602Z",
+    "checks": {
+      "productionHealth": "passed",
+      "registryIdentity": "passed",
+      "publicKey": "passed",
+      "signedCatalog": "passed"
+    },
+    "catalog": {
+      "sha256": "a64c88a1dace5723f9ee49a35978c69a120f1bc94025ab942829614f93c11190",
+      "sequence": 18,
+      "publishedAt": 1793369505267,
+      "expiresAt": 1795961505267,
+      "publishers": 1,
+      "apps": 1,
+      "revocations": 8
+    },
+    "lifecycleAcceptance": "required"
+  },
+  "format": "everyos-community-lifecycle-evidence/1",
+  "publisherId": "dev.goktugceyhan",
+  "environment": "owned disposable development instance; simulated host-data agent; real public registry, packages, browser, storage and signatures",
+  "publisherOrigin": "https://everyos.goktugceyhan.dev",
+  "enrollment": {
+    "passed": true,
+    "method": "Existing owner-verified publisher enrollment and authenticated live submissions"
+  },
+  "submissions": [
+    {
+      "version": "1.0.6",
+      "sha256": "19e3d9f2e648efbf195562b5a2656ed8a9eb51aa41b61345ff87d8e1e2c631b7"
+    },
+    {
+      "version": "1.0.7",
+      "sha256": "f83698fbe174e0c26cf1b87bb2277979a6c72c384190d3fa8a14f5a51fe1d6cd"
+    }
+  ],
+  "humanReview": {
+    "passed": true,
+    "recordedAt": "2026-10-30T14:09:29.361Z",
+    "method": "Owner terminal review and approval of exact source and archive digests",
+    "reviewedExactPackages": true,
+    "versions": [
+      {
+        "version": "1.0.6",
+        "sha256": "19e3d9f2e648efbf195562b5a2656ed8a9eb51aa41b61345ff87d8e1e2c631b7"
+      },
+      {
+        "version": "1.0.7",
+        "sha256": "f83698fbe174e0c26cf1b87bb2277979a6c72c384190d3fa8a14f5a51fe1d6cd"
+      }
+    ]
+  },
+  "cleanup": {
+    "scope": "Only the two prepared versions of the dedicated acceptance app",
+    "revokedVersions": ["1.0.6", "1.0.7"]
+  }
+}

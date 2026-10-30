@@ -26,6 +26,7 @@ test("menu bar context controls persist visibility, order and clock options", as
   await expect(bar.getByTestId("menubar-clock")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
   await bar.focus();
   await bar.press("Shift+F10");
   await page.getByRole("menuitem", { name: "Üst barı özelleştir", exact: true }).click();

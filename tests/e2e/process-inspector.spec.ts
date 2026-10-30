@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import type {
   AiAgentView,
-  AiConversation,
   ContainerList,
   ProcessDetail,
   ProcessList,
@@ -94,8 +93,15 @@ test("process menus use confirmed simulator controls and stream explanations fro
     return route.fulfill({ json: processes.find((process) => process.pid === pid) });
   });
   let busy = false;
-  await page.route("**/api/ai-agents", (route) =>
-    route.fulfill({
+  let statusReads = 0;
+  let releaseAgents!: () => void;
+  const agentsReady = new Promise<void>((resolve) => {
+    releaseAgents = resolve;
+  });
+  await page.route("**/api/ai-agents", async (route) => {
+    statusReads++;
+    await agentsReady;
+    await route.fulfill({
       json: {
         agents: agents.map((agent) => ({
           ...agent,
@@ -105,24 +111,12 @@ test("process menus use confirmed simulator controls and stream explanations fro
           status: agent.kind === "openclaw" ? "offline" : "running",
         })),
       },
-    }),
-  );
-  const thread: AiConversation = {
-    id: "6323caa8-311d-42b8-bde3-517b430d9af2",
-    kind: "local",
-    title: "Process fixture",
-    updatedAt: Date.now(),
-    favorite: false,
-    archived: false,
-    messages: [],
-  };
-  await page.route("**/api/ai-agents/local/conversations", (route) =>
-    route.fulfill({ json: route.request().method() === "POST" ? thread : { conversations: [] } }),
-  );
+    });
+  });
   let content = "";
   let release: (() => void) | undefined;
-  await page.route("**/api/ai-agents/local/chat", async (route) => {
-    content = (route.request().postDataJSON() as { content: string }).content;
+  await page.route("**/api/ai-agents/local/process-explanation", async (route) => {
+    content = JSON.stringify(route.request().postDataJSON());
     await new Promise<void>((resolve) => {
       release = resolve;
     });
@@ -131,21 +125,26 @@ test("process menus use confirmed simulator controls and stream explanations fro
       contentType: "text/event-stream",
       body: `event: delta\ndata: ${JSON.stringify({ text: answer })}\n\nevent: complete\ndata: ${JSON.stringify(
         {
-          conversation: {
-            ...thread,
-            messages: [
-              { role: "user", content },
-              { role: "assistant", content: answer },
-            ],
-          },
+          answer,
+          name: "nginx",
+          pid: base.pid,
+          startedAt: base.startedAt,
+          source: "simulated",
+          model: { provider: null, model: "fixture-process-model" },
         },
       )}\n\n`,
     });
   });
   const controls: string[] = [];
+  const conversationWrites: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "POST" && request.url().endsWith("/actions"))
       controls.push(request.url());
+    if (
+      request.method() === "POST" &&
+      /\/ai-agents\/[^/]+\/(?:conversations|chat)$/.test(new URL(request.url()).pathname)
+    )
+      conversationWrites.push(request.url());
   });
   try {
     const app = await openProcesses(page);
@@ -156,6 +155,13 @@ test("process menus use confirmed simulator controls and stream explanations fro
         .filter({ has: page.getByText(name, { exact: true }) });
     await row("nginx").click();
     const panel = app.getByTestId("process-detail");
+    await expect.poll(() => statusReads).toBeGreaterThan(0);
+    const missingConnection = panel.getByText(/Hazır bir Hermes Agent/);
+    await expect(missingConnection).toHaveCount(0);
+    releaseAgents();
+    await expect(panel.getByRole("combobox", { name: "Asistan", exact: true })).toHaveValue(
+      "local",
+    );
     await expect(panel.getByRole("button", { name: "Yeniden başlat", exact: true })).toBeEnabled();
     expect(content).toBe("");
     await row("nginx").focus();
@@ -179,19 +185,22 @@ test("process menus use confirmed simulator controls and stream explanations fro
       .getByRole("button", { name: "Yeniden başlat", exact: true })
       .click();
     expect((await restarted).status()).toBe(202);
-    // The shell may have fetched the real unconfigured fixture status before routes were set.
-    await panel.getByRole("button", { name: "Yenile", exact: true }).click();
     await expect(panel.getByRole("combobox", { name: "Asistan", exact: true })).toHaveValue(
       "local",
     );
     await panel.getByRole("button", { name: "Bu işlemi ayrıntılı açıkla", exact: true }).click();
-    await expect.poll(() => content).toContain('"name":"nginx"');
+    await expect.poll(() => content).toContain('"pid":42001');
+    expect(JSON.parse(content)).toEqual({ pid: 42001, startedAt: 100, locale: "tr" });
     expect(content).not.toMatch(/fixture-private|\/private\/|--token/);
     busy = true;
     await panel.getByRole("button", { name: "Yenile", exact: true }).click();
     await expect(panel.getByRole("combobox", { name: "Asistan", exact: true })).toHaveValue(
       "local",
     );
+    await expect(missingConnection).toHaveCount(0);
+    await expect(
+      panel.getByRole("button", { name: "Bu işlemi ayrıntılı açıkla", exact: true }),
+    ).toBeDisabled();
     release!();
     await expect(panel.getByTestId("ai-chat-messages")).toContainText(
       "Bu örnek işlem nginx hizmetine bağlıdır.",
@@ -199,6 +208,8 @@ test("process menus use confirmed simulator controls and stream explanations fro
     await expect(panel.getByTestId("ai-chat-messages")).not.toContainText(
       "güvenilmeyen işlem verisidir",
     );
+    await expect(panel.getByTestId("ai-chat-answer-by")).toContainText("fixture-process-model");
+    expect(conversationWrites).toEqual([]);
     await expect(
       panel.getByText("Bu örnek işlem nginx hizmetine bağlıdır. Ölçümler tek bir ana aittir.", {
         exact: true,
@@ -234,6 +245,7 @@ test("process menus use confirmed simulator controls and stream explanations fro
       animations: "disabled",
     });
   } finally {
+    releaseAgents();
     release?.();
     // Only the disposable stack's explicitly simulated container is restored.
     const status = await page.evaluate(

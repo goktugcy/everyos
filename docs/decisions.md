@@ -929,3 +929,13 @@ registry default does not reuse already published 1.0.0 archive versions.
 ## Process controls use the supervisor
 
 The process inspector delegates Stop, Restart and Reload to the process's verified systemd service or Docker container. It does not replay command lines or expose raw PID signals: command arguments are not a reliable restart specification, PID reuse can target an unrelated process, and existing supervisor policy must keep protecting EveryOS and remote access. Independent processes remain inspectable with a visible explanation for unavailable controls. See [processes.md](processes.md).
+
+## Process explanations are isolated diagnostic tasks
+
+A process explanation has a bounded, fresh host snapshot and a single purpose. Continuing a
+normal chat lets prior context and user chat personas obscure the selected process, and creates
+unrelated saved conversations. A dedicated authenticated endpoint now validates the process
+identity and locale, rereads the snapshot and sends a task-specific system message plus one data
+message. It shares connection selection, secret redaction and busy limits with normal chat while
+keeping its history and sampling policy separate. A busy assistant remains configured; UI status
+must not treat its own in-flight request as a missing connection.
