@@ -1378,6 +1378,7 @@ export const ko: LocaleMessages = {
     cancel: "취소",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "AI 어시스턴트",
       appearance: "모양",

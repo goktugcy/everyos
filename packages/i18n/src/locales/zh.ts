@@ -1332,6 +1332,7 @@ export const zh: LocaleMessages = {
     cancel: "取消",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "AI 助手",
       appearance: "外观",

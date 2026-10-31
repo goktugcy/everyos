@@ -19,9 +19,22 @@ uses the owner's updated English desktop capture, including the Pulse shelf.
 | Desktop screenshot | `docs/images/everyos-desktop.png`                  | README product overview                     |
 | Mountain wallpaper | `apps/web/public/wallpapers/everyos-mountains.png` | Default background and downloadable artwork |
 
+The browser favicon at `apps/web/public/favicon.png` is a square, transparent adaptation of
+the glass “e” emblem in the owner's supplied artwork. The small icon omits the poster's
+wordmark and tagline for legibility in browser tabs. It is bundled locally with the web client.
+
 The README uses a `picture` element to select the wordmark for the reader's color scheme.
 Wordmarks keep their original aspect ratio and clear space. The supplied screenshot shows
 the owner's desktop; it is not a generated product mockup or a source of benchmark claims.
+
+Settings → About uses these supplied wordmarks in place of the geometric mark and a separate
+product-name heading. The active EveryOS theme selects the white wordmark for dark surfaces
+and the color wordmark for light surfaces. The image has a translated accessible name and
+keeps its aspect ratio within narrow settings windows.
+Settings identifies the active section in the window title, for example “Settings - About”,
+instead of repeating a large heading above the section content. The title follows section and
+language changes on desktop and mobile. The About header compensates for the transparent
+padding already present in the supplied wordmark without cropping its artwork.
 
 ## Agent integration marks
 

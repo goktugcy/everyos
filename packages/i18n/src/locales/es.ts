@@ -1415,6 +1415,7 @@ export const es: LocaleMessages = {
     cancel: "Cancelar",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "Asistentes de IA",
       appearance: "Apariencia",

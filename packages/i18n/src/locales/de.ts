@@ -1417,6 +1417,7 @@ export const de: LocaleMessages = {
     cancel: "Abbrechen",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "KI-Assistenten",
       appearance: "Darstellung",
