@@ -1409,6 +1409,7 @@ export const ru: LocaleMessages = {
     cancel: "Отмена",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "ИИ-ассистенты",
       appearance: "Оформление",

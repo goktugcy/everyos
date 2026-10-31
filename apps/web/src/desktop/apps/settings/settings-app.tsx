@@ -11,12 +11,12 @@ import {
   UserRound,
   type LucideIcon,
 } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "../../../lib/cn.ts";
 import { SETTINGS_SECTIONS, type SettingsSection } from "../../commands.tsx";
 import { AppLoading } from "../../windows/app-content.tsx";
-import { useAppStateField } from "../app-context.ts";
+import { useAppHost, useAppStateField } from "../app-context.ts";
 
 const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnType<typeof lazy> }> =
   {
@@ -35,8 +35,18 @@ const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnTyp
 /** Settings app; the open section is part of the window state, so it survives reloads. */
 export default function SettingsApp() {
   const { t } = useTranslation();
+  const host = useAppHost();
   const [section, setSection] = useAppStateField("section", SETTINGS_SECTIONS, "appearance");
   const Section = SECTIONS[section].component;
+  const title = t("settings.windowTitle", {
+    app: t("apps.settings"),
+    section: t(`settings.sections.${section}`),
+  });
+
+  useEffect(() => {
+    host.setTitle(title);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Mobile host callbacks change after title updates.
+  }, [host.windowId, host.appState, title]);
 
   return (
     <div className="flex h-full min-h-0">
@@ -70,10 +80,7 @@ export default function SettingsApp() {
         </ul>
       </nav>
       <div className="min-w-0 flex-1 overflow-y-auto" data-testid={`settings-${section}`}>
-        <div className="mx-auto flex max-w-3xl flex-col gap-6 p-6">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {t(`settings.sections.${section}`)}
-          </h2>
+        <div className="mx-auto max-w-3xl p-6">
           <Suspense fallback={<AppLoading />}>
             <Section />
           </Suspense>

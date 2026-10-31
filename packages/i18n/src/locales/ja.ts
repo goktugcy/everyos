@@ -1402,6 +1402,7 @@ export const ja: LocaleMessages = {
     cancel: "キャンセル",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "AIアシスタント",
       appearance: "外観",

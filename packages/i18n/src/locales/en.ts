@@ -1333,6 +1333,7 @@ export const en: Messages = {
     cancel: "Cancel",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "AI Assistants",
       appearance: "Appearance",

@@ -1418,6 +1418,7 @@ export const it: LocaleMessages = {
     cancel: "Annulla",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "Assistenti IA",
       appearance: "Aspetto",

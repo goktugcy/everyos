@@ -1423,6 +1423,7 @@ export const fr: LocaleMessages = {
     cancel: "Annuler",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "Assistants IA",
       appearance: "Apparence",

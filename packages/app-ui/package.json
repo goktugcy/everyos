@@ -1,6 +1,6 @@
 {
   "name": "@everyos/app-ui",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "The visual language of EveryOS's official desktop apps: React components styled with the desktop's theme tokens, hooks for persistent settings, shortcuts and the app's texts, and helpers for importing and exporting files. Bundled into each app (no shared runtime).",
   "type": "module",
   "license": "MIT",

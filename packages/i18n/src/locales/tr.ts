@@ -1364,6 +1364,7 @@ export const tr = {
     cancel: "Vazgeç",
   },
   settings: {
+    windowTitle: "{{app}} - {{section}}",
     sections: {
       agents: "AI Asistanları",
       appearance: "Görünüm",
