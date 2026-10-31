@@ -164,7 +164,7 @@ The following production actions belong to the owner:
 The release preflight requires the matching live acceptance receipt and a fresh signed index; see
 [SDK distribution](distribution.md#public-release-readiness). The current production receipt is
 `packaging/community-live-acceptance.json`, linked to immutable public evidence and the exact
-0.1.38 candidate/key. This completes the community integration gate; protected production artifact
+0.1.41 candidate/key. This completes the community integration gate; protected production artifact
 signing, independent verification and explicit owner release approval remain separate publication gates.
 
 The agent never needs a Cloudflare account token. No tag, main-branch merge or public EveryOS
@@ -283,3 +283,5 @@ with the owner-reviewed acceptance versions 1.0.4 and 1.0.5. Both versions were 
 see the [public lifecycle evidence](../evidence/community-20261029/live-lifecycle.json).
 
 The 0.1.40 [live acceptance](../evidence/community-20261030/live-lifecycle.json) used the owner-reviewed versions 1.0.6 and 1.0.7. It verified installation, a data-preserving update and signed revocation on a disposable development instance against the real public registry. Only those two prepared versions were revoked.
+
+The 0.1.41 [live acceptance](../evidence/community-20261031/live-lifecycle.json) used the owner-reviewed versions 1.0.8 and 1.0.9. It verified installation, a data-preserving update and signed revocation on a disposable development instance against the real public registry. Only those two prepared versions were revoked.

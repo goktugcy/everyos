@@ -62,8 +62,8 @@ identity. Production private keys are only supplied to the protected signing job
 The package job runs `node scripts/release-preflight.ts` before any signing. An absent community
 anchor, a missing live acceptance receipt or an invalid/expired live signed index blocks publication.
 The production service and independent public-key pin are present, and the real human-reviewed
-six-step lifecycle passes. The current receipt binds EveryOS 0.1.40 to
-[immutable live evidence](../evidence/community-20261030/live-lifecycle.json). Standalone SDK tests
+six-step lifecycle passes. The current receipt binds EveryOS 0.1.41 to
+[immutable live evidence](../evidence/community-20261031/live-lifecycle.json). Standalone SDK tests
 remain one part of the complete release gate.
 
 `https://registry.everyos.net/index.json` and its independently retained key are pinned in
@@ -78,7 +78,7 @@ final OS, SDK and official app artifacts together before publishing the complete
 Historical lifecycle receipts retain the origin on which the human review actually occurred.
 After the 2026-10-28 domain change a receipt from the legacy origin also requires fresh migration
 evidence for the exact old/new origins, the same signing key and identical signed catalogs from both
-endpoints. The fresh 0.1.40 lifecycle uses the canonical origin for installation, update and
+endpoints. The fresh 0.1.41 lifecycle uses the canonical origin for installation, update and
 revocation checks, while retaining the existing owner-verified publisher and its origin-bound
 credential on the legacy alias. Migration evidence does not replace the six lifecycle checks,
 their candidate-version binding or their freshness limit.
