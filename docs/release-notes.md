@@ -2,7 +2,8 @@ EveryOS 0.1.42 improves file opening, media playback and window tabs.
 
 - Files and desktop items open supported PDFs, images, videos, Markdown, JSON, text, source files,
   calendars and Excalidraw drawings in the appropriate official app. Missing apps open their
-  official App Store installation details; downloading remains an explicit context-menu action.
+  official App Store installation details, and older installations open their update details.
+  Downloading remains an explicit context-menu action.
 - Gallery now supports video alongside images, including MP4 previews. Video Player accepts files
   opened from Files and the desktop, including subsequent selections in the same window.
 - PDF Viewer waits for the previous document to close before loading another PDF in the same

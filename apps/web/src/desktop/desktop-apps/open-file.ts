@@ -115,7 +115,13 @@ export function fileAppFor(name: string): string | null {
 /** A file double-click is consent for this exact file, not for a path named by an app. */
 export function openFileWithApp(location: FileLocation, appId: string): boolean {
   const app = activeDesktopApp(appId);
-  if (!app || app.registry?.kind !== "official")
+  // Earlier official apps do not consume the file handoff; their Store dialog offers an update.
+  if (
+    !app ||
+    app.registry?.kind !== "official" ||
+    !isVersion(app.version) ||
+    compareVersions(app.version, "1.0.1") < 0
+  )
     return (
       desktop.openApp("everyos.store", {
         appState: {
@@ -131,3 +137,4 @@ export function openFileWithApp(location: FileLocation, appId: string): boolean 
   wm().setAppState(windowId, { type: "everyos.file-open", requestId });
   return true;
 }
+import { compareVersions, isVersion } from "@everyos/app-manifest";

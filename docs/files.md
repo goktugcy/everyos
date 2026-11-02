@@ -166,7 +166,8 @@ desktop) next to the app shortcuts. Its items are ordinary files and folders:
   official app: videos in Video Player, PDFs in PDF Viewer, images in Image Viewer, Markdown in
   Markdown Editor, JSON in JSON Studio, plain text in Text Editor, source/configuration files in
   Code Editor, `.ics` calendars in Calendar's import preview and `.excalidraw` drawings in Whiteboard.
-  If that official app is not installed, its App Store installation details open. This does not
+  If that official app is missing or predates file handoff support (1.0.1), its App Store
+  installation/update details open. This does not
   install an app or download the file automatically. **Download** remains available in the context
   menu (**Download video** for a single video). Unsupported files keep their existing fallback.
   Only the selected file is shared, read-only, through the app's normal file permission; the app

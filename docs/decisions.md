@@ -986,3 +986,7 @@ board before importing. Changed official packages advance to 1.0.1 rather than c
 1.0.0 content. Formats without a compatible app retain their existing behavior.
 PDF session teardown is awaited before the next document uses pdf.js’s shared worker; a pending
 loading-task destruction otherwise rejects a second document in the same window.
+
+Official file handlers require app version 1.0.1 or newer. An active 1.0.0 installation cannot consume
+the handoff and opens its Store update details instead of an empty app window. The Store retains
+the existing registry-bound update and permission flow; no file grant is created before updating.

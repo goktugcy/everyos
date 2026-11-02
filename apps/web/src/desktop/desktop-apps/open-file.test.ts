@@ -16,10 +16,36 @@ vi.mock("../state/window-store.ts", () => ({ wm: () => ({ setAppState: mocks.set
 vi.mock("./file-launches.ts", () => ({ fileLaunches: { queue: mocks.queue } }));
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.active.mockReturnValue({ appId: "dev.everyos.video", registry: { kind: "official" } });
+  mocks.active.mockReturnValue({
+    appId: "dev.everyos.video",
+    version: "1.0.1",
+    registry: { kind: "official" },
+  });
   mocks.open.mockReturnValue("player-window");
 });
 describe("default file opener", () => {
+  it("offers an update for installed versions that cannot receive files", () => {
+    for (const version of ["1.0.0", "1.0.1-beta.1"]) {
+      mocks.active.mockReturnValue({
+        appId: "dev.everyos.pdf",
+        version,
+        registry: { kind: "official" },
+      });
+      expect(openFileWithApp({ root: "home", path: "document.pdf" }, "dev.everyos.pdf")).toBe(true);
+      expect(mocks.open).toHaveBeenLastCalledWith("everyos.store", {
+        appState: {
+          tab: "browse",
+          desktopAppRequest: {
+            appId: "dev.everyos.pdf",
+            registryId: "official",
+            requestId: expect.any(String),
+          },
+        },
+      });
+    }
+    expect(mocks.queue).not.toHaveBeenCalled();
+    expect(mocks.setState).not.toHaveBeenCalled();
+  });
   it("routes supported formats and special source names to their official apps", () => {
     for (const [name, slug] of [
       ["Document.PDF", "pdf"],
