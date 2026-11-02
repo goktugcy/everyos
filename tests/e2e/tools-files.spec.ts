@@ -16,7 +16,7 @@ test("files can be created, uploaded, edited, moved, duplicated, downloaded and 
     .getByRole("button", { name: "Development files" })
     .click();
   const rows = files.getByTestId("file-row");
-  const row = (name: string) => rows.filter({ hasText: name });
+  const row = (name: string) => rows.filter({ has: page.getByText(name, { exact: true }) });
 
   // New folder with inline rename.
   await files.getByRole("button", { name: "Yeni klasör" }).click();
@@ -27,17 +27,17 @@ test("files can be created, uploaded, edited, moved, duplicated, downloaded and 
 
   // Upload through the file picker (streamed, with progress in the status bar).
   await files.locator('input[type="file"]').setInputFiles({
-    name: "rapor.txt",
+    name: "rapor",
     mimeType: "text/plain",
     buffer: Buffer.from("İlk satır\n"),
   });
   await expect(files.getByTestId("upload-status")).toContainText("Yükleme tamamlandı: 1/1");
-  await expect(row("rapor.txt")).toBeVisible();
+  await expect(row("rapor")).toBeVisible();
 
-  // Text files open in the editor; Ctrl+S saves.
-  await row("rapor.txt").dblclick();
+  // Unassociated extensionless text keeps the built-in editor fallback; Ctrl+S saves.
+  await row("rapor").dblclick();
   const editor = page.locator('[data-app-id="everyos.editor"]');
-  const text = editor.getByRole("textbox", { name: "rapor.txt içeriği" });
+  const text = editor.getByRole("textbox", { name: "rapor içeriği" });
   await expect(text).toHaveValue("İlk satır\n");
   await text.focus();
   await text.evaluate((el: HTMLTextAreaElement) =>
@@ -46,36 +46,36 @@ test("files can be created, uploaded, edited, moved, duplicated, downloaded and 
   await text.pressSequentially("ikinci satır");
   await text.press("Control+s");
   await expect(editor).toContainText("Kaydedildi");
-  const saved = (await (
-    await page.request.get("/api/files/text?root=dev&path=rapor.txt")
-  ).json()) as { content: string };
+  const saved = (await (await page.request.get("/api/files/text?root=dev&path=rapor")).json()) as {
+    content: string;
+  };
   expect(saved.content).toBe("İlk satır\nikinci satır");
   await editor.getByRole("button", { name: "Kapat", exact: true }).first().click();
 
   // Drag the file onto the folder to move it.
-  await row("rapor.txt").dragTo(row("Arşiv"));
-  await expect(row("rapor.txt")).toHaveCount(0);
+  await row("rapor").dragTo(row("Arşiv"));
+  await expect(row("rapor")).toHaveCount(0);
   await row("Arşiv").dblclick();
   await expect(files.getByRole("button", { name: "Arşiv" })).toHaveAttribute(
     "aria-current",
     "page",
   );
-  await expect(row("rapor.txt")).toBeVisible();
+  await expect(row("rapor")).toBeVisible();
 
   // Context menu: duplicate, properties, download.
-  await row("rapor.txt").click({ button: "right" });
+  await row("rapor").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Çoğalt" }).click();
-  await expect(row("rapor (kopya).txt")).toBeVisible();
-  await row("rapor.txt").click({ button: "right" });
+  await expect(row("rapor (kopya)")).toBeVisible();
+  await row("rapor").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Özellikler" }).click();
-  const properties = page.getByRole("dialog", { name: "rapor.txt" });
-  await expect(properties).toContainText("/Arşiv/rapor.txt");
+  const properties = page.getByRole("dialog", { name: "rapor" });
+  await expect(properties).toContainText("/Arşiv/rapor");
   await expect(properties).toContainText("rw-");
   await page.keyboard.press("Escape");
   const download = page.waitForEvent("download");
-  await row("rapor.txt").click({ button: "right" });
+  await row("rapor").click({ button: "right" });
   await page.getByRole("menuitem", { name: "İndir" }).click();
-  expect((await download).suggestedFilename()).toBe("rapor.txt");
+  expect((await download).suggestedFilename()).toBe("rapor");
 
   // Search from the root finds both copies.
   await files.getByRole("button", { name: "Development files" }).first().click();
