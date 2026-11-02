@@ -23,6 +23,7 @@ import {
   cleanName,
   isVideo,
   mimeOfVideo,
+  openedVideoFiles,
   playlistId,
   resumePosition,
   videoPreferences,
@@ -44,6 +45,8 @@ export function VideoApp() {
   const [error, setError] = useState<unknown>(null);
   const [playbackError, setPlaybackError] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [opened, setOpened] = useState(app.window.initialState);
+  const handledOpen = useRef<string | null>(null);
   const media = useRef<HTMLVideoElement>(null);
   const generation = useRef(0);
   const active = useRef(false);
@@ -118,6 +121,43 @@ export function VideoApp() {
     setPlaybackError(false);
     setEpoch((n) => n + 1);
   };
+  useEffect(() => app.window.onOpened(setOpened), [app]);
+  useEffect(() => {
+    const request = openedVideoFiles(opened);
+    if (!stored.loaded || !allowed || !request || handledOpen.current === request.requestId) return;
+    if (request.error) {
+      handledOpen.current = request.requestId;
+      setError(new Error("file-open"));
+      return;
+    }
+    if (!request.ids.length) {
+      handledOpen.current = request.requestId;
+      return;
+    }
+    if (new Set([...list.ids, ...request.ids]).size > 100) {
+      setError(new Error("playlist-full"));
+      return;
+    }
+    handledOpen.current = request.requestId;
+    remember(true);
+    media.current?.pause();
+    restoring.current = true;
+    resume.current = null;
+    setRaw((raw: unknown) => {
+      const state = videoPreferences(raw);
+      return videoPreferences({
+        ...state,
+        current: request.ids[0],
+        lists: state.lists.map((item) =>
+          item.id === state.list
+            ? { ...item, ids: [...new Set([...item.ids, ...request.ids])].slice(0, 100) }
+            : item,
+        ),
+      });
+    });
+    setError(null);
+    setEpoch((n) => n + 1);
+  }, [opened, stored.loaded, allowed, prefs.list]);
   useEffect(() => {
     const stop = () => {
       remember(true);
@@ -336,12 +376,16 @@ export function VideoApp() {
     },
   });
   const problem = (cause: unknown) =>
-    cause instanceof Error &&
-    (cause.message === "subtitle-limit" || cause.message === "invalid-subtitles")
-      ? t("video.badSubtitles")
-      : cause instanceof Error && cause.message === "fullscreen"
-        ? t("video.fullscreenError")
-        : errorMessage(t, cause);
+    cause instanceof Error && cause.message === "file-open"
+      ? t("video.openFailed")
+      : cause instanceof Error && cause.message === "playlist-full"
+        ? t("video.playlistFull")
+        : cause instanceof Error &&
+            (cause.message === "subtitle-limit" || cause.message === "invalid-subtitles")
+          ? t("video.badSubtitles")
+          : cause instanceof Error && cause.message === "fullscreen"
+            ? t("video.fullscreenError")
+            : errorMessage(t, cause);
   return (
     <Shell
       toolbar={() => (

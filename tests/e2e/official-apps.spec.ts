@@ -1909,12 +1909,12 @@ test.describe("Gallery", () => {
     await expect(cards()).toContainText("winter.png");
     await frame.getByRole("checkbox", { name: "Yalnızca favoriler", exact: true }).uncheck();
     await frame
-      .getByRole("searchbox", { name: "Görsel adlarında ve yollarda ara", exact: true })
+      .getByRole("searchbox", { name: "Medya adı ve yollarında ara", exact: true })
       .fill("walks");
     await expect(cards()).toHaveCount(1);
     await expect(cards()).toContainText("summer.png");
     await frame
-      .getByRole("searchbox", { name: "Görsel adlarında ve yollarda ara", exact: true })
+      .getByRole("searchbox", { name: "Medya adı ve yollarında ara", exact: true })
       .fill("");
     await upload(base, "spring.png", makeImage(80, 80, [180, 130, 20]));
     await frame.getByRole("button", { name: "Klasör dizinlerini yenile", exact: true }).click();

@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.whiteboard",
   "name": "Whiteboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Sketch on an infinite canvas: pen, shapes, text, connecting arrows, undo and zoom. Boards are kept for you and export to PNG and SVG.",
   "entry": "index.html",
   "icon": "icon.svg",

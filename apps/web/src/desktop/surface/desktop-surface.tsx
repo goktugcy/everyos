@@ -1,3 +1,4 @@
+import { fileAppFor, isVideoFile, openFileWithApp } from "../desktop-apps/open-file.ts";
 import type { DesktopItem, FileEntry } from "@everyos/shared";
 import { workArea, type Point, type Rect } from "@everyos/window-manager";
 import {
@@ -518,11 +519,13 @@ export function DesktopSurface() {
     if (!location) return;
     const target = entryLocation(entry.name);
     const kind = kindOf(entry);
+    const appId = fileAppFor(entry.name);
     // Folders open in a Files window, with the sidebar, like every other folder.
     if (kind === "folder")
       desktop.openApp("everyos.files", { newInstance: true, appState: target });
-    else if (kind === "image") setPreview(target);
-    else if (kind === "text") desktop.openWindow("everyos.editor", target);
+    else if (kind !== "link" && appId) {
+      if (!openFileWithApp(target, appId)) setNotice({ text: t("errors.FORBIDDEN"), error: true });
+    } else if (kind === "text") desktop.openWindow("everyos.editor", target);
     else download(target);
   };
 
@@ -1062,7 +1065,9 @@ export function DesktopSurface() {
             {
               kind: "item" as const,
               id: "download",
-              label: t("files.menu.download"),
+              label: t(
+                isVideoFile(entry.name) ? "files.menu.downloadVideo" : "files.menu.download",
+              ),
               icon: <Download />,
               onSelect: () => download(target),
             },

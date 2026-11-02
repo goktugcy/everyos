@@ -38,6 +38,8 @@
     "codecHint": "Il s’agit des indications canPlayType du navigateur, sans garantie pour chaque fichier. La lecture réelle fait foi.",
     "probably": "Probablement pris en charge",
     "maybe": "Peut-être pris en charge",
-    "notReported": "Aucune prise en charge déclarée"
+    "notReported": "Aucune prise en charge déclarée",
+    "openFailed": "La vidéo sélectionnée n’a pas pu être ouverte. Vérifiez l’accès au fichier et sélectionnez-la à nouveau.",
+    "playlistFull": "Cette liste est pleine (100 vidéos). Choisissez une autre liste pour ouvrir la vidéo sélectionnée."
   }
 }

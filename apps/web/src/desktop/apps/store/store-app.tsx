@@ -9,6 +9,7 @@ import type {
 } from "@everyos/shared";
 import { Package, Store } from "lucide-react";
 import { Tabs } from "radix-ui";
+import { TabsList } from "../../../components/ui/tabs-list.tsx";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../../components/ui/button.tsx";
@@ -16,7 +17,7 @@ import { Field } from "../../../components/ui/field.tsx";
 import { Select } from "../../../components/ui/select.tsx";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
 import { usePermissions } from "../../../stores/session-store.ts";
-import { useAppStateField } from "../app-context.ts";
+import { useAppHost, useAppStateField } from "../app-context.ts";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { AddCatalog, CatalogCard } from "./catalogs.tsx";
 import { InstallDialog } from "./install-dialog.tsx";
@@ -32,12 +33,15 @@ import { NetworkRules } from "./network-rules.tsx";
 import { desktopAppWindowId, useDesktopApps } from "../../desktop-apps/store.ts";
 import { useAppMenu } from "../app-menu.tsx";
 import { ContextMenuArea } from "../../menus/menus.tsx";
+import { readDesktopAppRequest } from "./desktop-app-request.ts";
+import { RequestedAppDialog } from "./requested-app-dialog.tsx";
 
 const TABS = ["browse", "installed", "catalogs"] as const;
 const TYPES = ["all", "docker", "desktop", "hybrid"] as const;
 const SOURCES = ["all", "official", "community", "private"] as const;
 export default function StoreApp() {
   const { t, i18n } = useTranslation();
+  const host = useAppHost();
   const canCatalog = usePermissions().includes("catalogs:manage");
   const [tab, setTab] = useAppStateField("tab", TABS, "browse");
   const [search, setSearch] = useState("");
@@ -55,6 +59,18 @@ export default function StoreApp() {
     installation: DesktopAppInstallationView | null;
   } | null>(null);
   const [addingRegistry, setAddingRegistry] = useState(false);
+  const navigation =
+    host.appState && typeof host.appState === "object"
+      ? (host.appState as Record<string, unknown>)
+      : {};
+  const requested = readDesktopAppRequest(navigation.desktopAppRequest);
+  const closeRequest = () => {
+    const next = { ...navigation };
+    delete next.desktopAppRequest;
+    host.setAppState(next);
+    setSelected(null);
+    setDesktopSelected(null);
+  };
   const names = useDesktopApps((state) => state.names);
   const apps = useApiResource<{ apps: CatalogAppView[] }>("/catalogs/apps", 60_000);
   const desktopListings = useApiResource<{ apps: DesktopAppListing[] }>(
@@ -139,8 +155,8 @@ export default function StoreApp() {
       onValueChange={(value) => setTab(value as typeof tab)}
       className="flex h-full min-h-0 flex-col"
     >
-      <Tabs.List
-        className="flex shrink-0 gap-1 overflow-x-auto border-b border-line px-3 pt-2"
+      <TabsList
+        className="flex shrink-0 gap-1 overflow-x-auto overflow-y-hidden border-b border-line px-3 pt-2"
         aria-label={t("apps.store")}
       >
         {TABS.filter((value) => value !== "catalogs" || canCatalog).map((value) => (
@@ -152,7 +168,7 @@ export default function StoreApp() {
             {t(`appStore.${value}`)}
           </Tabs.Trigger>
         ))}
-      </Tabs.List>
+      </TabsList>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {jobId ? (
           <div className={jobNoticeHidden ? undefined : "mb-4"}>
@@ -424,7 +440,7 @@ export default function StoreApp() {
           </Tabs.Content>
         ) : null}
       </div>
-      {selected ? (
+      {selected && !requested ? (
         <InstallDialog
           app={selected}
           onClose={() => setSelected(null)}
@@ -432,11 +448,19 @@ export default function StoreApp() {
           sources={installed.data?.apps ?? []}
         />
       ) : null}
+      {requested ? (
+        <RequestedAppDialog
+          key={requested.requestId}
+          request={requested}
+          onClose={closeRequest}
+          onChanged={reload}
+        />
+      ) : null}
       {adding ? <AddCatalog onClose={() => setAdding(false)} onChanged={reload} /> : null}
       {addingRegistry ? (
         <AddRegistryDialog onClose={() => setAddingRegistry(false)} onChanged={reload} />
       ) : null}
-      {desktopSelected ? (
+      {desktopSelected && !requested ? (
         <DesktopAppDialog
           key={`${desktopSelected.listing?.appId ?? desktopSelected.installation?.appId}`}
           listing={desktopSelected.listing}

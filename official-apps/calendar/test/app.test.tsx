@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import type { MockHostOptions } from "@everyos/app-testing";
 import { byRole, byText, pressKey, typeInto } from "@everyos/app-testing/dom";
 import { renderApp, type RenderedApp } from "@everyos/app-ui/testing";
@@ -84,6 +85,25 @@ const chipTitles = () =>
   [...document.querySelectorAll(".cal-chip-title")].map((chip) => chip.textContent);
 
 describe("Calendar", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "BEGIN:VEVENT",
+      "UID:selected@test",
+      "DTSTART:20261022T090000Z",
+      "DTEND:20261022T100000Z",
+      "SUMMARY:Selected meeting",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const { host } = await start(fileOpenOptions("selected.ics", ics));
+    await vi.waitFor(() => expect(byText("The file has 1 event.")).not.toBeNull());
+    expect(events(host)).toHaveLength(0);
+    await click("button", "Import 1 event");
+    await vi.waitFor(() => expect(events(host)[0]?.title).toBe("Selected meeting"));
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("shows the month and adds an event through the dialog", async () => {
     const { host } = await start();
     expect(byText("October 2026")).not.toBeNull();

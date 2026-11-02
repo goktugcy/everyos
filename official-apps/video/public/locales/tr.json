@@ -38,6 +38,8 @@
     "codecHint": "Bunlar tarayıcının canPlayType bildirimleridir; belirli bir dosyanın açılacağını garanti etmez. Gerçek oynatma sonucu belirleyicidir.",
     "probably": "Büyük olasılıkla destekleniyor bildirimi",
     "maybe": "Desteklenebilir bildirimi",
-    "notReported": "Destek bildirilmiyor"
+    "notReported": "Destek bildirilmiyor",
+    "openFailed": "Seçilen video açılamadı. Dosya erişimini kontrol edip yeniden seçin.",
+    "playlistFull": "Bu oynatma listesi dolu (100 video). Seçilen videoyu açmak için başka bir oynatma listesi seçin."
   }
 }

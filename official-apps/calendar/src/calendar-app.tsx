@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import {
   Button,
   Dialog,
@@ -392,6 +393,26 @@ export function CalendarApp() {
       );
     }
   };
+
+  useOpenedFiles({
+    ready: events !== null && calendars !== null,
+    accept: [".ics", ".ical", ".ifb", ".icalendar"],
+    open: async ([handle]) => {
+      if (!handle) return;
+      const text = new TextDecoder().decode(
+        await app.files.read(handle, { maxBytes: MAX_ICS_BYTES }),
+      );
+      const imported = parseIcs(text, { calendarId: "", viewerZone: zone, now: Date.now() });
+      setImporting({ imported, fileName: handle.name.replace(/\.[^.]*$/, ""), target: "new" });
+    },
+    error: (caught) =>
+      toast(
+        caught instanceof SyntaxError
+          ? t("ics.invalid")
+          : errorMessage(t, caught) || t("ics.invalid"),
+        "danger",
+      ),
+  });
 
   const finishImport = async () => {
     if (!importing || !calendars) return;

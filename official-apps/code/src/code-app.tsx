@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import { gotoLine, openSearchPanel } from "@codemirror/search";
 import type { FileHandle } from "@everyos/app-sdk";
 import {
@@ -251,6 +252,14 @@ export function CodeApp() {
       fail(caught);
     }
   };
+
+  useOpenedFiles({
+    ready: docs !== null,
+    open: async (handles) => {
+      for (const handle of handles) await openSource({ kind: "file", handleId: handle.id }, handle);
+    },
+    error: fail,
+  });
 
   const openEntry = async (entry: Entry) => {
     if (!workspace) return;

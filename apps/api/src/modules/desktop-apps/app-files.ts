@@ -57,7 +57,10 @@ const MIME: Record<string, string> = {
   mp4: "video/mp4",
   m4v: "video/mp4",
   webm: "video/webm",
+  ogv: "video/ogg",
+  mov: "video/quicktime",
   mkv: "video/x-matroska",
+  avi: "video/x-msvideo",
   vtt: "text/vtt",
   srt: "application/x-subrip",
 };

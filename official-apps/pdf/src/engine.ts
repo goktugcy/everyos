@@ -225,14 +225,14 @@ export const engine: PdfEngine = {
         listeners.add(listener);
         return () => listeners.delete(listener);
       },
-      destroy() {
+      async destroy() {
         if (destroyed) return;
         destroyed = true;
         listeners.clear();
         viewer.setDocument(null);
         linkService.setDocument(null, null);
         // Ends the document's work in the worker (the worker itself serves the next one).
-        void doc.loadingTask.destroy();
+        await doc.loadingTask.destroy();
       },
     };
     return session;

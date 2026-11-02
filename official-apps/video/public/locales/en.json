@@ -38,6 +38,8 @@
     "codecHint": "These are the browser’s canPlayType reports, not a promise that a particular file will decode. Actual playback is decisive.",
     "probably": "Reported as probably supported",
     "maybe": "Reported as possibly supported",
-    "notReported": "No support reported"
+    "notReported": "No support reported",
+    "openFailed": "The selected video could not be opened. Check file access and select it again.",
+    "playlistFull": "This playlist is full (100 videos). Choose another playlist to open the selected video."
   }
 }

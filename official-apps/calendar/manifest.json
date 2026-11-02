@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.calendar",
   "name": "Calendar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plan your days: day, week and month views, repeating events, reminders, search, several calendars and iCalendar (.ics) import and export.",
   "entry": "index.html",
   "icon": "icon.svg",

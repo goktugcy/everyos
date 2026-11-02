@@ -62,6 +62,7 @@ import { ContextMenuArea } from "../../menus/menus.tsx";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { openTerminalEntries } from "../../menus/terminal-entry.tsx";
 import { desktop } from "../../state/controller.ts";
+import { fileAppFor, isVideoFile, openFileWithApp } from "../../desktop-apps/open-file.ts";
 import { iconsInRect, selectionRect } from "../../surface/icon-selection.ts";
 import { useAppHost } from "../app-context.ts";
 import {
@@ -357,9 +358,12 @@ export default function FilesApp() {
     if (!location) return;
     const target = { root: location.root, path: joinPath(location.path, entry.name) };
     const kind = kindOf(entry);
+    const appId = fileAppFor(entry.name);
     if (kind === "folder") go(target);
-    else if (kind === "image") setPreview(target);
-    else if (kind === "text") desktop.openWindow("everyos.editor", target);
+    else if (kind !== "link" && appId) {
+      if (!openFileWithApp(target, appId))
+        setActionError(new ApiRequestError(403, "FORBIDDEN", "File application access denied"));
+    } else if (kind === "text") desktop.openWindow("everyos.editor", target);
     else download([target.path]);
   };
 
@@ -844,7 +848,11 @@ export default function FilesApp() {
             {
               kind: "item" as const,
               id: "download",
-              label: t("files.menu.download"),
+              label: t(
+                single && isVideoFile(entry.name)
+                  ? "files.menu.downloadVideo"
+                  : "files.menu.download",
+              ),
               icon: <Download />,
               onSelect: () => download(paths),
             },

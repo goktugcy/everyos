@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.json",
   "name": "JSON Studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Validate, format and explore JSON: a tree, JSONPath queries, structural diff and CSV export.",
   "entry": "index.html",
   "icon": "icon.svg",

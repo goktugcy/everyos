@@ -2,8 +2,9 @@ import type { FileHandle } from "@everyos/app-sdk";
 import { Button, Checkbox, formatBytes, useApp, useI18n, useT } from "@everyos/app-ui";
 import { useEffect, useState } from "react";
 import { photoHandle, type Photo } from "./albums.ts";
+import { isVideo } from "../../video/src/video.ts";
 
-/** Four bridge requests at a time, at most one visible 40-image page. URLs never persist. */
+/** Four bridge requests at a time, at most one visible 40-item page. URLs never persist. */
 export function PhotoGrid({
   items,
   shares,
@@ -72,7 +73,16 @@ export function PhotoGrid({
                 if (image) open(photo, image.file);
               }}
             >
-              {image ? (
+              {image && isVideo(photo.name) ? (
+                <>
+                  <video src={image.src} muted playsInline preload="metadata" aria-hidden="true" />
+                  <span className="gallery-video-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                      <path fill="currentColor" d="M8 5v14l11-7z" />
+                    </svg>
+                  </span>
+                </>
+              ) : image ? (
                 <img
                   src={image.src}
                   alt={photo.name}

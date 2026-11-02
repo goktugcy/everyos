@@ -1064,6 +1064,13 @@ describe("app file access", () => {
     expect(await ranged.text()).toBe("2345");
     expect(ranged.headers.get("content-type")).toBe("video/mp4");
     expect(ranged.headers.get("access-control-allow-origin")).toBe("*");
+    expect(ranged.headers.get("accept-ranges")).toBe("bytes");
+    expect(ranged.headers.get("content-range")).toBe("bytes 2-5/10");
+    const head = await anonymous.request("HEAD", url);
+    expect(head.status).toBe(200);
+    expect(head.headers.get("content-type")).toBe("video/mp4");
+    expect(head.headers.get("content-length")).toBe("10");
+    expect(await head.text()).toBe("");
     await admin.request("DELETE", `/api/app-sdk/files/${handle}`, { body: {}, ...as(token) });
     expect((await anonymous.request("GET", url)).status).toBe(404);
   });

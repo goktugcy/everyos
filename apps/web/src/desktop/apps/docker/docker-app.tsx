@@ -2,6 +2,7 @@ import type { DockerStatus } from "@everyos/shared";
 import { Tabs } from "radix-ui";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
+import { TabsList } from "../../../components/ui/tabs-list.tsx";
 import { useLiveDocker, useLiveDockerSubscription } from "../../../features/docker/live-docker.ts";
 import { useApiResource } from "../../../features/system/use-api-resource.ts";
 import { useAppStateField } from "../app-context.ts";
@@ -38,17 +39,20 @@ export default function DockerApp() {
       className="flex h-full min-h-0 flex-col"
     >
       <div className="flex shrink-0 flex-wrap items-end justify-between gap-x-3 border-b border-line px-3 pt-2">
-        <Tabs.List aria-label={t("apps.docker")} className="flex gap-1 overflow-x-auto">
+        <TabsList
+          aria-label={t("apps.docker")}
+          className="flex min-w-0 max-w-full gap-1 overflow-x-auto overflow-y-hidden"
+        >
           {TABS.map((id) => (
             <Tabs.Trigger
               key={id}
               value={id}
-              className="-mb-px whitespace-nowrap rounded-t-everyos-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-fg"
+              className="whitespace-nowrap rounded-t-everyos-sm border-b-2 border-transparent px-3 py-2 text-sm text-fg-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:text-fg"
             >
               {t(`docker.tabs.${id}`)}
             </Tabs.Trigger>
           ))}
-        </Tabs.List>
+        </TabsList>
         {docker ? (
           <span className="flex items-center gap-2 pb-2 text-xs text-fg-subtle">
             {t("docker.versionLine", {

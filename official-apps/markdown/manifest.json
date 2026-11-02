@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.markdown",
   "name": "Markdown Editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Write Markdown with a live preview, highlighted code, an outline, search and replace, and HTML export.",
   "entry": "index.html",
   "icon": "icon.svg",

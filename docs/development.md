@@ -79,11 +79,11 @@ shortcuts are listed in Settings → Desktop and Dock.
 
 `pnpm dev` (see `scripts/dev.ts`) creates `./.dev/{data,run,secrets}` and starts:
 
-| Process | Command                               | Notes                                                          |
-| ------- | ------------------------------------- | -------------------------------------------------------------- |
-| agent   | `node --watch apps/agent/src/main.ts` | socket `./.dev/run/agent.sock` (0600)                          |
-| api     | `node --watch apps/api/src/main.ts`   | `127.0.0.1:7470`, database `./.dev/data/everyos.db`            |
-| web     | `vite`                                | `127.0.0.1:5173`, proxies `/api` and `/app-runtime` to the API |
+| Process | Command                               | Notes                                                                        |
+| ------- | ------------------------------------- | ---------------------------------------------------------------------------- |
+| agent   | `node --watch apps/agent/src/main.ts` | socket `./.dev/run/agent.sock` (0600)                                        |
+| api     | `node --watch apps/api/src/main.ts`   | `127.0.0.1:7470`, database `./.dev/data/everyos.db`                          |
+| web     | `vite`                                | `127.0.0.1:5173`, proxies `/api`, `/app-runtime` and `/app-files` to the API |
 
 TypeScript runs directly through Node's type stripping, so there is no build step in the loop.
 Code must therefore use erasable syntax only: no `enum`, `namespace` or constructor parameter
@@ -112,10 +112,12 @@ generated anchor changes, restart that stack's API to load it. An already runnin
 exits when the next `pnpm dev` instance takes over its anchor. State and build artifacts remain
 under the ignored `.dev` directory; production signing credentials are never used.
 
-The Vite proxy forwards `/app-runtime` as well as `/api` to the API. Installed app documents,
+The Vite proxy forwards `/app-runtime` and `/app-files` as well as `/api` to the API. Installed app documents,
 module scripts, translations and icons use these versioned runtime URLs; serving the desktop's
 HTML fallback there prevents apps from starting and leaves their icons blank. Runtime responses
 retain the API's content types, CORS headers and sandbox policy in development.
+Scoped media URLs also retain their content types, byte ranges and HEAD responses; serving the
+desktop HTML at `/app-files` prevents approved MP4 videos and gallery previews from decoding.
 
 Docker uses real read-only data when the Unix socket exists; otherwise it uses labeled simulated
 data. EveryOS never changes Docker group membership or socket permissions. Development refuses
@@ -153,6 +155,16 @@ from the runtime byte count. Agent fixture data is simulated; the browser measur
 The collection uses [Playwright CDP sessions](https://playwright.dev/docs/api/class-browsercontext#browser-context-new-cdp-session).
 
 ## Adding things
+
+Scrollable app tab bars use `overflow-x-auto overflow-y-hidden` and keep their triggers inside
+the list bounds. Negative bottom margins on triggers can create a one-pixel vertical overflow
+and an unwanted scrollbar, even when the tabs fit horizontally. Wrapped headers also constrain
+the tab list to the available window width so narrow windows retain horizontal navigation.
+
+Radix tab bars use `TabsList` from `components/ui/tabs-list.tsx`. It distinguishes pointer
+selection from keyboard focus: programmatic focus after restoring a window must not leave a
+keyboard ring on the first mouse-selected tab. Keyboard input and focus leaving the list reset
+the pointer marker, preserving the normal keyboard focus indicator.
 
 - **An API endpoint:** add the request schema to `packages/shared/src/schemas/api.ts` and the
   response type to `packages/shared/src/api-types.ts`. Write the route with `parseJsonBody` and

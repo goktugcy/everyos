@@ -1,4 +1,5 @@
-import type { ThemeSnapshot } from "@everyos/app-sdk";
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
+import type { FileHandle, ThemeSnapshot } from "@everyos/app-sdk";
 import {
   Button,
   EmptyState,
@@ -238,11 +239,9 @@ export function WhiteboardApp({
     }
   };
 
-  const importBoard = async () => {
+  const importHandle = async (handle: FileHandle) => {
     if (!module) return;
     try {
-      const [handle] = await app.files.open({ accept: IMPORT_TYPES });
-      if (!handle) return;
       if (handle.size !== null && handle.size > MAX_IMPORT_BYTES)
         throw new RangeError(`too-large:${MAX_IMPORT_BYTES}`);
       let scene: string;
@@ -265,6 +264,24 @@ export function WhiteboardApp({
       else fail(caught);
     }
   };
+
+  const importBoard = async () => {
+    try {
+      const [handle] = await app.files.open({ accept: IMPORT_TYPES });
+      if (handle) await importHandle(handle);
+    } catch (caught) {
+      fail(caught);
+    }
+  };
+
+  useOpenedFiles({
+    ready: !!module && !!opened && !!boards && currentStatus.loaded,
+    accept: [".excalidraw"],
+    open: async ([handle]) => {
+      if (handle) await importHandle(handle);
+    },
+    error: fail,
+  });
 
   const exportAs = async (kind: "png" | "svg" | "excalidraw") => {
     const canvas = controller.current;

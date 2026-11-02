@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.images",
   "name": "Image Viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "View selected images with zoom, pan, rotation, metadata, original export and slideshows.",
   "entry": "index.html",
   "icon": "icon.svg",

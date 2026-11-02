@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import type { MockHostOptions } from "@everyos/app-testing";
 import { byRole, byText, pressKey, typeInto } from "@everyos/app-testing/dom";
 import { renderApp, type RenderedApp } from "@everyos/app-ui/testing";
@@ -61,6 +62,7 @@ class FakeSession implements PdfSession {
   readonly calls: Array<[string, ...unknown[]]> = [];
   readonly #listeners = new Set<(event: SessionEvent) => void>();
   destroyed = false;
+  beforeDestroy: (() => Promise<void>) | null = null;
   #emit(event: SessionEvent) {
     for (const listener of this.#listeners) listener(event);
   }
@@ -125,6 +127,7 @@ class FakeSession implements PdfSession {
   }
   destroy() {
     this.destroyed = true;
+    return this.beforeDestroy?.();
   }
 }
 
@@ -175,6 +178,34 @@ async function openGuide() {
 }
 
 describe("PDF Viewer", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const fake = fakeEngine();
+    const { host } = await start({
+      ...fileOpenOptions("selected.pdf", BYTES),
+      engine: fake.engine,
+    });
+    await vi.waitFor(() => expect(fake.sessions).toHaveLength(1));
+    await vi.waitFor(() =>
+      expect(document.querySelector('[aria-label="Pages of selected.pdf"]')).not.toBeNull(),
+    );
+    const initial = fileOpenOptions("selected.pdf", BYTES).state as Record<string, unknown>;
+    let finishClose = () => {};
+    fake.sessions[0]!.beforeDestroy = () =>
+      new Promise<void>((resolve) => {
+        finishClose = resolve;
+      });
+    host.emit("window.opened", { state: { ...initial, requestId: "reopen-request" } });
+    await vi.waitFor(() => expect(fake.sessions[0]?.destroyed).toBe(true));
+    expect(fake.sessions).toHaveLength(1);
+    finishClose();
+    await vi.waitFor(() => expect(fake.sessions).toHaveLength(2));
+    expect(fake.sessions[0]?.destroyed).toBe(true);
+    host.emit("window.opened", { state: { ...initial, requestId: "reopen-request" } });
+    await settle();
+    expect(fake.sessions).toHaveLength(2);
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("opens where the person left the document, with their bookmarks", async () => {
     const fake = fakeEngine();
     const { host } = await start({

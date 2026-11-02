@@ -1,5 +1,5 @@
 import { APP_FRAME_SANDBOX, APP_SDK_VERSION } from "@everyos/app-manifest";
-import { INIT_TYPE, PROTOCOL, type HelloMessage } from "@everyos/app-sdk/protocol";
+import { INIT_TYPE, PROTOCOL, type FileHandle, type HelloMessage } from "@everyos/app-sdk/protocol";
 import { EVERYOS_VERSION, type DesktopAppInstallationView } from "@everyos/shared";
 import { AlertTriangle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -22,6 +22,7 @@ import { AppBridge } from "./bridge.ts";
 import { createHandlers, INSTANCE_HEADER, windowState } from "./handlers.ts";
 import { useDesktopApps } from "./store.ts";
 import { themeSnapshot } from "./theme-snapshot.ts";
+import { resolveFileLaunch } from "./file-launches.ts";
 
 /** What the frame may do (shared with the runtime CSP and the developer tools). */
 export { APP_FRAME_SANDBOX };
@@ -64,6 +65,8 @@ export function AppFrame({
   const hostRef = useRef(host);
   // The window state the app knows: what it was started with or saved itself.
   const knownState = useRef<unknown>(undefined);
+  const resolveStateRef = useRef<((state: unknown) => Promise<unknown>) | null>(null);
+  const initialized = useRef(false);
   // Declared before the frame effect, so it runs first in every commit.
   useEffect(() => {
     hostRef.current = host;
@@ -71,9 +74,25 @@ export function AppFrame({
   // Opened again with new state (a widget opening a note …): the running app hears it.
   const appState = host?.appState;
   useEffect(() => {
-    if (kind !== "window" || appState === undefined || appState === knownState.current) return;
+    const bridge = bridgeRef.current;
+    const resolveState = resolveStateRef.current;
+    if (
+      kind !== "window" ||
+      !initialized.current ||
+      !bridge ||
+      !resolveState ||
+      appState === undefined ||
+      appState === knownState.current
+    )
+      return;
     knownState.current = appState;
-    bridgeRef.current?.emit("window.opened", { state: appState });
+    let live = true;
+    void resolveState(appState).then((state) => {
+      if (live && bridge === bridgeRef.current) bridge.emit("window.opened", { state });
+    });
+    return () => {
+      live = false;
+    };
   }, [kind, appState]);
 
   const showDialog = useCallback(
@@ -120,79 +139,97 @@ export function AppFrame({
       if (!disposed) setPhase((current) => (current === "connecting" ? "ready" : current));
     };
 
-    const onLoad = (granted: string[]) => () => {
-      if (disposed || !token || !element.contentWindow) return;
-      bridgeRef.current?.close();
-      const channel = new MessageChannel();
-      const bridge = new AppBridge(
-        channel.port1,
-        createHandlers({
-          app,
-          kind,
-          token,
-          granted: new Set(granted),
-          host: hostRef.current && {
-            ...hostRef.current,
-            setAppState: (state: unknown) => {
-              knownState.current = state;
-              hostRef.current?.setAppState(state);
+    const onLoad = (granted: string[]) => {
+      const connect = async () => {
+        if (disposed || !token || !element.contentWindow) return;
+        initialized.current = false;
+        bridgeRef.current?.close();
+        const channel = new MessageChannel();
+        const bridge = new AppBridge(
+          channel.port1,
+          createHandlers({
+            app,
+            kind,
+            token,
+            granted: new Set(granted),
+            host: hostRef.current && {
+              ...hostRef.current,
+              setAppState: (state: unknown) => {
+                knownState.current = state;
+                hostRef.current?.setAppState(state);
+              },
             },
+            showDialog,
+            showPicker,
+            markReady,
+            guardClose: (enabled) => {
+              if (!windowId) return;
+              setCloseGuard(
+                windowId,
+                enabled
+                  ? () =>
+                      new Promise<boolean>((resolve) => {
+                        const requestId = randomId();
+                        const timer = setTimeout(() => {
+                          decisions.delete(requestId);
+                          resolve(true);
+                        }, CLOSE_DECISION_MS);
+                        decisions.set(requestId, (close) => {
+                          clearTimeout(timer);
+                          decisions.delete(requestId);
+                          resolve(close);
+                        });
+                        bridgeRef.current?.emit("lifecycle.beforeClose", { requestId });
+                      })
+                  : null,
+              );
+            },
+            decideClose: (requestId, close) => decisions.get(requestId)?.(close),
+          }),
+          () => {
+            if (!disposed) setPhase("stopped");
           },
-          showDialog,
-          showPicker,
-          markReady,
-          guardClose: (enabled) => {
-            if (!windowId) return;
-            setCloseGuard(
-              windowId,
-              enabled
-                ? () =>
-                    new Promise<boolean>((resolve) => {
-                      const requestId = randomId();
-                      const timer = setTimeout(() => {
-                        decisions.delete(requestId);
-                        resolve(true);
-                      }, CLOSE_DECISION_MS);
-                      decisions.set(requestId, (close) => {
-                        clearTimeout(timer);
-                        decisions.delete(requestId);
-                        resolve(close);
-                      });
-                      bridgeRef.current?.emit("lifecycle.beforeClose", { requestId });
-                    })
-                : null,
-            );
+        );
+        bridgeRef.current = bridge;
+        element.contentWindow.postMessage({ type: INIT_TYPE, protocol: PROTOCOL }, "*", [
+          channel.port2,
+        ]);
+        let state = kind === "window" ? hostRef.current?.appState : null;
+        knownState.current = state;
+        let resolvedState = await resolveStateRef.current?.(state);
+        while (!disposed && kind === "window" && hostRef.current?.appState !== state) {
+          state = hostRef.current?.appState;
+          knownState.current = state;
+          resolvedState = await resolveStateRef.current?.(state);
+        }
+        if (disposed || bridgeRef.current !== bridge) return;
+        const hello: HelloMessage = {
+          kind: "hello",
+          protocol: PROTOCOL,
+          app: {
+            id: app.appId,
+            version: app.version,
+            name: useDesktopApps.getState().names[app.appId] ?? app.name,
           },
-          decideClose: (requestId, close) => decisions.get(requestId)?.(close),
-        }),
-        () => {
-          if (!disposed) setPhase("stopped");
-        },
-      );
-      bridgeRef.current = bridge;
-      element.contentWindow.postMessage({ type: INIT_TYPE, protocol: PROTOCOL }, "*", [
-        channel.port2,
-      ]);
-      const hello: HelloMessage = {
-        kind: "hello",
-        protocol: PROTOCOL,
-        app: {
-          id: app.appId,
-          version: app.version,
-          name: useDesktopApps.getState().names[app.appId] ?? app.name,
-        },
-        instance: { id: randomId(), kind, widgetId },
-        granted,
-        locale: i18next.language,
-        theme: themeSnapshot(useThemeStore.getState().theme),
-        window: windowState(windowId),
-        everyos: { version: EVERYOS_VERSION, sdk: APP_SDK_VERSION },
-        state: kind === "window" ? (hostRef.current?.appState ?? null) : null,
+          instance: { id: randomId(), kind, widgetId },
+          granted,
+          locale: i18next.language,
+          theme: themeSnapshot(useThemeStore.getState().theme),
+          window: windowState(windowId),
+          everyos: { version: EVERYOS_VERSION, sdk: APP_SDK_VERSION },
+          state: resolvedState ?? null,
+        };
+        knownState.current = hostRef.current?.appState;
+        initialized.current = true;
+        bridge.start(hello);
+        if (readyTimer) clearTimeout(readyTimer);
+        readyTimer = setTimeout(markReady, READY_FALLBACK_MS);
       };
-      knownState.current = hostRef.current?.appState;
-      bridge.start(hello);
-      if (readyTimer) clearTimeout(readyTimer);
-      readyTimer = setTimeout(markReady, READY_FALLBACK_MS);
+      return () => {
+        void connect().catch(() => {
+          if (!disposed) setPhase("failed");
+        });
+      };
     };
 
     setPhase("connecting");
@@ -211,6 +248,22 @@ export function AppFrame({
           return;
         }
         token = opened.token;
+        resolveStateRef.current = (state) =>
+          windowId && kind === "window"
+            ? resolveFileLaunch(
+                state,
+                windowId,
+                app.appId,
+                async (location) =>
+                  (
+                    await api<{ handles: FileHandle[] }>("/app-sdk/files/grants", {
+                      method: "POST",
+                      body: { items: [location], write: false, persist: true },
+                      headers: { [INSTANCE_HEADER]: opened.token },
+                    })
+                  ).handles,
+              )
+            : Promise.resolve(state);
         grantedNow = new Set(opened.granted);
         listener = onLoad(opened.granted);
         element.addEventListener("load", listener);
@@ -261,6 +314,8 @@ export function AppFrame({
 
     return () => {
       disposed = true;
+      initialized.current = false;
+      resolveStateRef.current = null;
       if (listener) element.removeEventListener("load", listener);
       if (readyTimer) clearTimeout(readyTimer);
       const bridge = bridgeRef.current;

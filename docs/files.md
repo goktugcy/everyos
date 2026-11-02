@@ -139,8 +139,9 @@ The **Files** app (`everyos.files`) looks like the macOS Finder and provides:
 - **Drag and drop** onto folders, the path bar or sidebar places: move, or copy with Alt/Ctrl.
 - **Uploads:** files dropped from the operating system or chosen in a picker upload with progress,
   and ask before replacing an existing file.
-- **Previews and editing:** images open in a preview. Text files open in the **Text Editor**
-  (`everyos.editor`), which saves with Ctrl+S, detects concurrent changes and can revert.
+- **Previews and editing:** supported formats use the official app associations described below.
+  Other recognized text files retain the built-in editor (`everyos.editor`), which saves with Ctrl+S,
+  detects concurrent changes and can revert.
 - Every change made in the tab (any Files window, the desktop, the pulse shelf) makes all views
   of a folder list it again.
 
@@ -161,8 +162,16 @@ desktop) next to the app shortcuts. Its items are ordinary files and folders:
 - **New folder** and **New text document** in the desktop's context menu create them in the
   Desktop folder, where the menu was opened; **Paste** pastes the Files clipboard there and
   **Open Desktop folder** opens it in Files.
-- **Opening** works as in Files: a folder opens in a Files window (with the sidebar), an image in
-  the preview, a text file in the Text Editor, anything else downloads.
+- **Opening** works as in Files: folders open in a Files window. Supported files open in their
+  official app: videos in Video Player, PDFs in PDF Viewer, images in Image Viewer, Markdown in
+  Markdown Editor, JSON in JSON Studio, plain text in Text Editor, source/configuration files in
+  Code Editor, `.ics` calendars in Calendar's import preview and `.excalidraw` drawings in Whiteboard.
+  If that official app is not installed, its App Store installation details open. This does not
+  install an app or download the file automatically. **Download** remains available in the context
+  menu (**Download video** for a single video). Unsupported files keep their existing fallback.
+  Only the selected file is shared, read-only, through the app's normal file permission; the app
+  receives a handle instead of its host path. Editors retain their size limits and unsaved-change
+  checks; a read-only selection uses Save As when writing. Calendar import still asks for confirmation.
 - **Item menus and keys:** open, download, show in Files, cut, copy, paste into a folder, rename
   (F2), properties, move to trash (Delete, with confirmation). Ctrl/Command-click toggles icons, Shift-click
   selects a range, Ctrl/Command+A selects all and Escape clears the selection. Drawing on empty

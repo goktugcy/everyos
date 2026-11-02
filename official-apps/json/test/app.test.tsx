@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import { renderApp, typeInEditor, type RenderedApp } from "@everyos/app-ui/testing";
 import { byRole, byText, typeInto } from "@everyos/app-testing/dom";
 import type { MockHostOptions } from "@everyos/app-testing";
@@ -29,6 +30,12 @@ async function click(role: string, name: string | RegExp) {
 const editorText = () => document.querySelector(".cm-content")?.textContent;
 
 describe("JSON Studio", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const { host } = await start(fileOpenOptions("selected.json", '{"selected":true}'));
+    await vi.waitFor(() => expect(editorText()).toBe('{"selected":true}'));
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("validates as you type, points at errors and formats", async () => {
     await start();
     typeInEditor('{"b": 1, "a": [1, 2,]}');

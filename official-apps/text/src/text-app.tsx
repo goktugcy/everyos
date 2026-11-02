@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import type { FileHandle } from "@everyos/app-sdk";
 import {
   Button,
@@ -241,6 +242,14 @@ export function TextApp() {
       fail(caught);
     }
   };
+
+  useOpenedFiles({
+    ready: docs !== null,
+    open: async (handles) => {
+      for (const handle of handles) await openRecent(handle);
+    },
+    error: fail,
+  });
 
   /** Writes `doc` to its file (or asks where); returns false when it was not saved. */
   const save = async (doc: Doc, saveAs = false): Promise<boolean> => {

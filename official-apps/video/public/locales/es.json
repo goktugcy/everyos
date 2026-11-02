@@ -38,6 +38,8 @@
     "codecHint": "Son informes canPlayType del navegador, no una garantía para cada archivo. La reproducción real es decisiva.",
     "probably": "Probablemente compatible",
     "maybe": "Posiblemente compatible",
-    "notReported": "Sin compatibilidad declarada"
+    "notReported": "Sin compatibilidad declarada",
+    "openFailed": "No se pudo abrir el vídeo seleccionado. Comprueba el acceso al archivo y selecciónalo de nuevo.",
+    "playlistFull": "Esta lista está llena (100 vídeos). Elige otra lista para abrir el vídeo seleccionado."
   }
 }

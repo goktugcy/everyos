@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import { indentUnit } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import type { MockHostOptions } from "@everyos/app-testing";
@@ -55,6 +56,13 @@ async function openProject() {
 }
 
 describe("Code Editor", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const { host } = await start(fileOpenOptions("selected.ts", "export const selected = 42;"));
+    await vi.waitFor(() => expect(tabs()).toContain("selected.ts"));
+    await vi.waitFor(() => expect(editorText()).toBe("export const selected = 42;"));
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("opens a folder, browses it and saves a file in place with its line endings", async () => {
     const { host } = await start();
     expect(byText("Open something to edit")).not.toBeNull();

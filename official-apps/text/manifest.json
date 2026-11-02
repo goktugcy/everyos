@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.text",
   "name": "Text Editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Plain text files in tabs, with find and replace, encodings, line endings and recovery of unsaved work.",
   "entry": "index.html",
   "icon": "icon.svg",

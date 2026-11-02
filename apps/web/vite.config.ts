@@ -16,6 +16,8 @@ export default defineConfig({
       "/api": { target: apiTarget, changeOrigin: false, ws: true },
       // Installed app documents, modules, locales and icons are served by the API too.
       "/app-runtime": { target: apiTarget, changeOrigin: false },
+      // Scoped image/audio/video URLs must reach the API, including byte-range requests.
+      "/app-files": { target: apiTarget, changeOrigin: false },
     },
   },
   build: {

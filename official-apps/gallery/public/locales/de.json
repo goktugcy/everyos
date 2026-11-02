@@ -3,12 +3,12 @@
     "open": "Bilder öffnen",
     "save": "Originalbild speichern",
     "scope": "Zugriff nur auf ausgewählte Dateien. Bis zu 100 Bilder mit je höchstens 50 MiB. Zoom und Drehung betreffen die Vorschau; gespeichert wird das Original.",
-    "permission": "Bilderzugriff benötigt files:pick aus dem App Store.",
+    "permission": "Medienzugriff erfordert die Berechtigung files:pick aus dem App Store.",
     "revoked": "Einige gespeicherte Dateien sind nicht mehr freigegeben. Wähle sie erneut aus.",
     "empty": "Kein Bild ausgewählt",
     "openHint": "Wähle JPEG, PNG, GIF, WebP, AVIF, BMP, ICO oder SVG über EveryOS. Die Dekodierung hängt vom Browser ab.",
-    "previous": "Vorheriges Bild",
-    "next": "Nächstes Bild",
+    "previous": "Vorheriges Element",
+    "next": "Nächstes Element",
     "selection": "Ausgewähltes Bild",
     "slideshow": "Diashow starten",
     "stop": "Diashow stoppen",
@@ -27,7 +27,7 @@
   },
   "app": {
     "name": "Galerie",
-    "description": "Ausgewählte Bilder in Alben organisieren, ohne Quelldateien zu verschieben oder zu löschen."
+    "description": "Ausgewählte Bilder und Videos in Alben ordnen, ohne Quelldateien zu verschieben oder zu löschen."
   },
   "gallery": {
     "create": "Neues Album",
@@ -37,14 +37,14 @@
     "album": "Album",
     "empty": "Noch keine Alben",
     "emptyHint": "Erstelle ein Album und füge ausgewählte Dateien hinzu oder indexiere einen freigegebenen Ordner. Bis zu 20 Alben.",
-    "scope": "Nur ausgewählte Dateien und freigegebene Ordner werden indexiert. Pro Album bis zu 1.000 Bilder oder 210 KiB Indexdaten. Quelldateien werden weder verschoben noch gelöscht.",
-    "addFiles": "Bilder hinzufügen",
+    "scope": "Nur ausgewählte Dateien und freigegebene Ordner werden indiziert. Jedes Album enthält bis zu 1.000 Bilder und Videos oder 210 KiB Indexdaten. Videos werden direkt gestreamt; Quelldateien werden nie verschoben oder gelöscht.",
+    "addFiles": "Medien hinzufügen",
     "addFolder": "Freigegebenen Ordner indexieren",
     "refresh": "Ordnerindexe aktualisieren",
     "partial": "Der Index ist unvollständig: Einträge waren unzugänglich, zu groß oder ein Limit wurde erreicht. Wähle einen kleineren Bereich oder ein anderes Album.",
     "indexed": "Letzter Ordnerscan: {{at}}",
-    "search": "Bildnamen und Pfade suchen",
-    "sort": "Bilder sortieren",
+    "search": "Mediennamen und Pfade durchsuchen",
+    "sort": "Medien sortieren",
     "byName": "Name",
     "byDate": "Änderungszeit (falls bekannt)",
     "bySize": "Größe, größte zuerst",
@@ -54,15 +54,18 @@
     "selectPage": "Diese Seite auswählen",
     "clearSelection": "Auswahl aufheben",
     "removeSelected": "Auswahl aus Album entfernen",
-    "count": "{{count}} Bilder · {{selected}} ausgewählt",
+    "count": "{{count}} Elemente · {{selected}} ausgewählt",
     "closePreview": "Vorschau schließen",
     "previewNamed": "{{name}} anzeigen",
     "selectNamed": "{{name}} auswählen",
-    "noImages": "Keine passenden Bilder",
-    "addHint": "Füge Bilder hinzu, gib einen Ordner frei oder ändere die Filter.",
+    "noImages": "Keine passenden Medien",
+    "addHint": "Bilder oder Videos hinzufügen, einen Ordner freigeben oder Filter ändern.",
     "previousPage": "Vorherige Seite",
     "nextPage": "Nächste Seite",
     "unavailable": "Vorschau nicht verfügbar",
     "loading": "Vorschau lädt…"
+  },
+  "video": {
+    "unsupported": "Datei nicht abspielbar. Codec/Container möglicherweise nicht unterstützt, Datei beschädigt oder Freigabe abgelaufen. Lade neu oder nutze einen anderen Browser/ein anderes Format. Keine Transkodierung."
   }
 }

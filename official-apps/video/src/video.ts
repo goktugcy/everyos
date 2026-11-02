@@ -1,5 +1,35 @@
 export const VIDEO_TYPES = [".mp4", ".m4v", ".webm", ".ogv", ".ogg", ".mov", ".mkv", ".avi"];
 export const isVideo = (name: string) => /\.(mp4|m4v|webm|ogv|ogg|mov|mkv|avi)$/i.test(name);
+export function openedVideoFiles(
+  value: unknown,
+): { requestId: string; ids: string[]; error: string | null } | null {
+  if (!value || typeof value !== "object") return null;
+  const data = value as { type?: unknown; requestId?: unknown; files?: unknown; error?: unknown };
+  if (
+    data.type !== "everyos.file-open" ||
+    typeof data.requestId !== "string" ||
+    data.requestId.length > 128
+  )
+    return null;
+  const ids = (Array.isArray(data.files) ? data.files : [])
+    .slice(0, 100)
+    .flatMap((file: unknown) => {
+      if (!file || typeof file !== "object") return [];
+      const item = file as { id?: unknown; kind?: unknown; name?: unknown };
+      return typeof item.id === "string" &&
+        /^[\w-]{1,64}$/.test(item.id) &&
+        item.kind === "file" &&
+        typeof item.name === "string" &&
+        isVideo(item.name)
+        ? [item.id]
+        : [];
+    });
+  return {
+    requestId: data.requestId,
+    ids: [...new Set(ids)],
+    error: typeof data.error === "string" ? data.error : null,
+  };
+}
 const validId = (value: unknown): value is string =>
   typeof value === "string" && /^[\w-]{1,64}$/.test(value);
 export interface Playlist {

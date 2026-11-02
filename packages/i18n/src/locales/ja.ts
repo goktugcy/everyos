@@ -3196,6 +3196,7 @@ export const ja: LocaleMessages = {
     menu: {
       open: "開く",
       download: "ダウンロード",
+      downloadVideo: "動画をダウンロード",
       cut: "切り取り",
       copy: "コピー",
       paste: "貼り付け",
@@ -4084,6 +4085,8 @@ export const ja: LocaleMessages = {
       uninstallTitle: "{{name}} をアンインストールしますか？",
       uninstallBody: "このサーバーでアプリを使っていた全員のデータが削除されます。",
       permissions: "このアプリができること",
+      requestUnavailable:
+        "指定したアプリはカタログで利用できません。配信元を確認して再試行してください。",
       noPermissions: "このアプリは権限を要求しません。",
       notGranted: "あなたには許可されていません",
       approve:

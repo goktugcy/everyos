@@ -3204,6 +3204,7 @@ export const ru: LocaleMessages = {
     menu: {
       open: "Открыть",
       download: "Скачать",
+      downloadVideo: "Скачать видео",
       cut: "Вырезать",
       copy: "Копировать",
       paste: "Вставить",
@@ -4099,6 +4100,8 @@ export const ru: LocaleMessages = {
       uninstallTitle: "Удалить {{name}}?",
       uninstallBody: "Его данные будут удалены для всех, кто пользовался им на этом сервере.",
       permissions: "Что может это приложение",
+      requestUnavailable:
+        "Запрошенное приложение недоступно в каталоге. Проверьте источник и повторите попытку.",
       noPermissions: "Это приложение не запрашивает разрешений.",
       notGranted: "Не разрешено для вас",
       approve:

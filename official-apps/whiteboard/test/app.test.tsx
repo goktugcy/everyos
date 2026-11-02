@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import { DARK_THEME, type MockHostOptions } from "@everyos/app-testing";
 import { byRole, byText } from "@everyos/app-testing/dom";
 import { renderApp, type RenderedApp } from "@everyos/app-ui/testing";
@@ -78,6 +79,20 @@ const boardNames = () =>
   [...document.querySelectorAll(".wb-board-name")].map((entry) => entry.textContent);
 
 describe("Whiteboard", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const fake = fakeCanvas();
+    const { host } = await start(
+      fake,
+      fileOpenOptions(
+        "selected.excalidraw",
+        JSON.stringify({ type: "excalidraw", elements: ["selected rectangle"] }),
+      ),
+    );
+    await vi.waitFor(() => expect(boardNames()).toContain("selected"));
+    await vi.waitFor(() => expect(fake.state.shapes).toEqual(["selected rectangle"]));
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("starts with a board, saves drawings a moment after the last change, and reopens them", async () => {
     const fake = fakeCanvas();
     const first = await start(fake);
