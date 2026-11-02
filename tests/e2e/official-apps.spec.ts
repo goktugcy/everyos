@@ -379,9 +379,8 @@ test.describe("PDF Viewer", () => {
     }
     await page.reload();
     const showFiles = async () => {
-      await page.keyboard.press("Control+k");
-      await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("Dosyalar");
-      await page.keyboard.press("Enter");
+      await expect(page.getByTestId("desktop")).toBeVisible();
+      await page.getByTestId("dock").locator('[data-dock-item="everyos.files"] button').click();
     };
     await showFiles();
     const files = page.locator('[data-app-id="everyos.files"]');
@@ -393,7 +392,7 @@ test.describe("PDF Viewer", () => {
     page.on("download", (download) => downloads.push(download.suggestedFilename()));
     await files.locator('[data-name="default-first.pdf"]').dblclick();
     const dialog = page.getByRole("dialog").filter({ has: page.getByTestId("desktop-app-dialog") });
-    await expect(dialog).toContainText(pdf.name);
+    await expect(dialog).toContainText("PDF Viewer");
     const before = JSON.parse((await api(page, "GET", "/api/desktop-apps/installed")).text) as {
       apps: Array<{ appId: string }>;
     };
