@@ -91,8 +91,11 @@ export function useOffice(format: OfficeFormat) {
   ) => {
     exporter.current = null;
     setReady(false);
+    const id = [...crypto.getRandomValues(new Uint8Array(16))]
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
     update({
-      id: crypto.randomUUID(),
+      id,
       bytes,
       name,
       handle,

@@ -13,7 +13,9 @@ and **always saves a modern `.docx` copy**, leaving the original `.doc` unchange
 This is not full Microsoft Word compatibility. Password-protected Office files are rejected;
 macros are never executed. Native DOC writeback is not supported.
 
-The app bundles its engine, WASM and fonts, with license notices inside the package. No document
+The app bundles its engine, WASM and fonts, with license notices inside the package.
+On plain HTTP LAN origins, a bundled SHA-256 adapter supports the document writer without
+requiring native SubtleCrypto; native WebCrypto is used when available. No document
 is sent to an external conversion service. It requests only `files:pick` and `files:save`.
 Unsaved replacement and close actions require confirmation; save failures retain dirty state.
 Input is limited to 20 MiB, with validated ZIP sizes/CRC/XML and a bounded conversion worker.

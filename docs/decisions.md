@@ -1042,3 +1042,9 @@ A shared private office-core package validates containers (20 MiB input, 64 MiB 
 open/save operations and preserves unsaved state after cancelled/failed writes. It never adds
 host operations. All native controls are localized in ten languages. Engine controls are complete
 in Turkish and English; upstream translations and English fallback cover other locales.
+
+The DOCX writer requires SHA-256 even on plain HTTP LAN origins without SubtleCrypto. Word
+bundles pinned @noble/hashes 2.4.0 and installs a digest-only SHA-256 adapter in its own isolated
+frame only when the native API is absent. Unsupported algorithms reject; native WebCrypto is
+left intact. Document IDs use getRandomValues so both Office apps also open on HTTP. CI runs
+the actual Office open/edit/save flows through an untrusted HTTP host name.

@@ -1765,6 +1765,9 @@ importers:
       '@everyos/office-core':
         specifier: workspace:*
         version: link:../../packages/office-core
+      '@noble/hashes':
+        specifier: 2.4.0
+        version: 2.4.0
       lucide-react:
         specifier: 'catalog:'
         version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
@@ -3009,6 +3012,10 @@ packages:
   '@napi-rs/canvas@1.0.11':
     resolution: {integrity: sha512-vt5tog1cr+QKadIddGe+3LrcX0EmjEd0izF717Uwf92mBmgYfq2XRmL2r4bZU40spB69exxhrBn9I91HYEr/7w==}
     engines: {node: '>= 10'}
+
+  '@noble/hashes@2.4.0':
+    resolution: {integrity: sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==}
+    engines: {node: '>= 20.19.0'}
 
   '@oxc-project/types@0.153.0':
     resolution: {integrity: sha512-jSNrRIyvPVLL5E1z/tS5zLAprosGz/FuI1PWwEOz59j3E4TTTzSpqKb/RDGqJhhW0QHYISGXxq582wGx6T11Tw==}
@@ -7158,6 +7165,8 @@ snapshots:
       '@napi-rs/canvas-win32-arm64-msvc': 1.0.11
       '@napi-rs/canvas-win32-x64-msvc': 1.0.11
     optional: true
+
+  '@noble/hashes@2.4.0': {}
 
   '@oxc-project/types@0.153.0': {}
 

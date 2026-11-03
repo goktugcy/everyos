@@ -20,6 +20,7 @@
     "@everyos/app-sdk": "workspace:*",
     "@everyos/app-ui": "workspace:*",
     "@everyos/office-core": "workspace:*",
+    "@noble/hashes": "2.4.0",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

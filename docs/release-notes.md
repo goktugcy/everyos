@@ -12,6 +12,7 @@ EveryOS 0.1.44 adds official Word and spreadsheet editors with native file integ
   remains available for the original file.
 - Unsaved changes are protected by confirmation, including when a close decision takes time.
   Cancelled or failed writes retain the unsaved state, and keyboard saves use native file grants.
+- Office editing also works over plain HTTP LAN access, including DOCX saving.
 - The official catalog now contains 31 apps. Office engines, fonts, local conversion and
   compatibility notices are bundled with English-default manifests and Turkish controls.
 

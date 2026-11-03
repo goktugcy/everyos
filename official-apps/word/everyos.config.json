@@ -37,7 +37,8 @@
     "licenses/sheetjs.txt": "node_modules/@everyos/office-core/node_modules/xlsx/LICENSE",
     "licenses/betteroffice-i18n.txt": "node_modules/@betteroffice/docx-i18n/LICENSE",
     "licenses/betteroffice-react.txt": "node_modules/@betteroffice/docx-react/LICENSE",
-    "licenses/betteroffice-react-NOTICES.md": "node_modules/@betteroffice/docx-react/THIRD-PARTY-NOTICES.md"
+    "licenses/betteroffice-react-NOTICES.md": "node_modules/@betteroffice/docx-react/THIRD-PARTY-NOTICES.md",
+    "licenses/noble-hashes.txt": "node_modules/@noble/hashes/LICENSE"
   },
   "workers": {
     "office-worker.js": "src/office-worker.ts"
