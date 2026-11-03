@@ -1,0 +1,51 @@
+.office-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  background: var(--eui-bg);
+  color: var(--eui-text);
+}
+.office-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.office-editor {
+  color: #1f2937;
+  color-scheme: light;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.office-notice,
+.office-error {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--eui-line);
+}
+.office-notice {
+  background: var(--eui-hover);
+  color: var(--eui-muted);
+}
+.office-error {
+  color: var(--eui-danger, #b91c1c);
+}
+.office-status {
+  flex: none;
+  padding: 4px 12px;
+  border-top: 1px solid var(--eui-line);
+  color: var(--eui-muted);
+  font-size: 11px;
+}
+.office-actions {
+  flex: none;
+}
+.office-actions > .eui-toolbar {
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: none;
+}

@@ -11,6 +11,8 @@ export const isVideoFile = (name: string): boolean =>
 const ASSOCIATIONS: ReadonlyArray<{ app: string; extensions: readonly string[] }> = [
   { app: "video", extensions: ["mp4", "m4v", "webm", "ogv", "mov", "mkv", "avi"] },
   { app: "pdf", extensions: ["pdf"] },
+  { app: "word", extensions: ["docx", "doc"] },
+  { app: "excel", extensions: ["xlsx", "xls", "csv"] },
   { app: "images", extensions: ["png", "jpg", "jpeg", "gif", "webp", "avif", "bmp", "ico", "svg"] },
   { app: "markdown", extensions: ["md", "markdown", "mdown"] },
   { app: "json", extensions: ["json", "geojson", "jsonl"] },
@@ -22,7 +24,6 @@ const ASSOCIATIONS: ReadonlyArray<{ app: string; extensions: readonly string[] }
       "txt",
       "text",
       "log",
-      "csv",
       "tsv",
       "ini",
       "conf",
@@ -115,12 +116,14 @@ export function fileAppFor(name: string): string | null {
 /** A file double-click is consent for this exact file, not for a path named by an app. */
 export function openFileWithApp(location: FileLocation, appId: string): boolean {
   const app = activeDesktopApp(appId);
+  const minimumVersion =
+    appId === "dev.everyos.word" || appId === "dev.everyos.excel" ? "1.0.0" : "1.0.1";
   // Earlier official apps do not consume the file handoff; their Store dialog offers an update.
   if (
     !app ||
     app.registry?.kind !== "official" ||
     !isVersion(app.version) ||
-    compareVersions(app.version, "1.0.1") < 0
+    compareVersions(app.version, minimumVersion) < 0
   )
     return (
       desktop.openApp("everyos.store", {

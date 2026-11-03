@@ -1,0 +1,17 @@
+{
+  "entries": {
+    "app.js": "src/main.tsx"
+  },
+  "assets": {
+    "chunks/generated/": "node_modules/@betteroffice/xlsx/dist/generated/",
+    "licenses/betteroffice-LICENSE.txt": "node_modules/@betteroffice/xlsx/LICENSE",
+    "licenses/legacy-doc.txt": "node_modules/@everyos/office-core/src/vendor/legacy-doc/LICENSE.txt",
+    "licenses/legacy-doc-provenance.json": "node_modules/@everyos/office-core/src/vendor/legacy-doc/PROVENANCE.json",
+    "licenses/sheetjs.txt": "node_modules/@everyos/office-core/node_modules/xlsx/LICENSE",
+    "licenses/betteroffice-i18n.txt": "node_modules/@betteroffice/xlsx-i18n/LICENSE",
+    "licenses/betteroffice-react.txt": "node_modules/@betteroffice/xlsx-react/LICENSE"
+  },
+  "workers": {
+    "office-worker.js": "src/office-worker.ts"
+  }
+}

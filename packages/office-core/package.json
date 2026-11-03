@@ -1,0 +1,24 @@
+{
+  "name": "@everyos/office-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@everyos/app-sdk": "workspace:*",
+    "@everyos/app-ui": "workspace:*",
+    "@zip.js/zip.js": "2.24.0",
+    "react": "catalog:",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:"
+  }
+}

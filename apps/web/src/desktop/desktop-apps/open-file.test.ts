@@ -24,6 +24,35 @@ beforeEach(() => {
   mocks.open.mockReturnValue("player-window");
 });
 describe("default file opener", () => {
+  it.each([
+    ["report.xlsx", "excel"],
+    ["OLD.XLS", "excel"],
+    ["letter.docx", "word"],
+    ["OLD.DOC", "word"],
+  ])("opens %s with its official office app from the first release", (name, slug) => {
+    const appId = `dev.everyos.${slug}`;
+    expect(fileAppFor(name)).toBe(appId);
+    mocks.active.mockReturnValue({ appId, version: "1.0.0", registry: { kind: "official" } });
+    expect(openFileWithApp({ root: "home", path: name }, appId)).toBe(true);
+    expect(mocks.open).toHaveBeenLastCalledWith(`everyos.desktop.${appId}`);
+    expect(mocks.queue).toHaveBeenCalled();
+  });
+  it.each(["word", "excel"])(
+    "offers the official %s installation when missing without exposing its file",
+    (slug) => {
+      mocks.active.mockReturnValue(undefined);
+      const appId = `dev.everyos.${slug}`;
+      expect(openFileWithApp({ root: "home", path: "private.docx" }, appId)).toBe(true);
+      expect(mocks.open).toHaveBeenLastCalledWith("everyos.store", {
+        appState: {
+          tab: "browse",
+          desktopAppRequest: { appId, registryId: "official", requestId: expect.any(String) },
+        },
+      });
+      expect(mocks.queue).not.toHaveBeenCalled();
+      expect(JSON.stringify(mocks.open.mock.calls)).not.toContain("private.docx");
+    },
+  );
   it("offers an update for installed versions that cannot receive files", () => {
     for (const version of ["1.0.0", "1.0.1-beta.1"]) {
       mocks.active.mockReturnValue({
@@ -57,6 +86,7 @@ describe("default file opener", () => {
       ["drawing.excalidraw", "whiteboard"],
       ["notes.txt", "text"],
       ["table.tsv", "text"],
+      ["table.CSV", "excel"],
       ["config.yaml", "code"],
       ["settings.jsonc", "code"],
       ["script.ts", "code"],
@@ -64,7 +94,7 @@ describe("default file opener", () => {
       [".gitignore", "code"],
     ])
       expect(fileAppFor(name!)).toBe(`dev.everyos.${slug}`);
-    for (const name of ["archive.zip", "song.mp3", "report.docx", "movie.mp4.exe", "unknown"])
+    for (const name of ["archive.zip", "song.mp3", "movie.mp4.exe", "unknown"])
       expect(fileAppFor(name)).toBeNull();
   });
   it("requests the specific official viewer installation without giving the store file access", () => {

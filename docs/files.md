@@ -294,3 +294,24 @@ also audited when a batch stops after a partial change, with `succeeded: false`.
 See [Linux account linking](linux-accounts.md). EveryOS personal storage keeps its existing
 API-owned homes and backup coverage; host locations and Linux homes use the linked account’s
 actual UID, groups and ACLs. Privileged system actions require verified existing sudo rights.
+
+### Office documents
+
+Files and Desktop route `.docx`/`.doc` to the official Word Editor and `.xlsx`/`.xls`/`.csv` to
+Spreadsheet Editor. If the matching app is absent, the Store opens its official installation
+details without receiving access to the file. Reopen the file after installation. Right-click
+**Download** continues to return the original bytes. Office handoff is supported from app 1.0.0;
+older viewer associations retain their own minimum handoff version.
+
+Both editors use explicit SDK grants, native open/save dialogs and optimistic write revisions.
+A writable modern document can be saved in place; a read-only file, a new document or Save as
+uses the save picker. Binary DOC/XLS files are imported locally and always saved as DOCX/XLSX
+copies. The legacy source is preserved. Unsupported layout/drawings may change, and Word
+headers, notes and other text stories can be placed in labeled appendices. The apps display a
+conversion notice. Password-protected Office documents and native legacy-format writeback are
+not supported; macros are never executed. See the app READMEs for compatibility and size limits.
+
+CSV files open in Spreadsheet Editor rather than Text Editor. The file picker accepts them, and
+CSV saves retain the source delimiter, Unicode encoding/BOM and line endings. Only first-sheet
+values are written; multi-sheet saves require confirmation. Save as also offers an `.xlsx` copy.
+Malformed CSV and non-Unicode encodings are rejected rather than silently changing text.

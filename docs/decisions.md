@@ -1014,3 +1014,31 @@ tag cannot commit plaintext. New password-protected archives use AES-256; legacy
 accepted only for reading compatibility. Passwords stay in the in-memory task and are never
 included in transfer records, URLs or audit details. File names remain visible in encrypted ZIPs.
 No standalone SDK or official app interface changes.
+
+## Office editors and legacy import (2026-11-03)
+
+The owner's Office request expands the official catalog from 29 to 31 apps: Word Editor
+(`dev.everyos.word`) and Spreadsheet Editor (`dev.everyos.excel`). This supersedes D55's catalog
+count; all apps still ship as one complete official catalog with exact permission coverage.
+Both new manifests default to English and request only `files:pick` and `files:save`.
+
+Use pinned BetterOffice 0.5.1 browser engines for DOCX/XLSX, the official SheetJS CE 0.20.3
+tarball for BIFF XLS import and a pinned, unmodified 0BSD JSDoc reader for binary DOC import.
+The latter has source/hash/license provenance in `packages/office-core/src/vendor/legacy-doc/`.
+No host office service, external document upload or extra filesystem permission is introduced.
+Legacy imports save modern copies and preserve their originals. DOC text stories that cannot
+retain spatial layout are appended under localized headings. Unsupported layout/drawings can
+change; password-protected documents and native DOC/XLS writeback are not advertised.
+
+EveryOS app frames have opaque origins. Module workers cannot run in them, so the pinned
+0.5.1 editor engines explicitly use their supported in-thread open mode. Their bundled WASM
+and fonts load through the existing signed asset path. The separately bundled classic import
+worker uses the existing SDK blob-worker facility and a 15-second lifetime. Keep the frame
+sandbox and CSP unchanged. Revisit the engine's open mode before upgrading to 0.6, where the
+upstream compatibility flag is scheduled for removal.
+
+A shared private office-core package validates containers (20 MiB input, 64 MiB expanded,
+4096 entries, checked CRC, no XML entities or encrypted entries), owns file grants, serializes
+open/save operations and preserves unsaved state after cancelled/failed writes. It never adds
+host operations. All native controls are localized in ten languages. Engine controls are complete
+in Turkish and English; upstream translations and English fallback cover other locales.

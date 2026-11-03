@@ -374,6 +374,9 @@ importers:
       '@types/pg':
         specifier: 'catalog:'
         version: 8.23.1
+      '@zip.js/zip.js':
+        specifier: 2.24.0
+        version: 2.24.0
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
@@ -942,6 +945,52 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
+
+  official-apps/excel:
+    dependencies:
+      '@betteroffice/xlsx':
+        specifier: 0.5.1
+        version: 0.5.1
+      '@betteroffice/xlsx-i18n':
+        specifier: 0.5.1
+        version: 0.5.1
+      '@betteroffice/xlsx-react':
+        specifier: 0.5.1
+        version: 0.5.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@everyos/app-sdk':
+        specifier: workspace:*
+        version: link:../../packages/app-sdk
+      '@everyos/app-ui':
+        specifier: workspace:*
+        version: link:../../packages/app-ui
+      '@everyos/office-core':
+        specifier: workspace:*
+        version: link:../../packages/office-core
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@everyos/app-cli':
+        specifier: workspace:*
+        version: link:../../packages/app-cli
+      '@everyos/app-testing':
+        specifier: workspace:*
+        version: link:../../packages/app-testing
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      xlsx:
+        specifier: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+        version: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
 
   official-apps/gallery:
     dependencies:
@@ -1690,6 +1739,58 @@ importers:
         specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
 
+  official-apps/word:
+    dependencies:
+      '@betteroffice/docx':
+        specifier: 0.5.1
+        version: 0.5.1(@betteroffice/fonts@0.4.2(@betteroffice/fonts-cjk@0.4.2))
+      '@betteroffice/docx-i18n':
+        specifier: 0.5.1
+        version: 0.5.1
+      '@betteroffice/docx-react':
+        specifier: 0.5.1
+        version: 0.5.1(@betteroffice/fonts@0.4.2(@betteroffice/fonts-cjk@0.4.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@betteroffice/fonts':
+        specifier: 0.4.2
+        version: 0.4.2(@betteroffice/fonts-cjk@0.4.2)
+      '@betteroffice/fonts-cjk':
+        specifier: 0.4.2
+        version: 0.4.2
+      '@everyos/app-sdk':
+        specifier: workspace:*
+        version: link:../../packages/app-sdk
+      '@everyos/app-ui':
+        specifier: workspace:*
+        version: link:../../packages/app-ui
+      '@everyos/office-core':
+        specifier: workspace:*
+        version: link:../../packages/office-core
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
+      react:
+        specifier: 'catalog:'
+        version: 19.3.0
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@everyos/app-cli':
+        specifier: workspace:*
+        version: link:../../packages/app-cli
+      '@everyos/app-testing':
+        specifier: workspace:*
+        version: link:../../packages/app-testing
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.3.0(@types/react@19.3.0)
+      '@zip.js/zip.js':
+        specifier: 2.24.0
+        version: 2.24.0
+
   packages/agent-protocol:
     dependencies:
       '@everyos/logger':
@@ -1877,6 +1978,28 @@ importers:
 
   packages/logger: {}
 
+  packages/office-core:
+    dependencies:
+      '@everyos/app-sdk':
+        specifier: workspace:*
+        version: link:../app-sdk
+      '@everyos/app-ui':
+        specifier: workspace:*
+        version: link:../app-ui
+      '@zip.js/zip.js':
+        specifier: 2.24.0
+        version: 2.24.0
+      react:
+        specifier: 'catalog:'
+        version: 19.3.0
+      xlsx:
+        specifier: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+        version: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz
+    devDependencies:
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.3.0
+
   packages/release:
     dependencies:
       '@everyos/logger':
@@ -2048,6 +2171,51 @@ packages:
   '@babel/types@7.29.8':
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
+
+  '@betteroffice/docx-i18n@0.5.1':
+    resolution: {integrity: sha512-+uhvY8y16hVf3xGbvJyhBk3Y8Irsx+gwDOFOmjOHiz9f/ePSysNpQSDD/ZYx8y3GTLHHSfOAWsSkBGkpaHvpEg==}
+
+  '@betteroffice/docx-react@0.5.1':
+    resolution: {integrity: sha512-6qt5UF2pwSnHEEnpCO7LIM/E71p10puDGyWivwea7nkN9gTzjnGTusMyxvwGLxbgOpGmJjwqCuclaAnQ7Dql8Q==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  '@betteroffice/docx@0.5.1':
+    resolution: {integrity: sha512-90OVOjArTdk7KmHNSGBPMLDPg1sU+k/LI0HooZDdALwidGpjNjFAazkKSTg29K6fpmv6qmygCdJiXCCoxL2GRw==}
+    peerDependencies:
+      '@betteroffice/fonts': ^0
+    peerDependenciesMeta:
+      '@betteroffice/fonts':
+        optional: true
+
+  '@betteroffice/fonts-cjk@0.4.2':
+    resolution: {integrity: sha512-7emT0WTfmk7hNovU9CyjSDoLo8kNp7RnqICYJ1WT8KgIlPDhfvpVZIBlk258PTbIwe1UTW2lYPTrk5veglawIQ==}
+
+  '@betteroffice/fonts@0.4.2':
+    resolution: {integrity: sha512-OBumyWSLgyJjbElgHrE+lIcAoqNnXJ08ycOvH0vIs9JVzCDY5L0AirbpSUHn2A1NMTrHt0j8E0PmMFA3vhJkFw==}
+    peerDependencies:
+      '@betteroffice/fonts-cjk': ^0
+    peerDependenciesMeta:
+      '@betteroffice/fonts-cjk':
+        optional: true
+
+  '@betteroffice/xlsx-i18n@0.5.1':
+    resolution: {integrity: sha512-IlYiWFIgKIldu2PlcdKjeW54v0A2Gl4SFV3XR5p9IYRUxH4Mi5boG3TxfHSewn12nupul/05fCFiZ+SUxr0Byg==}
+
+  '@betteroffice/xlsx-react@0.5.1':
+    resolution: {integrity: sha512-ZIjyrxPP5QfULl3Z6DRAiuOpJ0/6VDp2Ihjx1R/FnNJScgp+XYaPbkhsBdR05/lJbjmtOVHZMaJQk5AezNh4QQ==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
+
+  '@betteroffice/xlsx@0.5.1':
+    resolution: {integrity: sha512-UHOnzcMML6Ud9D1M4d8FZKmw3AAg2/DttE/sVxM858SgiIpOtzGOqlh62RM9/8y/JW8bR8t+wN69EX8UJvR8EQ==}
 
   '@braintree/sanitize-url@6.0.2':
     resolution: {integrity: sha512-Tbsj02wXCbqGmzdnXNk0SOF19ChhRU70BsroIi4Pm6Ehp56in6vch94mfbdQ17DozxkL3BAVjbZ4Qc1a0HFRAg==}
@@ -5598,6 +5766,16 @@ packages:
     resolution: {integrity: sha512-VZBmZP8WU3sMOZm1bdgTadsQbcscK0UM8oKxKVBs4XAhUo2Xxzm/OFMGBkPusxw9xL3Uy8LrzEqGqJhclsr0yA==}
     deprecated: Unsupported
 
+  sonner@2.0.8:
+    resolution: {integrity: sha512-UM/ByIoFra8yzV75n1o0Puu0bw5U/9UNnDacrJNspekBewIfsQ3D6ez1nvlWpt7aTsO6rujQtifBpycwIivqlg==}
+    peerDependencies:
+      '@types/react': ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
   source-map-js@1.2.2:
     resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
     engines: {node: '>=0.10.0'}
@@ -5901,6 +6079,12 @@ packages:
       utf-8-validate:
         optional: true
 
+  xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz:
+    resolution: {integrity: sha512-oLDq3jw7AcLqKWH2AhCpVTZl8mf6X2YReP+Neh0SJUzV/BdZYjth94tG5toiMB1PPrYtxOCfaoUCkvtuH+3AJA==, tarball: https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz}
+    version: 0.20.3
+    engines: {node: '>=0.8'}
+    hasBin: true
+
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
@@ -6073,6 +6257,44 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@betteroffice/docx-i18n@0.5.1': {}
+
+  '@betteroffice/docx-react@0.5.1(@betteroffice/fonts@0.4.2(@betteroffice/fonts-cjk@0.4.2))(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@betteroffice/docx': 0.5.1(@betteroffice/fonts@0.4.2(@betteroffice/fonts-cjk@0.4.2))
+      '@betteroffice/docx-i18n': 0.5.1
+      '@radix-ui/react-select': 2.3.8(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      clsx: 2.1.1
+      sonner: 2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+    optionalDependencies:
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+    transitivePeerDependencies:
+      - '@betteroffice/fonts'
+      - '@types/react'
+      - '@types/react-dom'
+
+  '@betteroffice/docx@0.5.1(@betteroffice/fonts@0.4.2(@betteroffice/fonts-cjk@0.4.2))':
+    optionalDependencies:
+      '@betteroffice/fonts': 0.4.2(@betteroffice/fonts-cjk@0.4.2)
+
+  '@betteroffice/fonts-cjk@0.4.2': {}
+
+  '@betteroffice/fonts@0.4.2(@betteroffice/fonts-cjk@0.4.2)':
+    optionalDependencies:
+      '@betteroffice/fonts-cjk': 0.4.2
+
+  '@betteroffice/xlsx-i18n@0.5.1': {}
+
+  '@betteroffice/xlsx-react@0.5.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@betteroffice/xlsx': 0.5.1
+      '@betteroffice/xlsx-i18n': 0.5.1
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
+  '@betteroffice/xlsx@0.5.1': {}
 
   '@braintree/sanitize-url@6.0.2': {}
 
@@ -9697,6 +9919,13 @@ snapshots:
 
   sliced@1.0.1: {}
 
+  sonner@2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+    optionalDependencies:
+      '@types/react': 19.3.0
+
   source-map-js@1.2.2: {}
 
   split2@4.2.0: {}
@@ -9901,6 +10130,8 @@ snapshots:
   ws@8.21.0: {}
 
   ws@8.22.0: {}
+
+  xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz: {}
 
   xtend@4.0.2: {}
 

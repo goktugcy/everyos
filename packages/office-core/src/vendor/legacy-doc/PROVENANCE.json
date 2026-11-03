@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/Alpaq92/JSDoc",
+  "commit": "821695a884e0c0bb8592a635d9524bb3e116cd67",
+  "license": "0BSD",
+  "sha256": {
+    "reader.cjs": "1480cd409c36b0e8890509516ff6909dffd73a825211e821e1e09b880fc635db",
+    "LICENSE.txt": "45e4bda455be803c96d102e3c7bba71f785e7dc518f474af3dd5426aeca69a0d"
+  }
+}

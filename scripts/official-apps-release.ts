@@ -168,7 +168,7 @@ export async function loadReleasePlan(root: string): Promise<ReleasePlan> {
     }),
     policy,
   };
-  if (plan.apps.length !== 29) throw new Error("The official release requires exactly 29 apps");
+  if (plan.apps.length !== 31) throw new Error("The official release requires exactly 31 apps");
   same(
     sorted(Object.keys(policy.apps)),
     sorted(plan.apps.map((app) => app.id)),

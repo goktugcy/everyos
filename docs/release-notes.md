@@ -1,15 +1,20 @@
-EveryOS 0.1.43 adds built-in ZIP support to Files and the desktop.
+EveryOS 0.1.44 adds official Word and spreadsheet editors with native file integration.
 
-- Select files or folders, including multiple selections, and compress them into a ZIP archive
-  without installing an official app or a host archiving tool.
-- Double-click a ZIP to browse and search its contents, then extract it into a new folder.
-  Existing destinations are preserved, and the original archive remains available.
-- Archive jobs show progress and support cancellation in the transfer panel. Completed jobs
-  immediately refresh Files and desktop items without reloading the page.
-- Unicode names, hidden files, empty directories and ZIP64 archives are supported for personal
-  and linked-account file locations.
-- Create password-protected ZIPs with AES-256, and open AES or legacy ZipCrypto archives by
-  entering their password. Incorrect passwords can be retried in the same dialog. File names
-  remain visible in encrypted ZIPs.
-- Archive processing enforces file permissions, validates paths and integrity, limits resource
-  usage and removes temporary extraction output after failed or cancelled jobs.
+- Install Word Editor and Spreadsheet Editor from the official catalog. Read, edit and save
+  DOCX and XLSX files using EveryOS file permissions and native open/save dialogs.
+- Open legacy DOC and XLS files through local import. Saving creates a modern DOCX or XLSX
+  copy and preserves the original; complex layout and unsupported features can change.
+- Open and edit CSV tables in Spreadsheet Editor. Comma, semicolon and tab separators,
+  quoted and multiline fields, Unicode encodings, leading-zero identifiers and long integers
+  are supported. Save CSV again or choose an XLSX copy to keep workbook features.
+- Double-click DOC, DOCX, XLS, XLSX or CSV files in Files or on the desktop to open the matching
+  official app. If it is missing, EveryOS opens its installation details. Right-click Download
+  remains available for the original file.
+- Unsaved changes are protected by confirmation, including when a close decision takes time.
+  Cancelled or failed writes retain the unsaved state, and keyboard saves use native file grants.
+- The official catalog now contains 31 apps. Office engines, fonts, local conversion and
+  compatibility notices are bundled with English-default manifests and Turkish controls.
+
+Office documents are processed locally in the sandboxed app. Password-protected Office files
+and native DOC/XLS writeback are not supported. CSV saves first-sheet values; saving a workbook
+with multiple sheets as CSV requires confirmation.

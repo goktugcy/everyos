@@ -192,6 +192,16 @@
       "permissions": ["storage:app", "files:pick", "files:save"],
       "widgets": {},
       "rationale": "Store boards and import or export only chosen drawing files."
+    },
+    "dev.everyos.word": {
+      "permissions": ["files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Read and edit only explicitly chosen Office files; save a modern copy when importing a legacy format. No ambient filesystem or network access."
+    },
+    "dev.everyos.excel": {
+      "permissions": ["files:pick", "files:save"],
+      "widgets": {},
+      "rationale": "Read and edit only explicitly chosen Office files; save a modern copy when importing a legacy format. No ambient filesystem or network access."
     }
   }
 }

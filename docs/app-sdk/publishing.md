@@ -61,7 +61,7 @@ see [community setup](community.md).
 ## The complete official-app release pipeline
 
 The catalog in `scripts/official-apps.config.ts` and the explicit app/widget permission policy in
-`scripts/official-app-permissions.json` cover exactly 29 apps. A missing app, an unlisted manifest,
+`scripts/official-app-permissions.json` cover exactly 31 apps. A missing app, an unlisted manifest,
 a permission change, an incompatible SDK/EveryOS requirement, an incomplete locale, a skipped or
 failed app test, or a corrupt package fails the complete build. Official apps default to English;
 all ten locale dictionaries must have the same nonempty text keys (plural variants are normalized).
@@ -107,7 +107,7 @@ the report. A sequence must increase, app versions cannot go backward or reuse d
 revoked versions cannot reappear, and previous revocations are retained. Bump an app's manifest
 version when its package bytes change, including after a bundled dependency change.
 
-All published app assets have flat names: the 29 `.eosapp` files, matching icons,
+All published app assets have flat names: the 31 `.eosapp` files, matching icons,
 `official-apps.json`, `official-app-registry.pub`, `official-app-publisher.pub`,
 `official-apps-report.json` and, after the first index, `official-apps-previous.json`.
 The report is `{report, signature}` JSON, with a domain-separated registry-key signature over the

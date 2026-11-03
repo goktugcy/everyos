@@ -233,7 +233,7 @@ permissions, publisher, versions and storage use.
 
 ## Official apps and developer tooling
 
-- `official-apps/<name>/`: the 29 official apps, each a workspace package built with
+- `official-apps/<name>/`: the 31 official apps, each a workspace package built with
   `@everyos/app-sdk` and the shared `@everyos/app-ui` kit, packed and signed by CI with the official
   key, listed in the official registry.
 - `packages/app-cli` (`everyos-app dev | build | validate | pack | sign | test | publish`) and

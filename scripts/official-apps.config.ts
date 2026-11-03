@@ -1,5 +1,5 @@
 /**
- * The 29 official EveryOS desktop apps: their folder under official-apps/, id, icon (a lucide
+ * The official EveryOS desktop apps: their folder under official-apps/, id, icon (a lucide
  * glyph on the app's colors) and category. The single list every script and test uses.
  */
 export interface OfficialApp {
@@ -13,6 +13,22 @@ export interface OfficialApp {
 }
 
 export const OFFICIAL_APPS: readonly OfficialApp[] = [
+  {
+    slug: "word",
+    id: "dev.everyos.word",
+    name: "Word Editor",
+    icon: "FileText",
+    colors: ["#60a5fa", "#2563eb"],
+    category: "productivity",
+  },
+  {
+    slug: "excel",
+    id: "dev.everyos.excel",
+    name: "Spreadsheet Editor",
+    icon: "FileSpreadsheet",
+    colors: ["#4ade80", "#16a34a"],
+    category: "productivity",
+  },
   {
     slug: "notes",
     id: "dev.everyos.notes",

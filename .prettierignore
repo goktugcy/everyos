@@ -5,6 +5,7 @@ pnpm-lock.yaml
 test-results/
 playwright-report/
 graphify-out/
+packages/office-core/src/vendor/legacy-doc/reader.cjs
 docs/research/
 
 services/community-registry/worker-configuration.d.ts

@@ -1,0 +1,32 @@
+{
+  "manifestVersion": 1,
+  "id": "dev.everyos.excel",
+  "name": "Spreadsheet Editor",
+  "version": "1.0.0",
+  "description": "Read and edit Excel workbooks and CSV files with EveryOS file integration.",
+  "entry": "index.html",
+  "icon": "icon.svg",
+  "category": "productivity",
+  "permissions": ["files:pick", "files:save"],
+  "window": {
+    "defaultWidth": 1100,
+    "defaultHeight": 760,
+    "minWidth": 420,
+    "minHeight": 380,
+    "instances": "single"
+  },
+  "widgets": [],
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "de", "es", "fr", "it", "ja", "ko", "ru", "zh"],
+    "path": "locales"
+  },
+  "sdk": "^1.0.0",
+  "publisher": {
+    "id": "dev.everyos",
+    "name": "EveryOS"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/goktugcy/everyos",
+  "source": "https://github.com/goktugcy/everyos/tree/main/official-apps/excel"
+}

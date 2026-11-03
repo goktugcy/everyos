@@ -17,6 +17,8 @@ export default tseslint.config(
       // Runtime data of end-to-end runs (git-ignored), including files the tests create.
       "tests/e2e/.state*/**",
       "graphify-out/**",
+      // Pinned third-party source stays byte-identical; authored adapters are checked normally.
+      "packages/office-core/src/vendor/legacy-doc/*.cjs",
       // App templates are projects of their own (checked by building and testing generated apps).
       "packages/create-everyos-app/templates/**",
       "**/.everyos/**",

@@ -1,0 +1,45 @@
+{
+  "entries": {
+    "app.js": "src/main.tsx"
+  },
+  "assets": {
+    "chunks/generated/": "node_modules/@betteroffice/docx/dist/generated/",
+    "licenses/betteroffice-LICENSE.txt": "node_modules/@betteroffice/docx/LICENSE",
+    "fonts/": "node_modules/@betteroffice/fonts/assets",
+    "fonts/NotoSansSC-Regular.otf": "node_modules/@betteroffice/fonts-cjk/assets/NotoSansSC-Regular.otf",
+    "fonts/NotoSansTC-Regular.otf": "node_modules/@betteroffice/fonts-cjk/assets/NotoSansTC-Regular.otf",
+    "fonts/NotoSansJP-Regular.otf": "node_modules/@betteroffice/fonts-cjk/assets/NotoSansJP-Regular.otf",
+    "fonts/NotoSerifSC-Regular.otf": "node_modules/@betteroffice/fonts-cjk/assets/NotoSerifSC-Regular.otf",
+    "fonts/NotoSansKR-Regular.otf": "node_modules/@betteroffice/fonts-cjk/assets/NotoSansKR-Regular.otf",
+    "licenses/fonts-LICENSE.txt": "node_modules/@betteroffice/fonts/LICENSE",
+    "licenses/fonts/OFL-Poppins.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Poppins.txt",
+    "licenses/fonts/OFL-Heebo.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Heebo.txt",
+    "licenses/fonts/OFL-NotoArabic.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-NotoArabic.txt",
+    "licenses/fonts/OFL-ComicRelief.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-ComicRelief.txt",
+    "licenses/fonts/OFL-Montserrat.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Montserrat.txt",
+    "licenses/fonts/OFL-OpenSans.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-OpenSans.txt",
+    "licenses/fonts/OFL-DMSans.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-DMSans.txt",
+    "licenses/fonts/OFL-NotoSansHebrew.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-NotoSansHebrew.txt",
+    "licenses/fonts/OFL-Roboto.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Roboto.txt",
+    "licenses/fonts/OFL-Liberation.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Liberation.txt",
+    "licenses/fonts/OFL-Oswald.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Oswald.txt",
+    "licenses/fonts/OFL-SourceSans3.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-SourceSans3.txt",
+    "licenses/fonts/OFL-Gelasio.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Gelasio.txt",
+    "licenses/fonts/OFL-Inter.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Inter.txt",
+    "licenses/fonts/OFL-DMSerifDisplay.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-DMSerifDisplay.txt",
+    "licenses/fonts/OFL-Caladea.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Caladea.txt",
+    "licenses/fonts/OFL-Carlito.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Carlito.txt",
+    "licenses/fonts/OFL-Selawik.txt.txt": "node_modules/@betteroffice/fonts/LICENSES/OFL-Selawik.txt",
+    "licenses/fonts-cjk-LICENSE.txt": "node_modules/@betteroffice/fonts-cjk/LICENSE",
+    "licenses/fonts-cjk/OFL-NotoCJK.txt.txt": "node_modules/@betteroffice/fonts-cjk/LICENSES/OFL-NotoCJK.txt",
+    "licenses/legacy-doc.txt": "node_modules/@everyos/office-core/src/vendor/legacy-doc/LICENSE.txt",
+    "licenses/legacy-doc-provenance.json": "node_modules/@everyos/office-core/src/vendor/legacy-doc/PROVENANCE.json",
+    "licenses/sheetjs.txt": "node_modules/@everyos/office-core/node_modules/xlsx/LICENSE",
+    "licenses/betteroffice-i18n.txt": "node_modules/@betteroffice/docx-i18n/LICENSE",
+    "licenses/betteroffice-react.txt": "node_modules/@betteroffice/docx-react/LICENSE",
+    "licenses/betteroffice-react-NOTICES.md": "node_modules/@betteroffice/docx-react/THIRD-PARTY-NOTICES.md"
+  },
+  "workers": {
+    "office-worker.js": "src/office-worker.ts"
+  }
+}

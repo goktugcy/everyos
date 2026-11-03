@@ -1,6 +1,6 @@
 {
   "name": "everyos-monorepo",
-  "version": "0.1.43",
+  "version": "0.1.44",
   "private": true,
   "description": "EveryOS \u2014 a self-hosted personal OS for your files, apps and Linux workspace.",
   "type": "module",
@@ -39,6 +39,7 @@
     "@playwright/test": "1.64.0",
     "@types/node": "26.6.4",
     "@types/pg": "catalog:",
+    "@zip.js/zip.js": "2.24.0",
     "esbuild": "0.28.2",
     "eslint": "10.12.0",
     "eslint-config-prettier": "10.1.8",
