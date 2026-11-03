@@ -42,6 +42,24 @@ async function createAndScan() {
   await vi.waitFor(() => expect(cards()).toHaveLength(2));
 }
 describe("Gallery", () => {
+  it("indexes and opens MP4 previews through scoped media URLs and stops them on revocation", async () => {
+    const { host } = await start({
+      files: { "/Videos/clip.mp4": new Uint8Array([1, 2, 3]) },
+      pick: () => ["/Videos"],
+    });
+    await click("New album");
+    await click("Index approved folder");
+    await vi.waitFor(() => expect(cards()).toHaveLength(1));
+    await click("Preview clip.mp4");
+    await vi.waitFor(() =>
+      expect(document.querySelector(".gallery-preview video[src]")).not.toBeNull(),
+    );
+    expect(document.querySelector<HTMLVideoElement>(".gallery-preview video")?.controls).toBe(true);
+    expect(host.calls.some((call) => call.method === "files.read")).toBe(false);
+    host.revoke(host.persistentHandles().map((handle) => handle.id));
+    await vi.waitFor(() => expect(document.querySelector(".gallery-preview video")).toBeNull());
+    expect(host.files.size).toBe(1);
+  });
   it("indexes an approved directory, searches, favorites and bulk-removes album references only", async () => {
     const { host } = await start({ pick: () => ["/Photos"] });
     await createAndScan();
@@ -50,9 +68,9 @@ describe("Gallery", () => {
     byRole("checkbox", "Favorites only")!.click();
     await vi.waitFor(() => expect(cards()).toHaveLength(1));
     expect(byRole("button", "Remove favorite")).not.toBeNull();
-    typeInto(byRole("searchbox", "Search image names and paths"), "missing");
+    typeInto(byRole("searchbox", "Search media names and paths"), "missing");
     await vi.waitFor(() => expect(cards()).toHaveLength(0));
-    typeInto(byRole("searchbox", "Search image names and paths"), "");
+    typeInto(byRole("searchbox", "Search media names and paths"), "");
     await vi.waitFor(() => expect(cards()).toHaveLength(1));
     await click("Select this page");
     await click("Remove selected from album");

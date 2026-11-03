@@ -3078,6 +3078,7 @@ export const zh: LocaleMessages = {
     menu: {
       open: "打开",
       download: "下载",
+      downloadVideo: "下载视频",
       cut: "剪切",
       copy: "复制",
       paste: "粘贴",
@@ -3909,6 +3910,7 @@ export const zh: LocaleMessages = {
       uninstallTitle: "要卸载 {{name}} 吗？",
       uninstallBody: "在此服务器上使用过它的所有人的数据都会被删除。",
       permissions: "此应用可以做什么",
+      requestUnavailable: "目录中没有所请求的应用。请检查应用来源后重试。",
       noPermissions: "此应用不请求任何权限。",
       notGranted: "对你不可用",
       approve: "勾选你允许的每项权限。只有全部允许后才会安装此应用。",

@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import type { FileHandle } from "@everyos/app-sdk";
 import {
   Button,
@@ -178,6 +179,15 @@ export function MarkdownApp() {
       fail(caught);
     }
   };
+
+  useOpenedFiles({
+    ready: draft !== null,
+    accept: ACCEPT,
+    open: async ([handle]) => {
+      if (handle && (await replaceDocument())) await load(handle);
+    },
+    error: fail,
+  });
 
   const save = async (saveAs = false) => {
     const current = draftRef.current;

@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { Tabs } from "radix-ui";
+import { TabsList } from "../../../components/ui/tabs-list.tsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -273,7 +274,7 @@ export default function UpdatesApp() {
       className="flex h-full min-h-0 flex-col"
       data-testid="updates-app"
     >
-      <Tabs.List
+      <TabsList
         className="flex shrink-0 gap-1 border-b border-line px-3 pt-2"
         aria-label={t("apps.updates")}
       >
@@ -286,7 +287,7 @@ export default function UpdatesApp() {
             {t(`updates.tabs.${value}`)}
           </Tabs.Trigger>
         ))}
-      </Tabs.List>
+      </TabsList>
 
       <Tabs.Content value="everyos" className="flex min-h-0 flex-1 flex-col outline-none">
         <SelfUpdatePanel />

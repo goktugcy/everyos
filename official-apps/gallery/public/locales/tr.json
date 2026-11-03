@@ -3,12 +3,12 @@
     "open": "Görselleri aç",
     "save": "Özgün görseli kaydet",
     "scope": "Yalnızca seçtiğin dosyalara erişilir. Her biri en fazla 50 MiB olan 100 görsel tutabilirsin. Yakınlaştırma ve döndürme önizlemeyi değiştirir; kaydetmek özgün dosyayı kopyalar.",
-    "permission": "Görsellere erişmek için Uygulama Mağazası’ndan files:pick izni gerekir.",
+    "permission": "Medya erişimi için Uygulama Mağazası üzerinden files:pick izni gerekir.",
     "revoked": "Kaydedilmiş bazı dosyalar artık paylaşılmıyor. Erişimi geri vermek için yeniden seç.",
     "empty": "Görsel seçilmedi",
     "openHint": "EveryOS üzerinden JPEG, PNG, GIF, WebP, AVIF, BMP, ICO veya SVG görselleri seç. Açılabilen biçimler tarayıcına bağlıdır.",
-    "previous": "Önceki görsel",
-    "next": "Sonraki görsel",
+    "previous": "Önceki öğe",
+    "next": "Sonraki öğe",
     "selection": "Seçili görsel",
     "slideshow": "Slayt gösterisini başlat",
     "stop": "Slayt gösterisini durdur",
@@ -27,7 +27,7 @@
   },
   "app": {
     "name": "Galeri",
-    "description": "Kaynak dosyaları taşımadan veya silmeden seçtiğin görselleri albümlerde düzenle."
+    "description": "Kaynak dosyaları taşımadan veya silmeden seçilen resim ve videoları albümlerde düzenleyin."
   },
   "gallery": {
     "create": "Yeni albüm",
@@ -37,14 +37,14 @@
     "album": "Albüm",
     "empty": "Henüz albüm yok",
     "emptyHint": "Albüm oluştur; seçtiğin dosyaları ekle veya izin verdiğin klasörü dizine al. En fazla 20 albüm.",
-    "scope": "Yalnızca seçtiğin dosyalar ve izin verdiğin klasörler dizine alınır. Her albümde en fazla 1.000 görsel veya 210 KiB dizin verisi tutulur. Kaynak dosyalar taşınmaz veya silinmez.",
-    "addFiles": "Görsel ekle",
+    "scope": "Yalnızca seçilen dosyalar ve izin verilen klasörler indekslenir. Her albüm en fazla 1.000 resim ve video veya 210 KiB indeks verisi içerir. Videolar doğrudan akışla oynatılır; kaynak dosyalar taşınmaz veya silinmez.",
+    "addFiles": "Medya ekle",
     "addFolder": "İzin verilen klasörü dizine al",
     "refresh": "Klasör dizinlerini yenile",
     "partial": "Dizin kısmi: bazı öğelere erişilemedi, boyutları desteklenmiyor veya tarama/dizin sınırına ulaşıldı. Daha küçük kapsam veya başka albüm seç.",
     "indexed": "Son klasör taraması: {{at}}",
-    "search": "Görsel adlarında ve yollarda ara",
-    "sort": "Görselleri sırala",
+    "search": "Medya adı ve yollarında ara",
+    "sort": "Medyayı sırala",
     "byName": "Ad",
     "byDate": "Dosya zamanı (biliniyorsa)",
     "bySize": "Boyut, büyükten küçüğe",
@@ -54,15 +54,18 @@
     "selectPage": "Bu sayfayı seç",
     "clearSelection": "Seçimi temizle",
     "removeSelected": "Seçilenleri albümden çıkar",
-    "count": "{{count}} görsel · {{selected}} seçili",
+    "count": "{{count}} öğe · {{selected}} seçili",
     "closePreview": "Önizlemeyi kapat",
     "previewNamed": "{{name}} önizle",
     "selectNamed": "{{name}} seç",
-    "noImages": "Eşleşen görsel yok",
-    "addHint": "Görsel ekle, klasöre izin ver veya filtreleri değiştir.",
+    "noImages": "Eşleşen medya yok",
+    "addHint": "Resim veya video ekleyin, bir klasöre izin verin ya da filtreleri değiştirin.",
     "previousPage": "Önceki sayfa",
     "nextPage": "Sonraki sayfa",
     "unavailable": "Önizleme kullanılamıyor",
     "loading": "Önizleme yükleniyor…"
+  },
+  "video": {
+    "unsupported": "Bu dosya oynatılamadı. Kodek/kapsayıcı desteklenmiyor, dosya bozuk veya paylaşım süresi dolmuş olabilir. Yeniden yüklemeyi ya da başka tarayıcı/biçimi dene. Dönüştürme yapılmaz."
   }
 }

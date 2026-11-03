@@ -38,6 +38,77 @@ function metadata(node: HTMLVideoElement, duration = 20) {
   node.dispatchEvent(new Event("loadedmetadata"));
 }
 describe("Video Player", () => {
+  it("keeps a full playlist intact and opens the requested file after choosing another list", async () => {
+    const ids = Array.from({ length: 100 }, (_, i) => `old-${i}`);
+    const { host } = await start({
+      files: { "/new.mp4": new Uint8Array([1]) },
+      handles: [{ id: "new", path: "/new.mp4", kind: "file", writable: false }],
+      storage: {
+        "video.v1": {
+          lists: [
+            { id: "full", name: "Full", ids },
+            { id: "other", name: "Other", ids: [] },
+          ],
+          list: "full",
+        },
+      },
+      state: {
+        type: "everyos.file-open",
+        requestId: "request",
+        files: [{ id: "new", name: "new.mp4", kind: "file" }],
+      },
+    });
+    await vi.waitFor(() => expect(byText(/This playlist is full/)).not.toBeNull());
+    const selected = byRole("combobox", "Playlist") as HTMLSelectElement;
+    selected.value = "other";
+    selected.dispatchEvent(new Event("change", { bubbles: true }));
+    await vi.waitFor(() => expect(document.querySelector("video[src]")).not.toBeNull());
+    window.dispatchEvent(new Event("pagehide"));
+    await vi.waitFor(() =>
+      expect(
+        videoPreferences(host.storage.get("video.v1")).lists.find((item) => item.id === "other")
+          ?.ids,
+      ).toEqual(["new"]),
+    );
+    expect(
+      videoPreferences(host.storage.get("video.v1")).lists.find((item) => item.id === "full")?.ids,
+    ).toEqual(ids);
+  });
+  it("opens an EveryOS-selected MP4 immediately and accepts another file in the same window without a picker", async () => {
+    const first = {
+      id: "first",
+      name: "one.mp4",
+      kind: "file",
+      type: "video/mp4",
+      size: 1,
+      writable: false,
+      persistent: true,
+    };
+    const { host } = await start({
+      files: { "/one.mp4": new Uint8Array([1]), "/two.mp4": new Uint8Array([2]) },
+      handles: [
+        { id: "first", path: "/one.mp4", kind: "file", writable: false },
+        { id: "second", path: "/two.mp4", kind: "file", writable: false },
+      ],
+      state: { type: "everyos.file-open", requestId: "first-request", files: [first] },
+    });
+    await vi.waitFor(() => expect(document.querySelector("video[src]")).not.toBeNull());
+    const selected = () =>
+      (byRole("combobox", "Selected video") as HTMLSelectElement).selectedOptions[0]?.textContent;
+    expect(selected()).toBe("one.mp4");
+    host.emit("window.opened", {
+      state: {
+        type: "everyos.file-open",
+        requestId: "second-request",
+        files: [{ ...first, id: "second", name: "two.mp4" }],
+      },
+    });
+    await vi.waitFor(() => expect(selected()).toBe("two.mp4"));
+    expect(
+      host.calls.some((call) => call.method === "files.open" || call.method === "files.read"),
+    ).toBe(false);
+    expect((byRole("combobox", "Selected video") as HTMLSelectElement).options).toHaveLength(2);
+  });
   it("streams selected video URLs without reading video bytes through the bridge", async () => {
     const { host } = await start();
     const node = await opened();

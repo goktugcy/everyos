@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import { renderApp, typeInEditor, type RenderedApp } from "@everyos/app-ui/testing";
 import { byRole, byText } from "@everyos/app-testing/dom";
 import type { MockHostOptions } from "@everyos/app-testing";
@@ -29,6 +30,14 @@ async function click(name: string | RegExp) {
 const preview = () => document.querySelector(".md-preview");
 
 describe("Markdown Editor", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const { host } = await start(fileOpenOptions("selected.md", "# Selected document"));
+    await vi.waitFor(() =>
+      expect(preview()?.querySelector("h1")?.textContent).toBe("Selected document"),
+    );
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("previews as you type and builds the outline", async () => {
     await start();
     typeInEditor("# Plan\n\n## Steps\n\n| a | b |\n| - | - |\n| 1 | 2 |\n");

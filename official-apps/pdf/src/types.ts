@@ -57,7 +57,7 @@ export interface PdfSession {
   /** The document with the filled-in form fields. */
   saveWithChanges(): Promise<Uint8Array>;
   on(listener: (event: SessionEvent) => void): () => void;
-  destroy(): void;
+  destroy(): void | Promise<void>;
 }
 
 export interface OpenOptions {

@@ -939,3 +939,54 @@ identity and locale, rereads the snapshot and sends a task-specific system messa
 message. It shares connection selection, secret redaction and busy limits with normal chat while
 keeping its history and sampling policy separate. A busy assistant remains configured; UI status
 must not treat its own in-flight request as a missing connection.
+
+## 2026-11-02 — Scoped video opening and mixed-media gallery
+
+The official Video Player is the default opener for supported video names in Files and on the
+desktop when its official installation is active. A host-only queue binds an explicit file
+selection to its window, app, session and one-use request for sixty seconds. App window state
+contains only a request identifier: it cannot authorize a file path. Before the frame receives
+initial or reopened state, the host resolves the matching selection through the existing
+permission-checked SDK grant route and supplies read-only persistent handles. A forged, expired
+or restored request creates no grant. Grant audit events contain no paths or media URLs. The
+existing picker stays unchanged. The following decision replaces the unavailable-player fallback.
+
+Gallery 1.0.1 indexes images and videos together, retains the existing album storage format and
+image size limit, and streams video previews without copying bytes into album state. Folder,
+item, page and metadata budgets still apply. Revocation and suspension discard the preview;
+short-lived media URLs are refreshed without persisting them. Video playback uses browser
+decoders, with the existing localized unsupported-codec explanation. Vite forwards the same
+scoped media endpoint and byte-range requests as the production API. Video Player 1.0.1 handles
+initial and subsequent file-open messages without reopening the picker or discarding playlist
+references when a list is full.
+
+## 2026-11-03 — Missing video player opens installation details
+
+Opening a video with no active official Video Player now opens that app’s official installation
+details in the App Store. It does not download the file or install an app automatically. The store
+removes the navigation request when its dialog closes, reads fresh catalog and installation records, and keeps registry
+identities aligned before showing its existing permission-aware dialog. The request carries no
+file location and grants no access. Downloading remains an explicit **Download video** context-menu
+action in Files and on the desktop; mixed file selections keep the generic download label.
+
+## 2026-11-03 — Default official file associations
+
+Files and desktop items now share an explicit suffix/name-to-app table for formats the official
+viewers and editors actually read. An absent official app opens the same registry-bound installation
+details used for Video Player; there is no automatic install, file grant to the store or download.
+An installed app receives the existing one-use, session-bound read-only file handoff. This avoids
+adding a second file permission system or trusting paths in serialized window state.
+
+PDF, Image Viewer, Text Editor, Code Editor, Markdown Editor, JSON Studio, Calendar and Whiteboard
+consume initial and reopened handles through a repository-shared hook next to Video Player's file
+handoff helpers. The public SDK is unchanged. Delivery waits for recovery/engine readiness, consumes
+each request once and uses each app's existing bounded loading path. Markdown keeps its unsaved
+changes confirmation, calendar files open the import preview, and Whiteboard flushes the current
+board before importing. Changed official packages advance to 1.0.1 rather than changing published
+1.0.0 content. Formats without a compatible app retain their existing behavior.
+PDF session teardown is awaited before the next document uses pdf.js’s shared worker; a pending
+loading-task destruction otherwise rejects a second document in the same window.
+
+Official file handlers require app version 1.0.1 or newer. An active 1.0.0 installation cannot consume
+the handoff and opens its Store update details instead of an empty app window. The Store retains
+the existing registry-bound update and permission flow; no file grant is created before updating.

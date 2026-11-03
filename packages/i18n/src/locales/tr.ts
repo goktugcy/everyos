@@ -3109,6 +3109,7 @@ export const tr = {
     menu: {
       open: "Aç",
       download: "İndir",
+      downloadVideo: "Videoyu indir",
       cut: "Kes",
       copy: "Kopyala",
       paste: "Yapıştır",
@@ -3964,6 +3965,8 @@ export const tr = {
       uninstallTitle: "{{name}} kaldırılsın mı?",
       uninstallBody: "Bu sunucuda onu kullanan herkesin verileri silinir.",
       permissions: "Bu uygulamanın yapabilecekleri",
+      requestUnavailable:
+        "İstenen uygulama katalogda bulunamadı. Uygulama kaynağını denetleyip tekrar deneyin.",
       noPermissions: "Bu uygulama hiçbir izin istemiyor.",
       notGranted: "Sizin için izinli değil",
       approve:

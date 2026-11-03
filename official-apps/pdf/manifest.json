@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.pdf",
   "name": "PDF Viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Read PDF files: pages and thumbnails, zoom and rotation, text search, the document outline and your own bookmarks, printing and saving a copy.",
   "entry": "index.html",
   "icon": "icon.svg",

@@ -6,7 +6,7 @@ import {
   manualPhoto,
   photos,
   relativePath,
-  scanImages,
+  scanMedia,
 } from "../src/albums.ts";
 
 const root: FileHandle = {
@@ -25,6 +25,33 @@ const entry = (name: string, kind: "file" | "directory" = "file"): DirectoryEntr
   modifiedAt: 1700000000000,
 });
 describe("Gallery albums", () => {
+  it("indexes MP4 files of streaming size while retaining the image size limit and rejecting unrelated files", async () => {
+    const video = {
+      ...root,
+      id: "video",
+      kind: "file" as const,
+      name: "Movie.MP4",
+      size: 2 * 1024 ** 3,
+    };
+    const selected = manualPhoto(video);
+    expect(selected?.name).toBe("Movie.MP4");
+    expect(albumContent({ items: [selected] }).items).toHaveLength(1);
+    expect(manualPhoto({ ...video, name: "large.png" })).toBeNull();
+    expect(manualPhoto({ ...video, name: "movie.mp4.exe" })).toBeNull();
+    const scanned = await scanMedia(
+      {
+        list: () =>
+          Promise.resolve([
+            { ...entry("movie.mp4"), size: video.size },
+            entry("photo.png"),
+            entry("notes.txt"),
+          ]),
+      },
+      root,
+    );
+    expect(scanned.items.map((item) => item.name)).toEqual(["movie.mp4", "photo.png"]);
+    expect(scanned.partial).toBe(false);
+  });
   it("validates album identities, paths, entry sizes and limits restored per-album data", () => {
     expect(
       galleryPreferences({
@@ -67,7 +94,7 @@ describe("Gallery albums", () => {
         ]);
       }),
     };
-    const result = await scanImages(files, root);
+    const result = await scanMedia(files, root);
     expect(result.items.map((photo) => photo.path).toSorted()).toEqual([
       "cover.png",
       "nested/inside.jpg",
@@ -76,31 +103,31 @@ describe("Gallery albums", () => {
     expect(files.list.mock.calls.every(([handle]) => handle === root)).toBe(true);
   });
   it("stops at image, traversal, depth, deadline and cancellation budgets", async () => {
-    const many = await scanImages(
+    const many = await scanMedia(
       { list: () => Promise.resolve(Array.from({ length: 1001 }, (_, n) => entry(`${n}.png`))) },
       root,
     );
     expect(many.items).toHaveLength(1000);
     expect(many.partial).toBe(true);
-    const depth = await scanImages(
+    const depth = await scanMedia(
       { list: () => Promise.resolve([entry("nested", "directory")]) },
       root,
     );
     expect(depth.partial).toBe(true);
     expect(depth.visited).toBe(9);
-    const count = await scanImages(
+    const count = await scanMedia(
       { list: () => Promise.resolve(Array.from({ length: 20001 }, (_, n) => entry(`${n}.txt`))) },
       root,
     );
     expect(count.visited).toBe(20000);
     expect(count.partial).toBe(true);
     expect(
-      (await scanImages({ list: () => Promise.resolve([]) }, root, { cancelled: () => true }))
+      (await scanMedia({ list: () => Promise.resolve([]) }, root, { cancelled: () => true }))
         .partial,
     ).toBe(true);
     let time = 0;
     expect(
-      (await scanImages({ list: () => Promise.resolve([]) }, root, { now: () => (time += 31000) }))
+      (await scanMedia({ list: () => Promise.resolve([]) }, root, { now: () => (time += 31000) }))
         .partial,
     ).toBe(true);
   });

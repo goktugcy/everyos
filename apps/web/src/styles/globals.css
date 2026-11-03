@@ -145,6 +145,12 @@
   }
 }
 
+/* Radix can inherit focus-visible from a programmatically focused window on the first click. */
+.everyos-tab-list[data-pointer-focus] [role="tab"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 /*
  * Glass surfaces. A translucent tinted base, a soft top-down sheen, a hairline
  * border and an inner highlight give depth. The theme engine guarantees the

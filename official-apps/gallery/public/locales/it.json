@@ -3,12 +3,12 @@
     "open": "Apri immagini",
     "save": "Salva immagine originale",
     "scope": "Sono accessibili solo i file scelti. Fino a 100 immagini di 50 MiB ciascuna. Zoom e rotazione riguardano l’anteprima; il salvataggio copia l’originale.",
-    "permission": "L’accesso richiede il permesso files:pick nell’App Store.",
+    "permission": "L’accesso ai contenuti richiede il permesso files:pick dall’App Store.",
     "revoked": "Alcuni file non sono più condivisi. Selezionali nuovamente.",
     "empty": "Nessuna immagine selezionata",
     "openHint": "Scegli immagini JPEG, PNG, GIF, WebP, AVIF, BMP, ICO o SVG tramite EveryOS. La decodifica dipende dal browser.",
-    "previous": "Immagine precedente",
-    "next": "Immagine successiva",
+    "previous": "Elemento precedente",
+    "next": "Elemento successivo",
     "selection": "Immagine selezionata",
     "slideshow": "Avvia presentazione",
     "stop": "Ferma presentazione",
@@ -27,7 +27,7 @@
   },
   "app": {
     "name": "Galleria",
-    "description": "Organizza immagini in album senza spostare o eliminare gli originali."
+    "description": "Organizza immagini e video selezionati in album senza spostare o eliminare i file originali."
   },
   "gallery": {
     "create": "Nuovo album",
@@ -37,14 +37,14 @@
     "album": "Album",
     "empty": "Nessun album",
     "emptyHint": "Crea un album e aggiungi file o indicizza una cartella autorizzata. Fino a 20 album.",
-    "scope": "Sono indicizzati solo file e cartelle autorizzati. Ogni album contiene fino a 1.000 immagini o 210 KiB di indice. Nessun originale viene spostato o eliminato.",
-    "addFiles": "Aggiungi immagini",
+    "scope": "Vengono indicizzati solo file selezionati e cartelle autorizzate. Ogni album contiene fino a 1.000 immagini e video o 210 KiB di indice. I video sono riprodotti in streaming; gli originali non vengono spostati o eliminati.",
+    "addFiles": "Aggiungi contenuti multimediali",
     "addFolder": "Indicizza cartella autorizzata",
     "refresh": "Aggiorna indici cartelle",
     "partial": "Indice parziale: alcuni elementi sono inaccessibili, troppo grandi o è stato raggiunto un limite. Scegli un ambito minore o un altro album.",
     "indexed": "Ultima scansione: {{at}}",
-    "search": "Cerca nomi e percorsi",
-    "sort": "Ordina immagini",
+    "search": "Cerca nomi e percorsi multimediali",
+    "sort": "Ordina contenuti multimediali",
     "byName": "Nome",
     "byDate": "Modifica (se nota)",
     "bySize": "Dimensione decrescente",
@@ -54,15 +54,18 @@
     "selectPage": "Seleziona questa pagina",
     "clearSelection": "Cancella selezione",
     "removeSelected": "Rimuovi selezionati dall’album",
-    "count": "{{count}} immagini · {{selected}} selezionate",
+    "count": "{{count}} elementi · {{selected}} selezionati",
     "closePreview": "Chiudi anteprima",
     "previewNamed": "Anteprima {{name}}",
     "selectNamed": "Seleziona {{name}}",
-    "noImages": "Nessuna immagine corrispondente",
-    "addHint": "Aggiungi immagini, autorizza una cartella o cambia i filtri.",
+    "noImages": "Nessun contenuto corrispondente",
+    "addHint": "Aggiungi immagini o video, autorizza una cartella o modifica i filtri.",
     "previousPage": "Pagina precedente",
     "nextPage": "Pagina successiva",
     "unavailable": "Anteprima non disponibile",
     "loading": "Caricamento anteprima…"
+  },
+  "video": {
+    "unsupported": "Riproduzione non riuscita: codec non supportato, file danneggiato o accesso scaduto. Ricarica o prova un altro browser/formato. Nessuna transcodifica."
   }
 }

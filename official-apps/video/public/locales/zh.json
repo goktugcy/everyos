@@ -38,6 +38,8 @@
     "codecHint": "这些是浏览器 canPlayType 的报告，不保证某个文件一定可解码。以实际播放结果为准。",
     "probably": "报告为很可能支持",
     "maybe": "报告为可能支持",
-    "notReported": "未报告支持"
+    "notReported": "未报告支持",
+    "openFailed": "无法打开所选视频。请检查文件访问权限并重新选择。",
+    "playlistFull": "此播放列表已满（100个视频）。请选择其他播放列表来打开所选视频。"
   }
 }

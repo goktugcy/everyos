@@ -3,12 +3,12 @@
     "open": "Ouvrir des images",
     "save": "Enregistrer l’image originale",
     "scope": "Seuls les fichiers choisis sont accessibles. Jusqu’à 100 images de 50 Mio chacune. Zoom et rotation concernent l’aperçu ; l’enregistrement copie l’original.",
-    "permission": "L’accès nécessite la permission files:pick dans la boutique.",
+    "permission": "L’accès aux médias nécessite l’autorisation files:pick de la boutique.",
     "revoked": "Certains fichiers ne sont plus partagés. Sélectionnez-les à nouveau.",
     "empty": "Aucune image sélectionnée",
     "openHint": "Choisissez des images JPEG, PNG, GIF, WebP, AVIF, BMP, ICO ou SVG via EveryOS. Le décodage dépend du navigateur.",
-    "previous": "Image précédente",
-    "next": "Image suivante",
+    "previous": "Élément précédent",
+    "next": "Élément suivant",
     "selection": "Image sélectionnée",
     "slideshow": "Démarrer le diaporama",
     "stop": "Arrêter le diaporama",
@@ -27,7 +27,7 @@
   },
   "app": {
     "name": "Galerie",
-    "description": "Organisez les images choisies en albums sans déplacer ni supprimer les originaux."
+    "description": "Organisez les images et vidéos sélectionnées en albums sans déplacer ni supprimer les fichiers sources."
   },
   "gallery": {
     "create": "Nouvel album",
@@ -37,14 +37,14 @@
     "album": "Album",
     "empty": "Aucun album",
     "emptyHint": "Créez un album, ajoutez des fichiers ou indexez un dossier autorisé. Jusqu’à 20 albums.",
-    "scope": "Seuls les fichiers et dossiers autorisés sont indexés. Chaque album contient jusqu’à 1 000 images ou 210 Kio d’index. Aucun original n’est déplacé ni supprimé.",
-    "addFiles": "Ajouter des images",
+    "scope": "Seuls les fichiers sélectionnés et les dossiers autorisés sont indexés. Chaque album contient jusqu’à 1 000 images et vidéos ou 210 Kio d’index. Les vidéos sont diffusées directement ; les fichiers sources ne sont jamais déplacés ni supprimés.",
+    "addFiles": "Ajouter des médias",
     "addFolder": "Indexer un dossier autorisé",
     "refresh": "Actualiser les index",
     "partial": "Index partiel : certains éléments sont inaccessibles, trop volumineux ou une limite est atteinte. Choisissez un périmètre réduit ou un autre album.",
     "indexed": "Dernière analyse : {{at}}",
-    "search": "Rechercher les noms et chemins",
-    "sort": "Trier les images",
+    "search": "Rechercher des noms et chemins de médias",
+    "sort": "Trier les médias",
     "byName": "Nom",
     "byDate": "Modification (si connue)",
     "bySize": "Taille décroissante",
@@ -54,15 +54,18 @@
     "selectPage": "Sélectionner cette page",
     "clearSelection": "Effacer la sélection",
     "removeSelected": "Retirer la sélection de l’album",
-    "count": "{{count}} images · {{selected}} sélectionnées",
+    "count": "{{count}} éléments · {{selected}} sélectionnés",
     "closePreview": "Fermer l’aperçu",
     "previewNamed": "Aperçu de {{name}}",
     "selectNamed": "Sélectionner {{name}}",
-    "noImages": "Aucune image correspondante",
-    "addHint": "Ajoutez des images, autorisez un dossier ou changez les filtres.",
+    "noImages": "Aucun média correspondant",
+    "addHint": "Ajoutez des images ou vidéos, autorisez un dossier ou modifiez les filtres.",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante",
     "unavailable": "Aperçu indisponible",
     "loading": "Chargement de l’aperçu…"
+  },
+  "video": {
+    "unsupported": "Lecture impossible : codec non pris en charge, fichier endommagé ou accès expiré. Rechargez ou essayez un autre navigateur/format. Aucun transcodage."
   }
 }

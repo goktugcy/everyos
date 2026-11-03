@@ -3155,6 +3155,7 @@ export const ko: LocaleMessages = {
     menu: {
       open: "열기",
       download: "다운로드",
+      downloadVideo: "동영상 다운로드",
       cut: "잘라내기",
       copy: "복사",
       paste: "붙여넣기",
@@ -4027,6 +4028,8 @@ export const ko: LocaleMessages = {
       uninstallTitle: "{{name}}을(를) 제거할까요?",
       uninstallBody: "이 서버에서 앱을 사용한 모든 사람의 데이터가 삭제됩니다.",
       permissions: "이 앱이 할 수 있는 일",
+      requestUnavailable:
+        "요청한 앱을 카탈로그에서 사용할 수 없습니다. 앱 소스를 확인하고 다시 시도하세요.",
       noPermissions: "이 앱은 권한을 요청하지 않습니다.",
       notGranted: "나에게는 허용되지 않음",
       approve: "허용할 권한을 각각 선택하세요. 모두 허용해야 앱이 설치됩니다.",

@@ -3068,6 +3068,7 @@ export const en: Messages = {
     menu: {
       open: "Open",
       download: "Download",
+      downloadVideo: "Download video",
       cut: "Cut",
       copy: "Copy",
       paste: "Paste",
@@ -3927,6 +3928,8 @@ export const en: Messages = {
       uninstallTitle: "Uninstall {{name}}?",
       uninstallBody: "Its data is deleted for everyone who used it on this server.",
       permissions: "What this app may do",
+      requestUnavailable:
+        "The requested app is unavailable in the catalog. Check its registry and try again.",
       noPermissions: "This app asks for no permissions.",
       notGranted: "Not allowed for you",
       approve:

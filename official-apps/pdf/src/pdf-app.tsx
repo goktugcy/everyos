@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import type { FileHandle } from "@everyos/app-sdk";
 import {
   Button,
@@ -92,7 +93,7 @@ export function PdfApp({ loadEngine = defaultEngine }: { loadEngine?: () => Prom
     open: true,
     tab: "pages",
   });
-  const [storedRecent, setRecent] = usePersistentState<Recent[]>("recent", []);
+  const [storedRecent, setRecent, recentStatus] = usePersistentState<Recent[]>("recent", []);
   const recent = Array.isArray(storedRecent) ? storedRecent.filter(isRecent) : [];
   const [doc, setDoc] = useState<OpenDoc | null>(null);
   const [opening, setOpening] = useState(false);
@@ -134,7 +135,12 @@ export function PdfApp({ loadEngine = defaultEngine }: { loadEngine?: () => Prom
   );
 
   // pdf.js keeps work and memory per document: let it go with the window.
-  useEffect(() => () => sessionRef.current?.destroy(), []);
+  useEffect(
+    () => () => {
+      void Promise.resolve(sessionRef.current?.destroy()).catch(() => undefined);
+    },
+    [],
+  );
 
   useEffect(() => {
     void app.window.setTitle(doc ? (doc.session.title ?? doc.name) : t("app.name"));
@@ -214,7 +220,8 @@ export function PdfApp({ loadEngine = defaultEngine }: { loadEngine?: () => Prom
       const data = new Uint8Array(await app.files.read(handle));
       const engine = await loadEngine();
       saveState();
-      doc?.session.destroy();
+      // pdf.js cannot reuse its worker while the previous loading task is being destroyed.
+      await doc?.session.destroy();
       setDoc(null);
       setFindOpen(false);
       setFindStatus(null);
@@ -266,6 +273,15 @@ export function PdfApp({ loadEngine = defaultEngine }: { loadEngine?: () => Prom
       fail(caught);
     }
   };
+
+  useOpenedFiles({
+    ready: recentStatus.loaded && !opening,
+    accept: [".pdf"],
+    open: async ([handle]) => {
+      if (handle) await openHandle(handle);
+    },
+    error: fail,
+  });
 
   const openRecent = async (entry: Recent) => {
     try {

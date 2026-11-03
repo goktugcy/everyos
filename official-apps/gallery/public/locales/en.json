@@ -3,12 +3,12 @@
     "open": "Open images",
     "save": "Save original image",
     "scope": "Only files you select are accessible. Keep up to 100 images, each at most 50 MiB. Zoom and rotation affect the preview; saving copies the original file.",
-    "permission": "Image access needs files:pick permission from the App Store.",
+    "permission": "Media access needs files:pick permission from the App Store.",
     "revoked": "Some saved files are no longer shared. Select them again to restore access.",
     "empty": "No image selected",
     "openHint": "Choose JPEG, PNG, GIF, WebP, AVIF, BMP, ICO or SVG images through EveryOS. Actual decoding depends on your browser.",
-    "previous": "Previous image",
-    "next": "Next image",
+    "previous": "Previous item",
+    "next": "Next item",
     "selection": "Selected image",
     "slideshow": "Start slideshow",
     "stop": "Stop slideshow",
@@ -27,7 +27,7 @@
   },
   "app": {
     "name": "Gallery",
-    "description": "Organize selected images in albums without moving or deleting source files."
+    "description": "Organize selected images and videos in albums without moving or deleting source files."
   },
   "gallery": {
     "create": "New album",
@@ -37,14 +37,14 @@
     "album": "Album",
     "empty": "No albums yet",
     "emptyHint": "Create an album, then add selected files or index a folder you approve. Up to 20 albums.",
-    "scope": "Only selected files and approved folders are indexed. Each album holds up to 1,000 images or 210 KiB of index data. No source file is moved or deleted.",
-    "addFiles": "Add images",
+    "scope": "Only selected files and approved folders are indexed. Each album holds up to 1,000 images and videos or 210 KiB of index data. Videos stream directly; source files are never moved or deleted.",
+    "addFiles": "Add media",
     "addFolder": "Index approved folder",
     "refresh": "Refresh folder indexes",
     "partial": "The index is partial: some entries were inaccessible, unsupported in size, or a scan/index limit was reached. Choose a smaller scope or another album.",
     "indexed": "Last folder scan: {{at}}",
-    "search": "Search image names and paths",
-    "sort": "Sort images",
+    "search": "Search media names and paths",
+    "sort": "Sort media",
     "byName": "Name",
     "byDate": "Modified time (when known)",
     "bySize": "Size, largest first",
@@ -54,15 +54,18 @@
     "selectPage": "Select this page",
     "clearSelection": "Clear selection",
     "removeSelected": "Remove selected from album",
-    "count": "{{count}} images · {{selected}} selected",
+    "count": "{{count}} items · {{selected}} selected",
     "closePreview": "Close preview",
     "previewNamed": "Preview {{name}}",
     "selectNamed": "Select {{name}}",
-    "noImages": "No matching images",
-    "addHint": "Add images, approve a folder or change the filters.",
+    "noImages": "No matching media",
+    "addHint": "Add images or videos, approve a folder or change the filters.",
     "previousPage": "Previous page",
     "nextPage": "Next page",
     "unavailable": "Preview unavailable",
     "loading": "Loading preview…"
+  },
+  "video": {
+    "unsupported": "This file could not be played. Its codec/container may be unsupported, the file may be damaged, or its share may have expired. Try reloading or another browser/format. No transcoding is performed."
   }
 }

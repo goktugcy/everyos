@@ -19,7 +19,7 @@ import {
   useT,
 } from "@everyos/app-ui";
 import { useEffect, useRef, useState } from "react";
-import { IMAGE_TYPES } from "../../images/src/images.ts";
+import { isVideo } from "../../video/src/video.ts";
 import { ImageStage } from "../../images/src/image-stage.tsx";
 import { useImage } from "../../images/src/use-image.ts";
 import {
@@ -31,12 +31,14 @@ import {
   newId,
   photoHandle,
   photos,
-  scanImages,
+  MEDIA_TYPES,
+  scanMedia,
   type Album,
   type GalleryPreferences,
   type Photo,
 } from "./albums.ts";
 import { PhotoGrid } from "./photo-grid.tsx";
+import { GalleryVideo } from "./gallery-video.tsx";
 
 export function GalleryApp() {
   const app = useApp();
@@ -195,7 +197,7 @@ function AlbumPane({
   const pages = Math.max(1, Math.ceil(visible.length / 40));
   const currentPage = Math.min(page, pages - 1);
   const pageItems = visible.slice(currentPage * 40, (currentPage + 1) * 40);
-  const image = useImage(opened?.file ?? null);
+  const image = useImage(opened && !isVideo(opened.photo.name) ? opened.file : null);
   const update = (value: typeof content) => {
     if (!locked) setRaw(albumContent(value));
   };
@@ -267,7 +269,7 @@ function AlbumPane({
   };
   const addFiles = () =>
     void perform(async (current) => {
-      const files = await app.files.open({ accept: IMAGE_TYPES, multiple: true, persist: true });
+      const files = await app.files.open({ accept: MEDIA_TYPES, multiple: true, persist: true });
       if (current !== generation.current) return;
       const items = files.flatMap((file) => manualPhoto(file) ?? []);
       update({
@@ -287,7 +289,7 @@ function AlbumPane({
         partial: pick ? content.partial : chosen.length < content.roots.length,
       };
       for (const root of chosen.slice(0, 20)) {
-        const scanned = await scanImages(app.files, root, {
+        const scanned = await scanMedia(app.files, root, {
           cancelled: () => current !== generation.current,
         });
         if (current !== generation.current) return;
@@ -327,7 +329,7 @@ function AlbumPane({
     }
   };
   useEffect(() => {
-    if (!playing || !opened || visible.length < 2) return;
+    if (!playing || !opened || isVideo(opened.photo.name) || visible.length < 2) return;
     const timer = setInterval(() => void next(1), prefs.interval);
     return () => clearInterval(timer);
   }, [playing, opened?.photo.key, visible.map((item) => item.key).join("\0"), prefs.interval]);
@@ -477,9 +479,24 @@ function AlbumPane({
             />
           </div>
           <h2>{opened.photo.name}</h2>
-          {image.error ? <p role="alert">{errorMessage(t, image.error)}</p> : null}
-          {image.loading ? <LoadingState /> : null}
-          {image.data ? <ImageStage src={image.data.src} name={opened.photo.name} /> : null}
+          {isVideo(opened.photo.name) ? (
+            <GalleryVideo
+              key={opened.file.id}
+              file={opened.file}
+              epoch={epoch}
+              slideshow={playing}
+              onEnded={() => {
+                if (playing) void next(1);
+              }}
+            />
+          ) : null}
+          {!isVideo(opened.photo.name) ? (
+            <>
+              {image.error ? <p role="alert">{errorMessage(t, image.error)}</p> : null}
+              {image.loading ? <LoadingState /> : null}
+              {image.data ? <ImageStage src={image.data.src} name={opened.photo.name} /> : null}
+            </>
+          ) : null}
         </section>
       ) : null}
       <PhotoGrid

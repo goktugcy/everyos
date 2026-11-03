@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import {
   Badge,
   Button,
@@ -155,6 +156,17 @@ export function JsonApp() {
       fail(caught);
     }
   };
+  useOpenedFiles({
+    ready: draft !== null,
+    accept: [".json", ".geojson", ".jsonl"],
+    open: async ([handle]) => {
+      if (!handle) return;
+      const text = new TextDecoder().decode(await app.files.read(handle, { maxBytes: MAX_BYTES }));
+      setDraft({ text, name: handle.name });
+    },
+    error: fail,
+  });
+
   const save = async () => {
     if (!draft) return;
     try {

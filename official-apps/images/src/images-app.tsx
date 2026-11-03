@@ -1,3 +1,4 @@
+import { useOpenedFiles } from "../../video/src/use-opened-files.ts";
 import {
   Button,
   EmptyState,
@@ -88,7 +89,7 @@ export function ImagesApp() {
     const timer = setInterval(() => choose(1), prefs.interval);
     return () => clearInterval(timer);
   }, [playing, files.map((item) => item.id).join(","), file?.id, prefs.interval]);
-  const perform = async (work: (epoch: number) => Promise<void>) => {
+  const perform = async (work: (epoch: number) => Promise<void> | void) => {
     if (active.current || !app.permissions.has("files:pick")) return;
     const epoch = generation.current;
     active.current = true;
@@ -116,6 +117,23 @@ export function ImagesApp() {
       setPlaying(false);
       setRevision((n) => n + 1);
     });
+  useOpenedFiles({
+    ready: stored.loaded && allowed && !busy,
+    accept: IMAGE_TYPES,
+    open: (selected) =>
+      perform((epoch) => {
+        const ids = selected
+          .filter(isImage)
+          .slice(0, 100)
+          .map((item) => item.id);
+        if (!ids.length || epoch !== generation.current) return;
+        setRaw({ ...prefs, ids, current: ids[0] ?? null });
+        setPlaying(false);
+        setRevision((n) => n + 1);
+      }),
+    error: setError,
+  });
+
   const save = () => {
     if (!file) return;
     const selected = file;

@@ -349,6 +349,71 @@ test.describe("PDF Viewer", () => {
     await api(page, "DELETE", `/api/desktop-apps/installed/${pdf.id}`, { confirm: true });
   });
 
+  test("Files offers installation for PDFs and opens selected documents in the same viewer", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await api(page, "DELETE", `/api/desktop-apps/installed/${pdf.id}`, { confirm: true });
+    for (const [name, title] of [
+      ["default-first.pdf", "First selected PDF"],
+      ["default-second.pdf", "Second selected PDF"],
+    ]) {
+      const bytes = makePdf({ pages: [[title!]] });
+      expect(
+        await page.evaluate(
+          async ({ name, data, header }) => {
+            const session = (await (await fetch("/api/auth/session")).json()) as {
+              csrfToken: string;
+            };
+            return (
+              await fetch(`/api/files/upload?root=home&path=Belgeler&name=${name}`, {
+                method: "POST",
+                headers: { [header]: session.csrfToken },
+                body: new Uint8Array(data),
+              })
+            ).status;
+          },
+          { name, data: [...bytes], header: CSRF_HEADER },
+        ),
+      ).toBe(201);
+    }
+    await page.reload();
+    const showFiles = async () => {
+      await expect(page.getByTestId("desktop")).toBeVisible();
+      await page.getByTestId("dock").locator('[data-dock-item="everyos.files"] button').click();
+    };
+    await showFiles();
+    const files = page.locator('[data-app-id="everyos.files"]');
+    await files
+      .getByTestId("files-sidebar")
+      .getByRole("button", { name: "Belgeler", exact: true })
+      .click();
+    const downloads: string[] = [];
+    page.on("download", (download) => downloads.push(download.suggestedFilename()));
+    await files.locator('[data-name="default-first.pdf"]').dblclick();
+    const dialog = page.getByRole("dialog").filter({ has: page.getByTestId("desktop-app-dialog") });
+    await expect(dialog).toContainText("PDF Viewer");
+    const before = JSON.parse((await api(page, "GET", "/api/desktop-apps/installed")).text) as {
+      apps: Array<{ appId: string }>;
+    };
+    expect(before.apps.some((app) => app.appId === pdf.id)).toBe(false);
+    expect(downloads).toEqual([]);
+    await dialog.getByRole("button", { name: "Kur", exact: true }).click();
+    await expect(dialog.getByRole("button", { name: "Aç", exact: true })).toBeEnabled();
+    await dialog.getByRole("button", { name: "Kapat", exact: true }).first().click();
+    await showFiles();
+    await files.locator('[data-name="default-first.pdf"]').dblclick();
+    const window = page.locator(`[data-app-id="everyos.desktop.${pdf.id}"]`);
+    const frame = window.frameLocator('[data-testid="desktop-app-frame"]');
+    await expect(frame.locator(".textLayer")).toContainText("First selected PDF");
+    await showFiles();
+    await files.locator('[data-name="default-second.pdf"]').dblclick();
+    await expect(window).toHaveCount(1);
+    await expect(frame.locator(".textLayer")).toContainText("Second selected PDF");
+    await expect(page.getByTestId("desktop-app-file-picker")).toHaveCount(0);
+    expect(downloads).toEqual([]);
+  });
+
   test("renders, searches, navigates, remembers the place and prints a document", async ({
     page,
   }) => {
@@ -1909,12 +1974,12 @@ test.describe("Gallery", () => {
     await expect(cards()).toContainText("winter.png");
     await frame.getByRole("checkbox", { name: "Yalnızca favoriler", exact: true }).uncheck();
     await frame
-      .getByRole("searchbox", { name: "Görsel adlarında ve yollarda ara", exact: true })
+      .getByRole("searchbox", { name: "Medya adı ve yollarında ara", exact: true })
       .fill("walks");
     await expect(cards()).toHaveCount(1);
     await expect(cards()).toContainText("summer.png");
     await frame
-      .getByRole("searchbox", { name: "Görsel adlarında ve yollarda ara", exact: true })
+      .getByRole("searchbox", { name: "Medya adı ve yollarında ara", exact: true })
       .fill("");
     await upload(base, "spring.png", makeImage(80, 80, [180, 130, 20]));
     await frame.getByRole("button", { name: "Klasör dizinlerini yenile", exact: true }).click();

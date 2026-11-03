@@ -3214,6 +3214,7 @@ export const de: LocaleMessages = {
     menu: {
       open: "Öffnen",
       download: "Herunterladen",
+      downloadVideo: "Video herunterladen",
       cut: "Ausschneiden",
       copy: "Kopieren",
       paste: "Einfügen",
@@ -4119,6 +4120,8 @@ export const de: LocaleMessages = {
       uninstallBody:
         "Ihre Daten werden für alle gelöscht, die die App auf diesem Server genutzt haben.",
       permissions: "Was diese App darf",
+      requestUnavailable:
+        "Die angeforderte App ist im Katalog nicht verfügbar. Prüfen Sie die Quelle und versuchen Sie es erneut.",
       noPermissions: "Diese App fordert keine Berechtigungen an.",
       notGranted: "Für dich nicht erlaubt",
       approve:

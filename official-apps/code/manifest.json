@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "id": "dev.everyos.code",
   "name": "Code Editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Edit code in tabs with syntax highlighting, a minimap, search and replace, and a file explorer for a folder you choose.",
   "entry": "index.html",
   "icon": "icon.svg",

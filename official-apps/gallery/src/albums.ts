@@ -1,5 +1,13 @@
 import type { EveryOSApp, FileHandle } from "@everyos/app-sdk";
 import { isImage, MAX_IMAGE_BYTES } from "../../images/src/images.ts";
+import { isVideo, VIDEO_TYPES } from "../../video/src/video.ts";
+import { IMAGE_TYPES } from "../../images/src/images.ts";
+
+export const MEDIA_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES];
+const isMedia = (file: { name: string; kind: string }) =>
+  file.kind === "file" && (isImage({ ...file, kind: "file" }) || isVideo(file.name));
+const validMediaSize = (name: string, size: number) =>
+  Number.isSafeInteger(size) && size >= 0 && (isVideo(name) || size <= MAX_IMAGE_BYTES);
 
 export interface Album {
   id: string;
@@ -92,10 +100,8 @@ export function albumContent(value: unknown): AlbumContent {
       !candidate ||
       typeof candidate.name !== "string" ||
       candidate.name.length > 255 ||
-      !isImage({ name: candidate.name, kind: "file" }) ||
-      !Number.isSafeInteger(candidate.size) ||
-      candidate.size < 0 ||
-      candidate.size > MAX_IMAGE_BYTES ||
+      !isMedia({ name: candidate.name, kind: "file" }) ||
+      !validMediaSize(candidate.name, candidate.size) ||
       !Number.isFinite(candidate.modified) ||
       candidate.modified < 0 ||
       typeof candidate.path !== "string"
@@ -165,7 +171,7 @@ export function photos(
     );
 }
 export function manualPhoto(file: FileHandle): Photo | null {
-  return isImage(file) && file.size !== null && file.size <= MAX_IMAGE_BYTES
+  return isMedia(file) && file.size !== null && validMediaSize(file.name, file.size)
     ? {
         key: file.id,
         root: null,
@@ -178,7 +184,7 @@ export function manualPhoto(file: FileHandle): Photo | null {
       }
     : null;
 }
-export async function scanImages(
+export async function scanMedia(
   files: Pick<EveryOSApp["files"], "list">,
   root: FileHandle,
   options: { cancelled?: () => boolean; now?: () => number } = {},
@@ -225,8 +231,8 @@ export async function scanImages(
         if (entry.kind === "directory") {
           if (folder.depth >= 8) partial = true;
           else stack.push({ path, depth: folder.depth + 1 });
-        } else if (isImage({ name: entry.name, kind: entry.kind })) {
-          if (entry.size === null || entry.size > MAX_IMAGE_BYTES) {
+        } else if (isMedia({ name: entry.name, kind: entry.kind })) {
+          if (entry.size === null || !validMediaSize(entry.name, entry.size)) {
             partial = true;
             continue;
           }

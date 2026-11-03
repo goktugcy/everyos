@@ -87,6 +87,14 @@ export function appSdkFileRoutes(services: Services): Hono<AppEnv> {
         persistent: input.persist,
       });
       handles.push(files.view(grant, properties.size));
+      services.audit.record({
+        action: "desktop-apps.file.grant",
+        target: call.instance.appId,
+        outcome: "success",
+        actor: { userId: call.auth.user.id, username: call.auth.user.username },
+        ip: c.get("client").ip,
+        details: { kind: grant.kind, writable: input.write, persistent: input.persist },
+      });
     }
     return c.json({ handles }, 201);
   });

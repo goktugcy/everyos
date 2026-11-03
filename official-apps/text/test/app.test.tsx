@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import { renderApp, typeInEditor, type RenderedApp } from "@everyos/app-ui/testing";
 import { byRole, byText } from "@everyos/app-testing/dom";
 import type { MockHostOptions } from "@everyos/app-testing";
@@ -33,6 +34,13 @@ async function click(name: string | RegExp) {
 const type = (text: string) => typeInEditor(text);
 
 describe("Text Editor", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const { host } = await start(fileOpenOptions("selected.txt", "Selected text document"));
+    await vi.waitFor(() => expect(tabs()).toContain("selected.txt"));
+    await vi.waitFor(() => expect(editor().textContent).toBe("Selected text document"));
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("opens a file, edits it and saves it back in its encoding and line endings", async () => {
     const latin = new Uint8Array([0x4b, 0x61, 0x72, 0xfd, 0x0d, 0x0a]); // "Karı\r\n" in Windows-1254
     const { host } = await start({ locale: "tr", files: { "/docs/notlar.txt": latin } });

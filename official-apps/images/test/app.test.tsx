@@ -1,3 +1,4 @@
+import { fileOpenOptions } from "../../video/test/file-open-fixture.ts";
 import type { MockHostOptions } from "@everyos/app-testing";
 import { byRole } from "@everyos/app-testing/dom";
 import { renderApp, type RenderedApp } from "@everyos/app-ui/testing";
@@ -31,6 +32,14 @@ async function click(name: string) {
   byRole("button", name)!.click();
 }
 describe("Image Viewer", () => {
+  it("loads a desktop-selected file after recovery without reopening the file picker", async () => {
+    const { host } = await start(fileOpenOptions("selected.svg", svg));
+    await vi.waitFor(() =>
+      expect(document.querySelector('img[alt="selected.svg"]')).not.toBeNull(),
+    );
+    expect(host.calls.some((call) => call.method === "files.open")).toBe(false);
+  });
+
   it("bounds streamed reads even when a selected file grew after it was picked", async () => {
     const { app } = await start();
     const [file] = await app.files.open({ accept: [".svg"] });
