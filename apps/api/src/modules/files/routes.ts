@@ -26,6 +26,7 @@ import { requireAuth, requirePermission } from "../../middleware/auth.ts";
 import type { Services } from "../../services.ts";
 import { fileViewFor } from "./file-view.ts";
 import { readFileSettings, writeFileSettings } from "./file-settings.ts";
+import { fileArchiveRoutes } from "./archive-routes.ts";
 
 /** Raster formats that are safe to show in place; everything else downloads. */
 const INLINE_TYPES: Record<string, string> = {
@@ -89,6 +90,7 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
   };
   app.use("*", requirePermission("files:read"), enabled);
   const write = requirePermission("files:write");
+  app.route("/archive", fileArchiveRoutes(services));
 
   const audit = (
     c: Context<AppEnv>,

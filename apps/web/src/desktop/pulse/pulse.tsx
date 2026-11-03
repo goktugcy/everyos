@@ -1,5 +1,6 @@
 import type { BackupJobView, UpdateJobView } from "@everyos/shared";
 import {
+  Archive,
   ArrowDown,
   ArrowDownUp,
   ArrowUp,
@@ -444,7 +445,9 @@ export function Pulse() {
                 data-testid="pulse-amount"
                 className="pointer-events-none absolute inset-x-3 top-[3px] flex h-[15px] items-center justify-center gap-1 whitespace-nowrap text-[0.64rem] font-semibold leading-none tabular-nums"
               >
-                {transfer.direction === "upload" ? (
+                {transfer.direction === "compress" || transfer.direction === "extract" ? (
+                  <Archive className="size-2.5 shrink-0 text-accent" aria-hidden />
+                ) : transfer.direction === "upload" ? (
                   <ArrowUp className="size-2.5 shrink-0 text-accent" aria-hidden />
                 ) : transfer.direction === "both" ? (
                   <ArrowDownUp className="size-2.5 shrink-0 text-accent" aria-hidden />

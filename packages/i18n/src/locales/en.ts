@@ -2902,6 +2902,8 @@ export const en: Messages = {
     },
   },
   transfers: {
+    compress: "Create ZIP",
+    extract: "Extract to new folder",
     title: "Transfers",
     storage: "Storage and transfers",
     rate: "{{value}}/s",
@@ -2997,6 +2999,22 @@ export const en: Messages = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "Create ZIP",
+      extractTitle: "Open ZIP archive",
+      compressAction: "Compress to ZIP…",
+      extractAction: "Extract ZIP…",
+      archiveName: "Archive",
+      archiveLabel: "ZIP file name",
+      folderLabel: "New extraction folder name",
+      create: "Create ZIP",
+      extract: "Extract to new folder",
+      summary: "{{count}} items · {{size}}",
+      shown: "Showing the first {{shown}} items.",
+      search: "Search archive",
+      contents: "Archive contents",
+      empty: "This ZIP archive is empty.",
+    },
     selectAll: "Select all",
     locations: "Locations",
     disks: "Disks",
@@ -4074,6 +4092,10 @@ export const en: Messages = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID: "The ZIP archive is corrupt or contains unsafe file paths.",
+    FILES_ARCHIVE_LIMIT: "The archive exceeds the file count, size or processing time limit.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "Encrypted ZIP files, links and this compression method are not supported.",
     BAD_REQUEST: "The request could not be understood.",
     VALIDATION_FAILED: "Some of the entered information is invalid.",
     UNAUTHENTICATED: "Your session has ended. Please sign in again.",

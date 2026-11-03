@@ -1,7 +1,10 @@
+import { randomId } from "../../lib/random-id.ts";
+import { ArchiveDialog, type ArchiveRequest } from "../apps/files/archive-dialog.tsx";
 import { fileAppFor, isVideoFile, openFileWithApp } from "../desktop-apps/open-file.ts";
 import type { DesktopItem, FileEntry } from "@everyos/shared";
 import { workArea, type Point, type Rect } from "@everyos/window-manager";
 import {
+  Archive,
   AppWindow,
   ArrowDownAZ,
   ClipboardPaste,
@@ -61,6 +64,7 @@ import { useTrashMenu } from "../apps/files/trash-menu.tsx";
 import { FolderIconDialog } from "../apps/settings/folder-icon-picker.tsx";
 import { fileGlyph } from "../apps/files/icon-view.tsx";
 import {
+  isZipFile,
   FILES_DRAG_TYPE,
   filesApi,
   filesChanged,
@@ -370,6 +374,7 @@ export function DesktopSurface() {
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [preview, setPreview] = useState<FileLocation | null>(null);
   const [properties, setProperties] = useState<FileLocation | null>(null);
+  const [archive, setArchive] = useState<ArchiveRequest | null>(null);
   const [iconLocation, setIconLocation] = useState<FileLocation | null>(null);
   const menuPoint = useRef<Point | null>(null);
   const location = folder.location;
@@ -523,6 +528,8 @@ export function DesktopSurface() {
     // Folders open in a Files window, with the sidebar, like every other folder.
     if (kind === "folder")
       desktop.openApp("everyos.files", { newInstance: true, appState: target });
+    else if (kind !== "link" && isZipFile(entry.name))
+      setArchive({ id: randomId(), mode: "extract", location: target, writable });
     else if (kind !== "link" && appId) {
       if (!openFileWithApp(target, appId)) setNotice({ text: t("errors.FORBIDDEN"), error: true });
     } else if (kind === "text") desktop.openWindow("everyos.editor", target);
@@ -1052,6 +1059,7 @@ export function DesktopSurface() {
   const fileMenu = (entry: FileEntry): MenuEntry[] => {
     const target = entryLocation(entry.name);
     const folderEntry = isFolder(entry);
+    const paths = [target.path];
     return [
       {
         kind: "item",
@@ -1060,6 +1068,31 @@ export function DesktopSurface() {
         icon: <FolderOpen />,
         onSelect: () => openEntry(entry),
       },
+      {
+        kind: "item",
+        id: "compress",
+        label: t("files.archive.compressAction"),
+        icon: <Archive />,
+        permission: "files:write",
+        disabled: !writable || (entry.type !== "file" && entry.type !== "directory"),
+        onSelect: () => {
+          if (location) setArchive({ id: randomId(), mode: "compress", location, paths, writable });
+        },
+      },
+      ...(entry.type === "file" && isZipFile(entry.name)
+        ? [
+            {
+              kind: "item" as const,
+              id: "extract",
+              label: t("files.archive.extractAction"),
+              icon: <FolderOpen />,
+              permission: "files:write" as const,
+              disabled: !writable,
+              onSelect: () =>
+                setArchive({ id: randomId(), mode: "extract", location: target, writable }),
+            },
+          ]
+        : []),
       ...(!folderEntry && kindOf(entry) !== "link"
         ? [
             {
@@ -1295,6 +1328,28 @@ export function DesktopSurface() {
         label: t("desktop.menu.open"),
         icon: <FolderOpen />,
         onSelect: () => targets.forEach(openIcon),
+      },
+      {
+        kind: "item",
+        id: "compress",
+        label: t("files.archive.compressAction"),
+        icon: <Archive />,
+        permission: "files:write",
+        disabled:
+          !writable ||
+          !files.length ||
+          files.length !== targets.length ||
+          files.some((item) => item.entry.type !== "file" && item.entry.type !== "directory"),
+        onSelect: () => {
+          if (location)
+            setArchive({
+              id: randomId(),
+              mode: "compress",
+              location,
+              paths: files.map((item) => entryLocation(item.entry.name).path),
+              writable,
+            });
+        },
       },
       {
         kind: "item",
@@ -1542,6 +1597,7 @@ export function DesktopSurface() {
         </div>
       </ContextMenuArea>
       <ImagePreview location={preview} onClose={() => setPreview(null)} />
+      <ArchiveDialog request={archive} onClose={() => setArchive(null)} />
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
       <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />
     </>

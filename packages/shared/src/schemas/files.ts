@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_TEXT_FILE_BYTES } from "../files.ts";
+import { ARCHIVE_STAGING_NAME, MAX_FILE_ARCHIVE_ENTRIES, MAX_TEXT_FILE_BYTES } from "../files.ts";
 import { isShelfTemporary, MAX_SHELF_ITEMS } from "../preferences.ts";
 
 /** UTF-8 byte length (file names are limited to 255 bytes, not characters). */
@@ -44,6 +44,26 @@ export const FileNameSchema = z
   );
 
 const location = { root: FileRootIdSchema, path: RelativePathSchema };
+
+export const ArchiveCreateRequestSchema = z.strictObject({
+  ...location,
+  paths: z
+    .array(RelativePathSchema.refine((path) => path.length > 0))
+    .min(1)
+    .max(MAX_FILE_ARCHIVE_ENTRIES),
+  name: FileNameSchema.regex(/\.zip$/i),
+});
+export const ArchiveExtractRequestSchema = z.strictObject({
+  ...location,
+  path: RelativePathSchema.refine((path) => path.length > 0),
+  name: FileNameSchema,
+});
+export const ArchiveStageLocationSchema = z.strictObject({
+  root: FileRootIdSchema,
+  path: RelativePathSchema.refine((path) =>
+    ARCHIVE_STAGING_NAME.test(path.split("/").at(-1) ?? ""),
+  ),
+});
 
 export const FileLocationQuerySchema = z.strictObject(location);
 

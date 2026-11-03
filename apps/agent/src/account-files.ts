@@ -138,6 +138,11 @@ export function accountFiles(options: {
         await service(p, actor).remove(p.root, p.paths);
         return null;
       }),
+    "files.archive.discard": (p, { actor }) =>
+      safe(async () => {
+        await service(p, actor).discardArchiveStage(p.root, p.path);
+        return null;
+      }),
     "files.trash": (p, { actor }) => safe(() => service(p, actor).trash()),
     "files.trash.restore": (p, { actor }) =>
       safe(async () => {

@@ -3035,6 +3035,8 @@ export const es: LocaleMessages = {
     },
   },
   transfers: {
+    compress: "Crear ZIP",
+    extract: "Extraer en carpeta nueva",
     title: "Transferencias",
     storage: "Almacenamiento y transferencias",
     rate: "{{value}}/s",
@@ -3132,6 +3134,22 @@ export const es: LocaleMessages = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "Crear ZIP",
+      extractTitle: "Abrir archivo ZIP",
+      compressAction: "Comprimir en ZIP…",
+      extractAction: "Extraer ZIP…",
+      archiveName: "Archivo",
+      archiveLabel: "Nombre del archivo ZIP",
+      folderLabel: "Nombre de la nueva carpeta de extracción",
+      create: "Crear ZIP",
+      extract: "Extraer en carpeta nueva",
+      summary: "{{count}} elementos · {{size}}",
+      shown: "Se muestran los primeros {{shown}} elementos.",
+      search: "Buscar en el archivo",
+      contents: "Contenido del archivo",
+      empty: "Este archivo ZIP está vacío.",
+    },
     selectAll: "Seleccionar todo",
     locations: "Ubicaciones",
     disks: "Discos",
@@ -4276,6 +4294,10 @@ export const es: LocaleMessages = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID: "El ZIP está dañado o contiene rutas de archivo inseguras.",
+    FILES_ARCHIVE_LIMIT:
+      "El archivo supera el límite de cantidad de archivos, tamaño o tiempo de procesamiento.",
+    FILES_ARCHIVE_UNSUPPORTED: "No se admiten ZIP cifrados, enlaces ni este método de compresión.",
     BAD_REQUEST: "No se pudo entender la solicitud.",
     VALIDATION_FAILED: "Parte de la información introducida no es válida.",
     UNAUTHENTICATED: "Tu sesión ha finalizado. Vuelve a iniciar sesión.",

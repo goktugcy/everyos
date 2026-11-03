@@ -1,3 +1,4 @@
+import { ArchiveDialog, type ArchiveRequest } from "./archive-dialog.tsx";
 import type {
   FileEntry,
   FileListing,
@@ -8,6 +9,7 @@ import type {
 } from "@everyos/shared";
 import type { Point, Rect } from "@everyos/window-manager";
 import {
+  Archive,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
@@ -66,6 +68,7 @@ import { fileAppFor, isVideoFile, openFileWithApp } from "../../desktop-apps/ope
 import { iconsInRect, selectionRect } from "../../surface/icon-selection.ts";
 import { useAppHost } from "../app-context.ts";
 import {
+  isZipFile,
   copyName,
   FILES_DRAG_TYPE,
   filesApi,
@@ -166,6 +169,7 @@ export default function FilesApp() {
   const [results, setResults] = useState<FileSearchResult | null>(null);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [properties, setProperties] = useState<FileLocation | null>(null);
+  const [archive, setArchive] = useState<ArchiveRequest | null>(null);
   const [iconLocation, setIconLocation] = useState<FileLocation | null>(null);
   const [preview, setPreview] = useState<FileLocation | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -360,6 +364,8 @@ export default function FilesApp() {
     const kind = kindOf(entry);
     const appId = fileAppFor(entry.name);
     if (kind === "folder") go(target);
+    else if (kind !== "link" && isZipFile(entry.name))
+      setArchive({ id: randomId(), mode: "extract", location: target, writable });
     else if (kind !== "link" && appId) {
       if (!openFileWithApp(target, appId))
         setActionError(new ApiRequestError(403, "FORBIDDEN", "File application access denied"));
@@ -831,6 +837,34 @@ export default function FilesApp() {
         disabled: !single,
         onSelect: () => open(entry),
       },
+      {
+        kind: "item",
+        id: "compress",
+        label: t("files.archive.compressAction"),
+        icon: <Archive />,
+        permission: "files:write",
+        disabled: !writable || (entry.type !== "file" && entry.type !== "directory"),
+        onSelect: () => setArchive({ id: randomId(), mode: "compress", location, paths, writable }),
+      },
+      ...(single && entry.type === "file" && isZipFile(entry.name)
+        ? [
+            {
+              kind: "item" as const,
+              id: "extract",
+              label: t("files.archive.extractAction"),
+              icon: <FolderOpen />,
+              permission: "files:write" as const,
+              disabled: !writable,
+              onSelect: () =>
+                setArchive({
+                  id: randomId(),
+                  mode: "extract",
+                  location: { root: location.root, path: paths[0]! },
+                  writable,
+                }),
+            },
+          ]
+        : []),
       ...(isDriveConnected(driveView) && kindOf(entry) !== "link"
         ? [
             {
@@ -1566,6 +1600,7 @@ export default function FilesApp() {
           }}
         />
       ) : null}
+      <ArchiveDialog request={archive} onClose={() => setArchive(null)} />
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
       <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />
       <ImagePreview location={preview} onClose={() => setPreview(null)} />

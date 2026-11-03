@@ -7,7 +7,7 @@ export const TRANSFER_STATES = ["queued", "running", "done", "failed", "cancelle
 export type TransferState = (typeof TRANSFER_STATES)[number];
 
 /** `download`: from the cloud to EveryOS; `upload`: from EveryOS (or a browser) to the cloud. */
-export const TRANSFER_DIRECTIONS = ["download", "upload"] as const;
+export const TRANSFER_DIRECTIONS = ["download", "upload", "compress", "extract"] as const;
 export type TransferDirection = (typeof TRANSFER_DIRECTIONS)[number];
 
 /** Where a transfer reads or writes: an EveryOS location or Google Drive. */

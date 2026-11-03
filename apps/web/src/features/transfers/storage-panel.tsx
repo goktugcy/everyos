@@ -1,5 +1,5 @@
 import type { TransferView } from "@everyos/shared";
-import { ArrowDown, ArrowUp, Cloud, FolderOpen, LogOut, Plug, X } from "lucide-react";
+import { Archive, ArrowDown, ArrowUp, Cloud, FolderOpen, LogOut, Plug, X } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
@@ -80,10 +80,15 @@ function errorText(t: TFunction, code: string | null): string {
   return errorMessage(t, new ApiRequestError(0, code as never, code));
 }
 
-function TransferRow({ transfer }: { transfer: TransferView }) {
+export function TransferRow({ transfer }: { transfer: TransferView }) {
   const { t, i18n } = useTranslation();
   const active = isActive(transfer);
-  const Icon = transfer.direction === "upload" ? ArrowUp : ArrowDown;
+  const Icon =
+    transfer.direction === "compress" || transfer.direction === "extract"
+      ? Archive
+      : transfer.direction === "upload"
+        ? ArrowUp
+        : ArrowDown;
   const fraction =
     transfer.bytesTotal && transfer.bytesTotal > 0
       ? Math.min(1, transfer.bytesDone / transfer.bytesTotal)

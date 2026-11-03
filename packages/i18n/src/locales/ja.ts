@@ -3018,6 +3018,8 @@ export const ja: LocaleMessages = {
     },
   },
   transfers: {
+    compress: "ZIP を作成",
+    extract: "新しいフォルダーに展開",
     title: "転送",
     storage: "ストレージと転送",
     rate: "{{value}}/秒",
@@ -3116,6 +3118,22 @@ export const ja: LocaleMessages = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "ZIP を作成",
+      extractTitle: "ZIP アーカイブを開く",
+      compressAction: "ZIP に圧縮…",
+      extractAction: "ZIP を展開…",
+      archiveName: "アーカイブ",
+      archiveLabel: "ZIP ファイル名",
+      folderLabel: "展開先の新規フォルダー名",
+      create: "ZIP を作成",
+      extract: "新しいフォルダーに展開",
+      summary: "{{count}} 項目 · {{size}}",
+      shown: "最初の {{shown}} 項目を表示しています。",
+      search: "アーカイブ内を検索",
+      contents: "アーカイブの内容",
+      empty: "この ZIP アーカイブは空です。",
+    },
     selectAll: "すべて選択",
     locations: "場所",
     disks: "ディスク",
@@ -4234,6 +4252,10 @@ export const ja: LocaleMessages = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID:
+      "ZIP アーカイブが破損しているか、安全でないファイルパスが含まれています。",
+    FILES_ARCHIVE_LIMIT: "ファイル数、サイズ、または処理時間の上限を超えています。",
+    FILES_ARCHIVE_UNSUPPORTED: "暗号化 ZIP、リンク、およびこの圧縮方式には対応していません。",
     BAD_REQUEST: "リクエストを処理できませんでした。",
     VALIDATION_FAILED: "入力された情報の一部が無効です。",
     UNAUTHENTICATED: "セッションが終了しました。もう一度サインインしてください。",

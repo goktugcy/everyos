@@ -3037,6 +3037,8 @@ export const de: LocaleMessages = {
     },
   },
   transfers: {
+    compress: "ZIP erstellen",
+    extract: "In neuen Ordner entpacken",
     title: "Übertragungen",
     storage: "Speicher und Übertragungen",
     rate: "{{value}}/s",
@@ -3133,6 +3135,22 @@ export const de: LocaleMessages = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "ZIP erstellen",
+      extractTitle: "ZIP-Archiv öffnen",
+      compressAction: "Als ZIP komprimieren…",
+      extractAction: "ZIP entpacken…",
+      archiveName: "Archiv",
+      archiveLabel: "Name der ZIP-Datei",
+      folderLabel: "Name des neuen Zielordners",
+      create: "ZIP erstellen",
+      extract: "In neuen Ordner entpacken",
+      summary: "{{count}} Einträge · {{size}}",
+      shown: "Die ersten {{shown}} Einträge werden angezeigt.",
+      search: "Archiv durchsuchen",
+      contents: "Archivinhalt",
+      empty: "Dieses ZIP-Archiv ist leer.",
+    },
     selectAll: "Alle auswählen",
     locations: "Orte",
     disks: "Datenträger",
@@ -4272,6 +4290,11 @@ export const de: LocaleMessages = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID: "Das ZIP-Archiv ist beschädigt oder enthält unsichere Dateipfade.",
+    FILES_ARCHIVE_LIMIT:
+      "Das Archiv überschreitet die Grenze für Dateianzahl, Größe oder Verarbeitungszeit.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "Verschlüsselte ZIP-Dateien, Verknüpfungen und diese Komprimierung werden nicht unterstützt.",
     BAD_REQUEST: "Die Anfrage konnte nicht verarbeitet werden.",
     VALIDATION_FAILED: "Einige der eingegebenen Angaben sind ungültig.",
     UNAUTHENTICATED: "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",

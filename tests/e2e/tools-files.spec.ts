@@ -1,3 +1,4 @@
+import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
 import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers.ts";
 
@@ -109,4 +110,84 @@ test("file changes made in the app are recorded in the audit log", async ({ page
       "files.delete",
     ]),
   );
+});
+
+test("desktop files compress and extract through built-in ZIP controls without reloading", async ({
+  page,
+}) => {
+  await signIn(page);
+  const call = (method: string, path: string, body?: unknown) =>
+    page.evaluate(
+      async ({ method, path, body, header }) => {
+        const session = (await (await fetch("/api/auth/session")).json()) as { csrfToken: string };
+        const response = await fetch(path, {
+          method,
+          headers: { "Content-Type": "application/json", [header]: session.csrfToken },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        });
+        const text = await response.text();
+        return { status: response.status, data: text ? (JSON.parse(text) as unknown) : null };
+      },
+      { method, path, body, header: CSRF_HEADER },
+    );
+  const suffix = Date.now().toString(36);
+  const names = [`zip-one-${suffix}.txt`, `zip-two-${suffix}.txt`];
+  const archive = `zip-${suffix}.zip`;
+  const folder = `zip-out-${suffix}`;
+  const path = (name: string) => `Masaüstü/${name}`;
+  const targets = [...names, archive, folder].map(path);
+  try {
+    for (const name of names)
+      expect(
+        (
+          await call("PUT", "/api/files/text", {
+            root: "home",
+            path: path(name),
+            content: `exact ${name}`,
+            etag: null,
+          })
+        ).status,
+      ).toBe(200);
+    await page.reload();
+    const desktop = page.getByTestId("desktop-surface");
+    const origin = await page.evaluate(() => performance.timeOrigin);
+    await desktop.getByRole("button", { name: names[0]!, exact: true }).click();
+    await desktop
+      .getByRole("button", { name: names[1]!, exact: true })
+      .click({ modifiers: [process.platform === "darwin" ? "Meta" : "Control"] });
+    await desktop.getByRole("button", { name: names[0]!, exact: true }).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "ZIP olarak sıkıştır…", exact: true }).click();
+    let dialog = page.getByRole("dialog", { name: "ZIP oluştur", exact: true });
+    await dialog.getByLabel("ZIP dosyasının adı", { exact: true }).fill(archive);
+    await dialog.getByRole("button", { name: "ZIP oluştur", exact: true }).click();
+    await expect(dialog.getByTestId("transfer")).toHaveAttribute("data-state", "done");
+    await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
+    await expect(desktop.getByRole("button", { name: archive, exact: true })).toBeVisible();
+    await desktop.getByRole("button", { name: archive, exact: true }).dblclick();
+    dialog = page.getByRole("dialog", { name: "ZIP arşivini aç", exact: true });
+    await expect(dialog.getByRole("list", { name: "Arşiv içeriği" })).toContainText(names[1]!);
+    await dialog.getByLabel("Çıkarılacak yeni klasörün adı", { exact: true }).fill(folder);
+    await dialog.getByRole("button", { name: "Yeni klasöre çıkar", exact: true }).click();
+    await expect(dialog.getByTestId("transfer")).toHaveAttribute("data-state", "done");
+    await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
+    await expect(desktop.getByRole("button", { name: folder, exact: true })).toBeVisible();
+    expect(await page.evaluate(() => performance.timeOrigin)).toBe(origin);
+    const result = await call(
+      "GET",
+      `/api/files/text?root=home&path=${encodeURIComponent(path(`${folder}/${names[1]}`))}`,
+    );
+    expect(result.status).toBe(200);
+    expect((result.data as { content: string }).content).toBe(`exact ${names[1]}`);
+    await expect(page.locator('[data-app-id="everyos.store"]')).toHaveCount(0);
+  } finally {
+    const existing: string[] = [];
+    for (const target of targets)
+      if (
+        (await call("GET", `/api/files/properties?root=home&path=${encodeURIComponent(target)}`))
+          .status === 200
+      )
+        existing.push(target);
+    if (existing.length)
+      await call("POST", "/api/files/delete", { root: "home", paths: existing, confirm: true });
+  }
 });

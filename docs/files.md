@@ -145,6 +145,42 @@ The **Files** app (`everyos.files`) looks like the macOS Finder and provides:
 - Every change made in the tab (any Files window, the desktop, the pulse shelf) makes all views
   of a folder list it again.
 
+## Built-in ZIP archives
+
+ZIP support is part of Files and the desktop; no Store app, host `zip`/`unzip` command or elevated
+process is required. Select files or folders and choose **Compress to ZIP** to create an archive
+in the current folder. A double-click on a `.zip` file opens a built-in searchable contents dialog;
+**Extract ZIP** is also available in its context menu. Extraction creates a newly named folder next
+to the archive. Existing destinations are refused, and both actions respect the location's write
+permissions. The original archive and selected source files are retained.
+
+Creation and extraction use the existing per-person transfer queue, progress, cancellation and
+failure notifications. Completed archive jobs immediately refresh open Files windows and the
+desktop. The dialog may be closed while a job continues in the transfer panel. Empty folders,
+hidden files, Unicode names, stored/deflated entries and ZIP64 archives are supported.
+
+Before extraction, the central directory is validated: absolute/traversing paths, backslashes,
+ambiguous duplicate names, file/directory collisions, links and special files are refused. All
+entries are size-bounded and CRC-checked while streaming. Encrypted archives and compression
+methods other than stored/deflate are unsupported. Limits are 10,000 files/directories (including
+implicit parent directories), 16 GiB of uncompressed data, 16 MiB of central-directory metadata,
+bounded path metadata and a ten-minute
+job deadline; normal upload and free-space limits also apply. No archive contents execute.
+
+Reading uses bounded ranges through the same personal/linked-account file view. Compressed output
+uses private API scratch space and the normal atomic upload, with free-space checks. Extraction
+uses a private staging directory and publishes it only after all entries pass validation. Failure
+or cancellation discards only that fresh staging directory through a UUID-restricted, permission-
+checked agent operation; it never deletes an existing output folder or fills the user's trash.
+Cleanup remains subject to the linked account's permissions and availability.
+
+- `GET /api/files/archive?root&path` — contents and total size; `files:read`.
+- `POST /api/files/archive/create { root, path, paths, name }` — starts ZIP creation; `files:write`.
+- `POST /api/files/archive/extract { root, path, name }` — starts extraction; `files:write`.
+
+Both POST routes return `{ transfer }` with HTTP 202. Inputs are strict schemas and start/completion
+outcomes are audited. Progress and cancellation use the existing `/api/transfers` endpoints.
+
 ## The desktop is the Desktop folder
 
 The **Applications** system folder opens a live icon view of Store-managed installations.
@@ -194,7 +230,7 @@ App groups ("folders" of shortcuts) from earlier versions are converted once: ea
 folder of the same name in the Desktop folder, at the same place, and its shortcuts go back onto
 the desktop. Without file access only the shortcuts are kept.
 
-Not yet supported: uploading whole folders from the browser, archive downloads of folders, and
+Not yet supported: uploading whole folders from the browser, and
 editing files larger than 1 MiB.
 
 ## Recoverable trash

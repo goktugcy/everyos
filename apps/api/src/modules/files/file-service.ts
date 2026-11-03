@@ -28,6 +28,7 @@ import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import type { Logger } from "@everyos/logger";
 import {
   MAX_TEXT_FILE_BYTES,
+  ARCHIVE_STAGING_NAME,
   STANDARD_FOLDERS,
   type FileEntry,
   type FileEntryType,
@@ -565,6 +566,7 @@ export class FileService {
     const visible = dirents.filter(
       (d) =>
         d.name !== TRASH_DIRECTORY &&
+        !ARCHIVE_STAGING_NAME.test(d.name) &&
         (hidden || !d.name.startsWith(".")) &&
         !(top && PSEUDO.has(d.name)),
     );
@@ -616,13 +618,37 @@ export class FileService {
   async openFile(
     rootId: string,
     path: string,
-  ): Promise<{ handle: FileHandle; size: number; modifiedAt: number; name: string }> {
+  ): Promise<{
+    handle: FileHandle;
+    size: number;
+    modifiedAt: number;
+    name: string;
+    readAt(position: number, length: number): Promise<Buffer>;
+  }> {
     const { real } = await this.#follow(rootId, path);
     const handle = await open(real, constants.O_RDONLY | constants.O_NOFOLLOW).catch(fsError);
     try {
       const stats = await handle.stat();
       if (!stats.isFile()) throw invalid("Not a file");
-      return { handle, size: stats.size, modifiedAt: stats.mtimeMs, name: basename(real) };
+      return {
+        handle,
+        size: stats.size,
+        modifiedAt: stats.mtimeMs,
+        name: basename(real),
+        async readAt(position, length) {
+          if (
+            !Number.isSafeInteger(position) ||
+            position < 0 ||
+            !Number.isSafeInteger(length) ||
+            length < 0 ||
+            length > 48 * 1024
+          )
+            throw invalid("Invalid byte range");
+          const buffer = Buffer.alloc(length);
+          const { bytesRead } = await handle.read(buffer, 0, length, position);
+          return buffer.subarray(0, bytesRead);
+        },
+      };
     } catch (error) {
       await handle.close();
       throw error;
@@ -669,7 +695,12 @@ export class FileService {
         continue; // Unreadable folders are skipped, not errors.
       }
       for (const dirent of dirents) {
-        if (dirent.name === TRASH_DIRECTORY || dirent.name === SHELF_DIRECTORY) continue;
+        if (
+          dirent.name === TRASH_DIRECTORY ||
+          dirent.name === SHELF_DIRECTORY ||
+          ARCHIVE_STAGING_NAME.test(dirent.name)
+        )
+          continue;
         if (
           ++visited > SEARCH_LIMITS.visited ||
           Date.now() > deadline ||
@@ -945,6 +976,22 @@ export class FileService {
         size: info.size,
       }).catch(fsError);
     }
+  }
+
+  /** Only an archive job's newly allocated staging directory can bypass recoverable trash. */
+  async discardArchiveStage(rootId: string, path: string): Promise<void> {
+    this.#writable(rootId);
+    if (!ARCHIVE_STAGING_NAME.test(segmentsOf(path).at(-1) ?? ""))
+      throw invalid("Not an archive staging directory");
+    const { entry } = await this.#entryPath(rootId, path, { notRoot: true });
+    const info = await lstat(entry).catch((error: unknown) => {
+      if (errno(error) !== "ENOENT") fsError(error);
+      return null;
+    });
+    if (!info) return;
+    if (!info.isDirectory() || info.isSymbolicLink())
+      throw invalid("Not an archive staging directory");
+    await rm(entry, { recursive: true, force: true }).catch(fsError);
   }
 
   async trash(): Promise<TrashListing> {

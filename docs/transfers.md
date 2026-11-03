@@ -58,3 +58,10 @@ operation is counted as file access, so a home backup or restore waits for it.
 | `GET /events?topics=transfers` | `files:read` | `transfers` with the caller's list, at most four times a second. |
 
 Transfers are started by the module that moves the files, e.g. `POST /drive/transfers`.
+
+## Local archives
+
+Built-in ZIP creation and extraction share this queue as `compress` and `extract` directions.
+Their dialog, storage panel and pulse indicator show real progress and cancellation. Finishing,
+failing or cancelling an archive job invalidates the file listings in the active browser tab.
+See [Files](files.md#built-in-zip-archives) for formats, staging, limits and endpoints.

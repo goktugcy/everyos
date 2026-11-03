@@ -65,6 +65,18 @@ export interface FileListing {
   truncated: boolean;
 }
 
+export interface FileArchiveListing {
+  root: string;
+  path: string;
+  bytes: number;
+  entries: Array<{ path: string; type: "file" | "directory"; size: number }>;
+}
+
+/** Reserved for fresh extraction workspaces, never for an existing destination. */
+export const ARCHIVE_STAGING_NAME = /^\.everyos-archive-[a-f0-9-]{36}$/i;
+export const MAX_FILE_ARCHIVE_ENTRIES = 10_000;
+export const MAX_FILE_ARCHIVE_BYTES = 16 * 1024 ** 3;
+
 export interface FileProperties {
   root: string;
   path: string;

@@ -2944,6 +2944,8 @@ export const tr = {
     },
   },
   transfers: {
+    compress: "ZIP oluştur",
+    extract: "Yeni klasöre çıkar",
     title: "Aktarımlar",
     storage: "Depolama ve aktarımlar",
     rate: "{{value}}/sn",
@@ -3038,6 +3040,22 @@ export const tr = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "ZIP oluştur",
+      extractTitle: "ZIP arşivini aç",
+      compressAction: "ZIP olarak sıkıştır…",
+      extractAction: "ZIP’i çıkar…",
+      archiveName: "Arşiv",
+      archiveLabel: "ZIP dosyasının adı",
+      folderLabel: "Çıkarılacak yeni klasörün adı",
+      create: "ZIP oluştur",
+      extract: "Yeni klasöre çıkar",
+      summary: "{{count}} öğe · {{size}}",
+      shown: "İlk {{shown}} öğe gösteriliyor.",
+      search: "Arşivde ara",
+      contents: "Arşiv içeriği",
+      empty: "Bu ZIP arşivi boş.",
+    },
     selectAll: "Tümünü seç",
     locations: "Konumlar",
     disks: "Diskler",
@@ -4113,6 +4131,10 @@ export const tr = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID: "ZIP arşivi bozuk veya güvenli olmayan dosya yolları içeriyor.",
+    FILES_ARCHIVE_LIMIT: "Arşiv dosya sayısı, boyut veya işlem süresi sınırını aşıyor.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "Şifreli ZIP dosyaları, bağlantılar ve bu sıkıştırma biçimi desteklenmiyor.",
     BAD_REQUEST: "İstek anlaşılamadı.",
     VALIDATION_FAILED: "Girilen bilgiler geçersiz.",
     UNAUTHENTICATED: "Oturumunuz sona erdi. Lütfen yeniden giriş yapın.",

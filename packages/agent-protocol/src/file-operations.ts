@@ -15,6 +15,7 @@ import {
   RelativePathSchema,
   FileNameSchema,
   TrashEntrySchema,
+  ArchiveStageLocationSchema,
 } from "@everyos/shared/schemas";
 
 const number = z.number().nonnegative();
@@ -103,6 +104,7 @@ export const AGENT_FILE_OPERATIONS = {
   "files.copy": file(TransferRequestSchema, z.null(), true),
   "files.move": file(TransferRequestSchema.omit({ name: true }), z.null(), true),
   "files.delete": file(DeleteRequestSchema, z.null(), true),
+  "files.archive.discard": file(ArchiveStageLocationSchema, z.null(), true),
   "files.trash": file(
     z.strictObject({}),
     z.strictObject({ entries: z.array(TrashEntrySchema), truncated: z.boolean() }),

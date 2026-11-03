@@ -33,9 +33,10 @@ export class AccountFileView {
   #call = <N extends Parameters<typeof callAgentAs>[2]>(
     op: N,
     params: Parameters<typeof callAgentAs<N>>[3],
+    cleanup = false,
   ) =>
     callAgentAs(this.services, this.identity.actor, op, params, {
-      signal: this.identity.signal,
+      signal: cleanup ? undefined : this.identity.signal,
       logger: this.identity.logger,
     }).catch((error: unknown) => {
       // A full location is the person's to resolve, not an agent failure.
@@ -101,6 +102,13 @@ export class AccountFileView {
       ? this.personal.remove(root, paths)
       : this.#call("files.delete", { ...this.#params(), root, paths, confirm: true });
   }
+  discardArchiveStage(root: string, path: string) {
+    return root === "home"
+      ? this.personal.discardArchiveStage(root, path)
+      : this.#call("files.archive.discard", { ...this.#params(), root, path }, true).then(
+          () => undefined,
+        );
+  }
   async trash() {
     const personal = await this.personal.trash();
     const status = await this.#call("identity.status", {});
@@ -133,12 +141,22 @@ export class AccountFileView {
     if (root === "home") return this.personal.openFile(root, path);
     const opened = await this.#call("files.download.open", { ...this.#params(), root, path });
     const close = async () => {
-      await this.#call("files.download.close", {
-        ...this.#params(),
-        transferId: opened.transferId,
-      });
+      // Release this transfer even after its request is cancelled; actor checks still apply.
+      await this.#call(
+        "files.download.close",
+        {
+          ...this.#params(),
+          transferId: opened.transferId,
+        },
+        true,
+      );
     };
-    const read = async function* (view: AccountFileView, start: number, end: number) {
+    const read = async function* (
+      view: AccountFileView,
+      start: number,
+      end: number,
+      autoClose: boolean,
+    ) {
       let offset = start;
       try {
         while (offset <= end) {
@@ -154,15 +172,31 @@ export class AccountFileView {
           yield chunk;
         }
       } finally {
-        await close().catch(() => undefined);
+        if (autoClose) await close().catch(() => undefined);
       }
     };
     return {
       ...opened,
+      readAt: async (offset: number, length: number) => {
+        const { data } = await this.#call("files.download.read", {
+          ...this.#params(),
+          transferId: opened.transferId,
+          offset,
+          length,
+        });
+        return Buffer.from(data, "base64");
+      },
       handle: {
         close,
-        createReadStream: ({ start, end }: { start: number; end: number; autoClose?: boolean }) =>
-          Readable.from(read(this, start, end)),
+        createReadStream: ({
+          start,
+          end,
+          autoClose = true,
+        }: {
+          start: number;
+          end: number;
+          autoClose?: boolean;
+        }) => Readable.from(read(this, start, end, autoClose)),
       },
     };
   }
@@ -203,11 +237,15 @@ export class AccountFileView {
       commit = true;
     } finally {
       if (!commit)
-        await this.#call("files.upload.close", {
-          ...this.#params(),
-          transferId: opened.transferId,
-          commit: false,
-        }).catch(() => undefined);
+        await this.#call(
+          "files.upload.close",
+          {
+            ...this.#params(),
+            transferId: opened.transferId,
+            commit: false,
+          },
+          true,
+        ).catch(() => undefined);
     }
   }
 

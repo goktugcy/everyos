@@ -990,3 +990,22 @@ loading-task destruction otherwise rejects a second document in the same window.
 Official file handlers require app version 1.0.1 or newer. An active 1.0.0 installation cannot consume
 the handoff and opens its Store update details instead of an empty app window. The Store retains
 the existing registry-bound update and permission flow; no file grant is created before updating.
+
+## 2026-11-03 — Built-in ZIP operations through scoped file views
+
+ZIP is a core Files capability rather than a separately installed desktop app. Both desktop and
+Files actions use the existing transfer service. File data crosses only the caller's personal or
+linked-account file view; no shell command or privileged archive process is introduced. A bounded
+random-access adapter reuses an opened account download for central-directory reads. Cleanup
+calls remain authenticated but can release owned transfers after cancellation.
+
+ZIP decoding validates the complete namespace before creating a staging tree and verifies CRCs
+before individual uploads commit. Staging cleanup has its own UUID-restricted agent operation,
+`files.archive.discard`, with strict input/result validation, `files:write`, a timeout and normal
+agent policy/audit checks. It is not a general permanent-delete endpoint and is not exposed as an
+HTTP route. Existing destinations are never intentionally replaced. Compression uses bounded,
+space-checked API scratch storage before the normal upload commits the final ZIP.
+
+The implementation uses pinned [yauzl](https://github.com/thejoshwolfe/yauzl) and
+[yazl](https://github.com/thejoshwolfe/yazl). CRC checks are supplied by EveryOS because the reader
+exposes the checksum without validating it. No standalone SDK or official app interface changes.

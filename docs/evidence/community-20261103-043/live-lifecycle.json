@@ -1,0 +1,97 @@
+{
+  "live": true,
+  "status": "passed",
+  "origin": "https://registry.everyos.net",
+  "verifiedAt": "2026-11-03T12:22:56.698Z",
+  "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+  "appId": "dev.goktugceyhan.acceptancenotes",
+  "observations": [
+    {
+      "check": "installation",
+      "version": "1.0.12",
+      "digest": "d3d97bec5938a70d0dfa59bfbf410293dabc2a015f0b4d6f56da8a8454768d92",
+      "passed": true
+    },
+    {
+      "check": "update",
+      "version": "1.0.13",
+      "digest": "d8e4e4bff8f0da8b64b48b459538c8ba35b7ee1970c38685f10968868e7abba9",
+      "savedNotePreserved": true,
+      "oldRuntimeDenied": true,
+      "passed": true
+    },
+    {
+      "check": "revocation",
+      "versions": ["1.0.12", "1.0.13"],
+      "signedSequence": 30,
+      "installationDisabled": true,
+      "instancesDenied": true,
+      "runtimeDenied": true,
+      "publicPackagesDenied": true,
+      "passed": true
+    }
+  ],
+  "deployment": {
+    "format": "everyos-community-deployment-verification/1",
+    "status": "passed",
+    "origin": "https://registry.everyos.net",
+    "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+    "verifiedAt": "2026-11-03T12:22:55.873Z",
+    "checks": {
+      "productionHealth": "passed",
+      "registryIdentity": "passed",
+      "publicKey": "passed",
+      "signedCatalog": "passed"
+    },
+    "catalog": {
+      "sha256": "0a24cb21937defbb3cffa0056f2470bf57469dfddeb9e888c5545bbccc7c82f5",
+      "sequence": 30,
+      "publishedAt": 1793708573558,
+      "expiresAt": 1796300573558,
+      "publishers": 1,
+      "apps": 1,
+      "revocations": 14
+    },
+    "lifecycleAcceptance": "required"
+  },
+  "everyosVersion": "0.1.43",
+  "format": "everyos-community-lifecycle-evidence/1",
+  "publisherId": "dev.goktugceyhan",
+  "environment": "owned disposable development instance; simulated host-data agent; real public registry, packages, browser, storage and signatures",
+  "publisherOrigin": "https://everyos.goktugceyhan.dev",
+  "enrollment": {
+    "passed": true,
+    "method": "Existing owner-verified publisher enrollment and authenticated live submissions"
+  },
+  "submissions": [
+    {
+      "version": "1.0.12",
+      "sha256": "d3d97bec5938a70d0dfa59bfbf410293dabc2a015f0b4d6f56da8a8454768d92"
+    },
+    {
+      "version": "1.0.13",
+      "sha256": "d8e4e4bff8f0da8b64b48b459538c8ba35b7ee1970c38685f10968868e7abba9"
+    }
+  ],
+  "humanReview": {
+    "passed": true,
+    "recordedAt": "2026-11-03T12:21:26.384Z",
+    "method": "Owner terminal review and approval of exact source and archive digests",
+    "reviewedExactPackages": true,
+    "versions": [
+      {
+        "version": "1.0.12",
+        "sha256": "d3d97bec5938a70d0dfa59bfbf410293dabc2a015f0b4d6f56da8a8454768d92"
+      },
+      {
+        "version": "1.0.13",
+        "sha256": "d8e4e4bff8f0da8b64b48b459538c8ba35b7ee1970c38685f10968868e7abba9"
+      }
+    ]
+  },
+  "versionLabelCorrection": {
+    "harnessLabel": "0.1.42",
+    "candidateVersion": "0.1.43",
+    "reason": "The package.json candidate was already 0.1.43 during this run. The harness reported a stale shared version constant (0.1.42); that display constant was synchronized to 0.1.43 before CI. No lifecycle logic or reviewed community packages changed."
+  }
+}

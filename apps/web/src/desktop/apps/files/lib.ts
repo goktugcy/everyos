@@ -2,6 +2,7 @@ import { randomId } from "../../../lib/random-id.ts";
 import { localTransfers } from "../../../features/transfers/transfers.ts";
 import type {
   FileEntry,
+  FileArchiveListing,
   FileListing,
   FileProperties,
   FileRootsResponse,
@@ -9,6 +10,7 @@ import type {
   ShelfTidyResponse,
   TextFile,
   TrashListing,
+  TransferView,
 } from "@everyos/shared";
 import { create } from "zustand";
 import { api, ApiRequestError, uploadWithProgress } from "../../../lib/api.ts";
@@ -31,6 +33,20 @@ const query = (params: Record<string, string | undefined>) =>
   ).toString();
 
 export const filesApi = {
+  archive: (location: FileLocation, signal?: AbortSignal) =>
+    api<FileArchiveListing>(`/files/archive?${query({ ...location })}`, {
+      ...(signal ? { signal } : {}),
+    }),
+  compress: (location: FileLocation, paths: string[], name: string) =>
+    api<{ transfer: TransferView }>("/files/archive/create", {
+      method: "POST",
+      body: { ...location, paths, name },
+    }),
+  extract: (location: FileLocation, name: string) =>
+    api<{ transfer: TransferView }>("/files/archive/extract", {
+      method: "POST",
+      body: { ...location, name },
+    }),
   roots: () => api<FileRootsResponse>("/files/roots"),
   setSystemRoots: (systemRoots: boolean) =>
     api<{ systemRoots: boolean }>("/files/settings", { method: "PUT", body: { systemRoots } }),
@@ -98,6 +114,8 @@ export const filesApi = {
     api<void>("/files/shelf/discard", { method: "POST", body: { paths } }),
   tidyShelf: () => api<ShelfTidyResponse>("/files/shelf/tidy", { method: "POST", body: {} }),
 };
+
+export const isZipFile = (name: string) => /\.zip$/i.test(name);
 
 /**
  * Bumped after every change made from this tab (Files windows, the desktop,

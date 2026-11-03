@@ -3047,6 +3047,8 @@ export const fr: LocaleMessages = {
     },
   },
   transfers: {
+    compress: "Créer un ZIP",
+    extract: "Extraire dans un nouveau dossier",
     title: "Transferts",
     storage: "Stockage et transferts",
     rate: "{{value}}/s",
@@ -3146,6 +3148,22 @@ export const fr: LocaleMessages = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "Créer un ZIP",
+      extractTitle: "Ouvrir une archive ZIP",
+      compressAction: "Compresser en ZIP…",
+      extractAction: "Extraire le ZIP…",
+      archiveName: "Archive",
+      archiveLabel: "Nom du fichier ZIP",
+      folderLabel: "Nom du nouveau dossier d’extraction",
+      create: "Créer un ZIP",
+      extract: "Extraire dans un nouveau dossier",
+      summary: "{{count}} éléments · {{size}}",
+      shown: "Affichage des {{shown}} premiers éléments.",
+      search: "Rechercher dans l’archive",
+      contents: "Contenu de l’archive",
+      empty: "Cette archive ZIP est vide.",
+    },
     selectAll: "Tout sélectionner",
     locations: "Emplacements",
     disks: "Disques",
@@ -4289,6 +4307,11 @@ export const fr: LocaleMessages = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID: "L’archive ZIP est endommagée ou contient des chemins dangereux.",
+    FILES_ARCHIVE_LIMIT:
+      "L’archive dépasse la limite de fichiers, de taille ou de durée de traitement.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "Les ZIP chiffrés, les liens et cette méthode de compression ne sont pas pris en charge.",
     BAD_REQUEST: "La requête n’a pas pu être comprise.",
     VALIDATION_FAILED: "Certaines des informations saisies ne sont pas valides.",
     UNAUTHENTICATED: "Votre session a expiré. Veuillez vous reconnecter.",

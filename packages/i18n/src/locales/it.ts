@@ -3036,6 +3036,8 @@ export const it: LocaleMessages = {
     },
   },
   transfers: {
+    compress: "Crea ZIP",
+    extract: "Estrai in una nuova cartella",
     title: "Trasferimenti",
     storage: "Archiviazione e trasferimenti",
     rate: "{{value}}/s",
@@ -3133,6 +3135,22 @@ export const it: LocaleMessages = {
     },
   },
   files: {
+    archive: {
+      compressTitle: "Crea ZIP",
+      extractTitle: "Apri archivio ZIP",
+      compressAction: "Comprimi in ZIP…",
+      extractAction: "Estrai ZIP…",
+      archiveName: "Archivio",
+      archiveLabel: "Nome del file ZIP",
+      folderLabel: "Nome della nuova cartella di estrazione",
+      create: "Crea ZIP",
+      extract: "Estrai in una nuova cartella",
+      summary: "{{count}} elementi · {{size}}",
+      shown: "Sono mostrati i primi {{shown}} elementi.",
+      search: "Cerca nell’archivio",
+      contents: "Contenuto dell’archivio",
+      empty: "Questo archivio ZIP è vuoto.",
+    },
     selectAll: "Seleziona tutto",
     locations: "Posizioni",
     disks: "Dischi",
@@ -4271,6 +4289,10 @@ export const it: LocaleMessages = {
     },
   },
   errors: {
+    FILES_ARCHIVE_INVALID: "L’archivio ZIP è danneggiato o contiene percorsi non sicuri.",
+    FILES_ARCHIVE_LIMIT: "L’archivio supera il limite di file, dimensioni o tempo di elaborazione.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "ZIP cifrati, collegamenti e questo metodo di compressione non sono supportati.",
     BAD_REQUEST: "Impossibile interpretare la richiesta.",
     VALIDATION_FAILED: "Alcune delle informazioni inserite non sono valide.",
     UNAUTHENTICATED: "La sessione è scaduta. Accedi di nuovo.",

@@ -233,6 +233,7 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     "files.copy": filesDisabled,
     "files.move": filesDisabled,
     "files.delete": filesDisabled,
+    "files.archive.discard": filesDisabled,
     "files.trash": filesDisabled,
     "files.trash.restore": filesDisabled,
     "files.trash.delete": filesDisabled,
