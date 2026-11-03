@@ -78,6 +78,7 @@ function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers
     "files.copy": notUsed,
     "files.move": notUsed,
     "files.delete": notUsed,
+    "files.archive.discard": notUsed,
     "files.trash": notUsed,
     "files.trash.restore": notUsed,
     "files.trash.delete": notUsed,
