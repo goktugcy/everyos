@@ -69,6 +69,7 @@ export interface FileArchiveListing {
   root: string;
   path: string;
   bytes: number;
+  encrypted: boolean;
   entries: Array<{ path: string; type: "file" | "directory"; size: number }>;
 }
 

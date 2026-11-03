@@ -3127,6 +3127,13 @@ export const ru: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "Пароль (необязательно)",
+      password: "Пароль архива",
+      passwordConfirm: "Подтвердите пароль",
+      passwordMismatch: "Пароли не совпадают.",
+      encryptionHint:
+        "Пароль шифрует содержимое с помощью AES-256. Имена файлов остаются видимыми.",
+      encryptedHint: "Этот ZIP зашифрован. Введите пароль для распаковки.",
       compressTitle: "Создать ZIP",
       extractTitle: "Открыть ZIP-архив",
       compressAction: "Сжать в ZIP…",
@@ -4276,7 +4283,10 @@ export const ru: LocaleMessages = {
   errors: {
     FILES_ARCHIVE_INVALID: "ZIP-архив повреждён или содержит небезопасные пути.",
     FILES_ARCHIVE_LIMIT: "Превышен предел количества файлов, размера или времени обработки.",
-    FILES_ARCHIVE_UNSUPPORTED: "Зашифрованные ZIP, ссылки и этот метод сжатия не поддерживаются.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "Этот метод шифрования или сжатия ZIP, ссылки и специальные файлы не поддерживаются.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "Для распаковки этого ZIP требуется пароль.",
+    FILES_ARCHIVE_PASSWORD_INVALID: "Неверный пароль или не удалось проверить зашифрованный ZIP.",
     BAD_REQUEST: "Некорректный запрос.",
     VALIDATION_FAILED: "Часть введённых данных некорректна.",
     UNAUTHENTICATED: "Ваш сеанс завершён. Войдите снова.",

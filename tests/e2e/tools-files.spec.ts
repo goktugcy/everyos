@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
 import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers.ts";
@@ -112,9 +113,9 @@ test("file changes made in the app are recorded in the audit log", async ({ page
   );
 });
 
-test("desktop files compress and extract through built-in ZIP controls without reloading", async ({
+test("desktop files create and unlock encrypted ZIPs without reloading", async ({
   page,
-}) => {
+}, testInfo) => {
   await signIn(page);
   const call = (method: string, path: string, body?: unknown) =>
     page.evaluate(
@@ -134,6 +135,7 @@ test("desktop files compress and extract through built-in ZIP controls without r
   const names = [`zip-one-${suffix}.txt`, `zip-two-${suffix}.txt`];
   const archive = `zip-${suffix}.zip`;
   const folder = `zip-out-${suffix}`;
+  const password = "Synthetic ZIP password 🌷";
   const path = (name: string) => `Masaüstü/${name}`;
   const targets = [...names, archive, folder].map(path);
   try {
@@ -159,14 +161,35 @@ test("desktop files compress and extract through built-in ZIP controls without r
     await page.getByRole("menuitem", { name: "ZIP olarak sıkıştır…", exact: true }).click();
     let dialog = page.getByRole("dialog", { name: "ZIP oluştur", exact: true });
     await dialog.getByLabel("ZIP dosyasının adı", { exact: true }).fill(archive);
+    await dialog.getByLabel("Parola (isteğe bağlı)", { exact: true }).fill(password);
+    await expect(dialog.getByRole("button", { name: "ZIP oluştur", exact: true })).toBeDisabled();
+    await dialog.getByLabel("Parolayı tekrar girin", { exact: true }).fill(password);
     await dialog.getByRole("button", { name: "ZIP oluştur", exact: true }).click();
     await expect(dialog.getByTestId("transfer")).toHaveAttribute("data-state", "done");
     await dialog.getByRole("button", { name: "Kapat", exact: true }).click();
     await expect(desktop.getByRole("button", { name: archive, exact: true })).toBeVisible();
+    const download = await page.request.get(
+      `/api/files/download?root=home&path=${encodeURIComponent(path(archive))}`,
+    );
+    expect(download.ok()).toBe(true);
+    const archiveFile = testInfo.outputPath("encrypted.zip");
+    await writeFile(archiveFile, await download.body());
+    await testInfo.attach("encrypted-zip", {
+      path: archiveFile,
+      contentType: "application/zip",
+    });
     await desktop.getByRole("button", { name: archive, exact: true }).dblclick();
     dialog = page.getByRole("dialog", { name: "ZIP arşivini aç", exact: true });
     await expect(dialog.getByRole("list", { name: "Arşiv içeriği" })).toContainText(names[1]!);
     await dialog.getByLabel("Çıkarılacak yeni klasörün adı", { exact: true }).fill(folder);
+    await expect(
+      dialog.getByRole("button", { name: "Yeni klasöre çıkar", exact: true }),
+    ).toBeDisabled();
+    await dialog.getByLabel("Arşiv parolası", { exact: true }).fill("incorrect password");
+    await dialog.getByRole("button", { name: "Yeni klasöre çıkar", exact: true }).click();
+    await expect(dialog.getByTestId("transfer")).toHaveAttribute("data-state", "failed");
+    await dialog.getByRole("button", { name: "Tekrar dene", exact: true }).click();
+    await dialog.getByLabel("Arşiv parolası", { exact: true }).fill(password);
     await dialog.getByRole("button", { name: "Yeni klasöre çıkar", exact: true }).click();
     await expect(dialog.getByTestId("transfer")).toHaveAttribute("data-state", "done");
     await dialog.getByRole("button", { name: "Kapat", exact: true }).click();

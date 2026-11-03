@@ -3078,6 +3078,13 @@ export const ko: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "비밀번호(선택 사항)",
+      password: "압축 파일 비밀번호",
+      passwordConfirm: "비밀번호 확인",
+      passwordMismatch: "비밀번호가 일치하지 않습니다.",
+      encryptionHint:
+        "비밀번호를 설정하면 내용이 AES-256으로 암호화됩니다. 파일 이름은 계속 표시됩니다.",
+      encryptedHint: "이 ZIP은 암호화되어 있습니다. 압축을 풀려면 비밀번호를 입력하세요.",
       compressTitle: "ZIP 만들기",
       extractTitle: "ZIP 압축 파일 열기",
       compressAction: "ZIP으로 압축…",
@@ -4185,7 +4192,10 @@ export const ko: LocaleMessages = {
   errors: {
     FILES_ARCHIVE_INVALID: "ZIP 파일이 손상되었거나 안전하지 않은 파일 경로를 포함합니다.",
     FILES_ARCHIVE_LIMIT: "파일 수, 크기 또는 처리 시간 제한을 초과했습니다.",
-    FILES_ARCHIVE_UNSUPPORTED: "암호화된 ZIP, 링크 및 이 압축 방식은 지원되지 않습니다.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "이 ZIP 암호화 또는 압축 방식, 링크 및 특수 파일은 지원하지 않습니다.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "이 ZIP의 압축을 풀려면 비밀번호가 필요합니다.",
+    FILES_ARCHIVE_PASSWORD_INVALID: "비밀번호가 틀리거나 암호화된 ZIP을 검증할 수 없습니다.",
     BAD_REQUEST: "요청을 이해할 수 없습니다.",
     VALIDATION_FAILED: "입력한 정보 중 일부가 올바르지 않습니다.",
     UNAUTHENTICATED: "세션이 만료되었습니다. 다시 로그인해 주세요.",

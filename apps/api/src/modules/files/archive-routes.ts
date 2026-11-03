@@ -62,6 +62,7 @@ export function fileArchiveRoutes(services: Services): Hono<AppEnv> {
       root: input.root,
       path: input.path,
       name: input.name,
+      ...(input.password !== undefined ? { password: input.password } : {}),
       files: (signal?: AbortSignal) => files(c, signal),
       withAccess: <T>(run: () => Promise<T>) => services.files.withAccess(auth.user.id, run),
       from: label(input.path),

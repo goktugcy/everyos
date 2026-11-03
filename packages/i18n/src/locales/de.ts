@@ -3136,6 +3136,13 @@ export const de: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "Passwort (optional)",
+      password: "Archivpasswort",
+      passwordConfirm: "Passwort bestätigen",
+      passwordMismatch: "Die Passwörter stimmen nicht überein.",
+      encryptionHint:
+        "Ein Passwort verschlüsselt Inhalte mit AES-256. Dateinamen bleiben sichtbar.",
+      encryptedHint: "Diese ZIP-Datei ist verschlüsselt. Geben Sie zum Entpacken das Passwort ein.",
       compressTitle: "ZIP erstellen",
       extractTitle: "ZIP-Archiv öffnen",
       compressAction: "Als ZIP komprimieren…",
@@ -4294,7 +4301,11 @@ export const de: LocaleMessages = {
     FILES_ARCHIVE_LIMIT:
       "Das Archiv überschreitet die Grenze für Dateianzahl, Größe oder Verarbeitungszeit.",
     FILES_ARCHIVE_UNSUPPORTED:
-      "Verschlüsselte ZIP-Dateien, Verknüpfungen und diese Komprimierung werden nicht unterstützt.",
+      "Diese ZIP-Verschlüsselung oder Komprimierung, Links und Spezialdateien werden nicht unterstützt.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED:
+      "Zum Entpacken dieser ZIP-Datei ist ein Passwort erforderlich.",
+    FILES_ARCHIVE_PASSWORD_INVALID:
+      "Das Passwort ist falsch oder die verschlüsselte ZIP-Datei konnte nicht geprüft werden.",
     BAD_REQUEST: "Die Anfrage konnte nicht verarbeitet werden.",
     VALIDATION_FAILED: "Einige der eingegebenen Angaben sind ungültig.",
     UNAUTHENTICATED: "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",

@@ -7,7 +7,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import { ZipFile } from "yazl";
+import { ZipWriter, Uint8ArrayWriter, TextReader } from "@zip.js/zip.js/index-native.js";
 import { crc32 } from "node:zlib";
 import { silentLogger } from "@everyos/logger";
 import type { OperationContext, Actor } from "@everyos/agent-protocol";
@@ -247,14 +247,106 @@ describe("built-in ZIP files", () => {
     expect(readdirSync(root.path).some((name) => name.startsWith(".everyos-archive-"))).toBe(false);
   });
 
+  it("creates AES-256 ZIPs and never commits output before password authentication", async () => {
+    const { admin, root, start, wait } = await setup();
+    const password = "  Lâle🌷-synthetic-only  ";
+    writeFileSync(join(root.path, "secret.txt"), "private UTF-8 payload: İstanbul 🌷");
+    writeFileSync(join(root.path, "empty.txt"), "");
+    const created = await start("create", {
+      path: "",
+      paths: ["secret.txt", "empty.txt"],
+      name: "encrypted.zip",
+      password,
+    });
+    expect(await wait(created.id)).toMatchObject({ state: "done", error: null });
+    const preview = await json<FileArchiveListing>(
+      await admin.get(`/api/files/archive?root=${root.id}&path=encrypted.zip`),
+    );
+    expect(preview.encrypted).toBe(true);
+    expect(preview.entries.map((entry) => entry.path).sort()).toEqual(["empty.txt", "secret.txt"]);
+    for (const attempt of [
+      { name: "missing", error: "FILES_ARCHIVE_PASSWORD_REQUIRED" },
+      { name: "wrong", password: "incorrect", error: "FILES_ARCHIVE_PASSWORD_INVALID" },
+      { name: "trimmed", password: password.trim(), error: "FILES_ARCHIVE_PASSWORD_INVALID" },
+    ]) {
+      const { error, ...input } = attempt;
+      const failed = await start("extract", { path: "encrypted.zip", ...input });
+      expect(await wait(failed.id)).toMatchObject({ state: "failed", error });
+      expect(existsSync(join(root.path, input.name))).toBe(false);
+      expect(readdirSync(root.path).some((name) => name.startsWith(".everyos-archive-"))).toBe(
+        false,
+      );
+    }
+    const extracted = await start("extract", { path: "encrypted.zip", name: "opened", password });
+    expect(await wait(extracted.id)).toMatchObject({ state: "done", error: null });
+    expect(readFileSync(join(root.path, "opened", "secret.txt"), "utf8")).toBe(
+      "private UTF-8 payload: İstanbul 🌷",
+    );
+    expect(readFileSync(join(root.path, "opened", "empty.txt"))).toHaveLength(0);
+    expect(await (await admin.get("/api/transfers")).text()).not.toContain(password);
+  });
+
+  it.each([false, true])("opens encrypted input with ZipCrypto=%s", async (zipCrypto) => {
+    const { root, start, wait } = await setup();
+    const zip = new ZipWriter(new Uint8ArrayWriter(), { useWebWorkers: false });
+    await zip.add("legacy.txt", new TextReader("encrypted fixture"), {
+      password: "fixture-password",
+      zipCrypto,
+    });
+    writeFileSync(join(root.path, "input.zip"), await zip.close());
+    const transfer = await start("extract", {
+      path: "input.zip",
+      name: "opened",
+      password: "fixture-password",
+    });
+    expect(await wait(transfer.id)).toMatchObject({ state: "done", error: null });
+    expect(readFileSync(join(root.path, "opened", "legacy.txt"), "utf8")).toBe("encrypted fixture");
+  });
+
+  // Generated independently with pyzipper 0.3.6, AES-256, using only this synthetic payload/password.
+  const independentAes = Buffer.from(
+    "UEsDBBQAAQhjAHx+Y12XwRY6LAAAAA4AAAAQAAsAZMSxxZ9hcsSxZGFuLnR4dAGZBwABAEFFAwgAwcDbDzyqoTx+7c3nywYVyjMEGOW8s607O1O+L16d1dFMF0SxFFfyIDaOH59QSwECFAMUAAEIYwB8fmNdl8EWOiwAAAAOAAAAEAALAAAAAAAAAAAAgAEAAAAAZMSxxZ9hcsSxZGFuLnR4dAGZBwABAEFFAwgAUEsFBgAAAAABAAEASQAAAGUAAAAAAA==",
+    "base64",
+  );
+
+  it("reads an independent AES-256 fixture", async () => {
+    const { root, start, wait } = await setup();
+    writeFileSync(join(root.path, "independent.zip"), independentAes);
+    const transfer = await start("extract", {
+      path: "independent.zip",
+      name: "opened",
+      password: "independent-fixture-only",
+    });
+    expect(await wait(transfer.id)).toMatchObject({ state: "done", error: null });
+    expect(readFileSync(join(root.path, "opened", "dışarıdan.txt"), "utf8")).toBe("İstanbul 🌷");
+  });
+
+  it("rejects tampered AES authentication before publishing plaintext", async () => {
+    const { root, start, wait } = await setup();
+    const bytes = Buffer.from(independentAes);
+    const central = bytes.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+    const dataOffset = 30 + bytes.readUInt16LE(26) + bytes.readUInt16LE(28);
+    const macEnd = dataOffset + bytes.readUInt32LE(central + 20) - 1;
+    bytes[macEnd] = bytes[macEnd]! ^ 1;
+    writeFileSync(join(root.path, "tampered.zip"), bytes);
+    const transfer = await start("extract", {
+      path: "tampered.zip",
+      name: "blocked",
+      password: "independent-fixture-only",
+    });
+    expect(await wait(transfer.id)).toMatchObject({
+      state: "failed",
+      error: "FILES_ARCHIVE_PASSWORD_INVALID",
+    });
+    expect(existsSync(join(root.path, "blocked"))).toBe(false);
+    expect(readdirSync(root.path).some((name) => name.startsWith(".everyos-archive-"))).toBe(false);
+  });
+
   it("opens a forced ZIP64 archive with small files", async () => {
     const { root, start, wait } = await setup();
-    const zip = new ZipFile();
-    zip.addBuffer(Buffer.from("ZIP64 payload"), "zip64.txt", { forceZip64Format: true });
-    zip.end({ forceZip64Format: true, comment: "" });
-    const chunks: Buffer[] = [];
-    for await (const chunk of zip.outputStream) chunks.push(chunk as Buffer);
-    writeFileSync(join(root.path, "zip64.zip"), Buffer.concat(chunks));
+    const zip = new ZipWriter(new Uint8ArrayWriter(), { useWebWorkers: false });
+    await zip.add("zip64.txt", new TextReader("ZIP64 payload"), { zip64: true });
+    writeFileSync(join(root.path, "zip64.zip"), await zip.close(undefined, { zip64: true }));
     const transfer = await start("extract", { path: "zip64.zip", name: "zip64-out" });
     expect(await wait(transfer.id)).toMatchObject({ state: "done", error: null });
     expect(readFileSync(join(root.path, "zip64-out", "zip64.txt"), "utf8")).toBe("ZIP64 payload");
@@ -296,10 +388,10 @@ describe("built-in ZIP files", () => {
     }
   });
 
-  it("rejects encrypted files, symlinks and unsupported compression", async () => {
+  it("rejects unsupported encryption, symlinks and unsupported compression", async () => {
     const { admin, root } = await setup();
     for (const entry of [
-      { name: "secret", flags: 1, data: "abcdefghijkl", size: 0 },
+      { name: "secret", flags: 0x41, data: "abcdefghijkl", size: 0 },
       { name: "link", mode: 0o120777 },
       { name: "data", method: 12 },
     ]) {
@@ -312,9 +404,7 @@ describe("built-in ZIP files", () => {
 
   it("bounds entry counts and expansion before creating an output folder", async () => {
     const { admin, root } = await setup();
-    const excessive = zipFixture([]);
-    excessive.writeUInt16LE(10001, 8);
-    excessive.writeUInt16LE(10001, 10);
+    const excessive = zipFixture(Array.from({ length: 10001 }, (_, i) => ({ name: `item-${i}` })));
     for (const bytes of [
       excessive,
       zipFixture(
@@ -322,7 +412,7 @@ describe("built-in ZIP files", () => {
           name: `bomb-${i}`,
           data: "x",
           method: 8,
-          size: 0xffffffff,
+          size: 0xfffffffe,
         })),
       ),
     ]) {

@@ -159,13 +159,20 @@ failure notifications. Completed archive jobs immediately refresh open Files win
 desktop. The dialog may be closed while a job continues in the transfer panel. Empty folders,
 hidden files, Unicode names, stored/deflated entries and ZIP64 archives are supported.
 
+ZIP creation has an optional password and confirmation field. Password-protected output uses
+WinZip AES-256; extraction also reads legacy ZipCrypto archives. An encrypted ZIP prompts for
+its password, and a failed attempt can be retried in the same dialog. Passwords are sent only in
+the POST body, retained only for the in-memory job, and excluded from URLs, transfer metadata
+and audit details. ZIP encryption protects contents; file names remain visible.
+
 Before extraction, the central directory is validated: absolute/traversing paths, backslashes,
 ambiguous duplicate names, file/directory collisions, links and special files are refused. All
-entries are size-bounded and CRC-checked while streaming. Encrypted archives and compression
-methods other than stored/deflate are unsupported. Limits are 10,000 files/directories (including
+entries are size-bounded while streaming, and CRC or AES authentication is checked before upload
+commit. Unsupported encryption and compression methods other than stored/deflate are refused.
+Limits are 10,000 files/directories (including
 implicit parent directories), 16 GiB of uncompressed data, 16 MiB of central-directory metadata,
-bounded path metadata and a ten-minute
-job deadline; normal upload and free-space limits also apply. No archive contents execute.
+bounded path metadata and a ten-minute job deadline; normal upload and free-space limits also
+apply. No archive contents execute.
 
 Reading uses bounded ranges through the same personal/linked-account file view. Compressed output
 uses private API scratch space and the normal atomic upload, with free-space checks. Extraction
@@ -175,8 +182,9 @@ checked agent operation; it never deletes an existing output folder or fills the
 Cleanup remains subject to the linked account's permissions and availability.
 
 - `GET /api/files/archive?root&path` — contents and total size; `files:read`.
-- `POST /api/files/archive/create { root, path, paths, name }` — starts ZIP creation; `files:write`.
-- `POST /api/files/archive/extract { root, path, name }` — starts extraction; `files:write`.
+- `POST /api/files/archive/create { root, path, paths, name, password? }` — starts ZIP creation;
+  `files:write`.
+- `POST /api/files/archive/extract { root, path, name, password? }` — starts extraction; `files:write`.
 
 Both POST routes return `{ transfer }` with HTTP 202. Inputs are strict schemas and start/completion
 outcomes are audited. Progress and cancellation use the existing `/api/transfers` endpoints.

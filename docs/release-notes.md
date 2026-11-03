@@ -7,6 +7,9 @@ EveryOS 0.1.43 adds built-in ZIP support to Files and the desktop.
 - Archive jobs show progress and support cancellation in the transfer panel. Completed jobs
   immediately refresh Files and desktop items without reloading the page.
 - Unicode names, hidden files, empty directories and ZIP64 archives are supported for personal
-  and linked-account file locations. Encrypted archives are not yet supported.
+  and linked-account file locations.
+- Create password-protected ZIPs with AES-256, and open AES or legacy ZipCrypto archives by
+  entering their password. Incorrect passwords can be retried in the same dialog. File names
+  remain visible in encrypted ZIPs.
 - Archive processing enforces file permissions, validates paths and integrity, limits resource
   usage and removes temporary extraction output after failed or cancelled jobs.

@@ -25,6 +25,7 @@
     "@everyos/system": "workspace:*",
     "@everyos/widget-sdk": "workspace:*",
     "@hono/node-server": "catalog:",
+    "@zip.js/zip.js": "2.24.0",
     "hono": "catalog:",
     "mysql2": "catalog:",
     "nodemailer": "catalog:",
@@ -32,8 +33,6 @@
     "pg-cursor": "catalog:",
     "ws": "catalog:",
     "yaml": "catalog:",
-    "yauzl": "3.4.0",
-    "yazl": "3.3.1",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -41,8 +40,6 @@
     "@everyos/theme": "workspace:*",
     "@types/pg": "catalog:",
     "@types/ws": "catalog:",
-    "@types/yauzl": "3.4.0",
-    "@types/yazl": "3.3.1",
     "create-everyos-app": "workspace:*"
   }
 }

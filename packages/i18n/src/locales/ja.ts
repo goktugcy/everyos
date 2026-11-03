@@ -3119,6 +3119,13 @@ export const ja: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "パスワード（任意）",
+      password: "アーカイブのパスワード",
+      passwordConfirm: "パスワードを確認",
+      passwordMismatch: "パスワードが一致しません。",
+      encryptionHint:
+        "パスワードを設定すると内容をAES-256で暗号化します。ファイル名は表示されます。",
+      encryptedHint: "このZIPは暗号化されています。展開するにはパスワードを入力してください。",
       compressTitle: "ZIP を作成",
       extractTitle: "ZIP アーカイブを開く",
       compressAction: "ZIP に圧縮…",
@@ -4255,7 +4262,10 @@ export const ja: LocaleMessages = {
     FILES_ARCHIVE_INVALID:
       "ZIP アーカイブが破損しているか、安全でないファイルパスが含まれています。",
     FILES_ARCHIVE_LIMIT: "ファイル数、サイズ、または処理時間の上限を超えています。",
-    FILES_ARCHIVE_UNSUPPORTED: "暗号化 ZIP、リンク、およびこの圧縮方式には対応していません。",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "このZIPの暗号化・圧縮方式、リンク、特殊ファイルには対応していません。",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "このZIPを展開するにはパスワードが必要です。",
+    FILES_ARCHIVE_PASSWORD_INVALID: "パスワードが違うか、暗号化ZIPの整合性を確認できませんでした。",
     BAD_REQUEST: "リクエストを処理できませんでした。",
     VALIDATION_FAILED: "入力された情報の一部が無効です。",
     UNAUTHENTICATED: "セッションが終了しました。もう一度サインインしてください。",

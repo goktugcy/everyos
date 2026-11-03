@@ -3041,6 +3041,12 @@ export const tr = {
   },
   files: {
     archive: {
+      passwordOptional: "Parola (isteğe bağlı)",
+      password: "Arşiv parolası",
+      passwordConfirm: "Parolayı tekrar girin",
+      passwordMismatch: "Parolalar eşleşmiyor.",
+      encryptionHint: "Parola girilirse içerik AES-256 ile şifrelenir. Dosya adları görünür kalır.",
+      encryptedHint: "Bu ZIP şifreli. Çıkarmak için parolasını girin.",
       compressTitle: "ZIP oluştur",
       extractTitle: "ZIP arşivini aç",
       compressAction: "ZIP olarak sıkıştır…",
@@ -4134,7 +4140,9 @@ export const tr = {
     FILES_ARCHIVE_INVALID: "ZIP arşivi bozuk veya güvenli olmayan dosya yolları içeriyor.",
     FILES_ARCHIVE_LIMIT: "Arşiv dosya sayısı, boyut veya işlem süresi sınırını aşıyor.",
     FILES_ARCHIVE_UNSUPPORTED:
-      "Şifreli ZIP dosyaları, bağlantılar ve bu sıkıştırma biçimi desteklenmiyor.",
+      "Bu ZIP şifreleme veya sıkıştırma yöntemi, bağlantılar ve özel dosyalar desteklenmiyor.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "ZIP arşivini açmak için parola gerekiyor.",
+    FILES_ARCHIVE_PASSWORD_INVALID: "Parola yanlış veya şifreli ZIP’in bütünlüğü doğrulanamadı.",
     BAD_REQUEST: "İstek anlaşılamadı.",
     VALIDATION_FAILED: "Girilen bilgiler geçersiz.",
     UNAUTHENTICATED: "Oturumunuz sona erdi. Lütfen yeniden giriş yapın.",

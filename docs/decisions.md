@@ -1000,12 +1000,17 @@ random-access adapter reuses an opened account download for central-directory re
 calls remain authenticated but can release owned transfers after cancellation.
 
 ZIP decoding validates the complete namespace before creating a staging tree and verifies CRCs
-before individual uploads commit. Staging cleanup has its own UUID-restricted agent operation,
+or AES authentication before individual uploads commit. Staging cleanup has its own UUID-restricted agent operation,
 `files.archive.discard`, with strict input/result validation, `files:write`, a timeout and normal
 agent policy/audit checks. It is not a general permanent-delete endpoint and is not exposed as an
 HTTP route. Existing destinations are never intentionally replaced. Compression uses bounded,
 space-checked API scratch storage before the normal upload commits the final ZIP.
 
-The implementation uses pinned [yauzl](https://github.com/thejoshwolfe/yauzl) and
-[yazl](https://github.com/thejoshwolfe/yazl). CRC checks are supplied by EveryOS because the reader
-exposes the checksum without validating it. No standalone SDK or official app interface changes.
+The implementation uses pinned [zip.js](https://gildas-lormeau.github.io/zip.js/) for reading,
+writing and encryption. Its native JavaScript build runs in the API without external worker or
+WASM files. The reader adapter bounds metadata allocations before reading and uses scoped 48 KiB
+file ranges. Authentication must succeed before the extraction stream ends, so a failed CRC or AES
+tag cannot commit plaintext. New password-protected archives use AES-256; legacy ZipCrypto is
+accepted only for reading compatibility. Passwords stay in the in-memory task and are never
+included in transfer records, URLs or audit details. File names remain visible in encrypted ZIPs.
+No standalone SDK or official app interface changes.

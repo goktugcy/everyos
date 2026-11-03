@@ -3000,6 +3000,12 @@ export const en: Messages = {
   },
   files: {
     archive: {
+      passwordOptional: "Password (optional)",
+      password: "Archive password",
+      passwordConfirm: "Confirm password",
+      passwordMismatch: "Passwords do not match.",
+      encryptionHint: "A password encrypts file contents with AES-256. File names remain visible.",
+      encryptedHint: "This ZIP is encrypted. Enter its password to extract it.",
       compressTitle: "Create ZIP",
       extractTitle: "Open ZIP archive",
       compressAction: "Compress to ZIP…",
@@ -4095,7 +4101,10 @@ export const en: Messages = {
     FILES_ARCHIVE_INVALID: "The ZIP archive is corrupt or contains unsafe file paths.",
     FILES_ARCHIVE_LIMIT: "The archive exceeds the file count, size or processing time limit.",
     FILES_ARCHIVE_UNSUPPORTED:
-      "Encrypted ZIP files, links and this compression method are not supported.",
+      "This ZIP encryption or compression method, links and special files are unsupported.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "A password is required to extract this ZIP.",
+    FILES_ARCHIVE_PASSWORD_INVALID:
+      "The password is incorrect or the encrypted ZIP could not be verified.",
     BAD_REQUEST: "The request could not be understood.",
     VALIDATION_FAILED: "Some of the entered information is invalid.",
     UNAUTHENTICATED: "Your session has ended. Please sign in again.",

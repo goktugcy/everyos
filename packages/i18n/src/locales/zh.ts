@@ -3001,6 +3001,12 @@ export const zh: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "密码（可选）",
+      password: "压缩包密码",
+      passwordConfirm: "确认密码",
+      passwordMismatch: "两次密码不一致。",
+      encryptionHint: "设置密码后将使用 AES-256 加密内容。文件名仍然可见。",
+      encryptedHint: "此 ZIP 已加密。请输入密码以解压。",
       compressTitle: "创建 ZIP",
       extractTitle: "打开 ZIP 压缩包",
       compressAction: "压缩为 ZIP…",
@@ -4046,7 +4052,9 @@ export const zh: LocaleMessages = {
   errors: {
     FILES_ARCHIVE_INVALID: "ZIP 压缩包已损坏或包含不安全的文件路径。",
     FILES_ARCHIVE_LIMIT: "压缩包超出了文件数量、大小或处理时间限制。",
-    FILES_ARCHIVE_UNSUPPORTED: "不支持加密 ZIP、链接及此压缩方式。",
+    FILES_ARCHIVE_UNSUPPORTED: "不支持此 ZIP 加密或压缩方式、链接及特殊文件。",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "解压此 ZIP 需要密码。",
+    FILES_ARCHIVE_PASSWORD_INVALID: "密码错误或无法验证加密 ZIP 的完整性。",
     BAD_REQUEST: "无法理解该请求。",
     VALIDATION_FAILED: "输入的部分信息无效。",
     UNAUTHENTICATED: "你的会话已结束。请重新登录。",

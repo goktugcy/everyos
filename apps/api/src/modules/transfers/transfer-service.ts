@@ -31,7 +31,7 @@ export interface TransferTask {
 interface Job {
   userId: string;
   view: TransferView;
-  task: TransferTask;
+  task: TransferTask | null;
   controller: AbortController;
   sample: { at: number; bytes: number } | null;
 }
@@ -156,6 +156,8 @@ export class TransferService {
   }
 
   async #run(job: Job): Promise<void> {
+    const task = job.task;
+    if (!task) return;
     job.view.state = "running";
     job.view.startedAt = this.#now();
     job.sample = { at: this.#now(), bytes: 0 };
@@ -177,7 +179,7 @@ export class TransferService {
       },
     };
     try {
-      await job.task.run(progress, job.controller.signal);
+      await task.run(progress, job.controller.signal);
       if (job.controller.signal.aborted) this.#finish(job, "cancelled", null);
       else this.#finish(job, "done", null);
     } catch (error) {
@@ -192,6 +194,8 @@ export class TransferService {
   }
 
   #finish(job: Job, state: "done" | "failed" | "cancelled", error: string | null): void {
+    // History retains public progress only, never task closures holding credentials or passwords.
+    job.task = null;
     job.view.state = state;
     job.view.error = error;
     job.view.finishedAt = this.#now();

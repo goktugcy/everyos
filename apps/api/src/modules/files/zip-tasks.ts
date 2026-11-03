@@ -3,10 +3,10 @@ import { createWriteStream } from "node:fs";
 import { mkdtemp, open, rm, stat, statfs } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { addAbortSignal, Readable, Transform } from "node:stream";
+import { addAbortSignal, PassThrough, Readable, Transform, Writable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import { ZipFile } from "yazl";
+import { ZipWriter } from "@zip.js/zip.js/index-native.js";
 import { ApiError } from "../../http/errors.ts";
 import type { FileView } from "./file-view.ts";
 import type { TransferProgress, TransferTask } from "../transfers/transfer-service.ts";
@@ -18,6 +18,7 @@ import {
   ZipNames,
   zipLimit,
   zipPath,
+  zipReadError,
 } from "./zip-reader.ts";
 
 const pathJoin = (...parts: string[]) => parts.filter(Boolean).join("/");
@@ -37,6 +38,7 @@ interface ArchiveTaskOptions {
   root: string;
   path: string;
   name: string;
+  password?: string;
   files: (signal?: AbortSignal) => FileView;
   withAccess: <T>(run: () => Promise<T>) => Promise<T>;
   from: string;
@@ -123,10 +125,13 @@ export function createZipTask(
         progress.totals({ items: plan.entries.length + 1 });
         const temp = await mkdtemp(join(tmpdir(), "everyos-zip-"));
         const archive = join(temp, "archive.zip");
-        const zip = new ZipFile();
-        const output = zip.outputStream as Readable;
+        const output = new PassThrough();
+        const zip = new ZipWriter(Writable.toWeb(output), {
+          useWebWorkers: false,
+          level: 6,
+          bufferedWrite: false,
+        });
         const streams = new Set<Readable>();
-        zip.on("error", (error: Error) => output.destroy(error));
         let size = 0;
         let checkAfter = 0;
         const space = new Transform({
@@ -160,46 +165,56 @@ export function createZipTask(
         void writing.catch(() => undefined);
         try {
           for (const entry of plan.entries) {
+            signal.throwIfAborted();
+            const attributes = {
+              lastModDate: new Date(entry.modifiedAt),
+              externalFileAttributes: ((entry.directory ? 0o040750 : 0o100640) * 65536) >>> 0,
+              versionMadeBy: 0x314,
+              signal,
+            };
             if (entry.directory) {
-              zip.addEmptyDirectory(entry.name);
+              await zip.add(entry.name + "/", undefined, { ...attributes, directory: true });
               progress.item();
               continue;
             }
-            zip.addReadStreamLazy(
-              entry.name,
-              { size: entry.size, mtime: new Date(entry.modifiedAt), mode: 0o100640 },
-              (callback) => {
-                const source = Readable.from(
-                  (async function* () {
-                    const file = await files.openFile(options.root, entry.path);
-                    try {
-                      if (file.size !== entry.size || file.modifiedAt !== entry.modifiedAt)
-                        throw new ApiError(409, "CONFLICT", "A source file changed");
-                      if (file.size)
-                        for await (const chunk of addAbortSignal(
-                          signal,
-                          file.handle.createReadStream({
-                            start: 0,
-                            end: file.size - 1,
-                            autoClose: false,
-                          }),
-                        )) {
-                          progress.bytes((chunk as Buffer).length);
-                          yield chunk;
-                        }
-                      progress.item();
-                    } finally {
-                      await file.handle.close().catch(() => undefined);
+            const source = Readable.from(
+              (async function* () {
+                const file = await files.openFile(options.root, entry.path);
+                try {
+                  if (file.size !== entry.size || file.modifiedAt !== entry.modifiedAt)
+                    throw new ApiError(409, "CONFLICT", "A source file changed");
+                  if (file.size)
+                    for await (const chunk of addAbortSignal(
+                      signal,
+                      file.handle.createReadStream({
+                        start: 0,
+                        end: file.size - 1,
+                        autoClose: false,
+                      }),
+                    )) {
+                      progress.bytes((chunk as Buffer).length);
+                      yield chunk;
                     }
-                  })(),
-                );
-                streams.add(source);
-                source.once("close", () => streams.delete(source));
-                callback(null, source);
+                } finally {
+                  await file.handle.close().catch(() => undefined);
+                }
+              })(),
+            );
+            streams.add(source);
+            source.once("close", () => streams.delete(source));
+            await zip.add(
+              entry.name,
+              { readable: Readable.toWeb(source), size: entry.size },
+              {
+                ...attributes,
+                ...(options.password !== undefined
+                  ? { password: options.password, encryptionStrength: 3 }
+                  : {}),
               },
             );
+            progress.item();
           }
-          zip.end();
+          await zip.close();
           await writing;
           const info = await stat(archive);
           progress.totals({ bytes: plan.bytes + info.size });
@@ -256,6 +271,12 @@ export function extractZipTask(options: ArchiveTaskOptions): TransferTask {
         const staging = pathJoin(directory, stagingName);
         let staged = false;
         try {
+          if (archive.listing.encrypted && options.password === undefined)
+            throw new ApiError(
+              400,
+              "FILES_ARCHIVE_PASSWORD_REQUIRED",
+              "An archive password is required",
+            );
           progress.totals({ bytes: archive.listing.bytes, items: archive.names.entries.size });
           await files.mkdir(options.root, directory, stagingName);
           staged = true;
@@ -272,23 +293,27 @@ export function extractZipTask(options: ArchiveTaskOptions): TransferTask {
             progress.item();
           }
           for (const entry of archive.entries) {
-            if (entry.fileName.endsWith("/")) continue;
+            if (entry.directory) continue;
             signal.throwIfAborted();
-            const name = zipPath(entry.fileName);
-            let raw: Readable;
-            try {
-              raw = await archive.zip.openReadStreamPromise(entry);
-            } catch (error) {
-              if (error instanceof ApiError) throw error;
-              throw invalidZip();
-            }
+            const name = zipPath(entry.filename);
             const checked = checkedZipStream(entry, (bytes) => progress.bytes(bytes));
-            let readFailure: unknown = null;
-            raw.once("error", (error: unknown) => {
-              readFailure = error;
-            });
-            const pumping = pipeline(raw, checked, { signal });
-            void pumping.catch(() => undefined);
+            const decoding = (async () => {
+              try {
+                await entry.getData(Writable.toWeb(checked), {
+                  signal,
+                  checkSignature: true,
+                  preventClose: true,
+                  ...(options.password !== undefined ? { password: options.password } : {}),
+                });
+                // Only validated plaintext can end the upload and commit into our private staging tree.
+                checked.end();
+              } catch (error) {
+                const failure = signal.aborted ? error : zipReadError(error, entry.encrypted);
+                checked.destroy(failure instanceof Error ? failure : invalidZip());
+                throw failure;
+              }
+            })();
+            void decoding.catch(() => undefined);
             try {
               await files.upload(
                 options.root,
@@ -298,15 +323,10 @@ export function extractZipTask(options: ArchiveTaskOptions): TransferTask {
                 entry.uncompressedSize,
                 false,
               );
-              await pumping;
-            } catch (error) {
-              if (readFailure && !(readFailure instanceof ApiError) && !signal.aborted)
-                throw invalidZip();
-              throw error;
+              await decoding;
             } finally {
-              raw.destroy();
               checked.destroy();
-              await pumping.catch(() => undefined);
+              await decoding.catch(() => undefined);
             }
             progress.item();
           }

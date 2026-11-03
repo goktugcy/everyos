@@ -37,15 +37,15 @@ export const filesApi = {
     api<FileArchiveListing>(`/files/archive?${query({ ...location })}`, {
       ...(signal ? { signal } : {}),
     }),
-  compress: (location: FileLocation, paths: string[], name: string) =>
+  compress: (location: FileLocation, paths: string[], name: string, password?: string) =>
     api<{ transfer: TransferView }>("/files/archive/create", {
       method: "POST",
-      body: { ...location, paths, name },
+      body: { ...location, paths, name, ...(password !== undefined ? { password } : {}) },
     }),
-  extract: (location: FileLocation, name: string) =>
+  extract: (location: FileLocation, name: string, password?: string) =>
     api<{ transfer: TransferView }>("/files/archive/extract", {
       method: "POST",
-      body: { ...location, name },
+      body: { ...location, name, ...(password !== undefined ? { password } : {}) },
     }),
   roots: () => api<FileRootsResponse>("/files/roots"),
   setSystemRoots: (systemRoots: boolean) =>

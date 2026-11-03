@@ -3135,6 +3135,13 @@ export const es: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "Contraseña (opcional)",
+      password: "Contraseña del archivo",
+      passwordConfirm: "Confirmar contraseña",
+      passwordMismatch: "Las contraseñas no coinciden.",
+      encryptionHint:
+        "La contraseña cifra el contenido con AES-256. Los nombres siguen siendo visibles.",
+      encryptedHint: "Este ZIP está cifrado. Introduce su contraseña para extraerlo.",
       compressTitle: "Crear ZIP",
       extractTitle: "Abrir archivo ZIP",
       compressAction: "Comprimir en ZIP…",
@@ -4297,7 +4304,11 @@ export const es: LocaleMessages = {
     FILES_ARCHIVE_INVALID: "El ZIP está dañado o contiene rutas de archivo inseguras.",
     FILES_ARCHIVE_LIMIT:
       "El archivo supera el límite de cantidad de archivos, tamaño o tiempo de procesamiento.",
-    FILES_ARCHIVE_UNSUPPORTED: "No se admiten ZIP cifrados, enlaces ni este método de compresión.",
+    FILES_ARCHIVE_UNSUPPORTED:
+      "No se admiten este cifrado o compresión ZIP, enlaces ni archivos especiales.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "Se necesita una contraseña para extraer este ZIP.",
+    FILES_ARCHIVE_PASSWORD_INVALID:
+      "La contraseña es incorrecta o no se pudo verificar el ZIP cifrado.",
     BAD_REQUEST: "No se pudo entender la solicitud.",
     VALIDATION_FAILED: "Parte de la información introducida no es válida.",
     UNAUTHENTICATED: "Tu sesión ha finalizado. Vuelve a iniciar sesión.",

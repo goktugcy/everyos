@@ -49,6 +49,9 @@ function ArchiveContents({ request, onClose }: { request: ArchiveRequest; onClos
   const [pending, setPending] = useState(false);
   const [started, setStarted] = useState<TransferView | null>(null);
   const [search, setSearch] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+  const passwordMismatch = !extracting && password.length > 0 && password !== confirmation;
   const live = useTransfers((state) =>
     started ? state.server.find((transfer) => transfer.id === started.id) : undefined,
   );
@@ -77,13 +80,16 @@ function ArchiveContents({ request, onClose }: { request: ArchiveRequest; onClos
     try {
       const result =
         request.mode === "extract"
-          ? await filesApi.extract(request.location, name.trim())
+          ? await filesApi.extract(request.location, name.trim(), password || undefined)
           : await filesApi.compress(
               request.location,
               request.paths,
               /\.zip$/i.test(name.trim()) ? name.trim() : name.trim() + ".zip",
+              password || undefined,
             );
       setStarted(result.transfer);
+      setPassword("");
+      setConfirmation("");
       await refreshTransfers();
     } catch (cause) {
       setError(cause);
@@ -171,6 +177,45 @@ function ArchiveContents({ request, onClose }: { request: ArchiveRequest; onClos
                 maxLength={255}
               />
             </label>
+            {!extracting || listing?.encrypted ? (
+              <>
+                <label className="flex flex-col gap-2 text-sm">
+                  {t(extracting ? "files.archive.password" : "files.archive.passwordOptional")}
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    className="rounded-everyos-sm border border-line bg-hover/5 px-3 py-2"
+                    value={password}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      if (!event.target.value) setConfirmation("");
+                    }}
+                    maxLength={1024}
+                    disabled={pending}
+                  />
+                </label>
+                <p className="text-xs text-fg-muted">
+                  {t(extracting ? "files.archive.encryptedHint" : "files.archive.encryptionHint")}
+                </p>
+                {!extracting && password ? (
+                  <label className="flex flex-col gap-2 text-sm">
+                    {t("files.archive.passwordConfirm")}
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      className="rounded-everyos-sm border border-line bg-hover/5 px-3 py-2"
+                      value={confirmation}
+                      onChange={(event) => setConfirmation(event.target.value)}
+                      maxLength={1024}
+                      disabled={pending}
+                    />
+                  </label>
+                ) : null}
+                {passwordMismatch && confirmation ? (
+                  <Alert tone="danger">{t("files.archive.passwordMismatch")}</Alert>
+                ) : null}
+              </>
+            ) : null}
             {!request.writable ? <Alert>{t("errors.FILES_READ_ONLY")}</Alert> : null}
             <div className="flex justify-end gap-2">
               <Button variant="secondary" onClick={onClose}>
@@ -178,7 +223,13 @@ function ArchiveContents({ request, onClose }: { request: ArchiveRequest; onClos
               </Button>
               <Button
                 loading={pending}
-                disabled={!request.writable || !name.trim() || loading || (extracting && !listing)}
+                disabled={
+                  !request.writable ||
+                  !name.trim() ||
+                  loading ||
+                  passwordMismatch ||
+                  (extracting && (!listing || (listing.encrypted && !password)))
+                }
                 onClick={() => void submit()}
               >
                 {t(extracting ? "files.archive.extract" : "files.archive.create")}
@@ -186,9 +237,16 @@ function ArchiveContents({ request, onClose }: { request: ArchiveRequest; onClos
             </div>
           </>
         ) : (
-          <ul aria-label={t("transfers.title")}>
-            <TransferRow transfer={live ?? started} />
-          </ul>
+          <>
+            <ul aria-label={t("transfers.title")}>
+              <TransferRow transfer={live ?? started} />
+            </ul>
+            {live?.state === "failed" || live?.state === "cancelled" ? (
+              <Button variant="secondary" onClick={() => setStarted(null)}>
+                {t("common.retry")}
+              </Button>
+            ) : null}
+          </>
         )}
       </div>
     </Dialog>

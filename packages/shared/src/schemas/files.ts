@@ -52,11 +52,13 @@ export const ArchiveCreateRequestSchema = z.strictObject({
     .min(1)
     .max(MAX_FILE_ARCHIVE_ENTRIES),
   name: FileNameSchema.regex(/\.zip$/i),
+  password: z.string().min(1).max(1024).optional(),
 });
 export const ArchiveExtractRequestSchema = z.strictObject({
   ...location,
   path: RelativePathSchema.refine((path) => path.length > 0),
   name: FileNameSchema,
+  password: z.string().min(1).max(1024).optional(),
 });
 export const ArchiveStageLocationSchema = z.strictObject({
   root: FileRootIdSchema,

@@ -3149,6 +3149,12 @@ export const fr: LocaleMessages = {
   },
   files: {
     archive: {
+      passwordOptional: "Mot de passe (facultatif)",
+      password: "Mot de passe de l’archive",
+      passwordConfirm: "Confirmer le mot de passe",
+      passwordMismatch: "Les mots de passe ne correspondent pas.",
+      encryptionHint: "Le mot de passe chiffre le contenu avec AES-256. Les noms restent visibles.",
+      encryptedHint: "Ce ZIP est chiffré. Saisissez son mot de passe pour l’extraire.",
       compressTitle: "Créer un ZIP",
       extractTitle: "Ouvrir une archive ZIP",
       compressAction: "Compresser en ZIP…",
@@ -4311,7 +4317,10 @@ export const fr: LocaleMessages = {
     FILES_ARCHIVE_LIMIT:
       "L’archive dépasse la limite de fichiers, de taille ou de durée de traitement.",
     FILES_ARCHIVE_UNSUPPORTED:
-      "Les ZIP chiffrés, les liens et cette méthode de compression ne sont pas pris en charge.",
+      "Ce chiffrement ou cette compression ZIP, les liens et les fichiers spéciaux ne sont pas pris en charge.",
+    FILES_ARCHIVE_PASSWORD_REQUIRED: "Un mot de passe est nécessaire pour extraire ce ZIP.",
+    FILES_ARCHIVE_PASSWORD_INVALID:
+      "Le mot de passe est incorrect ou le ZIP chiffré n’a pas pu être vérifié.",
     BAD_REQUEST: "La requête n’a pas pu être comprise.",
     VALIDATION_FAILED: "Certaines des informations saisies ne sont pas valides.",
     UNAUTHENTICATED: "Votre session a expiré. Veuillez vous reconnecter.",
