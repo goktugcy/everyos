@@ -5,18 +5,7 @@ import {
   type FileRootView,
   type ShelfItem,
 } from "@everyos/shared";
-import {
-  Download,
-  File,
-  FileArchive,
-  FileImage,
-  FileText,
-  Folder,
-  FolderOpen,
-  Trash2,
-  Upload,
-  X,
-} from "lucide-react";
+import { Download, Folder, FolderOpen, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useState, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useApiResource } from "../../features/system/use-api-resource.ts";
@@ -35,6 +24,7 @@ import {
   useFilesRevision,
 } from "../apps/files/lib.ts";
 import { desktop } from "../state/controller.ts";
+import { FileTypeIcon } from "../apps/files/file-type-icon.tsx";
 import { updatePreference, usePreferences } from "../state/preferences-store.ts";
 import { readFilesDrag, shelfAdd, shelfName, shelfRemove } from "./pulse-lib.ts";
 
@@ -46,26 +36,16 @@ interface Upload {
   error: string | null;
 }
 
-const IMAGE = /\.(png|jpe?g|gif|webp|avif|bmp|svg|heic)$/i;
-const ARCHIVE = /\.(zip|tar|gz|tgz|xz|bz2|7z|rar|zst)$/i;
-const TEXT = /\.(txt|md|json|ya?ml|toml|ini|conf|log|csv|xml|html?|css|js|ts|sh|py|env)$/i;
-
 /** After a drag that may have left the page, the shelf looks whether the server deleted the file. */
 const RECHECK_AFTER_DRAG_MS = [2_000, 10_000, 60_000];
 
 function ItemIcon({ item }: { item: ShelfItem }) {
   const name = shelfName(item);
-  const Icon =
-    item.kind === "directory"
-      ? Folder
-      : IMAGE.test(name)
-        ? FileImage
-        : ARCHIVE.test(name)
-          ? FileArchive
-          : TEXT.test(name)
-            ? FileText
-            : File;
-  return <Icon className="size-8 text-fg" strokeWidth={1.4} aria-hidden />;
+  return item.kind === "directory" ? (
+    <Folder className="size-8 text-accent" strokeWidth={1.4} aria-hidden />
+  ) : (
+    <FileTypeIcon entry={{ name, type: "file", link: null }} size={32} />
+  );
 }
 
 const setShelf = (update: (shelf: ShelfItem[]) => ShelfItem[]) =>

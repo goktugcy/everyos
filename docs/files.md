@@ -16,6 +16,16 @@ full when selected, hovered or keyboard-focused; the full title and accessible n
 Mobile launcher names use the same fitting component. Icon layout and drag/selection hit areas
 retain their existing geometry.
 
+File types share one local SVG icon family across the desktop, Files grid/list/search, app file
+picker, Trash, Google Drive browser and Pulse shelf. Large icons use layered, colored document
+surfaces, a translucent fold, purpose-drawn format artwork and the actual extension. Compact rows
+use category glyphs with theme-aware colors. Word, spreadsheets
+(including CSV), PDF, presentations, images, video, audio, archives, code/data, databases, calendars,
+drawings, fonts and disk images have distinct identities. Unknown extensions retain a neutral file
+icon. File names remain the accessible label, so color is never the only identifier. Existing image
+thumbnails and custom folder icons take precedence. Icons describe the format, independently of
+installed apps or codec support; file-opening associations and permissions are unchanged.
+
 The file manager never exposes the host file system by default. Every user gets a private
 **home** inside EveryOS's data directory; an administrator configures shared **locations** in
 `/etc/everyos/config.yaml`; and read-only **system** locations exist only after an administrator

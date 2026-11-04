@@ -1,5 +1,5 @@
 import type { FileEntry, FileRootView } from "@everyos/shared";
-import { ChevronRight, File, Folder, HardDrive, Home } from "lucide-react";
+import { ChevronRight, Folder, HardDrive, Home } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui/button.tsx";
@@ -7,6 +7,7 @@ import { Spinner } from "../../components/ui/spinner.tsx";
 import { cn } from "../../lib/cn.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { filesApi } from "../apps/files/lib.ts";
+import { FileTypeIcon } from "../apps/files/file-type-icon.tsx";
 
 export type PickerRequest =
   | {
@@ -310,7 +311,7 @@ export function FilePicker({
                           aria-hidden
                         />
                       ) : (
-                        <File className="size-4 shrink-0 text-fg-muted" aria-hidden />
+                        <FileTypeIcon entry={entry} compact size={16} />
                       )}
                       <span className="truncate">{entry.name}</span>
                     </button>

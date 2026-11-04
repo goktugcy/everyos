@@ -67,6 +67,77 @@
   --everyos-chart-2: #eb6834;
 }
 
+/* File identities stay consistent across themes; compact glyphs brighten on dark surfaces. */
+.everyos-file-icon {
+  --file-tone: #52637b;
+  --file-tone-bright: #a8b6cc;
+  --file-tone-deep: color-mix(in srgb, var(--file-tone) 68%, #101827);
+  --file-shadow: #0b1220;
+  color: var(--file-tone);
+}
+
+.everyos-file-icon[data-file-icon="document"] {
+  --file-tone: #2563c4;
+  --file-tone-bright: #79b1ff;
+}
+
+.everyos-file-icon[data-file-icon="spreadsheet"] {
+  --file-tone: #137b54;
+  --file-tone-bright: #54d6a3;
+}
+
+.everyos-file-icon[data-file-icon="pdf"] {
+  --file-tone: #c93d4b;
+  --file-tone-bright: #ff8a95;
+}
+
+.everyos-file-icon[data-file-icon="presentation"] {
+  --file-tone: #ba4f22;
+  --file-tone-bright: #ffa477;
+}
+
+.everyos-file-icon[data-file-icon="image"],
+.everyos-file-icon[data-file-icon="font"] {
+  --file-tone: #087d91;
+  --file-tone-bright: #5bd6e6;
+}
+
+.everyos-file-icon[data-file-icon="video"],
+.everyos-file-icon[data-file-icon="drawing"] {
+  --file-tone: #7c43c4;
+  --file-tone-bright: #bd9aff;
+}
+
+.everyos-file-icon[data-file-icon="audio"] {
+  --file-tone: #b9327b;
+  --file-tone-bright: #f48fc6;
+}
+
+.everyos-file-icon[data-file-icon="archive"] {
+  --file-tone: #a8650d;
+  --file-tone-bright: #f8c368;
+}
+
+.everyos-file-icon[data-file-icon="code"],
+.everyos-file-icon[data-file-icon="data"],
+.everyos-file-icon[data-file-icon="database"] {
+  --file-tone: #535bc5;
+  --file-tone-bright: #a5adff;
+}
+
+.everyos-file-icon[data-file-icon="calendar"] {
+  --file-tone: #b44261;
+  --file-tone-bright: #ff9eb5;
+}
+
+.everyos-file-icon[data-compact] {
+  color: var(--file-tone-bright);
+}
+
+[data-scheme="light"] .everyos-file-icon[data-compact] {
+  color: var(--file-tone);
+}
+
 @theme {
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,

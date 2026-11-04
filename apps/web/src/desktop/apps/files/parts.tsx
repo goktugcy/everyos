@@ -1,15 +1,5 @@
 import type { FileEntry, FileProperties } from "@everyos/shared";
-import {
-  File,
-  FileArchive,
-  FileImage,
-  FileQuestion,
-  FileText,
-  Folder,
-  Link2,
-  Loader2,
-  type LucideIcon,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
@@ -18,17 +8,8 @@ import { errorMessage } from "../../../lib/errors.ts";
 import { formatBytes, formatDateTime, formatNumber } from "../../../lib/format.ts";
 import { formatEta, formatRate, useTransfers } from "../../../features/transfers/transfers.ts";
 import { FolderIcon } from "./folder-icon.tsx";
-import { filesApi, kindOf, nameOf, type FileKind, type FileLocation } from "./lib.ts";
-
-const ICONS: Record<FileKind, LucideIcon> = {
-  folder: Folder,
-  text: FileText,
-  image: FileImage,
-  archive: FileArchive,
-  link: Link2,
-  file: File,
-  other: FileQuestion,
-};
+import { FileTypeIcon } from "./file-type-icon.tsx";
+import { filesApi, kindOf, nameOf, type FileLocation } from "./lib.ts";
 
 export function EntryIcon({
   entry,
@@ -48,8 +29,7 @@ export function EntryIcon({
         {...(className ? { className } : {})}
       />
     );
-  const Icon = ICONS[kind];
-  return <Icon aria-hidden className={className} />;
+  return <FileTypeIcon entry={entry} compact size={16} {...(className ? { className } : {})} />;
 }
 
 export interface UploadItem {

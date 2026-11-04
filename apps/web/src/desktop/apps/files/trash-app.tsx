@@ -10,6 +10,7 @@ import { useHasPermission } from "../../../stores/session-store.ts";
 import { requestConfirm } from "../../menus/confirm.tsx";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { filesApi, filesChanged } from "./lib.ts";
+import { EntryIcon } from "./parts.tsx";
 import { useTrashActions, useTrashListing } from "./trash-status.tsx";
 
 /** Recoverable files, isolated by account even in shared file locations. */
@@ -165,7 +166,12 @@ export default function TrashApp() {
                     }
                   />
                 </td>
-                <td className="border-t border-line p-3 font-medium text-fg">{item.name}</td>
+                <td className="border-t border-line p-3 font-medium text-fg">
+                  <span className="flex items-center gap-2">
+                    <EntryIcon entry={{ name: item.name, type: item.type, link: null }} />
+                    <span>{item.name}</span>
+                  </span>
+                </td>
                 <td
                   className="max-w-64 truncate border-t border-line p-3 text-fg-muted"
                   title={`${item.root}/${item.path}`}

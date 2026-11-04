@@ -5,14 +5,10 @@ import {
   ChevronRight,
   Copy,
   Download,
-  File,
-  FileSpreadsheet,
-  FileText,
   Folder,
   FolderOpen,
   FolderPlus,
   Pencil,
-  Presentation,
   RefreshCw,
   Trash2,
   Upload,
@@ -28,6 +24,7 @@ import { cn } from "../../lib/cn.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { formatBytes, formatDateTime } from "../../lib/format.ts";
 import { FILES_DRAG_TYPE } from "../../desktop/apps/files/lib.ts";
+import { FileTypeIcon } from "../../desktop/apps/files/file-type-icon.tsx";
 import { ContextMenuArea } from "../../desktop/menus/menus.tsx";
 import type { MenuEntry } from "../../desktop/menus/menu-model.ts";
 import { requestConfirm } from "../../desktop/menus/confirm.tsx";
@@ -36,14 +33,6 @@ import { LocationPicker } from "./pickers.tsx";
 
 const toolbarButton =
   "grid size-8 shrink-0 place-items-center rounded-everyos-sm text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40 disabled:hover:bg-transparent";
-
-function glyph(entry: DriveEntry) {
-  if (entry.folder) return Folder;
-  if (entry.exportAs === "docx") return FileText;
-  if (entry.exportAs === "xlsx") return FileSpreadsheet;
-  if (entry.exportAs === "pptx") return Presentation;
-  return File;
-}
 
 /** The person's Google Drive inside Files: browse, upload, download, copy into EveryOS. */
 export function DriveBrowser({
@@ -363,7 +352,6 @@ export function DriveBrowser({
             </thead>
             <tbody>
               {listing.entries.map((entry) => {
-                const Icon = glyph(entry);
                 return (
                   <ContextMenuArea key={entry.id} entries={() => menu(entry)}>
                     <tr
@@ -392,13 +380,21 @@ export function DriveBrowser({
                     >
                       <td className="px-2 py-1.5">
                         <span className="flex min-w-0 items-center gap-2">
-                          <Icon
-                            className={cn(
-                              "size-4 shrink-0",
-                              entry.folder ? "text-accent" : "text-fg-muted",
-                            )}
-                            aria-hidden
-                          />
+                          {entry.folder ? (
+                            <Folder className="size-4 shrink-0 text-accent" aria-hidden />
+                          ) : (
+                            <FileTypeIcon
+                              entry={{
+                                name: entry.exportAs
+                                  ? `${entry.name}.${entry.exportAs}`
+                                  : entry.name,
+                                type: "file",
+                                link: null,
+                              }}
+                              compact
+                              size={16}
+                            />
+                          )}
                           <span className="truncate">{entry.name}</span>
                         </span>
                       </td>

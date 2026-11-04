@@ -33,7 +33,6 @@ import {
   X,
 } from "lucide-react";
 import {
-  createElement,
   useEffect,
   useMemo,
   useRef,
@@ -62,7 +61,7 @@ import { IconLabel } from "../../components/ui/icon-label.tsx";
 import { FolderIcon } from "../apps/files/folder-icon.tsx";
 import { useTrashMenu } from "../apps/files/trash-menu.tsx";
 import { FolderIconDialog } from "../apps/settings/folder-icon-picker.tsx";
-import { fileGlyph } from "../apps/files/icon-view.tsx";
+import { FileTypeIcon } from "../apps/files/file-type-icon.tsx";
 import {
   isZipFile,
   FILES_DRAG_TYPE,
@@ -318,18 +317,7 @@ function FileGlyph({
         />
       </span>
     );
-  return createElement(fileGlyph(entry), {
-    "aria-hidden": true,
-    strokeWidth: 1.1,
-    style: {
-      width: size,
-      height: size,
-      filter: "drop-shadow(0 1px 2px rgb(0 0 0 / 0.35))",
-      ...(isFolder(entry)
-        ? { color: "rgb(var(--everyos-accent))", fill: "rgb(var(--everyos-accent) / 0.45)" }
-        : { color: "rgb(71 85 105)", fill: "rgb(255 255 255 / 0.92)" }),
-    },
-  });
+  return <FileTypeIcon entry={entry} size={size} />;
 }
 
 /**
