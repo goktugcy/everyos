@@ -17,6 +17,8 @@ export interface AptManager {
   package(name: string): Promise<PackageInfo>;
   /** `apt-get update`: refreshes the package lists. */
   refresh(signal: AbortSignal): Promise<{ ok: boolean; busy: boolean; output: string }>;
+  /** Installs only the compatible BorgBackup dependency from configured APT repositories. */
+  installBorg(signal: AbortSignal): Promise<{ ok: boolean; busy: boolean }>;
   /** Upgrades the given packages (only if already installed) or everything; never removes any. */
   upgrade(packages: readonly string[] | null, signal: AbortSignal): AsyncGenerator<AptUpgradeEvent>;
 }
@@ -47,6 +49,14 @@ const LOCKED =
 function summaryOf(text: string): string | null {
   const first = /^(.+?)(?:\n|$)/.exec(text.trim())?.[1];
   return first ? first.slice(0, 200) : null;
+}
+
+export function isSupportedBorgPackageVersion(version: string): boolean {
+  const match = /^(?:[0-9]+:)?1\.(\d+)\.(\d+)(?:[+-][A-Za-z0-9.+~:-]+)?$/.exec(version);
+  return (
+    version.length <= 128 &&
+    Boolean(match && (Number(match[1]) > 2 || (Number(match[1]) === 2 && Number(match[2]) >= 5)))
+  );
 }
 
 export function createAptManager(): AptManager {
@@ -96,6 +106,42 @@ export function createAptManager(): AptManager {
         maxOutputBytes: 32 * 1024,
       });
       return { ok: result.exitCode === 0, busy: LOCKED.test(result.output), output: result.output };
+    },
+
+    async installBorg(signal) {
+      const aptGet = await tool("apt-get");
+      const candidate = (await this.package("borgbackup")).candidateVersion;
+      if (!candidate) throw new CommandError("failed", "BORG_PACKAGE_UNAVAILABLE");
+      if (!isSupportedBorgPackageVersion(candidate))
+        throw new CommandError("failed", "BORG_PACKAGE_VERSION");
+      const installed = await runCapture(
+        await tool("dpkg-query"),
+        ["--show", "--showformat=${Version}", "everyos"],
+        { timeoutMs: 10_000, signal, env: APT_ENV, maxOutputBytes: 1024 },
+      );
+      if (installed.exitCode !== 0 && installed.exitCode !== 1)
+        throw new CommandError("failed", "BORG_INSTALL_EVERYOS_VERSION");
+      const everyosVersion = installed.exitCode === 0 ? installed.output.trim() : null;
+      if (everyosVersion && !RELEASE_VERSION_PATTERN.test(everyosVersion))
+        throw new CommandError("failed", "BORG_INSTALL_EVERYOS_VERSION");
+      const result = await runCapture(
+        aptGet,
+        [
+          ...UPGRADE_OPTIONS,
+          "--no-install-recommends",
+          "install",
+          "--",
+          `borgbackup=${candidate}`,
+          ...(everyosVersion ? [`everyos=${everyosVersion}`] : []),
+        ],
+        {
+          timeoutMs: 20 * 60_000,
+          signal,
+          env: APT_ENV,
+          maxOutputBytes: 64 * 1024,
+        },
+      );
+      return { ok: result.exitCode === 0, busy: LOCKED.test(result.output) };
     },
 
     async *upgrade(packages, signal) {

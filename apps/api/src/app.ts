@@ -43,6 +43,7 @@ import { appMediaRoutes, appSdkFileRoutes } from "./modules/desktop-apps/sdk-fil
 import { appSdkHostRoutes } from "./modules/desktop-apps/sdk-host-routes.ts";
 import { appRuntimeRoutes } from "./modules/desktop-apps/runtime-routes.ts";
 import { backupRoutes } from "./modules/backups/routes.ts";
+import { linuxBackupRoutes } from "./modules/backups/linux-backup-routes.ts";
 import { appSdkAppearanceRoutes } from "./modules/desktop-apps/sdk-appearance-routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
 import type { Services } from "./services.ts";
@@ -129,6 +130,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/updates", updateRoutes(services));
   api.route("/tasks", taskRoutes(services));
   api.route("/backups", backupRoutes(services));
+  api.route("/linux-backups", linuxBackupRoutes(services));
   api.route("/catalogs", catalogRoutes(services));
   api.route("/apps", appRoutes(services));
   api.route("/desktop-apps", desktopAppRoutes(services));

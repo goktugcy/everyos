@@ -3408,6 +3408,7 @@ export const zh: LocaleMessages = {
       health: "Tailscale 警告：{{message}}",
     },
   },
+  linuxBackups: en.linuxBackups,
   backups: {
     secure: {
       open: "加密与异地备份",
@@ -3684,6 +3685,7 @@ export const zh: LocaleMessages = {
       "service.restart": "重启服务",
       "container.restart": "重启容器",
       "app.update": "更新应用",
+      "backup.linux": en.tasks.types["backup.linux"],
       "backup.create": "创建备份",
     },
     typeHints: {
@@ -3692,6 +3694,7 @@ export const zh: LocaleMessages = {
       "service.restart": "重启所选的 systemd 服务。受保护的服务无法重启。",
       "container.restart": "按名称查找所选容器并重启。",
       "app.update": "更新通过 EveryOS 安装的应用；如遇问题将回滚到之前的镜像。",
+      "backup.linux": en.tasks.typeHints["backup.linux"],
       "backup.create": "备份 EveryOS 数据以及在“备份”设置中所选的应用数据，并执行保留策略。",
     },
     modes: {

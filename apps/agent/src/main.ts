@@ -1,6 +1,7 @@
 import { installedVersion } from "@everyos/release";
 import { lstatSync, chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
+import { mkdir } from "node:fs/promises";
 import { AgentServer } from "@everyos/agent-protocol";
 import { createLogger, serializeError } from "@everyos/logger";
 import { deriveKey, loadKeyFile, SecretBox } from "@everyos/security";
@@ -22,6 +23,7 @@ import { loadApiConfig } from "../../api/src/config.ts";
 import { TerminalManager } from "./terminal.ts";
 import { ManagedAppManager } from "./managed-apps.ts";
 import { AppDataBackups } from "./app-data-backup.ts";
+import { LinuxBackups } from "./linux-backups.ts";
 import { createPolicy } from "./policy.ts";
 import { createContainerProtection, createUnitProtection } from "./protection.ts";
 
@@ -125,11 +127,53 @@ async function main(): Promise<void> {
     isProtected: isProtectedContainer,
   });
   const appData = new AppDataBackups({ apps, logger });
+  const backupDirectories = config.systemBackupDirectories ?? ["/var/backups/everyos-linux"];
+  const fixtureRoot =
+    config.mode === "development" &&
+    config.simulate &&
+    process.env.EVERYOS_DEV_BORG_BINARY &&
+    process.env.EVERYOS_DEV_ROOT
+      ? process.env.EVERYOS_DEV_ROOT
+      : null;
+  const linuxDirectories = fixtureRoot
+    ? [join(fixtureRoot, "linux-backup-target")]
+    : backupDirectories;
+  if (fixtureRoot || (config.mode === "production" && isRoot))
+    for (const directory of linuxDirectories) {
+      if (fixtureRoot || directory === "/var/backups/everyos-linux")
+        await mkdir(directory, { recursive: true, mode: 0o700 });
+    }
   // Development lists the host's disks where lsblk exists but never mounts them (policy).
   const disks =
     config.mode === "development" && (config.simulate || !(await findExecutable("lsblk")))
       ? createDiskSimulator({ mountRoot: config.disksRoot })
       : createDiskManager({ mountRoot: config.disksRoot });
+  const linuxBackups = new LinuxBackups({
+    mode: config.mode,
+    directories: linuxDirectories,
+    ...(config.mode === "production"
+      ? {
+          mountedDirectories: async () => {
+            const listed = await disks.list();
+            return listed.disks.flatMap((disk) =>
+              disk.volumes
+                .filter((volume) => volume.managed && !volume.readOnly)
+                .flatMap((volume) =>
+                  volume.mountpoints.filter((path) => path.startsWith(config.disksRoot + "/")),
+                ),
+            );
+          },
+        }
+      : {}),
+    ...(fixtureRoot
+      ? {
+          fixture: {
+            root: join(fixtureRoot, "linux-backup-source"),
+            binary: process.env.EVERYOS_DEV_BORG_BINARY!,
+          },
+        }
+      : {}),
+  });
   const handlers = createHandlers({
     mode: config.mode,
     version: installedVersion(),
@@ -146,6 +190,7 @@ async function main(): Promise<void> {
     ...(config.tailscaleSocket ? { tailscaleSockets: [config.tailscaleSocket] } : {}),
     apps,
     appData,
+    linuxBackups,
     disks,
   });
   const server = new AgentServer({
@@ -162,6 +207,7 @@ async function main(): Promise<void> {
       dockerSource: docker.source,
       aptSource: apt.source,
       disksSource: disks.source,
+      linuxBackupsSource: linuxBackups.source,
     }),
     logger,
     socketMode: socketGroupId === null ? 0o600 : 0o660,
@@ -179,13 +225,12 @@ async function main(): Promise<void> {
     if (shuttingDown) return;
     shuttingDown = true;
     logger.info("Shutting down", { signal });
-    const forceExit = setTimeout(() => process.exit(1), 5_000);
+    const forceExit = setTimeout(() => process.exit(1), 15_000);
     forceExit.unref();
     terminal.closeAll();
     workers?.closeAll();
     void appData.closeAll();
-    server
-      .close()
+    Promise.all([server.close(), linuxBackups.close()])
       .then(() => process.exit(0))
       .catch((error: unknown) => {
         logger.error("Error during shutdown", { error });

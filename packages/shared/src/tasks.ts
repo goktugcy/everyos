@@ -12,6 +12,7 @@ export const TASK_TYPES = [
   "container.restart",
   "app.update",
   "backup.create",
+  "backup.linux",
 ] as const;
 
 export type TaskType = (typeof TASK_TYPES)[number];
@@ -24,6 +25,7 @@ export const TASK_PERMISSIONS: Record<TaskType, Permission> = {
   "container.restart": "docker:manage",
   "app.update": "apps:manage",
   "backup.create": "backups:manage",
+  "backup.linux": "backups:restore",
 };
 
 export type TaskNotify = "failure" | "always" | "never";

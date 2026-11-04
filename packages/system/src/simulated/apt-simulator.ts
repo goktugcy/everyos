@@ -98,6 +98,10 @@ export function createAptSimulator(now: () => number = Date.now): AptManager {
         output: "Hit:1 simulated noble InRelease\nReading package lists... Done\n",
       };
     },
+    async installBorg(signal) {
+      await wait(150, signal);
+      return { ok: !signal.aborted, busy: false };
+    },
     async *upgrade(packages, signal): AsyncGenerator<AptUpgradeEvent> {
       const targets = pending.filter((p) => packages === null || packages.includes(p.name));
       yield { type: "line", text: "Reading package lists... (simulated)" };

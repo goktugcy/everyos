@@ -68,6 +68,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Install Linux backup test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends borgbackup acl attr
+
       - name: Unit and integration tests
         run: pnpm test
         env:
@@ -75,6 +80,7 @@ jobs:
           EVERYOS_REQUIRE_DB_TESTS: "1"
           EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
           EVERYOS_TEST_MYSQL: 127.0.0.1:3306:root:admin-secret-1
+          EVERYOS_TEST_BORG: /usr/bin/borg
 
       - name: Build
         id: build
@@ -128,6 +134,7 @@ jobs:
       - name: End-to-end tests
         run: pnpm test:e2e --output=test-results/regular
         env:
+          EVERYOS_TEST_BORG: /usr/bin/borg
           EVERYOS_APP_MEASUREMENTS: "1"
           EVERYOS_TEST_POSTGRES: 127.0.0.1:5432:admin:admin-secret-1
 

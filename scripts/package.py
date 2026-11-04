@@ -80,6 +80,7 @@ Maintainer: EveryOS contributors <noreply@everyos.invalid>
 Section: admin
 Priority: optional
 Depends: libc6 (>= 2.34), libstdc++6, libatomic1, ca-certificates, systemd (>= 248), adduser, openssl, python3, iproute2, libpam0g, libpam-modules, libpam-runtime, sudo
+Recommends: borgbackup (>= 1.2.5)
 Installed-Size: {sum(len(data) for _, data, _ in entries) // 1024}
 Description: Self-hosted EveryOS personal OS and Linux management service
  Unprivileged API, typed local agent, web desktop and verified update worker.

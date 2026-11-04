@@ -32,6 +32,9 @@ import { CreateDialog, DownloadDialog, RestoreDialog, SettingsDialog } from "./d
 import { DecryptDialog, SecureDialog } from "./secure-dialog.tsx";
 import { contentLabels, jobError, stageText, verificationText } from "./lib.ts";
 import { filesChanged } from "../files/lib.ts";
+import { Tabs } from "radix-ui";
+import { TabsList } from "../../../components/ui/tabs-list.tsx";
+import { LinuxBackupsApp } from "./linux-backups-app.tsx";
 
 type Open =
   | { kind: "create" }
@@ -42,7 +45,7 @@ type Open =
   | { kind: "restore"; backup: BackupView };
 
 /** Backups: manual and scheduled backups, verification, download and restore. */
-export default function BackupsApp() {
+function EveryOSBackupsApp() {
   const { t, i18n } = useTranslation();
   const canRestore = useHasPermission("backups:restore");
   const [revision, setRevision] = useState(0);
@@ -487,5 +490,45 @@ export default function BackupsApp() {
         />
       ) : null}
     </div>
+  );
+}
+
+export default function BackupsApp() {
+  const { t } = useTranslation();
+  const canRestore = useHasPermission("backups:restore");
+  return (
+    <Tabs.Root
+      defaultValue="everyos"
+      className="flex h-full min-h-0 flex-col"
+      data-testid="backups-shell"
+    >
+      <TabsList
+        className="flex shrink-0 gap-4 border-b border-line px-4"
+        aria-label={t("backups.settings")}
+      >
+        <Tabs.Trigger
+          value="everyos"
+          className="border-b-2 border-transparent py-3 text-sm font-medium text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:text-fg"
+        >
+          {t("linuxBackups.everyos")}
+        </Tabs.Trigger>
+        {canRestore ? (
+          <Tabs.Trigger
+            value="linux"
+            className="border-b-2 border-transparent py-3 text-sm font-medium text-fg-muted outline-none focus-visible:ring-2 focus-visible:ring-accent data-[state=active]:border-accent data-[state=active]:text-fg"
+          >
+            {t("linuxBackups.title")}
+          </Tabs.Trigger>
+        ) : null}
+      </TabsList>
+      <Tabs.Content value="everyos" className="min-h-0 flex-1 outline-none">
+        <EveryOSBackupsApp />
+      </Tabs.Content>
+      {canRestore ? (
+        <Tabs.Content value="linux" className="min-h-0 flex-1 outline-none">
+          <LinuxBackupsApp />
+        </Tabs.Content>
+      ) : null}
+    </Tabs.Root>
   );
 }

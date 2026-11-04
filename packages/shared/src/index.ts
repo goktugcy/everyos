@@ -27,6 +27,7 @@ export * from "./updates.ts";
 export * from "./cron.ts";
 export * from "./tasks.ts";
 export * from "./backups.ts";
+export * from "./linux-backups.ts";
 export * from "./tailscale.ts";
 export * from "./https.ts";
 export * from "./widgets.ts";
@@ -101,7 +102,7 @@ export type {
 } from "./schemas/api.ts";
 
 /** Single coordinated product version (see docs/decisions.md). */
-export const EVERYOS_VERSION = "0.1.45";
+export const EVERYOS_VERSION = "0.1.46";
 
 /** HTTP header carrying the per-session CSRF token on state-changing requests. */
 export const CSRF_HEADER = "x-everyos-csrf";

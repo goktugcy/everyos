@@ -67,6 +67,16 @@ describe("account workers", () => {
     expect(reached).toEqual(["power.reboot.status", "disks.list"]);
   });
 
+  it("allows backup status and cancellation after sudo expiry but protects data operations", async () => {
+    const { identities, call, reached } = wrapped(false);
+    for (const op of ["backups.linux.status", "backups.linux.job", "backups.linux.cancel"])
+      expect(await call(op, {})).toEqual({ ok: true });
+    expect(identities.resolve).not.toHaveBeenCalled();
+    for (const op of ["backups.linux.start", "backups.linux.preview", "backups.linux.archives"])
+      await expect(call(op, {})).rejects.toMatchObject({ message: "LINUX_ACCOUNT_REQUIRED" });
+    expect(reached).toEqual(["backups.linux.status", "backups.linux.job", "backups.linux.cancel"]);
+  });
+
   it("powers off and mounts only with an unlocked sudo account", async () => {
     const locked = wrapped(false);
     locked.identities.resolve.mockImplementation(() => ({}) as never);

@@ -101,6 +101,8 @@ export class AccountWorkers {
       "power.reboot.status",
       "disks.list",
       "disks.watch",
+      "backups.linux.status",
+      "backups.linux.job",
     ]);
     for (const [op, contract] of Object.entries(AGENT_OPERATIONS)) {
       if (op.startsWith("identity.") || op.startsWith("terminal.") || publicReads.has(op)) continue;
@@ -110,6 +112,9 @@ export class AccountWorkers {
       ) => unknown;
       const execute = async (params: unknown, context: OperationContext) => {
         if (context.actor.kind === "system") return original(params, context);
+        // The protocol still requires backups:restore. Cancelling only this EveryOS-owned job
+        // must remain possible after the Linux sudo grant that started it expires.
+        if (op === "backups.linux.cancel") return original(params, context);
         this.#identities.resolve(context.actor);
         // Root-owned application/release state and root-only package, service, power and mount
         // actions need sudo.

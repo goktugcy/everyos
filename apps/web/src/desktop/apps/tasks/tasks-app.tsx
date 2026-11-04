@@ -6,6 +6,7 @@ import {
   type TaskType,
   type TaskView,
   type DockerContainerView,
+  type LinuxBackupOverview,
 } from "@everyos/shared";
 import {
   CircleCheck,
@@ -252,6 +253,10 @@ function TaskDialog({
     draft.type === "app.update" ? "/apps" : null,
     null,
   );
+  const linuxPlans = useApiResource<LinuxBackupOverview>(
+    draft.type === "backup.linux" ? "/linux-backups" : null,
+    null,
+  );
   const set = (patch: Partial<Draft>) => setDraft((current) => ({ ...current, ...patch }));
 
   const save = async () => {
@@ -334,6 +339,13 @@ function TaskDialog({
                 value: app.id,
                 label: localized(app.name, i18n.language) || app.project,
               })),
+            )
+          : null}
+        {!task && draft.type === "backup.linux"
+          ? choice(
+              "planId",
+              t("linuxBackups.name"),
+              (linuxPlans.data?.plans ?? []).map((p) => ({ value: p.id, label: p.name })),
             )
           : null}
         <Field

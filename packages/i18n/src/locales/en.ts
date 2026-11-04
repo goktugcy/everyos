@@ -1,3 +1,4 @@
+import { linuxBackupsEn } from "../linux-backups.ts";
 import type { Messages } from "./tr.ts";
 
 export const en: Messages = {
@@ -3394,6 +3395,7 @@ export const en: Messages = {
       health: "Tailscale warning: {{message}}",
     },
   },
+  linuxBackups: linuxBackupsEn,
   backups: {
     secure: {
       open: "Encryption and off-site",
@@ -3691,6 +3693,7 @@ export const en: Messages = {
       "service.restart": "Restart a service",
       "container.restart": "Restart a container",
       "app.update": "Update an app",
+      "backup.linux": "Create a Linux backup",
       "backup.create": "Create a backup",
     },
     typeHints: {
@@ -3702,6 +3705,8 @@ export const en: Messages = {
       "container.restart": "Finds the selected container by name and restarts it.",
       "app.update":
         "Updates an app installed with EveryOS; rolls back to the previous images on problems.",
+      "backup.linux":
+        "Runs a saved Linux backup plan with the current permissions of its administrator owner.",
       "backup.create":
         "Backs up EveryOS's data and the app data selected in the Backups settings; applies the retention policy.",
     },

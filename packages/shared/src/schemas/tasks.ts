@@ -29,6 +29,10 @@ export const TaskDefinitionSchema = z.discriminatedUnion("type", [
     params: z.strictObject({ appId: z.string().uuid() }),
   }),
   z.strictObject({ type: z.literal("backup.create"), params: z.strictObject({}) }),
+  z.strictObject({
+    type: z.literal("backup.linux"),
+    params: z.strictObject({ planId: z.string().uuid() }),
+  }),
 ]);
 
 const common = {

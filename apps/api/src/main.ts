@@ -106,6 +106,7 @@ async function main(): Promise<void> {
       details: { requestedBy: restored.requestedBy, previous: restored.previous },
     });
   await services.backups.start();
+  services.linuxBackups.startPolling();
   if (config.mode === "development") await services.files.ensureRoots();
   const app = createApp(services);
   services.metrics.start();
@@ -197,6 +198,9 @@ async function main(): Promise<void> {
     services.updates.stop();
     services.tasks.stop();
     services.backups.stop();
+    const linuxBackupsStopped = services.linuxBackups.stop().catch((error: unknown) => {
+      logger.error("Linux backup shutdown failed", { error });
+    });
     services.https.stop();
     void lan.close();
     detachTerminals();
@@ -207,9 +211,11 @@ async function main(): Promise<void> {
     const forceExit = setTimeout(() => process.exit(1), 10_000);
     forceExit.unref();
     server.close(() => {
-      agent.stop();
-      db.close();
-      process.exit(code);
+      void linuxBackupsStopped.then(() => {
+        agent.stop();
+        db.close();
+        process.exit(code);
+      });
     });
     // Event streams never finish on their own; give normal requests a moment first.
     const closeStreams = setTimeout(() => {

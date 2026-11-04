@@ -1048,3 +1048,40 @@ bundles pinned @noble/hashes 2.4.0 and installs a digest-only SHA-256 adapter in
 frame only when the native API is absent. Unsupported algorithms reject; native WebCrypto is
 left intact. Document IDs use getRandomValues so both Office apps also open on HTTP. CI runs
 the actual Office open/edit/save flows through an untrusted HTTP host name.
+
+## Built-in file-based Linux backups (2026-11-04)
+
+The owner chose file-based full Linux backup rather than bootable disk images. Extend the
+existing built-in Backups app, not the official catalog. Use the native BorgBackup 1.x CLI
+(minimum 1.2.5, recommended 1.4.5) for incremental deduplicated repositories, optional encryption
+and Linux metadata preservation. Do not implement a second archive/encryption format or expose
+a generic shell command. Borg 2 is not CLI compatible and is rejected.
+
+The privileged agent owns dedicated marked repositories under root-configured or managed-disk
+destinations. Bind plans to filesystem identity, exclude backup/virtual/bind mounts and stage
+restore into a fresh private directory. No existing service is stopped, no live root is replaced,
+and no foreign repository is adopted. The unprivileged API seals passphrases per plan; the fixed
+agent invocation uses an anonymous password pipe. Detailed capture scope belongs in encrypted
+archive metadata. All actions require administrator backup permission, normal Linux sudo policy
+and audit records without secrets. Native Tasks provide unattended scheduling with current-owner
+permission checks; session-only sudo grants do not authorize unattended jobs.
+
+A successful capture includes a full archive data check. Capture warnings remain visible even
+if a subsequent checksum check passes. Automatic retention is opt-in and applies after successful
+verified capture. Recovery is a real file extraction; offline filesystem/bootloader recovery and
+application-consistent live database snapshots are outside this file-copy screen. Keep the existing
+consistent EveryOS SQLite/app-data format and explain the distinction. See [the operational
+guide](linux-backups.md) for preparation, limitations and isolated fixture validation.
+
+## Explicit BorgBackup dependency installation (2026-11-05)
+
+The owner requested an Install action directly in the backup screen when Borg is absent.
+Use a fixed `backups.linux.install` streaming operation with system administrator permission,
+existing Linux sudo policy and strict empty agent parameters. The API reauthenticates the owner,
+requires explicit confirmation and persists installation phases/outcome in private instance state.
+No generic package or shell installer is exposed. Reuse the APT manager's noninteractive safety
+options, pin the running EveryOS package version and select a compatible fixed Borg candidate
+from configured repositories. Never add a repository or install an old/unsupported Borg version
+silently. Verify the executable after installation and refresh a previously negative executable
+lookup so it becomes available without a service restart. Normal development mode cannot mutate
+host packages; tests use explicitly marked simulator data and mocked package tools.

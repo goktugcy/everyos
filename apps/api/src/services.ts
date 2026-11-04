@@ -45,6 +45,7 @@ import { UpdateService } from "./modules/updates/update-service.ts";
 import { TaskService } from "./modules/tasks/task-service.ts";
 import { taskExecutors } from "./modules/tasks/executors.ts";
 import { BackupService } from "./modules/backups/backup-service.ts";
+import { LinuxBackupService } from "./modules/backups/linux-backup-service.ts";
 import { logProvider, NotificationService } from "./modules/notifications/notification-service.ts";
 import {
   NotificationChannelService,
@@ -113,6 +114,7 @@ export interface Services {
   updates: UpdateService;
   tasks: TaskService;
   backups: BackupService;
+  linuxBackups: LinuxBackupService;
   /** Tailscale Serve and the local-network HTTPS listener with its certificate authority. */
   https: HttpsService;
   /** Where encrypted backup copies go (a disk, S3-compatible storage or Google Drive). */
@@ -350,6 +352,13 @@ export function createServices(deps: ServiceDependencies): Services {
     ...(deps.s3 ? { s3: deps.s3 } : {}),
   });
   backups.useOffsite(offsite);
+  const linuxBackups = new LinuxBackupService({
+    db: deps.db,
+    agent: deps.agent,
+    secrets,
+    audit,
+    now,
+  });
   const services: Services = {
     config: deps.config,
     logger: deps.logger,
@@ -422,9 +431,10 @@ export function createServices(deps: ServiceDependencies): Services {
       notifications,
       logger: deps.logger,
       now,
-      executors: taskExecutors({ agent: deps.agent, updates, apps, backups }),
+      executors: taskExecutors({ agent: deps.agent, updates, apps, backups, linuxBackups }),
     }),
     backups,
+    linuxBackups,
     offsite,
     releaseMonitor: new ReleaseMonitor({
       agent: deps.agent,
@@ -457,6 +467,7 @@ export function createServices(deps: ServiceDependencies): Services {
     https,
     now,
   };
+  linuxBackups.attachTasks(services.tasks);
   return services;
 }
 

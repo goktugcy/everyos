@@ -1,9 +1,17 @@
-EveryOS 0.1.45 refreshes file type icons throughout the desktop.
+EveryOS 0.1.46 adds built-in Linux system backups and recovery.
 
-- Recognize Word, Excel/CSV, PDF, image, video, audio, archive, code and other formats at a
-  glance with a consistent icon family. Large icons use layered color surfaces, soft folds
-  and purpose-drawn artwork, with extension labels at readable sizes.
-- See matching file identities on the desktop, in Files, the native open/save picker,
-  Trash, Google Drive and the Pulse shelf. Compact rows use clear, theme-aware glyphs.
-- Image thumbnails and custom folder icons remain available. File-opening associations,
-  app installation prompts, downloads and file permissions retain their existing behavior.
+- Open Backups → Linux backups to protect Linux system files, all system and user data,
+  or selected directories with explicit exclusions. Preview the actual capture scope before
+  saving a plan.
+- Schedule hourly, daily, weekly or monthly backups. Choose encrypted or unencrypted Borg
+  repositories, compression and optional retention rules. Follow background progress, cancel
+  a backup and review its history.
+- Verify archive data and extract a backup into a fresh recovery directory. File permissions,
+  ownership and supported Linux metadata are preserved. Recovery keeps the running system
+  intact; live databases still need application-aware backups.
+- Install a missing BorgBackup dependency directly from the backup screen on supported APT
+  hosts, with account-password confirmation and Linux sudo permission. Installation progress,
+  failures and retries remain visible, and the executable is checked before backups are enabled.
+
+Linux backups require a root agent and BorgBackup 1.2.5 or a newer 1.x release. The existing
+consistent EveryOS database and app-data backup remains available in its own tab.

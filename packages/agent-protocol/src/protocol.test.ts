@@ -65,6 +65,15 @@ const notUsed = () => {
 
 function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers {
   return {
+    "backups.linux.install": async function* () {
+      yield await Promise.reject(new OperationError("failed", "not used in this test"));
+    },
+    "backups.linux.status": notUsed,
+    "backups.linux.preview": notUsed,
+    "backups.linux.start": notUsed,
+    "backups.linux.job": notUsed,
+    "backups.linux.cancel": notUsed,
+    "backups.linux.archives": notUsed,
     "ai.discover": notUsed,
     "ai.snapshot": notUsed,
     "files.roots": notUsed,
@@ -250,6 +259,72 @@ describe("agent protocol", () => {
     const pong = await client.call("agent.ping", {}, viewer);
     expect(pong.pong).toBe(true);
     if (process.platform !== "win32") expect(statSync(socketPath).mode & 0o777).toBe(0o660);
+  });
+
+  it("keeps Linux backup metadata administrator-only and rejects system actors", async () => {
+    let calls = 0;
+    const { client } = await setup({
+      handlers: {
+        "backups.linux.status": () => {
+          calls++;
+          return {
+            source: "simulated",
+            available: false,
+            reason: "development-mode",
+            version: null,
+            installationSupported: false,
+            targets: [],
+            systemIncludes: [],
+            alwaysExcluded: [],
+          };
+        },
+      },
+    });
+    client.start();
+    await client.waitUntilConnected();
+    for (const actor of [
+      viewer,
+      { ...admin, role: "operator" },
+      { kind: "system", component: "backup" },
+    ] as Actor[])
+      await expect(client.call("backups.linux.status", {}, actor)).rejects.toMatchObject({
+        code: "AGENT_OPERATION_DENIED",
+      });
+    expect(calls).toBe(0);
+    await expect(client.call("backups.linux.status", {}, admin)).resolves.toMatchObject({
+      source: "simulated",
+    });
+    expect(calls).toBe(1);
+  });
+
+  it("allows only explicit administrator dependency installations", async () => {
+    let calls = 0;
+    const { client } = await setup({
+      handlers: {
+        "backups.linux.install": async function* () {
+          calls++;
+          yield await Promise.resolve({
+            type: "done",
+            ok: false,
+            error: "BORG_PACKAGE_UNAVAILABLE",
+          });
+        },
+      },
+    });
+    client.start();
+    await client.waitUntilConnected();
+    for (const actor of [
+      viewer,
+      { ...admin, role: "operator" },
+      { kind: "system", component: "backup" },
+    ] as Actor[])
+      await expect(
+        collect(client.stream("backups.linux.install", {}, actor)),
+      ).rejects.toMatchObject({ code: "AGENT_OPERATION_DENIED" });
+    expect(calls).toBe(0);
+    const events = await collect(client.stream("backups.linux.install", {}, admin));
+    expect(events.at(-1)).toMatchObject({ type: "done", ok: false });
+    expect(calls).toBe(1);
   });
 
   it("allows background release reads but never background installation", async () => {

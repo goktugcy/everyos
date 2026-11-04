@@ -75,6 +75,10 @@ backups:
 
 ## Agent: `/etc/everyos/agent.yaml` (root-owned)
 
+File-based host backup destinations use `systemBackupDirectories`; the default is
+`/var/backups/everyos-linux`. See [Linux system backups](linux-backups.md) for native Borg
+requirements, directory ownership, managed disks and recovery.
+
 ```yaml
 socketPath: /run/everyos/agent.sock
 agentKeyFile: /etc/everyos/agent.key

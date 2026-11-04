@@ -2,6 +2,7 @@ import type { TaskType } from "@everyos/shared";
 import type { AgentGateway } from "../../services.ts";
 import type { AppService } from "../apps/app-service.ts";
 import type { BackupService } from "../backups/backup-service.ts";
+import type { LinuxBackupService } from "../backups/linux-backup-service.ts";
 import type { UpdateService } from "../updates/update-service.ts";
 import { TaskFailure, type TaskExecutor } from "./task-service.ts";
 
@@ -24,6 +25,7 @@ export function taskExecutors(deps: {
   updates: UpdateService;
   apps: AppService;
   backups?: BackupService;
+  linuxBackups?: LinuxBackupService;
 }): Partial<Record<TaskType, TaskExecutor>> {
   const { agent, updates, apps, backups } = deps;
   const runUpdateJob = async (
@@ -43,6 +45,13 @@ export function taskExecutors(deps: {
     return done;
   };
   return {
+    "backup.linux": async ({ planId }, actor, signal) => {
+      if (!deps.linuxBackups || !planId) throw new TaskFailure("unsupported");
+      const job = await deps.linuxBackups.start(planId, "create", null, actor);
+      const done = await deps.linuxBackups.wait(job.id, actor, signal);
+      if (done.status !== "succeeded") throw new TaskFailure(done.error ?? done.status);
+      return { summary: done.archive };
+    },
     "updates.refresh": async (_params, actor, signal) => {
       await runUpdateJob("refresh", null, actor, signal);
       return { summary: null };

@@ -1,5 +1,9 @@
 # Backup and restore
 
+The built-in app also has an administrator-only **Linux backups** tab for file-based host
+system backup, scheduling, encryption and staged recovery. See [Linux system backups](linux-backups.md).
+The remaining sections describe the separate EveryOS database/app-data format.
+
 The **Backups** app (`everyos.backups`) creates, verifies, downloads, uploads and restores
 backups of EveryOS itself and of the data of apps installed through the App Store. Backups run
 as background jobs, one at a time, independent of the HTTP request that started them.

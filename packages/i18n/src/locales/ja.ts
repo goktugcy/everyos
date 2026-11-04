@@ -3541,6 +3541,7 @@ export const ja: LocaleMessages = {
       health: "Tailscaleの警告：{{message}}",
     },
   },
+  linuxBackups: en.linuxBackups,
   backups: {
     secure: {
       open: "暗号化と外部コピー",
@@ -3844,6 +3845,7 @@ export const ja: LocaleMessages = {
       "service.restart": "サービスを再起動",
       "container.restart": "コンテナを再起動",
       "app.update": "アプリをアップデート",
+      "backup.linux": en.tasks.types["backup.linux"],
       "backup.create": "バックアップを作成",
     },
     typeHints: {
@@ -3855,6 +3857,7 @@ export const ja: LocaleMessages = {
       "container.restart": "選択したコンテナを名前で検索して再起動します。",
       "app.update":
         "EveryOSでインストールされたアプリをアップデートします。問題が発生した場合は以前のイメージにロールバックします。",
+      "backup.linux": en.tasks.typeHints["backup.linux"],
       "backup.create":
         "EveryOSのデータと「バックアップ」の設定で選択されたアプリのデータをバックアップし、保持ポリシーを適用します。",
     },

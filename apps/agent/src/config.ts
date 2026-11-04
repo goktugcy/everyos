@@ -13,6 +13,16 @@ import type { TerminalConfig } from "./terminal.ts";
  * agent never reads policy from locations writable by the everyos user.
  */
 const AgentConfigFileSchema = z.strictObject({
+  systemBackupDirectories: z
+    .array(
+      z
+        .string()
+        .regex(/^\/[^\0\r\n]+$/)
+        .max(1024),
+    )
+    .min(1)
+    .max(16)
+    .optional(),
   appsRoot: z
     .string()
     .regex(/^\/[^\0]+$/)
@@ -81,6 +91,7 @@ const AgentConfigFileSchema = z.strictObject({
 export type AgentMode = "production" | "development";
 
 export interface AgentConfig {
+  systemBackupDirectories?: string[];
   mode: AgentMode;
   appsRoot: string;
   /** Where disks are mounted (each volume at `<root>/<filesystem UUID>`). */
@@ -206,6 +217,7 @@ export function loadAgentConfig(env: NodeJS.ProcessEnv = process.env): AgentConf
     logFormat: mode === "development" ? "pretty" : "json",
     configFile,
     protectedUnits: file.protectedUnits ?? [],
+    systemBackupDirectories: file.systemBackupDirectories ?? ["/var/backups/everyos-linux"],
     internetCheckTargets: file.internetCheckTargets ?? DEFAULT_INTERNET_CHECK_TARGETS,
     protectedContainers: file.protectedContainers ?? [],
     dockerSocket: file.dockerSocket ?? null,

@@ -1,3 +1,4 @@
+import { installLinuxBackupEngine } from "./linux-backup-install.ts";
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
 import { SelfUpdateManager } from "@everyos/release";
 import {
@@ -42,10 +43,12 @@ import type { AgentMode } from "./config.ts";
 import { POLICY_REASONS } from "./policy.ts";
 import type { ManagedAppManager } from "./managed-apps.ts";
 import type { AppDataBackups } from "./app-data-backup.ts";
+import type { LinuxBackups } from "./linux-backups.ts";
 import type { LinuxIdentities } from "./linux-identities.ts";
 import type { TerminalManager } from "./terminal.ts";
 
 export interface HandlerDependencies {
+  linuxBackups?: LinuxBackups;
   mode: AgentMode;
   version: string;
   startedAt: number;
@@ -605,6 +608,37 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
 
     "terminal.close": ({ sessionId }) => ({ closed: deps.terminal?.close(sessionId) ?? false }),
 
+    "backups.linux.install": async function* (_params, { signal }) {
+      if (!deps.linuxBackups)
+        throw new OperationError("unsupported", "Linux backups are unavailable");
+      yield* installLinuxBackupEngine(apt, deps.linuxBackups, signal);
+    },
+    "backups.linux.status": () =>
+      deps.linuxBackups
+        ? deps.linuxBackups.status()
+        : Promise.reject(new OperationError("unsupported", "Linux backups are unavailable")),
+    "backups.linux.preview": (params) =>
+      deps.linuxBackups
+        ? deps.linuxBackups.preview(params)
+        : Promise.reject(new OperationError("unsupported", "Linux backups are unavailable")),
+    "backups.linux.start": (params) =>
+      deps.linuxBackups
+        ? deps.linuxBackups.start(params)
+        : Promise.reject(new OperationError("unsupported", "Linux backups are unavailable")),
+    "backups.linux.job": ({ id }) => {
+      if (!deps.linuxBackups)
+        throw new OperationError("unsupported", "Linux backups are unavailable");
+      return deps.linuxBackups.job(id);
+    },
+    "backups.linux.cancel": ({ id }) => {
+      if (!deps.linuxBackups)
+        throw new OperationError("unsupported", "Linux backups are unavailable");
+      return deps.linuxBackups.cancel(id);
+    },
+    "backups.linux.archives": ({ spec }, context) =>
+      deps.linuxBackups
+        ? deps.linuxBackups.archives(spec, context.signal)
+        : Promise.reject(new OperationError("unsupported", "Linux backups are unavailable")),
     "backups.appdata.export.begin": (params, context) => appData().beginExport(params, context),
     "backups.appdata.export.read": (params, context) => appData().readExport(params, context),
     "backups.appdata.export.abort": (params, context) => appData().abortExport(params, context),

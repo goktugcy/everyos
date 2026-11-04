@@ -51,8 +51,11 @@ const SEARCH_DIRS = [
 const executableCache = new Map<string, string | null>();
 
 /** Absolute path of a trusted system tool, or null when it is not installed. */
-export async function findExecutable(name: string): Promise<string | null> {
-  if (executableCache.has(name)) return executableCache.get(name)!;
+export async function findExecutable(
+  name: string,
+  options: { refresh?: boolean } = {},
+): Promise<string | null> {
+  if (!options.refresh && executableCache.has(name)) return executableCache.get(name)!;
   let found: string | null = null;
   for (const dir of SEARCH_DIRS) {
     try {

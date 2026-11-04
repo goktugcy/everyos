@@ -3551,6 +3551,7 @@ export const ru: LocaleMessages = {
       health: "Предупреждение Tailscale: {{message}}",
     },
   },
+  linuxBackups: en.linuxBackups,
   backups: {
     secure: {
       open: "Шифрование и внешние копии",
@@ -3855,6 +3856,7 @@ export const ru: LocaleMessages = {
       "service.restart": "Перезапустить службу",
       "container.restart": "Перезапустить контейнер",
       "app.update": "Обновить приложение",
+      "backup.linux": en.tasks.types["backup.linux"],
       "backup.create": "Создать резервную копию",
     },
     typeHints: {
@@ -3866,6 +3868,7 @@ export const ru: LocaleMessages = {
       "container.restart": "Находит выбранный контейнер по имени и перезапускает его.",
       "app.update":
         "Обновляет приложение, установленное через EveryOS; при возникновении проблем выполняет откат к предыдущим образам.",
+      "backup.linux": en.tasks.typeHints["backup.linux"],
       "backup.create":
         "Создаёт резервную копию данных EveryOS и данных приложений, выбранных в настройках приложения «Резервные копии»; применяет политику хранения.",
     },

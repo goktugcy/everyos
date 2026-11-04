@@ -3567,6 +3567,7 @@ export const it: LocaleMessages = {
       health: "Avviso Tailscale: {{message}}",
     },
   },
+  linuxBackups: en.linuxBackups,
   backups: {
     secure: {
       open: "Crittografia e copie esterne",
@@ -3873,6 +3874,7 @@ export const it: LocaleMessages = {
       "service.restart": "Riavvia un servizio",
       "container.restart": "Riavvia un container",
       "app.update": "Aggiorna un'app",
+      "backup.linux": en.tasks.types["backup.linux"],
       "backup.create": "Crea un backup",
     },
     typeHints: {
@@ -3884,6 +3886,7 @@ export const it: LocaleMessages = {
       "container.restart": "Trova il container selezionato per nome e lo riavvia.",
       "app.update":
         "Aggiorna un'app installata con EveryOS; esegue il rollback alle immagini precedenti in caso di problemi.",
+      "backup.linux": en.tasks.typeHints["backup.linux"],
       "backup.create":
         "Esegue il backup dei dati di EveryOS e dei dati delle app selezionate nelle impostazioni di Backup; applica i criteri di conservazione.",
     },

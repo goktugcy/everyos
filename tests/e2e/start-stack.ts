@@ -3,7 +3,7 @@
  * state in a throwaway directory. Run `pnpm build` before `pnpm test:e2e`.
  */
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer, type ServerResponse } from "node:http";
@@ -22,6 +22,21 @@ if (!existsSync(join(root, "dist/api/server.mjs"))) {
 
 rmSync(E2E_STATE_DIR, { recursive: true, force: true });
 mkdirSync(E2E_STATE_DIR, { recursive: true });
+const devRoot = realpathSync(E2E_STATE_DIR);
+if (process.env.EVERYOS_TEST_BORG) {
+  for (const name of ["etc", "usr", "home", "proc"])
+    mkdirSync(join(devRoot, "linux-backup-source", name), { recursive: true });
+  writeFileSync(
+    join(devRoot, "linux-backup-source/etc/backup-fixture"),
+    "e2e-system-configuration\n",
+    { mode: 0o640 },
+  );
+  writeFileSync(join(devRoot, "linux-backup-source/home/backup-fixture"), "e2e-user-content\n");
+  writeFileSync(
+    join(devRoot, "linux-backup-source/home/excluded-fixture"),
+    "must-not-be-captured\n",
+  );
+}
 const apiConfig = join(E2E_STATE_DIR, "api.yaml");
 // These disposable fixtures need a reserve, but not the production 1 GiB allowance.
 // The official desktop app registry is a local fixture with throwaway keys (a LAN "mirror").
@@ -35,7 +50,10 @@ writeFileSync(
 const env = {
   ...process.env,
   EVERYOS_ENV: "development",
-  EVERYOS_DEV_ROOT: E2E_STATE_DIR,
+  EVERYOS_DEV_ROOT: devRoot,
+  ...(process.env.EVERYOS_TEST_BORG
+    ? { EVERYOS_DEV_BORG_BINARY: process.env.EVERYOS_TEST_BORG }
+    : {}),
   EVERYOS_WEB_DIR: join(root, "dist/web"),
   EVERYOS_PORT: String(E2E_PORT),
   EVERYOS_LOG_LEVEL: "warn",

@@ -1,4 +1,5 @@
 import { AGENT_FILE_OPERATIONS } from "./file-operations.ts";
+import { LINUX_BACKUP_OPERATIONS } from "./linux-backup-operations.ts";
 import type { Permission } from "@everyos/shared";
 import {
   AiDiscoverySchema,
@@ -156,6 +157,7 @@ const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
   ...AGENT_FILE_OPERATIONS,
+  ...LINUX_BACKUP_OPERATIONS,
   "ai.discover": unary({
     params: NoParams,
     result: z.strictObject({

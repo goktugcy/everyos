@@ -3498,6 +3498,7 @@ export const ko: LocaleMessages = {
       health: "Tailscale 경고: {{message}}",
     },
   },
+  linuxBackups: en.linuxBackups,
   backups: {
     secure: {
       open: "암호화 및 외부 백업",
@@ -3790,6 +3791,7 @@ export const ko: LocaleMessages = {
       "service.restart": "서비스 재시작",
       "container.restart": "컨테이너 재시작",
       "app.update": "앱 업데이트",
+      "backup.linux": en.tasks.types["backup.linux"],
       "backup.create": "백업 만들기",
     },
     typeHints: {
@@ -3799,6 +3801,7 @@ export const ko: LocaleMessages = {
         "선택한 systemd 서비스를 재시작합니다. 보호된 서비스는 재시작할 수 없습니다.",
       "container.restart": "선택한 컨테이너를 이름으로 찾아 재시작합니다.",
       "app.update": "EveryOS로 설치된 앱을 업데이트하며, 문제가 발생하면 이전 이미지로 롤백합니다.",
+      "backup.linux": en.tasks.typeHints["backup.linux"],
       "backup.create":
         "EveryOS 데이터와 백업 설정에서 선택한 앱 데이터를 백업하고 보관 정책을 적용합니다.",
     },

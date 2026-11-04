@@ -1,3 +1,4 @@
+import { linuxBackupsTr } from "../linux-backups.ts";
 import type {
   AlertKind,
   AppDataSupport,
@@ -3430,6 +3431,7 @@ export const tr = {
       health: "Tailscale uyarısı: {{message}}",
     } satisfies Record<TailscaleWarningKind, string>,
   },
+  linuxBackups: linuxBackupsTr,
   backups: {
     secure: {
       open: "Şifreleme ve uzak kopya",
@@ -3726,6 +3728,7 @@ export const tr = {
       "service.restart": "Servisi yeniden başlat",
       "container.restart": "Konteyneri yeniden başlat",
       "app.update": "Uygulamayı güncelle",
+      "backup.linux": "Linux yedeği al",
       "backup.create": "Yedek al",
     } satisfies Record<TaskType, string>,
     typeHints: {
@@ -3737,6 +3740,8 @@ export const tr = {
       "container.restart": "Seçilen konteyneri adıyla bulur ve yeniden başlatır.",
       "app.update":
         "EveryOS ile kurulmuş uygulamayı günceller; sorun olursa önceki imajlara döner.",
+      "backup.linux":
+        "Kaydedilmiş Linux yedekleme planını güncel yönetici yetkileriyle çalıştırır.",
       "backup.create":
         "EveryOS verilerinin ve Yedekler ayarlarında seçilen uygulama verilerinin yedeğini alır; saklama politikasını uygular.",
     } satisfies Record<TaskType, string>,

@@ -20,6 +20,7 @@ const DOCKER_MUTATIONS = new Set([
 ]);
 
 export interface PolicyOptions {
+  linuxBackupsSource?: "host" | "simulated";
   mode: AgentMode;
   isProtected: (unit: string) => boolean;
   /** Where service operations are answered from; the simulator never touches the host. */
@@ -39,6 +40,16 @@ export interface PolicyOptions {
  */
 export function createPolicy(options: PolicyOptions): OperationPolicy {
   return (op, params) => {
+    if (
+      op.startsWith("backups.linux.") &&
+      op !== "backups.linux.status" &&
+      options.mode === "development" &&
+      options.linuxBackupsSource !== "simulated"
+    )
+      return {
+        allowed: false,
+        reason: `${POLICY_REASONS.developmentMode}: host Linux backups are disabled in development mode`,
+      };
     if (op === "release.install" && options.mode !== "production")
       return {
         allowed: false,
@@ -52,7 +63,7 @@ export function createPolicy(options: PolicyOptions): OperationPolicy {
           }
         : { allowed: true };
     }
-    if (op === "apt.refresh" || op === "apt.upgrade") {
+    if (op === "apt.refresh" || op === "apt.upgrade" || op === "backups.linux.install") {
       return options.mode === "development" && options.aptSource !== "simulated"
         ? {
             allowed: false,

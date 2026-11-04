@@ -3575,6 +3575,7 @@ export const fr: LocaleMessages = {
       health: "Avertissement Tailscale : {{message}}",
     },
   },
+  linuxBackups: en.linuxBackups,
   backups: {
     secure: {
       open: "Chiffrement et copies hors site",
@@ -3888,6 +3889,7 @@ export const fr: LocaleMessages = {
       "service.restart": "Redémarrer un service",
       "container.restart": "Redémarrer un conteneur",
       "app.update": "Mettre à jour une application",
+      "backup.linux": en.tasks.types["backup.linux"],
       "backup.create": "Créer une sauvegarde",
     },
     typeHints: {
@@ -3899,6 +3901,7 @@ export const fr: LocaleMessages = {
       "container.restart": "Recherche le conteneur sélectionné par son nom et le redémarre.",
       "app.update":
         "Met à jour une application installée avec EveryOS ; effectue un retour arrière vers les images précédentes en cas de problème.",
+      "backup.linux": en.tasks.typeHints["backup.linux"],
       "backup.create":
         "Sauvegarde les données d’EveryOS et les données d’applications sélectionnées dans les paramètres de Sauvegardes ; applique la politique de conservation.",
     },
