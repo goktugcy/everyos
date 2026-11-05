@@ -239,7 +239,11 @@ describe("built-in Linux backup API", () => {
       { id: ownerId, permissions: ROLE_PERMISSIONS.admin },
     );
     let overview = await json<LinuxBackupOverview>(await admin.get("/api/linux-backups"));
-    expect(overview.plans[0]).toMatchObject({ schedule: { frequency: "manual" }, nextRunAt: null });
+    expect(overview.plans[0]).toMatchObject({
+      enabled: false,
+      schedule: { frequency: "daily" },
+      nextRunAt: null,
+    });
     ctx.services.tasks.update(
       plan.taskId!,
       { enabled: true, schedule: "0 2,14 * * *" },
@@ -487,5 +491,297 @@ describe("built-in Linux backup API", () => {
       "backups.linux.delete.finish",
     ]);
     expect(JSON.stringify(events)).not.toContain(STRONG_PASSWORD);
+  });
+  it("pauses and resumes the saved schedule without losing credentials, and denies disabled backup creation", async () => {
+    const { ctx, admin } = await withRoles();
+    backend(ctx);
+    const plan = await json<LinuxBackupPlan>(await admin.post("/api/linux-backups/plans", draft()));
+    const owner = {
+      id: ctx.db.get<{ id: string }>("SELECT id FROM users WHERE username = 'admin'")!.id,
+      permissions: ROLE_PERMISSIONS.admin,
+    };
+    ctx.services.tasks.update(plan.taskId!, { schedule: "0 2,14 * * *" }, owner);
+    const saved = () =>
+      ctx.db.get<{ value: string }>(
+        "SELECT value FROM instance_settings WHERE key = 'linux-backup/plans/v1'",
+      )!.value;
+    const sealed = JSON.parse(saved())[0].sealedPassphrase as string;
+    const paused = await json<LinuxBackupPlan>(
+      await admin.request("PATCH", `/api/linux-backups/plans/${plan.id}/state`, {
+        body: { enabled: false, password: STRONG_PASSWORD },
+      }),
+    );
+    expect(paused).toMatchObject({
+      enabled: false,
+      taskId: plan.taskId,
+      nextRunAt: null,
+      schedule: plan.schedule,
+      scheduleOverride: "0 2,14 * * *",
+    });
+    expect(JSON.parse(saved())[0].sealedPassphrase).toBe(sealed);
+    expect(ctx.services.tasks.get(plan.taskId!)).toMatchObject({
+      enabled: false,
+      schedule: "0 2,14 * * *",
+    });
+    expect(
+      (
+        await admin.post(`/api/linux-backups/plans/${plan.id}/jobs`, {
+          kind: "create",
+          archive: null,
+          password: STRONG_PASSWORD,
+        })
+      ).status,
+    ).toBe(409);
+    const run = ctx.services.tasks.runNow(plan.taskId!, owner);
+    await vi.waitFor(() =>
+      expect(ctx.services.tasks.runs(plan.taskId!).find((r) => r.id === run.id)?.status).toBe(
+        "failed",
+      ),
+    );
+    expect(ctx.agent.calls.filter((c) => c.op === "backups.linux.start")).toHaveLength(0);
+    const resumed = await json<LinuxBackupPlan>(
+      await admin.request("PATCH", `/api/linux-backups/plans/${plan.id}/state`, {
+        body: { enabled: true, password: STRONG_PASSWORD },
+      }),
+    );
+    expect(resumed).toMatchObject({
+      enabled: true,
+      taskId: plan.taskId,
+      scheduleOverride: "0 2,14 * * *",
+    });
+    expect(resumed.nextRunAt).toBeGreaterThan(ctx.clock.now);
+    expect(ctx.services.tasks.get(plan.taskId!)).toMatchObject({
+      enabled: true,
+      schedule: "0 2,14 * * *",
+    });
+    expect(JSON.parse(saved())[0].sealedPassphrase).toBe(sealed);
+    expect(
+      (
+        await admin.request("PATCH", `/api/linux-backups/plans/${plan.id}/state`, {
+          body: { enabled: false, password: STRONG_PASSWORD },
+        })
+      ).status,
+    ).toBe(200);
+    const edited = await json<LinuxBackupPlan>(
+      await admin.request("PUT", `/api/linux-backups/plans/${plan.id}`, {
+        body: { ...draft(), name: "Edited while disabled", passphrase: undefined },
+      }),
+    );
+    expect(edited.enabled).toBe(false);
+    expect(ctx.services.tasks.get(plan.taskId!).enabled).toBe(false);
+    expect(
+      (
+        await admin.post(`/api/linux-backups/plans/${plan.id}/jobs`, {
+          kind: "restore",
+          archive: "eos-20261105T120000Z-12345678",
+          password: STRONG_PASSWORD,
+        })
+      ).status,
+    ).toBe(202);
+  });
+
+  it("requires administrator reauthentication and explicit plan deletion confirmation; preserves unrelated plans and archives", async () => {
+    const { ctx, admin, operator, viewer } = await withRoles();
+    backend(ctx);
+    const plan = await json<LinuxBackupPlan>(await admin.post("/api/linux-backups/plans", draft()));
+    const other = await json<LinuxBackupPlan>(
+      await admin.post("/api/linux-backups/plans", { ...draft(), name: "Unrelated plan" }),
+    );
+    const path = `/api/linux-backups/plans/${plan.id}`;
+    for (const client of [operator, viewer]) {
+      expect(
+        (
+          await client.request("PATCH", path + "/state", {
+            body: { enabled: false, password: STRONG_PASSWORD },
+          })
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await client.request("DELETE", path, {
+            body: { confirm: true, password: STRONG_PASSWORD },
+          })
+        ).status,
+      ).toBe(403);
+    }
+    for (const body of [
+      { password: STRONG_PASSWORD },
+      { confirm: false, password: STRONG_PASSWORD },
+      { confirm: true, password: "wrong-password" },
+      { confirm: true, password: STRONG_PASSWORD, deleteArchives: true },
+    ])
+      expect((await admin.request("DELETE", path, { body })).status).toBe(400);
+    for (const body of [
+      { enabled: "false", password: STRONG_PASSWORD },
+      { enabled: false, password: "wrong-password" },
+      { enabled: false, password: STRONG_PASSWORD, shell: "arbitrary" },
+    ])
+      expect((await admin.request("PATCH", path + "/state", { body })).status).toBe(400);
+    const calls = ctx.agent.calls.length;
+    const response = await admin.request("DELETE", path, {
+      body: { confirm: true, password: STRONG_PASSWORD },
+    });
+    expect(response.status).toBe(200);
+    expect(await json(response)).toEqual({ deleted: true, archivesPreserved: true });
+    expect(ctx.agent.calls).toHaveLength(calls);
+    expect(() => ctx.services.tasks.get(plan.taskId!)).toThrow();
+    expect(ctx.services.tasks.get(other.taskId!).enabled).toBe(true);
+    const stored = JSON.parse(
+      ctx.db.get<{ value: string }>(
+        "SELECT value FROM instance_settings WHERE key = 'linux-backup/plans/v1'",
+      )!.value,
+    ) as Array<{ id: string }>;
+    expect(stored.map((p) => p.id)).toEqual([other.id]);
+    expect(
+      (
+        await admin.post(path + "/jobs", {
+          kind: "create",
+          archive: null,
+          password: STRONG_PASSWORD,
+        })
+      ).status,
+    ).toBe(404);
+    const events = ctx.db.all<{ action: string; details: string }>(
+      "SELECT action,details FROM audit_events WHERE action LIKE 'backups.linux.plan.%'",
+    );
+    expect(
+      events.some(
+        (e) =>
+          e.action === "backups.linux.plan.delete" &&
+          JSON.parse(e.details).archivesPreserved === true,
+      ),
+    ).toBe(true);
+    expect(JSON.stringify(events)).not.toContain(phrase);
+    expect(JSON.stringify(events)).not.toContain(STRONG_PASSWORD);
+  });
+
+  it("allows disabling a running plan without stopping it, but requires completion before plan removal", async () => {
+    const { ctx, admin } = await withRoles();
+    backend(ctx);
+    const plan = await json<LinuxBackupPlan>(await admin.post("/api/linux-backups/plans", draft()));
+    const job = await json<LinuxBackupJob>(
+      await admin.post(`/api/linux-backups/plans/${plan.id}/jobs`, {
+        kind: "create",
+        archive: null,
+        password: STRONG_PASSWORD,
+      }),
+    );
+    ctx.agent.handlers.set("backups.linux.job", () => job);
+    const path = `/api/linux-backups/plans/${plan.id}`;
+    expect(
+      (await admin.request("DELETE", path, { body: { confirm: true, password: STRONG_PASSWORD } }))
+        .status,
+    ).toBe(409);
+    expect(
+      (
+        await admin.request("PATCH", path + "/state", {
+          body: { enabled: false, password: STRONG_PASSWORD },
+        })
+      ).status,
+    ).toBe(200);
+    expect(ctx.services.tasks.get(plan.taskId!).enabled).toBe(false);
+    expect(ctx.agent.calls.filter((c) => c.op === "backups.linux.cancel")).toHaveLength(0);
+    expect((await json<LinuxBackupOverview>(await admin.get("/api/linux-backups"))).job?.id).toBe(
+      job.id,
+    );
+    ctx.agent.handlers.set("backups.linux.job", () => ({
+      ...job,
+      status: "cancelled",
+      stage: "done",
+      finishedAt: ctx.clock.now,
+    }));
+    await admin.get("/api/linux-backups");
+    expect(
+      (await admin.request("DELETE", path, { body: { confirm: true, password: STRONG_PASSWORD } }))
+        .status,
+    ).toBe(200);
+  });
+
+  it("keeps legacy plans enabled by default and persists disablement for a manual-only plan", async () => {
+    const { ctx, admin } = await withRoles();
+    backend(ctx);
+    const plan = await json<LinuxBackupPlan>(
+      await admin.post("/api/linux-backups/plans", {
+        ...draft(),
+        schedule: { ...draft().schedule, frequency: "manual" },
+      }),
+    );
+    const read = (): Array<{ enabled?: boolean }> =>
+      JSON.parse(
+        ctx.db.get<{ value: string }>(
+          "SELECT value FROM instance_settings WHERE key = 'linux-backup/plans/v1'",
+        )!.value,
+      ) as Array<{ enabled?: boolean }>;
+    const legacy = read();
+    delete legacy[0]!.enabled;
+    ctx.db.run(
+      "UPDATE instance_settings SET value = ? WHERE key = 'linux-backup/plans/v1'",
+      JSON.stringify(legacy),
+    );
+    expect(
+      (await json<LinuxBackupOverview>(await admin.get("/api/linux-backups"))).plans[0]?.enabled,
+    ).toBe(true);
+    const paused = await json<LinuxBackupPlan>(
+      await admin.request("PATCH", `/api/linux-backups/plans/${plan.id}/state`, {
+        body: { enabled: false, password: STRONG_PASSWORD },
+      }),
+    );
+    expect(paused).toMatchObject({
+      enabled: false,
+      taskId: null,
+      schedule: { frequency: "manual" },
+    });
+    expect(read()[0]!.enabled).toBe(false);
+    expect(
+      (
+        await admin.post(`/api/linux-backups/plans/${plan.id}/jobs`, {
+          kind: "create",
+          archive: null,
+          password: STRONG_PASSWORD,
+        })
+      ).status,
+    ).toBe(409);
+    const resumed = await json<LinuxBackupPlan>(
+      await admin.request("PATCH", `/api/linux-backups/plans/${plan.id}/state`, {
+        body: { enabled: true, password: STRONG_PASSWORD },
+      }),
+    );
+    expect(resumed).toMatchObject({ enabled: true, taskId: null, nextRunAt: null });
+    expect(ctx.services.tasks.list().filter((task) => task.type === "backup.linux")).toHaveLength(
+      0,
+    );
+  });
+
+  it("refuses to mutate an unrelated scheduled task through a stale plan link", async () => {
+    const { ctx, admin } = await withRoles();
+    backend(ctx);
+    const plan = await json<LinuxBackupPlan>(await admin.post("/api/linux-backups/plans", draft()));
+    const other = await json<LinuxBackupPlan>(
+      await admin.post("/api/linux-backups/plans", { ...draft(), name: "Keep this plan" }),
+    );
+    const stored = JSON.parse(
+      ctx.db.get<{ value: string }>(
+        "SELECT value FROM instance_settings WHERE key = 'linux-backup/plans/v1'",
+      )!.value,
+    );
+    stored[0].taskId = other.taskId;
+    ctx.db.run(
+      "UPDATE instance_settings SET value = ? WHERE key = 'linux-backup/plans/v1'",
+      JSON.stringify(stored),
+    );
+    const path = `/api/linux-backups/plans/${plan.id}`;
+    expect(
+      (
+        await admin.request("PATCH", path + "/state", {
+          body: { enabled: false, password: STRONG_PASSWORD },
+        })
+      ).status,
+    ).toBe(409);
+    expect(
+      (await admin.request("DELETE", path, { body: { confirm: true, password: STRONG_PASSWORD } }))
+        .status,
+    ).toBe(409);
+    expect(ctx.services.tasks.get(other.taskId!).enabled).toBe(true);
+    expect(ctx.services.tasks.get(plan.taskId!).enabled).toBe(true);
   });
 });

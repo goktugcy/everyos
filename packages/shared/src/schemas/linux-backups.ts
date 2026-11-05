@@ -94,6 +94,14 @@ export const LinuxBackupSpecSchema = plan.omit({ name: true, schedule: true }).e
     .max(1024)
     .regex(/^[^\r\n\0]*$/),
 });
+export const LinuxBackupPlanStateRequestSchema = z.strictObject({
+  enabled: z.boolean(),
+  password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+});
+export const LinuxBackupPlanDeleteRequestSchema = z.strictObject({
+  confirm: z.literal(true),
+  password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+});
 export const LinuxBackupStartSchema = z
   .strictObject({
     spec: LinuxBackupSpecSchema,

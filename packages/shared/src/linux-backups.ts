@@ -28,6 +28,7 @@ export interface LinuxBackupSelection {
 export interface LinuxBackupPlan extends LinuxBackupSelection {
   id: string;
   name: string;
+  enabled: boolean;
   targetId: string;
   targetPath: string;
   targetDevice: string;

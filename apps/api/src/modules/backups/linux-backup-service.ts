@@ -127,7 +127,10 @@ export class LinuxBackupService {
       throw new ApiError(403, "FORBIDDEN", "Linux backups require administrator backup permission");
   }
   #plans() {
-    return this.#read<Stored[]>(PLANS, []);
+    return this.#read<Stored[]>(PLANS, []).map((plan) => ({
+      ...plan,
+      enabled: plan.enabled ?? true,
+    }));
   }
   #plan(id: string) {
     const plan = this.#plans().find((p) => p.id === id);
@@ -139,17 +142,95 @@ export class LinuxBackupService {
     let nextRunAt: number | null = null;
     const schedule = { ...plan.schedule };
     let scheduleOverride: string | null = null;
+    let enabled = plan.enabled;
     if (plan.taskId) {
       try {
         const task = this.#tasks?.get(plan.taskId);
-        nextRunAt = task?.nextRunAt ?? null;
-        if (!task?.enabled) schedule.frequency = "manual";
-        else if (task.schedule !== linuxBackupCron(plan.schedule)) scheduleOverride = task.schedule;
+        enabled = enabled && Boolean(task?.enabled);
+        nextRunAt = enabled ? (task?.nextRunAt ?? null) : null;
+        if (task && task.schedule !== linuxBackupCron(plan.schedule))
+          scheduleOverride = task.schedule;
       } catch {
-        schedule.frequency = "manual";
+        enabled = false;
       }
     }
-    return { ...rest, schedule, scheduleOverride, nextRunAt };
+    return { ...rest, enabled, schedule, scheduleOverride, nextRunAt };
+  }
+  #linkedTask(plan: Stored) {
+    if (!this.#tasks) throw new Error("Linux backup task service is not attached");
+    if (!plan.taskId) return null;
+    let task;
+    try {
+      task = this.#tasks.get(plan.taskId);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null;
+      throw error;
+    }
+    if (task.type !== "backup.linux" || task.params.planId !== plan.id)
+      throw new ApiError(409, "CONFLICT", "The scheduled task does not belong to this backup plan");
+    return task;
+  }
+
+  setEnabled(id: string, enabled: boolean, actor: UserActor): LinuxBackupPlan {
+    this.#authorize(actor);
+    if (this.#starting)
+      throw new ApiError(409, "BACKUP_BUSY", "Linux backup operation is starting");
+    const plan = this.#plan(id);
+    const task = this.#linkedTask(plan);
+    const owner = { id: actor.userId, permissions: ROLE_PERMISSIONS[actor.role] };
+    this.#db.transaction(() => {
+      plan.enabled = enabled;
+      if (task) this.#tasks!.update(task.id, { enabled }, owner);
+      else {
+        plan.taskId = null;
+        const cron = linuxBackupCron(plan.schedule);
+        if (enabled && cron)
+          plan.taskId = this.#tasks!.create(
+            {
+              name: plan.name,
+              type: "backup.linux",
+              params: { planId: id },
+              schedule: cron,
+              enabled: true,
+              notify: "failure",
+              catchUp: true,
+            },
+            owner,
+          ).id;
+      }
+      this.#write(
+        PLANS,
+        this.#plans().map((p) => (p.id === id ? plan : p)),
+      );
+    });
+    this.#record(actor, "plan.state", id, { enabled });
+    return this.#view(plan);
+  }
+
+  remove(id: string, confirmed: boolean, actor: UserActor) {
+    this.#authorize(actor);
+    if (!confirmed)
+      throw new ApiError(400, "VALIDATION_FAILED", "Plan deletion requires explicit confirmation");
+    if (this.#starting)
+      throw new ApiError(409, "BACKUP_BUSY", "Linux backup operation is starting");
+    const plan = this.#plan(id);
+    const task = this.#linkedTask(plan);
+    const current = this.#read<LinuxBackupJob | null>(CURRENT, null);
+    if ((current?.planId === id && current.status === "running") || task?.running)
+      throw new ApiError(
+        409,
+        "BACKUP_BUSY",
+        "Stop this plan's running operation before deleting it",
+      );
+    this.#db.transaction(() => {
+      if (task) this.#tasks!.remove(task.id, { permissions: ROLE_PERMISSIONS[actor.role] });
+      this.#write(
+        PLANS,
+        this.#plans().filter((p) => p.id !== id),
+      );
+    });
+    this.#record(actor, "plan.delete", id, { archivesPreserved: true });
+    return { deleted: true, archivesPreserved: true };
   }
   #spec(plan: Stored): OperationParams<"backups.linux.start">["spec"] {
     const {
@@ -347,6 +428,7 @@ export class LinuxBackupService {
     const plan: Stored = {
       ...data,
       id: planId,
+      enabled: previous ? this.#view(previous).enabled : true,
       targetDevice: target.device,
       targetPath: target.path,
       createdAt: previous?.createdAt ?? this.#now(),
@@ -370,7 +452,7 @@ export class LinuxBackupService {
         if (plan.taskId)
           this.#tasks!.update(
             plan.taskId,
-            { name: plan.name, schedule: cron, enabled: true },
+            { name: plan.name, schedule: cron, enabled: plan.enabled },
             owner,
           );
         else
@@ -380,7 +462,7 @@ export class LinuxBackupService {
               type: "backup.linux",
               params: { planId },
               schedule: cron,
-              enabled: true,
+              enabled: plan.enabled,
               notify: "failure",
               catchUp: true,
             },
@@ -435,10 +517,13 @@ export class LinuxBackupService {
     try {
       if ((await this.refresh(actor))?.status === "running")
         throw new ApiError(409, "BACKUP_BUSY", "Linux backup is running");
+      const plan = this.#plan(id);
+      if (kind === "create" && !this.#view(plan).enabled)
+        throw new ApiError(409, "CONFLICT", "The Linux backup plan is disabled");
       const job = await this.#call(
         "backups.linux.start",
         {
-          spec: this.#spec(this.#plan(id)),
+          spec: this.#spec(plan),
           kind,
           archive,
           ...(kind === "delete" && confirmed ? { confirm: true as const } : {}),

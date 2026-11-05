@@ -125,6 +125,32 @@ a separate password-confirmed retention action. Unrelated archive names are not 
 buckets. Compaction reclaims storage after pruning. The UI lists the latest 1000 archives;
 older retained archives remain in the repository.
 
+## Disable or remove a plan
+
+Each plan has **Disable** (or **Enable**) and **Delete plan**, protected by administrator
+permission and account-password confirmation. Disabling preserves its original schedule,
+repository credentials and existing backups. It disables the associated scheduled task and
+blocks new captures from both the interactive API and scheduled/manual task runs. Verification,
+archive deletion and staged recovery remain available. Disabling a plan does not stop a running
+operation; use **Stop operation** separately. Enabling restores the saved schedule, including a
+custom cron expression changed in Tasks. Editing a disabled plan does not enable it.
+
+Deleting a plan removes its configuration, linked scheduled task and saved repository passphrase.
+It never deletes repository files, archives, source data or staged recovery directories. Removal
+is refused while this plan has a running operation or scheduled-task run. Historical job/audit
+records remain, labeled **Deleted plan**. Only the plan's own linked task may be removed.
+
+The confirmation displays the retained repository path. After deletion these archives cannot be
+opened through the removed EveryOS plan. Keep the repository path and the original backup
+encryption passphrase for recovery with BorgBackup; the account password is not that passphrase.
+Disable a plan instead when it should remain accessible in EveryOS. Older saved plans without
+an enablement field remain enabled, subject to their actual scheduled-task pause state.
+
+The refresh icon rotates continuously at a constant speed throughout a backup, verification,
+recovery, deletion, installation or cancellation. Periodic status fetches do not restart the
+animation; it ends when the operation and outstanding refresh requests finish. Reduced-motion
+preferences disable rotation while the accessible busy state remains available.
+
 ## Delete a selected backup
 
 Each archive row has **Delete backup**. The confirmation identifies the plan and exact archive,

@@ -102,6 +102,16 @@ passed on 2026-10-22. Production official-artifact publication and the complete 
 | 28  | Image Viewer    | `dev.everyos.images`      | tested |
 | 29  | Gallery         | `dev.everyos.gallery`     | tested |
 
+## JSON Studio line containment — 2026-11-05
+
+JSON Studio 1.0.2 enables CodeMirror's visual line wrapping and constrains both editor/panel
+grid items to their assigned width. Long minified JSON and unbroken string values wrap without
+changing document bytes, formatting, validation or saved content. A real Chromium layout check
+in the explicitly mocked SDK preview host verified a 1098 px two-pane view and a 418 px stacked
+view: neither the document nor the editor scroller overflowed horizontally, the editor stayed
+within its pane, and the source text remained exact. The five existing JSON interface tests and
+the app's TypeScript check passed. This is scoped UI verification, not another release qualification.
+
 ## Measurements
 
 Actual package sizes, Linux/Mac app observations and virtualized core startup, RSS and idle CPU

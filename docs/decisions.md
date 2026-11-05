@@ -1085,3 +1085,17 @@ from configured repositories. Never add a repository or install an old/unsupport
 silently. Verify the executable after installation and refresh a previously negative executable
 lookup so it becomes available without a service restart. Normal development mode cannot mutate
 host packages; tests use explicitly marked simulator data and mocked package tools.
+
+## Linux backup plan lifetime is separate from archive lifetime (2026-11-05)
+
+Plan enablement is persisted independently of its schedule. Pausing keeps the schedule and sealed
+repository passphrase, blocks new captures, and leaves archive verification/recovery accessible.
+The linked task is paused as well, and resuming preserves its custom cron expression. An active
+capture is stopped only through the explicit cancellation action.
+
+Removing a plan is a password-confirmed configuration operation. It removes only that plan and
+its linked task/credential; it never invokes Borg or deletes on-disk data. The dialog explains
+that these archives leave the EveryOS UI, identifies their retained repository, and asks users to
+keep their original encryption passphrase for Borg recovery. Reject removal of a running plan
+instead of implicitly cancelling it or losing configuration while work is active. Retain history
+and audit records. Users who want to keep EveryOS recovery access should disable the plan.

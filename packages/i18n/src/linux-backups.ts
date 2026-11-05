@@ -1,4 +1,22 @@
 export const linuxBackupsTr = {
+  enablePlan: "Etkinleştir",
+  disablePlan: "Devre dışı bırak",
+  deletePlan: "Planı sil",
+  planEnabled: "Etkin",
+  planDisabled: "Devre dışı",
+  enablePlanHint:
+    "Bu plan yeniden yedek alabilecek. Varsa kayıtlı otomatik zamanlaması da yeniden etkinleştirilecek.",
+  disablePlanHint:
+    "Planın zamanlaması ve mevcut yedekleri korunur, ancak yeni yedek başlatılamaz. Çalışan işlem kendiliğinden durdurulmaz. Mevcut yedekler doğrulanabilir ve geri yüklenebilir.",
+  deletePlanHint:
+    "Plan, zamanlanmış görevi ve kayıtlı ayarları kaldırılacak. Diskteki yedekler ve kurtarma dizinleri korunur; bu planın yedeklerine EveryOS üzerinden erişim kalkar.",
+  deletePlanEncryptedHint:
+    "Kayıtlı yedek şifreleme parolası da kaldırılacak. Yedekleri BorgBackup ile kurtarabilmek için depo yolunu ve kendi yedek şifreleme parolanızı güvenli bir yerde saklayın.",
+  repositoryLocation: "Korunacak yedek deposu",
+  enablePlanSuccess: "Yedekleme planı etkinleştirildi.",
+  disablePlanSuccess: "Yedekleme planı devre dışı bırakıldı.",
+  deletePlanSuccess: "Plan silindi. Diskteki yedekler korundu.",
+  deletedPlan: "Silinmiş plan",
   remove: "Yedeği sil",
   deleteConfirm: "Yedeği kalıcı olarak sil",
   deleteHint:
@@ -157,6 +175,24 @@ export const linuxBackupsTr = {
 };
 
 export const linuxBackupsEn: Record<keyof typeof linuxBackupsTr, string> = {
+  enablePlan: "Enable",
+  disablePlan: "Disable",
+  deletePlan: "Delete plan",
+  planEnabled: "Enabled",
+  planDisabled: "Disabled",
+  enablePlanHint:
+    "This plan will be able to create backups again. Its saved automatic schedule, if any, will also be enabled.",
+  disablePlanHint:
+    "The schedule and existing backups are preserved, but new backups cannot start. A running operation is not stopped automatically. Existing backups can still be verified and restored.",
+  deletePlanHint:
+    "The plan, scheduled task and saved settings will be removed. Backups and recovery directories stay on disk; this plan's backups will no longer be accessible through EveryOS.",
+  deletePlanEncryptedHint:
+    "The saved backup encryption passphrase will also be removed. Keep the repository path and your own backup encryption passphrase somewhere safe to recover these backups with BorgBackup.",
+  repositoryLocation: "Backup repository to preserve",
+  enablePlanSuccess: "Backup plan enabled.",
+  disablePlanSuccess: "Backup plan disabled.",
+  deletePlanSuccess: "Plan deleted. Backups on disk were preserved.",
+  deletedPlan: "Deleted plan",
   remove: "Delete backup",
   deleteConfirm: "Permanently delete backup",
   deleteHint:

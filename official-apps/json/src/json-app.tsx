@@ -300,7 +300,7 @@ export function JsonApp() {
               value={draft.text}
               language={jsonLanguage}
               label={t("editor.label")}
-              setup={{ tabIndents: true, placeholder: t("editor.placeholder") }}
+              setup={{ wrap: true, tabIndents: true, placeholder: t("editor.placeholder") }}
               extensions={lint}
               onChange={setText}
               onView={(editor) => {

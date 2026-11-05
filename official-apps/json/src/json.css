@@ -15,6 +15,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   min-height: 0;
+  min-width: 0;
 }
 .json-body[data-narrow] {
   grid-template-columns: 1fr;
@@ -24,10 +25,13 @@
   display: grid;
   grid-template-rows: 1fr auto;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   border-right: 1px solid var(--eui-line);
 }
 .json-editor {
   min-height: 0;
+  min-width: 0;
 }
 .json-status {
   display: flex;
@@ -53,6 +57,7 @@
   grid-template-rows: auto 1fr;
   gap: 8px;
   min-height: 0;
+  min-width: 0;
   padding: 8px 10px;
 }
 .json-panel-body {

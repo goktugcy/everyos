@@ -14,6 +14,7 @@ import {
   LockKeyhole,
   Play,
   Plus,
+  Power,
   RefreshCw,
   Settings2,
   ShieldCheck,
@@ -36,6 +37,7 @@ import { formatBytes, formatDateTime } from "../../../lib/format.ts";
 import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { LinuxBackupInstall } from "./linux-backup-install.tsx";
 import { LinuxPlanDialog } from "./linux-plan-dialog.tsx";
+import { LinuxPlanActionDialog, type LinuxPlanAction } from "./linux-plan-action-dialog.tsx";
 
 const titleKey = {
   create: "run",
@@ -311,12 +313,18 @@ export function LinuxBackupsApp() {
   const busy = Boolean(job) || installation?.status === "running";
   if (polling !== busy) setPolling(busy);
   const [editing, setEditing] = useState<LinuxBackupPlan | "new" | null>(null);
+  const [planAction, setPlanAction] = useState<LinuxPlanAction | null>(null);
+  const [planChanging, setPlanChanging] = useState(false);
+  const [notice, setNotice] = useState<
+    "enablePlanSuccess" | "disablePlanSuccess" | "deletePlanSuccess" | null
+  >(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [action, setAction] = useState<Action | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [cancellingJobId, setCancellingJobId] = useState<string | null>(null);
   const [archivesRefreshing, setArchivesRefreshing] = useState(false);
   const refreshing = resource.loading || resource.refreshing || archivesRefreshing;
+  const refreshAnimating = refreshing || busy || planChanging;
   const reload = () => setRevision((v) => v + 1);
   const completed = data?.history[0];
   const latestId = completed?.id ?? "";
@@ -340,16 +348,23 @@ export function LinuxBackupsApp() {
             title={t("common.refresh")}
             onClick={reload}
             disabled={refreshing}
-            aria-busy={refreshing || undefined}
+            aria-busy={refreshAnimating || undefined}
           >
-            <RefreshCw className={cn("size-4", refreshing && "animate-spin")} aria-hidden />
+            <RefreshCw
+              className={cn(
+                "size-4 motion-reduce:animate-none",
+                refreshAnimating && "animate-spin [animation-duration:1.2s]",
+              )}
+              aria-hidden
+            />
           </Button>
           <Button
             size="sm"
             disabled={
               !data?.capability.available ||
               !data.capability.targets.some((p) => p.available) ||
-              busy
+              busy ||
+              planChanging
             }
             onClick={() => setEditing("new")}
           >
@@ -359,6 +374,11 @@ export function LinuxBackupsApp() {
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+        {notice ? (
+          <p role="status" className="text-sm text-success">
+            {t(`linuxBackups.${notice}`)}
+          </p>
+        ) : null}
         {error ? (
           <>
             <Alert tone="danger">{errorMessage(t, error)}</Alert>
@@ -492,6 +512,15 @@ export function LinuxBackupsApp() {
                     <p className="mt-1 text-xs text-fg-muted">
                       {t(`linuxBackups.${plan.scope}Title`)}
                     </p>
+                    <p
+                      className={cn(
+                        "mt-2 inline-flex items-center gap-1.5 text-xs font-medium",
+                        plan.enabled ? "text-success" : "text-fg-muted",
+                      )}
+                    >
+                      <Power className="size-3.5" aria-hidden />
+                      {t(plan.enabled ? "linuxBackups.planEnabled" : "linuxBackups.planDisabled")}
+                    </p>
                   </div>
                   <span
                     className={cn(
@@ -520,7 +549,7 @@ export function LinuxBackupsApp() {
                     {t("linuxBackups.next")}:{" "}
                     {plan.nextRunAt
                       ? formatDateTime(plan.nextRunAt, i18n.language)
-                      : t("linuxBackups.paused")}
+                      : t(plan.enabled ? "linuxBackups.paused" : "linuxBackups.planDisabled")}
                   </p>
                   {recent ? (
                     <p className="flex items-center gap-2">
@@ -537,7 +566,13 @@ export function LinuxBackupsApp() {
                 <div className="flex flex-wrap gap-1">
                   <Button
                     size="sm"
-                    disabled={busy || !data.capability.available || !targetReady}
+                    disabled={
+                      busy ||
+                      planChanging ||
+                      !plan.enabled ||
+                      !data.capability.available ||
+                      !targetReady
+                    }
                     onClick={() => setAction({ plan, kind: "create", archive: null })}
                   >
                     <Play className="size-3.5" aria-hidden />
@@ -555,11 +590,36 @@ export function LinuxBackupsApp() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    disabled={busy}
+                    disabled={busy || planChanging}
                     onClick={() => setEditing(plan)}
                   >
                     <Settings2 className="size-4" aria-hidden />
                     {t("linuxBackups.edit")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={planChanging}
+                    onClick={() => {
+                      setNotice(null);
+                      setPlanAction({ plan, kind: plan.enabled ? "disable" : "enable" });
+                    }}
+                  >
+                    <Power className="size-4" aria-hidden />
+                    {t(plan.enabled ? "linuxBackups.disablePlan" : "linuxBackups.enablePlan")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-danger hover:text-danger"
+                    disabled={planChanging || job?.planId === plan.id}
+                    onClick={() => {
+                      setNotice(null);
+                      setPlanAction({ plan, kind: "delete" });
+                    }}
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                    {t("linuxBackups.deletePlan")}
                   </Button>
                   {plan.retention.enabled ? (
                     <Button
@@ -599,8 +659,9 @@ export function LinuxBackupsApp() {
                   className="flex flex-wrap justify-between gap-2 py-2 text-xs text-fg-muted"
                 >
                   <span>
-                    {data.plans.find((p) => p.id === item.planId)?.name} ·{" "}
-                    {t(`linuxBackups.${titleKey[item.kind]}`)}
+                    {data.plans.find((p) => p.id === item.planId)?.name ??
+                      t("linuxBackups.deletedPlan")}{" "}
+                    · {t(`linuxBackups.${titleKey[item.kind]}`)}
                   </span>
                   <span>
                     {t(`linuxBackups.${statusKey[item.status]}`)} ·{" "}
@@ -628,6 +689,26 @@ export function LinuxBackupsApp() {
           onStarted={(job) => {
             setPendingJob(job);
             setPolling(true);
+            reload();
+          }}
+        />
+      ) : null}
+      {planAction ? (
+        <LinuxPlanActionDialog
+          action={planAction}
+          onClose={() => setPlanAction(null)}
+          onPendingChange={setPlanChanging}
+          onDone={() => {
+            const deleting = planAction.kind === "delete";
+            setNotice(
+              deleting
+                ? "deletePlanSuccess"
+                : planAction.kind === "enable"
+                  ? "enablePlanSuccess"
+                  : "disablePlanSuccess",
+            );
+            if (deleting && expanded === planAction.plan.id) setExpanded(null);
+            setPlanAction(null);
             reload();
           }}
         />

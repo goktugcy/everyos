@@ -6,13 +6,14 @@ import type {
 } from "../../packages/shared/src/index.ts";
 import { PASSWORD, signIn } from "./helpers.ts";
 
-test("Linux backup deletion confirms the exact archive and refresh/stop indicators track completion", async ({
+test("Linux backup plans can be disabled, enabled and removed; refresh remains continuous through backup and cancellation", async ({
   page,
 }) => {
   await signIn(page);
   const plan: LinuxBackupPlan = {
     id: "0820e237-0d3b-49e7-96cc-c94c667459b6",
     name: "Archive controls fixture",
+    enabled: true,
     scope: "system",
     includes: [],
     excludes: [],
@@ -20,7 +21,7 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
     targetId: "a".repeat(16),
     targetPath: "/simulated/backup",
     targetDevice: "1",
-    encryption: "none",
+    encryption: "repokey-blake2",
     compression: "lz4",
     retention: { enabled: false, hourly: 24, daily: 7, weekly: 4, monthly: 12 },
     schedule: { frequency: "manual", hour: 3, minute: 0, weekday: 0, day: 1 },
@@ -37,6 +38,10 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
     scope: "system",
   };
   let visible = true;
+  let planVisible = true;
+  let overviewRequests = 0;
+  let planDeletes = 0;
+  const planStates: boolean[] = [];
   let job: LinuxBackupJob | null = null;
   const history: LinuxBackupJob[] = [];
   let holdOverview = false;
@@ -71,6 +76,7 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
     restorePath: null,
   });
   await page.route("**/api/linux-backups", async (route) => {
+    overviewRequests++;
     if (holdOverview) {
       overviewHeld = true;
       await overviewGate;
@@ -95,7 +101,7 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
           systemIncludes: ["/etc"],
           alwaysExcluded: ["/proc"],
         },
-        plans: [plan],
+        plans: planVisible ? [plan] : [],
         job,
         history,
         timezone: "Europe/Istanbul",
@@ -125,6 +131,21 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
   await page.route("**/api/linux-backups/cancel", async (route) => {
     cancelRequests++;
     await route.fulfill({ json: { cancelled: true } });
+  });
+  await page.route(`**/api/linux-backups/plans/${plan.id}/state`, async (route) => {
+    const body = route.request().postDataJSON() as { password: string; enabled: boolean };
+    expect(body.password).toBe(PASSWORD);
+    expect(typeof body.enabled).toBe("boolean");
+    plan.enabled = body.enabled;
+    planStates.push(body.enabled);
+    await route.fulfill({ json: plan });
+  });
+  await page.route(`**/api/linux-backups/plans/${plan.id}`, async (route) => {
+    expect(route.request().method()).toBe("DELETE");
+    expect(route.request().postDataJSON()).toEqual({ password: PASSWORD, confirm: true });
+    planDeletes++;
+    planVisible = false;
+    await route.fulfill({ json: { deleted: true, archivesPreserved: true } });
   });
   try {
     await page
@@ -176,6 +197,22 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
     await expect(refresh).toBeEnabled();
     await refresh.click();
     const running = app.getByTestId("linux-backup-job");
+    await expect(running).toBeVisible();
+    await expect(card.getByRole("button", { name: "Planı sil", exact: true })).toBeDisabled();
+    const refreshIcon = refresh.locator("svg");
+    await expect(refreshIcon).toHaveClass(/animate-spin/);
+    await expect
+      .poll(() => refreshIcon.evaluate((element) => element.getAnimations()[0]?.startTime ?? 0))
+      .toBeGreaterThan(0);
+    const animationStarted = await refreshIcon.evaluate(
+      (element) => element.getAnimations()[0]?.startTime,
+    );
+    expect(animationStarted).toBeGreaterThan(0);
+    const polled = overviewRequests;
+    await expect.poll(() => overviewRequests, { timeout: 10_000 }).toBeGreaterThan(polled + 2);
+    expect(await refreshIcon.evaluate((element) => element.getAnimations()[0]?.startTime)).toBe(
+      animationStarted,
+    );
     const cancelled = page.waitForResponse((response) =>
       response.url().endsWith("/api/linux-backups/cancel"),
     );
@@ -185,10 +222,53 @@ test("Linux backup deletion confirms the exact archive and refresh/stop indicato
     await expect(stopping).toHaveAttribute("aria-busy", "true");
     await expect(stopping).toBeDisabled();
     await expect(stopping.locator("svg.animate-spin")).toBeVisible();
+    expect(await refreshIcon.evaluate((element) => element.getAnimations()[0]?.startTime)).toBe(
+      animationStarted,
+    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await expect(refreshIcon).toHaveCSS("animation-name", "none");
+    await expect(refresh).toHaveAttribute("aria-busy", "true");
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     history.unshift({ ...job, status: "cancelled", stage: "done", finishedAt: Date.now() });
     job = null;
     await expect(running).toHaveCount(0);
+    await expect(refreshIcon).not.toHaveClass(/animate-spin/);
     expect(cancelRequests).toBe(1);
+    await card.getByRole("button", { name: "Devre dışı bırak", exact: true }).click();
+    const disable = page.getByRole("dialog", { name: "Devre dışı bırak", exact: true });
+    await expect(
+      disable.getByRole("button", { name: "Devre dışı bırak", exact: true }),
+    ).toBeDisabled();
+    await disable.getByLabel("Hesap parolanız").fill(PASSWORD);
+    await disable.getByRole("button", { name: "Devre dışı bırak", exact: true }).click();
+    await expect(card.getByRole("button", { name: "Etkinleştir", exact: true })).toBeVisible();
+    await expect(card.getByRole("button", { name: "Şimdi yedekle", exact: true })).toBeDisabled();
+    await app.screenshot({ path: test.info().outputPath("linux-plan-disabled.png") });
+    await card.getByRole("button", { name: "Etkinleştir", exact: true }).click();
+    const enable = page.getByRole("dialog", { name: "Etkinleştir", exact: true });
+    await enable.getByLabel("Hesap parolanız").fill(PASSWORD);
+    await enable.getByRole("button", { name: "Etkinleştir", exact: true }).click();
+    await expect(card.getByRole("button", { name: "Şimdi yedekle", exact: true })).toBeEnabled();
+    expect(planStates).toEqual([false, true]);
+    await card.getByRole("button", { name: "Planı sil", exact: true }).click();
+    const remove = page.getByRole("dialog", { name: "Planı sil", exact: true });
+    await expect(
+      remove.getByText(`${plan.targetPath}/everyos-linux-${plan.id}/repository`, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      remove.getByText(/Kayıtlı yedek şifreleme parolası da kaldırılacak/),
+    ).toBeVisible();
+    await remove.screenshot({ path: test.info().outputPath("linux-plan-delete-confirm.png") });
+    await remove.getByRole("button", { name: "Vazgeç", exact: true }).click();
+    expect(planDeletes).toBe(0);
+    await card.getByRole("button", { name: "Planı sil", exact: true }).click();
+    await remove.getByLabel("Hesap parolanız").fill(PASSWORD);
+    await remove.getByRole("button", { name: "Planı sil", exact: true }).click();
+    await expect(card).toHaveCount(0);
+    await expect(
+      app.getByRole("status").filter({ hasText: "Plan silindi. Diskteki yedekler korundu." }),
+    ).toBeVisible();
+    expect(planDeletes).toBe(1);
   } finally {
     releaseOverview();
     releaseArchives();

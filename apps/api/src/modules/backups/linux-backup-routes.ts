@@ -5,6 +5,8 @@ import {
   LinuxBackupActionRequestSchema,
   LinuxBackupSelectionSchema,
   LinuxBackupInstallRequestSchema,
+  LinuxBackupPlanStateRequestSchema,
+  LinuxBackupPlanDeleteRequestSchema,
 } from "@everyos/shared/schemas";
 import { ApiError } from "../../http/errors.ts";
 import type { AppEnv } from "../../context.ts";
@@ -52,6 +54,24 @@ export function linuxBackupRoutes(services: Services): Hono<AppEnv> {
     await confirmPassword(services, c, auth, input.password, "backups.linux.plan");
     return c.json(
       await services.linuxBackups.save(input, agentActor(auth, c.get("client").ip), id),
+    );
+  });
+  app.patch("/plans/:id/state", async (c) => {
+    const { id } = parseParams(c, Id);
+    const input = await parseJsonBody(c, LinuxBackupPlanStateRequestSchema);
+    const auth = requireAuth(c);
+    await confirmPassword(services, c, auth, input.password, "backups.linux.plan.state");
+    return c.json(
+      services.linuxBackups.setEnabled(id, input.enabled, agentActor(auth, c.get("client").ip)),
+    );
+  });
+  app.delete("/plans/:id", async (c) => {
+    const { id } = parseParams(c, Id);
+    const input = await parseJsonBody(c, LinuxBackupPlanDeleteRequestSchema);
+    const auth = requireAuth(c);
+    await confirmPassword(services, c, auth, input.password, "backups.linux.plan.delete");
+    return c.json(
+      services.linuxBackups.remove(id, input.confirm, agentActor(auth, c.get("client").ip)),
     );
   });
   app.get("/plans/:id/archives", async (c) =>

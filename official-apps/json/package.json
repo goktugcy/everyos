@@ -1,6 +1,6 @@
 {
   "name": "@everyos-official/json",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "EveryOS JSON Studio.",
   "type": "module",
