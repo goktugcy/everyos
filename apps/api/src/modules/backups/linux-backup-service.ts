@@ -420,8 +420,15 @@ export class LinuxBackupService {
     kind: LinuxBackupJob["kind"],
     archive: string | null,
     actor: UserActor,
+    confirmed = false,
   ): Promise<LinuxBackupJob> {
     this.#authorize(actor);
+    if (kind === "delete" && (!confirmed || !archive))
+      throw new ApiError(
+        400,
+        "VALIDATION_FAILED",
+        "Deleting a backup requires explicit archive confirmation",
+      );
     if (this.#starting || this.#installController)
       throw new ApiError(409, "BACKUP_BUSY", "Linux backup operation is running");
     this.#starting = true;
@@ -430,7 +437,12 @@ export class LinuxBackupService {
         throw new ApiError(409, "BACKUP_BUSY", "Linux backup is running");
       const job = await this.#call(
         "backups.linux.start",
-        { spec: this.#spec(this.#plan(id)), kind, archive },
+        {
+          spec: this.#spec(this.#plan(id)),
+          kind,
+          archive,
+          ...(kind === "delete" && confirmed ? { confirm: true as const } : {}),
+        },
         actor,
       );
       this.#write(CURRENT, job);

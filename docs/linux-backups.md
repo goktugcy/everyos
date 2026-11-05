@@ -125,6 +125,25 @@ a separate password-confirmed retention action. Unrelated archive names are not 
 buckets. Compaction reclaims storage after pruning. The UI lists the latest 1000 archives;
 older retained archives remain in the repository.
 
+## Delete a selected backup
+
+Each archive row has **Delete backup**. The confirmation identifies the plan and exact archive,
+warns that deletion is permanent (including the last remaining copy), and requires the account
+password again. Both API and agent contracts require explicit confirmation and a canonical
+EveryOS archive name; the operation never falls back to deleting the repository. Administrator
+backup permission, Linux sudo policy, target identity and private repository markers remain
+mandatory. Start and completion are audited without secrets.
+
+A background job deletes that one archive and compacts unused repository space. Other archives,
+source files and previously extracted recovery directories are preserved. A partial cleanup or
+interrupted deletion is reported honestly as a warning; refreshing the archive list shows the
+actual state. Cancellation cannot restore an archive already deleted. See
+[Borg delete](https://borgbackup.readthedocs.io/en/stable/usage/delete.html).
+
+Refresh shows an animated icon until the overview and expanded archive list finish loading.
+After a stop request is accepted, its spinner remains visible until the running job reaches a
+terminal state. A failed stop request clears the spinner and permits retry.
+
 ## Verification and recovery
 
 Every successful capture is followed by an archive/data integrity check. Individual archive

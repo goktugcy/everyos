@@ -325,4 +325,50 @@ describe.skipIf(!binary)("real Borg fixture backup and restore", () => {
       await f.cleanup();
     }
   }, 90_000);
+  it("deletes only the confirmed archive and preserves other backups and source files", async () => {
+    const f = await fixture();
+    try {
+      const first = await done(f.engine, { spec: f.spec, kind: "create", archive: null });
+      expect(first, first.error ?? "").toMatchObject({ status: "succeeded" });
+      const second = await done(f.engine, { spec: f.spec, kind: "create", archive: null });
+      expect(second, second.error ?? "").toMatchObject({ status: "succeeded" });
+      expect(() =>
+        f.engine.start({ spec: f.spec, kind: "delete", archive: first.archive }),
+      ).toThrow("BACKUP_DELETE_CONFIRMATION_REQUIRED");
+      const deleted = await done(f.engine, {
+        spec: f.spec,
+        kind: "delete",
+        archive: first.archive,
+        confirm: true,
+      });
+      expect(deleted, deleted.error ?? "").toMatchObject({ status: "succeeded", kind: "delete" });
+      expect((await f.engine.archives(f.spec)).archives.map((a) => a.name)).toEqual([
+        second.archive,
+      ]);
+      expect(await readFile(join(f.root, "etc/setting"), "utf8")).toBe("system-configuration\n");
+      const base = join(f.target, `everyos-linux-${f.spec.planId}`);
+      expect(
+        JSON.parse(await readFile(join(base, "archive-status.json"), "utf8")),
+      ).not.toHaveProperty(first.archive!);
+      const restored = await done(f.engine, {
+        spec: f.spec,
+        kind: "restore",
+        archive: second.archive,
+      });
+      expect(restored, restored.error ?? "").toMatchObject({ status: "succeeded" });
+      expect(await readFile(join(restored.restorePath!, "home/note"), "utf8")).toBe(
+        "preserve-this-exact-data\n",
+      );
+      const missing = await done(f.engine, {
+        spec: f.spec,
+        kind: "delete",
+        archive: first.archive,
+        confirm: true,
+      });
+      expect(missing).toMatchObject({ status: "failed", error: "BORG_ARCHIVE_MISSING" });
+    } finally {
+      await f.engine.close();
+      await f.cleanup();
+    }
+  }, 240_000);
 });

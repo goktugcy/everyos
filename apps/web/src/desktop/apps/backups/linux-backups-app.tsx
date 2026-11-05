@@ -19,8 +19,9 @@ import {
   ShieldCheck,
   Square,
   TriangleAlert,
+  Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "../../../components/ui/alert.tsx";
 import { Button } from "../../../components/ui/button.tsx";
@@ -36,7 +37,13 @@ import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { LinuxBackupInstall } from "./linux-backup-install.tsx";
 import { LinuxPlanDialog } from "./linux-plan-dialog.tsx";
 
-const titleKey = { create: "run", verify: "verify", restore: "restore", prune: "prune" } as const;
+const titleKey = {
+  create: "run",
+  verify: "verify",
+  restore: "restore",
+  prune: "prune",
+  delete: "remove",
+} as const;
 const statusKey = {
   running: "statusRunning",
   succeeded: "statusSucceeded",
@@ -50,6 +57,8 @@ const stageKey = {
   verifying: "stageVerifying",
   restoring: "stageRestoring",
   retention: "stageRetention",
+  deleting: "stageDeleting",
+  compacting: "stageCompacting",
   done: "stageDone",
 } as const;
 type Action = { plan: LinuxBackupPlan; kind: LinuxBackupJob["kind"]; archive: string | null };
@@ -82,7 +91,12 @@ function ActionDialog({
           setError(null);
           void api<LinuxBackupJob>(`/linux-backups/plans/${action.plan.id}/jobs`, {
             method: "POST",
-            body: { kind: action.kind, archive: action.archive, password },
+            body: {
+              kind: action.kind,
+              archive: action.archive,
+              password,
+              ...(action.kind === "delete" ? { confirm: true } : {}),
+            },
           })
             .then(
               (job) => {
@@ -97,13 +111,15 @@ function ActionDialog({
         {action.archive ? (
           <p className="break-all font-mono text-xs text-fg-muted">{action.archive}</p>
         ) : null}
-        <Alert tone={action.kind === "prune" ? "warning" : "info"}>
+        <Alert tone={action.kind === "prune" || action.kind === "delete" ? "warning" : "info"}>
           {t(
-            action.kind === "restore"
-              ? "linuxBackups.recoveryHint"
-              : action.kind === "prune"
-                ? "linuxBackups.retentionHint"
-                : "linuxBackups.liveWarning",
+            action.kind === "delete"
+              ? "linuxBackups.deleteHint"
+              : action.kind === "restore"
+                ? "linuxBackups.recoveryHint"
+                : action.kind === "prune"
+                  ? "linuxBackups.retentionHint"
+                  : "linuxBackups.liveWarning",
           )}
         </Alert>
         <PasswordField
@@ -123,8 +139,17 @@ function ActionDialog({
           <Button variant="ghost" disabled={busy} onClick={onClose}>
             {t("common.cancel")}
           </Button>
-          <Button type="submit" loading={busy} disabled={!password}>
-            {t("linuxBackups.actionConfirm")}
+          <Button
+            type="submit"
+            variant={action.kind === "delete" ? "danger" : "primary"}
+            loading={busy}
+            disabled={!password}
+          >
+            {t(
+              action.kind === "delete"
+                ? "linuxBackups.deleteConfirm"
+                : "linuxBackups.actionConfirm",
+            )}
           </Button>
         </div>
       </form>
@@ -137,11 +162,13 @@ function Archives({
   busy,
   revision,
   onAction,
+  onPendingChange,
 }: {
   plan: LinuxBackupPlan;
   busy: boolean;
   revision: string;
   onAction: (value: Action) => void;
+  onPendingChange: (pending: boolean) => void;
 }) {
   const { t, i18n } = useTranslation();
   const resource = useApiResource<{ archives: LinuxBackupArchive[]; limit: number }>(
@@ -149,6 +176,11 @@ function Archives({
     null,
     revision,
   );
+  const pending = !busy && (resource.loading || resource.refreshing);
+  useEffect(() => {
+    onPendingChange(pending);
+    return () => onPendingChange(false);
+  }, [onPendingChange, pending]);
   return (
     <div className="border-t border-line p-4">
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-fg-muted">
@@ -158,7 +190,14 @@ function Archives({
         <>
           <ResourceError error={resource.error} />
           <SudoUnlock error={resource.error} />
-          <Button size="sm" variant="ghost" onClick={resource.reload}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={resource.reload}
+            disabled={pending}
+            aria-busy={pending || undefined}
+          >
+            <RefreshCw className={cn("size-4", pending && "animate-spin")} aria-hidden />
             {t("common.refresh")}
           </Button>
         </>
@@ -225,6 +264,16 @@ function Archives({
                     <FolderTree className="size-4" aria-hidden />
                     {t("linuxBackups.restore")}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-danger hover:text-danger"
+                    disabled={busy}
+                    onClick={() => onAction({ plan, kind: "delete", archive: archive.name })}
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                    {t("linuxBackups.remove")}
+                  </Button>
                 </div>
               </li>
             ))}
@@ -265,7 +314,9 @@ export function LinuxBackupsApp() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [action, setAction] = useState<Action | null>(null);
   const [error, setError] = useState<unknown>(null);
-  const [cancelling, setCancelling] = useState(false);
+  const [cancellingJobId, setCancellingJobId] = useState<string | null>(null);
+  const [archivesRefreshing, setArchivesRefreshing] = useState(false);
+  const refreshing = resource.loading || resource.refreshing || archivesRefreshing;
   const reload = () => setRevision((v) => v + 1);
   const completed = data?.history[0];
   const latestId = completed?.id ?? "";
@@ -288,8 +339,10 @@ export function LinuxBackupsApp() {
             aria-label={t("common.refresh")}
             title={t("common.refresh")}
             onClick={reload}
+            disabled={refreshing}
+            aria-busy={refreshing || undefined}
           >
-            <RefreshCw className="size-4" aria-hidden />
+            <RefreshCw className={cn("size-4", refreshing && "animate-spin")} aria-hidden />
           </Button>
           <Button
             size="sm"
@@ -358,16 +411,20 @@ export function LinuxBackupsApp() {
               <Button
                 variant="ghost"
                 size="sm"
-                loading={cancelling}
+                loading={cancellingJobId === job.id}
                 onClick={() => {
-                  setCancelling(true);
-                  void api("/linux-backups/cancel", { method: "POST", body: {} })
-                    .then(reload, (caught: unknown) => setError(caught))
-                    .finally(() => setCancelling(false));
+                  setCancellingJobId(job.id);
+                  void api("/linux-backups/cancel", { method: "POST", body: {} }).then(
+                    reload,
+                    (caught: unknown) => {
+                      setCancellingJobId(null);
+                      setError(caught);
+                    },
+                  );
                 }}
               >
-                <Square className="size-4" aria-hidden />
-                {t("linuxBackups.cancel")}
+                {cancellingJobId !== job.id ? <Square className="size-4" aria-hidden /> : null}
+                {t(cancellingJobId === job.id ? "linuxBackups.stopping" : "linuxBackups.cancel")}
               </Button>
             </div>
           </section>
@@ -387,7 +444,15 @@ export function LinuxBackupsApp() {
               {t(`linuxBackups.${statusKey[completed.status]}`)}
             </p>
             {completed.status === "warning" ? (
-              <p className="mt-1">{t("linuxBackups.warning")}</p>
+              <p className="mt-1">
+                {t(
+                  completed.kind === "delete"
+                    ? completed.error === "BORG_DELETE_CLEANUP_FAILED"
+                      ? "linuxBackups.deleteCleanupWarning"
+                      : "linuxBackups.deleteWarning"
+                    : "linuxBackups.warning",
+                )}
+              </p>
             ) : completed.error && completed.status === "failed" ? (
               <p className="mt-1">{t("linuxBackups.jobError", { code: completed.error })}</p>
             ) : null}
@@ -515,6 +580,7 @@ export function LinuxBackupsApp() {
                   busy={busy}
                   revision={`${revision}:${latestId}`}
                   onAction={setAction}
+                  onPendingChange={setArchivesRefreshing}
                 />
               ) : null}
             </section>

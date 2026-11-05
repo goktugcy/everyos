@@ -94,17 +94,32 @@ export const LinuxBackupSpecSchema = plan.omit({ name: true, schedule: true }).e
     .max(1024)
     .regex(/^[^\r\n\0]*$/),
 });
-export const LinuxBackupStartSchema = z.strictObject({
-  spec: LinuxBackupSpecSchema,
-  kind: z.enum(["create", "verify", "restore", "prune"]),
-  archive: LinuxBackupArchiveNameSchema.nullable(),
-});
+export const LinuxBackupStartSchema = z
+  .strictObject({
+    spec: LinuxBackupSpecSchema,
+    kind: z.enum(["create", "verify", "restore", "prune", "delete"]),
+    archive: LinuxBackupArchiveNameSchema.nullable(),
+    confirm: z.literal(true).optional(),
+  })
+  .refine(
+    (v) => v.kind !== "delete" || (v.confirm === true && v.archive !== null),
+    "delete-confirmation-required",
+  );
 export const LinuxBackupJobSchema = z.strictObject({
   id: uuid,
   planId: uuid,
-  kind: z.enum(["create", "verify", "restore", "prune"]),
+  kind: z.enum(["create", "verify", "restore", "prune", "delete"]),
   status: z.enum(["running", "succeeded", "warning", "failed", "cancelled"]),
-  stage: z.enum(["preparing", "archiving", "verifying", "restoring", "retention", "done"]),
+  stage: z.enum([
+    "preparing",
+    "archiving",
+    "verifying",
+    "restoring",
+    "retention",
+    "deleting",
+    "compacting",
+    "done",
+  ]),
   archive: LinuxBackupArchiveNameSchema.nullable(),
   startedAt: z.number(),
   finishedAt: z.number().nullable(),
@@ -152,11 +167,17 @@ export const LinuxBackupArchivesSchema = z.strictObject({
     }),
   ),
 });
-export const LinuxBackupActionRequestSchema = z.strictObject({
-  password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
-  kind: z.enum(["create", "verify", "restore", "prune"]),
-  archive: LinuxBackupArchiveNameSchema.nullable(),
-});
+export const LinuxBackupActionRequestSchema = z
+  .strictObject({
+    password: z.string().min(1).max(PASSWORD_MAX_LENGTH),
+    kind: z.enum(["create", "verify", "restore", "prune", "delete"]),
+    archive: LinuxBackupArchiveNameSchema.nullable(),
+    confirm: z.literal(true).optional(),
+  })
+  .refine(
+    (v) => v.kind !== "delete" || (v.confirm === true && v.archive !== null),
+    "delete-confirmation-required",
+  );
 
 export const LinuxBackupInstallRequestSchema = z.strictObject({
   confirm: z.literal(true),

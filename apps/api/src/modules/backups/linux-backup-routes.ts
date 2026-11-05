@@ -73,6 +73,7 @@ export function linuxBackupRoutes(services: Services): Hono<AppEnv> {
         input.kind,
         input.archive,
         agentActor(auth, c.get("client").ip),
+        input.confirm === true,
       ),
       202,
     );

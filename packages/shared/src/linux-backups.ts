@@ -76,9 +76,17 @@ export interface LinuxBackupArchive {
 export interface LinuxBackupJob {
   id: string;
   planId: string;
-  kind: "create" | "verify" | "restore" | "prune";
+  kind: "create" | "verify" | "restore" | "prune" | "delete";
   status: "running" | "succeeded" | "warning" | "failed" | "cancelled";
-  stage: "preparing" | "archiving" | "verifying" | "restoring" | "retention" | "done";
+  stage:
+    | "preparing"
+    | "archiving"
+    | "verifying"
+    | "restoring"
+    | "retention"
+    | "deleting"
+    | "compacting"
+    | "done";
   archive: string | null;
   startedAt: number;
   finishedAt: number | null;

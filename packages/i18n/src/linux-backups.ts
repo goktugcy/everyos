@@ -1,4 +1,14 @@
 export const linuxBackupsTr = {
+  remove: "Yedeği sil",
+  deleteConfirm: "Yedeği kalıcı olarak sil",
+  deleteHint:
+    "Seçili yedek kalıcı olarak silinecek ve kullanılmayan depo alanı temizlenecek. Bu son yedekse kurtarma kopyanız kalmayacak.",
+  deleteWarning:
+    "Silme işlemi veya depo temizliği tamamlanamadı. Arşiv listesindeki güncel durumu kontrol edin; silinen arşivler geri getirilemez.",
+  deleteCleanupWarning: "Yedek silindi, ancak depo alanı temizliği tamamlanamadı.",
+  stageDeleting: "Yedek siliniyor",
+  stageCompacting: "Depo alanı temizleniyor",
+  stopping: "İşlem durduruluyor…",
   install: "Kur",
   installTitle: "BorgBackup kurulumu",
   installHint: "Linux yedeklemesi için gereken BorgBackup paketini bu ekrandan kurabilirsiniz.",
@@ -147,6 +157,16 @@ export const linuxBackupsTr = {
 };
 
 export const linuxBackupsEn: Record<keyof typeof linuxBackupsTr, string> = {
+  remove: "Delete backup",
+  deleteConfirm: "Permanently delete backup",
+  deleteHint:
+    "The selected backup will be permanently deleted and unused repository space reclaimed. If this is your last backup, no recovery copy will remain.",
+  deleteWarning:
+    "Deletion or repository cleanup did not finish. Check the current archive list; deleted archives cannot be recovered.",
+  deleteCleanupWarning: "The backup was deleted, but repository space cleanup did not finish.",
+  stageDeleting: "Deleting backup",
+  stageCompacting: "Reclaiming repository space",
+  stopping: "Stopping operation…",
   install: "Install",
   installTitle: "Install BorgBackup",
   installHint: "Install the BorgBackup package required for Linux backups from this screen.",

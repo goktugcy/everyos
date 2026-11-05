@@ -450,4 +450,42 @@ describe("built-in Linux backup API", () => {
       stage: "done",
     });
   });
+  it("requires an exact archive, explicit confirmation and password before deletion", async () => {
+    const { ctx, admin, operator, viewer } = await withRoles();
+    backend(ctx);
+    const plan = await json<LinuxBackupPlan>(await admin.post("/api/linux-backups/plans", draft()));
+    const path = `/api/linux-backups/plans/${plan.id}/jobs`;
+    const body = {
+      kind: "delete",
+      archive: "eos-20261105T120000Z-12345678",
+      password: STRONG_PASSWORD,
+      confirm: true,
+    };
+    for (const client of [operator, viewer])
+      expect((await client.post(path, body)).status).toBe(403);
+    for (const invalid of [
+      { ...body, confirm: undefined },
+      { ...body, archive: null },
+      { ...body, archive: "../repository" },
+      { ...body, archive: "eos-*" },
+      { ...body, password: "wrong-password" },
+    ])
+      expect((await admin.post(path, invalid)).status).toBe(400);
+    expect(ctx.agent.calls.filter((c) => c.op === "backups.linux.start")).toHaveLength(0);
+    expect((await admin.post(path, body)).status).toBe(202);
+    expect(ctx.agent.calls.find((c) => c.op === "backups.linux.start")?.params).toMatchObject({
+      kind: "delete",
+      archive: body.archive,
+      confirm: true,
+    });
+    await admin.get("/api/linux-backups");
+    const events = ctx.db.all<{ action: string; details: string }>(
+      "SELECT action, details FROM audit_events WHERE action LIKE 'backups.linux.delete.%'",
+    );
+    expect(events.map((e) => e.action)).toEqual([
+      "backups.linux.delete.start",
+      "backups.linux.delete.finish",
+    ]);
+    expect(JSON.stringify(events)).not.toContain(STRONG_PASSWORD);
+  });
 });

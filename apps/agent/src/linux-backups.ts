@@ -368,6 +368,8 @@ export class LinuxBackups {
       fail("BACKUP_PASSPHRASE_REQUIRED");
     if (input.kind !== "create" && input.kind !== "prune" && !input.archive)
       fail("BACKUP_ARCHIVE_REQUIRED");
+    if (input.kind === "delete" && (input.confirm !== true || !ARCHIVE.test(input.archive ?? "")))
+      fail("BACKUP_DELETE_CONFIRMATION_REQUIRED");
     // Reserve the slot before awaiting filesystem or capability checks.
     const job: LinuxBackupJob = {
       id: randomUUID(),
@@ -424,6 +426,8 @@ export class LinuxBackups {
     let guardFailure: string | null = null;
     let archiveBase: string | null = null;
     let verified = false;
+    let deletionAttempted = false;
+    let archiveDeleted = false;
     try {
       const { spec, kind } = input;
       const { base, repository, target } = await this.#repository(spec, kind === "create");
@@ -469,7 +473,7 @@ export class LinuxBackups {
           },
           cwd,
         );
-      if (kind === "verify" || kind === "restore") {
+      if (kind === "verify" || kind === "restore" || kind === "delete") {
         const information = await run(["info", "--json", `${repository}::${job.archive}`]);
         if (information.code !== 0) throw new Error("BORG_ARCHIVE_MISSING");
         const archive = (
@@ -584,6 +588,15 @@ export class LinuxBackups {
         )
           throw new Error("BORG_RESTORE_FAILED");
         job.restorePath = destination;
+      } else if (kind === "delete") {
+        job.stage = "deleting";
+        deletionAttempted = true;
+        if ((await run(["delete", "--", `${repository}::${job.archive}`])).code !== 0)
+          throw new Error("BORG_DELETE_FAILED");
+        archiveDeleted = true;
+        job.stage = "compacting";
+        if ((await run(["compact", repository])).code !== 0)
+          throw new Error("BORG_DELETE_CLEANUP_FAILED");
       } else {
         if (!spec.retention.enabled) fail("BACKUP_RETENTION_DISABLED");
         await this.#prune(spec, repository, job, run);
@@ -599,22 +612,35 @@ export class LinuxBackups {
           : /^[A-Z_]{1,80}$/.test(message)
             ? message
             : "BORG_OPERATION_FAILED");
+      if (archiveDeleted) {
+        outcome = "warning";
+        job.error = "BORG_DELETE_CLEANUP_FAILED";
+      } else if (deletionAttempted && controller.signal.aborted) {
+        outcome = "warning";
+        job.error = "BORG_DELETE_INTERRUPTED";
+      }
     } finally {
       if (spaceTimer) clearInterval(spaceTimer);
-      if (archiveBase && job.archive && (job.kind === "create" || job.kind === "verify")) {
+      if (
+        archiveBase &&
+        job.archive &&
+        (job.kind === "create" || job.kind === "verify" || archiveDeleted)
+      ) {
         try {
           await this.#repository(input.spec, false);
           const entries = await this.#archiveMetadata(archiveBase);
           const { scope } = input.spec;
-          entries[job.archive] = {
-            verification:
-              outcome === "warning" || entries[job.archive]?.verification === "warning"
-                ? "warning"
-                : verified
-                  ? "verified"
-                  : "unknown",
-            scope: job.kind === "create" ? scope : (entries[job.archive]?.scope ?? null),
-          };
+          if (archiveDeleted) delete entries[job.archive];
+          else
+            entries[job.archive] = {
+              verification:
+                outcome === "warning" || entries[job.archive]?.verification === "warning"
+                  ? "warning"
+                  : verified
+                    ? "verified"
+                    : "unknown",
+              scope: job.kind === "create" ? scope : (entries[job.archive]?.scope ?? null),
+            };
           const temporary = join(archiveBase, `.archive-status-${randomUUID()}`);
           await writeFile(
             temporary,
@@ -624,8 +650,8 @@ export class LinuxBackups {
           await rename(temporary, join(archiveBase, "archive-status.json"));
         } catch {
           if (outcome === "succeeded") {
-            outcome = "failed";
-            job.error = "BORG_METADATA_FAILED";
+            outcome = archiveDeleted ? "warning" : "failed";
+            job.error = archiveDeleted ? "BORG_DELETE_METADATA_FAILED" : "BORG_METADATA_FAILED";
           }
         }
       }
