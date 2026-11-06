@@ -30,6 +30,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
       - name: Verify real systemd module visibility and sandboxed package preflight
         run: bash tests/package-safety/check.sh
 
