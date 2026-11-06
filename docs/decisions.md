@@ -1099,3 +1099,15 @@ that these archives leave the EveryOS UI, identifies their retained repository, 
 keep their original encryption passphrase for Borg recovery. Reject removal of a running plan
 instead of implicitly cancelling it or losing configuration while work is active. Retain history
 and audit records. Users who want to keep EveryOS recovery access should disable the plan.
+
+## Host package hooks require the real module and boot filesystem (2026-11-06)
+
+`ProtectKernelModules=yes` masks the module tree inherited by package maintainer scripts and
+can cause incomplete kernel installation or incomplete initramfs generation. Remove that policy
+only from the two privileged package executors; retain the API sandbox. Do not filter kernel
+package names as a substitute, because ordinary packages can also trigger initramfs regeneration.
+The executor independently verifies its live mount view and dpkg state before mutation. Refuse an
+unsafe environment instead of repairing global package state or boot images automatically.
+Preserve unfinished release recovery transactions when refusing and block replacement requests.
+Existing services need an idle, administrator-controlled namespace replacement before safe use;
+an on-disk unit change alone cannot fix their running namespace. See [updates.md](updates.md).

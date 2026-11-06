@@ -23,7 +23,7 @@ export function compareKernelReleases(a: string, b: string): number {
  * Whether installed updates wait for a restart: Debian/Ubuntu's `reboot-required` marker (with
  * the packages that asked for it), or a kernel in /boot newer than the running one (or the
  * running one removed). Only kernels of the running flavour (`-generic`, `-raspi`, `-rpi-v8`…)
- * count. /boot, unlike /lib/modules, stays visible to services with ProtectKernelModules.
+ * count. Inspect boot images rather than assuming the running kernel is the newest installed.
  */
 export async function collectRebootStatus(
   options: { paths?: HostPaths; kernel?: string } = {},

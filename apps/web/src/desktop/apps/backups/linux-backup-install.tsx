@@ -48,6 +48,12 @@ export function LinuxBackupInstall({
     job?.error && Object.hasOwn(errors, job.error)
       ? errors[job.error as keyof typeof errors]
       : "installFailed";
+  const installationError =
+    job?.error === "PACKAGE_ENVIRONMENT_UNSAFE"
+      ? t("packageSafety.unsafeEnvironment")
+      : job?.error === "PACKAGE_STATE_UNSAFE"
+        ? t("packageSafety.unsafeState")
+        : t(`linuxBackups.${errorKey}`);
   const unlockError = job?.error
     ? new ApiRequestError(403, "AGENT_OPERATION_DENIED", "", { reason: job.error })
     : null;
@@ -73,9 +79,7 @@ export function LinuxBackupInstall({
           </p>
         </div>
         <p className="mt-2 text-xs leading-relaxed">{t("linuxBackups.installHint")}</p>
-        {job?.status === "failed" ? (
-          <p className="mt-2 text-sm">{t(`linuxBackups.${errorKey}`)}</p>
-        ) : null}
+        {job?.status === "failed" ? <p className="mt-2 text-sm">{installationError}</p> : null}
         {job?.status === "failed" ? (
           <div className="mt-2">
             <SudoUnlock error={unlockError} />

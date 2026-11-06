@@ -48,6 +48,8 @@ export async function* installLinuxBackupEngine(
     const code =
       reason === "BORG_PACKAGE_UNAVAILABLE" ||
       reason === "BORG_PACKAGE_VERSION" ||
+      reason === "PACKAGE_ENVIRONMENT_UNSAFE" ||
+      reason === "PACKAGE_STATE_UNSAFE" ||
       reason === "BORG_INSTALL_EVERYOS_VERSION"
         ? reason
         : "BORG_INSTALL_FAILED";

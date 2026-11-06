@@ -1,7 +1,9 @@
+import { packageSafetyEn } from "../package-safety.ts";
 import { linuxBackupsEn } from "../linux-backups.ts";
 import type { Messages } from "./tr.ts";
 
 export const en: Messages = {
+  packageSafety: packageSafetyEn,
   common: {
     appName: "EveryOS",
     continue: "Continue",

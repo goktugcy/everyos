@@ -11,6 +11,8 @@ import { requestConfirm } from "../../desktop/menus/confirm.tsx";
 import { subscribeTopic } from "../../lib/event-stream.ts";
 
 const FAILURE_MESSAGES = {
+  "package-environment-unsafe": "packageSafety.unsafeEnvironment",
+  "package-state-unsafe": "packageSafety.unsafeState",
   "release-metadata-invalid": "selfUpdate.errors.metadata",
   "recovery-package-invalid": "selfUpdate.errors.recovery",
   "package-download-failed": "selfUpdate.errors.download",

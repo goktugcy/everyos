@@ -15,6 +15,24 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  package-safety:
+    name: Package environment safety (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+      - name: Verify real systemd module visibility and sandboxed package preflight
+        run: bash tests/package-safety/check.sh
+
   check:
     name: Lint, typecheck, test, build (${{ matrix.arch }})
     strategy:

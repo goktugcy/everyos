@@ -1,8 +1,10 @@
+import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
 
 /** Japanese. */
 export const ja: LocaleMessages = {
+  packageSafety: packageSafetyEn,
   common: {
     appName: "EveryOS",
     continue: "続行",

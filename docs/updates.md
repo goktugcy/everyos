@@ -82,6 +82,60 @@ signed release.
 
 ## Operating-system package updates
 
+### Package-service filesystem safety
+
+The privileged agent and release worker run APT/dpkg maintainer scripts, which can rebuild an
+initramfs even when the selected package is not a kernel. Their units must use
+`ProtectKernelModules=no`: systemd's `yes` setting hides `/usr/lib/modules`, in addition to
+blocking module-load syscalls. The unprivileged HTTP API keeps its existing strict sandbox,
+including `ProtectKernelModules=yes`. The update worker also permits `AF_NETLINK` for package
+hooks that query udev/network state. Other unit protections remain in place.
+
+Before an APT refresh/install/upgrade or a release install/rollback, the executor checks its actual
+filesystem view against PID 1's root: module trees, the running kernel's module metadata, `/boot`
+and the dpkg database must be visible and refer to the same host objects. Relevant mounts must
+be writable. This checks the running namespace, so merely editing a unit file and reloading
+systemd cannot trick an already restricted process into proceeding. Missing/unreadable metadata,
+a hidden tree, a read-only boot/module/database mount or an unverifiable host view fails closed.
+Minimal containers without the host's kernel module tree are intentionally refused for host
+package mutations. Read-only package queries remain available. Explicit APT list refreshes also
+use the filesystem gate because APT can run administrator-configured post-invoke hooks.
+
+APT and normal EveryOS installs audit dpkg state before mutation and after an otherwise successful
+installation; release recovery also requires a clean audit before clearing its transaction.
+Unfinished package configuration is not reported as success or silently repaired by
+installing another package. A release recovery transaction is retained if its environment is unsafe;
+a new request cannot overwrite that transaction. Recovery can resume after an administrator fixes
+the environment. These checks are not proof that an initramfs is bootable and do not regenerate or
+repair existing boot images automatically.
+
+#### Existing installations affected by the old unit policy
+
+Versions whose package services have `ProtectKernelModules=yes` remain affected until their
+running service namespaces are replaced. Do not use a potentially restricted EveryOS worker to
+repair a damaged kernel installation. A privileged host administrator should first pause scheduled
+updates and ensure no APT/dpkg/initramfs operation or EveryOS release transaction is running;
+never kill such a transaction or restart its agent midway through it.
+
+From an ordinary host SSH/physical terminal outside EveryOS, create administrator-owned service drop-ins setting
+`ProtectKernelModules=no` for **both** `everyos-agent.service` and `everyos-update.service`, and
+include `AF_NETLINK` in the worker's address-family allowlist. Run `systemctl daemon-reload`, then
+restart the idle agent. The idle oneshot worker will get the corrected namespace on its next start.
+Do not relax the API unit. `systemctl show` describes the loaded policy, not necessarily the
+namespace of a process started before the change; a safe executor restart is necessary.
+
+An unbootable host needs recovery outside EveryOS, with its actual root/boot/encryption layout
+identified by an administrator. A successful EveryOS code update alone cannot certify or repair
+images previously generated with missing modules. Preserve any known-good boot image before
+manual repair and verify the host's package and boot state before restarting.
+
+The **Package environment safety** CI jobs demonstrate the old/new module visibility
+using real systemd namespaces on fresh AMD64/ARM64 hosted VMs. The preflight fixture suite runs
+in a separate read-only root with no network/credentials, a capped scratch tmpfs, and explicit
+CPU/memory/process/file-size/runtime limits. It does not install a kernel or modify real `/boot`.
+
+Reference: [systemd v255 execution environment documentation](https://github.com/systemd/systemd/blob/v255/man/systemd.exec.xml).
+
 The **Updates** app (`everyos.updates`) lists upgradable APT packages, explains each one and runs
 package-list refreshes and upgrades as background jobs. Nothing ever starts on its own: EveryOS
 never upgrades the operating system automatically. Scheduling a refresh or a security upgrade is

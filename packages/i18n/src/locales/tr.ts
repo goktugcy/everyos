@@ -1,3 +1,4 @@
+import { packageSafetyTr } from "../package-safety.ts";
 import { linuxBackupsTr } from "../linux-backups.ts";
 import type {
   AlertKind,
@@ -29,6 +30,7 @@ import type {
  * locale must provide (enforced by the type checker).
  */
 export const tr = {
+  packageSafety: packageSafetyTr,
   common: {
     appName: "EveryOS",
     continue: "Devam et",

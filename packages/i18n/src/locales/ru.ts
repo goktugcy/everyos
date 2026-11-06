@@ -1,8 +1,10 @@
+import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
 
 /** Russian. */
 export const ru: LocaleMessages = {
+  packageSafety: packageSafetyEn,
   common: {
     appName: "EveryOS",
     continue: "Продолжить",

@@ -113,6 +113,8 @@ export class SelfUpdateManager {
     writeFileSync(join(lock, "pid"), String(process.pid), { mode: 0o600, flag: "wx" });
     try {
       const old = readJob();
+      if (existsSync(join(UPDATE_ROOT, "transaction.json")))
+        throw new Error("An unfinished update transaction requires recovery before another update");
       if (old && !terminal(old.job)) throw new Error("An update is already running");
       const worker = await promisify(execFile)(
         "/usr/bin/systemctl",

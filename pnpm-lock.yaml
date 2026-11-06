@@ -2011,6 +2011,9 @@ importers:
       '@everyos/shared':
         specifier: workspace:*
         version: link:../shared
+      '@everyos/system':
+        specifier: workspace:*
+        version: link:../system
       zod:
         specifier: 'catalog:'
         version: 4.6.6

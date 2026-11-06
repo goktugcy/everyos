@@ -202,6 +202,8 @@ export const LinuxBackupInstallEventSchema = z.discriminatedUnion("type", [
     error: z
       .enum([
         "BORG_PACKAGE_UNAVAILABLE",
+        "PACKAGE_ENVIRONMENT_UNSAFE",
+        "PACKAGE_STATE_UNSAFE",
         "BORG_PACKAGE_VERSION",
         "BORG_INSTALL_BUSY",
         "BORG_INSTALL_REFRESH_FAILED",

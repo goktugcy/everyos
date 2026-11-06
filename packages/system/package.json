@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./archive": "./src/archive/index.ts"
+    "./archive": "./src/archive/index.ts",
+    "./package-safety": "./src/apt/safety.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json"

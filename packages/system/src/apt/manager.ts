@@ -5,6 +5,7 @@ import { CommandError, findExecutable, runCapture, runCommand, SAFE_ENV } from "
 import { parseAptPolicy, parseAptShow, parseAptSummary } from "../linux/apt.ts";
 import { collectAptUpdates } from "../collect/apt.ts";
 import { UnavailableError } from "../unavailable.ts";
+import { assertPackageMutationSafe } from "./safety.ts";
 
 export type AptUpgradeEvent =
   | { type: "line"; text: string }
@@ -65,6 +66,16 @@ export function createAptManager(): AptManager {
     if (!path) throw new UnavailableError("tool-missing", `${name} is not installed`);
     return path;
   };
+  const checkDatabase = async (signal: AbortSignal) => {
+    const audit = await runCapture(await tool("dpkg"), ["--audit"], {
+      timeoutMs: 20_000,
+      signal,
+      env: APT_ENV,
+      maxOutputBytes: 32 * 1024,
+    });
+    if (audit.exitCode !== 0 || audit.output.trim())
+      throw new CommandError("failed", "PACKAGE_STATE_UNSAFE");
+  };
   return {
     source: "host",
     updates: () => collectAptUpdates(),
@@ -98,6 +109,10 @@ export function createAptManager(): AptManager {
     },
 
     async refresh(signal) {
+      // APT list refreshes can also execute administrator-configured hooks.
+      await assertPackageMutationSafe().catch(() => {
+        throw new CommandError("failed", "PACKAGE_ENVIRONMENT_UNSAFE");
+      });
       const aptGet = await tool("apt-get");
       const result = await runCapture(aptGet, ["update"], {
         timeoutMs: 10 * 60_000,
@@ -109,6 +124,10 @@ export function createAptManager(): AptManager {
     },
 
     async installBorg(signal) {
+      await assertPackageMutationSafe().catch(() => {
+        throw new CommandError("failed", "PACKAGE_ENVIRONMENT_UNSAFE");
+      });
+      await checkDatabase(signal);
       const aptGet = await tool("apt-get");
       const candidate = (await this.package("borgbackup")).candidateVersion;
       if (!candidate) throw new CommandError("failed", "BORG_PACKAGE_UNAVAILABLE");
@@ -141,6 +160,7 @@ export function createAptManager(): AptManager {
           maxOutputBytes: 64 * 1024,
         },
       );
+      if (result.exitCode === 0) await checkDatabase(signal);
       return { ok: result.exitCode === 0, busy: LOCKED.test(result.output) };
     },
 
@@ -157,12 +177,16 @@ export function createAptManager(): AptManager {
         (await collectAptUpdates()).packages
           .map((item) => item.name)
           .filter((name) => name !== "everyos");
+      if (selected.some((name) => !PACKAGE_NAME.test(name)))
+        throw new CommandError("failed", "Invalid package name");
+      await assertPackageMutationSafe().catch(() => {
+        throw new CommandError("failed", "PACKAGE_ENVIRONMENT_UNSAFE");
+      });
+      await checkDatabase(signal);
       if (!selected.length) {
         yield { type: "done", ok: true, exitCode: 0, upgraded: 0, busy: false };
         return;
       }
-      if (selected.some((name) => !PACKAGE_NAME.test(name)))
-        throw new CommandError("failed", "Invalid package name");
       const aptGet = await tool("apt-get");
       const installed = await runCapture(
         await tool("dpkg-query"),
@@ -180,6 +204,7 @@ export function createAptManager(): AptManager {
         ...selected,
         ...(everyosVersion ? [`everyos=${everyosVersion}`] : []),
       ];
+      signal.throwIfAborted();
       const child = spawn(aptGet, args, { env: APT_ENV, stdio: ["ignore", "pipe", "pipe"] });
       const kill = () => child.exitCode === null && child.kill("SIGTERM");
       signal.addEventListener("abort", kill, { once: true });
@@ -218,6 +243,7 @@ export function createAptManager(): AptManager {
           yield { type: "line", text };
         }
         const exitCode = await exit;
+        if (exitCode === 0) await checkDatabase(signal);
         yield { type: "done", ok: exitCode === 0, exitCode, upgraded, busy };
       } finally {
         signal.removeEventListener("abort", kill);

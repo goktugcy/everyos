@@ -35,6 +35,7 @@ import {
   type ReleaseConfig,
 } from "./config.ts";
 import type { ReleaseJobState } from "@everyos/shared";
+import { assertPackageMutationSafe, PackageEnvironmentError } from "@everyos/system/package-safety";
 
 const execute = promisify(execFile);
 const logger = createLogger({ name: "everyos-update", level: "info", format: "json" });
@@ -46,6 +47,13 @@ const environment = {
 };
 const command = (file: string, args: string[]) =>
   execute(file, args, { env: environment, timeout: 15 * 60_000, maxBuffer: 1024 * 1024 });
+async function packageDatabaseClean(): Promise<boolean> {
+  try {
+    return !(await command("/usr/bin/dpkg", ["--audit"])).stdout.trim();
+  } catch {
+    return false;
+  }
+}
 const units = ["everyos-api.service", "everyos-agent.service"];
 const transactionPath = join(UPDATE_ROOT, "transaction.json");
 const snapshotPath = join(UPDATE_ROOT, "snapshot");
@@ -62,7 +70,9 @@ type Transaction = z.infer<typeof TransactionSchema>;
 function update(record: JobRecord, state: ReleaseJobState, error: string | null = null): void {
   record.job.state = state;
   record.job.error = error;
-  if (["succeeded", "rolled-back", "failed"].includes(state)) record.job.finishedAt = Date.now();
+  record.job.finishedAt = ["succeeded", "rolled-back", "failed"].includes(state)
+    ? Date.now()
+    : null;
   writeState(join(UPDATE_ROOT, "job.json"), record);
   // The append-only root audit survives database restore and volatile journal configurations.
   const event = {
@@ -157,11 +167,17 @@ async function recover(
   config: ReleaseConfig,
   transaction: Transaction,
 ): Promise<void> {
+  await assertPackageMutationSafe();
   update(record, "rolling-back", record.job.error);
   await command("/usr/bin/systemctl", ["stop", ...units]);
   if (transaction.installing) {
     const previous = cachedPackage(config, record.job.previousVersion);
+    await assertPackageMutationSafe();
     await command("/usr/bin/dpkg", ["--force-confold", "--install", previous]);
+  }
+  if (!(await packageDatabaseClean())) {
+    update(record, "failed", "package-state-unsafe");
+    return;
   }
   if (transaction.snapshot) restoreSnapshot(config, transaction);
   await command("/usr/bin/systemctl", ["reset-failed", ...units]);
@@ -177,7 +193,15 @@ export async function runWorker(): Promise<void> {
   stateDirectory();
   const record = readJob();
   if (!record) return;
-  if (record.job.finishedAt !== null) {
+  let oldTransaction: Transaction | null = null;
+  if (existsSync(transactionPath)) {
+    trustedPath(transactionPath);
+    oldTransaction = TransactionSchema.parse(JSON.parse(readFileSync(transactionPath, "utf8")));
+  }
+  if (oldTransaction && oldTransaction.jobId !== record.job.id)
+    throw new Error("Transaction identity mismatch");
+  // A refused recovery must retain its snapshot/transaction until the environment is repaired.
+  if (record.job.finishedAt !== null && !(record.job.state === "failed" && oldTransaction)) {
     if (existsSync(maintenance) && readFileSync(maintenance, "utf8") === record.job.id)
       rmSync(maintenance);
     if (existsSync(transactionPath)) {
@@ -189,17 +213,22 @@ export async function runWorker(): Promise<void> {
   }
   const config = releaseConfig();
   if (!config) throw new Error("Release source is not configured");
-  const oldTransaction = existsSync(transactionPath)
-    ? TransactionSchema.parse(JSON.parse(readFileSync(transactionPath, "utf8")))
-    : null;
+  try {
+    await assertPackageMutationSafe();
+  } catch {
+    update(record, "failed", "package-environment-unsafe");
+    return;
+  }
   if (oldTransaction) {
-    if (oldTransaction.jobId !== record.job.id) throw new Error("Transaction identity mismatch");
     await recover(record, config, oldTransaction);
     return;
   }
   let transaction: Transaction | null = null;
   let failure = "release-metadata-invalid";
   try {
+    failure = "package-state-unsafe";
+    if (!(await packageDatabaseClean())) throw new Error("Package database needs repair");
+    failure = "release-metadata-invalid";
     update(record, "downloading");
     const bytes = await readReleaseFile(config, "latest/download/release.json", 128 * 1024);
     const manifest = verifyRelease(bytes.toString("utf8"), config.publicKey);
@@ -296,7 +325,10 @@ export async function runWorker(): Promise<void> {
     writeState(transactionPath, transaction);
     update(record, "installing");
     failure = "dpkg-install-failed";
+    await assertPackageMutationSafe();
     await command("/usr/bin/dpkg", ["--force-confold", "--install", candidate]);
+    failure = "package-state-unsafe";
+    if (!(await packageDatabaseClean())) throw new Error("Package configuration is incomplete");
     update(record, "restarting");
     failure = "service-health-failed";
     await command("/usr/bin/systemctl", ["start", "everyos-agent.service", "everyos-api.service"]);
@@ -326,7 +358,11 @@ export async function runWorker(): Promise<void> {
     update(record, "succeeded");
     rmSync(transactionPath, { force: true });
     rmSync(maintenance, { force: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof PackageEnvironmentError) {
+      update(record, "failed", "package-environment-unsafe");
+      return;
+    }
     record.job.error = failure;
     if (transaction) await recover(record, config, transaction);
     else update(record, "failed", failure);

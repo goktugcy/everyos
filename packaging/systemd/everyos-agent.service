@@ -17,13 +17,14 @@ RestartSec=2
 UMask=0077
 ProtectHome=read-only
 ProtectKernelTunables=yes
-ProtectKernelModules=yes
+# APT maintainer scripts must read/write the real module tree when rebuilding initramfs.
+ProtectKernelModules=no
 ProtectControlGroups=yes
 RestrictRealtime=yes
 LockPersonality=yes
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 # APT and configured account PTYs require host filesystem/device access and setuid.
-# Docker consumes the host-visible app-configs mount; no private mount namespace here.
+# Docker consumes the app-configs mount created by the separate host mount unit.
 
 [Install]
 WantedBy=multi-user.target

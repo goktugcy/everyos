@@ -243,7 +243,12 @@ write roots or backup disks require explicit systemd `ReadWritePaths` drop-ins. 
 unit's filesystem policy.
 
 The agent and updater run as root because APT, configured account PTYs and dpkg need host access.
-They protect kernel settings, modules/control groups, realtime scheduling and address families.
+They protect kernel settings/control groups, realtime scheduling and address families.
+Both package executors use `ProtectKernelModules=no`: APT/dpkg hooks need the actual writable
+module tree to build initramfs, even for non-kernel updates. The API retains
+`ProtectKernelModules=yes`. A runtime preflight refuses hidden/read-only boot/module/package
+trees, and dpkg audits prevent incomplete configuration being reported as success. See
+[package-service safety and existing-installation migration](updates.md#package-service-filesystem-safety).
 They deliberately retain the filesystem/device/setuid access those operations need; Node's JIT
 also prevents a blanket executable-memory prohibition. The typed registry, permissions, strict
 schemas, policy, limits and audit remain the primary privileged-operation boundary.
@@ -254,8 +259,7 @@ Disks from Settings › Disks are mounted by systemd itself through mount units 
 `/srv/everyos/disks` ([disks.md](disks.md)); the post-installation script creates `/srv/everyos`
 and `/srv/everyos/disks` as `root:root 0755` and refuses symlinks there. The API never reads
 them: Files reaches disks through the account workers. Restart and shutdown run through a
-transient `everyos-power` timer. Because `ProtectKernelModules` hides `/lib/modules`, the
-restart-required check reads the kernels in `/boot` instead.
+transient `everyos-power` timer. The restart-required check reads installed kernels from `/boot`.
 
 ```sh
 sudo apt-get remove everyos
