@@ -1,10 +1,10 @@
 {
   "format": "everyos-community-live-acceptance/1",
-  "everyosVersion": "0.1.49",
+  "everyosVersion": "0.1.50",
   "origin": "https://registry.everyos.net",
   "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
-  "verifiedAt": "2026-11-06T22:18:06.302Z",
-  "evidenceUrl": "https://github.com/goktugcy/everyos/blob/670be61a2a317bb11bfc78f3c70262f497021c34/docs/evidence/community-20261107-049/live-lifecycle.json",
+  "verifiedAt": "2026-11-08T20:29:07.301Z",
+  "evidenceUrl": "https://github.com/goktugcy/everyos/blob/7b6ba8b9b52a922a7b4d5b352a54923dfd6d8c0c/docs/evidence/community-20261108-050/live-lifecycle.json",
   "live": true,
   "checks": {
     "enrollment": "passed",
