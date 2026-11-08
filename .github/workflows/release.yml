@@ -1,7 +1,7 @@
 name: Signed EveryOS release
 on:
   push:
-    tags: ["v*", "!v-notes-*"]
+    tags: ["v*", "!v-notes-*", "!v-apps-*"]
 permissions:
   contents: read
 # The shared latest index and its sequence must advance in publication order.
@@ -111,7 +111,7 @@ jobs:
         env:
           EVERYOS_APP_REGISTRY_PRIVATE_KEY: ${{ secrets.EVERYOS_APP_REGISTRY_PRIVATE_KEY }}
           EVERYOS_APP_PUBLISHER_PRIVATE_KEY: ${{ secrets.EVERYOS_APP_PUBLISHER_PRIVATE_KEY }}
-        run: pnpm official-apps:sign --sequence "$GITHUB_RUN_NUMBER" --previous-index dist/previous-official-apps.json
+        run: pnpm official-apps:sign --sequence next --previous-index dist/previous-official-apps.json
       - name: Verify pinned official app signatures and release report
         run: pnpm official-apps:verify
       - name: Sign release metadata

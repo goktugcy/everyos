@@ -27,6 +27,21 @@ const preferences = {
 };
 
 describe("notification preferences", () => {
+  it("announces automatic desktop updates and opens the installed-app list without bypassing preferences", () => {
+    const notice: NotificationView = {
+      ...base,
+      kind: "desktop-app-updated",
+      category: "apps",
+      severity: "success",
+    };
+    expect(shouldToast(notice, preferences)).toBe(true);
+    expect(shouldToast(notice, { ...preferences, toasts: false })).toBe(false);
+    expect(shouldToast(notice, { ...preferences, mutedCategories: ["apps"] })).toBe(false);
+    expect(notificationAction(notice.kind, ["apps:read"])).toEqual({
+      appId: "everyos.store",
+      appState: { tab: "installed" },
+    });
+  });
   it("counts unread notifications outside muted categories", () => {
     expect(unreadTotal({ services: 2, security: 1 }, [])).toBe(3);
     expect(unreadTotal({ services: 2, security: 1 }, ["security"])).toBe(2);

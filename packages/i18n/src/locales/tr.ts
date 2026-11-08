@@ -1,3 +1,4 @@
+import { desktopAppNotificationsTr } from "../desktop-app-updates.ts";
 import { packageSafetyTr } from "../package-safety.ts";
 import { linuxBackupsTr } from "../linux-backups.ts";
 import type {
@@ -2751,6 +2752,7 @@ export const tr = {
       interrupted: "İşlem yarıda kesildi",
     },
     kinds: {
+      ...desktopAppNotificationsTr,
       "everyos-update-available": {
         title: "Yeni EveryOS sürümü hazır",
         body: "EveryOS {{version}} yayınlandı. Kurulu sürüm: {{installedVersion}}. Ayrıntılar ve güncelleme için Ayarlar → Hakkında ekranını aç.",

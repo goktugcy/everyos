@@ -395,6 +395,7 @@ export function createServices(deps: ServiceDependencies): Services {
     apps,
     desktopApps: new DesktopAppsService({
       db: deps.db,
+      audit,
       secrets,
       logger: deps.logger,
       now,

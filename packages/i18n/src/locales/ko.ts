@@ -1,3 +1,4 @@
+import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
@@ -2764,6 +2765,7 @@ export const ko: LocaleMessages = {
       interrupted: "작업이 중단되었습니다",
     },
     kinds: {
+      ...desktopAppNotificationsEn,
       "everyos-update-available": {
         title: "새 EveryOS 버전 사용 가능",
         body: "EveryOS {{version}} 버전을 사용할 수 있습니다. 설치된 버전: {{installedVersion}}. 자세한 내용 확인 및 업데이트는 설정 → 정보에서 진행하세요.",

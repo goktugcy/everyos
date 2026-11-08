@@ -55,6 +55,9 @@ export function notificationText(
 const ACTIONS: Partial<
   Record<NotificationKind, { appId: AppId; appState?: Record<string, string> }>
 > = {
+  "desktop-app-updated": { appId: "everyos.store", appState: { tab: "installed" } },
+  "desktop-app-update-approval": { appId: "everyos.store", appState: { tab: "installed" } },
+  "desktop-app-update-failed": { appId: "everyos.store", appState: { tab: "installed" } },
   "service-failed": { appId: "everyos.services", appState: { filter: "failed" } },
   "storage-low": { appId: "everyos.system", appState: { tab: "storage" } },
   "nvme-unhealthy": { appId: "everyos.system", appState: { tab: "hardware" } },

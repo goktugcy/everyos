@@ -51,6 +51,9 @@ export const NOTIFICATION_KINDS = {
   "app-failed": { category: "apps", permission: "apps:read", condition: false },
   /** The catalog has a newer definition of an installed app. */
   "app-update-available": { category: "apps", permission: "apps:read", condition: true },
+  "desktop-app-updated": { category: "apps", permission: "apps:read", condition: false },
+  "desktop-app-update-approval": { category: "apps", permission: "apps:manage", condition: true },
+  "desktop-app-update-failed": { category: "apps", permission: "apps:manage", condition: true },
   "updates-installed": { category: "updates", permission: "system:read", condition: false },
   "updates-failed": { category: "updates", permission: "system:read", condition: false },
   "backup-succeeded": { category: "backups", permission: "backups:manage", condition: false },
@@ -92,6 +95,7 @@ export type NotificationKind = keyof typeof NOTIFICATION_KINDS;
 export const ANNOUNCED_KINDS: ReadonlySet<NotificationKind> = new Set([
   "disk-attached",
   "disk-detached",
+  "desktop-app-updated",
 ]);
 
 export const NOTIFICATION_KIND_IDS = Object.keys(NOTIFICATION_KINDS) as NotificationKind[];

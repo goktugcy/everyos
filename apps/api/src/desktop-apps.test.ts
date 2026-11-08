@@ -315,10 +315,11 @@ describe("desktop app registries", () => {
         );
         expect(apps).toHaveLength(1);
         expect(apps[0]?.version).toBe(state === "available" ? "1.1.0" : "1.0.0");
-        const installed = await json<{ apps: DesktopAppInstallationView[] }>(
-          await viewer.get("/api/desktop-apps/installed"),
+        await vi.waitFor(() =>
+          expect(
+            ctx.services.desktopApps.installer.installation("dev.everyos.notes"),
+          ).toMatchObject({ version: state === "available" ? "1.1.0" : "1.0.0", state: "active" }),
         );
-        expect(installed.apps[0]).toMatchObject({ version: "1.0.0", state: "active" });
         expect(registry.requests.some((request) => request.path === "/disabled.json")).toBe(false);
       } finally {
         ctx.services.desktopApps.stop();
@@ -3222,4 +3223,214 @@ describe("an independent developer's registry", () => {
       await rm(work, { recursive: true, force: true });
     }
   }, 60_000);
+});
+
+describe("automatic official app updates", () => {
+  it("does not automatically update independently installed community apps", async () => {
+    const { ctx, admin, registry } = await setup();
+    const id = "com.example.notes";
+    const source = ctx.services.desktopApps.registries.create({
+      kind: "community",
+      name: "Fixture community",
+      url: registry.base + "/community.json",
+      publicKey: registryKeys.publicKey,
+      fingerprint: keyFingerprint(registryKeys.publicKey),
+      allowPrivate: true,
+    });
+    const publisher = { id: "com.example", name: "Example", keys: [officialKeys.publicKey] };
+    const first = await buildApp(id, "1.0.0", ["storage:app"], officialKeys.privateKey);
+    publish(
+      registry,
+      index(
+        [{ id, versions: [first] }],
+        { registry: { id: "community", name: "Community" } },
+        publisher,
+      ),
+      [first],
+      false,
+    );
+    registry.files.set("/community.json", registry.files.get("/index.json")!);
+    await ctx.services.desktopApps.registries.sync(source.id);
+    expect(
+      (
+        await admin.post("/api/desktop-apps/installed", {
+          registryId: source.id,
+          appId: id,
+          approve: [],
+        })
+      ).status,
+    ).toBe(201);
+    const second = await buildApp(id, "1.1.0", ["storage:app"], officialKeys.privateKey);
+    publish(
+      registry,
+      index(
+        [{ id, versions: [first, second] }],
+        { sequence: 2, registry: { id: "community", name: "Community" } },
+        publisher,
+      ),
+      [first, second],
+      false,
+    );
+    registry.files.set("/community.json", registry.files.get("/index.json")!);
+    await ctx.services.desktopApps.registries.sync(source.id);
+    expect(
+      ctx.services.desktopApps.installer.listings().find((app) => app.appId === id)
+        ?.updateAvailable,
+    ).toBe("1.1.0");
+    await ctx.services.desktopApps.updates.check();
+    expect(ctx.services.desktopApps.installer.installation(id)?.version).toBe("1.0.0");
+  });
+  async function pending(permissions = ["storage:app"]) {
+    const env = await setup();
+    const first = await buildApp(
+      "dev.everyos.notes",
+      "1.0.0",
+      ["storage:app"],
+      officialKeys.privateKey,
+    );
+    publish(env.registry, index([{ id: "dev.everyos.notes", versions: [first] }]), [first]);
+    expect((await sync(env.admin)).status).toBe(200);
+    expect(
+      (
+        await env.admin.post("/api/desktop-apps/installed", {
+          registryId: "official",
+          appId: "dev.everyos.notes",
+          approve: [],
+        })
+      ).status,
+    ).toBe(201);
+    const next = await buildApp("dev.everyos.notes", "1.1.0", permissions, officialKeys.privateKey);
+    publish(
+      env.registry,
+      index([{ id: "dev.everyos.notes", versions: [first, next] }], { sequence: 2 }),
+      [first, next],
+    );
+    expect((await sync(env.admin)).status).toBe(200);
+    return { ...env, next, service: env.ctx.services.desktopApps };
+  }
+
+  it("updates verified packages without a login, preserves per-user data and announces success once", async () => {
+    const { ctx, service } = await pending();
+    const user = ctx.db.get<{ id: string }>("SELECT id FROM users LIMIT 1")!.id;
+    service.storage.set("dev.everyos.notes", user, "note", "Keep my real fixture note");
+    const old = service.installer.installation("dev.everyos.notes")!;
+    await Promise.all([service.updates.check(), service.updates.check()]);
+    const updated = service.installer.installation("dev.everyos.notes")!;
+    expect(updated.version).toBe("1.1.0");
+    expect(updated.runtimeUrl).not.toBe(old.runtimeUrl);
+    expect(service.storage.get("dev.everyos.notes", user, "note")?.value).toBe(
+      "Keep my real fixture note",
+    );
+    await service.updates.check();
+    expect(
+      ctx.db.get<{ n: number }>(
+        "SELECT count(*) AS n FROM notifications WHERE kind = 'desktop-app-updated'",
+      )?.n,
+    ).toBe(1);
+    expect(
+      ctx.db.get(
+        "SELECT actor_user_id, outcome FROM audit_events WHERE action = 'desktop-apps.auto-update'",
+      ),
+    ).toMatchObject({ actor_user_id: null, outcome: "success" });
+  });
+
+  it.each(["window", "widget"] as const)(
+    "defers while a %s is open and updates after it closes",
+    async (kind) => {
+      const { service } = await pending();
+      const instance = service.instances.open({
+        appId: "dev.everyos.notes",
+        userId: "fixture",
+        sessionId: "fixture",
+        kind,
+        widgetId: kind === "widget" ? "note" : null,
+      });
+      await service.updates.check();
+      expect(service.installer.installation("dev.everyos.notes")?.version).toBe("1.0.0");
+      service.instances.close(instance.token);
+      await vi.waitFor(() =>
+        expect(service.installer.installation("dev.everyos.notes")?.version).toBe("1.1.0"),
+      );
+    },
+  );
+
+  it("requires approval even for newly requested standard permissions and never auto-grants them", async () => {
+    const { ctx, service, admin, registry } = await pending(["storage:app", "clipboard:write"]);
+    const downloads = registry.requests.filter((r) => r.path.includes("1.1.0.eosapp")).length;
+    await service.updates.check();
+    await service.updates.check();
+    expect(service.installer.installation("dev.everyos.notes")?.version).toBe("1.0.0");
+    expect(service.installer.active("dev.everyos.notes")?.granted.has("clipboard:write")).toBe(
+      false,
+    );
+    expect(registry.requests.filter((r) => r.path.includes("1.1.0.eosapp"))).toHaveLength(
+      downloads,
+    );
+    expect(
+      ctx.db.get(
+        "SELECT kind, count FROM notifications WHERE kind = 'desktop-app-update-approval'",
+      ),
+    ).toMatchObject({ kind: "desktop-app-update-approval", count: 1 });
+    expect(
+      (await admin.post("/api/desktop-apps/installed/dev.everyos.notes/update", { approve: [] }))
+        .status,
+    ).toBe(200);
+    await service.updates.check();
+    expect(
+      ctx.db.get<{ resolved_at: number | null }>(
+        "SELECT resolved_at FROM notifications WHERE kind = 'desktop-app-update-approval'",
+      )?.resolved_at,
+    ).not.toBeNull();
+  });
+
+  it("keeps the previous version after a corrupt download and backs off without repeat alerts", async () => {
+    const { ctx, service, registry, next } = await pending();
+    registry.files.set(`/${next.version.package.url}`, Buffer.from("corrupt fixture"));
+    await service.updates.check();
+    const requests = registry.requests.length;
+    await service.updates.check();
+    expect(registry.requests).toHaveLength(requests);
+    expect(service.installer.installation("dev.everyos.notes")?.version).toBe("1.0.0");
+    expect(
+      ctx.db.get("SELECT kind, count FROM notifications WHERE kind = 'desktop-app-update-failed'"),
+    ).toMatchObject({ kind: "desktop-app-update-failed", count: 1 });
+  });
+
+  it("does not re-enable disabled installations or update from a disabled registry", async () => {
+    const { service } = await pending();
+    service.installer.setEnabled("dev.everyos.notes", false);
+    await service.updates.check();
+    expect(service.installer.installation("dev.everyos.notes")).toMatchObject({
+      version: "1.0.0",
+      state: "disabled",
+    });
+    service.installer.setEnabled("dev.everyos.notes", true);
+    service.registries.update("official", { enabled: false });
+    await service.updates.check();
+    expect(service.installer.installation("dev.everyos.notes")?.version).toBe("1.0.0");
+  });
+
+  it("reserves idle apps against frames opening during the update", async () => {
+    const { service } = await pending();
+    const release = service.instances.reserveIdle("dev.everyos.notes")!;
+    expect(() =>
+      service.instances.open({
+        appId: "dev.everyos.notes",
+        userId: "fixture",
+        sessionId: "fixture",
+        kind: "window",
+        widgetId: null,
+      }),
+    ).toThrow("being updated");
+    release();
+    expect(
+      service.instances.open({
+        appId: "dev.everyos.notes",
+        userId: "fixture",
+        sessionId: "fixture",
+        kind: "window",
+        widgetId: null,
+      }),
+    ).toBeDefined();
+  });
 });

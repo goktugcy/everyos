@@ -1,0 +1,88 @@
+name: Publish official app updates
+
+on:
+  push:
+    tags: ["v-apps-*"]
+
+permissions:
+  contents: read
+
+# The OS publisher, notes amendments and app publisher share the same latest discovery catalog.
+concurrency:
+  group: signed-everyos-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require a main source commit and an app publication tag
+        run: |
+          node --input-type=module -e 'if (!/^v-apps-\d{8}-[1-9]\d{0,8}$/.test(process.env.GITHUB_REF_NAME)) process.exit(1)'
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check app and publication source
+        run: |
+          pnpm exec prettier --check official-apps scripts/official-apps*.ts scripts/previous-official-apps.ts .github/workflows/official-apps.yml
+          pnpm exec eslint official-apps scripts/official-apps*.ts scripts/previous-official-apps.ts
+          pnpm exec tsc -p tsconfig.json
+          pnpm --filter './official-apps/*' --workspace-concurrency=4 -r typecheck
+      - name: Test publication invariants
+        run: pnpm exec vitest run --project node scripts/official-apps-release.test.ts
+      - name: Test and package the complete official catalog
+        run: pnpm official-apps:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: independent-official-apps
+          path: dist/official-apps/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: independent-official-apps
+          path: dist/official-apps
+      - name: Inspect the current signed discovery catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/official-apps.ts previous
+      - name: Sign immutable app-release URLs with the next shared sequence
+        env:
+          EVERYOS_APP_REGISTRY_PRIVATE_KEY: ${{ secrets.EVERYOS_APP_REGISTRY_PRIVATE_KEY }}
+          EVERYOS_APP_PUBLISHER_PRIVATE_KEY: ${{ secrets.EVERYOS_APP_PUBLISHER_PRIVATE_KEY }}
+        run: pnpm official-apps:sign --sequence next --previous-index dist/previous-official-apps.json --asset-base-url "https://github.com/goktugcy/everyos/releases/download/$GITHUB_REF_NAME/"
+      - name: Verify and publish apps, then promote the compatibility catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/official-apps-publish.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: official-app-publication
+          path: dist/official-app-publication.json
+          if-no-files-found: error

@@ -450,6 +450,7 @@ export class DesktopAppInstaller {
     appId: string,
     input: { version?: string | undefined; approve: string[] },
     actor: InstallActor,
+    automatic = false,
   ): Promise<DesktopAppInstallationView> {
     return this.#exclusive(appId, async () => {
       const row = this.#row(appId);
@@ -457,10 +458,13 @@ export class DesktopAppInstaller {
       if (!row.registry_id)
         throw new ApiError(409, "CONFLICT", "The registry of this app was removed");
       const { registry, app } = this.listing(row.registry_id, appId);
+      if (automatic && (registry.kind !== "official" || row.state !== "active")) throw busy();
       const entry = this.#choose(registry.index!, app, input.version);
       if (compareVersions(entry.version, row.version) <= 0)
         throw new ApiError(409, "CONFLICT", "Not a newer version");
       const previous = new Set(JSON.parse(row.granted) as string[]);
+      if (automatic && entry.manifest.permissions.some((permission) => !previous.has(permission)))
+        throw new ApiError(409, "DESKTOP_APP_APPROVAL_REQUIRED", "New permissions need approval");
       const granted = this.#grants(entry.manifest, previous, input.approve, actor);
       const { bytes, publisherKey } = await this.#download(registry, app, entry);
       await this.#unpack(appId, entry, bytes);
@@ -481,8 +485,16 @@ export class DesktopAppInstaller {
         appId,
       );
       // The new version is active; the old files can go.
-      await rm(join(this.#dir, "apps", appId, row.version), { recursive: true, force: true });
-      await rm(join(this.#dir, "packages", `${appId}@${row.version}.eosapp`), { force: true });
+      await Promise.all([
+        rm(join(this.#dir, "apps", appId, row.version), { recursive: true, force: true }),
+        rm(join(this.#dir, "packages", `${appId}@${row.version}.eosapp`), { force: true }),
+      ]).catch(() => {
+        // A cleanup failure cannot undo the committed version or turn success into a false failure.
+        this.#logger.warn("Old desktop app files could not be removed", {
+          app: appId,
+          version: row.version,
+        });
+      });
       this.#logger.info("Desktop app updated", {
         app: appId,
         from: row.version,
@@ -526,6 +538,7 @@ export class DesktopAppInstaller {
   }
 
   setEnabled(appId: string, enabled: boolean): DesktopAppInstallationView {
+    if (this.#busy.has(appId)) throw busy();
     const row = this.#row(appId);
     if (!row) throw notFound("App");
     if (row.state === "revoked" && enabled)

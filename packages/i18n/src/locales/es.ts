@@ -1,3 +1,4 @@
+import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
@@ -2817,6 +2818,7 @@ export const es: LocaleMessages = {
       interrupted: "la operación se interrumpió",
     },
     kinds: {
+      ...desktopAppNotificationsEn,
       "everyos-update-available": {
         title: "Hay una nueva versión de EveryOS disponible",
         body: "EveryOS {{version}} está disponible. Versión instalada: {{installedVersion}}. Abre Ajustes → Acerca de para ver los detalles y actualizar.",

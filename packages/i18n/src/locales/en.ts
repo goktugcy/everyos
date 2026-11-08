@@ -1,3 +1,4 @@
+import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
 import { linuxBackupsEn } from "../linux-backups.ts";
 import type { Messages } from "./tr.ts";
@@ -2711,6 +2712,7 @@ export const en: Messages = {
       interrupted: "the operation was interrupted",
     },
     kinds: {
+      ...desktopAppNotificationsEn,
       "everyos-update-available": {
         title: "A new EveryOS version is available",
         body: "EveryOS {{version}} is available. Installed version: {{installedVersion}}. Open Settings → About for details and updating.",

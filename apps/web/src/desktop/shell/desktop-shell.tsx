@@ -1,6 +1,7 @@
 import { DEFAULT_WALLPAPER_PRESET_ID } from "@everyos/theme";
 import { i18next } from "../../app/i18n.ts";
 import { clearDesktopApps, loadDesktopApps } from "../desktop-apps/store.ts";
+import { useDesktopAppRefresh } from "../desktop-apps/live-updates.ts";
 import { reassignDesktops } from "@everyos/widget-sdk";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -196,6 +197,11 @@ export function DesktopShell() {
     .join(",");
   const lastListing = useRef<{ apps: InstalledAppView[] } | null>(null);
   const canReadApps = Boolean(permissions?.includes("apps:read"));
+  useDesktopAppRefresh(
+    ready && !locked && canReadApps,
+    sessionId,
+    Boolean(permissions?.includes("notifications:read")),
+  );
   const watchInstalled = ready && !locked && canReadApps && installedShortcutIds.length > 0;
   const installedResource = useApiResource<{ apps: InstalledAppView[] }>(
     watchInstalled ? "/apps" : null,

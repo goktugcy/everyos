@@ -11,6 +11,7 @@ import {
   runAppTests,
   signRelease,
   verifyRelease,
+  nextOfficialSequence,
 } from "./official-apps-release.ts";
 
 async function main(): Promise<void> {
@@ -19,6 +20,7 @@ async function main(): Promise<void> {
       out: { type: "string" },
       sequence: { type: "string" },
       "previous-index": { type: "string" },
+      "asset-base-url": { type: "string" },
       help: { type: "boolean" },
     },
     allowPositionals: true,
@@ -27,7 +29,7 @@ async function main(): Promise<void> {
   const command = positionals[0];
   if (values.help) {
     console.log(
-      "Usage: node scripts/official-apps.ts <check|build|previous|sign|verify> [--out directory] [--sequence integer] [--previous-index file]",
+      "Usage: node scripts/official-apps.ts <check|build|previous|sign|verify> [--out directory] [--sequence next|integer] [--previous-index file] [--asset-base-url URL]",
     );
     console.log(
       "check uses ephemeral keys; sign reads the protected release environment; verify requires the pinned production keys.",
@@ -78,19 +80,22 @@ async function main(): Promise<void> {
       throw new Error("Both protected app-signing secrets are required");
     if (
       !values.sequence ||
-      !/^[1-9][0-9]*$/.test(values.sequence) ||
-      !Number.isSafeInteger(Number(values.sequence))
+      (values.sequence !== "next" &&
+        (!/^[1-9][0-9]*$/.test(values.sequence) || !Number.isSafeInteger(Number(values.sequence))))
     )
-      throw new Error("Signing requires a positive safe --sequence integer");
+      throw new Error("Signing requires --sequence next or a positive safe integer");
     if (!values["previous-index"]) throw new Error("Signing requires the previous-index receipt");
     const previous = await readFile(resolve(root, values["previous-index"]), "utf8");
+    const previousIndex = previous.trim() === "null" ? undefined : previous;
     const report = await signRelease(plan, out, {
       registryPrivateKey,
       publisherPrivateKey,
       trust: RELEASE_TRUST,
       mode: "release",
-      sequence: Number(values.sequence),
-      ...(previous.trim() === "null" ? {} : { previousIndex: previous }),
+      sequence:
+        values.sequence === "next" ? nextOfficialSequence(previousIndex) : Number(values.sequence),
+      ...(previousIndex === undefined ? {} : { previousIndex }),
+      ...(values["asset-base-url"] === undefined ? {} : { assetBaseUrl: values["asset-base-url"] }),
     });
     console.log(
       JSON.stringify({

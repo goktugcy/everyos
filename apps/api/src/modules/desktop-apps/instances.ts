@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { ApiError } from "../../http/errors.ts";
 
 /** One running app window or widget frame, bound to the session that opened it. */
 export interface AppInstance {
@@ -27,6 +28,7 @@ const BURST = 200;
  */
 export class AppInstances {
   readonly #byToken = new Map<string, AppInstance>();
+  readonly #updating = new Set<string>();
   readonly #now: () => number;
   readonly #onClose: (instance: AppInstance) => void;
 
@@ -43,6 +45,8 @@ export class AppInstances {
   open(
     input: Pick<AppInstance, "appId" | "userId" | "sessionId" | "kind" | "widgetId">,
   ): AppInstance {
+    if (this.#updating.has(input.appId))
+      throw new ApiError(409, "DESKTOP_APP_BUSY", "The app is being updated");
     this.#sweep();
     const mine = [...this.#byToken.values()]
       .filter((instance) => instance.sessionId === input.sessionId)
@@ -97,6 +101,17 @@ export class AppInstances {
   closeApp(appId: string): void {
     for (const instance of [...this.#byToken.values()])
       if (instance.appId === appId) this.#end(instance);
+  }
+
+  /** Prevent new frames opening between an idle check and the installer's atomic switch. */
+  reserveIdle(appId: string): (() => void) | null {
+    this.#sweep();
+    if (this.#updating.has(appId) || [...this.#byToken.values()].some((i) => i.appId === appId))
+      return null;
+    this.#updating.add(appId);
+    return () => {
+      this.#updating.delete(appId);
+    };
   }
 
   #sweep(): void {

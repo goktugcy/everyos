@@ -2,6 +2,8 @@ import type { Database } from "@everyos/database";
 import type { Logger } from "@everyos/logger";
 import type { SecretBox } from "@everyos/security";
 import type { NotificationService } from "../notifications/notification-service.ts";
+import type { AuditLog } from "../audit/audit-log.ts";
+import { AutomaticAppUpdates } from "./automatic-updates.ts";
 import type { RegistryAnchor } from "./anchors.ts";
 import { AppDatabases } from "./app-databases.ts";
 import { AppFiles } from "./app-files.ts";
@@ -15,7 +17,7 @@ import { DesktopAppInstaller } from "./installer.ts";
 import { AppInstances } from "./instances.ts";
 import { DesktopAppRegistries, type FetcherFactory } from "./registries.ts";
 
-const REFRESH_INTERVAL_MS = 6 * 3_600_000;
+const REFRESH_INTERVAL_MS = 15 * 60_000;
 const STARTUP_RETRY_MS = 30_000;
 
 /** Desktop apps: registries, the installer and store assets, refreshed in the background. */
@@ -36,9 +38,11 @@ export class DesktopAppsService {
   readonly databases: AppDatabases;
   /** Each person's SSH keys, for apps holding secrets:ssh. */
   readonly sshKeys: AppSshKeys;
+  readonly updates: AutomaticAppUpdates;
   readonly #logger: Logger;
   #timers: NodeJS.Timeout[] = [];
   readonly #controller = new AbortController();
+  #refreshing: Promise<void> | null = null;
 
   constructor(options: {
     db: Database;
@@ -49,6 +53,7 @@ export class DesktopAppsService {
     anchors: { official: RegistryAnchor | null; community: RegistryAnchor | null };
     fetcher?: FetcherFactory;
     notifications: NotificationService;
+    audit: AuditLog;
     /** DNS for the network policy (tests). */
     resolve?: (hostname: string) => Promise<Array<{ address: string; family: number }>>;
   }) {
@@ -71,9 +76,19 @@ export class DesktopAppsService {
     });
     this.assets = new RegistryAssets(this.registries);
     this.files = new AppFiles({ db: options.db, now: options.now, dir: options.dir });
-    this.instances = new AppInstances(options.now, (instance) =>
-      this.files.endInstance(instance.id),
-    );
+    this.instances = new AppInstances(options.now, (instance) => {
+      this.files.endInstance(instance.id);
+      queueMicrotask(() => {
+        void this.updates.check().catch(() => undefined);
+      });
+    });
+    this.updates = new AutomaticAppUpdates({
+      installer: this.installer,
+      instances: this.instances,
+      notifications: options.notifications,
+      audit: options.audit,
+      now: options.now,
+    });
     this.storage = new AppStorage(options.db, options.now);
     this.settings = new AppUserSettings(options.db, options.now);
     this.network = new AppNetwork({
@@ -104,12 +119,19 @@ export class DesktopAppsService {
   }
 
   /** Syncs every enabled registry and applies their revocations to installed apps. */
-  async refresh(): Promise<void> {
+  refresh(): Promise<void> {
+    return (this.#refreshing ??= this.#refresh().finally(() => {
+      this.#refreshing = null;
+    }));
+  }
+
+  async #refresh(): Promise<void> {
     await this.registries.syncAll(this.#controller.signal);
     const changed = this.installer.applyRevocations();
     for (const appId of changed) this.instances.closeApp(appId);
     if (changed.length)
       this.#logger.warn("Registries changed installed apps' state", { apps: changed });
+    if (!this.#controller.signal.aborted) await this.updates.check();
   }
 
   /** Unpacks verified packages of installations that lost their files (a restore). */
@@ -126,7 +148,13 @@ export class DesktopAppsService {
     const run = () => void this.refresh().catch(() => undefined);
     // Updates restart the API: refresh the catalog immediately without delaying startup.
     run();
-    this.#timers = [setTimeout(run, STARTUP_RETRY_MS), setInterval(run, REFRESH_INTERVAL_MS)];
+    this.#timers = [
+      setTimeout(run, STARTUP_RETRY_MS),
+      setInterval(run, REFRESH_INTERVAL_MS),
+      setInterval(() => {
+        void this.updates.check().catch(() => undefined);
+      }, 60_000),
+    ];
     for (const timer of this.#timers) timer.unref();
     this.monitors.start();
   }
@@ -134,6 +162,7 @@ export class DesktopAppsService {
   stop(): void {
     for (const timer of this.#timers) clearTimeout(timer);
     this.monitors.stop();
+    this.updates.stop();
     this.#controller.abort();
   }
 }

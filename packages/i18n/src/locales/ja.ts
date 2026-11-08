@@ -1,3 +1,4 @@
+import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
@@ -2800,6 +2801,7 @@ export const ja: LocaleMessages = {
       interrupted: "操作が中断されました",
     },
     kinds: {
+      ...desktopAppNotificationsEn,
       "everyos-update-available": {
         title: "EveryOSの新しいバージョンが利用可能です",
         body: "EveryOS {{version}}が利用可能です。インストール済みのバージョン：{{installedVersion}}。詳細の確認とアップデートは「設定 → 情報」を開いてください。",

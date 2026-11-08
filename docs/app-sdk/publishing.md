@@ -37,7 +37,8 @@ EveryOS repository: see [community submissions](community.md).
 
 ## The official registry
 
-Only EveryOS's own apps are published there, by EveryOS's release process.
+Only EveryOS's own apps are published there, by the OS release process or the independent
+official-app publication workflow described below.
 
 The built-in trust anchor is
 `https://github.com/goktugcy/everyos/releases/latest/download/official-apps.json`, signed by the
@@ -87,7 +88,7 @@ Production uses two jobs in `.github/workflows/release.yml`:
    the unsigned build report. Archives and icons are uploaded with that report.
 2. The `sign` job runs in the protected `release` environment. It obtains the previous published
    official index with `node scripts/official-apps.ts previous`, verifies its pinned signature,
-   then runs `pnpm official-apps:sign --sequence "$GITHUB_RUN_NUMBER" --previous-index
+   then runs `pnpm official-apps:sign --sequence next --previous-index
 dist/previous-official-apps.json`. Only this step receives
    `EVERYOS_APP_REGISTRY_PRIVATE_KEY` and `EVERYOS_APP_PUBLISHER_PRIVATE_KEY`. Their derived public
    keys must match the committed registry and publisher pins. Keys are never written to a file,
@@ -121,3 +122,70 @@ does not rerun those historical tests. Rebuild/test with the matching checkout f
 The pipeline is implemented before publication. Creating a tag or public release still requires
 the owner's explicit authorization and the remaining ecosystem acceptance gates. No production
 signature or release is claimed merely because the ephemeral development gate passes.
+
+## Independent official-app updates
+
+Update an app's source and bump its `manifest.json` and package version when its archive bytes
+change. Merge the reviewed changes to `main`, then publish an annotated `v-apps-YYYYMMDD-N` tag
+at that commit, for example `v-apps-20261108-1`. The protected **Publish official app updates**
+workflow tests, typechecks, packages and verifies the complete official catalog without building
+Linux packages, changing the EveryOS version, running host upgrade qualification or requesting
+another community lifecycle review. It uses the existing `release` signing environment and keys.
+
+Both publishers allocate `previous verified sequence + 1`, not their independent workflow run
+numbers. They and signed-notes amendments share one concurrency group. Older source cannot
+overwrite a newer app version: immutable-version, no-downgrade and revocation checks still fail
+closed. A later OS release must include the independently released app changes in its source.
+
+App releases are published outside the OS latest channel (`prerelease`, `make_latest=false`);
+their contained app versions remain stable semantic versions. Signed catalog entries use absolute
+version-specific package/icon URLs. Every uploaded byte length and GitHub SHA-256 digest is checked
+while the release is still a draft, then checked again after publication before discovery changes.
+The signer and publisher independently verify the full package/report/signature chain.
+
+Existing clients keep the same built-in `.../releases/latest/download/official-apps.json` URL.
+Only this discovery asset advances on the current OS release. OS packages, `release.json`, SDK
+archives and the OS release's original reports remain unchanged. The old index is retained as
+`official-apps-sequence-<sequence>.json`; the signed report and full current app artifacts live in
+the immutable app-release directory. After discovery advances, use the retained index matching
+the original report's sequence when verifying the OS-bundled app snapshot.
+
+Promotion first uploads and verifies a staged index. It then renames the old index to its retained
+sequence name and the staged index to `official-apps.json`. GitHub offers no atomic asset-name swap:
+the discovery URL can briefly return 404 between renames; clients keep their verified cached
+catalog and retry. If a rename fails, the publisher inspects the actual asset identities, restores
+the old name only if no new index became visible, and never rolls back a successfully published
+higher sequence. OS-release identity and existing non-catalog assets are checked before and after.
+
+The compatibility mirror requires the current OS GitHub release to allow asset changes. An
+immutable OS release is refused before creating or uploading an app release; enabling GitHub
+release immutability requires a future independent catalog endpoint/client migration instead.
+An interrupted publication, existing draft/tag, retained staging asset or unexpected asset change
+requires administrator inspection before retrying. No release or asset is silently overwritten
+or deleted. Signing keys never leave the protected signing step; the publisher receives only the
+GitHub workflow token. This workflow must never call `gh release create --latest` for app tags.
+
+## Automatic installation of official updates
+
+The API refreshes enabled catalogs at startup and every 15 minutes. Once this EveryOS implementation
+is installed, active installed official apps update automatically to their newest compatible,
+non-revoked stable version. Community/private apps and disabled or conflicting installations are
+excluded. This uses the usual size, digest, publisher-signature, manifest and safe-extraction checks;
+the signed index is data and is never executed as server code.
+
+Any newly requested capability, including a standard capability, pauses automatic installation and
+creates an administrator-visible approval notification. The Store's existing update/permission
+flow provides explicit approval. Updates wait while any app window or widget is running, reserve
+the idle app against new frames during installation, and retry after the last instance closes or
+on the minute timer. Persistent widgets may defer an update until closed. Existing grants and
+per-user storage/settings are preserved; no user identity is impersonated in the audit trail.
+
+A successful update creates one localized notification and refreshes desktop runtime URLs, names
+and widgets without a page reload. Toast/category preferences still apply. Reconnect, visibility
+and a minute poll recover missed events, also for users without notification permissions. Failures
+retain the previous installed version, are audited with non-secret reason codes, notify administrators
+and back off for 15 minutes per app version. There are no host package operations or restarts.
+
+Older EveryOS clients can receive independently published app versions through their existing
+Store update action. Automatic installation/notifications require the one-time EveryOS upgrade
+that includes this implementation; subsequent application-only publications need no OS update.

@@ -1,3 +1,4 @@
+import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
 import type { LocaleMessages } from "./tr.ts";
@@ -2695,6 +2696,7 @@ export const zh: LocaleMessages = {
       interrupted: "操作已中断",
     },
     kinds: {
+      ...desktopAppNotificationsEn,
       "everyos-update-available": {
         title: "有新版本的 EveryOS 可用",
         body: "EveryOS {{version}} 已发布。当前安装版本：{{installedVersion}}。打开“设置 → 关于”查看详情并更新。",

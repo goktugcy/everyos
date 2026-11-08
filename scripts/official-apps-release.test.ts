@@ -2,7 +2,12 @@ import { previousOfficialIndex } from "./previous-official-apps.ts";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import {
+  publishOfficialApps,
+  type PublishedRelease,
+  type ReleaseHost,
+} from "./official-apps-publish.ts";
 import {
   generatePublisherKeys,
   keyFingerprint,
@@ -19,6 +24,7 @@ import {
   appTestDiagnostics,
   verifyRelease,
   RELEASE_TRUST,
+  nextOfficialSequence,
   type ReleasePlan,
 } from "./official-apps-release.ts";
 
@@ -53,6 +59,195 @@ const signing = (mode: "development" | "release" = "development") => ({
   mode,
   sequence: 17,
   now,
+});
+
+class FixtureReleaseHost implements ReleaseHost {
+  readonly releases = new Map<string, PublishedRelease>();
+  nextId = 100;
+  corruptUpload = false;
+  failPromotion = false;
+  lostPromotionResponse = false;
+  lostBackupResponse = false;
+  changedCore = false;
+  constructor(indexBytes: Buffer) {
+    this.releases.set("latest", {
+      id: 1,
+      tag_name: "v0.1.49",
+      draft: false,
+      prerelease: false,
+      immutable: false,
+      assets: [
+        {
+          id: 10,
+          name: "release.json",
+          size: 4,
+          digest: "sha256:" + sha256Hex(Buffer.from("core")),
+        },
+        {
+          id: 11,
+          name: "official-apps.json",
+          size: indexBytes.length,
+          digest: "sha256:" + sha256Hex(indexBytes),
+        },
+      ],
+    });
+  }
+  get(ref: string): Promise<PublishedRelease> {
+    const release =
+      this.releases.get(ref) ?? [...this.releases.values()].find((r) => r.tag_name === ref);
+    if (!release) throw new Error("Missing fixture release");
+    return Promise.resolve(structuredClone(release));
+  }
+  create(tag: string): Promise<void> {
+    if (this.releases.has(tag)) throw new Error("Existing fixture release");
+    this.releases.set(tag, {
+      id: 2,
+      tag_name: tag,
+      draft: true,
+      prerelease: true,
+      immutable: false,
+      assets: [],
+    });
+    return Promise.resolve();
+  }
+  async upload(tag: string, files: string[]): Promise<void> {
+    const ref = [...this.releases.values()].find((r) => r.tag_name === tag)!;
+    for (const file of files) {
+      const bytes = await readFile(file);
+      const name = basename(file);
+      if (ref.assets.some((a) => a.name === name)) throw new Error("Immutable fixture upload");
+      ref.assets.push({
+        id: this.nextId++,
+        name,
+        size: bytes.length,
+        digest: "sha256:" + (this.corruptUpload ? "0".repeat(64) : sha256Hex(bytes)),
+      });
+    }
+  }
+  publish(tag: string): Promise<void> {
+    this.releases.get(tag)!.draft = false;
+    if (this.changedCore)
+      this.releases.get("latest")!.assets[0]!.digest = "sha256:" + "f".repeat(64);
+    return Promise.resolve();
+  }
+  rename(id: number, name: string): Promise<void> {
+    const release = [...this.releases.values()].find((r) => r.assets.some((a) => a.id === id))!;
+    const asset = release.assets.find((a) => a.id === id)!;
+    const promotion = asset.name.startsWith("official-apps-next-") && name === "official-apps.json";
+    if (promotion && this.failPromotion) return Promise.reject(new Error("Promotion refused"));
+    if (release.assets.some((a) => a.id !== id && a.name === name))
+      throw new Error("Duplicate asset name");
+    asset.name = name;
+    if (name.startsWith("official-apps-sequence-") && this.lostBackupResponse)
+      return Promise.reject(new Error("Lost backup response"));
+    if (promotion && this.lostPromotionResponse) return Promise.reject(new Error("Lost response"));
+    return Promise.resolve();
+  }
+}
+
+describe("independent official app publication", () => {
+  const tag = "v-apps-20261108-1";
+  async function candidate() {
+    await signed();
+    const previous = await readFile(join(root, "output/official-apps.json"), "utf8");
+    manifest.version = "1.0.1";
+    await writeFile(manifestFile(), JSON.stringify(manifest));
+    const dir = join(root, "independent");
+    await buildRelease(plan, dir, evidence());
+    await signRelease(plan, dir, {
+      ...signing(),
+      sequence: nextOfficialSequence(previous, trust),
+      previousIndex: previous,
+      assetBaseUrl: `https://github.com/goktugcy/everyos/releases/download/${tag}/`,
+    });
+    return { dir, previous, host: new FixtureReleaseHost(Buffer.from(previous)) };
+  }
+  async function publish(dir: string, host: FixtureReleaseHost) {
+    return publishOfficialApps(plan, dir, { tag, host, trust, mode: "development" });
+  }
+  it("advances the existing catalog after publishing immutable app URLs and keeps core assets and the prior catalog", async () => {
+    const { dir, host } = await candidate();
+    const core = (await host.get("latest")).assets[0];
+    const result = await publish(dir, host);
+    expect(result).toMatchObject({
+      status: "passed",
+      coreTag: "v0.1.49",
+      sequence: 18,
+      coreAssetsPreserved: true,
+    });
+    const current = await host.get("latest");
+    expect(current.tag_name).toBe("v0.1.49");
+    expect(current.assets.find((a) => a.name === "release.json")).toEqual(core);
+    expect(current.assets.find((a) => a.name === "official-apps-sequence-17.json")?.id).toBe(11);
+    expect(await host.get(tag)).toMatchObject({ draft: false, prerelease: true });
+    const index = verifyRegistryIndex(
+      await readFile(join(dir, "official-apps.json"), "utf8"),
+      trust.registry,
+      { official: true },
+    );
+    expect(index.apps[0]!.versions[0]!.package.url).toBe(
+      `https://github.com/goktugcy/everyos/releases/download/${tag}/dev.everyos.notes-1.0.1.eosapp`,
+    );
+    expect(index.apps[0]!.icon).toBe(
+      `https://github.com/goktugcy/everyos/releases/download/${tag}/dev.everyos.notes.svg`,
+    );
+  });
+  it("rejects corrupted uploads before promoting the current catalog", async () => {
+    const { dir, host } = await candidate();
+    host.corruptUpload = true;
+    await expect(publish(dir, host)).rejects.toThrow("digest mismatch");
+    expect((await host.get("latest")).assets.find((a) => a.name === "official-apps.json")?.id).toBe(
+      11,
+    );
+    expect((await host.get(tag)).draft).toBe(true);
+  });
+  it("restores the old catalog name when promotion fails before the new index becomes visible", async () => {
+    const { dir, host } = await candidate();
+    host.failPromotion = true;
+    await expect(publish(dir, host)).rejects.toThrow("promotion failed");
+    expect((await host.get("latest")).assets.find((a) => a.name === "official-apps.json")?.id).toBe(
+      11,
+    );
+  });
+  it("does not roll back a successfully promoted catalog after a lost API response", async () => {
+    const { dir, host } = await candidate();
+    host.lostPromotionResponse = true;
+    expect((await publish(dir, host)).sequence).toBe(18);
+    expect(
+      (await host.get("latest")).assets.find((a) => a.name === "official-apps.json")?.id,
+    ).not.toBe(11);
+  });
+  it("restores discovery after losing the response to the old catalog's backup rename", async () => {
+    const { dir, host } = await candidate();
+    host.lostBackupResponse = true;
+    await expect(publish(dir, host)).rejects.toThrow("promotion failed");
+    expect((await host.get("latest")).assets.find((a) => a.name === "official-apps.json")?.id).toBe(
+      11,
+    );
+  });
+  it("refuses immutable core releases or a changed discovery catalog before creating a release", async () => {
+    const { dir, host } = await candidate();
+    host.releases.get("latest")!.immutable = true;
+    await expect(publish(dir, host)).rejects.toThrow("mutable");
+    host.releases.get("latest")!.immutable = false;
+    host.releases.get("latest")!.assets[1]!.digest = "sha256:" + "a".repeat(64);
+    await expect(publish(dir, host)).rejects.toThrow("digest mismatch");
+    expect(host.releases.has(tag)).toBe(false);
+  });
+  it("refuses a concurrent core-asset change without replacing the discovery catalog", async () => {
+    const { dir, host } = await candidate();
+    host.changedCore = true;
+    await expect(publish(dir, host)).rejects.toThrow("existing release asset changed");
+    expect((await host.get("latest")).assets.find((a) => a.name === "official-apps.json")?.id).toBe(
+      11,
+    );
+  });
+  it("shares a monotonic sequence across workflows and verifies the previous signature", async () => {
+    const { previous } = await candidate();
+    expect(nextOfficialSequence(undefined, trust)).toBe(1);
+    expect(nextOfficialSequence(previous, trust)).toBe(18);
+    expect(() => nextOfficialSequence(previous)).toThrow("bad-signature");
+  });
 });
 const signed = async () => {
   await prepare();

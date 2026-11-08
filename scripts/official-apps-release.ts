@@ -47,6 +47,11 @@ const DAY = 86_400_000;
 const Hash = z.string().regex(/^[a-f0-9]{64}$/);
 const Fingerprint = z.string().regex(/^sha256:[a-f0-9]{64}$/);
 const Count = z.number().int().positive();
+const AssetBase = z
+  .string()
+  .regex(
+    /^https:\/\/github\.com\/goktugcy\/everyos\/releases\/download\/v-apps-\d{8}-[1-9]\d{0,8}\/$/,
+  );
 const TestStatus = z.strictObject({
   status: z.literal("passed"),
   assertions: Count,
@@ -100,6 +105,7 @@ export const ReportSchema = z.strictObject({
   sequence: z.number().int().positive().nullable(),
   permissionPolicySha256: Hash,
   previousIndexSha256: Hash.nullable(),
+  assetBaseUrl: AssetBase.optional(),
   registryFingerprint: Fingerprint.nullable(),
   publisherFingerprint: Fingerprint.nullable(),
   testCommand: z.literal("pnpm exec vitest run --project official-apps --reporter=json"),
@@ -140,6 +146,20 @@ const same = (actual: unknown, expected: unknown, message: string) => {
 };
 export const policyDigest = (plan: ReleasePlan) =>
   sha256Hex(Buffer.from(JSON.stringify(plan.policy)));
+
+export function nextOfficialSequence(previous: string | undefined, trust = RELEASE_TRUST): number {
+  const sequence =
+    previous === undefined
+      ? 1
+      : verifyRegistryIndex(previous, trust.registry, { official: true, allowExpired: true })
+          .sequence + 1;
+  if (!Number.isSafeInteger(sequence)) throw new Error("Official sequence is exhausted");
+  return sequence;
+}
+
+function assetUrl(report: ReleaseReport, file: string): string {
+  return report.assetBaseUrl ? new URL(file, report.assetBaseUrl).href : file;
+}
 
 export async function loadReleasePlan(root: string): Promise<ReleasePlan> {
   const pkg = z
@@ -609,6 +629,7 @@ export async function signRelease(
     sequence: number;
     now?: number;
     previousIndex?: string;
+    assetBaseUrl?: string;
   },
 ): Promise<ReleaseReport> {
   let registry: string;
@@ -649,6 +670,7 @@ export async function signRelease(
     publisherFingerprint: keyFingerprint(publisher),
     previousIndexSha256:
       options.previousIndex === undefined ? null : sha256Hex(Buffer.from(options.previousIndex)),
+    ...(options.assetBaseUrl === undefined ? {} : { assetBaseUrl: options.assetBaseUrl }),
   });
   const previous = checkPrevious(options.previousIndex, report, options.trust, now);
   const index: RegistryIndex = {
@@ -662,7 +684,7 @@ export async function signRelease(
     apps: inspected.map(({ entry, manifest }) => ({
       id: entry.id,
       publisher: "dev.everyos",
-      icon: entry.icon.file,
+      icon: assetUrl(report, entry.icon.file),
       screenshots: [],
       versions: [
         {
@@ -670,7 +692,7 @@ export async function signRelease(
           manifest,
           publishedAt: now,
           package: {
-            url: entry.package.file,
+            url: assetUrl(report, entry.package.file),
             size: entry.package.size,
             sha256: entry.package.sha256,
             signature: signPackage(
@@ -790,11 +812,11 @@ export async function verifyRelease(
       },
       {
         version: entry.version,
-        url: entry.package.file,
+        url: assetUrl(report, entry.package.file),
         size: entry.package.size,
         sha256: entry.package.sha256,
         publishedAt: report.signedAt,
-        icon: entry.icon.file,
+        icon: assetUrl(report, entry.icon.file),
       },
       "Signed package metadata changed",
     );

@@ -1111,3 +1111,19 @@ unsafe environment instead of repairing global package state or boot images auto
 Preserve unfinished release recovery transactions when refusing and block replacement requests.
 Existing services need an idle, administrator-controlled namespace replacement before safe use;
 an on-disk unit change alone cannot fix their running namespace. See [updates.md](updates.md).
+
+## Independent official app publication and unattended updates (2026-11-08)
+
+Keep the existing signed official discovery URL for installed clients. Publish complete tested
+catalogs as separate app tags outside GitHub's OS latest channel, with immutable package URLs;
+advance only the discovery index after checking uploaded bytes. Retain prior catalogs, protect
+OS assets, share the publication lock and derive sequences from the previous signed catalog.
+Preserve downgrade/immutable-version checks across both publishers. A dedicated endpoint can
+replace the compatibility mirror later; it is not required to update existing clients manually.
+
+Automatically update only active official installations with unchanged capabilities and no live
+window/widget, using the existing verifier/installer. Reserve idle apps during downloads to close
+the open/update race. Never elevate a capability or impersonate an administrator. Emit audited,
+localized results and refresh runtime metadata in visible desktops, with polling recovery.
+These client-side automatic behaviours require one initial EveryOS upgrade; independent app
+publication and older clients' manual app updates do not.
