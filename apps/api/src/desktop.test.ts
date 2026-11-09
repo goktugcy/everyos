@@ -1,7 +1,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { crc32, deflateSync } from "node:zlib";
-import type { ApiErrorBody, SessionInfo, WallpaperInfo } from "@everyos/shared";
+import type { ApiErrorBody, CustomShortcut, SessionInfo, WallpaperInfo } from "@everyos/shared";
 import type { AppearancePreferences, PreferenceDocuments } from "@everyos/shared/schemas";
 import { describe, expect, it } from "vitest";
 import { probeImage } from "./modules/wallpapers/image-probe.ts";
@@ -294,6 +294,100 @@ describe("session locking", () => {
     for (let i = 0; i < 5; i++)
       await client.post("/api/auth/unlock", { password: "yanlis-parola-1" });
     expect((await client.post("/api/auth/unlock", { password: STRONG_PASSWORD })).status).toBe(429);
+  });
+});
+
+describe("custom shortcut preferences", () => {
+  const entry: CustomShortcut = {
+    id: "everyos.shortcut.link-test",
+    name: "Server console",
+    source: "manual",
+    permission: null,
+    icon: null,
+    target: { kind: "url", url: "https://server.example/ui?token=private-link" },
+  };
+  const document = (entries: unknown[] = [entry]) => ({ version: 1, entries });
+
+  it("persists private shortcuts and enforces ownership of uploaded artwork", async () => {
+    const { ctx, client } = await admin();
+    const uploaded = await client.request("POST", "/api/folder-icons", {
+      rawBody: png(32, 32),
+      headers: { "content-type": "image/png" },
+    });
+    expect(uploaded.status).toBe(201);
+    const image = await json<WallpaperInfo>(uploaded);
+    const owned = { ...entry, icon: `/api/folder-icons/${image.id}/image` };
+    expect(
+      (await client.request("PUT", "/api/preferences/shortcuts", { body: document([owned]) }))
+        .status,
+    ).toBe(204);
+    const saved = await json<{ preferences: Partial<PreferenceDocuments> }>(
+      await client.get("/api/preferences"),
+    );
+    expect(saved.preferences.shortcuts).toEqual(document([owned]));
+    expect((await client.delete(`/api/folder-icons/${image.id}`)).status).toBe(409);
+    await client.post("/api/users", {
+      username: "linkviewer",
+      displayName: "Link viewer",
+      password: STRONG_PASSWORD,
+      role: "viewer",
+    });
+    const other = new TestClient(ctx, "192.0.2.21");
+    await other.login("linkviewer", STRONG_PASSWORD);
+    expect(await json(await other.get("/api/preferences"))).toEqual({ preferences: {} });
+    expect(
+      (await other.request("PUT", "/api/preferences/shortcuts", { body: document([owned]) }))
+        .status,
+    ).toBe(400);
+    expect(
+      (await new TestClient(ctx).request("PUT", "/api/preferences/shortcuts", { body: document() }))
+        .status,
+    ).toBe(401);
+    const audit = ctx.db.all<{ action: string; details: string }>(
+      "SELECT action, details FROM audit_events WHERE action LIKE 'preferences.shortcuts.%'",
+    );
+    expect(audit).toHaveLength(1);
+    expect(audit[0]?.action).toBe("preferences.shortcuts.update");
+    expect(JSON.stringify(audit)).not.toContain("private-link");
+    expect((await client.delete("/api/preferences/shortcuts")).status).toBe(204);
+    expect((await client.delete(`/api/folder-icons/${image.id}`)).status).toBe(204);
+  });
+
+  it("rejects executable links, nested shortcuts, duplicate ids and oversized documents", async () => {
+    const { client } = await admin();
+    const invalid = [
+      ...[
+        "javascript:alert(1)",
+        "data:text/html,hi",
+        "file:///etc/passwd",
+        "http://user:pass@server/",
+        "https:server",
+        "https://server/\npath",
+      ].map((url) => document([{ ...entry, target: { kind: "url", url } }])),
+      document([{ ...entry, icon: "data:image/svg+xml,hi" }]),
+      document([{ ...entry, target: { kind: "app", appId: entry.id } }]),
+      document([entry, entry]),
+      document([{ ...entry, shell: "anything" }]),
+      document(
+        Array.from({ length: 129 }, (_, i) => ({ ...entry, id: `everyos.shortcut.link-${i}` })),
+      ),
+    ];
+    for (const body of invalid)
+      expect((await client.request("PUT", "/api/preferences/shortcuts", { body })).status).toBe(
+        400,
+      );
+    expect(
+      (
+        await client.request("PUT", "/api/preferences/shortcuts", {
+          body: document([
+            { ...entry, source: "official", target: { kind: "app", appId: "everyos.settings" } },
+          ]),
+        })
+      ).status,
+    ).toBe(204);
+    const csp = (await client.get("/api/health")).headers.get("content-security-policy");
+    expect(csp).toContain("img-src 'self' data: blob: https: http:");
+    expect(csp).toContain("script-src 'self'");
   });
 });
 

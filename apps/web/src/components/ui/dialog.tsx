@@ -12,6 +12,7 @@ export function Dialog({
   children,
   className,
   overlayClassName,
+  footer,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,6 +21,7 @@ export function Dialog({
   children: ReactNode;
   className?: string;
   overlayClassName?: string;
+  footer?: ReactNode;
 }) {
   const { t } = useTranslation();
   return (
@@ -34,7 +36,7 @@ export function Dialog({
             className,
           )}
         >
-          <div className="flex items-start justify-between gap-4 border-b border-line px-6 pb-4 pt-5">
+          <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-6 pb-4 pt-5">
             <div className="flex flex-col gap-1">
               <DialogPrimitive.Title className="text-lg font-semibold tracking-tight">
                 {title}
@@ -50,13 +52,18 @@ export function Dialog({
               )}
             </div>
             <DialogPrimitive.Close
-              className="grid size-8 place-items-center rounded-everyos-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
+              className="grid size-8 shrink-0 place-items-center rounded-everyos-sm text-fg-subtle hover:bg-hover/8 hover:text-fg"
               aria-label={t("common.close")}
             >
               <X className="size-4" aria-hidden />
             </DialogPrimitive.Close>
           </div>
-          <div className="overflow-y-auto px-6 py-5">{children}</div>
+          <div className="min-h-0 overflow-y-auto px-6 py-5">{children}</div>
+          {footer ? (
+            <div className="flex shrink-0 justify-end gap-2 border-t border-line px-6 py-4">
+              {footer}
+            </div>
+          ) : null}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

@@ -11,6 +11,7 @@ import type {
   SecurityPreferences,
   WidgetPreferences,
   WindowSession,
+  ShortcutPreferences,
 } from "@everyos/shared";
 import { defaultWidgetPreferences, migrateWidgets } from "@everyos/widget-sdk";
 import { DEFAULT_APPEARANCE } from "@everyos/theme";
@@ -19,6 +20,7 @@ import { create } from "zustand";
 import { api, ApiRequestError } from "../../lib/api.ts";
 import { randomId } from "../../lib/random-id.ts";
 import { applyAppearance } from "../theme/theme-store.ts";
+import { setShortcutReader } from "../apps/registry.ts";
 import {
   DEFAULT_MENUBAR,
   DEFAULT_PULSE,
@@ -32,6 +34,7 @@ import {
 type EditableKey = Exclude<PreferenceKey, "windows">;
 
 export interface PreferencesState {
+  shortcuts: ShortcutPreferences;
   ready: boolean;
   appearance: AppearancePreferences;
   desktop: DesktopPreferences;
@@ -47,6 +50,7 @@ export interface PreferencesState {
 }
 
 export const usePreferences = create<PreferencesState>()(() => ({
+  shortcuts: { version: 1, entries: [] },
   ready: false,
   appearance: DEFAULT_APPEARANCE,
   desktop: {
@@ -64,6 +68,7 @@ export const usePreferences = create<PreferencesState>()(() => ({
   initialWindows: null,
   saveError: false,
 }));
+setShortcutReader(() => usePreferences.getState().shortcuts?.entries ?? []);
 
 /* ----------------------------- saving ----------------------------- */
 
@@ -134,6 +139,7 @@ export async function flushPending(): Promise<void> {
 
 /** Drops queued saves and timers (the user signed out). */
 export function discardPending(): void {
+  usePreferences.setState({ shortcuts: { version: 1, entries: [] } });
   generation++;
   for (const timer of timers.values()) clearTimeout(timer);
   timers.clear();
@@ -155,6 +161,18 @@ export function updatePreference<K extends EditableKey>(
   const next = updater(usePreferences.getState()[key]);
   usePreferences.setState({ [key]: next } as Pick<PreferencesState, K>);
   if (key === "appearance") applyAppearance(next as AppearancePreferences);
+  if (key === "desktop" || key === "dock") {
+    const state = usePreferences.getState();
+    const references = new Set([
+      ...state.dock.pinned,
+      ...state.desktop.items.flatMap((item) => (item.kind === "app" ? [item.appId] : [])),
+    ]);
+    const entries = state.shortcuts.entries.filter((entry) => references.has(entry.id));
+    if (entries.length !== state.shortcuts.entries.length) {
+      usePreferences.setState({ shortcuts: { version: 1, entries } });
+      scheduleSave("shortcuts", () => usePreferences.getState().shortcuts);
+    }
+  }
   scheduleSave(key, () => usePreferences.getState()[key]);
 }
 
@@ -181,6 +199,7 @@ export async function loadPreferences(context: LoadContext, signal?: AbortSignal
   applyAppearance(appearance);
   usePreferences.setState({
     ready: true,
+    shortcuts: stored.shortcuts ?? { version: 1, entries: [] },
     appearance,
     desktop,
     dock: stored.dock ?? defaultDock(context.permissions),

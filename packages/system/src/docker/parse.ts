@@ -1,5 +1,6 @@
 import {
   BUILT_IN_NETWORKS,
+  isShortcutUrl,
   CONTAINER_STATES,
   type ComposeProject,
   type ContainerDetail,
@@ -32,6 +33,35 @@ const str = (value: unknown): string | null => (typeof value === "string" ? valu
 const num = (value: unknown): number | null =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 const cut = (value: string, max: number) => (value.length > max ? value.slice(0, max) : value);
+
+/** Read presentation labels only. Never expose arbitrary labels, credentials or query tokens. */
+export function containerShortcutHints(labels: Record<string, unknown>): {
+  webUiTemplate?: string;
+  icon?: string;
+} {
+  const safe = (keys: string[], template: boolean): string | null => {
+    for (const key of keys) {
+      const raw = labels[key];
+      if (typeof raw !== "string" || raw.length > 2048) continue;
+      const value = raw.split(/[?#]/, 1)[0]!;
+      const probe = template
+        ? value
+            .replaceAll("[IP]", "127.0.0.1")
+            .replace(/\[PORT:(\d{1,5})\]/g, (_match, port: string) =>
+              Number(port) > 0 && Number(port) <= 65535 ? port : "invalid",
+            )
+        : value;
+      if (isShortcutUrl(probe)) return value;
+    }
+    return null;
+  };
+  const webUiTemplate = safe(
+    ["net.unraid.docker.webui", "homepage.href", "org.everyos.webui"],
+    true,
+  );
+  const icon = safe(["net.unraid.docker.icon", "homepage.icon", "org.everyos.icon"], false);
+  return { ...(webUiTemplate ? { webUiTemplate } : {}), ...(icon ? { icon } : {}) };
+}
 
 /** Docker uses "0001-01-01T00:00:00Z" for "never". */
 export function parseDockerTime(value: unknown): number | null {
@@ -136,6 +166,7 @@ export function parseContainerList(raw: unknown): ListedContainer[] {
         service: project ? cut(str(labels[COMPOSE_LABELS.service]) ?? "", 128) || null : null,
         networks: Object.keys(obj(obj(c.NetworkSettings).Networks)).slice(0, 64),
         managerHint: project ? detectManager(labels) : null,
+        ...containerShortcutHints(labels),
       },
       labels,
       volumeNames: arr(c.Mounts)

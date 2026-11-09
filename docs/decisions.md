@@ -1112,6 +1112,22 @@ Preserve unfinished release recovery transactions when refusing and block replac
 Existing services need an idle, administrator-controlled namespace replacement before safe use;
 an on-disk unit change alone cannot fix their running namespace. See [updates.md](updates.md).
 
+## Shared, user-owned desktop and Dock links (2026-11-10)
+
+Keep custom shortcut metadata in a separate per-user preference instead of duplicating it in
+desktop items and Dock pins. Both placements reference one bounded record, so edits are immediate
+and consistent and deleting the last placement removes the record. Legacy native shortcuts need
+no migration. App targets delegate to the existing launcher and underlying permission checks;
+explicit URL overrides remain links rather than pretending to be window-manager applications.
+
+Discover Docker applications through existing read-only listings. Preserve a managed application
+identity when its proposed URL is unchanged so later port changes are resolved by the launcher.
+Other containers contribute only bounded presentation labels and published ports. Strip query
+tokens from label hints, mark simulation, do not infer live links from it, and allow manual edits.
+Use existing owned raster uploads for icons, and browser-side image loading for remote URLs;
+adding an API image proxy would introduce unnecessary server-side network access. Keep URL and
+image protocols restricted and leave security audit details free of user URLs and image content.
+
 ## Independent official app publication and unattended updates (2026-11-08)
 
 Keep the existing signed official discovery URL for installed clients. Publish complete tested

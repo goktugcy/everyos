@@ -9,6 +9,7 @@ export function appTitle(
   t: TFunction,
   locale: string = i18next.language,
 ): string {
+  if (manifest.shortcut) return manifest.shortcut.name;
   if (manifest.desktopApp)
     return useDesktopApps.getState().names[manifest.desktopApp.appId] ?? manifest.desktopApp.name;
   return manifest.installedApp

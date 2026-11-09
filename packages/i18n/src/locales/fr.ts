@@ -1,3 +1,4 @@
+import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
 import { en } from "./en.ts";
@@ -5,6 +6,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** French. */
 export const fr: LocaleMessages = {
+  shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
   common: {
     appName: "EveryOS",

@@ -8,15 +8,21 @@ export async function uninstallDesktopApp(appId: string): Promise<void> {
   await api(`/desktop-apps/installed/${appId}`, { method: "DELETE", body: { confirm: true } });
   const id = desktopAppWindowId(appId);
   const preferences = usePreferences.getState();
-  if (preferences.desktop.items.some((item) => item.kind === "app" && item.appId === id))
+  const ids = new Set([
+    id,
+    ...preferences.shortcuts.entries
+      .filter((entry) => entry.target.kind === "app" && entry.target.appId === id)
+      .map((entry) => entry.id),
+  ]);
+  if (preferences.desktop.items.some((item) => item.kind === "app" && ids.has(item.appId)))
     updatePreference("desktop", (doc) => ({
       ...doc,
-      items: doc.items.filter((item) => item.kind !== "app" || item.appId !== id),
+      items: doc.items.filter((item) => item.kind !== "app" || !ids.has(item.appId)),
     }));
-  if (preferences.dock.pinned.includes(id))
+  if (preferences.dock.pinned.some((entry) => ids.has(entry)))
     updatePreference("dock", (doc) => ({
       ...doc,
-      pinned: doc.pinned.filter((entry) => entry !== id),
+      pinned: doc.pinned.filter((entry) => !ids.has(entry)),
     }));
   for (const window of Object.values(wm().windows)) if (window.appId === id) wm().close(window.id);
 }

@@ -18,6 +18,7 @@ import { checkComposeFile } from "./compose.ts";
 import {
   composeProjects,
   containerHealth,
+  containerShortcutHints,
   LogDemuxer,
   parseContainerInspect,
   parseContainerList,
@@ -105,6 +106,31 @@ const LIST = [
 ];
 
 describe("docker parsers", () => {
+  it("exposes only safe presentation hints, without URL tokens or arbitrary labels", () => {
+    const labels = {
+      "net.unraid.docker.webui": "http://[IP]:[PORT:8080]/ui?token=private#secret",
+      "homepage.icon": "https://images.example/icon.png?key=private",
+      "app.password": "must-not-leak",
+    };
+    expect(containerShortcutHints(labels)).toEqual({
+      webUiTemplate: "http://[IP]:[PORT:8080]/ui",
+      icon: "https://images.example/icon.png",
+    });
+    expect(parseContainerList([{ ...LIST[0], Labels: labels }])[0]?.summary).toMatchObject({
+      webUiTemplate: "http://[IP]:[PORT:8080]/ui",
+      icon: "https://images.example/icon.png",
+    });
+    for (const value of [
+      "javascript:alert(1)",
+      "http://user:pass@host/",
+      "//host/icon.png",
+      "https:host",
+      "http://[IP]:[PORT:99999]/",
+    ])
+      expect(containerShortcutHints({ "homepage.href": value, "homepage.icon": value })).toEqual(
+        {},
+      );
+  });
   it("parses the container list and groups Compose projects", () => {
     const listed = parseContainerList(LIST);
     expect(listed).toHaveLength(3);

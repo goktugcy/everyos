@@ -12,7 +12,8 @@ const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  // User-selected shortcut artwork loads in the browser, never through a server-side URL fetch.
+  "img-src 'self' data: blob: https: http:",
   "font-src 'self'",
   "connect-src 'self'",
   "worker-src 'self' blob:",

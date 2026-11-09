@@ -4,6 +4,7 @@ import type {
   DesktopAppInstallationView,
   InstalledAppView,
   Permission,
+  CustomShortcut,
 } from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import type { LucideIcon } from "lucide-react";
@@ -12,6 +13,7 @@ import type { DesktopAppWindowId } from "../desktop-apps/store.ts";
 import type { InstalledAppId } from "./store/installed-apps-store.ts";
 
 export type AppId =
+  | `everyos.shortcut.link-${string}`
   | InstalledAppId
   | DesktopAppWindowId
   | "everyos.homeassistant"
@@ -40,6 +42,7 @@ export type AppId =
  */
 export interface DesktopAppManifest {
   id: AppId;
+  shortcut?: CustomShortcut;
   installedApp?: InstalledAppView;
   /** An installed desktop app (docs/app-sdk/architecture.md), run in a sandboxed frame. */
   desktopApp?: DesktopAppInstallationView;

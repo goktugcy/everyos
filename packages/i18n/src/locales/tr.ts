@@ -1,3 +1,4 @@
+import { shortcutsTr } from "../shortcuts.ts";
 import { desktopAppNotificationsTr } from "../desktop-app-updates.ts";
 import { packageSafetyTr } from "../package-safety.ts";
 import { linuxBackupsTr } from "../linux-backups.ts";
@@ -31,6 +32,7 @@ import type {
  * locale must provide (enforced by the type checker).
  */
 export const tr = {
+  shortcuts: shortcutsTr,
   packageSafety: packageSafetyTr,
   common: {
     appName: "EveryOS",

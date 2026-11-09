@@ -1,4 +1,10 @@
-import { isPreferenceKey, THEME_PRESET_IDS, type PreferenceKey } from "@everyos/shared";
+import {
+  isPreferenceKey,
+  shortcutIconId,
+  THEME_PRESET_IDS,
+  type PreferenceKey,
+  type ShortcutPreferences,
+} from "@everyos/shared";
 import {
   EmptyDesktopQuerySchema,
   PreferenceParamsSchema,
@@ -24,6 +30,17 @@ function checkConsistency(
   key: PreferenceKey,
   value: unknown,
 ): void {
+  if (key === "shortcuts") {
+    const shortcuts = value as ShortcutPreferences;
+    if (
+      shortcuts.entries.some((entry) => {
+        const id = entry.icon && shortcutIconId(entry.icon);
+        return id && !services.wallpapers.file(userId, id, "folder-icon");
+      })
+    )
+      throw new ApiError(400, "VALIDATION_FAILED", "Unknown shortcut icon");
+    return;
+  }
   if (key !== "appearance") return;
   const appearance = value as AppearancePreferences;
   const icons = [appearance.folderIcon, ...(appearance.folderIcons ?? []).map((item) => item.icon)];
@@ -65,9 +82,9 @@ export function preferenceRoutes(services: Services): Hono<AppEnv> {
     const value: unknown = await parseJsonBody(c, PREFERENCE_SCHEMAS[key]);
     checkConsistency(services, auth.user.id, key, value);
     services.preferences.set(auth.user.id, key, value);
-    if (key === "security")
+    if (key === "security" || key === "shortcuts")
       services.audit.record({
-        action: "preferences.security.update",
+        action: `preferences.${key}.update`,
         outcome: "success",
         actor: { userId: auth.user.id, username: auth.user.username },
         ip: c.get("client").ip,
@@ -81,9 +98,9 @@ export function preferenceRoutes(services: Services): Hono<AppEnv> {
     const key = keyParam(c.req.param("key"));
     parseParams(c, PreferenceParamsSchema);
     services.preferences.delete(auth.user.id, key);
-    if (key === "security")
+    if (key === "security" || key === "shortcuts")
       services.audit.record({
-        action: "preferences.security.reset",
+        action: `preferences.${key}.reset`,
         outcome: "success",
         actor: { userId: auth.user.id, username: auth.user.username },
         ip: c.get("client").ip,

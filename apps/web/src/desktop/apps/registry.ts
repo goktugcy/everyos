@@ -1,4 +1,9 @@
-import type { DesktopAppInstallationView, Permission } from "@everyos/shared";
+import {
+  SHORTCUT_PREFIX,
+  type CustomShortcut,
+  type DesktopAppInstallationView,
+  type Permission,
+} from "@everyos/shared";
 import { desktopAppIdOf, desktopAppWindowId, useDesktopApps } from "../desktop-apps/store.ts";
 import { installationId, installedAppId, useInstalledApps } from "./store/installed-apps-store.ts";
 import {
@@ -22,6 +27,7 @@ import {
   Trash2,
   Users,
   Waypoints,
+  Link,
 } from "lucide-react";
 import type { AppId, DesktopAppManifest } from "./types.ts";
 
@@ -411,6 +417,12 @@ export const APP_MANIFESTS: readonly DesktopAppManifest[] = [
 
 const BY_ID = new Map(APP_MANIFESTS.map((manifest) => [manifest.id, manifest]));
 
+// The preferences owner supplies the reader, avoiding a registry/default-preferences import cycle.
+let readShortcuts: () => readonly CustomShortcut[] = () => [];
+export function setShortcutReader(read: () => readonly CustomShortcut[]): void {
+  readShortcuts = read;
+}
+
 /** A window manifest for an installed desktop app (its frame loads the app's own files). */
 function desktopAppManifest(app: DesktopAppInstallationView): DesktopAppManifest {
   return {
@@ -437,6 +449,27 @@ function desktopApps(
 }
 
 export function getApp(id: string): DesktopAppManifest | undefined {
+  if (id.startsWith(SHORTCUT_PREFIX)) {
+    const shortcut = readShortcuts().find((entry) => entry.id === id);
+    if (!shortcut) return undefined;
+    const target =
+      shortcut.target.kind === "app" && !shortcut.target.appId.startsWith(SHORTCUT_PREFIX)
+        ? getApp(shortcut.target.appId)
+        : null;
+    if (shortcut.target.kind === "app" && !target) return undefined;
+    const fallback = BY_ID.get("everyos.applications")!;
+    return {
+      ...(target || fallback),
+      id: shortcut.id as AppId,
+      shortcut,
+      icon: target?.icon ?? Link,
+      ...(shortcut.target.kind === "url"
+        ? { requiredPermission: shortcut.permission ?? "preferences:manage" }
+        : shortcut.permission
+          ? { requiredPermission: shortcut.permission }
+          : {}),
+    };
+  }
   const builtin = BY_ID.get(id as AppId);
   if (builtin) return builtin;
   const desktopId = desktopAppIdOf(id);
@@ -453,10 +486,20 @@ export function getApp(id: string): DesktopAppManifest | undefined {
   return app && folder ? { ...folder, id: installedAppId(app.id), installedApp: app } : undefined;
 }
 
+/** Identity used by installed-app loading/pruning, without treating links as real windows. */
+export function shortcutTargetAppId(id: string): string {
+  const shortcut = readShortcuts().find((entry) => entry.id === id);
+  return shortcut?.target.kind === "app" ? shortcut.target.appId : id;
+}
+
 export function isAppAllowed(
   manifest: DesktopAppManifest,
   permissions: readonly Permission[],
 ): boolean {
+  if (manifest.shortcut?.target.kind === "app") {
+    const target = getApp(manifest.shortcut.target.appId);
+    if (!target || !isAppAllowed(target, permissions)) return false;
+  }
   return !manifest.requiredPermission || permissions.includes(manifest.requiredPermission);
 }
 

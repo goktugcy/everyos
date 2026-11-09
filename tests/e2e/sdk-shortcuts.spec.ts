@@ -51,6 +51,23 @@ test("new SDK apps get immediate Dock shortcuts and application list context act
   const name = "Hesap Makinesi";
   const dock = page.getByTestId("dock");
   const dockApp = dock.locator(`[data-dock-item="${windowId}"]`).getByRole("button");
+  await dockApp.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Kısayol ekle", exact: true }).click();
+  const shortcutEditor = page.getByRole("dialog", { name: "Kısayol ekle", exact: true });
+  await shortcutEditor.getByRole("tab", { name: "EveryOS", exact: true }).click();
+  await shortcutEditor.getByRole("button", { name: /Hesap Makinesi.*Resmî uygulama/ }).click();
+  await expect(shortcutEditor.getByLabel("Kısayol adı", { exact: true })).toHaveValue(name);
+  await expect(shortcutEditor.getByLabel("Kısayol önizlemesi").locator("img")).toHaveAttribute(
+    "src",
+    /\/app-runtime\//,
+  );
+  await shortcutEditor.getByLabel("Kısayol adı", { exact: true }).fill("My calculator");
+  await shortcutEditor.getByRole("button", { name: "Masaüstü", exact: true }).click();
+  await shortcutEditor.getByRole("button", { name: "Kısayol oluştur", exact: true }).click();
+  const customDesktop = page
+    .getByTestId("desktop-surface")
+    .getByRole("button", { name: "My calculator", exact: true });
+  await expect(customDesktop).toBeVisible();
   let navigations = 0;
   page.on("framenavigated", (frame) => {
     if (frame === page.mainFrame()) navigations++;
@@ -112,5 +129,6 @@ test("new SDK apps get immediate Dock shortcuts and application list context act
   await expect(shortcut).toHaveCount(0);
   await expect(dockApp).toHaveCount(0);
   await expect(appWindow).toHaveCount(0);
+  await expect(customDesktop).toHaveCount(0);
   expect(navigations).toBe(0);
 });

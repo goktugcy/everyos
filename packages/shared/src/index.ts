@@ -82,6 +82,8 @@ export type {
   DesktopFilePosition,
   DesktopItem,
   DesktopPreferences,
+  CustomShortcut,
+  ShortcutPreferences,
   DockPreferences,
   FolderIconSpec,
   MenubarPreferences,

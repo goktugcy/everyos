@@ -78,7 +78,8 @@ import {
   type FileLocation,
 } from "../apps/files/lib.ts";
 import { ImagePreview, PropertiesDialog } from "../apps/files/parts.tsx";
-import { allowedApps, getApp } from "../apps/registry.ts";
+import { allowedApps, getApp, isAppAllowed } from "../apps/registry.ts";
+import { openShortcutDialog } from "../shortcuts/dialog-store.ts";
 import type { AppId } from "../apps/types.ts";
 import type { MenuEntry } from "../menus/menu-model.ts";
 import { requestConfirm } from "../menus/confirm.tsx";
@@ -87,7 +88,6 @@ import { ContextMenuArea } from "../menus/menus.tsx";
 import { readFilesDrag } from "../pulse/pulse-lib.ts";
 import { desktop } from "../state/controller.ts";
 import {
-  addShortcut,
   arrangeIcons,
   dissolveAppGroups,
   fileCell,
@@ -332,6 +332,7 @@ export function DesktopSurface() {
   const desktopApps = useDesktopApps((state) => state.apps);
   const permissions = usePermissions();
   const desktopDoc = usePreferences((state) => state.desktop);
+  const customShortcuts = usePreferences((state) => state.shortcuts.entries);
   const pinned = usePreferences((state) => state.dock.pinned);
   const iconSizeName = useThemeStore((state) => state.theme.iconSize);
   const viewport = useWindowManager((state) => state.viewport);
@@ -377,11 +378,17 @@ export function DesktopSurface() {
     () =>
       new Set<string>([
         ...allowedApps(permissions, { includeHidden: true, desktopApps }).map((app) => app.id),
+        ...customShortcuts
+          .filter((entry) => {
+            const manifest = getApp(entry.id);
+            return manifest && isAppAllowed(manifest, permissions);
+          })
+          .map((entry) => entry.id),
         ...(permissions.includes("apps:read")
           ? installedApps.map((app) => installedAppId(app.id))
           : []),
       ]),
-    [permissions, installedApps, desktopApps],
+    [permissions, installedApps, desktopApps, customShortcuts],
   );
   const icons = useMemo<Icon[]>(
     () => [
@@ -899,10 +906,6 @@ export function DesktopSurface() {
   /* --------------------------------- menus --------------------------------- */
 
   const desktopMenu = (): MenuEntry[] => {
-    const onThisDesktop = new Set(
-      icons.flatMap((icon) => (icon.kind === "app" ? [icon.item.appId] : [])),
-    );
-    const addable = allowedApps(permissions).filter((app) => !onThisDesktop.has(app.id));
     const fileEntries: MenuEntry[] = writable
       ? [
           {
@@ -940,22 +943,13 @@ export function DesktopSurface() {
         onSelect: () => desktop.openApp("everyos.trash"),
       },
       {
-        kind: "submenu",
+        kind: "item",
         id: "add-shortcut",
         label: t("desktop.menu.addShortcut"),
         icon: <Plus />,
-        entries:
-          addable.length > 0
-            ? addable.map((app) => ({
-                kind: "item" as const,
-                id: app.id,
-                label: appTitle(app, t),
-                onSelect: () =>
-                  updatePreference("desktop", (doc) =>
-                    addShortcut(doc, app.id, activeDesktopId, metrics),
-                  ),
-              }))
-            : [{ kind: "label" as const, id: "none", label: t("desktop.menu.noShortcutsLeft") }],
+        permission: "preferences:manage",
+        onSelect: () =>
+          openShortcutDialog({ destination: "desktop", desktopId: activeDesktopId, metrics }),
       },
       ...(location
         ? [
@@ -1176,6 +1170,18 @@ export function DesktopSurface() {
     const manifest = getApp(item.appId);
     const isPinned = pinned.includes(item.appId);
     return [
+      ...(manifest?.shortcut
+        ? [
+            {
+              kind: "item" as const,
+              id: "edit-shortcut",
+              label: t("shortcuts.edit"),
+              permission: "preferences:manage" as const,
+              onSelect: () =>
+                openShortcutDialog({ destination: "desktop", shortcutId: item.appId }),
+            },
+          ]
+        : []),
       {
         kind: "item",
         id: "open",

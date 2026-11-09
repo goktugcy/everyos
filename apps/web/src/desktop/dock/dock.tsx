@@ -18,7 +18,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { DockPreferences } from "@everyos/shared";
-import { AppWindow, LayoutGrid, MonitorUp, Pin, PinOff, XCircle } from "lucide-react";
+import { AppWindow, LayoutGrid, MonitorUp, Pin, PinOff, XCircle, Plus } from "lucide-react";
 import { Tooltip } from "radix-ui";
 import {
   useMemo,
@@ -36,7 +36,8 @@ import { AppIcon } from "../apps/app-icon.tsx";
 import { useTrashMenu } from "../apps/files/trash-menu.tsx";
 import { appTitle } from "../apps/app-title.ts";
 import { useInstalledApps } from "../apps/store/installed-apps-store.ts";
-import { getApp, isAppAllowed } from "../apps/registry.ts";
+import { getApp, isAppAllowed, shortcutTargetAppId } from "../apps/registry.ts";
+import { openShortcutDialog } from "../shortcuts/dialog-store.ts";
 import type { AppId } from "../apps/types.ts";
 import { useLauncher } from "../launcher/launcher-store.ts";
 import type { MenuEntry } from "../menus/menu-model.ts";
@@ -66,7 +67,9 @@ function useDockWindows(): DockWindow[] {
 
 /** Dock click: open, focus, or minimize the app's most recent window. */
 function activateApp(appId: string, windows: DockWindow[]): void {
-  const own = windows.filter((window) => window.appId === appId).sort((a, b) => b.z - a.z);
+  const own = windows
+    .filter((window) => window.appId === shortcutTargetAppId(appId))
+    .sort((a, b) => b.z - a.z);
   const top = own[0];
   if (!top) {
     desktop.openApp(appId as AppId);
@@ -122,7 +125,7 @@ function DockItem({
     id: appId,
     disabled: !sortable,
   });
-  const own = windows.filter((window) => window.appId === appId);
+  const own = windows.filter((window) => window.appId === shortcutTargetAppId(appId));
   const running = own.length > 0;
   const pinned = dock.pinned.includes(appId);
   const iconSize = useThemeStore((state) => state.theme.iconSize);
@@ -132,6 +135,25 @@ function DockItem({
   const label = appTitle(manifest, t, i18n.language);
 
   const menu = (): MenuEntry[] => [
+    {
+      kind: "item",
+      id: "add-custom-shortcut",
+      label: t("shortcuts.title"),
+      icon: <Plus />,
+      permission: "preferences:manage",
+      onSelect: () => openShortcutDialog({ destination: "dock" }),
+    },
+    ...(manifest.shortcut
+      ? [
+          {
+            kind: "item" as const,
+            id: "edit-custom-shortcut",
+            label: t("shortcuts.edit"),
+            permission: "preferences:manage" as const,
+            onSelect: () => openShortcutDialog({ destination: "dock", shortcutId: appId }),
+          },
+        ]
+      : []),
     own.length === 0 || manifest.window.instancing === "multiple"
       ? {
           kind: "item",
@@ -298,6 +320,7 @@ export function Dock() {
   const { t } = useTranslation();
   useInstalledApps((state) => state.apps);
   useDesktopApps();
+  usePreferences((state) => state.shortcuts);
   const dock = usePreferences((state) => state.dock);
   const permissions = usePermissions();
   const windows = useDockWindows();
@@ -319,7 +342,7 @@ export function Dock() {
     return manifest && isAppAllowed(manifest, permissions);
   });
   const runningExtra = useMemo(() => {
-    const seen = new Set(pinned);
+    const seen = new Set(pinned.map(shortcutTargetAppId));
     const extra: string[] = [];
     for (const window of windows) {
       if (!seen.has(window.appId)) {
@@ -405,117 +428,130 @@ export function Dock() {
           )}
         />
       ) : null}
-      <nav
-        aria-label={t("dock.label")}
-        data-testid="dock"
-        data-style={dock.style}
-        data-position={dock.position}
-        data-hidden={hidden || undefined}
-        className={cn("fixed z-[60] flex transition-transform duration-200", positionClass)}
-        style={{ transform: [centering, offscreen].filter(Boolean).join(" ") || undefined }}
-        onPointerEnter={dock.autoHide ? reveal : undefined}
-        onFocus={dock.autoHide ? reveal : undefined}
-        onBlur={dock.autoHide ? scheduleHide : undefined}
-        onPointerMove={onPointerMove}
-        onPointerLeave={() => {
-          resetScale();
-          if (dock.autoHide) scheduleHide();
-        }}
+      <ContextMenuArea
+        entries={() => [
+          {
+            kind: "item",
+            id: "add-shortcut",
+            label: t("shortcuts.title"),
+            icon: <Plus />,
+            permission: "preferences:manage",
+            onSelect: () => openShortcutDialog({ destination: "dock" }),
+          },
+        ]}
       >
-        <div
-          aria-hidden
-          className={cn(
-            "glass-strong absolute inset-0",
-            floating ? "rounded-everyos-lg" : "rounded-none border-x-0 border-b-0",
-          )}
-          style={{ opacity: dock.opacity }}
-        />
-        <div
-          className={cn(
-            "relative flex items-center gap-1.5",
-            vertical ? "flex-col px-2 py-2.5" : "px-2.5 py-2",
-            !floating && (vertical ? "w-full" : "w-full"),
-          )}
+        <nav
+          aria-label={t("dock.label")}
+          data-testid="dock"
+          data-style={dock.style}
+          data-position={dock.position}
+          data-hidden={hidden || undefined}
+          className={cn("fixed z-[60] flex transition-transform duration-200", positionClass)}
+          style={{ transform: [centering, offscreen].filter(Boolean).join(" ") || undefined }}
+          onPointerEnter={dock.autoHide ? reveal : undefined}
+          onFocus={dock.autoHide ? reveal : undefined}
+          onBlur={dock.autoHide ? scheduleHide : undefined}
+          onPointerMove={onPointerMove}
+          onPointerLeave={() => {
+            resetScale();
+            if (dock.autoHide) scheduleHide();
+          }}
         >
-          <WithTooltip label={t("dock.launcher")} side={side}>
-            <button
-              type="button"
-              aria-label={t("dock.launcher")}
-              onClick={openLauncher}
-              className="grid place-items-center rounded-everyos-md text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
-              style={{ width: dock.iconSize, height: dock.iconSize }}
-            >
-              <LayoutGrid style={{ width: dock.iconSize * 0.46, height: dock.iconSize * 0.46 }} />
-            </button>
-          </WithTooltip>
-          <span aria-hidden className={cn("bg-line", vertical ? "h-px w-8" : "h-8 w-px")} />
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext
-              items={pinned}
-              strategy={vertical ? verticalListSortingStrategy : horizontalListSortingStrategy}
-            >
-              <ul
-                ref={listRef}
-                aria-describedby="dock-reorder-hint"
-                className={cn("flex items-center gap-1.5", vertical && "flex-col")}
-              >
-                {pinned.map((appId) => (
-                  <DockItem
-                    key={appId}
-                    appId={appId}
-                    sortable
-                    windows={windows}
-                    dock={dock}
-                    side={side}
-                  />
-                ))}
-                {!taskbar && runningExtra.length > 0 ? (
-                  <li aria-hidden className={cn("bg-line", vertical ? "h-px w-8" : "h-8 w-px")} />
-                ) : null}
-                {!taskbar
-                  ? runningExtra.map((appId) => (
-                      <DockItem
-                        key={appId}
-                        appId={appId}
-                        sortable={false}
-                        windows={windows}
-                        dock={dock}
-                        side={side}
-                      />
-                    ))
-                  : null}
-              </ul>
-            </SortableContext>
-          </DndContext>
-          {taskbar && !vertical ? (
-            <>
-              <span aria-hidden className="h-8 w-px bg-line" />
-              <ul className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-                {desktopWindows.map((window) => (
-                  <TaskbarWindow
-                    key={window.id}
-                    window={window}
-                    focused={focusedId === window.id}
-                  />
-                ))}
-              </ul>
-            </>
-          ) : null}
-          <StorageShelf
-            side={side}
-            size={dock.iconSize}
-            vertical={vertical}
-            tooltip={(label, trigger) => (
-              <WithTooltip label={label} side={side}>
-                {trigger}
-              </WithTooltip>
+          <div
+            aria-hidden
+            className={cn(
+              "glass-strong absolute inset-0",
+              floating ? "rounded-everyos-lg" : "rounded-none border-x-0 border-b-0",
             )}
+            style={{ opacity: dock.opacity }}
           />
-          <span id="dock-reorder-hint" className="sr-only">
-            {t("dock.reorderHint")}
-          </span>
-        </div>
-      </nav>
+          <div
+            className={cn(
+              "relative flex items-center gap-1.5",
+              vertical ? "flex-col px-2 py-2.5" : "px-2.5 py-2",
+              !floating && (vertical ? "w-full" : "w-full"),
+            )}
+          >
+            <WithTooltip label={t("dock.launcher")} side={side}>
+              <button
+                type="button"
+                aria-label={t("dock.launcher")}
+                onClick={openLauncher}
+                className="grid place-items-center rounded-everyos-md text-fg-muted outline-none hover:bg-hover/10 hover:text-fg focus-visible:ring-2 focus-visible:ring-accent"
+                style={{ width: dock.iconSize, height: dock.iconSize }}
+              >
+                <LayoutGrid style={{ width: dock.iconSize * 0.46, height: dock.iconSize * 0.46 }} />
+              </button>
+            </WithTooltip>
+            <span aria-hidden className={cn("bg-line", vertical ? "h-px w-8" : "h-8 w-px")} />
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext
+                items={pinned}
+                strategy={vertical ? verticalListSortingStrategy : horizontalListSortingStrategy}
+              >
+                <ul
+                  ref={listRef}
+                  aria-describedby="dock-reorder-hint"
+                  className={cn("flex items-center gap-1.5", vertical && "flex-col")}
+                >
+                  {pinned.map((appId) => (
+                    <DockItem
+                      key={appId}
+                      appId={appId}
+                      sortable
+                      windows={windows}
+                      dock={dock}
+                      side={side}
+                    />
+                  ))}
+                  {!taskbar && runningExtra.length > 0 ? (
+                    <li aria-hidden className={cn("bg-line", vertical ? "h-px w-8" : "h-8 w-px")} />
+                  ) : null}
+                  {!taskbar
+                    ? runningExtra.map((appId) => (
+                        <DockItem
+                          key={appId}
+                          appId={appId}
+                          sortable={false}
+                          windows={windows}
+                          dock={dock}
+                          side={side}
+                        />
+                      ))
+                    : null}
+                </ul>
+              </SortableContext>
+            </DndContext>
+            {taskbar && !vertical ? (
+              <>
+                <span aria-hidden className="h-8 w-px bg-line" />
+                <ul className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+                  {desktopWindows.map((window) => (
+                    <TaskbarWindow
+                      key={window.id}
+                      window={window}
+                      focused={focusedId === window.id}
+                    />
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            <StorageShelf
+              side={side}
+              size={dock.iconSize}
+              vertical={vertical}
+              tooltip={(label, trigger) => (
+                <WithTooltip label={label} side={side}>
+                  {trigger}
+                </WithTooltip>
+              )}
+            />
+            <span id="dock-reorder-hint" className="sr-only">
+              {t("dock.reorderHint")}
+            </span>
+          </div>
+        </nav>
+      </ContextMenuArea>
     </Tooltip.Provider>
   );
 }

@@ -12,7 +12,8 @@ import { Spinner } from "../../components/ui/spinner.tsx";
 import { useMediaQuery } from "../../lib/use-media-query.ts";
 import { errorMessage } from "../../lib/errors.ts";
 import { registerBeforeSignOut, useSessionStore } from "../../stores/session-store.ts";
-import { getApp, isAppAllowed } from "../apps/registry.ts";
+import { getApp, isAppAllowed, shortcutTargetAppId } from "../apps/registry.ts";
+import { ShortcutDialogHost } from "../shortcuts/shortcut-dialog.tsx";
 import { TrashStatusProvider } from "../apps/files/trash-status.tsx";
 import { useAiAgentPolling } from "../apps/ai-agents/agent-store.ts";
 import {
@@ -187,11 +188,13 @@ export function DesktopShell() {
   const [attempt, setAttempt] = useState(0);
   const desktopDoc = usePreferences((state) => state.desktop);
   const pinned = usePreferences((state) => state.dock.pinned);
+  usePreferences((state) => state.shortcuts);
   const installed = useInstalledApps();
   const installedShortcutIds = [
     ...pinned,
     ...desktopDoc.items.flatMap((item) => (item.kind === "app" ? [item.appId] : [])),
   ]
+    .map(shortcutTargetAppId)
     .filter((id) => installationId(id))
     .sort()
     .join(",");
@@ -228,8 +231,9 @@ export function DesktopShell() {
     // A failed/offline listing must never erase persisted shortcuts.
     if (canReadApps && !installed.loaded) return;
     const available = (id: string) =>
-      !installationId(id) ||
-      (canReadApps && installed.apps.some((app) => app.id === installationId(id)));
+      !installationId(shortcutTargetAppId(id)) ||
+      (canReadApps &&
+        installed.apps.some((app) => app.id === installationId(shortcutTargetAppId(id))));
     const current = usePreferences.getState();
     if (pruneUnavailable(current.desktop, available) !== current.desktop)
       updatePreference("desktop", (doc) => pruneUnavailable(doc, available));
@@ -252,7 +256,7 @@ export function DesktopShell() {
         if (controller.signal.aborted) return;
         // Drop shortcuts to apps this user can no longer open (e.g. after a role change).
         const available = (appId: string) => {
-          if (installationId(appId)) return permissions.includes("apps:read");
+          if (installationId(shortcutTargetAppId(appId))) return permissions.includes("apps:read");
           const manifest = getApp(appId);
           return Boolean(manifest && isAppAllowed(manifest, permissions));
         };
@@ -318,6 +322,7 @@ export function DesktopShell() {
   return (
     <TrashStatusProvider key={sessionId}>
       {mobile ? <MobileShell /> : <DesktopWorkspace />}
+      <ShortcutDialogHost />
       {!locked ? <NotificationToasts /> : null}
     </TrashStatusProvider>
   );

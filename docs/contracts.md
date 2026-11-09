@@ -54,6 +54,35 @@ export interface AppHost {
 - Every action that is reachable by right-click must also be reachable by keyboard and touch (the
   app menu and the command palette).
 
+### Custom desktop and Dock shortcuts
+
+The desktop and Dock context menus open the same shortcut editor. Its Docker tab reads managed
+installations (`apps:read`) and existing containers (`docker:read`); its EveryOS tab lists permitted
+built-ins and active official desktop apps. Manual links do not require either discovery permission.
+Creating or editing a shortcut requires `preferences:manage`.
+
+The per-user `shortcuts` preference contains at most 128 strict records with a name, optional icon,
+source and URL/app target. The desktop and Dock reference its `everyos.shortcut.link-*` identifier;
+editing that record immediately changes both placements. Removing a placement retains the record
+while another desktop or Dock placement still uses it. Old native app shortcuts remain supported.
+
+App targets open the actual application identity and preserve its permission checks. Managed apps
+resolve their current web address on launch if the suggested URL was kept. An explicitly edited
+address becomes a fixed URL target. Only absolute HTTP(S) links without embedded credentials are
+accepted; links open a separate tab with no opener or referrer. They never create restored windows.
+
+Docker suggestions use published TCP ports and selected web-UI/artwork labels, with query strings
+and fragments removed from label hints. Containers belonging to managed projects are deduplicated.
+No container is started, modified or probed. Simulation is visibly labeled and produces no inferred
+real endpoint. Unpublished/loopback-only ports on remote clients produce no port-based suggestion;
+users can supply their own address. A port suggestion does not prove a service speaks HTTP.
+
+Artwork accepts HTTP(S) image URLs or private PNG/JPEG/WebP uploads through the existing bounded
+folder-icon service (2 MiB, maximum edge 1024). Uploaded references must belong to the signed-in
+user; referenced artwork cannot be deleted. Remote images load directly in the browser without a
+referrer; the image CSP allows HTTP(S), while scripts, connections and frames remain same-origin.
+There is no arbitrary URL fetch on the API or agent. Failed images fall back to an application glyph.
+
 ## 2. Window manager API (Phase 2)
 
 `packages/window-manager` exposes a framework-independent Zustand store. The React binding lives

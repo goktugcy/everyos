@@ -1,7 +1,7 @@
 import { createReadStream } from "node:fs";
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import { WALLPAPER_MIME_TYPES } from "@everyos/shared";
+import { WALLPAPER_MIME_TYPES, shortcutIconId } from "@everyos/shared";
 import {
   EmptyDesktopQuerySchema,
   WallpaperParamsSchema,
@@ -85,12 +85,18 @@ export function wallpaperRoutes(
     const auth = requireAuth(c);
     const { id } = parseParams(c, WallpaperParamsSchema);
     if (purpose === "folder-icon") {
-      const appearance = services.preferences.getAll(auth.user.id).appearance;
+      const preferences = services.preferences.getAll(auth.user.id);
+      const appearance = preferences.appearance;
       const references = [
         appearance?.folderIcon,
         ...(appearance?.folderIcons ?? []).map((item) => item.icon),
       ];
-      if (references.some((icon) => icon?.kind === "uploaded" && icon.iconId === id))
+      if (
+        references.some((icon) => icon?.kind === "uploaded" && icon.iconId === id) ||
+        preferences.shortcuts?.entries.some(
+          (entry) => entry.icon && shortcutIconId(entry.icon) === id,
+        )
+      )
         throw new ApiError(409, "CONFLICT", "Folder icon is in use");
     }
     if (!(await services.wallpapers.delete(auth.user.id, id, purpose))) throw notFound("Wallpaper");

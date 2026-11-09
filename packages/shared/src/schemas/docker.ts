@@ -66,6 +66,9 @@ const PortSchema = z.object({
 export const ContainerSummarySchema = z.object({
   id: ContainerIdSchema,
   name: text(256),
+  /** Safe presentation hints, not a claim of ownership or permission to manage the container. */
+  webUiTemplate: z.string().max(2048).optional(),
+  icon: z.string().max(2048).optional(),
   image: text(512),
   imageId: text(128),
   state: z.enum(CONTAINER_STATES),

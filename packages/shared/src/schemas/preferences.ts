@@ -11,6 +11,10 @@ import {
   FOLDER_ICON_PRESET_IDS,
   ICON_SIZES,
   MAX_DESKTOPS,
+  MAX_CUSTOM_SHORTCUTS,
+  SHORTCUT_PREFIX,
+  isShortcutUrl,
+  isShortcutIcon,
   MENUBAR_MODULE_IDS,
   PREFERENCE_KEYS,
   RENDER_MODES,
@@ -40,6 +44,36 @@ export const AppIdSchema = z
   .max(160)
   .regex(/^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$/, "app-id")
   .transform((id) => (id.startsWith("otuken.") ? `everyos.${id.slice(7)}` : id));
+
+export const CustomShortcutSchema = z.strictObject({
+  id: z.string().regex(/^everyos\.shortcut\.link-[a-z0-9-]{1,64}$/),
+  name: z.string().trim().min(1).max(80),
+  icon: z.string().max(2048).refine(isShortcutIcon, "shortcut-icon").nullable(),
+  source: z.enum(["manual", "docker", "official"]),
+  permission: z.enum(["apps:read", "docker:read"]).nullable(),
+  target: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("url"),
+      url: z.string().refine(isShortcutUrl, "shortcut-url"),
+    }),
+    z.strictObject({
+      kind: z.literal("app"),
+      appId: AppIdSchema.refine((id) => !id.startsWith(SHORTCUT_PREFIX), "nested-shortcut"),
+    }),
+  ]),
+});
+export type CustomShortcut = z.infer<typeof CustomShortcutSchema>;
+export const ShortcutPreferencesSchema = z.strictObject({
+  version: z.literal(1),
+  entries: z
+    .array(CustomShortcutSchema)
+    .max(MAX_CUSTOM_SHORTCUTS)
+    .refine(
+      (entries) => new Set(entries.map((entry) => entry.id)).size === entries.length,
+      "duplicate-shortcut",
+    ),
+});
+export type ShortcutPreferences = z.infer<typeof ShortcutPreferencesSchema>;
 
 /* Appearance */
 
@@ -264,6 +298,7 @@ export type SecurityPreferences = z.infer<typeof SecurityPreferencesSchema>;
 
 /** Schema registry used by the preferences API. */
 export const PREFERENCE_SCHEMAS: Record<PreferenceKey, z.ZodType> = {
+  shortcuts: ShortcutPreferencesSchema,
   appearance: AppearancePreferencesSchema,
   desktop: DesktopPreferencesSchema,
   dock: DockPreferencesSchema,
@@ -276,6 +311,7 @@ export const PREFERENCE_SCHEMAS: Record<PreferenceKey, z.ZodType> = {
 };
 
 export interface PreferenceDocuments {
+  shortcuts: ShortcutPreferences;
   appearance: AppearancePreferences;
   desktop: DesktopPreferences;
   dock: DockPreferences;

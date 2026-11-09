@@ -2,6 +2,33 @@ import { cn } from "../../lib/cn.ts";
 import type { DesktopAppManifest } from "./types.ts";
 import { InstalledAppIcon } from "./store/installed-icon.tsx";
 import { TrashGlyph } from "./files/trash-glyph.tsx";
+import { useState, type ReactNode } from "react";
+
+export function ShortcutImage({
+  src,
+  size,
+  fallback,
+}: {
+  src: string;
+  size: number;
+  fallback: ReactNode;
+}) {
+  const [failed, setFailed] = useState<string | null>(null);
+  return failed === src ? (
+    fallback
+  ) : (
+    <img
+      src={src}
+      alt=""
+      aria-hidden
+      draggable={false}
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(src)}
+      className="shrink-0 rounded-xl object-contain"
+      style={{ width: size, height: size }}
+    />
+  );
+}
 
 /** App artwork follows `size` (px); the trash basket keeps its transparent silhouette. */
 export function AppIcon({
@@ -9,10 +36,23 @@ export function AppIcon({
   size = 40,
   className,
 }: {
-  manifest: Pick<DesktopAppManifest, "id" | "icon" | "tint" | "installedApp" | "desktopApp">;
+  manifest: Pick<
+    DesktopAppManifest,
+    "id" | "icon" | "tint" | "installedApp" | "desktopApp" | "shortcut"
+  >;
   size?: number;
   className?: string;
 }) {
+  if (manifest.shortcut?.icon) {
+    const { shortcut, ...base } = manifest;
+    return (
+      <ShortcutImage
+        src={shortcut.icon!}
+        size={size}
+        fallback={<AppIcon manifest={base} size={size} {...(className ? { className } : {})} />}
+      />
+    );
+  }
   if (manifest.installedApp) return <InstalledAppIcon app={manifest.installedApp} size={size} />;
   if (manifest.desktopApp)
     return (

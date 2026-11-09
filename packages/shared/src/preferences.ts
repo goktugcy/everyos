@@ -15,9 +15,54 @@ export const PREFERENCE_KEYS = [
   "widgets",
   "notifications",
   "pulse",
+  "shortcuts",
 ] as const;
 
 export type PreferenceKey = (typeof PREFERENCE_KEYS)[number];
+
+export const SHORTCUT_PREFIX = "everyos.shortcut.link-";
+export const MAX_CUSTOM_SHORTCUTS = 128;
+
+/** Browser-opened links only; credentials and executable/custom protocols are never accepted. */
+export function isShortcutUrl(value: string): boolean {
+  if (
+    !/^https?:\/\//i.test(value) ||
+    value.includes("\\") ||
+    value.length > 2048 ||
+    [...value].some((char) => char.charCodeAt(0) <= 32 || char.charCodeAt(0) === 127)
+  )
+    return false;
+  try {
+    // Contracts also compile without DOM/Node globals; both supported runtimes provide WHATWG URL.
+    const PlatformUrl = (
+      globalThis as unknown as {
+        URL: new (value: string) => {
+          protocol: string;
+          hostname: string;
+          username: string;
+          password: string;
+        };
+      }
+    ).URL;
+    const url = new PlatformUrl(value);
+    return (
+      ["http:", "https:"].includes(url.protocol) &&
+      Boolean(url.hostname) &&
+      !url.username &&
+      !url.password
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function shortcutIconId(value: string): string | null {
+  return /^\/api\/folder-icons\/([A-Za-z0-9_-]{1,64})\/image$/.exec(value)?.[1] ?? null;
+}
+
+export function isShortcutIcon(value: string): boolean {
+  return isShortcutUrl(value) || shortcutIconId(value) !== null;
+}
 
 /** Most items the pulse shelf keeps. */
 export const MAX_SHELF_ITEMS = 48;

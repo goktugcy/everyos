@@ -68,6 +68,7 @@ export async function signIn(
           "widgets",
           "notifications",
           "pulse",
+          "shortcuts",
         ])
           statuses.push(
             (await fetch(`/api/preferences/${key}`, { method: "DELETE", headers })).status,

@@ -1,4 +1,5 @@
 import type { InstalledAppView, Permission } from "@everyos/shared";
+import { SHORTCUT_PREFIX, isShortcutUrl } from "@everyos/shared";
 import type { WindowSpec } from "@everyos/window-manager";
 import { getApp, isAppAllowed } from "../apps/registry.ts";
 import { useAiAgents } from "../apps/ai-agents/agent-store.ts";
@@ -28,6 +29,7 @@ export function specFor(manifest: DesktopAppManifest): WindowSpec {
 
 /** Resolves persisted windows on restore; unknown or forbidden apps are dropped. */
 export function resolveSpec(appId: string): WindowSpec | null {
+  if (appId.startsWith(SHORTCUT_PREFIX)) return null;
   if (installationId(appId)) return null;
   const manifest = getApp(appId);
   return manifest && isAppAllowed(manifest, permissions()) ? specFor(manifest) : null;
@@ -44,6 +46,12 @@ export const desktop = {
   ): string | null {
     const manifest = getApp(appId);
     if (!manifest || !isAppAllowed(manifest, permissions())) return null;
+    if (manifest.shortcut) {
+      const target = manifest.shortcut.target;
+      if (target.kind === "app") return desktop.openApp(target.appId as AppId, options);
+      if (isShortcutUrl(target.url)) window.open(target.url, "_blank", "noopener,noreferrer");
+      return null;
+    }
     const installedId = installationId(appId);
     if (installedId && manifest.installedApp) {
       const nativeChat = useAiAgents
