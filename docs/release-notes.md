@@ -1,25 +1,23 @@
-EveryOS 0.1.50 adds automatic official app updates and independent app publication.
+EveryOS 0.1.51 adds a shared desktop and Dock shortcut editor.
 
-- Active installed official apps update automatically to newer compatible signed versions.
-  Catalogs refresh at startup and every 15 minutes. Updates wait while an app window or widget
-  is open, then retry when it closes. App data, settings and existing grants are preserved.
-- New capabilities still require approval, including newly requested standard capabilities.
-  The App Store handles that review. Disabled apps, revoked versions, conflicting sources and
-  community/private installations are excluded from automatic installation.
-- Successful updates create localized notifications and refresh desktop app runtime URLs, names
-  and widgets without reloading the page. Notification preferences remain respected. Polling,
-  reconnect and visibility recovery cover missed events. Failed updates notify administrators,
-  are audited without secrets and retry with backoff.
-- Publishers can release official application packages through a separate protected app-tag
-  workflow. It tests, verifies and signs app artifacts without building another Linux package or
-  changing the EveryOS version. Existing clients keep the same signed official catalog address.
-- Both publication workflows share the catalog sequence and publication lock. Immutable package
-  URLs, retained catalog snapshots, uploaded-asset digest checks and no-downgrade checks protect
-  the app catalog and existing OS release assets.
-
-Automatic installation and its notifications require this one-time EveryOS upgrade. Subsequent
-official app publications can use the independent app workflow. Older clients retain their
-existing manual App Store update action.
+- Right-click the desktop or Dock and choose Add shortcut. The shared dialog has sections for
+  installed Docker applications, built-in and installed official EveryOS apps, and manual links.
+- Docker discovery reads existing installations, published TCP ports and available presentation
+  labels without starting or modifying containers. Suggested addresses and artwork can be edited.
+  Simulated data is labeled and never used to infer a real address.
+- Give a shortcut its own name and icon URL, or upload a private PNG, JPEG or WebP image. Link and
+  image addresses are limited to HTTP(S), and embedded URL credentials are rejected. Uploaded
+  artwork is validated, scoped to its owner and protected from deletion while referenced.
+- Add a shortcut to the desktop, Dock or both. Edits appear immediately in every placement and
+  persist across reloads. Removing one placement keeps the others; removing the last cleans up
+  the shared record. Existing native shortcuts remain supported.
+- EveryOS app shortcuts open the actual application window with its existing permissions.
+  Managed Docker shortcuts keep resolving current published ports when the suggested address is
+  unchanged; an explicit address override becomes a fixed link. External links open a separate
+  tab without an opener or referrer.
+- Confirmed official app removal also removes its custom shortcut aliases. The dialog supports
+  keyboard context menus and narrow screens, with save and cancel actions kept visible while
+  the form scrolls.
 
 For installations older than 0.1.49, a host administrator must apply the package-service migration
 before updating through an older restricted EveryOS worker:
