@@ -1630,6 +1630,7 @@ export const it: LocaleMessages = {
       },
     },
     about: {
+      links: en.settings.about.links,
       description:
         "EveryOS è un'esperienza di OS personale che riunisce i tuoi file, le tue app e il tuo spazio di lavoro sul tuo sistema Linux, accessibile da un browser.",
       version: "Versione",

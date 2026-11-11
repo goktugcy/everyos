@@ -1543,6 +1543,15 @@ export const en: Messages = {
       },
     },
     about: {
+      links: {
+        title: "Project links",
+        github: "GitHub",
+        githubHint: "Source code and contributions",
+        website: "Website",
+        websiteHint: "everyos.net",
+        support: "Buy Me a Coffee",
+        supportHint: "Support the project",
+      },
       description:
         "EveryOS is a personal OS experience that brings your files, apps and workspace together on your own Linux system, accessible from a browser.",
       version: "Version",

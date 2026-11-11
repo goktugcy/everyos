@@ -1622,6 +1622,7 @@ export const ru: LocaleMessages = {
       },
     },
     about: {
+      links: en.settings.about.links,
       description:
         "EveryOS — это персональная ОС, которая объединяет ваши файлы, приложения и рабочее пространство в вашей собственной Linux-системе и доступна из браузера.",
       version: "Версия",

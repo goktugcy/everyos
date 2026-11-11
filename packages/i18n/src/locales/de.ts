@@ -1628,6 +1628,7 @@ export const de: LocaleMessages = {
       },
     },
     about: {
+      links: en.settings.about.links,
       description:
         "EveryOS ist ein persönliches Betriebssystem-Erlebnis, das deine Dateien, Apps und deinen Arbeitsbereich auf deinem eigenen Linux-System zusammenführt – erreichbar über den Browser.",
       version: "Version",

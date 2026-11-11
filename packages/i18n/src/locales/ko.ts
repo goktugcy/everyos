@@ -1587,6 +1587,7 @@ export const ko: LocaleMessages = {
       },
     },
     about: {
+      links: en.settings.about.links,
       description:
         "EveryOS는 파일, 앱, 작업 공간을 사용자의 Linux 시스템에 한데 모아 브라우저에서 사용할 수 있게 해 주는 개인 OS 환경입니다.",
       version: "버전",

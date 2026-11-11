@@ -1614,6 +1614,7 @@ export const ja: LocaleMessages = {
       },
     },
     about: {
+      links: en.settings.about.links,
       description:
         "EveryOSは、ファイル、アプリ、ワークスペースをご自身のLinuxシステム上にまとめ、ブラウザーからアクセスできるようにするパーソナルOS体験です。",
       version: "バージョン",

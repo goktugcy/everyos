@@ -1575,6 +1575,15 @@ export const tr = {
       },
     },
     about: {
+      links: {
+        title: "Proje bağlantıları",
+        github: "GitHub",
+        githubHint: "Kaynak kodu ve katkılar",
+        website: "Web sitesi",
+        websiteHint: "everyos.net",
+        support: "Buy Me a Coffee",
+        supportHint: "Projeyi destekleyin",
+      },
       description:
         "EveryOS, dosyalarını, uygulamalarını ve çalışma alanını kendi Linux sisteminde bir araya getiren, tarayıcıdan erişilen kişisel OS deneyimidir.",
       version: "Sürüm",

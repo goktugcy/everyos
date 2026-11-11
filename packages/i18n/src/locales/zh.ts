@@ -1532,6 +1532,7 @@ export const zh: LocaleMessages = {
       },
     },
     about: {
+      links: en.settings.about.links,
       description:
         "EveryOS 是一种个人操作系统体验：它在你自己的 Linux 系统上汇聚你的文件、应用和工作区，并可通过浏览器访问。",
       version: "版本",

@@ -85,6 +85,10 @@ desktop/dock, account and security preferences. Files and folders on the desktop
 home's Desktop folder (inside EveryOS's data directory, not the host's home directories). Keyboard
 shortcuts are listed in Settings → Desktop and Dock.
 
+Settings → About includes icon links to the source repository (`github.com/goktugcy/everyos`),
+the project website (`everyos.net`) and the owner's support page (`buymeacoffee.com/goktugcy`).
+They open in a separate tab with `noopener noreferrer`; labels and captions use the locale catalog.
+
 ## Development mode
 
 `pnpm dev` (see `scripts/dev.ts`) creates `./.dev/{data,run,secrets}` and starts:
