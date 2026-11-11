@@ -1,23 +1,22 @@
-EveryOS 0.1.51 adds a shared desktop and Dock shortcut editor.
+EveryOS 0.1.52 brings Tailscale and NetBird together in Settings → Remote Access.
 
-- Right-click the desktop or Dock and choose Add shortcut. The shared dialog has sections for
-  installed Docker applications, built-in and installed official EveryOS apps, and manual links.
-- Docker discovery reads existing installations, published TCP ports and available presentation
-  labels without starting or modifying containers. Suggested addresses and artwork can be edited.
-  Simulated data is labeled and never used to infer a real address.
-- Give a shortcut its own name and icon URL, or upload a private PNG, JPEG or WebP image. Link and
-  image addresses are limited to HTTP(S), and embedded URL credentials are rejected. Uploaded
-  artwork is validated, scoped to its owner and protected from deletion while referenced.
-- Add a shortcut to the desktop, Dock or both. Edits appear immediately in every placement and
-  persist across reloads. Removing one placement keeps the others; removing the last cleans up
-  the shared record. Existing native shortcuts remain supported.
-- EveryOS app shortcuts open the actual application window with its existing permissions.
-  Managed Docker shortcuts keep resolving current published ports when the suggested address is
-  unchanged; an explicit address override becomes a fixed link. External links open a separate
-  tab without an opener or referrer.
-- Confirmed official app removal also removes its custom shortcut aliases. The dialog supports
-  keyboard context menus and narrow screens, with save and cancel actions kept visible while
-  the form scrolls.
+- Install, configure, connect and disconnect providers independently. NetBird supports its cloud
+  service and self-hosted HTTPS management servers. Existing Tailscale diagnostics, widgets and
+  EveryOS HTTPS Serve integration remain available.
+- Keep both providers installed and connected. EveryOS warns about observed or potential DNS,
+  overlapping subnet and default-route/exit-node conflicts, and explicitly identifies unreadable
+  information. Starting a second connection requires acknowledgment; EveryOS does not automatically
+  disable the other provider or rewrite its network policy.
+- Provider actions use validated privileged-agent operations with administrator and linked Linux
+  sudo permissions. Initial headless registration uses a provider auth/setup key passed through
+  stdin; EveryOS does not retain it in settings, command-line arguments, environment or logs.
+- Automatic provider installation supports Debian/Ubuntu and uses signed APT packages, reviewed
+  vendor signing-key pins and existing package-environment safeguards. Installation continues in
+  the agent when the browser or API connection closes.
+- A refreshed Remote Access screen includes official provider logos, clear connection badges,
+  compact network summaries and labeled DNS/route switches, with light/dark theme and mobile layouts.
+- About now provides icon links to the GitHub repository, everyos.net and Buy Me a Coffee. The
+  introductory product description has been removed for a cleaner header.
 
 For installations older than 0.1.49, a host administrator must apply the package-service migration
 before updating through an older restricted EveryOS worker:

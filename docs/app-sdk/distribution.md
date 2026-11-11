@@ -62,8 +62,8 @@ identity. Production private keys are only supplied to the protected signing job
 The package job runs `node scripts/release-preflight.ts` before any signing. An absent community
 anchor, a missing live acceptance receipt or an invalid/expired live signed index blocks publication.
 The production service and independent public-key pin are present, and the real human-reviewed
-six-step lifecycle passes. The current receipt binds EveryOS 0.1.42 to
-[immutable live evidence](../evidence/community-20261103/live-lifecycle.json). Standalone SDK tests
+six-step lifecycle passes. The current receipt binds EveryOS 0.1.52 to
+[immutable live evidence](../evidence/community-20261112-052/live-lifecycle.json). Standalone SDK tests
 remain one part of the complete release gate.
 
 `https://registry.everyos.net/index.json` and its independently retained key are pinned in
