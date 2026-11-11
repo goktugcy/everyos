@@ -82,7 +82,8 @@ const invoke = async (frame: { id: number; op: string; params: unknown; actor: A
       frame.op.startsWith("terminal.") ||
       frame.op.startsWith("release.") ||
       frame.op.startsWith("backups.") ||
-      frame.op.startsWith("apps.")
+      frame.op.startsWith("apps.") ||
+      frame.op.startsWith("remoteAccess.")
     )
       throw new OperationError("forbidden", "Operation unavailable in account worker");
     const contract = AGENT_OPERATIONS[frame.op];

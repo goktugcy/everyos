@@ -2,8 +2,10 @@
 
 Tailscale is optional. EveryOS works fully without it; when it is not installed or its LocalAPI is
 not reachable, the Tailscale app shows why ("not detected", "permission denied") and the menu bar
-hides its Tailscale link. EveryOS reads tailscaled's LocalAPI and explains what it finds. The only
-change it ever makes is **its own HTTPS Serve handler**, when an administrator turns it on.
+hides its Tailscale link. EveryOS reads tailscaled's LocalAPI and explains what it finds.
+[Settings → Remote Access](remote-access.md) adds authorized installation, headless enrollment,
+connection and disconnection alongside NetBird. The existing HTTPS integration changes only
+**its own Serve handler**, when an administrator turns it on.
 
 ## Data sources
 
@@ -92,7 +94,8 @@ monitor) and `tailscale.peers` (`system:manage`, users only).
 
 ## Limitations
 
-- Connecting, logging in, choosing an exit node, Funnel and any Serve handler other than
-  EveryOS's own stay in the Tailscale CLI or admin console.
+- Interactive SSO, choosing an exit node, Funnel and any Serve handler other than EveryOS's own
+  stay in the Tailscale CLI or admin console. Key-based enrollment and connection are available
+  in Settings → Remote Access.
 - Detecting HTTPS behind Serve relies on the `X-Forwarded-Proto` header Serve sends; the origin is
   allowed either way.

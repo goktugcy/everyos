@@ -1143,3 +1143,19 @@ the open/update race. Never elevate a capability or impersonate an administrator
 localized results and refresh runtime metadata in visible desktops, with polling recovery.
 These client-side automatic behaviours require one initial EveryOS upgrade; independent app
 publication and older clients' manual app updates do not.
+
+## Independent remote access providers (2026-11-11)
+
+Keep Tailscale's existing LocalAPI diagnostics and Serve paths. Add a provider-neutral facade in
+the API and small host drivers in the system package, with explicit typed agent operations. Both
+Tailscale and NetBird may be installed and connected; selecting a settings tab is not a global VPN
+switch. Serialize host transitions and require acknowledgment before starting a second tunnel.
+Warnings describe observed DNS/routes/default routes and unreadable state without automatically
+changing another provider. Correlate routes to actual interface addresses; do not mistake NetBird
+advertisements or empty DNS groups for effective client policy.
+
+Use headless auth/setup keys over stdin without retaining them in EveryOS. Save only public desired
+settings and apply them on explicit Connect. Install fixed signed APT packages after existing boot,
+module and dpkg safety checks; use reviewed public key pins rather than curl-to-shell installers.
+Installation belongs to the agent, so an HTTP disconnect cannot interrupt package configuration.
+See [remote-access.md](remote-access.md) for permissions, contracts and verification limits.

@@ -94,6 +94,7 @@ export class AccountWorkers {
       "power.status",
       "hardware.status",
       "network.status",
+      "remoteAccess.snapshot",
       "storage.usage",
       "release.status",
       "release.check",
@@ -126,6 +127,7 @@ export class AccountWorkers {
           op === "services.control" ||
           op === "power.control" ||
           op === "tailscale.serve" ||
+          op.startsWith("remoteAccess.") ||
           (op.startsWith("disks.") && contract.mutating);
         if (
           privileged ||

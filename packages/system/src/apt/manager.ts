@@ -1,6 +1,11 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
-import { RELEASE_VERSION_PATTERN, type AptUpdates, type PackageInfo } from "@everyos/shared";
+import {
+  RELEASE_VERSION_PATTERN,
+  type AptUpdates,
+  type PackageInfo,
+  type RemoteAccessProviderId,
+} from "@everyos/shared";
 import { CommandError, findExecutable, runCapture, runCommand, SAFE_ENV } from "../exec.ts";
 import { parseAptPolicy, parseAptShow, parseAptSummary } from "../linux/apt.ts";
 import { collectAptUpdates } from "../collect/apt.ts";
@@ -20,6 +25,11 @@ export interface AptManager {
   refresh(signal: AbortSignal): Promise<{ ok: boolean; busy: boolean; output: string }>;
   /** Installs only the compatible BorgBackup dependency from configured APT repositories. */
   installBorg(signal: AbortSignal): Promise<{ ok: boolean; busy: boolean }>;
+  /** Fixed VPN package names only; authentication remains APT's responsibility. */
+  installRemoteAccess?(
+    provider: RemoteAccessProviderId,
+    signal: AbortSignal,
+  ): Promise<{ ok: boolean; busy: boolean }>;
   /** Upgrades the given packages (only if already installed) or everything; never removes any. */
   upgrade(packages: readonly string[] | null, signal: AbortSignal): AsyncGenerator<AptUpgradeEvent>;
 }
@@ -76,6 +86,63 @@ export function createAptManager(): AptManager {
     if (audit.exitCode !== 0 || audit.output.trim())
       throw new CommandError("failed", "PACKAGE_STATE_UNSAFE");
   };
+  async function installDependency(
+    manager: AptManager,
+    name: "borgbackup" | RemoteAccessProviderId,
+    signal: AbortSignal,
+    borg: boolean,
+  ): Promise<{ ok: boolean; busy: boolean }> {
+    await assertPackageMutationSafe().catch(() => {
+      throw new CommandError("failed", "PACKAGE_ENVIRONMENT_UNSAFE");
+    });
+    await checkDatabase(signal);
+    const aptGet = await tool("apt-get");
+    const candidate = (await manager.package(name)).candidateVersion;
+    if (!candidate)
+      throw new CommandError(
+        "failed",
+        borg ? "BORG_PACKAGE_UNAVAILABLE" : "REMOTE_PACKAGE_UNAVAILABLE",
+      );
+    if (borg && !isSupportedBorgPackageVersion(candidate))
+      throw new CommandError("failed", "BORG_PACKAGE_VERSION");
+    if (!/^[0-9][A-Za-z0-9.+:~_-]{0,127}$/.test(candidate))
+      throw new CommandError("failed", "REMOTE_PACKAGE_VERSION");
+    const installed = await runCapture(
+      await tool("dpkg-query"),
+      ["--show", "--showformat=${Version}", "everyos"],
+      { timeoutMs: 10_000, signal, env: APT_ENV, maxOutputBytes: 1024 },
+    );
+    if (installed.exitCode !== 0 && installed.exitCode !== 1)
+      throw new CommandError(
+        "failed",
+        borg ? "BORG_INSTALL_EVERYOS_VERSION" : "REMOTE_INSTALL_EVERYOS_VERSION",
+      );
+    const everyosVersion = installed.exitCode === 0 ? installed.output.trim() : null;
+    if (everyosVersion && !RELEASE_VERSION_PATTERN.test(everyosVersion))
+      throw new CommandError(
+        "failed",
+        borg ? "BORG_INSTALL_EVERYOS_VERSION" : "REMOTE_INSTALL_EVERYOS_VERSION",
+      );
+    const result = await runCapture(
+      aptGet,
+      [
+        ...UPGRADE_OPTIONS,
+        "--no-install-recommends",
+        "install",
+        "--",
+        `${name}=${candidate}`,
+        ...(everyosVersion ? [`everyos=${everyosVersion}`] : []),
+      ],
+      {
+        timeoutMs: 20 * 60_000,
+        signal,
+        env: APT_ENV,
+        maxOutputBytes: 64 * 1024,
+      },
+    );
+    if (result.exitCode === 0) await checkDatabase(signal);
+    return { ok: result.exitCode === 0, busy: LOCKED.test(result.output) };
+  }
   return {
     source: "host",
     updates: () => collectAptUpdates(),
@@ -124,44 +191,12 @@ export function createAptManager(): AptManager {
     },
 
     async installBorg(signal) {
-      await assertPackageMutationSafe().catch(() => {
-        throw new CommandError("failed", "PACKAGE_ENVIRONMENT_UNSAFE");
-      });
-      await checkDatabase(signal);
-      const aptGet = await tool("apt-get");
-      const candidate = (await this.package("borgbackup")).candidateVersion;
-      if (!candidate) throw new CommandError("failed", "BORG_PACKAGE_UNAVAILABLE");
-      if (!isSupportedBorgPackageVersion(candidate))
-        throw new CommandError("failed", "BORG_PACKAGE_VERSION");
-      const installed = await runCapture(
-        await tool("dpkg-query"),
-        ["--show", "--showformat=${Version}", "everyos"],
-        { timeoutMs: 10_000, signal, env: APT_ENV, maxOutputBytes: 1024 },
-      );
-      if (installed.exitCode !== 0 && installed.exitCode !== 1)
-        throw new CommandError("failed", "BORG_INSTALL_EVERYOS_VERSION");
-      const everyosVersion = installed.exitCode === 0 ? installed.output.trim() : null;
-      if (everyosVersion && !RELEASE_VERSION_PATTERN.test(everyosVersion))
-        throw new CommandError("failed", "BORG_INSTALL_EVERYOS_VERSION");
-      const result = await runCapture(
-        aptGet,
-        [
-          ...UPGRADE_OPTIONS,
-          "--no-install-recommends",
-          "install",
-          "--",
-          `borgbackup=${candidate}`,
-          ...(everyosVersion ? [`everyos=${everyosVersion}`] : []),
-        ],
-        {
-          timeoutMs: 20 * 60_000,
-          signal,
-          env: APT_ENV,
-          maxOutputBytes: 64 * 1024,
-        },
-      );
-      if (result.exitCode === 0) await checkDatabase(signal);
-      return { ok: result.exitCode === 0, busy: LOCKED.test(result.output) };
+      return installDependency(this, "borgbackup", signal, true);
+    },
+    async installRemoteAccess(provider, signal) {
+      if (provider !== "tailscale" && provider !== "netbird")
+        throw new CommandError("failed", "REMOTE_PROVIDER_INVALID");
+      return installDependency(this, provider, signal, false);
     },
 
     async *upgrade(packages, signal) {

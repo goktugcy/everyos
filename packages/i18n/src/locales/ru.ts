@@ -1,3 +1,4 @@
+import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
@@ -6,6 +7,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** Russian. */
 export const ru: LocaleMessages = {
+  remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
   common: {
@@ -1416,6 +1418,7 @@ export const ru: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      remoteAccess: en.settings.sections.remoteAccess,
       agents: "ИИ-ассистенты",
       appearance: "Оформление",
       desktop: "Рабочий стол и Dock",

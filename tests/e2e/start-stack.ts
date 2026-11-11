@@ -40,7 +40,10 @@ if (process.env.EVERYOS_TEST_BORG) {
 const apiConfig = join(E2E_STATE_DIR, "api.yaml");
 // These disposable fixtures need a reserve, but not the production 1 GiB allowance.
 // The official desktop app registry is a local fixture with throwaway keys (a LAN "mirror").
-const appRegistry = await startAppRegistry(E2E_PORT + 2);
+// Built-in-only checks can avoid rebuilding the unrelated official app catalog.
+const appRegistry = await startAppRegistry(E2E_PORT + 2, {
+  includeOfficialApps: process.env.EVERYOS_E2E_SKIP_OFFICIAL_APPS !== "1",
+});
 writeFileSync(
   apiConfig,
   "files:\n  minFreeMiB: 64\nbackups:\n  minFreeMiB: 64\n" +

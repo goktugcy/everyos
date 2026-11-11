@@ -20,6 +20,7 @@ const DOCKER_MUTATIONS = new Set([
 ]);
 
 export interface PolicyOptions {
+  remoteAccessSource?: "host" | "simulated";
   linuxBackupsSource?: "host" | "simulated";
   mode: AgentMode;
   isProtected: (unit: string) => boolean;
@@ -40,6 +41,15 @@ export interface PolicyOptions {
  */
 export function createPolicy(options: PolicyOptions): OperationPolicy {
   return (op, params) => {
+    if (
+      ["remoteAccess.connect", "remoteAccess.disconnect", "remoteAccess.install"].includes(op) &&
+      options.mode === "development" &&
+      options.remoteAccessSource !== "simulated"
+    )
+      return {
+        allowed: false,
+        reason: `${POLICY_REASONS.developmentMode}: changing host VPN providers is disabled in development mode`,
+      };
     if (
       op.startsWith("backups.linux.") &&
       op !== "backups.linux.status" &&

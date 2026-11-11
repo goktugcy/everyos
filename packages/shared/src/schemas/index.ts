@@ -6,6 +6,7 @@
 export * from "./api.ts";
 export * from "./docker.ts";
 export * from "./host.ts";
+export * from "./remote-access.ts";
 export * from "./preferences.ts";
 export * from "./system.ts";
 export * from "./widgets.ts";

@@ -46,6 +46,7 @@ import { backupRoutes } from "./modules/backups/routes.ts";
 import { linuxBackupRoutes } from "./modules/backups/linux-backup-routes.ts";
 import { appSdkAppearanceRoutes } from "./modules/desktop-apps/sdk-appearance-routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
+import { remoteAccessRoutes } from "./modules/remote-access/routes.ts";
 import type { Services } from "./services.ts";
 
 const MAX_JSON_BODY_BYTES = 64 * 1024;
@@ -141,6 +142,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/ai-agents", aiAgentRoutes(services));
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
+  api.route("/remote-access", remoteAccessRoutes(services));
   api.route("/wallpapers", wallpaperRoutes(services));
   api.route("/folder-icons", wallpaperRoutes(services, "folder-icon"));
   api.all("*", () => {

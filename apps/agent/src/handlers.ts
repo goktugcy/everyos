@@ -1,4 +1,5 @@
 import { installLinuxBackupEngine } from "./linux-backup-install.ts";
+import { createRemoteAccessHandlers } from "./remote-access.ts";
 import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
 import { SelfUpdateManager } from "@everyos/release";
 import {
@@ -64,6 +65,7 @@ export interface HandlerDependencies {
   collect?: () => Promise<SystemInfo>;
   inspectProcess?: typeof collectProcessDetail;
   tailscaleSockets?: readonly string[];
+  remoteAccessSimulate?: boolean;
   /** Concurrent `journalctl --follow` processes across all connections. */
   maxLogFollows?: number;
   apps?: ManagedAppManager;
@@ -220,6 +222,11 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     throw new OperationError("unsupported", "Account files require a linked Linux account");
   };
   return {
+    ...createRemoteAccessHandlers({
+      apt,
+      simulate: deps.mode === "development" && deps.remoteAccessSimulate === true,
+      ...(deps.tailscaleSockets ? { tailscaleSockets: deps.tailscaleSockets } : {}),
+    }),
     "ai.discover": () => {
       if (deps.mode === "development") return { source: "simulated", discoveries: [] };
       return filesDisabled();

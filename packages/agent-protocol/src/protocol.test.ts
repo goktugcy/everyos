@@ -65,6 +65,11 @@ const notUsed = () => {
 
 function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers {
   return {
+    "remoteAccess.snapshot": notUsed,
+    "remoteAccess.peers": notUsed,
+    "remoteAccess.install": notUsed,
+    "remoteAccess.connect": notUsed,
+    "remoteAccess.disconnect": notUsed,
     "backups.linux.install": async function* () {
       yield await Promise.reject(new OperationError("failed", "not used in this test"));
     },

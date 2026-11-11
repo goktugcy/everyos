@@ -60,6 +60,24 @@ function wrapped(unlocked: boolean) {
 }
 
 describe("account workers", () => {
+  it("reads VPN telemetry without sudo but requires a linked and unlocked account for private peers and host changes", async () => {
+    const locked = wrapped(false);
+    expect(await locked.call("remoteAccess.snapshot", {})).toEqual({ ok: true });
+    expect(locked.identities.resolve).not.toHaveBeenCalled();
+    for (const op of [
+      "remoteAccess.peers",
+      "remoteAccess.connect",
+      "remoteAccess.disconnect",
+      "remoteAccess.install",
+    ])
+      await expect(locked.call(op, {})).rejects.toThrow("LINUX_ACCOUNT_REQUIRED");
+    locked.identities.resolve.mockImplementation(() => ({}) as never);
+    await expect(locked.call("remoteAccess.connect", {})).rejects.toThrow("LINUX_SUDO_REQUIRED");
+    const unlocked = wrapped(true);
+    unlocked.identities.resolve.mockImplementation(() => ({}) as never);
+    await unlocked.call("remoteAccess.connect", {});
+    expect(unlocked.identities.requirePrivilege).toHaveBeenCalledOnce();
+  });
   it("reads the reboot state and the disk list without a linked Linux account", async () => {
     const { reached, call } = wrapped(false);
     expect(await call("power.reboot.status", {})).toEqual({ ok: true });

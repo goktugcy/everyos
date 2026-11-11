@@ -86,6 +86,7 @@ async function officialApps(): Promise<Listed[]> {
 
 export async function startAppRegistry(
   port: number,
+  options: { includeOfficialApps?: boolean } = {},
 ): Promise<{ url: string; publicKey: string; close: () => void }> {
   const registryKeys = generatePublisherKeys();
   const publisherKeys = generatePublisherKeys();
@@ -96,7 +97,7 @@ export async function startAppRegistry(
     bytes: await buildProbe(),
     icon: { path: "icons/probe.png", content: PNG },
   };
-  const listed = [probe, ...(await officialApps())];
+  const listed = [probe, ...(options.includeOfficialApps === false ? [] : await officialApps())];
   const now = Date.now();
   const files = new Map<string, Buffer>();
   const apps = listed.map(({ manifest, bytes, icon }) => {

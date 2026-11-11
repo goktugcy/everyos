@@ -8,6 +8,7 @@ import {
   Palette,
   PanelsTopLeft,
   ShieldCheck,
+  Network,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,7 @@ const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnTyp
     notifications: { icon: Bell, component: lazy(() => import("./notifications-section.tsx")) },
     disks: { icon: HardDrive, component: lazy(() => import("./disks-section.tsx")) },
     connections: { icon: Cloud, component: lazy(() => import("./connections-section.tsx")) },
+    remoteAccess: { icon: Network, component: lazy(() => import("./remote-access-section.tsx")) },
     account: { icon: UserRound, component: lazy(() => import("./account-section.tsx")) },
     security: { icon: ShieldCheck, component: lazy(() => import("./security-section.tsx")) },
     agents: { icon: Bot, component: lazy(() => import("./agents-section.tsx")) },

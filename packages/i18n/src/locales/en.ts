@@ -1,3 +1,4 @@
+import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
 import { packageSafetyEn } from "../package-safety.ts";
@@ -5,6 +6,7 @@ import { linuxBackupsEn } from "../linux-backups.ts";
 import type { Messages } from "./tr.ts";
 
 export const en: Messages = {
+  remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
   common: {
@@ -1341,6 +1343,7 @@ export const en: Messages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      remoteAccess: "Remote Access",
       agents: "AI Assistants",
       appearance: "Appearance",
       desktop: "Desktop & Dock",

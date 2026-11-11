@@ -1,3 +1,4 @@
+import { remoteAccessTr } from "../remote-access.ts";
 import { shortcutsTr } from "../shortcuts.ts";
 import { desktopAppNotificationsTr } from "../desktop-app-updates.ts";
 import { packageSafetyTr } from "../package-safety.ts";
@@ -32,6 +33,7 @@ import type {
  * locale must provide (enforced by the type checker).
  */
 export const tr = {
+  remoteAccess: remoteAccessTr,
   shortcuts: shortcutsTr,
   packageSafety: packageSafetyTr,
   common: {
@@ -1372,6 +1374,7 @@ export const tr = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      remoteAccess: "Uzaktan Erişim",
       agents: "AI Asistanları",
       appearance: "Görünüm",
       desktop: "Masaüstü ve Dock",

@@ -90,6 +90,32 @@ describe("fixed BorgBackup package installation", () => {
       NEEDRESTART_MODE: "l",
     });
   });
+  it("uses the same host and package safety checks for the two fixed VPN packages", async () => {
+    for (const provider of ["tailscale", "netbird"] as const) {
+      state.candidate = "0.61.0-1";
+      expect(
+        await createAptManager().installRemoteAccess!(provider, new AbortController().signal),
+      ).toMatchObject({ ok: true });
+      expect(
+        vi
+          .mocked(runCapture)
+          .mock.calls.filter(([file]) => file.endsWith("apt-get"))
+          .at(-1)?.[1],
+      ).toEqual(
+        expect.arrayContaining([
+          "--no-remove",
+          "--no-install-recommends",
+          `${provider}=0.61.0-1`,
+          "everyos=0.1.45",
+          "Dpkg::Options::=--force-confold",
+        ]),
+      );
+    }
+    state.unsafe = true;
+    await expect(
+      createAptManager().installRemoteAccess!("netbird", new AbortController().signal),
+    ).rejects.toThrow("PACKAGE_ENVIRONMENT_UNSAFE");
+  });
   it("refuses unsupported or unavailable candidates before starting APT", async () => {
     for (const candidate of ["1.2.4-7", "2.0.0", "(none)"]) {
       state.candidate = candidate;

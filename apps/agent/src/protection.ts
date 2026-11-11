@@ -17,6 +17,7 @@ export const BUILT_IN_PROTECTED_UNITS = [
   "sshd.service",
   "ssh.socket",
   "tailscaled.service",
+  "netbird.service",
   "dbus.service",
   "dbus-broker.service",
   "dbus.socket",

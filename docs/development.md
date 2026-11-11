@@ -53,6 +53,16 @@ coverage includes window drag/resize/snap and restoration, dock/context menus, f
 themes, virtual desktops, API-enforced locking across reloads, mobile transitions, and recovery
 from failed preference loads. Desktop/mobile screenshots are written to the test output directory.
 
+For targeted built-in screens that do not install official apps, skip rebuilding that unrelated
+catalog with `EVERYOS_E2E_SKIP_OFFICIAL_APPS=1`. For example:
+
+```sh
+EVERYOS_E2E_SKIP_OFFICIAL_APPS=1 pnpm exec playwright test --config tests/e2e/playwright.config.ts foundation.spec.ts:9 remote-access.spec.ts tools-tailscale.spec.ts
+```
+
+The probe registry remains available. The default and full CI runs still build every official app;
+do not enable this option for store, file-association or official-app runtime checks.
+
 Phase 3/4 browser tests set `EVERYOS_AGENT_SIMULATE=1`: Docker lifecycle, Compose import/down/up,
 volume deletion, logs, live stats and error recovery run against the in-memory simulator, never
 the developer's containers. Socket-level Docker tests use temporary fake Unix-socket servers;

@@ -35,3 +35,6 @@ export * from "./simulated/apt-simulator.ts";
 export * from "./collect/power.ts";
 export * from "./collect/reboot.ts";
 export * from "./disks/disks.ts";
+export * from "./remote-access/providers.ts";
+export * from "./remote-access/conflicts.ts";
+export * from "./remote-access/install.ts";
