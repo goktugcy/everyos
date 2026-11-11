@@ -88,6 +88,7 @@ shortcuts are listed in Settings → Desktop and Dock.
 Settings → About includes icon links to the source repository (`github.com/goktugcy/everyos`),
 the project website (`everyos.net`) and the owner's support page (`buymeacoffee.com/goktugcy`).
 They open in a separate tab with `noopener noreferrer`; labels and captions use the locale catalog.
+The header shows the brand mark and tagline without an introductory product description.
 
 ## Development mode
 

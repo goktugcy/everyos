@@ -43,9 +43,6 @@ export default function AboutSection() {
           />
         </div>
         <p className="text-sm text-fg-muted">{t("brand.tagline")}</p>
-        <p className="max-w-md text-sm leading-relaxed text-fg-muted">
-          {t("settings.about.description")}
-        </p>
         <dl className="glass-inset grid w-full max-w-sm grid-cols-2 gap-x-4 gap-y-2 rounded-everyos-lg p-4 text-left text-sm">
           {rows.map(([label, value]) => (
             <div key={label} className="contents">
