@@ -151,6 +151,9 @@ verification limits.
 API tests use `apps/api/src/test-support.ts`. It provides a temporary database, a fake agent, a
 controllable clock, cheap scrypt parameters, and a cookie-aware `TestClient` that behaves like a
 browser (Origin header, CSRF token).
+Tests that perform real TLS handshakes must align certificate issuance with `Date.now()` before
+creating sessions and certificates: native TLS checks expiry against the OS clock, independently
+of the controllable fixture clock. Keep certificate and hostname verification enabled.
 
 ### Official app resource observations
 

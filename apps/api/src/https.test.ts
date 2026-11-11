@@ -29,6 +29,8 @@ afterEach(async () => {
 
 async function setup() {
   const ctx = await createTestContext();
+  // Native TLS validates certificate dates against the OS clock, not the fixture clock.
+  ctx.clock.now = Date.now();
   const admin = new TestClient(ctx);
   await completeSetup(ctx, admin);
   return { ctx, admin };
