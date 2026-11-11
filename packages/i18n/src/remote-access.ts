@@ -1,7 +1,13 @@
 export const remoteAccessTr = {
   title: "Uzaktan Erişim",
-  description:
-    "Tailscale ve NetBird bağlantılarını ayrı ayrı yönetin. İki sağlayıcı aynı anda kurulu ve bağlı olabilir.",
+  description: "VPN bağlantılarınızı, cihazları ve ağ tercihlerini tek yerden yönetin.",
+  tailscaleDescription: "Tailnet'inize güvenli erişim",
+  netbirdDescription: "Bulut veya kendi sunucunuz",
+  installDescription:
+    "Bağlanmaya başlamak için sağlayıcıyı kurun. Diğer VPN kurulumlarınız ve bağlantılarınız korunur.",
+  connectionChecks: "Bağlantı denetimi",
+  acceptDNSHint: "Sağlayıcının DNS sunucularını ve arama alanlarını kullanır.",
+  acceptRoutesHint: "Paylaşılan ağlara bu VPN üzerinden erişilmesini sağlar.",
   tailscale: "Tailscale",
   netbird: "NetBird",
   provider: "VPN sağlayıcısı",
@@ -119,8 +125,14 @@ export const remoteAccessTr = {
 };
 export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   title: "Remote Access",
-  description:
-    "Manage Tailscale and NetBird independently. Both providers can be installed and connected at the same time.",
+  description: "Manage your VPN connections, devices and network preferences in one place.",
+  tailscaleDescription: "Secure access to your tailnet",
+  netbirdDescription: "Cloud or your own server",
+  installDescription:
+    "Install this provider to start connecting. Your other VPN installations and connections are preserved.",
+  connectionChecks: "Connection checks",
+  acceptDNSHint: "Uses the provider's DNS servers and search domains.",
+  acceptRoutesHint: "Allows access to shared networks through this VPN.",
   tailscale: "Tailscale",
   netbird: "NetBird",
   provider: "VPN provider",

@@ -1,7 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { Tabs } from "radix-ui";
 import { useTranslation } from "react-i18next";
-import { ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  ExternalLink,
+  Globe2,
+  Monitor,
+  Network,
+  PlugZap,
+  Power,
+  RefreshCw,
+  Route,
+  Users,
+} from "lucide-react";
 import {
   REMOTE_ACCESS_PROVIDERS,
   isShortcutUrl,
@@ -26,6 +37,15 @@ import { usePermissions } from "../../../stores/session-store.ts";
 import { useAppStateField } from "../app-context.ts";
 import { desktop } from "../../state/controller.ts";
 import { SettingsGroup } from "./group.tsx";
+import { cn } from "../../../lib/cn.ts";
+import {
+  ConnectionWarnings,
+  PreferenceToggle,
+  ProviderLogo,
+  ProviderState,
+  SummaryItem,
+  providerStateText,
+} from "./remote-access-parts.tsx";
 
 export function remoteAccessError(t: TFunction, error: unknown): string {
   const reason =
@@ -45,22 +65,6 @@ export function remoteAccessError(t: TFunction, error: unknown): string {
     );
   return errorMessage(t, error);
 }
-const warningKey = {
-  "multiple-active": "multipleActive",
-  dns: "dns",
-  subnet: "subnet",
-  "exit-node": "exitNode",
-  "route-policy": "routePolicy",
-  visibility: "visibility",
-} as const;
-const stateKey = {
-  connected: "connected",
-  connecting: "connecting",
-  disconnected: "disconnected",
-  "needs-login": "needsLogin",
-  unknown: "unknown",
-} as const;
-
 export default function RemoteAccessSection() {
   const { t } = useTranslation();
   const permissions = usePermissions(),
@@ -73,7 +77,7 @@ export default function RemoteAccessSection() {
   const view = useApiResource<RemoteAccessOverview>(canRead ? "/remote-access" : null, 3_000);
   if (!canRead) return <Alert>{t("errors.FORBIDDEN")}</Alert>;
   return (
-    <div className="space-y-6" data-testid="remote-access">
+    <div className="@container space-y-6" data-testid="remote-access">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">{t("remoteAccess.title")}</h2>
@@ -99,56 +103,49 @@ export default function RemoteAccessSection() {
       {!view.data && view.loading ? <Spinner label={t("common.loading")} /> : null}
       {view.data ? (
         <>
-          {view.data.conflicts.map((warning, index) => (
-            <Alert
-              key={`${warning.kind}-${index}`}
-              tone={
-                warning.severity === "critical"
-                  ? "danger"
-                  : warning.severity === "warning"
-                    ? "warning"
-                    : "info"
-              }
-            >
-              <span>{t(`remoteAccess.warning_${warningKey[warning.kind]}`)}</span>
-              {warning.routes.length ? (
-                <span className="mt-1 block break-all font-mono text-xs">
-                  {warning.routes.join(" · ")}
-                </span>
-              ) : null}
-            </Alert>
-          ))}
           <Tabs.Root
             value={selected}
             onValueChange={(value) => setSelected(value as typeof selected)}
             className="space-y-5"
           >
-            <TabsList aria-label={t("remoteAccess.provider")} className="grid grid-cols-2 gap-2">
+            <TabsList aria-label={t("remoteAccess.provider")} className="grid grid-cols-2 gap-3">
               {REMOTE_ACCESS_PROVIDERS.map((id) => {
                 const node = view.data?.providers.find((item) => item.node.provider === id)?.node;
                 return (
                   <Tabs.Trigger
                     key={id}
                     value={id}
-                    className="flex min-h-16 min-w-0 items-center gap-3 rounded-everyos-md border border-line px-3 py-2 text-left outline-none data-[state=active]:border-accent data-[state=active]:bg-accent/10 focus-visible:ring-2 focus-visible:ring-accent"
+                    aria-label={`${t(`remoteAccess.${id}`)} ${providerStateText(t, node)}`}
+                    className={cn(
+                      "group grid min-w-0 grid-cols-[1fr_auto] gap-x-3 gap-y-2 rounded-everyos-lg @min-[560px]:grid-cols-[auto_1fr_auto] border p-4 text-left outline-none transition-[background,border-color,box-shadow] duration-150 focus-visible:ring-2 focus-visible:ring-accent motion-reduce:transition-none",
+                      selected === id
+                        ? "border-accent/60 bg-accent/8 shadow-[inset_0_0_0_1px_rgb(var(--everyos-accent)/0.12)]"
+                        : "border-line bg-hover/3 hover:border-accent/30 hover:bg-hover/6",
+                    )}
                   >
-                    <ShieldCheck className="size-5 shrink-0 text-accent" aria-hidden />
-                    <span className="min-w-0">
-                      <span className="block font-medium">{t(`remoteAccess.${id}`)}</span>
-                      <span className="block text-xs text-fg-muted">
-                        {node
-                          ? t(
-                              node.installed
-                                ? `remoteAccess.state_${stateKey[node.state]}`
-                                : "remoteAccess.notInstalled",
-                            )
-                          : t("remoteAccess.unknown")}
-                      </span>
+                    <ProviderLogo
+                      provider={id}
+                      className="col-start-1 row-start-1 @min-[560px]:row-span-2 @min-[560px]:self-center"
+                    />
+                    <CheckCircle2
+                      className={cn(
+                        "col-start-2 row-start-1 size-4 justify-self-end self-start text-accent transition-opacity @min-[560px]:col-start-3 @min-[560px]:row-span-2",
+                        selected === id ? "opacity-100" : "opacity-0",
+                      )}
+                      aria-hidden
+                    />
+                    <span className="col-span-2 row-start-2 flex min-w-0 flex-col items-start gap-1.5 @min-[560px]:col-span-1 @min-[560px]:col-start-2 @min-[560px]:row-start-1">
+                      <span className="text-sm font-semibold">{t(`remoteAccess.${id}`)}</span>
+                      <ProviderState node={node} compact />
+                    </span>
+                    <span className="col-span-2 row-start-3 hidden text-xs leading-relaxed text-fg-muted sm:block @min-[560px]:col-span-1 @min-[560px]:col-start-2 @min-[560px]:row-start-2">
+                      {t(`remoteAccess.${id}Description`)}
                     </span>
                   </Tabs.Trigger>
                 );
               })}
             </TabsList>
+            <ConnectionWarnings conflicts={view.data.conflicts} />
             {view.data.providers.map((entry) => (
               <Tabs.Content key={entry.node.provider} value={entry.node.provider}>
                 <ProviderPanel
@@ -282,69 +279,143 @@ function ProviderPanel({
       {node.installed && !node.available ? (
         <Alert tone="warning">{t("remoteAccess.unavailable")}</Alert>
       ) : null}
-      <SettingsGroup title={t(`remoteAccess.${node.provider}`)}>
-        <dl className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-x-3 gap-y-2 text-sm">
-          {[
-            [t("remoteAccess.host"), node.hostName ?? t("remoteAccess.unknown")],
-            [t("remoteAccess.version"), node.version ?? t("remoteAccess.unknown")],
-            [t("remoteAccess.addresses"), node.addresses.join(", ") || t("remoteAccess.none")],
-            [t("remoteAccess.dns"), boolean(node.dnsEnabled)],
-            [t("remoteAccess.exitNode"), boolean(node.defaultRoute)],
-            [
-              t("remoteAccess.routes"),
-              node.routes.join(", ") ||
-                t(node.routeVisibility ? "remoteAccess.none" : "remoteAccess.unknown"),
-            ],
-            [t("remoteAccess.peers"), t("remoteAccess.peerCounts", node.peers)],
-          ].map(([label, value]) => (
-            <div key={label} className="contents">
-              <dt className="text-fg-muted">{label}</dt>
-              <dd className="min-w-0 break-words [overflow-wrap:anywhere]">{value}</dd>
+      <section
+        aria-label={t(`remoteAccess.${node.provider}`)}
+        className="glass-inset overflow-hidden rounded-everyos-lg"
+      >
+        <div className="space-y-4 p-4 sm:p-5">
+          <header className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <ProviderLogo provider={node.provider} className="size-10" />
+              <div>
+                <p className="mb-0.5 text-xs text-fg-muted">{t("remoteAccess.connection")}</p>
+                <h3 className="text-base font-semibold">{t(`remoteAccess.${node.provider}`)}</h3>
+              </div>
             </div>
-          ))}
-        </dl>
-        {canManage ? (
-          <div className="flex flex-wrap gap-2">
-            {!node.installed ? (
-              <Button
-                disabled={busy || installing || !node.installationSupported}
-                onClick={() => begin("install")}
-              >
-                {t("remoteAccess.install")}
-              </Button>
-            ) : (
-              <>
-                <Button disabled={busy || installing || dirty} onClick={() => begin("connect")}>
-                  {t("remoteAccess.connect")}
-                </Button>
+            <ProviderState node={node} />
+          </header>
+          {canManage ? (
+            <div className="flex flex-wrap gap-2">
+              {!node.installed ? (
                 <Button
-                  variant="secondary"
-                  disabled={
-                    busy ||
-                    installing ||
-                    node.state === "disconnected" ||
-                    node.state === "needs-login"
-                  }
-                  onClick={() => begin("disconnect")}
+                  disabled={busy || installing || !node.installationSupported}
+                  onClick={() => begin("install")}
                 >
-                  {t("remoteAccess.disconnect")}
+                  <PlugZap className="size-4" aria-hidden />
+                  {t("remoteAccess.install")}
                 </Button>
-              </>
-            )}
+              ) : (
+                <>
+                  <Button disabled={busy || installing || dirty} onClick={() => begin("connect")}>
+                    <PlugZap className="size-4" aria-hidden />
+                    {t("remoteAccess.connect")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    disabled={
+                      busy ||
+                      installing ||
+                      node.state === "disconnected" ||
+                      node.state === "needs-login"
+                    }
+                    onClick={() => begin("disconnect")}
+                  >
+                    <Power className="size-4" aria-hidden />
+                    {t("remoteAccess.disconnect")}
+                  </Button>
+                </>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-fg-muted">{t("remoteAccess.viewer")}</p>
+          )}
+
+          {node.installed ? (
+            <>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-muted">
+                <span className="flex min-w-0 items-start gap-2">
+                  <Monitor className="size-3.5 shrink-0" aria-hidden />
+                  <span className="break-all">{node.hostName ?? t("remoteAccess.unknown")}</span>
+                </span>
+                <span>
+                  {t("remoteAccess.version")}{" "}
+                  <span className="font-mono text-fg">
+                    {node.version ?? t("remoteAccess.unknown")}
+                  </span>
+                </span>
+              </div>
+              <dl className="grid min-w-0 grid-cols-2 gap-2.5 @min-[560px]:grid-cols-4">
+                <SummaryItem
+                  icon={Network}
+                  label={t("remoteAccess.addresses")}
+                  className="col-span-2 @min-[560px]:col-span-1"
+                >
+                  {node.addresses.length
+                    ? node.addresses.map((address) => (
+                        <span className="block font-mono text-xs leading-relaxed" key={address}>
+                          {address}
+                        </span>
+                      ))
+                    : t("remoteAccess.none")}
+                </SummaryItem>
+                <SummaryItem icon={Users} label={t("remoteAccess.peers")}>
+                  {t("remoteAccess.peerCounts", node.peers)}
+                </SummaryItem>
+                <SummaryItem icon={Globe2} label={t("remoteAccess.dns")}>
+                  {boolean(node.dnsEnabled)}
+                </SummaryItem>
+                <SummaryItem
+                  icon={Route}
+                  label={t("remoteAccess.exitNode")}
+                  className="col-span-2 @min-[560px]:col-span-1"
+                >
+                  {boolean(node.defaultRoute)}
+                </SummaryItem>
+              </dl>
+              <div className="border-t border-line pt-3 text-xs">
+                <p className="mb-2 text-fg-muted">{t("remoteAccess.routes")}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {node.routes.length ? (
+                    node.routes.map((route) => (
+                      <span
+                        key={route}
+                        className="max-w-full break-all rounded-everyos-sm border border-line bg-hover/5 px-2 py-1 font-mono"
+                      >
+                        {route}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-fg-subtle">
+                      {t(node.routeVisibility ? "remoteAccess.none" : "remoteAccess.unknown")}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm leading-relaxed text-fg-muted">
+              {t("remoteAccess.installDescription")}
+            </p>
+          )}
+        </div>
+        {node.provider === "tailscale" || (!node.installed && !node.installationSupported) ? (
+          <div className="space-y-3 border-t border-line bg-hover/3 p-4">
+            {!node.installed && !node.installationSupported ? (
+              <p className="text-xs text-fg-muted">{t("remoteAccess.installationUnsupported")}</p>
+            ) : null}
+            {node.provider === "tailscale" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => desktop.openApp("everyos.tailscale")}
+              >
+                <ExternalLink className="size-4" aria-hidden />
+                {t("remoteAccess.diagnostics")}
+              </Button>
+            ) : null}
           </div>
-        ) : (
-          <p className="text-xs text-fg-muted">{t("remoteAccess.viewer")}</p>
-        )}
-        {!node.installed && !node.installationSupported ? (
-          <p className="text-xs text-fg-muted">{t("remoteAccess.installationUnsupported")}</p>
         ) : null}
-        {node.provider === "tailscale" ? (
-          <Button variant="ghost" size="sm" onClick={() => desktop.openApp("everyos.tailscale")}>
-            <ExternalLink className="size-4" aria-hidden />
-            {t("remoteAccess.diagnostics")}
-          </Button>
-        ) : null}
-      </SettingsGroup>
+      </section>
       {job ? (
         <Alert
           tone={
@@ -411,30 +482,28 @@ function ProviderPanel({
                 ) : null}
               </>
             ) : null}
-            <label className="flex min-h-11 items-center gap-3 text-sm">
-              <input
-                type="checkbox"
+            <div className="divide-y divide-line rounded-everyos-md border border-line px-3.5">
+              <PreferenceToggle
+                label={t("remoteAccess.acceptDNS")}
+                hint={t("remoteAccess.acceptDNSHint")}
                 checked={settings.acceptDNS}
-                onChange={(event) => {
-                  setSettings({ ...settings, acceptDNS: event.target.checked });
+                disabled={busy}
+                onChange={(checked) => {
+                  setSettings({ ...settings, acceptDNS: checked });
                   setSaved(false);
                 }}
-                disabled={busy}
               />
-              {t("remoteAccess.acceptDNS")}
-            </label>
-            <label className="flex min-h-11 items-center gap-3 text-sm">
-              <input
-                type="checkbox"
+              <PreferenceToggle
+                label={t("remoteAccess.acceptRoutes")}
+                hint={t("remoteAccess.acceptRoutesHint")}
                 checked={settings.acceptRoutes}
-                onChange={(event) => {
-                  setSettings({ ...settings, acceptRoutes: event.target.checked });
+                disabled={busy}
+                onChange={(checked) => {
+                  setSettings({ ...settings, acceptRoutes: checked });
                   setSaved(false);
                 }}
-                disabled={busy}
               />
-              {t("remoteAccess.acceptRoutes")}
-            </label>
+            </div>
             <Button
               type="submit"
               variant="secondary"
@@ -450,16 +519,18 @@ function ProviderPanel({
             ) : null}
           </form>
           {node.installed ? (
-            <Field
-              type="password"
-              autoComplete="off"
-              label={t("remoteAccess.credential")}
-              hint={t("remoteAccess.credentialHint")}
-              value={credential}
-              onChange={(event) => setCredential(event.target.value)}
-              maxLength={4096}
-              disabled={busy}
-            />
+            <div className="border-t border-line pt-4">
+              <Field
+                type="password"
+                autoComplete="off"
+                label={t("remoteAccess.credential")}
+                hint={t("remoteAccess.credentialHint")}
+                value={credential}
+                onChange={(event) => setCredential(event.target.value)}
+                maxLength={4096}
+                disabled={busy}
+              />
+            </div>
           ) : null}
           {dirty ? <p className="text-xs text-fg-muted">{t("remoteAccess.saveFirst")}</p> : null}
         </SettingsGroup>
@@ -486,7 +557,10 @@ function ProviderPanel({
                 <li className="text-sm text-fg-muted">{t("remoteAccess.noPeers")}</li>
               ) : null}
               {peers.data.peers.map((peer, index) => (
-                <li key={index} className="rounded-everyos-md border border-line p-3 text-sm">
+                <li
+                  key={index}
+                  className="rounded-everyos-md border border-line bg-hover/3 p-3.5 text-sm"
+                >
                   <div className="flex flex-wrap justify-between gap-2">
                     <span className="break-all font-medium">
                       {peer.name ?? t("remoteAccess.unknown")}

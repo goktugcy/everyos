@@ -12,6 +12,34 @@ test("remote access installs, configures and independently connects providers wi
     ts = remote.getByTestId("remote-provider-tailscale"),
     nb = remote.getByTestId("remote-provider-netbird");
   await expect(remote).toContainText("Simüle veri");
+  for (const provider of ["tailscale", "netbird"]) {
+    const mark = remote
+      .getByRole("tab", { name: new RegExp(provider, "i") })
+      .getByTestId(`provider-logo-${provider}`);
+    await expect
+      .poll(() =>
+        mark.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0),
+      )
+      .toBe(true);
+  }
+  await remote.getByRole("tab", { name: /Tailscale/ }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(remote.getByRole("tab", { name: /NetBird/ })).toBeFocused();
+  await expect(remote.getByRole("tab", { name: /NetBird/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.keyboard.press("ArrowLeft");
+  await expect(remote.getByRole("tab", { name: /Tailscale/ })).toBeFocused();
+  await expect(remote.getByRole("tab", { name: /Tailscale/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await remote.getByRole("tab", { name: /Tailscale/ }).click();
+  await page.screenshot({
+    path: test.info().outputPath("remote-access-overview.png"),
+    animations: "disabled",
+  });
   await ts.getByLabel("Sağlayıcının DNS ayarlarını kullan").check();
   await ts.getByLabel("Sağlayıcının ağ rotalarını kabul et").check();
   await ts.getByRole("button", { name: "Ayarları kaydet", exact: true }).click();
@@ -52,7 +80,13 @@ test("remote access installs, configures and independently connects providers wi
   await nb.getByRole("button", { name: "Cihazları göster", exact: true }).click();
   await expect(nb).toContainText("Simulated peer");
   await expect(nb).toContainText("100.64.0.20");
-  await page.screenshot({ path: test.info().outputPath("remote-access.png") });
+  await remote
+    .getByRole("heading", { name: "Uzaktan Erişim", exact: true })
+    .scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: test.info().outputPath("remote-access.png"),
+    animations: "disabled",
+  });
 
   await page.reload();
   await expect(nb.getByLabel("Yönetim sunucusu", { exact: true })).toHaveValue(
@@ -66,6 +100,17 @@ test("remote access installs, configures and independently connects providers wi
   await expect(remote.getByRole("tab", { name: "NetBird Bağlı değil", exact: true })).toBeVisible();
   await expect(remote.getByRole("tab", { name: "Tailscale Bağlı", exact: true })).toBeVisible();
   await expect(remote).not.toContainText("İki sağlayıcı da DNS yönetiyor");
+  await page.getByRole("button", { name: "Hızlı ayarlar", exact: true }).click();
+  await page.getByRole("radio", { name: "Liquid Light", exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "liquid-light");
+  await page.getByRole("button", { name: "Hızlı ayarlar", exact: true }).click();
+  await remote
+    .getByRole("heading", { name: "Uzaktan Erişim", exact: true })
+    .scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: test.info().outputPath("remote-access-light.png"),
+    animations: "disabled",
+  });
   await page.setViewportSize({ width: 375, height: 812 });
   // The mobile shell opens on its home screen; reopen Settings after the transition.
   await page
@@ -78,6 +123,11 @@ test("remote access installs, configures and independently connects providers wi
   expect(await remote.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(
     true,
   );
+  await remote.getByRole("tab", { name: /NetBird/ }).scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: test.info().outputPath("remote-access-mobile.png"),
+    animations: "disabled",
+  });
   await nb.getByRole("button", { name: "Bağlan", exact: true }).click();
   await expect(connect.getByRole("button", { name: "Bağlan", exact: true })).toBeInViewport();
   expect(await connect.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(

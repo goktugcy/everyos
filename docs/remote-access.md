@@ -5,6 +5,12 @@ and connected. Selecting a provider only selects its settings panel; connecting 
 one never disables the other. Existing Tailscale diagnostics, menu-bar status, widgets, HTTPS
 Serve integration and `/api/system/tailscale/*` routes remain available.
 
+The provider picker uses locally bundled official Tailscale and NetBird SVG marks. Connection
+states have both text and color, current telemetry appears in compact summary cards, and DNS/route
+preferences use labeled keyboard-accessible switches. Warnings stay visible in a shared connection
+checks panel. Cards adapt to the actual settings pane width; logos retain their original colors in
+light and dark themes. Asset sources and notices are in `apps/web/public/provider-logos/`.
+
 ## Connection and configuration
 
 An administrator can install a missing CLI, save DNS/route preferences, connect, disconnect and
