@@ -104,6 +104,20 @@ export const remoteAccessTr = {
   error_STATUS_UNAVAILABLE: "VPN durumu veya cihaz listesi okunamadı.",
   error_COMMAND_FAILED:
     "VPN işlemi tamamlanamadı. Yönetim sunucusunu, anahtarı ve servis durumunu kontrol edin.",
+  error_CREDENTIAL_INPUT_UNAVAILABLE:
+    "EveryOS kayıt anahtarını VPN istemcisine güvenli biçimde aktaramadı. EveryOS'u güncelleyin ve sistemin Python 3 desteğini kontrol edin.",
+  error_AUTH_REJECTED:
+    "NetBird kayıt anahtarını kabul etmedi. Setup Key'in süresini, iptal durumunu, kullanım sınırını ve doğru NetBird hesabına ait olduğunu kontrol edin.",
+  error_PEER_IDENTITY_CONFLICT:
+    "Bu cihaz farklı bir kullanıcı veya kayıt yöntemiyle zaten kayıtlı. NetBird hesabındaki mevcut cihaz kaydını kontrol edin.",
+  error_CERTIFICATE_FAILED:
+    "VPN yönetim sunucusunun TLS sertifikası doğrulanamadı. Sistem saatini ve sunucunun sertifika zincirini kontrol edin.",
+  error_CONFIGURATION_LOCKED:
+    "NetBird servisi yapılandırma değişikliklerine kapalı. Sunucu veya istemci yöneticinizin belirlediği politikayı kontrol edin.",
+  error_NETWORK_UNREACHABLE:
+    "NetBird yönetim sunucusuna ulaşılamadı. İnternet bağlantısını, DNS'i ve varsa proxy veya güvenlik duvarı ayarlarını kontrol edin.",
+  error_COMMAND_TIMEOUT:
+    "VPN işlemi zaman aşımına uğradı. Durumu yenileyip yönetim sunucusuna erişimi kontrol edin.",
   error_CONFLICT_ACK_REQUIRED: "Diğer VPN aktif. Durumu yenileyip çakışma uyarısını onaylayın.",
   error_VERSION_UNSUPPORTED:
     "Kurulu istemci bu güvenli bağlantı seçeneklerini desteklemiyor. İstemciyi güncelleyin.",
@@ -239,6 +253,20 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   error_STATUS_UNAVAILABLE: "VPN status or devices could not be read.",
   error_COMMAND_FAILED:
     "The VPN operation failed. Check the management server, key and service status.",
+  error_CREDENTIAL_INPUT_UNAVAILABLE:
+    "EveryOS could not securely pass the registration key to the VPN client. Update EveryOS and check the system's Python 3 support.",
+  error_AUTH_REJECTED:
+    "NetBird rejected the registration key. Check the Setup Key's expiry, revocation, usage limit and that it belongs to the correct NetBird account.",
+  error_PEER_IDENTITY_CONFLICT:
+    "This device is already registered under a different user or registration method. Check the existing device in your NetBird account.",
+  error_CERTIFICATE_FAILED:
+    "The VPN management server's TLS certificate could not be verified. Check the system clock and the server's certificate chain.",
+  error_CONFIGURATION_LOCKED:
+    "The NetBird service does not allow configuration changes. Check the policy set by your server or client administrator.",
+  error_NETWORK_UNREACHABLE:
+    "The NetBird management server could not be reached. Check the internet connection, DNS and any proxy or firewall settings.",
+  error_COMMAND_TIMEOUT:
+    "The VPN operation timed out. Refresh status and check access to the management server.",
   error_CONFLICT_ACK_REQUIRED:
     "The other VPN is active. Refresh status and acknowledge the conflict warning.",
   error_VERSION_UNSUPPORTED:

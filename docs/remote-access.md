@@ -31,6 +31,21 @@ and the CLI's stdin (`--auth-key=file:/dev/stdin` or `--setup-key-file /dev/stdi
 environment, EveryOS settings, audit details or logs. CLI output from mutations is discarded;
 errors are static reason codes. Provider-owned identity/configuration files remain provider-owned.
 
+On Linux, Node/libuv stdin pipes are sockets that cannot be reopened as `/dev/stdin`. Both
+providers read their key-file flags by opening that path. For enrollment only, a fixed isolated
+Python helper (using the package's existing Python 3 dependency) consumes the bounded stdin key,
+creates an anonymous `memfd`, seals it against writes/resize and replaces itself with the fixed
+provider executable. The CLI inherits that RAM descriptor as stdin; no named file or disk-backed
+temporary copy is created. The descriptor closes with the process. Reconnection without a key
+and disconnection execute the provider directly. The same timeout and abort kill the helper or
+its replacement process, with no detached credential process.
+
+Connection failures distinguish credential transport, rejected setup keys, existing peer-identity
+conflicts, TLS trust, locked configuration, service availability, network access and timeouts.
+Classification uses bounded output internally and returns only static translated reasons. Unknown
+failures retain the generic error. EveryOS does not delete a provider identity, reset its
+configuration, disable TLS validation or disconnect another provider in response to these errors.
+
 Public desired configuration is stored in existing `instance_settings` entries
 `remote-access.tailscale` and `remote-access.netbird`. Saving it does not change a running tunnel;
 Connect applies it explicitly, including when already connected. Initial preferences adopt the

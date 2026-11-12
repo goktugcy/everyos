@@ -97,8 +97,10 @@ describe("remote provider adapters", () => {
       new AbortController().signal,
     );
     const call = vi.mocked(deps.capture).mock.calls[0]!;
-    expect(call[0]).toBe("/fixture/netbird");
-    expect(call[1]).toEqual([
+    expect(call[0]).toBe("/fixture/python3");
+    expect(call[1].slice(0, 2)).toEqual(["-I", "-c"]);
+    expect(call[1].slice(3)).toEqual([
+      "/fixture/netbird",
       "up",
       "--no-browser",
       "--disable-dns=true",

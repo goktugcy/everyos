@@ -1173,3 +1173,18 @@ Test this with a separate process running the production umask, including a priv
 Classify failed APT refresh output into static, localized reasons. Never forward raw diagnostics
 from private source/proxy URLs to the browser or logs, and never bypass repository authentication
 or automatically disable another repository to make installation succeed.
+
+## Reopenable VPN credential input on Linux (2026-11-12)
+
+NetBird's setup-key file and Tailscale's auth-key file readers open `/dev/stdin`; Linux cannot
+reopen the Unix socket supplied by Node/libuv's `stdio: "pipe"`. Keep credentials out of argv,
+environment and persistent storage. A fixed helper using the already-required Python 3 standard
+library reads the bounded key from stdin, supplies a sealed anonymous `memfd` as fd 0 and `exec`s
+the allowlisted VPN executable. This avoids named temporary key files, new dependencies and
+detached processes. The existing mutation timeout/abort still targets the same process. Fail
+closed with a static transport error if the runtime cannot create the memory descriptor.
+
+Linux-only integration tests exercise actual child processes: reproduce the original socket
+reopen error, reopen the replacement descriptor, require no filesystem links, verify mode 0600
+and write seals, and check that the key is absent from argv. Adapter tests cover secret-free
+invocation and static error categories. No real provider account or host tunnel is used.

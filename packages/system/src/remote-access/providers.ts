@@ -7,7 +7,8 @@ import type {
   RemoteAccessProviderId,
   RemoteAccessSettings,
 } from "@everyos/shared";
-import { findExecutable, runCommand, runCapture, type CaptureResult } from "../exec.ts";
+import { findExecutable, runCommand, runCapture } from "../exec.ts";
+import { executeRemoteMutation } from "./execute.ts";
 import { parseOsRelease } from "../parsers.ts";
 import {
   getTailscaleStatus,
@@ -226,22 +227,9 @@ export function createRemoteAccessDrivers(
     args: string[],
     signal: AbortSignal,
     credential?: string,
-  ): Promise<CaptureResult> => {
-    const executable = await deps.find(provider);
-    if (!executable) throw new RemoteAccessError("REMOTE_NOT_INSTALLED");
-    try {
-      const result = await deps.capture(executable, args, {
-        signal,
-        timeoutMs: 55_000,
-        maxOutputBytes: 16 * 1024,
-        ...(credential ? { input: credential + "\n" } : {}),
-      });
-      if (result.exitCode !== 0) throw new RemoteAccessError("REMOTE_COMMAND_FAILED");
-      return { exitCode: 0, output: "" };
-    } catch (error) {
-      if (error instanceof RemoteAccessError) throw error;
-      throw new RemoteAccessError("REMOTE_COMMAND_FAILED");
-    }
+  ): Promise<void> => {
+    const error = await executeRemoteMutation(deps, provider, args, signal, credential);
+    if (error) throw new RemoteAccessError(error);
   };
   const supportsInstallation = async () => {
     if (process.platform !== "linux" || !(await deps.find("apt-get"))) return false;
