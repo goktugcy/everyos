@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { signIn } from "./helpers.ts";
-import { CSRF_HEADER, type RemoteAccessOverview } from "../../packages/shared/src/index.ts";
+import {
+  CSRF_HEADER,
+  type RemoteAccessOverview,
+  type SessionInfo,
+} from "../../packages/shared/src/index.ts";
 
 test("remote access installs, configures and independently connects providers with explicit conflict consent", async ({
   page,
@@ -204,18 +208,13 @@ test("remote access installs, configures and independently connects providers wi
     true,
   );
   await connect.getByRole("button", { name: "Vazgeç", exact: true }).click();
-  expect(
-    await page.evaluate(async (header) => {
-      const session = (await (await fetch("/api/auth/session")).json()) as { csrfToken: string };
-      return (
-        await fetch("/api/account", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", [header]: session.csrfToken },
-          body: JSON.stringify({ locale: "en" }),
-        })
-      ).status;
-    }, CSRF_HEADER),
-  ).toBe(200);
+  // Localize this browser only; later suites share the administrator's Turkish account.
+  await page.route("**/api/auth/session", async (route) => {
+    const response = await route.fetch();
+    const session = (await response.json()) as SessionInfo;
+    session.user.locale = "en";
+    await route.fulfill({ response, json: session });
+  });
   await page.reload();
   if (!(await remote.isVisible())) {
     await page
@@ -235,4 +234,7 @@ test("remote access installs, configures and independently connects providers wi
     path: test.info().outputPath("exit-node-mobile-en.png"),
     animations: "disabled",
   });
+  // APIRequestContext bypasses browser routing and observes the actual persisted account.
+  const serverSession = (await (await page.request.get("/api/auth/session")).json()) as SessionInfo;
+  expect(serverSession.user.locale).toBe("tr");
 });
