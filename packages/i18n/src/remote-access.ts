@@ -113,9 +113,20 @@ export const remoteAccessTr = {
     "Paket deposu yapılandırılmamış. Resmî depoyu ekleme seçeneğini onaylayın.",
   error_REPOSITORY_KEY: "Resmî paket deposunun imza anahtarı doğrulanamadı. Kurulum durduruldu.",
   error_REPOSITORY_CONFLICT:
-    "Mevcut paket deposu veya anahtar dosyasıyla çakışma var. Dosyalar değiştirilmedi.",
+    "Mevcut paket deposu veya anahtar dosyasıyla çakışma var. Mevcut dosyaların içeriği değiştirilmedi.",
+  error_REPOSITORY_PERMISSIONS:
+    "Paket deposu dosyaları APT'nin okuyabileceği izinlerle hazırlanamadı. Anahtar ve depo dizinlerinin izinlerini kontrol edin.",
   error_PACKAGE_BUSY: "Paket yöneticisi başka bir işlem yapıyor. Tamamlanmasını bekleyin.",
   error_REFRESH_FAILED: "Paket listeleri yenilenemedi.",
+  error_REFRESH_SIGNATURE:
+    "Bir paket deposunun imzası doğrulanamadı. Depo anahtarlarını ve APT'nin anahtar dosyalarını okuyabildiğini kontrol edin.",
+  error_REFRESH_NETWORK:
+    "Paket depolarına ulaşılamadı. İnternet bağlantısını, DNS'i ve varsa proxy ayarlarını kontrol edin.",
+  error_REFRESH_REPOSITORY:
+    "Bir paket deposunun adresi veya yapılandırması geçersiz ya da depo bilgileri güncel değil. Linux paket kaynaklarını kontrol edin.",
+  error_REFRESH_PERMISSIONS:
+    "APT, paket listesi veya anahtar dosyalarına erişemedi. Paket dizinlerinin izinlerini ve dosya sisteminin yazılabilir olduğunu kontrol edin.",
+  error_REFRESH_SPACE: "Paket listelerini yenilemek için yeterli boş disk alanı yok.",
   error_PACKAGE_UNAVAILABLE: "İmzalı depoda kurulabilir paket bulunamadı.",
   error_PACKAGE_VERSION: "Paket sürümü geçersiz.",
   error_INSTALL_FAILED: "VPN paketi kurulamadı. Paket yöneticisi durumunu kontrol edin.",
@@ -240,8 +251,19 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
     "The official repository signing key could not be verified. Installation was stopped.",
   error_REPOSITORY_CONFLICT:
     "An existing repository or key file conflicts. Its contents were not changed.",
+  error_REPOSITORY_PERMISSIONS:
+    "Repository files could not be prepared with permissions readable by APT. Check the keyring and source directory permissions.",
   error_PACKAGE_BUSY: "The package manager is busy. Wait for the other operation to finish.",
   error_REFRESH_FAILED: "Package lists could not be refreshed.",
+  error_REFRESH_SIGNATURE:
+    "A package repository signature could not be verified. Check repository keys and ensure APT can read the key files.",
+  error_REFRESH_NETWORK:
+    "Package repositories could not be reached. Check the internet connection, DNS and any proxy settings.",
+  error_REFRESH_REPOSITORY:
+    "A package repository address or configuration is invalid, or its metadata is out of date. Check the Linux package sources.",
+  error_REFRESH_PERMISSIONS:
+    "APT could not access package-list or key files. Check package directory permissions and that the filesystem is writable.",
+  error_REFRESH_SPACE: "There is not enough free disk space to refresh package lists.",
   error_PACKAGE_UNAVAILABLE: "No installable package was found in the signed repository.",
   error_PACKAGE_VERSION: "The package version is invalid.",
   error_INSTALL_FAILED: "The VPN package could not be installed. Check the package manager state.",

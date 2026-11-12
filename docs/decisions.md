@@ -1159,3 +1159,17 @@ settings and apply them on explicit Connect. Install fixed signed APT packages a
 module and dpkg safety checks; use reviewed public key pins rather than curl-to-shell installers.
 Installation belongs to the agent, so an HTTP disconnect cannot interrupt package configuration.
 See [remote-access.md](remote-access.md) for permissions, contracts and verification limits.
+
+## Public APT metadata under a private agent umask (2026-11-12)
+
+Keep the privileged agent's `UMask=0077`. Explicitly set `0644` on verified public VPN signing keys
+and source files through their descriptors, and `0755` only on directories created for this setup.
+Changing the process or unit umask would expose unrelated private state. Stage complete files and
+publish without overwriting an existing path. On retries, repair restrictive permissions only for
+the dedicated EveryOS source/key pair after checking exact content, pinned digest, ownership,
+regular-file type and single link. Preserve administrator files and existing directory policies.
+Test this with a separate process running the production umask, including a private-file probe.
+
+Classify failed APT refresh output into static, localized reasons. Never forward raw diagnostics
+from private source/proxy URLs to the browser or logs, and never bypass repository authentication
+or automatically disable another repository to make installation succeed.

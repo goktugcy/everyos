@@ -88,6 +88,19 @@ reuse the live module/boot mount safety checks, dpkg audit, `--no-remove`, confi
 and the installed EveryOS version pin used for Borg installation. No automatic global dpkg repair,
 service removal or unrelated package upgrade is introduced.
 
+The agent retains `UMask=0077` for private data. Public APT source and signing-key files explicitly
+receive mode `0644` through their file descriptors before atomic publication; newly created source
+and keyring directories receive `0755`. APT's `_apt` user must be able to read `Signed-By` keys.
+On retry, an earlier EveryOS-created source/key pair with restrictive permissions is repaired only
+after verifying the exact generated source bytes, pinned key hash, owner, regular-file type and
+single link. Symlinks, hard links, changed content and administrator-managed repositories are not
+modified. Existing administrator directory permissions remain untouched.
+
+Failed refreshes report static categories for repository signatures, network access, invalid source
+configuration, permissions or disk space. Raw APT output can contain private repository or proxy
+credentials and is never included in VPN job results or completion logs. Other APT failures retain
+the generic refresh error; existing repositories and package state are not silently disabled or repaired.
+
 Installation returns HTTP 202 and continues in the privileged agent independently of browser or
 API request lifetime. Closing a tab or restarting only the API does not cancel APT. Jobs are
 in-memory; do not restart the agent or host during package installation. After an agent restart,
