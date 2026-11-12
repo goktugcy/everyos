@@ -85,6 +85,7 @@ Connecting providers already require the second-provider conflict acknowledgment
 peer reads remain errors rather than an empty successful list. Malformed status and non-finite
 counters cannot produce invented healthy telemetry. Settings forms follow refreshed configuration
 when there is no local draft and preserve unsaved changes during background polls.
+Initial loading and peer-list loading use the same bounded indicator as other Settings sections.
 
 The dedicated Tailscale screen also shows Unknown for unreadable exit eligibility and key expiry,
 and displays refresh errors alongside retained data. Its shared network card labels the selected

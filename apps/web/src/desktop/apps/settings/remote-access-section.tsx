@@ -38,6 +38,7 @@ import { usePermissions } from "../../../stores/session-store.ts";
 import { useAppStateField } from "../app-context.ts";
 import { desktop } from "../../state/controller.ts";
 import { SettingsGroup } from "./group.tsx";
+import { LoadingBlock } from "../system/parts.tsx";
 import { cn } from "../../../lib/cn.ts";
 import {
   ConnectionWarnings,
@@ -101,7 +102,7 @@ export default function RemoteAccessSection() {
         </Button>
       </div>
       {view.error ? <Alert tone="danger">{remoteAccessError(t, view.error)}</Alert> : null}
-      {!view.data && view.loading ? <Spinner label={t("common.loading")} /> : null}
+      {!view.data && view.loading ? <LoadingBlock /> : null}
       {view.data ? (
         <>
           <Tabs.Root
@@ -574,9 +575,7 @@ function ProviderPanel({
               <SudoUnlock error={peers.error} />
             </>
           ) : null}
-          {showPeers && peers.loading && !peers.data ? (
-            <Spinner label={t("common.loading")} />
-          ) : null}
+          {showPeers && peers.loading && !peers.data ? <LoadingBlock /> : null}
           {showPeers && peers.data ? (
             <ul className="space-y-2">
               {!peers.data.peers.length ? (
