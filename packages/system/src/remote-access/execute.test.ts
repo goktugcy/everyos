@@ -35,6 +35,19 @@ describe("remote command diagnostics", () => {
         remoteCommandFailure("netbird", `${output}\nhttps://user:secret@private.test?token=secret`),
       ).toBe(reason);
     expect(remoteCommandFailure("tailscale", "setup key expired")).toBe("REMOTE_COMMAND_FAILED");
+    for (const [output, reason] of [
+      ["invalid authkey: fixture-secret", "REMOTE_AUTH_REJECTED"],
+      ["failed to connect to local tailscaled", "REMOTE_DAEMON_UNAVAILABLE"],
+      [
+        "changing settings via tailscale up requires mentioning all non-default flags",
+        "REMOTE_SETTINGS_NOT_APPLIED",
+      ],
+      ["device approval required", "REMOTE_APPROVAL_REQUIRED"],
+      ["timeout waiting for tailscaled to enter Running", "REMOTE_COMMAND_TIMEOUT"],
+      ["flag provided but not defined", "REMOTE_VERSION_UNSUPPORTED"],
+      ["lookup control.example: no such host", "REMOTE_NETWORK_UNREACHABLE"],
+    ])
+      expect(remoteCommandFailure("tailscale", output!)).toBe(reason);
   });
   it("uses the packaged Python runtime only for credentials, and keeps secrets out of argv and env", async () => {
     const find = vi.fn((name: string) => Promise.resolve(`/fixture/${name}`));
@@ -105,6 +118,26 @@ describe("remote command diagnostics", () => {
     expect(
       await executeRemoteMutation({ find, capture }, "netbird", ["up"], signal(), "secret-key"),
     ).toBe("REMOTE_AUTH_REJECTED");
+  });
+  it("does not claim success when NetBird reports ignored settings or a session owned by another user", async () => {
+    const find = () => Promise.resolve("/fixture/netbird");
+    for (const [output, reason] of [
+      [
+        "WARN the daemon did not apply the settings update: fixture-private",
+        "REMOTE_SETTINGS_NOT_APPLIED",
+      ],
+      [
+        "Already connected and the connection belongs to another user.",
+        "REMOTE_PEER_IDENTITY_CONFLICT",
+      ],
+    ]) {
+      const capture = vi.fn<typeof runCapture>(() =>
+        Promise.resolve({ exitCode: 0, output: output! }),
+      );
+      expect(await executeRemoteMutation({ find, capture }, "netbird", ["up"], signal())).toBe(
+        reason,
+      );
+    }
   });
 });
 

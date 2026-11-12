@@ -15,6 +15,7 @@ const stateKey = {
   connecting: "connecting",
   disconnected: "disconnected",
   "needs-login": "needsLogin",
+  "needs-approval": "needsApproval",
   unknown: "unknown",
 } as const;
 export function providerStateText(t: TFunction, node: RemoteAccessNode | undefined): string {
@@ -107,7 +108,7 @@ export function SummaryItem({
         className,
       )}
     >
-      <dt className="mb-2 flex items-start gap-2 text-xs leading-relaxed text-fg-muted">
+      <dt className="mb-2 flex items-start gap-2 text-xs leading-relaxed text-fg-muted [overflow-wrap:anywhere]">
         <Icon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
         {label}
       </dt>

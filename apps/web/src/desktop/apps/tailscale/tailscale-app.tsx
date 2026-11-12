@@ -157,13 +157,18 @@ export default function TailscaleApp() {
     [t("tailscale.self.relay"), details.self.relay ?? "—"],
     [
       t("tailscale.self.keyExpiry"),
-      details.self.keyExpired
-        ? t("tailscale.self.keyExpired")
-        : details.self.keyExpiry
-          ? `${formatDateTime(details.self.keyExpiry, i18n.language)} (${formatRelative(details.self.keyExpiry, i18n.language)})`
-          : t("tailscale.self.keyNoExpiry"),
+      !details.status.available
+        ? t("tailscale.unknown")
+        : details.self.keyExpired
+          ? t("tailscale.self.keyExpired")
+          : details.self.keyExpiry
+            ? `${formatDateTime(details.self.keyExpiry, i18n.language)} (${formatRelative(details.self.keyExpiry, i18n.language)})`
+            : t("tailscale.self.keyNoExpiry"),
     ],
-    [t("tailscale.self.exitNode"), answer(details.self.exitNodeOption)],
+    [
+      t("tailscale.self.exitNode"),
+      answer(details.status.available ? details.self.exitNodeOption : null),
+    ],
     [t("tailscale.self.routes"), details.self.routes.join(", ") || "—"],
     [t("tailscale.self.magicDNS"), answer(details.self.magicDNS)],
     ...(details.self.tags.length
@@ -186,6 +191,7 @@ export default function TailscaleApp() {
   return (
     <div className="h-full overflow-auto" data-testid="tailscale-app">
       <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4">
+        {overview.error ? <ResourceError error={overview.error} /> : null}
         {data.warnings.length > 0 ? (
           <section className="flex flex-col gap-2">
             {data.warnings.map((warning, index) => (

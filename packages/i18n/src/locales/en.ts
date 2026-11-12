@@ -1707,7 +1707,7 @@ export const en: Messages = {
       dnsName: "MagicDNS name",
       tailnet: "Tailnet",
       ips: "Tailscale addresses",
-      exitNode: "Exit node",
+      exitNode: "Exit node in use",
       exitNodeNone: "Not in use",
       peers: "Devices",
       peersValue: "{{online}} of {{total}} online",

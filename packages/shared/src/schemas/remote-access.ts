@@ -51,7 +51,14 @@ export const RemoteAccessNodeSchema = z.strictObject({
   reason: z
     .enum(["not-installed", "daemon-unavailable", "permission-denied", "unsupported"])
     .nullable(),
-  state: z.enum(["connected", "connecting", "disconnected", "needs-login", "unknown"]),
+  state: z.enum([
+    "connected",
+    "connecting",
+    "disconnected",
+    "needs-login",
+    "needs-approval",
+    "unknown",
+  ]),
   version: z.string().max(128).nullable(),
   hostName: z.string().max(256).nullable(),
   addresses: z.array(z.string().max(128)).max(16),
@@ -60,6 +67,7 @@ export const RemoteAccessNodeSchema = z.strictObject({
   acceptsRoutes: z.boolean().nullable(),
   routes: z.array(z.string().max(128)).max(128),
   defaultRoute: z.boolean().nullable(),
+  advertisesExitNode: z.boolean().nullable(),
   routeVisibility: z.boolean(),
   peers: z.strictObject({
     total: z.number().int().nonnegative(),

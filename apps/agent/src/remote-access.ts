@@ -103,7 +103,10 @@ export function createRemoteAccessHandlers(options: {
         };
         if (
           !acknowledgeConflicts &&
-          all.providers.some((node) => node.provider !== provider && node.state === "connected")
+          all.providers.some(
+            (node) =>
+              node.provider !== provider && ["connected", "connecting"].includes(node.state),
+          )
         )
           throw new OperationError("conflict", "REMOTE_CONFLICT_ACK_REQUIRED");
         if (provider === "tailscale" && settings.managementUrl !== null)

@@ -57,7 +57,9 @@ export function remoteRoutesOverlap(a: string, b: string): boolean {
 }
 /** Warnings describe observed or potential interactions; they never turn another VPN off. */
 export function remoteAccessConflicts(nodes: readonly RemoteAccessNode[]): RemoteAccessConflict[] {
-  const active = nodes.filter((node) => node.state === "connected" && node.available),
+  const active = nodes.filter(
+      (node) => ["connected", "connecting"].includes(node.state) && node.available,
+    ),
     conflicts: RemoteAccessConflict[] = [];
   for (let i = 0; i < active.length; i++)
     for (const other of active.slice(i + 1)) {

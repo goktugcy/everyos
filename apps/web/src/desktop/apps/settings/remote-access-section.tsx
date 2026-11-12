@@ -11,6 +11,7 @@ import {
   Power,
   RefreshCw,
   Route,
+  Router,
   Users,
 } from "lucide-react";
 import {
@@ -156,7 +157,8 @@ export default function RemoteAccessSection() {
                   )}
                   otherActive={view.data!.providers.some(
                     (item) =>
-                      item.node.provider !== entry.node.provider && item.node.state === "connected",
+                      item.node.provider !== entry.node.provider &&
+                      ["connected", "connecting"].includes(item.node.state),
                   )}
                   reload={view.reload}
                 />
@@ -184,18 +186,22 @@ function ProviderPanel({
 }) {
   const { t, i18n } = useTranslation(),
     node = entry.node;
-  const [settings, setSettings] = useState<RemoteAccessSettings>(entry.settings);
-  const [mode, setMode] = useState<"cloud" | "selfHosted">(
-    entry.settings.managementUrl &&
-      !/^https:\/\/api\.netbird\.io(?::443)?\/?$/.test(entry.settings.managementUrl)
+  const [settingsDraft, setSettings] = useState<RemoteAccessSettings | null>(null);
+  const settings = settingsDraft ?? entry.settings;
+  // Once a saved draft arrives in telemetry, resume following live configuration.
+  if (settingsDraft && JSON.stringify(settingsDraft) === JSON.stringify(entry.settings))
+    setSettings(null);
+  const mode =
+    settings.managementUrl !== null &&
+    !/^https:\/\/api\.netbird\.io(?::443)?\/?$/i.test(settings.managementUrl)
       ? "selfHosted"
-      : "cloud",
-  );
+      : "cloud";
   const [credential, setCredential] = useState("");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState<unknown>(null),
     [saved, setSaved] = useState(false);
   const [action, setAction] = useState<"connect" | "disconnect" | "install" | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
   const [acknowledge, setAcknowledge] = useState(false),
     [configureRepository, setConfigureRepository] = useState(true);
   const [showPeers, setShowPeers] = useState(false);
@@ -266,6 +272,11 @@ function ProviderPanel({
     }
   };
   const begin = (next: typeof action) => {
+    setReconnecting(
+      next === "connect" &&
+        node.provider === "netbird" &&
+        ["connected", "connecting"].includes(node.state),
+    );
     setError(null);
     setAcknowledge(false);
     setAction(next);
@@ -306,9 +317,17 @@ function ProviderPanel({
                 </Button>
               ) : (
                 <>
-                  <Button disabled={busy || installing || dirty} onClick={() => begin("connect")}>
+                  <Button
+                    disabled={busy || installing || dirty || node.state === "needs-approval"}
+                    onClick={() => begin("connect")}
+                  >
                     <PlugZap className="size-4" aria-hidden />
-                    {t("remoteAccess.connect")}
+                    {t(
+                      node.provider === "netbird" &&
+                        ["connected", "connecting"].includes(node.state)
+                        ? "remoteAccess.reconnect"
+                        : "remoteAccess.connect",
+                    )}
                   </Button>
                   <Button
                     variant="secondary"
@@ -344,11 +363,11 @@ function ProviderPanel({
                   </span>
                 </span>
               </div>
-              <dl className="grid min-w-0 grid-cols-2 gap-2.5 @min-[560px]:grid-cols-4">
+              <dl className="grid min-w-0 grid-cols-2 gap-2.5 @min-[560px]:grid-cols-3">
                 <SummaryItem
                   icon={Network}
                   label={t("remoteAccess.addresses")}
-                  className="col-span-2 @min-[560px]:col-span-1"
+                  className="col-span-2"
                 >
                   {node.addresses.length
                     ? node.addresses.map((address) => (
@@ -364,14 +383,17 @@ function ProviderPanel({
                 <SummaryItem icon={Globe2} label={t("remoteAccess.dns")}>
                   {boolean(node.dnsEnabled)}
                 </SummaryItem>
-                <SummaryItem
-                  icon={Route}
-                  label={t("remoteAccess.exitNode")}
-                  className="col-span-2 @min-[560px]:col-span-1"
-                >
+                <SummaryItem icon={Route} label={t("remoteAccess.exitNode")}>
                   {boolean(node.defaultRoute)}
                 </SummaryItem>
+                <SummaryItem icon={Router} label={t("remoteAccess.exitNodeAdvertisement")}>
+                  {boolean(node.advertisesExitNode)}
+                </SummaryItem>
               </dl>
+              <p className="text-xs text-fg-muted">{t("remoteAccess.exitNodeHint")}</p>
+              {node.state === "needs-approval" ? (
+                <Alert>{t("remoteAccess.approvalHint")}</Alert>
+              ) : null}
               <div className="border-t border-line pt-3 text-xs">
                 <p className="mb-2 text-fg-muted">{t("remoteAccess.routes")}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -457,7 +479,6 @@ function ProviderPanel({
                     { value: "selfHosted", label: t("remoteAccess.selfHosted") },
                   ]}
                   onChange={(value) => {
-                    setMode(value);
                     setSettings({
                       ...settings,
                       managementUrl: value === "cloud" ? "https://api.netbird.io" : "",
@@ -524,7 +545,12 @@ function ProviderPanel({
                 type="password"
                 autoComplete="off"
                 label={t("remoteAccess.credential")}
-                hint={t("remoteAccess.credentialHint")}
+                hint={t(
+                  node.provider === "tailscale" &&
+                    ["connected", "connecting", "disconnected"].includes(node.state)
+                    ? "remoteAccess.registeredCredentialHint"
+                    : "remoteAccess.credentialHint",
+                )}
                 value={credential}
                 onChange={(event) => setCredential(event.target.value)}
                 maxLength={4096}
@@ -604,7 +630,9 @@ function ProviderPanel({
             ? "remoteAccess.confirmInstall"
             : action === "disconnect"
               ? "remoteAccess.confirmDisconnect"
-              : "remoteAccess.confirmConnect",
+              : reconnecting
+                ? "remoteAccess.confirmReconnect"
+                : "remoteAccess.confirmConnect",
           { provider: t(`remoteAccess.${node.provider}`) },
         )}
         className="!z-[8500]"
@@ -625,7 +653,9 @@ function ProviderPanel({
                   ? "remoteAccess.install"
                   : action === "disconnect"
                     ? "remoteAccess.disconnect"
-                    : "remoteAccess.connect",
+                    : reconnecting
+                      ? "remoteAccess.reconnect"
+                      : "remoteAccess.connect",
               )}
             </Button>
           </>
@@ -638,7 +668,9 @@ function ProviderPanel({
                 ? "remoteAccess.installHint"
                 : action === "disconnect"
                   ? "remoteAccess.disconnectHint"
-                  : "remoteAccess.connectHint",
+                  : reconnecting
+                    ? "remoteAccess.reconnectHint"
+                    : "remoteAccess.connectHint",
               {
                 repository: node.provider === "netbird" ? "pkgs.netbird.io" : "pkgs.tailscale.com",
               },

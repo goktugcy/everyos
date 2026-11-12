@@ -1739,7 +1739,7 @@ export const tr = {
       dnsName: "MagicDNS adı",
       tailnet: "Tailnet",
       ips: "Tailscale adresleri",
-      exitNode: "Çıkış düğümü",
+      exitNode: "Kullanılan çıkış düğümü",
       exitNodeNone: "Kullanılmıyor",
       peers: "Cihazlar",
       peersValue: "{{online}} / {{total}} çevrimiçi",

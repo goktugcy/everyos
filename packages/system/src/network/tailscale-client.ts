@@ -91,6 +91,28 @@ export async function getTailscaleStatus(
   }
 }
 
+/** Shared status and preferences for Remote Access, without a duplicate status or Serve poll. */
+export async function getTailscaleRemoteState(sockets: readonly string[] = SOCKETS) {
+  const unavailable = (reason: Unavailable) => ({
+    status: tailscaleUnavailable(reason),
+    details: tailscaleDetailsUnavailable(reason),
+  });
+  const found = await findSocket(sockets);
+  if ("reason" in found) return unavailable(found.reason);
+  try {
+    const [status, prefs] = await Promise.all([
+      getJson(found.socket, "/localapi/v0/status?peers=true", 5_000),
+      getJson(found.socket, "/localapi/v0/prefs", 5_000).catch(() => null),
+    ]);
+    return {
+      status: parseTailscaleStatus(status),
+      details: parseTailscaleDetails(status, prefs, null),
+    };
+  } catch (error) {
+    return unavailable(failure(error));
+  }
+}
+
 /** Status, preferences and Serve configuration of this node (read-only LocalAPI calls). */
 export async function getTailscaleDetails(
   sockets: readonly string[] = SOCKETS,

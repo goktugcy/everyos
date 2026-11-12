@@ -141,6 +141,31 @@ describe("remote access agent", () => {
     release();
     await first;
   });
+  it("requires conflict consent while another provider is still connecting and releases the mutation lock after failure", async () => {
+    const host = drivers();
+    vi.mocked(host.tailscale.status).mockResolvedValue({
+      ...emptyRemoteNode("tailscale"),
+      installed: true,
+      available: true,
+      state: "connecting",
+    });
+    const handlers = createRemoteAccessHandlers({
+      apt: createAptSimulator(),
+      simulate: false,
+      drivers: host,
+    });
+    const params = { provider: "netbird" as const, settings, acknowledgeConflicts: false };
+    await expect(handlers["remoteAccess.connect"](params, context())).rejects.toThrow(
+      "REMOTE_CONFLICT_ACK_REQUIRED",
+    );
+    expect(host.netbird.connect).not.toHaveBeenCalled();
+    vi.mocked(host.netbird.connect).mockRejectedValueOnce(new Error("private fixture error"));
+    await expect(
+      handlers["remoteAccess.connect"]({ ...params, acknowledgeConflicts: true }, context()),
+    ).rejects.toThrow("REMOTE_COMMAND_FAILED");
+    await handlers["remoteAccess.disconnect"]({ provider: "netbird" }, context());
+    expect(host.tailscale.disconnect).not.toHaveBeenCalled();
+  });
   it("continues a package job independently of the initiating request and exposes its completion", async () => {
     const handlers = createRemoteAccessHandlers({
       apt: createAptSimulator(),

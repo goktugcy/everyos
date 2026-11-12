@@ -1188,3 +1188,22 @@ Linux-only integration tests exercise actual child processes: reproduce the orig
 reopen error, reopen the replacement descriptor, require no filesystem links, verify mode 0600
 and write seals, and check that the key is absent from argv. Adapter tests cover secret-free
 invocation and static error categories. No real provider account or host tunnel is used.
+
+## Distinct VPN exit roles and explicit reconnection (2026-11-12)
+
+An exit-node server need not consume an exit node. Keep `defaultRoute` for outbound VPN routing
+and add nullable `advertisesExitNode` for server advertisement. Read Tailscale's shared status and
+preferences once; positive approved-self evidence also establishes advertisement. Missing telemetry
+stays unknown, and advertising is not counted as a competing outbound default route. NetBird's CLI
+does not expose a reliable advertisement flag, so do not infer it from opaque network identifiers.
+
+Use a bare Tailscale `up` after targeted `set` on an enrolled node: any extra flag, including timeout,
+disables the upstream bare-up shortcut and can trip the non-default-settings revert guard. Preserve
+the external command deadline and reject unnecessary enrollment keys before editing preferences or reauthenticating. Never reset
+SSH, advertised routes, exit-node preferences or provider identities to make a connection succeed.
+
+NetBird skips flag application when already connected. Make the resulting reconnect explicit in
+the confirmation screen and preflight CLI compatibility before disconnecting only that provider.
+Treat upstream ignored-settings/session-ownership warnings as failures even with exit code zero.
+Require conflict consent while another provider is connecting as well as connected. Public desired
+configuration follows refreshed server state unless the user has an unsaved local draft.

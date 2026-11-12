@@ -54,6 +54,47 @@ current readable settings, falling back to DNS/routes disabled when unavailable.
 advertisements and existing exit-node preferences. NetBird changes only the specified client DNS,
 route and management options. EveryOS does not select exit nodes or advertise new subnet routes.
 
+## Exit-node roles and connection behavior
+
+Remote Access shows two independent facts: `defaultRoute` describes this device using a VPN
+exit/default route; `advertisesExitNode` describes this device offering an exit. Tailscale derives
+advertisement from readable `AdvertiseRoutes` preferences or a positive `Self.ExitNodeOption`
+(offered and approved). Advertisement alone does not assert that provider approval or host IP
+forwarding is complete. The existing Tailscale diagnostics retain the separate approved-exit
+indicator. NetBird's public CLI status does not authoritatively expose an exit-advertisement flag,
+so that field remains unknown rather than inventing a negative result. Unavailable telemetry uses
+null, displayed as Unknown, rather than No.
+
+Tailscale Remote Access reads status and preferences once in parallel, without fetching Serve
+configuration on each poll. An enrolled device applies only DNS and route-acceptance preferences
+with `tailscale set`, then uses a **bare** `tailscale up`. Adding even a timeout flag bypasses the
+CLI's preference-preserving bare-up path and can trigger its non-default-setting revert guard.
+The existing capture timeout still bounds the command. An enrolled device rejects an unnecessary
+auth key before editing preferences or reauthenticating; initial login still accepts a transient key. Existing preference
+guards on reauthentication fail with a specific settings error instead of resetting host policy.
+`NeedsMachineAuth` is shown as awaiting administrator approval, not an unknown state.
+
+NetBird returns early from `up` when already connected and ignores the requested settings. Applying
+saved settings to a connected/connecting node therefore explicitly reconnects that provider:
+preflight supported flags, run `down`, then `up` with the saved settings. The UI calls this Reconnect
+and explains the temporary access loss before confirmation. No other provider is disconnected.
+Client warnings that settings were ignored or the connection belongs to another user are failures
+even when the CLI exits zero. EveryOS does not erase identities or unlock managed configuration.
+
+Connecting providers already require the second-provider conflict acknowledgment. Failed private
+peer reads remain errors rather than an empty successful list. Malformed status and non-finite
+counters cannot produce invented healthy telemetry. Settings forms follow refreshed configuration
+when there is no local draft and preserve unsaved changes during background polls.
+
+The dedicated Tailscale screen also shows Unknown for unreadable exit eligibility and key expiry,
+and displays refresh errors alongside retained data. Its shared network card labels the selected
+exit as "in use" so it cannot be confused with this device serving as an exit.
+
+Regression coverage includes provider adapters, real local Unix-socket HTTP fixtures, strict
+protocol/HTTP permissions and audit handling, conflict detection, and browser flows for both roles,
+unknown states, refreshed configuration, preserved drafts and reconnect consent. Browser host data
+is explicitly simulated; these checks do not enroll a real provider account or change a Pi tunnel.
+
 ## Architecture and endpoints
 
 - `packages/shared/src/remote-access.ts` defines provider-neutral node, peer, settings, job and

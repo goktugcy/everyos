@@ -38,6 +38,29 @@ const config = {
   confirm: true,
 };
 describe("remote access HTTP API", () => {
+  it("preserves exit-node advertisement separately from default-route use for read-only viewers", async () => {
+    const { ctx, viewer } = await withRoles();
+    fixture(ctx);
+    ctx.agent.handlers.set("remoteAccess.snapshot", () => ({
+      providers: [
+        {
+          ...emptyRemoteNode("tailscale"),
+          installed: true,
+          available: true,
+          state: "connected",
+          advertisesExitNode: true,
+          defaultRoute: false,
+        },
+      ],
+      installations: [],
+    }));
+    const overview = await json<RemoteAccessOverview>(await viewer.get("/api/remote-access"));
+    expect(overview.providers[0]?.node).toMatchObject({
+      advertisesExitNode: true,
+      defaultRoute: false,
+    });
+    expect(overview.canManage).toBe(false);
+  });
   it("provides public node telemetry and conflicts but protects peers, configuration and host operations", async () => {
     const { ctx, admin, viewer, operator } = await withRoles();
     fixture(ctx);

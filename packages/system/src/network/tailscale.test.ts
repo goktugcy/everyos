@@ -8,7 +8,11 @@ import {
   parseTailscaleDetails,
   parseTailscalePeers,
 } from "../linux/tailscale.ts";
-import { getTailscaleDetails, getTailscalePeers } from "./tailscale-client.ts";
+import {
+  getTailscaleDetails,
+  getTailscalePeers,
+  getTailscaleRemoteState,
+} from "./tailscale-client.ts";
 
 /* Shaped like tailscaled's LocalAPI responses (ipnstate.Status, ipn.Prefs, ipn.ServeConfig). */
 const STATUS = {
@@ -105,11 +109,15 @@ afterEach(() => {
   for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
-async function fakeLocalApi(routes: Record<string, { status?: number; body: unknown }>) {
+async function fakeLocalApi(
+  routes: Record<string, { status?: number; body: unknown }>,
+  requests: string[] = [],
+) {
   const dir = mkdtempSync(join(tmpdir(), "everyos-ts-"));
   directories.push(dir);
   const socket = join(dir, "tailscaled.sock");
   const server = createServer((request, response) => {
+    requests.push(request.url ?? "");
     // tailscaled requires this Host header; check that the client sends it.
     if (request.headers.host !== "local-tailscaled.sock") {
       response.writeHead(400).end();
@@ -127,6 +135,38 @@ async function fakeLocalApi(routes: Record<string, { status?: number; body: unkn
 }
 
 describe("tailscale details", () => {
+  it("reads one shared status and optional preferences for Remote Access, preserving exit-node server evidence", async () => {
+    const requests: string[] = [];
+    const socket = await fakeLocalApi(
+      {
+        "/localapi/v0/status?peers=true": { body: STATUS },
+        "/localapi/v0/prefs": { body: PREFS },
+      },
+      requests,
+    );
+    const state = await getTailscaleRemoteState([socket]);
+    expect(state.status).toMatchObject({ backendState: "Running", exitNode: { active: false } });
+    expect(state.details).toMatchObject({
+      prefs: { advertisesExitNode: true },
+      serve: { available: false },
+    });
+    expect(requests.sort()).toEqual(["/localapi/v0/prefs", "/localapi/v0/status?peers=true"]);
+    const invalid = await fakeLocalApi({ "/localapi/v0/status?peers=true": { body: {} } });
+    expect((await getTailscaleRemoteState([invalid])).status.status.available).toBe(false);
+  });
+  it("ignores malformed peers and non-finite traffic counters", () => {
+    const status = {
+      ...STATUS,
+      Peer: {
+        bad: null,
+        array: [],
+        peer: { HostName: "fixture", RxBytes: Infinity, TxBytes: NaN },
+      },
+    };
+    const { peers } = parseTailscalePeers(status);
+    expect(peers).toHaveLength(1);
+    expect(peers[0]).toMatchObject({ rxBytes: 0, txBytes: 0 });
+  });
   it("keeps the node's details and never the keys", () => {
     const details = parseTailscaleDetails(STATUS, PREFS, SERVE);
     expect(details.self).toEqual({

@@ -16,12 +16,14 @@ export const remoteAccessTr = {
   state_connecting: "Bağlanıyor",
   state_disconnected: "Bağlı değil",
   state_needsLogin: "Kayıt gerekiyor",
+  state_needsApproval: "Yönetici onayı gerekiyor",
   state_unknown: "Bilinmiyor",
   notInstalled: "Kurulu değil",
   unavailable: "Arka plan servisine ulaşılamıyor",
   simulated: "Simüle veri · Bu geliştirme ortamı gerçek VPN'i değiştirmez.",
   install: "Kur",
   connect: "Bağlan",
+  reconnect: "Yeniden bağlan",
   disconnect: "Bağlantıyı kes",
   configure: "Bağlantı ayarları",
   save: "Ayarları kaydet",
@@ -45,7 +47,14 @@ export const remoteAccessTr = {
   addresses: "VPN adresleri",
   dns: "DNS yönetimi",
   routes: "Etkin VPN rotaları",
-  exitNode: "Varsayılan rota / exit node",
+  exitNode: "Exit node kullanımı",
+  exitNodeAdvertisement: "Exit node sunumu",
+  exitNodeHint:
+    "Kullanım, bu cihazın trafiğini bir VPN çıkışına göndermesidir. Duyuru, bu cihazı diğer cihazlara çıkış olarak sunar; sağlayıcı onayı gerekebilir. Okunamayan durumlar Bilinmiyor olarak gösterilir.",
+  approvalHint:
+    "Bu cihaz sağlayıcının yönetim panelinde onay bekliyor. Onayladıktan sonra durumu yenileyin.",
+  registeredCredentialHint:
+    "Bu Tailscale cihazı zaten kayıtlı. Mevcut SSH, exit node ve diğer tercihleri koruyarak bağlanmak için anahtar alanını boş bırakın.",
   yes: "Evet",
   no: "Hayır",
   unknown: "Bilinmiyor",
@@ -67,6 +76,9 @@ export const remoteAccessTr = {
   viewer:
     "Bu görünüm salt okunur. Kurulum ve bağlantı değişiklikleri yönetici ve yetkilendirilmiş Linux hesabı gerektirir.",
   confirmConnect: "{{provider}} bağlantısını başlat",
+  confirmReconnect: "{{provider}} bağlantısını yeniden başlat",
+  reconnectHint:
+    "Kaydedilen ayarların uygulanması için bu NetBird bağlantısı kısa süre kesilip yeniden kurulacak. EveryOS'a bu VPN üzerinden erişiyorsanız erişiminiz kesilebilir; başka bir erişim yolunuz olsun. Diğer VPN değiştirilmez.",
   connectHint:
     "Kaydedilen DNS ve rota ayarları bu sağlayıcıya uygulanacak. Diğer VPN bağlantısı kapatılmaz.",
   confirmDisconnect: "{{provider}} bağlantısını kes",
@@ -99,6 +111,12 @@ export const remoteAccessTr = {
   warning_visibility:
     "Bazı DNS veya rota bilgileri okunamadı. EveryOS çakışma olmadığını doğrulayamıyor.",
   error_AUTH_REQUIRED: "Bu cihaz için kayıt anahtarı gerekli.",
+  error_PROVIDER_SETTINGS: "Bu ayarlar seçilen VPN sağlayıcısı için geçerli değil.",
+  error_APPROVAL_REQUIRED: "Bu cihaz sağlayıcının yönetim panelinde yönetici onayı bekliyor.",
+  error_ALREADY_REGISTERED:
+    "Bu Tailscale cihazı zaten kayıtlı. Anahtar alanını boş bırakıp tekrar bağlanın; yeniden kayıt mevcut tercihleri değiştirebilir.",
+  error_SETTINGS_NOT_APPLIED:
+    "VPN istemcisi istenen ayarları uygulamadı. İstemci/servis sürümlerini ve yönetim politikasını kontrol edin; EveryOS mevcut tercihleri sıfırlamaz.",
   error_NOT_INSTALLED: "Sağlayıcı kurulu değil.",
   error_DAEMON_UNAVAILABLE: "VPN servisi başlatılamadı veya okunamadı.",
   error_STATUS_UNAVAILABLE: "VPN durumu veya cihaz listesi okunamadı.",
@@ -107,7 +125,7 @@ export const remoteAccessTr = {
   error_CREDENTIAL_INPUT_UNAVAILABLE:
     "EveryOS kayıt anahtarını VPN istemcisine güvenli biçimde aktaramadı. EveryOS'u güncelleyin ve sistemin Python 3 desteğini kontrol edin.",
   error_AUTH_REJECTED:
-    "NetBird kayıt anahtarını kabul etmedi. Setup Key'in süresini, iptal durumunu, kullanım sınırını ve doğru NetBird hesabına ait olduğunu kontrol edin.",
+    "VPN sağlayıcısı kayıt anahtarını kabul etmedi. Auth/Setup Key'in süresini, iptal durumunu, kullanım sınırını ve doğru hesaba ait olduğunu kontrol edin.",
   error_PEER_IDENTITY_CONFLICT:
     "Bu cihaz farklı bir kullanıcı veya kayıt yöntemiyle zaten kayıtlı. NetBird hesabındaki mevcut cihaz kaydını kontrol edin.",
   error_CERTIFICATE_FAILED:
@@ -115,7 +133,7 @@ export const remoteAccessTr = {
   error_CONFIGURATION_LOCKED:
     "NetBird servisi yapılandırma değişikliklerine kapalı. Sunucu veya istemci yöneticinizin belirlediği politikayı kontrol edin.",
   error_NETWORK_UNREACHABLE:
-    "NetBird yönetim sunucusuna ulaşılamadı. İnternet bağlantısını, DNS'i ve varsa proxy veya güvenlik duvarı ayarlarını kontrol edin.",
+    "VPN yönetim sunucusuna ulaşılamadı. İnternet bağlantısını, DNS'i ve varsa proxy veya güvenlik duvarı ayarlarını kontrol edin.",
   error_COMMAND_TIMEOUT:
     "VPN işlemi zaman aşımına uğradı. Durumu yenileyip yönetim sunucusuna erişimi kontrol edin.",
   error_CONFLICT_ACK_REQUIRED: "Diğer VPN aktif. Durumu yenileyip çakışma uyarısını onaylayın.",
@@ -166,12 +184,14 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   state_connecting: "Connecting",
   state_disconnected: "Disconnected",
   state_needsLogin: "Registration required",
+  state_needsApproval: "Administrator approval required",
   state_unknown: "Unknown",
   notInstalled: "Not installed",
   unavailable: "The background service is unavailable",
   simulated: "Simulated data · This development environment does not change a real VPN.",
   install: "Install",
   connect: "Connect",
+  reconnect: "Reconnect",
   disconnect: "Disconnect",
   configure: "Connection settings",
   save: "Save settings",
@@ -192,9 +212,16 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   host: "Device",
   version: "Version",
   addresses: "VPN addresses",
-  dns: "DNS management",
+  dns: "DNS control",
   routes: "Active VPN routes",
-  exitNode: "Default route / exit node",
+  exitNode: "Uses an exit node",
+  exitNodeAdvertisement: "Offers an exit node",
+  exitNodeHint:
+    "Use sends this device's traffic through a VPN exit. Advertisement offers this device as an exit to other devices; provider approval may be required. Unreadable states are shown as Unknown.",
+  approvalHint:
+    "This device is awaiting approval in the provider's administration console. Refresh status after approving it.",
+  registeredCredentialHint:
+    "This Tailscale device is already registered. Leave the key empty to reconnect while preserving SSH, exit-node and other preferences.",
   yes: "Yes",
   no: "No",
   unknown: "Unknown",
@@ -216,6 +243,9 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   viewer:
     "This view is read-only. Installation and connection changes require an administrator and an authorized Linux account.",
   confirmConnect: "Connect {{provider}}",
+  confirmReconnect: "Reconnect {{provider}}",
+  reconnectHint:
+    "This NetBird connection will briefly disconnect and reconnect to apply the saved settings. If you access EveryOS through this VPN, you may lose access; have another access path available. The other VPN is unchanged.",
   connectHint:
     "Saved DNS and route settings will be applied to this provider. The other VPN stays connected.",
   confirmDisconnect: "Disconnect {{provider}}",
@@ -248,6 +278,13 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   warning_visibility:
     "Some DNS or route data could not be read. EveryOS cannot confirm that there are no conflicts.",
   error_AUTH_REQUIRED: "A registration key is required for this device.",
+  error_PROVIDER_SETTINGS: "These settings are not valid for the selected VPN provider.",
+  error_APPROVAL_REQUIRED:
+    "This device is awaiting administrator approval in the provider's administration console.",
+  error_ALREADY_REGISTERED:
+    "This Tailscale device is already registered. Clear the key and reconnect; enrolling again could change existing preferences.",
+  error_SETTINGS_NOT_APPLIED:
+    "The VPN client did not apply the requested settings. Check client/service versions and management policy; EveryOS does not reset existing preferences.",
   error_NOT_INSTALLED: "The provider is not installed.",
   error_DAEMON_UNAVAILABLE: "The VPN service could not be started or read.",
   error_STATUS_UNAVAILABLE: "VPN status or devices could not be read.",
@@ -256,7 +293,7 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   error_CREDENTIAL_INPUT_UNAVAILABLE:
     "EveryOS could not securely pass the registration key to the VPN client. Update EveryOS and check the system's Python 3 support.",
   error_AUTH_REJECTED:
-    "NetBird rejected the registration key. Check the Setup Key's expiry, revocation, usage limit and that it belongs to the correct NetBird account.",
+    "The VPN provider rejected the registration key. Check the Auth/Setup Key's expiry, revocation, usage limit and that it belongs to the correct account.",
   error_PEER_IDENTITY_CONFLICT:
     "This device is already registered under a different user or registration method. Check the existing device in your NetBird account.",
   error_CERTIFICATE_FAILED:
@@ -264,7 +301,7 @@ export const remoteAccessEn: Record<keyof typeof remoteAccessTr, string> = {
   error_CONFIGURATION_LOCKED:
     "The NetBird service does not allow configuration changes. Check the policy set by your server or client administrator.",
   error_NETWORK_UNREACHABLE:
-    "The NetBird management server could not be reached. Check the internet connection, DNS and any proxy or firewall settings.",
+    "The VPN management server could not be reached. Check the internet connection, DNS and any proxy or firewall settings.",
   error_COMMAND_TIMEOUT:
     "The VPN operation timed out. Refresh status and check access to the management server.",
   error_CONFLICT_ACK_REQUIRED:

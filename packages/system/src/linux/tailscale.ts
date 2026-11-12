@@ -21,13 +21,18 @@ const strings = (value: unknown, limit: number, max = 64): string[] =>
  * Unknown fields are ignored; nothing about other devices beyond counts is kept.
  */
 export function parseTailscaleStatus(json: unknown): TailscaleStatus {
-  const data = (typeof json === "object" && json !== null ? json : {}) as Record<string, unknown>;
-  const self = (data.Self ?? {}) as Record<string, unknown>;
-  const tailnet = (data.CurrentTailnet ?? null) as Record<string, unknown> | null;
-  const exit = (data.ExitNodeStatus ?? null) as Record<string, unknown> | null;
-  const peers = (
-    typeof data.Peer === "object" && data.Peer !== null ? Object.values(data.Peer) : []
-  ) as Array<Record<string, unknown>>;
+  const data = object(json);
+  if (typeof data.BackendState !== "string" || !data.BackendState)
+    throw new Error("Invalid Tailscale status response");
+  const self = object(data.Self);
+  const tailnet = data.CurrentTailnet ? object(data.CurrentTailnet) : null;
+  const exit =
+    data.ExitNodeStatus &&
+    typeof data.ExitNodeStatus === "object" &&
+    !Array.isArray(data.ExitNodeStatus)
+      ? object(data.ExitNodeStatus)
+      : null;
+  const peers = Object.values(object(data.Peer)).filter(isRecord);
   const exitPeer = peers.find((peer) => peer.ExitNode === true);
   const dnsName = str(self.DNSName);
   return {
@@ -76,6 +81,12 @@ const object = (value: unknown): Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+const bytes = (value: unknown): number =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? Math.min(value, Number.MAX_SAFE_INTEGER)
+    : 0;
 
 const bool = (value: unknown): boolean | null => (typeof value === "boolean" ? value : null);
 
@@ -160,7 +171,7 @@ export function parseTailscaleDetails(
   const data = object(statusJson);
   const self = object(data.Self);
   const tailnet = data.CurrentTailnet ? object(data.CurrentTailnet) : null;
-  const prefs = prefsJson === null ? null : object(prefsJson);
+  const prefs = isRecord(prefsJson) ? prefsJson : null;
   const advertised = strings(prefs?.AdvertiseRoutes, 64);
   return {
     status: { available: true },
@@ -229,6 +240,7 @@ export function tailscaleDetailsUnavailable(
 /** The other devices of the tailnet (online first), without keys or user details. */
 export function parseTailscalePeers(json: unknown): TailscalePeers {
   const peers = Object.values(object(object(json).Peer))
+    .filter(isRecord)
     .slice(0, 500)
     .map((raw): TailscalePeer => {
       const peer = object(raw);
@@ -246,8 +258,8 @@ export function parseTailscalePeers(json: unknown): TailscalePeers {
         exitNodeOption: peer.ExitNodeOption === true,
         connection: !active ? "idle" : str(peer.CurAddr) ? "direct" : "relay",
         relay: str(peer.Relay, 64),
-        rxBytes: typeof peer.RxBytes === "number" && peer.RxBytes >= 0 ? peer.RxBytes : 0,
-        txBytes: typeof peer.TxBytes === "number" && peer.TxBytes >= 0 ? peer.TxBytes : 0,
+        rxBytes: bytes(peer.RxBytes),
+        txBytes: bytes(peer.TxBytes),
         keyExpiry: time(peer.KeyExpiry),
         tags: strings(peer.Tags, 32, 128),
       };

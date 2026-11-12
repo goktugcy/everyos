@@ -10,11 +10,7 @@ import type {
 import { findExecutable, runCommand, runCapture } from "../exec.ts";
 import { executeRemoteMutation } from "./execute.ts";
 import { parseOsRelease } from "../parsers.ts";
-import {
-  getTailscaleStatus,
-  getTailscaleDetails,
-  getTailscalePeers,
-} from "../network/tailscale-client.ts";
+import { getTailscaleRemoteState, getTailscalePeers } from "../network/tailscale-client.ts";
 
 export class RemoteAccessError extends Error {
   constructor(readonlyCode: string) {
@@ -48,6 +44,7 @@ export const emptyRemoteNode = (provider: RemoteAccessProviderId): RemoteAccessN
   acceptsRoutes: null,
   routes: [],
   defaultRoute: null,
+  advertisesExitNode: null,
   routeVisibility: false,
   peers: { total: 0, online: 0 },
   installationSupported: false,
@@ -58,11 +55,13 @@ const record = (value: unknown): Record<string, unknown> =>
     : {};
 const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 const text = (value: unknown, max = 256) =>
-  typeof value === "string" ? value.slice(0, max) : null;
+  typeof value === "string" && value.length > 0 ? value.slice(0, max) : null;
 const count = (value: unknown) =>
-  typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : 0;
+  typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? Math.min(value, Number.MAX_SAFE_INTEGER)
+    : 0;
 const address = (value: unknown): string[] =>
-  typeof value === "string" && isIP(value.split("/")[0]!) ? [value.slice(0, 128)] : [];
+  typeof value === "string" && (isIP(value) || cidr(value)) ? [value] : [];
 const cidr = (value: unknown): boolean => {
   if (typeof value !== "string" || value.length > 128) return false;
   const [ip, prefix, extra] = value.split("/");
@@ -82,6 +81,8 @@ export function parseNetBirdStatus(value: unknown): RemoteAccessNode {
     management = record(raw.management),
     peers = record(raw.peers);
   const state = text(raw.daemonStatus, 64);
+  if (!state && typeof management.connected !== "boolean")
+    throw new RemoteAccessError("REMOTE_STATUS_UNAVAILABLE");
   return {
     ...emptyRemoteNode("netbird"),
     installed: true,
@@ -96,7 +97,7 @@ export function parseNetBirdStatus(value: unknown): RemoteAccessNode {
             ? "needs-login"
             : state === "Idle"
               ? "disconnected"
-              : management.connected === true
+              : state === null && management.connected === true
                 ? "connected"
                 : "unknown",
     version: text(raw.daemonVersion, 128) ?? text(raw.cliVersion, 128),
@@ -111,7 +112,10 @@ export function parseNetBirdStatus(value: unknown): RemoteAccessNode {
   };
 }
 export function parseNetBirdPeers(value: unknown): RemoteAccessPeer[] {
-  return list(record(record(value).peers).details)
+  const peers = record(record(value).peers);
+  if (!Array.isArray(peers.details) && !(peers.total === 0 && peers.connected === 0))
+    throw new RemoteAccessError("REMOTE_STATUS_UNAVAILABLE");
+  return list(peers.details)
     .slice(0, 500)
     .map((value) => {
       const peer = record(value),
@@ -249,42 +253,52 @@ export function createRemoteAccessDrivers(
   const netbirdRead = async () => {
     const executable = await deps.find("netbird");
     if (!executable) throw new RemoteAccessError("REMOTE_NOT_INSTALLED");
-    return JSON.parse(
+    const value: unknown = JSON.parse(
       await deps.run(executable, ["status", "--json"], {
         timeoutMs: 8_000,
         maxBytes: 4 * 1024 * 1024,
       }),
-    ) as unknown;
+    );
+    parseNetBirdStatus(value);
+    return value;
   };
   const drivers: Record<RemoteAccessProviderId, RemoteAccessDriver> = {
     tailscale: {
       id: "tailscale",
       async status() {
-        const [status, details] = await Promise.all([
-          getTailscaleStatus(deps.tailscaleSockets),
-          getTailscaleDetails(deps.tailscaleSockets),
-        ]);
+        const { status, details } = await getTailscaleRemoteState(deps.tailscaleSockets);
         const node: RemoteAccessNode = {
           ...emptyRemoteNode("tailscale"),
           installed: status.status.available,
           available: status.status.available,
-          reason: status.status.available ? null : "daemon-unavailable",
+          reason: status.status.available
+            ? null
+            : status.status.reason === "permission-denied"
+              ? "permission-denied"
+              : "daemon-unavailable",
           state:
             status.backendState === "Running"
               ? "connected"
               : status.backendState === "NeedsLogin"
                 ? "needs-login"
-                : status.backendState === "Stopped"
-                  ? "disconnected"
-                  : status.backendState === "Starting"
-                    ? "connecting"
-                    : "unknown",
+                : status.backendState === "NeedsMachineAuth"
+                  ? "needs-approval"
+                  : status.backendState === "Stopped"
+                    ? "disconnected"
+                    : status.backendState === "Starting"
+                      ? "connecting"
+                      : "unknown",
           version: status.version,
           hostName: status.hostName,
           addresses: status.ips,
           dnsEnabled: details.prefs.acceptDNS,
           acceptsRoutes: details.prefs.acceptRoutes,
-          defaultRoute: status.exitNode.active,
+          defaultRoute: status.status.available ? status.exitNode.active : null,
+          advertisesExitNode: details.status.available
+            ? details.self.exitNodeOption
+              ? true
+              : details.prefs.advertisesExitNode
+            : null,
           peers: status.peers,
         };
         const result = await installed(node);
@@ -292,7 +306,9 @@ export function createRemoteAccessDrivers(
         return withRemoteRoutes(result, deps);
       },
       async peers() {
-        return (await getTailscalePeers(deps.tailscaleSockets)).peers.map((p) => ({
+        const result = await getTailscalePeers(deps.tailscaleSockets);
+        if (!result.status.available) throw new RemoteAccessError("REMOTE_STATUS_UNAVAILABLE");
+        return result.peers.map((p) => ({
           name: p.dnsName ?? p.hostName,
           addresses: p.ips,
           online: p.online,
@@ -309,9 +325,13 @@ export function createRemoteAccessDrivers(
           await start("tailscaled.service", signal);
           state = await this.status();
         }
-        if (state.state === "needs-login" && !credential)
+        if (!state.available) throw new RemoteAccessError("REMOTE_DAEMON_UNAVAILABLE");
+        if (state.state === "needs-approval")
+          throw new RemoteAccessError("REMOTE_APPROVAL_REQUIRED");
+        if (["needs-login", "unknown"].includes(state.state) && !credential)
           throw new RemoteAccessError("REMOTE_AUTH_REQUIRED");
         if (state.state !== "needs-login" && state.state !== "unknown") {
+          if (credential) throw new RemoteAccessError("REMOTE_ALREADY_REGISTERED");
           await mutate(
             "tailscale",
             [
@@ -323,7 +343,8 @@ export function createRemoteAccessDrivers(
           );
           await mutate(
             "tailscale",
-            ["up", "--timeout=30s", ...(credential ? ["--auth-key=file:/dev/stdin"] : [])],
+            // Only a bare `up` preserves all existing non-default preferences in Tailscale.
+            ["up"],
             signal,
             credential,
           );
@@ -373,7 +394,8 @@ export function createRemoteAccessDrivers(
           await start("netbird.service", signal);
           state = await this.status();
         }
-        if (state.state === "needs-login" && !credential)
+        if (!state.available) throw new RemoteAccessError("REMOTE_DAEMON_UNAVAILABLE");
+        if (["needs-login", "unknown"].includes(state.state) && !credential)
           throw new RemoteAccessError("REMOTE_AUTH_REQUIRED");
         const binary = await deps.find("netbird");
         if (!binary) throw new RemoteAccessError("REMOTE_NOT_INSTALLED");
@@ -391,6 +413,9 @@ export function createRemoteAccessDrivers(
             ).includes("--setup-key-file"))
         )
           throw new RemoteAccessError("REMOTE_VERSION_UNSUPPORTED");
+        // NetBird returns "Already connected" before applying flags. This is an explicit reconnect.
+        if (state.state === "connected" || state.state === "connecting")
+          await mutate("netbird", ["down"], signal);
         await mutate(
           "netbird",
           [

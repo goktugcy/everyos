@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { RemoteAccessNode } from "@everyos/shared";
 import { emptyRemoteNode } from "./providers.ts";
 import { remoteAccessConflicts, remoteRoutesOverlap } from "./conflicts.ts";
 
@@ -63,5 +64,18 @@ describe("remote access conflict detection", () => {
     ]);
     expect(remoteAccessConflicts([nodes[0]!, { ...nodes[1]!, state: "disconnected" }])).toEqual([]);
     expect(remoteAccessConflicts([nodes[0]!, { ...nodes[1]!, available: false }])).toEqual([]);
+  });
+  it("warns while a second VPN is connecting and does not confuse exit-node servers with exit consumers", () => {
+    const nodes: RemoteAccessNode[] = active().map((node) => ({
+      ...node,
+      advertisesExitNode: true,
+    }));
+    expect(remoteAccessConflicts(nodes).some((conflict) => conflict.kind === "exit-node")).toBe(
+      false,
+    );
+    nodes[1] = { ...nodes[1]!, state: "connecting" };
+    expect(
+      remoteAccessConflicts(nodes).some((conflict) => conflict.kind === "multiple-active"),
+    ).toBe(true);
   });
 });

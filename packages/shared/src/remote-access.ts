@@ -12,7 +12,7 @@ export interface RemoteAccessNode {
   installed: boolean;
   available: boolean;
   reason: "not-installed" | "daemon-unavailable" | "permission-denied" | "unsupported" | null;
-  state: "connected" | "connecting" | "disconnected" | "needs-login" | "unknown";
+  state: "connected" | "connecting" | "disconnected" | "needs-login" | "needs-approval" | "unknown";
   version: string | null;
   hostName: string | null;
   addresses: string[];
@@ -21,6 +21,7 @@ export interface RemoteAccessNode {
   acceptsRoutes: boolean | null;
   routes: string[];
   defaultRoute: boolean | null;
+  advertisesExitNode: boolean | null;
   routeVisibility: boolean;
   peers: { total: number; online: number };
   installationSupported: boolean;
