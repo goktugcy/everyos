@@ -149,6 +149,18 @@ checks. Passwords use the existing password hasher. Public access allows 60 requ
 Forged IDs do not allow directory listing. Owner disablement, file-role revocation, expiry, quotas
 and revocation are checked on the server and while streaming.
 
+Quick Share offers separate **Revoke** and **Delete** actions with confirmation. Revoke immediately
+disables the link and keeps its list entry. Delete permanently removes the owner's record, sealed
+link token, password hash and access grants, including expired, revoked and exhausted shares.
+Existing recipient grants stop working, and active streams fail their next capability check.
+Shared source files and files already received remain intact. Audit events retain only their normal
+non-secret action/record metadata.
+
+The owner uses `POST /api/sharing/quick/:id/revoke` to revoke and
+`DELETE /api/sharing/quick/:id` to delete; both require `files:write`, session CSRF protection and
+`{ "confirm": true }`. The DELETE endpoint now removes the record instead of only revoking it.
+Another user's ID is not accessible. Deleted public links return `410 SHARING_EXPIRED`.
+
 One-time means **one successful browser access grant**. That browser may download the selected
 files within the adjusted quota. Each GET, including a Range/retry request, consumes a download
 count. HTTP ranges support download continuation within that quota. Uploads and cross-server

@@ -133,10 +133,94 @@ describe("built-in network sharing and capability-scoped Quick Share", () => {
     const second = await json<{ share: QuickShareView; token: string }>(fresh);
     expect((await access(guest, second.token)).status).toBe(200);
     expect(
-      (await admin.delete("/api/sharing/quick/" + second.share.id, { body: { confirm: true } }))
+      (await admin.post("/api/sharing/quick/" + second.share.id + "/revoke", { confirm: true }))
         .status,
     ).toBe(204);
     expect((await guest.get("/api/quick-share/" + second.share.id)).status).toBe(410);
+  });
+  it.each(["active", "revoked", "expired", "exhausted"])(
+    "permanently deletes a %s link and its grants while preserving the shared file",
+    async (state) => {
+      const { ctx, admin, guest } = await setup();
+      const created = await share(admin);
+      await access(guest, created.token);
+      const id = created.share.id;
+      if (state === "revoked") {
+        expect(
+          (await admin.post("/api/sharing/quick/" + id + "/revoke", { confirm: true })).status,
+        ).toBe(204);
+        expect(
+          ctx.db.get("SELECT id FROM quick_shares WHERE id=? AND revoked=1", id),
+        ).toBeDefined();
+      } else if (state === "expired") ctx.clock.now = created.share.expiresAt + 1;
+      else if (state === "exhausted")
+        ctx.db.run(
+          "UPDATE quick_shares SET downloads=? WHERE id=?",
+          created.share.maxDownloads,
+          id,
+        );
+      expect(
+        (await admin.delete("/api/sharing/quick/" + id, { body: { confirm: true } })).status,
+      ).toBe(204);
+      expect(ctx.db.get("SELECT id FROM quick_shares WHERE id=?", id)).toBeUndefined();
+      expect(ctx.db.all("SELECT hash FROM quick_share_grants WHERE share_id=?", id)).toEqual([]);
+      expect(
+        (
+          await json<{ quickShares: QuickShareView[] }>(await admin.get("/api/sharing"))
+        ).quickShares.map((s) => s.id),
+      ).not.toContain(id);
+      expect((await access(guest, created.token)).status).toBe(410);
+      expect((await guest.get("/api/quick-share/" + id)).status).toBe(410);
+      expect((await admin.get("/api/sharing/quick/" + id + "/link")).status).toBe(410);
+      expect(await (await admin.get("/api/files/download?root=home&path=fixture.txt")).text()).toBe(
+        "Real offline fixture bytes",
+      );
+      expect(
+        ctx.db.get(
+          "SELECT id FROM audit_events WHERE action='sharing.quick.remove' AND target=?",
+          id,
+        ),
+      ).toBeDefined();
+    },
+  );
+  it("requires ownership, file-write permission and explicit confirmation to delete links", async () => {
+    const { ctx, admin, operator, viewer } = await withRoles();
+    contexts.push(ctx);
+    const created = await share(admin);
+    const path = "/api/sharing/quick/" + created.share.id;
+    expect((await operator.delete(path, { body: { confirm: true } })).status).toBe(404);
+    expect((await viewer.delete(path, { body: { confirm: true } })).status).toBe(403);
+    expect((await admin.delete(path, { body: { confirm: false } })).status).toBe(400);
+    expect((await admin.delete(path, { body: { confirm: true, all: true } })).status).toBe(400);
+    expect(ctx.db.get("SELECT id FROM quick_shares WHERE id=?", created.share.id)).toBeDefined();
+    expect((await admin.post(path + "/revoke", { confirm: true })).status).toBe(204);
+    expect((await operator.delete(path, { body: { confirm: true } })).status).toBe(404);
+    expect((await admin.delete(path, { body: { confirm: true } })).status).toBe(204);
+    expect((await admin.delete(path, { body: { confirm: true } })).status).toBe(404);
+  });
+  it("rejects uploads through a deleted receive link without deleting existing destination files", async () => {
+    const { admin, guest } = await setup();
+    const created = await share(admin, { direction: "receive", paths: [], path: "" });
+    const opened = await json<{ grant: string }>(await access(guest, created.token));
+    expect(
+      (await admin.delete("/api/sharing/quick/" + created.share.id, { body: { confirm: true } }))
+        .status,
+    ).toBe(204);
+    expect(
+      (
+        await guest.request(
+          "POST",
+          "/api/quick-share/" + created.share.id + "/upload?name=new.txt",
+          {
+            rawBody: "new",
+            headers: { "content-length": "3", "x-everyos-quick-grant": opened.grant },
+          },
+        )
+      ).status,
+    ).toBe(410);
+    expect(await (await admin.get("/api/files/download?root=home&path=fixture.txt")).text()).toBe(
+      "Real offline fixture bytes",
+    );
   });
   it("receives streamed files into only the selected folder with collision and quota protection", async () => {
     const { admin, guest } = await setup();
@@ -338,45 +422,54 @@ describe("built-in network sharing and capability-scoped Quick Share", () => {
     ).toBe(204);
     expect(ctx.db.get("SELECT id FROM network_connections WHERE id=?", saved.id)).toBeUndefined();
   });
-  it("revokes a large active stream and retains HTTP Range support within the download quota", async () => {
-    const { ctx, admin, guest } = await setup();
-    const bytes = Buffer.alloc(8 * 1024 ** 2, 0x67);
-    expect(
-      (
-        await admin.request("POST", "/api/files/upload?root=home&path=&name=large.bin", {
-          rawBody: bytes,
-          headers: { "content-length": String(bytes.length) },
-        })
-      ).status,
-    ).toBe(201);
-    const created = await json<{ share: QuickShareView; token: string }>(
-      await admin.post("/api/sharing/quick", { ...input, paths: ["large.bin"] }),
-    );
-    await access(guest, created.token);
-    const range = await guest.get("/api/quick-share/" + created.share.id + "/download/0", {
-      headers: { range: "bytes=4-103" },
-    });
-    expect(range.status).toBe(206);
-    expect((await range.arrayBuffer()).byteLength).toBe(100);
-    const response = await guest.get("/api/quick-share/" + created.share.id + "/download/0");
-    const reader = response.body!.getReader();
-    expect((await reader.read()).done).toBe(false);
-    expect(
-      (await admin.delete("/api/sharing/quick/" + created.share.id, { body: { confirm: true } }))
-        .status,
-    ).toBe(204);
-    await expect(
-      (async () => {
-        while (!(await reader.read()).done) {
-          /* Drain buffered bytes until revocation is observed. */
-        }
-      })(),
-    ).rejects.toThrow();
-    expect((await guest.get("/api/quick-share/" + created.share.id)).status).toBe(410);
-    expect(
-      ctx.services.transfers
-        .list(ctx.services.users.findByUsername("admin")!.id)
-        .some((j) => j.name === "large.bin"),
-    ).toBe(true);
-  });
+  it.each(["revoke", "remove"])(
+    "%s ends an active stream and preserves HTTP Range quota checks",
+    async (action) => {
+      const { ctx, admin, guest } = await setup();
+      const bytes = Buffer.alloc(8 * 1024 ** 2, 0x67);
+      expect(
+        (
+          await admin.request("POST", "/api/files/upload?root=home&path=&name=large.bin", {
+            rawBody: bytes,
+            headers: { "content-length": String(bytes.length) },
+          })
+        ).status,
+      ).toBe(201);
+      const created = await json<{ share: QuickShareView; token: string }>(
+        await admin.post("/api/sharing/quick", { ...input, paths: ["large.bin"] }),
+      );
+      await access(guest, created.token);
+      const range = await guest.get("/api/quick-share/" + created.share.id + "/download/0", {
+        headers: { range: "bytes=4-103" },
+      });
+      expect(range.status).toBe(206);
+      expect((await range.arrayBuffer()).byteLength).toBe(100);
+      const response = await guest.get("/api/quick-share/" + created.share.id + "/download/0");
+      const reader = response.body!.getReader();
+      expect((await reader.read()).done).toBe(false);
+      expect(
+        (action === "revoke"
+          ? await admin.post("/api/sharing/quick/" + created.share.id + "/revoke", {
+              confirm: true,
+            })
+          : await admin.delete("/api/sharing/quick/" + created.share.id, {
+              body: { confirm: true },
+            })
+        ).status,
+      ).toBe(204);
+      await expect(
+        (async () => {
+          while (!(await reader.read()).done) {
+            /* Drain buffered bytes until revocation is observed. */
+          }
+        })(),
+      ).rejects.toThrow();
+      expect((await guest.get("/api/quick-share/" + created.share.id)).status).toBe(410);
+      expect(
+        ctx.services.transfers
+          .list(ctx.services.users.findByUsername("admin")!.id)
+          .some((j) => j.name === "large.bin"),
+      ).toBe(true);
+    },
+  );
 });

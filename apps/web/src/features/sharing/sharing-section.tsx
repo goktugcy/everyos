@@ -100,13 +100,20 @@ export function SharingSection({
     path: string,
     body: unknown,
     method: "POST" | "DELETE" = "POST",
-    remove = false,
+    intent: "change" | "remove" | "revoke" | "deleteQuick" = "change",
   ) => {
+    const remove = intent === "remove" || intent === "deleteQuick";
     if (
       !(await requestConfirm({
         title: t("sharing.confirmTitle"),
         body:
-          (remove ? t("sharing.removeConfirm") : t("sharing.confirmBody")) +
+          (intent === "revoke"
+            ? t("sharing.revokeConfirm")
+            : intent === "deleteQuick"
+              ? t("sharing.deleteQuickConfirm")
+              : remove
+                ? t("sharing.removeConfirm")
+                : t("sharing.confirmBody")) +
           " " +
           (data?.connections.find((c) => path.includes(c.id))?.name ??
             data?.shares.find((s) => path.includes(s.id))?.name ??
@@ -119,8 +126,13 @@ export function SharingSection({
               : path.endsWith("/smb/account")
                 ? smbUser
                 : "")),
-        confirmLabel: remove ? t("common.delete") : t("common.confirm"),
-        danger: remove,
+        confirmLabel:
+          intent === "revoke"
+            ? t("sharing.revoke")
+            : remove
+              ? t("common.delete")
+              : t("common.confirm"),
+        danger: intent !== "change",
       }))
     )
       return false;
@@ -361,7 +373,7 @@ export function SharingSection({
                               "/sharing/connections/" + c.id,
                               { confirm: true },
                               "DELETE",
-                              true,
+                              "remove",
                             )
                           }
                           disabled={busy}
@@ -440,7 +452,12 @@ export function SharingSection({
                         size="sm"
                         variant="ghost"
                         onClick={() =>
-                          void action("/sharing/folders/" + s.id, { confirm: true }, "DELETE", true)
+                          void action(
+                            "/sharing/folders/" + s.id,
+                            { confirm: true },
+                            "DELETE",
+                            "remove",
+                          )
                         }
                         disabled={busy}
                       >
@@ -537,16 +554,40 @@ export function SharingSection({
                     >
                       {t("sharing.copyLink")}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        void action("/sharing/quick/" + s.id, { confirm: true }, "DELETE", true)
-                      }
-                      disabled={busy || s.revoked}
-                    >
-                      {t("sharing.revoke")}
-                    </Button>
+                    {canWrite ? (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            void action(
+                              "/sharing/quick/" + s.id + "/revoke",
+                              { confirm: true },
+                              "POST",
+                              "revoke",
+                            )
+                          }
+                          disabled={busy || s.revoked}
+                        >
+                          {t("sharing.revoke")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() =>
+                            void action(
+                              "/sharing/quick/" + s.id,
+                              { confirm: true },
+                              "DELETE",
+                              "deleteQuick",
+                            )
+                          }
+                          disabled={busy}
+                        >
+                          {t("common.delete")}
+                        </Button>
+                      </>
+                    ) : null}
                   </div>
                 </article>
               ))

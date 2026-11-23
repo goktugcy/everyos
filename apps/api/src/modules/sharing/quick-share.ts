@@ -243,6 +243,16 @@ export class QuickShareService {
     this.services.db.run("DELETE FROM quick_share_grants WHERE share_id=?", id);
     this.services.sharing.audit(actor, "quick.revoke", id);
   }
+  remove(id: string, actor: UserActor) {
+    // Grants cascade with the record, so already-open links lose their capability too.
+    const change = this.services.db.run(
+      "DELETE FROM quick_shares WHERE id=? AND user_id=?",
+      id,
+      actor.userId,
+    );
+    if (!change.changes) throw new ApiError(404, "NOT_FOUND", "Share not found");
+    this.services.sharing.audit(actor, "quick.remove", id);
+  }
   async access(raw: string, password: string | undefined, _ip: string) {
     if (!/^[A-Za-z0-9_-]{43}$/.test(raw)) throw expired();
     const row = this.#valid(

@@ -159,10 +159,16 @@ export function sharingRoutes(services: Services) {
       url: c.get("client").expectedOrigin + "/share#" + services.quickShares.link(id, actor(c)),
     });
   });
-  app.delete("/quick/:id", requirePermission("files:write"), async (c) => {
+  app.post("/quick/:id/revoke", requirePermission("files:write"), async (c) => {
     const { id } = parseParams(c, SharingIdParamsSchema);
     await parseJsonBody(c, Confirm);
     services.quickShares.revoke(id, actor(c));
+    return c.body(null, 204);
+  });
+  app.delete("/quick/:id", requirePermission("files:write"), async (c) => {
+    const { id } = parseParams(c, SharingIdParamsSchema);
+    await parseJsonBody(c, Confirm);
+    services.quickShares.remove(id, actor(c));
     return c.body(null, 204);
   });
   return app;
