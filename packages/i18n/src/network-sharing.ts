@@ -53,6 +53,9 @@ export const networkSharingMessages = {
     minutes: "dakika",
     createLink: "Bağlantı oluştur",
     revoke: "İptal et",
+    revokeConfirm: "Bu bağlantıya erişim kapatılacak. Paylaşım kaydı listede tutulur.",
+    deleteQuickConfirm:
+      "Quick Share bağlantısı ve paylaşım kaydı kalıcı olarak silinecek. Paylaşılan dosyalar korunur.",
     chooseFiles: "Dosya seç",
     selectFolder: "Klasör seç",
     uploaded: "Dosyalar yüklendi.",
@@ -170,6 +173,9 @@ export const networkSharingMessages = {
     minutes: "minutes",
     createLink: "Create link",
     revoke: "Revoke",
+    revokeConfirm: "Disable access to this link? The sharing record stays in the list.",
+    deleteQuickConfirm:
+      "Permanently delete this Quick Share link and its record? Shared files will be kept.",
     chooseFiles: "Choose files",
     selectFolder: "Choose folder",
     uploaded: "Files uploaded.",
@@ -288,6 +294,9 @@ export const networkSharingMessages = {
     minutes: "Minuten",
     createLink: "Link erstellen",
     revoke: "Widerrufen",
+    revokeConfirm: "Den Zugriff über diesen Link sperren? Der Freigabeeintrag bleibt in der Liste.",
+    deleteQuickConfirm:
+      "Diesen Quick-Share-Link und seinen Eintrag dauerhaft löschen? Die freigegebenen Dateien bleiben erhalten.",
     chooseFiles: "Dateien auswählen",
     selectFolder: "Ordner auswählen",
     uploaded: "Dateien hochgeladen.",
@@ -405,6 +414,10 @@ export const networkSharingMessages = {
     minutes: "minutos",
     createLink: "Crear enlace",
     revoke: "Revocar",
+    revokeConfirm:
+      "¿Desactivar el acceso a este enlace? El registro de uso compartido permanece en la lista.",
+    deleteQuickConfirm:
+      "¿Eliminar permanentemente este enlace de Quick Share y su registro? Los archivos compartidos se conservarán.",
     chooseFiles: "Elegir archivos",
     selectFolder: "Elegir carpeta",
     uploaded: "Archivos cargados.",
@@ -523,6 +536,9 @@ export const networkSharingMessages = {
     minutes: "minutes",
     createLink: "Créer un lien",
     revoke: "Révoquer",
+    revokeConfirm: "Désactiver l’accès à ce lien ? Le partage reste dans la liste.",
+    deleteQuickConfirm:
+      "Supprimer définitivement ce lien Quick Share et son enregistrement ? Les fichiers partagés seront conservés.",
     chooseFiles: "Choisir des fichiers",
     selectFolder: "Choisir un dossier",
     uploaded: "Fichiers envoyés.",
@@ -640,6 +656,10 @@ export const networkSharingMessages = {
     minutes: "minuti",
     createLink: "Crea collegamento",
     revoke: "Revoca",
+    revokeConfirm:
+      "Disattivare l’accesso a questo collegamento? Il record di condivisione rimane nell’elenco.",
+    deleteQuickConfirm:
+      "Eliminare definitivamente questo collegamento Quick Share e il suo record? I file condivisi saranno conservati.",
     chooseFiles: "Scegli file",
     selectFolder: "Scegli cartella",
     uploaded: "File caricati.",
@@ -756,6 +776,9 @@ export const networkSharingMessages = {
     minutes: "分",
     createLink: "リンクを作成",
     revoke: "取り消す",
+    revokeConfirm: "このリンクへのアクセスを無効にしますか？共有記録は一覧に残ります。",
+    deleteQuickConfirm:
+      "このQuick Shareリンクと共有記録を完全に削除しますか？共有ファイルは保持されます。",
     chooseFiles: "ファイルを選択",
     selectFolder: "フォルダーを選択",
     uploaded: "アップロード完了。",
@@ -872,6 +895,9 @@ export const networkSharingMessages = {
     minutes: "분",
     createLink: "링크 만들기",
     revoke: "취소",
+    revokeConfirm: "이 링크의 접근을 차단할까요? 공유 기록은 목록에 유지됩니다.",
+    deleteQuickConfirm:
+      "이 Quick Share 링크와 공유 기록을 영구 삭제할까요? 공유된 파일은 유지됩니다.",
     chooseFiles: "파일 선택",
     selectFolder: "폴더 선택",
     uploaded: "파일을 업로드했습니다.",
@@ -986,6 +1012,9 @@ export const networkSharingMessages = {
     minutes: "минут",
     createLink: "Создать ссылку",
     revoke: "Отозвать",
+    revokeConfirm: "Закрыть доступ по этой ссылке? Запись общего доступа останется в списке.",
+    deleteQuickConfirm:
+      "Безвозвратно удалить эту ссылку Quick Share и её запись? Общие файлы будут сохранены.",
     chooseFiles: "Выбрать файлы",
     selectFolder: "Выбрать папку",
     uploaded: "Файлы загружены.",
@@ -1101,6 +1130,8 @@ export const networkSharingMessages = {
     minutes: "分钟",
     createLink: "创建链接",
     revoke: "撤销",
+    revokeConfirm: "停用此链接的访问权限？共享记录将保留在列表中。",
+    deleteQuickConfirm: "永久删除此 Quick Share 链接及其共享记录？共享文件将保留。",
     chooseFiles: "选择文件",
     selectFolder: "选择文件夹",
     uploaded: "文件已上传。",

@@ -50,7 +50,7 @@ test.afterAll(async ({ request }) => {
   ).json()) as { entries: Array<{ name: string }> };
   const paths = listing.entries
     .map((e) => e.name)
-    .filter((name) => ["network-phone.txt", "Phone uploads"].includes(name));
+    .filter((name) => ["network-phone.txt", "Phone uploads", "quick-delete.txt"].includes(name));
   if (paths.length)
     expect(
       (
@@ -109,6 +109,7 @@ async function files(page: Page) {
     await expect(mobile.getByTestId("files-app")).toBeVisible();
     return mobile;
   }
+  await expect(page.getByTestId("desktop")).toBeVisible();
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("dosyalar");
   await page.keyboard.press("Enter");
@@ -228,17 +229,111 @@ test("a phone uploads a video into the selected folder and sees revocation", asy
       path: test.info().outputPath("phone-video-upload.png"),
       animations: "disabled",
     });
-    const revoked = await mutate(
-      page,
-      session,
-      "/sharing/quick/" + share.id,
-      { confirm: true },
-      "DELETE",
-    );
+    const revoked = await mutate(page, session, "/sharing/quick/" + share.id + "/revoke", {
+      confirm: true,
+    });
     expect(revoked.status).toBe(204);
     expect((await guest.request.get("/api/quick-share/" + share.id)).status()).toBe(410);
   } finally {
     await phone.close();
+  }
+});
+
+test("Quick Share links can be revoked and permanently deleted while their files remain", async ({
+  page,
+  browser,
+}) => {
+  const session = await signIn(page);
+  const content = "Keep this file after deleting its sharing links\n";
+  expect(
+    (
+      await mutate(
+        page,
+        session,
+        "/files/text",
+        {
+          root: "dev",
+          path: "quick-delete.txt",
+          content,
+          etag: null,
+        },
+        "PUT",
+      )
+    ).status,
+  ).toBe(200);
+  const names = ["Delete active link", "Delete revoked link"];
+  let url = "";
+  let id = "";
+  for (const name of names) {
+    const response = await mutate(page, session, "/sharing/quick", {
+      name,
+      direction: "send",
+      root: "dev",
+      path: "",
+      paths: ["quick-delete.txt"],
+      lifetimeMinutes: 15,
+      oneTime: false,
+      maxDownloads: 10,
+      maxBytes: 4096,
+    });
+    expect(response.status).toBe(201);
+    if (!url) {
+      const created = response.body as { url: string; share: { id: string } };
+      url = created.url;
+      id = created.share.id;
+    }
+  }
+  const recipient = await browser.newContext({ locale: "tr-TR" });
+  try {
+    const guest = await recipient.newPage();
+    await guest.goto(url);
+    await guest.getByRole("button", { name: "Aç", exact: true }).click();
+    await expect(guest.getByRole("link", { name: /quick-delete.txt/ })).toBeVisible();
+    const app = await files(page);
+    await app.getByTestId("files-network").click();
+    const network = app.getByTestId("network-sharing");
+    await network.getByRole("tab", { name: "Quick Share", exact: true }).click();
+    for (const name of names) {
+      const row = network
+        .getByRole("article")
+        .filter({ has: page.getByRole("heading", { name, exact: true }) });
+      if (name === names[1]) {
+        await row.getByRole("button", { name: "İptal et", exact: true }).click();
+        const confirm = page.getByRole("alertdialog");
+        await expect(confirm).toContainText("Paylaşım kaydı listede tutulur.");
+        await confirm.getByRole("button", { name: "İptal et", exact: true }).click();
+        await expect(row).toContainText("Çalışmıyor");
+        await expect(row.getByRole("button", { name: "İptal et", exact: true })).toBeDisabled();
+      }
+      await row.getByRole("button", { name: "Sil", exact: true }).click();
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Vazgeç", exact: true })
+        .click();
+      await expect(row).toBeVisible();
+      await row.getByRole("button", { name: "Sil", exact: true }).click();
+      const confirm = page.getByRole("alertdialog");
+      await expect(confirm).toContainText("Paylaşılan dosyalar korunur.");
+      if (name === names[0])
+        await page.screenshot({
+          path: test.info().outputPath("quick-share-delete-confirmation.png"),
+          animations: "disabled",
+        });
+      await confirm.getByRole("button", { name: "Sil", exact: true }).click();
+      await expect(row).toHaveCount(0);
+    }
+    expect((await guest.request.get("/api/quick-share/" + id)).status()).toBe(410);
+    const saved = await page.request.get("/api/files/download?root=dev&path=quick-delete.txt");
+    expect(saved.status()).toBe(200);
+    expect(await saved.text()).toBe(content);
+    await page.reload();
+    const reopened = page.getByTestId("network-sharing");
+    await expect(reopened).toBeVisible();
+    await reopened.getByRole("tab", { name: "Quick Share", exact: true }).click();
+    for (const name of names)
+      await expect(reopened.getByRole("heading", { name, exact: true })).toHaveCount(0);
+  } finally {
+    await recipient.close();
   }
 });
 
