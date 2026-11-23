@@ -59,6 +59,8 @@ async function fixture(closeDelayMs = 0) {
     keyAttempts = 0,
     pendingCloses = 0;
   const server = new Server({ hostKeys: [hostKey] }, (client) => {
+    // ssh2 exposes this on server connections; its published Connection type omits it.
+    (client as Connection & { setNoDelay(noDelay: boolean): void }).setNoDelay(true);
     clients.add(client);
     client.on("close", () => clients.delete(client));
     client.on("error", () => undefined);

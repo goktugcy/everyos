@@ -172,6 +172,7 @@ export class SftpPool {
             return false;
           },
         });
+        client.setNoDelay(true);
       });
     } finally {
       this.#probing--;
@@ -262,6 +263,8 @@ export class SftpPool {
       });
       try {
         client.connect(config);
+        // Directory and metadata operations exchange many small request/response packets.
+        client.setNoDelay(true);
       } catch {
         client.destroy();
         this.#entries.delete(key);
