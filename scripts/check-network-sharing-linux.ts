@@ -40,7 +40,8 @@ const source = "/srv/everyos-network-fixture-" + suffix,
   home = source + "/home",
   data = source + "/data";
 const state = "/var/lib/everyos-network-fixture-" + suffix;
-const mountRoot = "/mnt/everyos-network-fixture-" + suffix,
+// Keep fixture mounts on /srv; /mnt may depend on a runner's unavailable ephemeral-disk unit.
+const mountRoot = source + "/mounts",
   runtime = "/run/everyos-network-fixture-" + suffix;
 const host = Object.values(networkInterfaces())
   .flatMap((v) => v ?? [])
