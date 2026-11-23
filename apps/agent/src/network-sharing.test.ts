@@ -127,12 +127,21 @@ describe("native network sharing safety contracts (no host services changed)", (
       );
     expect(rendered.mount).toContain("hard,timeo=50,retrans=2,retry=0");
     expect(rendered.mount).toContain("TimeoutSec=12");
+    expect(rendered.mount.split("\n")).toContain("Where=/mnt/everyos-network/person/research");
+    expect(rendered.mount.split("\n")).toContain("What=192.168.10.5:/data");
+    expect(rendered.automount.split("\n")).toContain("Where=/mnt/everyos-network/person/research");
     expect(rendered.mount).toContain("nosuid,nodev,noexec,_netdev,ro");
     expect(rendered.mount).not.toContain("[Install]");
     expect(rendered.automount).toContain("WantedBy=multi-user.target");
     expect(rendered.automount).not.toContain("network-online.target");
     expect(rendered.automount).toContain("TimeoutIdleSec=120");
     expect(rendered.name).toBe("mnt-everyos\\x2dnetwork-person-research");
+    expect(
+      mountUnits({ ...input, remotePath: "/Shared Data/%n" }, "/mnt/x", "/run/c", 1, 1).mount,
+    ).toContain("What=192.168.10.5:/Shared Data/%%n\n");
+    expect(() => mountUnits({ ...input, remotePath: "/data\\" }, "/mnt/x", "/run/c", 1, 1)).toThrow(
+      "SHARING_PROTOCOL_SETTINGS",
+    );
     for (const version of ["4.1", "4", "3"] as const)
       expect(mountUnits({ ...input, version }, "/mnt/x", "/run/c", 1001, 1001).mount).toContain(
         "vers=" + version,

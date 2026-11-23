@@ -72,6 +72,30 @@ const context: OperationContext = {
 const asUser = (args: readonly string[]) =>
   networkExecute("setpriv", ["--reuid=" + uid, "--regid=" + gid, "--init-groups", ...args]);
 const options = {
+  execute: async (...args: Parameters<typeof networkExecute>) => {
+    try {
+      return await networkExecute(...args);
+    } catch (error) {
+      if (args[0] === "systemctl") {
+        const unit = args[1].find((v) => /\.(?:mount|automount|service)$/.test(v));
+        if (unit) {
+          console.error(
+            "Failed fixture unit:",
+            unit,
+            await networkExecute("systemctl", [
+              "show",
+              unit,
+              "--property=LoadState,LoadError,ActiveState,SubState,Result",
+            ]).catch(() => "Unit state unavailable"),
+            await networkExecute("journalctl", ["-u", unit, "-n", "20", "--no-pager"]).catch(
+              () => "Unit journal unavailable",
+            ),
+          );
+        }
+      }
+      throw error;
+    }
+  },
   root: state,
   mountRoot,
   runtime,

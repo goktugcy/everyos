@@ -161,6 +161,16 @@ export const unitQuote = (s: string) =>
   '"' +
   s.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("%", "%%").replaceAll("\n", "\\n") +
   '"';
+// Mount fields take literal values, unlike ExecStart arguments: enclosing quotes become path bytes.
+const mountValue = (s: string) => {
+  if (
+    s.includes("\\") ||
+    s.trim() !== s ||
+    Array.from(s).some((c) => c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)
+  )
+    fail("SHARING_PROTOCOL_SETTINGS");
+  return s.replaceAll("%", "%%");
+};
 export function mountUnits(
   input: MountInput,
   target: string,
@@ -216,10 +226,10 @@ export function mountUnits(
     ...common,
     "",
     "[Mount]",
-    "What=" + unitQuote(source),
-    "Where=" + unitQuote(target),
+    "What=" + mountValue(source),
+    "Where=" + mountValue(target),
     "Type=" + (smb ? "cifs" : "nfs"),
-    "Options=" + unitQuote(options.join(",")),
+    "Options=" + mountValue(options.join(",")),
     "TimeoutSec=12",
     "DirectoryMode=0700",
     "",
@@ -230,7 +240,7 @@ export function mountUnits(
     "Description=EveryOS on-demand network folder",
     "",
     "[Automount]",
-    "Where=" + unitQuote(target),
+    "Where=" + mountValue(target),
     "DirectoryMode=0700",
     "TimeoutIdleSec=120",
     "",
