@@ -16,7 +16,7 @@ import {
   type SharingServiceStatus,
 } from "@everyos/shared";
 import { AgentMountInputSchema, SharingIdSchema } from "@everyos/shared/schemas";
-import { findExecutable, runCapture, type AptManager } from "@everyos/system";
+import { findExecutable, runCapture, runCommand, type AptManager } from "@everyos/system";
 import type { SecretBox } from "@everyos/security";
 import { z } from "zod";
 import {
@@ -42,6 +42,18 @@ export type NetworkExecute = (
 export const networkExecute: NetworkExecute = async (name, args, input, signal) => {
   const tool = await findExecutable(name, { refresh: true });
   if (!tool) throw new OperationError("unsupported", "SHARING_DEPENDENCY_MISSING");
+  // Parsers need stdout alone: tools such as testparm emit diagnostics on stderr even on success.
+  if (input === undefined) {
+    try {
+      return await runCommand(tool, args, {
+        timeoutMs: 20000,
+        maxBytes: 256 * 1024,
+        ...(signal ? { signal } : {}),
+      });
+    } catch {
+      throw new OperationError("failed", "SHARING_COMMAND_FAILED");
+    }
+  }
   const result = await runCapture(tool, args, {
     timeoutMs: 20000,
     maxOutputBytes: 256 * 1024,
