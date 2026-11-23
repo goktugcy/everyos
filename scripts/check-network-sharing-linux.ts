@@ -85,11 +85,16 @@ const options = {
             await networkExecute("systemctl", [
               "show",
               unit,
-              "--property=LoadState,LoadError,ActiveState,SubState,Result",
+              "--property=LoadState,LoadError,ActiveState,SubState,Result,Requires,After",
             ]).catch(() => "Unit state unavailable"),
             await networkExecute("journalctl", ["-u", unit, "-n", "20", "--no-pager"]).catch(
               () => "Unit journal unavailable",
             ),
+            await networkExecute("systemctl", [
+              "show",
+              unit.replace(/\.automount$/, ".mount"),
+              "--property=LoadState,LoadError,ActiveState,SubState,Result,What,Where,Requires",
+            ]).catch(() => "Related mount state unavailable"),
           );
         }
       }
