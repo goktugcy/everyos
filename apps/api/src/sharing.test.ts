@@ -7,6 +7,7 @@ import {
   TestClient,
   json,
   withRoles,
+  STRONG_PASSWORD,
   type TestContext,
 } from "./test-support.ts";
 
@@ -320,7 +321,7 @@ describe("built-in network sharing and capability-scoped Quick Share", () => {
     );
     const user = ctx.services.users.findByUsername("admin")!;
     const response = await admin.delete("/api/users/" + user.id + "/linux-account", {
-      body: { password: "mavi-gokyuzu-ve-daglar-42" },
+      body: { password: STRONG_PASSWORD },
     });
     expect(response.status).toBe(204);
     const config = JSON.parse(

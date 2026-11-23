@@ -146,7 +146,7 @@ describe("native network sharing safety contracts (no host services changed)", (
       port: 445,
       version: "3.1.1" as const,
       username: "owner",
-      password: "not-in-units",
+      password: randomUUID(),
       readOnly: false,
     };
     const rendered = mountUnits(input, "/mnt/x", "/run/secret-file", 1001, 1002);
