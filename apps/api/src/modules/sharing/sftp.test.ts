@@ -4,6 +4,7 @@ import {
   mkdir,
   open,
   readFile,
+  writeFile,
   readdir,
   lstat,
   realpath,
@@ -50,12 +51,13 @@ afterEach(async () => {
 });
 
 /** Actual SSH encryption/authentication and SFTP packets, backed only by a disposable local tree. */
-async function fixture() {
+async function fixture(closeDelayMs = 0) {
   const root = await realpath(await mkdtemp(join(tmpdir(), "everyos-sftp-")));
   await mkdir(join(root, "vault"));
   const clients = new Set<Connection>();
   let passwordAttempts = 0,
-    keyAttempts = 0;
+    keyAttempts = 0,
+    pendingCloses = 0;
   const server = new Server({ hostKeys: [hostKey] }, (client) => {
     clients.add(client);
     client.on("close", () => clients.delete(client));
@@ -186,9 +188,12 @@ async function fixture() {
           );
           s.on("CLOSE", (id, handle) =>
             run(id, async () => {
+              pendingCloses++;
               const item = handles.get(handle.toString());
               handles.delete(handle.toString());
               await item?.file?.close();
+              if (closeDelayMs) await new Promise((resolve) => setTimeout(resolve, closeDelayMs));
+              pendingCloses--;
               status(id);
             }),
           );
@@ -307,6 +312,7 @@ async function fixture() {
     files,
     passwordAttempts: () => passwordAttempts,
     keyAttempts: () => keyAttempts,
+    pendingCloses: () => pendingCloses,
   };
 }
 
@@ -352,6 +358,15 @@ describe("real SSH/SFTP transport", () => {
     await files.remove(f.connection.root, ["folder"]);
     expect((await files.list(f.connection.root, "", true)).entries).toEqual([]);
     expect(f.passwordAttempts()).toBe(1);
+  });
+  it("acknowledges delayed remote handle closure before completing text reads", async () => {
+    const f = await fixture(40);
+    await writeFile(join(f.root, "vault/text.txt"), "A real remote text document");
+    expect((await f.files().readText(f.connection.root, "text.txt")).content).toBe(
+      "A real remote text document",
+    );
+    expect(f.pendingCloses()).toBe(0);
+    f.pool.close();
   });
   it("supports private keys and rejects bad passwords without leaking provider errors", async () => {
     const f = await fixture();

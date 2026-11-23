@@ -316,11 +316,15 @@ function watchStream<T extends Readable>(stream: T, signal?: AbortSignal): T {
   stream.on("data", progress);
   signal?.addEventListener("abort", abort, { once: true });
   if (signal?.aborted) abort();
-  stream.once("close", () => {
+  const cleanup = () => {
     clearTimeout(timer);
     signal?.removeEventListener("abort", abort);
     stream.removeListener("data", progress);
-  });
+  };
+  stream.once("close", cleanup);
+  // ssh2 can emit a late CLOSE error after a reader has consumed EOF and detached its handlers.
+  // Keep a handler installed; active consumers still receive and reject the same error.
+  stream.on("error", cleanup);
   return stream;
 }
 const modeString = (mode: number) =>
@@ -510,13 +514,27 @@ export class SftpFiles {
           )
             throw new ApiError(400, "VALIDATION_FAILED", "Invalid range");
           if (length === 0) return Buffer.alloc(0);
-          const chunks: Buffer[] = [];
-          const stream = watchStream(
-            s.createReadStream(target, { start: offset, end: offset + length - 1 }),
-            this.signal,
-          );
-          for await (const chunk of stream) chunks.push(Buffer.from(chunk as Uint8Array));
-          return Buffer.concat(chunks);
+          const handle = await timed<Buffer>((cb) => s.open(target, "r", cb), this.signal);
+          try {
+            const buffer = Buffer.alloc(length);
+            let read = 0;
+            while (read < length) {
+              const bytes = await timed<number>(
+                (cb) =>
+                  s.read(handle, buffer, read, length - read, offset + read, (error, bytes) =>
+                    cb(error, bytes),
+                  ),
+                this.signal,
+              );
+              if (!bytes) break;
+              read += bytes;
+            }
+            return buffer.subarray(0, read);
+          } finally {
+            // A stream's EOF precedes ssh2's asynchronous handle close; acknowledge CLOSE before
+            // releasing the SFTP channel used by text reads and range probes.
+            await timed<void>((cb) => s.close(handle, cb));
+          }
         },
         handle: {
           close,
