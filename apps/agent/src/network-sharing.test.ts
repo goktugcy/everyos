@@ -49,6 +49,46 @@ const mount = () =>
   });
 
 describe("native network sharing safety contracts (no host services changed)", () => {
+  it.each(["nfs", "smb"] as const)(
+    "validates a %s export through the strict account-worker inspection contract before host changes",
+    async (protocol) => {
+      const root = await mkdtemp(join(tmpdir(), "everyos-export-contract-"));
+      directories.push(root);
+      const inspected = new Error("Inspection completed; stop before changing the host");
+      let location: unknown;
+      const network = new NetworkSharing({
+        root,
+        secrets: new SecretBox(Buffer.alloc(32, 8)),
+        apt: {} as AptManager,
+        account: () => {
+          throw new Error("Inspection must run before privileged host work");
+        },
+        inspect: (params) => {
+          location = AGENT_OPERATIONS["files.share.inspect"].params.parse(params);
+          return Promise.reject(inspected);
+        },
+        execute: () => Promise.reject(new Error("Inspection must run before native commands")),
+      });
+      await expect(
+        network.exports.apply(
+          {
+            id: randomUUID(),
+            name: "Documents",
+            protocol,
+            root: "linux-home",
+            path: "Documents",
+            readOnly: false,
+            clients: ["192.168.1.0/24"],
+            users: ["fixture"],
+            enabled: true,
+            confirm: true,
+          },
+          context,
+        ),
+      ).rejects.toBe(inspected);
+      expect(location).toEqual({ root: "linux-home", path: "Documents", readOnly: false });
+    },
+  );
   it("preserves full connection identities within the existing Files root limit", () => {
     const a = networkRootId("29c6f8ee-7500-48ca-b826-34b676a9ef66"),
       b = networkRootId("29c6f8ee-7500-48ca-b826-34b676a9ef67");

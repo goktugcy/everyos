@@ -2,14 +2,18 @@ import { expect, test } from "@playwright/test";
 import { CSRF_HEADER, type FileRootsResponse } from "../../packages/shared/src/index.ts";
 import { signIn } from "./helpers.ts";
 
-test("selection covers icons and names while long unbroken names fit or expand completely", async ({
+test("desktop filenames stay fixed on hover and selection while Files can expand long names", async ({
   page,
 }) => {
   const session = await signIn(page);
   const headers = { [CSRF_HEADER]: session.csrfToken };
   const roots = (await (await page.request.get("/api/files/roots")).json()) as FileRootsResponse;
   const desktopPath = roots.roots.find((root) => root.kind === "home")!.folders!.desktop!;
-  const names = ["LongSingleWordDocumentArchiveFile.txt", "VeryLong".repeat(20) + ".txt"] as const;
+  const names = [
+    "LongSingleWordDocumentArchiveFile.txt",
+    "VeryLong".repeat(20) + ".txt",
+    "E98FFA91-6E2F-47C1-B7FA-83D1379A656C.jpeg",
+  ] as const;
   for (const name of names)
     expect(
       (
@@ -50,12 +54,21 @@ test("selection covers icons and names while long unbroken names fit or expand c
     await label.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
   ).toBeLessThan(11.52);
   const veryLong = surface.getByRole("button", { name: names[1], exact: true });
-  await veryLong.click();
-  const expanded = veryLong.locator(".everyos-caption-expanded");
-  await expect(expanded).toBeVisible();
-  await expect(expanded).toHaveText(names[1]);
-  expect(await expanded.evaluate((node) => node.scrollHeight <= node.clientHeight)).toBe(true);
-  await expect(expanded).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  for (const item of [veryLong, surface.getByRole("button", { name: names[2], exact: true })]) {
+    await page.mouse.move(0, 0);
+    const caption = item.locator("[data-icon-label]");
+    const before = await caption.boundingBox();
+    const fontSize = await caption.evaluate((node) => getComputedStyle(node).fontSize);
+    for (const action of [() => item.hover(), () => item.click(), () => item.focus()]) {
+      await action();
+      await expect(caption).toBeVisible();
+      await expect(caption).toHaveCSS("visibility", "visible");
+      await expect(caption).toHaveCSS("font-size", fontSize);
+      expect(await caption.boundingBox()).toEqual(before);
+      await expect(item.locator(".everyos-caption-expanded")).toBeHidden();
+    }
+    await expect(caption).toHaveAttribute("title", (await item.getAttribute("aria-label"))!);
+  }
   await surface.click({ button: "right", position: { x: 500, y: 350 } });
   await page.getByRole("menuitem", { name: "Masaüstü klasörünü aç", exact: true }).click();
   const files = page.locator('[data-app-id="everyos.files"]');

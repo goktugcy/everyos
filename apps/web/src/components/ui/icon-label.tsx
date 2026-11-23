@@ -2,7 +2,15 @@ import { useLayoutEffect, useRef } from "react";
 import { cn } from "../../lib/cn.ts";
 
 /** Fit names after fonts and container sizes settle, including unbroken file names. */
-export function IconLabel({ text, className }: { text: string; className?: string }) {
+export function IconLabel({
+  text,
+  className,
+  expand = true,
+}: {
+  text: string;
+  className?: string;
+  expand?: boolean;
+}) {
   const ref = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
     const element = ref.current;
@@ -21,7 +29,8 @@ export function IconLabel({ text, className }: { text: string; className?: strin
         if (element.scrollHeight <= limit || size === 9) break;
       }
       const caption = element.parentElement!;
-      caption.dataset.overflow = String(element.scrollHeight > limit);
+      caption.dataset.overflow = String(expand && element.scrollHeight > limit);
+      if (!expand) return;
       const grid = element.closest("[data-icon-grid]")?.getBoundingClientRect();
       const expandedWidth = Math.min(256, grid?.width ?? window.innerWidth - 24);
       caption.style.setProperty("--everyos-caption-width", `${expandedWidth}px`);
@@ -40,7 +49,7 @@ export function IconLabel({ text, className }: { text: string; className?: strin
       disposed = true;
       observer.disconnect();
     };
-  }, [text]);
+  }, [text, expand]);
   return (
     <span className="everyos-icon-caption relative block w-full">
       <span
@@ -54,9 +63,11 @@ export function IconLabel({ text, className }: { text: string; className?: strin
       >
         {text}
       </span>
-      <span aria-hidden className={cn("everyos-caption-expanded", className)}>
-        {text}
-      </span>
+      {expand && (
+        <span aria-hidden className={cn("everyos-caption-expanded", className)}>
+          {text}
+        </span>
+      )}
     </span>
   );
 }

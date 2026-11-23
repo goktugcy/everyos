@@ -9,7 +9,7 @@ import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { SecretBox } from "../packages/security/src/index.ts";
 import { silentLogger } from "../packages/logger/src/index.ts";
 import { createAptManager } from "../packages/system/src/index.ts";
-import type { OperationContext } from "../packages/agent-protocol/src/index.ts";
+import { AGENT_OPERATIONS, type OperationContext } from "../packages/agent-protocol/src/index.ts";
 import { AgentMountInputSchema } from "../packages/shared/src/schemas/index.ts";
 import { networkRootId, type NetworkConnection } from "../packages/shared/src/index.ts";
 import { NetworkSharing, networkExecute } from "../apps/agent/src/network-sharing.ts";
@@ -109,6 +109,8 @@ const options = {
   apt: createAptManager(),
   account: () => ({ name: username, uid, gid, home, shell: "/bin/sh" }),
   inspect: async (input: { root: string; path: string; readOnly: boolean }) => {
+    // Match the production worker's strict IPC contract, including rejection of extra fields.
+    input = AGENT_OPERATIONS["files.share.inspect"].params.parse(input);
     assert.equal(input.root, "fixture");
     assert.equal(input.path, "data");
     await asUser(["/usr/bin/test", "-r", data]);
