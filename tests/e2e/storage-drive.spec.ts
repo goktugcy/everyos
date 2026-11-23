@@ -1,6 +1,7 @@
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
+import { CSRF_HEADER } from "../../packages/shared/src/index.ts";
 import { signIn, stateDir } from "./helpers.ts";
 
 /** The development agent's simulator treats this file as a plugged-in USB stick. */
@@ -102,7 +103,20 @@ test("uploads report their speed, and Google Drive connects, browses and copies 
   page,
   context,
 }) => {
-  await signIn(page);
+  const session = await signIn(page);
+  // Other browser scenarios also create real server transfers. Count only this test's new jobs.
+  expect(
+    await page.evaluate(
+      async ({ header, token }) =>
+        (
+          await fetch("/api/transfers", {
+            method: "DELETE",
+            headers: { [header]: token },
+          })
+        ).status,
+      { header: CSRF_HEADER, token: session.csrfToken },
+    ),
+  ).toBe(204);
   await page.keyboard.press("Control+k");
   await page.getByRole("combobox", { name: "Uygulama veya komut ara…" }).fill("ayarlar");
   await page.keyboard.press("Enter");
