@@ -1,5 +1,10 @@
 # File manager (Phase 7)
 
+Built-in [Network Sharing](network-sharing.md) adds managed NFS/SMB Linux roots, an SFTP adapter
+and browser Quick Share. Native roots retain Linux UID/GID checks; remote copies reuse the existing
+transfer queue, previews and editor. SFTP deletion is permanent and explicitly confirmed. The guide
+documents setup, HTTPS/private-network access, protocol limits, recovery and Linux qualification.
+
 Trash uses a shared, permissioned listing of the current account's recoverable files. Its icon
 changes between an empty bin and a bin with visible paper in the desktop, Dock, launcher,
 window title and Files sidebar. File mutations refresh it immediately; visible sessions also

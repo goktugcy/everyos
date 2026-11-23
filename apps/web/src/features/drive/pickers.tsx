@@ -113,7 +113,13 @@ function FolderPicker({
   );
 }
 
-const ROOT_ICONS = { home: House, location: HardDrive, disk: Usb, system: HardDrive } as const;
+const ROOT_ICONS = {
+  home: House,
+  location: HardDrive,
+  disk: Usb,
+  system: HardDrive,
+  network: HardDrive,
+} as const;
 
 /** Chooses a writable EveryOS folder (home, locations, disks). */
 export function LocationPicker({
@@ -121,11 +127,15 @@ export function LocationPicker({
   confirmLabel,
   onPick,
   onClose,
+  allowReadOnly = false,
+  localOnly = false,
 }: {
   title: string;
   confirmLabel: string;
   onPick: (location: FileLocation) => void;
   onClose: () => void;
+  allowReadOnly?: boolean;
+  localOnly?: boolean;
 }) {
   const [roots, setRoots] = useState<FileRootView[] | null>(null);
   const [at, setAt] = useState<FileLocation | null>(null);
@@ -140,12 +150,16 @@ export function LocationPicker({
         (value) =>
           setRoots(
             value.roots.filter(
-              (root) => root.available && !root.readOnly && root.kind !== "system",
+              (root) =>
+                root.available &&
+                (allowReadOnly || !root.readOnly) &&
+                root.kind !== "system" &&
+                (!localOnly || (root.kind !== "home" && root.kind !== "network")),
             ),
           ),
         setError,
       );
-  }, []);
+  }, [allowReadOnly, localOnly]);
   useEffect(() => {
     if (!at) return;
     const controller = new AbortController();

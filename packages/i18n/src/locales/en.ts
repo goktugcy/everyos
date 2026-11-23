@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -6,6 +8,7 @@ import { linuxBackupsEn } from "../linux-backups.ts";
 import type { Messages } from "./tr.ts";
 
 export const en: Messages = {
+  sharing: networkSharingMessages.en,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1343,6 +1346,7 @@ export const en: Messages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.en.title,
       remoteAccess: "Remote Access",
       agents: "AI Assistants",
       appearance: "Appearance",
@@ -4121,6 +4125,7 @@ export const en: Messages = {
     },
   },
   errors: {
+    ...sharingErrors.en,
     FILES_ARCHIVE_INVALID: "The ZIP archive is corrupt or contains unsafe file paths.",
     FILES_ARCHIVE_LIMIT: "The archive exceeds the file count, size or processing time limit.",
     FILES_ARCHIVE_UNSUPPORTED:

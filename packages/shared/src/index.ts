@@ -115,3 +115,4 @@ export * from "./power.ts";
 export * from "./linux-accounts.ts";
 export * from "./ai-agents.ts";
 export * from "./desktop-apps.ts";
+export * from "./sharing.ts";

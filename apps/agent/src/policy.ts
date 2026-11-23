@@ -20,6 +20,7 @@ const DOCKER_MUTATIONS = new Set([
 ]);
 
 export interface PolicyOptions {
+  sharingSource?: "host" | "simulated";
   remoteAccessSource?: "host" | "simulated";
   linuxBackupsSource?: "host" | "simulated";
   mode: AgentMode;
@@ -41,6 +42,18 @@ export interface PolicyOptions {
  */
 export function createPolicy(options: PolicyOptions): OperationPolicy {
   return (op, params) => {
+    if (
+      op.startsWith("sharing.") &&
+      !["sharing.status", "sharing.discover"].includes(op) &&
+      options.mode === "development" &&
+      options.sharingSource !== "simulated"
+    )
+      return {
+        allowed: false,
+        reason:
+          POLICY_REASONS.developmentMode +
+          ": changing native network shares is disabled in development mode",
+      };
     if (
       ["remoteAccess.connect", "remoteAccess.disconnect", "remoteAccess.install"].includes(op) &&
       options.mode === "development" &&

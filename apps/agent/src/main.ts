@@ -1,3 +1,4 @@
+import type { Actor } from "@everyos/agent-protocol";
 import { installedVersion } from "@everyos/release";
 import { lstatSync, chmodSync, chownSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -19,6 +20,8 @@ import { ConfigError, loadAgentConfig, resolveGroupId } from "./config.ts";
 import { createHandlers } from "./handlers.ts";
 import { LinuxIdentities } from "./linux-identities.ts";
 import { AccountWorkers } from "./account-workers.ts";
+import { NetworkSharing } from "./network-sharing.ts";
+import { OperationError } from "@everyos/agent-protocol";
 import { loadApiConfig } from "../../api/src/config.ts";
 import { TerminalManager } from "./terminal.ts";
 import { ManagedAppManager } from "./managed-apps.ts";
@@ -112,6 +115,7 @@ async function main(): Promise<void> {
       identities,
       files: apiConfig.files,
       version: installedVersion(),
+      networkRoots: (actor) => networkSharing?.fileRoots(actor) ?? [],
     });
   }
   const terminal = new TerminalManager({
@@ -174,7 +178,36 @@ async function main(): Promise<void> {
         }
       : {}),
   });
+  const networkSharing = new NetworkSharing({
+    secrets: new SecretBox(deriveKey(agentKey, "everyos/network-sharing/v1")),
+    apt,
+    ...(identities
+      ? { requirePrivilege: (actor: Actor) => identities.requirePrivilege(actor) }
+      : {}),
+    simulate: config.mode === "development" && config.simulate,
+    account: (actor) => {
+      if (identities) return identities.resolve(actor);
+      if (config.mode === "development" && config.simulate)
+        return {
+          name: "simulated",
+          uid: 1000,
+          gid: 1000,
+          home: "/home/simulated",
+          shell: "/bin/sh",
+        };
+      throw new OperationError("policy_denied", "LINUX_ACCOUNT_REQUIRED");
+    },
+    inspect: (params, context) => {
+      if (!workers) throw new OperationError("unsupported", "SHARING_LINUX_REQUIRED");
+      return workers.inspectShare(params, context);
+    },
+  });
+  if (config.mode === "production" && isRoot)
+    await networkSharing
+      .initialize()
+      .catch(() => logger.error("Network sharing configuration requires recovery"));
   const handlers = createHandlers({
+    networkSharing,
     mode: config.mode,
     version: installedVersion(),
     startedAt: Date.now(),
@@ -210,6 +243,7 @@ async function main(): Promise<void> {
       disksSource: disks.source,
       remoteAccessSource: config.mode === "development" && config.simulate ? "simulated" : "host",
       linuxBackupsSource: linuxBackups.source,
+      sharingSource: networkSharing.source,
     }),
     logger,
     socketMode: socketGroupId === null ? 0o600 : 0o660,

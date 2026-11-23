@@ -12,7 +12,6 @@ export function useTransfersStream(enabled: boolean): void {
       if (
         state.server.some(
           (transfer) =>
-            (transfer.direction === "compress" || transfer.direction === "extract") &&
             ["done", "failed", "cancelled"].includes(transfer.state) &&
             previous.server.find((old) => old.id === transfer.id)?.state !== transfer.state,
         )

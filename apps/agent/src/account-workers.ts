@@ -9,18 +9,20 @@ import {
   type OperationContext,
   type OperationHandlers,
 } from "@everyos/agent-protocol";
-import type { LinuxAccount } from "@everyos/shared";
+import type { LinuxAccount, FileRootKind } from "@everyos/shared";
 import type { AgentConfig } from "./config.ts";
 import type { LinuxIdentities } from "./linux-identities.ts";
 import { spawnAccount } from "./account-process.ts";
 
 interface WorkerFiles {
-  roots: Array<{ id: string; name: string; path: string; readOnly: boolean }>;
+  roots: Array<{ id: string; name: string; path: string; readOnly: boolean; kind?: FileRootKind }>;
   maxUploadBytes: number;
   minFreeBytes: number;
 }
 
 interface Pending {
+  detached?: boolean;
+  completed?: boolean;
   frames: unknown[];
   error?: OperationError;
   done: boolean;
@@ -43,12 +45,14 @@ export class AccountWorkers {
   readonly #files: WorkerFiles;
   readonly #version: string;
   #sequence = 0;
+  readonly #networkRoots: (actor: Actor) => WorkerFiles["roots"];
 
   constructor(options: {
     config: AgentConfig;
     identities: LinuxIdentities;
     files: WorkerFiles;
     version: string;
+    networkRoots?: (actor: Actor) => WorkerFiles["roots"];
   }) {
     this.#config = options.config;
     this.#identities = options.identities;
@@ -58,6 +62,7 @@ export class AccountWorkers {
       minFreeBytes: options.files.minFreeBytes,
     };
     this.#version = options.version;
+    this.#networkRoots = options.networkRoots ?? (() => []);
     const timer = setInterval(() => {
       for (const [id, worker] of this.#workers)
         if (!worker.pending.size && Date.now() - worker.at > 10 * 60_000) this.closeUser(id);
@@ -84,6 +89,21 @@ export class AccountWorkers {
     for (const id of this.#workers.keys()) this.closeUser(id);
   }
 
+  async inspectShare(
+    params: { root: string; path: string; readOnly: boolean },
+    context: OperationContext,
+  ) {
+    let result: unknown;
+    const deadline = AbortSignal.timeout(12000);
+    for await (const frame of this.#run("files.share.inspect", params, {
+      ...context,
+      signal: AbortSignal.any([context.signal, deadline]),
+    }))
+      result = frame;
+    if (deadline.aborted) throw new OperationError("timeout", "SHARING_UNREACHABLE");
+    return AGENT_OPERATIONS["files.share.inspect"].result.parse(result);
+  }
+
   wrap(handlers: OperationHandlers): OperationHandlers {
     const mapped = { ...handlers };
     // These return public host telemetry or EveryOS-owned metadata. No private host reads.
@@ -102,6 +122,9 @@ export class AccountWorkers {
       "power.reboot.status",
       "disks.list",
       "disks.watch",
+      "sharing.status",
+      "sharing.discover",
+      "sharing.mount.access",
       "backups.linux.status",
       "backups.linux.job",
     ]);
@@ -120,6 +143,7 @@ export class AccountWorkers {
         // Root-owned application/release state and root-only package, service, power and mount
         // actions need sudo.
         const privileged =
+          op.startsWith("sharing.") ||
           op.startsWith("backups.") ||
           op.startsWith("apps.") ||
           op === "release.install" ||
@@ -168,6 +192,8 @@ export class AccountWorkers {
       !current.child.killed
     )
       return current;
+    if (current && [...current.pending.values()].some((p) => p.detached))
+      throw new OperationError("busy", "Account worker is still finishing earlier operations");
     if (current) this.closeUser(actor.userId);
     if (this.#workers.size >= 16) throw new OperationError("busy", "Too many account workers");
     const child = spawnAccount(account, process.execPath, [
@@ -196,10 +222,16 @@ export class AccountWorkers {
         };
         const pending = worker.pending.get(frame.id);
         if (!pending) return;
+        if (pending.detached) {
+          if (frame.error || "result" in frame) worker.pending.delete(frame.id);
+          return;
+        }
         if (frame.error) {
+          pending.completed = true;
           pending.error = new OperationError(frame.error.code, frame.error.message);
           pending.done = true;
         } else if ("result" in frame) {
+          pending.completed = true;
           pending.frames.push(frame.result);
           pending.done = true;
         } else pending.frames.push(frame.event);
@@ -224,7 +256,7 @@ export class AccountWorkers {
     child.once("error", failed);
     child.once("close", failed);
     child.stdin.write(
-      `${JSON.stringify({ account, userId: actor.userId, version: this.#version, dockerSocket: this.#config.dockerSocket, protectedUnits: this.#config.protectedUnits, protectedContainers: this.#config.protectedContainers, internetCheckTargets: this.#config.internetCheckTargets, disksRoot: this.#config.disksRoot, ...this.#files })}\n`,
+      `${JSON.stringify({ account, userId: actor.userId, version: this.#version, dockerSocket: this.#config.dockerSocket, protectedUnits: this.#config.protectedUnits, protectedContainers: this.#config.protectedContainers, internetCheckTargets: this.#config.internetCheckTargets, disksRoot: this.#config.disksRoot, ...this.#files, roots: this.#files.roots })}\n`,
     );
     return worker;
   }
@@ -232,6 +264,13 @@ export class AccountWorkers {
   async *#run(op: string, params: unknown, context: OperationContext): AsyncGenerator<unknown> {
     if (context.actor.kind !== "user") throw new OperationError("forbidden", "User required");
     const worker = this.#worker(context.actor, this.#identities.resolve(context.actor));
+    // Preserve the existing stream capacity; separately bound cancelled filesystem work
+    // that may still be stuck in a hard-NFS syscall and has not acknowledged cancellation.
+    if (
+      worker.pending.size >= 32 ||
+      [...worker.pending.values()].filter((p) => p.detached).length >= 4
+    )
+      throw new OperationError("busy", "Account worker is busy");
     const id = ++this.#sequence;
     const pending: Pending = { frames: [], done: false, wake: () => undefined };
     worker.pending.set(id, pending);
@@ -244,7 +283,9 @@ export class AccountWorkers {
     context.signal.addEventListener("abort", cancel, { once: true });
     try {
       if (context.signal.aborted) return;
-      worker.child.stdin.write(`${JSON.stringify({ id, op, params, actor: context.actor })}\n`);
+      worker.child.stdin.write(
+        `${JSON.stringify({ id, op, params, actor: context.actor, ...(op.startsWith("files.") ? { networkRoots: this.#networkRoots(context.actor) } : {}) })}\n`,
+      );
       while (!context.signal.aborted) {
         while (pending.frames.length) {
           const frame = pending.frames.shift();
@@ -262,7 +303,8 @@ export class AccountWorkers {
       }
     } finally {
       context.signal.removeEventListener("abort", cancel);
-      worker.pending.delete(id);
+      if (context.signal.aborted && !pending.completed) pending.detached = true;
+      else worker.pending.delete(id);
       worker.at = Date.now();
       if (!pending.done) cancel();
     }

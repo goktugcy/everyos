@@ -23,6 +23,7 @@ const TwoFactorSetupScreen = lazy(() =>
 const DesktopShell = lazy(() =>
   import("../desktop/shell/desktop-shell.tsx").then((m) => ({ default: m.DesktopShell })),
 );
+const QuickShareScreen = lazy(() => import("../features/sharing/quick-share-screen.tsx"));
 
 function Splash({ children }: { children?: ReactNode }) {
   return (
@@ -41,7 +42,11 @@ export function App() {
       <Spinner className="size-6 text-fg-subtle" label={t("common.loading")} />
     </Splash>
   );
-  return <Suspense fallback={loading}>{<Screen loading={loading} />}</Suspense>;
+  return (
+    <Suspense fallback={loading}>
+      {window.location.pathname === "/share" ? <QuickShareScreen /> : <Screen loading={loading} />}
+    </Suspense>
+  );
 }
 
 function Screen({ loading }: { loading: ReactNode }) {

@@ -4,6 +4,7 @@ import type { UserActor } from "../../http/agent.ts";
 import type { Services } from "../../services.ts";
 import { AccountFileView } from "./account-file-view.ts";
 import { readFileSettings } from "./file-settings.ts";
+import { NetworkFileView } from "./network-file-view.ts";
 
 /** The person a file view belongs to. */
 export interface FileUser {
@@ -31,15 +32,39 @@ export function fileViewFor(
     personalOnly: services.config.mode === "production",
     systemRoots,
   });
-  return services.config.mode === "production"
-    ? new AccountFileView(services, personal, {
-        actor: who.actor,
-        locale: isLocale(who.user.locale) ? who.user.locale : DEFAULT_LOCALE,
-        systemRoots,
-        signal: options.signal,
-        logger: options.logger,
-      })
-    : personal;
+  const base =
+    services.config.mode === "production"
+      ? new AccountFileView(services, personal, {
+          actor: who.actor,
+          locale: isLocale(who.user.locale) ? who.user.locale : DEFAULT_LOCALE,
+          systemRoots,
+          signal: options.signal,
+          logger: options.logger,
+        })
+      : personal;
+  return new NetworkFileView(services, base, who, options);
 }
 
-export type FileView = ReturnType<typeof fileViewFor>;
+/** Structural file operations also admit standalone account/local views in archive tooling. */
+export type FileView = Pick<
+  NetworkFileView,
+  | "roots"
+  | "list"
+  | "properties"
+  | "search"
+  | "readText"
+  | "writeText"
+  | "openFile"
+  | "mkdir"
+  | "rename"
+  | "remove"
+  | "upload"
+  | "copy"
+  | "move"
+  | "trash"
+  | "restoreTrash"
+  | "deleteTrash"
+  | "discardShelf"
+  | "tidyShelf"
+  | "discardArchiveStage"
+> & { hasLinuxAccount?: () => Promise<boolean> };

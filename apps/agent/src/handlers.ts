@@ -1,6 +1,11 @@
 import { installLinuxBackupEngine } from "./linux-backup-install.ts";
 import { createRemoteAccessHandlers } from "./remote-access.ts";
-import { OperationError, type OperationHandlers } from "@everyos/agent-protocol";
+import { networkSharingHandlers, type NetworkSharing } from "./network-sharing.ts";
+import {
+  OperationError,
+  type OperationHandlers,
+  type OperationContext,
+} from "@everyos/agent-protocol";
 import { SelfUpdateManager } from "@everyos/release";
 import {
   POWER_DELAY_SECONDS,
@@ -49,6 +54,7 @@ import type { LinuxIdentities } from "./linux-identities.ts";
 import type { TerminalManager } from "./terminal.ts";
 
 export interface HandlerDependencies {
+  networkSharing?: NetworkSharing;
   linuxBackups?: LinuxBackups;
   mode: AgentMode;
   version: string;
@@ -210,6 +216,16 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     if (!deps.disks) throw new OperationError("unsupported", "Disk management is not available");
     return deps.disks;
   };
+  const identityChange = <T>(
+    userId: string,
+    context: OperationContext,
+    run: (before?: () => Promise<void>) => Promise<T>,
+  ) => {
+    const network = deps.networkSharing;
+    return network
+      ? network.exclusive(() => run(() => network.cleanupOwner(userId, context)))
+      : run();
+  };
   const identities = () => {
     if (!deps.identities)
       throw new OperationError(
@@ -222,6 +238,21 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     throw new OperationError("unsupported", "Account files require a linked Linux account");
   };
   return {
+    ...(deps.networkSharing
+      ? networkSharingHandlers(deps.networkSharing)
+      : {
+          "sharing.status": filesDisabled,
+          "sharing.mount.apply": filesDisabled,
+          "sharing.mount.control": filesDisabled,
+          "sharing.mount.access": filesDisabled,
+          "sharing.mount.remove": filesDisabled,
+          "sharing.export.apply": filesDisabled,
+          "sharing.export.remove": filesDisabled,
+          "sharing.service": filesDisabled,
+          "sharing.install": filesDisabled,
+          "sharing.smb.account": filesDisabled,
+          "sharing.discover": filesDisabled,
+        }),
     ...createRemoteAccessHandlers({
       apt,
       simulate: deps.mode === "development" && deps.remoteAccessSimulate === true,
@@ -233,6 +264,7 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     },
     "ai.snapshot": filesDisabled,
     "files.roots": filesDisabled,
+    "files.share.inspect": filesDisabled,
     "files.list": filesDisabled,
     "files.properties": filesDisabled,
     "files.search": filesDisabled,
@@ -255,10 +287,12 @@ export function createHandlers(deps: HandlerDependencies): OperationHandlers {
     "files.upload.close": filesDisabled,
     "identity.accounts": () => identities().accounts(),
     "identity.bindings": () => identities().bindings(),
-    "identity.bind": ({ userId, account, linuxPassword }) =>
-      identities().bind(userId, account, linuxPassword),
-    "identity.unbind": async ({ userId }) => {
-      await identities().unbind(userId);
+    "identity.bind": ({ userId, account, linuxPassword }, context) =>
+      identityChange(userId, context, (before) =>
+        identities().bind(userId, account, linuxPassword, before),
+      ),
+    "identity.unbind": async ({ userId }, context) => {
+      await identityChange(userId, context, (before) => identities().unbind(userId, before));
       return null;
     },
     "identity.status": (_params, { actor }) => identities().status(actor),

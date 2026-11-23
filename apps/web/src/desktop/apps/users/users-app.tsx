@@ -298,7 +298,10 @@ export default function UsersApp() {
         disabled: self,
         confirm: {
           title: t("users.deleteConfirm.title"),
-          body: t("users.deleteConfirm.body", { name: user.displayName }),
+          body:
+            t("users.deleteConfirm.body", { name: user.displayName }) +
+            " " +
+            t("sharing.identityCleanup"),
           confirmLabel: t("users.deleteConfirm.confirm"),
         },
         onSelect: () => void act(() => api(path, { method: "DELETE" }), t("users.deleted")),

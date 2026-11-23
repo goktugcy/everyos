@@ -302,13 +302,21 @@ export class LinuxIdentities {
     };
   }
 
-  async bind(userId: string, name: string, password: string): Promise<LinuxBinding> {
+  async bind(
+    userId: string,
+    name: string,
+    password: string,
+    beforeChange?: () => Promise<void>,
+  ): Promise<LinuxBinding> {
     this.#attempt(name);
     const account = this.accounts().find((a) => a.name === name);
     if (!account || !(await this.#authenticate(account, password)))
       throw new OperationError("policy_denied", "LINUX_AUTH_FAILED");
-    const run = this.#pending.then(() => {
+    const run = this.#pending.then(async () => {
       // Recheck after PAM and pin the UID: account replacement must not inherit access.
+      if (!this.accounts().some((a) => a.name === name && a.uid === account.uid))
+        throw new OperationError("policy_denied", "LINUX_AUTH_FAILED");
+      await beforeChange?.();
       if (!this.accounts().some((a) => a.name === name && a.uid === account.uid))
         throw new OperationError("policy_denied", "LINUX_AUTH_FAILED");
       const binding = { userId, account: name, uid: account.uid };
@@ -324,8 +332,9 @@ export class LinuxIdentities {
     return run;
   }
 
-  unbind(userId: string): Promise<void> {
-    const run = this.#pending.then(() => {
+  unbind(userId: string, beforeChange?: () => Promise<void>): Promise<void> {
+    const run = this.#pending.then(async () => {
+      await beforeChange?.();
       this.#invalidate(userId);
       this.#save(this.#bindings.filter((b) => b.userId !== userId));
     });

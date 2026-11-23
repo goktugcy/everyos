@@ -1,7 +1,9 @@
+import { isNetworkRoot } from "@everyos/shared";
 import { randomUUID } from "node:crypto";
 import { constants, createWriteStream, type Stats } from "node:fs";
 import {
   cp,
+  access,
   copyFile,
   link,
   lstat,
@@ -62,7 +64,7 @@ export interface FileRootConfig {
   name: string;
   path: string;
   readOnly: boolean;
-  kind?: FileRootKind;
+  kind?: FileRootKind | undefined;
   /** Home only: the owner's language, for the names of new standard folders. */
   locale?: string;
 }
@@ -317,6 +319,53 @@ export class IdNames {
  * the API user can only touch what it may touch anyway.
  */
 export class FileService {
+  /** Resolve as the actual file-view UID before a native protocol receives this folder. */
+  async sharePath(rootId: string, path: string, readOnly: boolean) {
+    const root = this.#root(rootId);
+    if (
+      rootId === "home" ||
+      rootId.startsWith("sys-") ||
+      isNetworkRoot(rootId) ||
+      (rootId === "linux-home" && !path) ||
+      root.kind === "system" ||
+      root.kind === "network"
+    )
+      throw new ApiError(403, "FILES_PROTECTED", "This location cannot be exported");
+    if (!readOnly) this.#writable(rootId);
+    const { real: target } = await this.#follow(rootId, path);
+    const linuxHome = this.#roots.get("linux-home")?.path;
+    if (
+      ["/", "/home", "/var", "/srv", "/opt", "/mnt", "/media"].includes(target) ||
+      (linuxHome && target === (await realpath(linuxHome)))
+    )
+      throw new ApiError(403, "FILES_PROTECTED", "A specific data folder is required");
+    if (
+      target
+        .split("/")
+        .some((p) => [".ssh", ".gnupg", ".aws", ".kube", ".docker", ".everyos"].includes(p)) ||
+      [
+        "/etc",
+        "/proc",
+        "/sys",
+        "/dev",
+        "/run",
+        "/boot",
+        "/usr",
+        "/root",
+        "/var/lib/everyos",
+        "/var/lib/everyos-agent",
+      ].some((p) => target === p || target.startsWith(p + "/"))
+    )
+      throw new ApiError(403, "FILES_PROTECTED", "Protected folder");
+    const filesystem = await statfs(target);
+    if ([0x6969, 0xff534d42, 0xfe534d42].includes(Number(filesystem.type)))
+      throw new ApiError(403, "FILES_PROTECTED", "A local filesystem is required for exports");
+    const info = await lstat(target);
+    if (!info.isDirectory() || info.isSymbolicLink())
+      throw new ApiError(400, "VALIDATION_FAILED", "A regular directory is required");
+    await access(target, constants.R_OK | constants.X_OK | (readOnly ? 0 : constants.W_OK));
+    return { path: target, device: info.dev, inode: info.ino };
+  }
   readonly #roots: Map<string, FileRootConfig>;
   readonly #maxUploadBytes: number;
   readonly #minFreeBytes: number;
@@ -463,10 +512,12 @@ export class FileService {
           name: root.name,
           kind,
           readOnly: root.readOnly || !canWrite,
-          available: await stat(root.path).then(
-            (s) => s.isDirectory(),
-            () => false,
-          ),
+          available:
+            kind === "network" ||
+            (await stat(root.path).then(
+              (s) => s.isDirectory(),
+              () => false,
+            )),
           ...(folders ? { folders } : {}),
         };
       }),
@@ -994,11 +1045,12 @@ export class FileService {
     await rm(entry, { recursive: true, force: true }).catch(fsError);
   }
 
-  async trash(): Promise<TrashListing> {
+  async trash(rootId?: string): Promise<TrashListing> {
     const entries: TrashListing["entries"] = [];
     let truncated = false;
     for (const root of this.#roots.values()) {
-      if (root.kind === "system") continue;
+      if (root.kind === "system" || (rootId ? root.id !== rootId : root.kind === "network"))
+        continue;
       try {
         const listing = await listTrash(await this.#trash(root.id), root.id);
         entries.push(...listing.entries);

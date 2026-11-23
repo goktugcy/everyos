@@ -105,7 +105,8 @@ can mount it by itself whenever it is plugged in. EveryOS never formats a disk o
 system disk. Connect your own Google Drive to browse it in Files and copy files both ways; every
 upload and copy shows its speed and time left in the menu bar, the dock and the pulse. Learn
 more in the [file manager](docs/files.md), [disks](docs/disks.md), [Google Drive](docs/drive.md)
-and [transfers](docs/transfers.md) guides.
+and [transfers](docs/transfers.md) guides. Built-in [Network Sharing](docs/network-sharing.md)
+adds NFS/SMB folders, SFTP and private browser Quick Share to the same Files experience.
 
 ### Apps on your own machine
 

@@ -1,3 +1,4 @@
+import { isNetworkRoot } from "@everyos/shared";
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import { isShelfTemporary, type FileRootsResponse, type ShelfTidyResponse } from "@everyos/shared";
@@ -248,6 +249,15 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
 
   app.post("/copy", write, async (c) => {
     const { root, paths, destination, name } = await parseJsonBody(c, TransferRequestSchema);
+    if (isNetworkRoot(root) || isNetworkRoot(destination.root)) {
+      const view = files(c);
+      const transfer = services.transfers.start(
+        requireAuth(c).user.id,
+        view.task(root, paths, destination, false, name),
+      );
+      audit(c, "copy", root, { destination: destination.root, count: paths.length });
+      return c.json({ transfer }, 202);
+    }
     await files(c).copy(root, paths, destination, name);
     audit(c, "copy", `${root}:${paths.join(", ")}`, {
       destination: `${destination.root}:${destination.path}`,
@@ -260,6 +270,15 @@ export function fileRoutes(services: Services): Hono<AppEnv> {
     const { root, paths, destination, name } = await parseJsonBody(c, TransferRequestSchema);
     if (name !== undefined)
       throw new ApiError(400, "VALIDATION_FAILED", "Use rename to change a name");
+    if (isNetworkRoot(root) || isNetworkRoot(destination.root)) {
+      const view = files(c);
+      const transfer = services.transfers.start(
+        requireAuth(c).user.id,
+        view.task(root, paths, destination, true),
+      );
+      audit(c, "move", root, { destination: destination.root, count: paths.length });
+      return c.json({ transfer }, 202);
+    }
     await files(c).move(root, paths, destination);
     audit(c, "move", `${root}:${paths.join(", ")}`, {
       destination: `${destination.root}:${destination.path}`,

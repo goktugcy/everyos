@@ -1,3 +1,31 @@
+EveryOS 0.1.55 adds Network Sharing to Files and Settings.
+
+- Connect to NFS, SMB and SFTP folders from Files. Native Linux mounts use managed systemd
+  units and on-demand automounts; SFTP verifies the server's SSH fingerprint before authentication.
+- Share selected local folders through NFS or encrypted, authenticated SMB using the linked
+  Linux account's permissions. Confirmed setup installs missing dependencies and manages only
+  EveryOS-owned configuration while retaining existing host services and settings.
+- Send selected files or receive uploads through expiring, revocable Quick Share links and QR
+  codes. Guests use a browser without an EveryOS account on a private network over HTTPS.
+  Passwords, one-time access and transfer quotas are available.
+- Network file operations reuse Files previews, editing, copying and transfer progress. Discovery
+  uses mDNS; existing Tailscale and NetBird status helps identify private-network addresses.
+- Saved credentials are encrypted, resources belong to their creating account, and Linux identity
+  changes clean up that account's managed resources before committing the change.
+- Network Sharing includes all ten interface languages and phone-sized layouts. Loading indicators
+  stay compact and centered when opening the section or installing dependencies.
+
+Native sharing requires AMD64/ARM64 Linux with systemd. Managing host mounts, exports and services
+requires a linked Linux account with unlocked sudo. Sharing does not configure router ports,
+firewall rules or public tunnels. See docs/network-sharing.md for protocol and recovery details.
+
+For installations older than 0.1.49, a host administrator must apply the package-service migration
+before updating through an older restricted EveryOS worker:
+https://github.com/goktugcy/everyos/blob/main/docs/updates.md#existing-installations-affected-by-the-old-unit-policy.
+Wait for all APT/dpkg/initramfs and EveryOS release operations to finish before changing or
+restarting package services. Reloading systemd alone does not replace a running service namespace.
+Existing damaged boot images still require administrator verification and recovery outside EveryOS.
+
 EveryOS 0.1.54 improves Tailscale and NetBird connection reliability and Remote Access status.
 
 - Secure registration-key delivery now works with both VPN clients on Linux. Keys remain transient

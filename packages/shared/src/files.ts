@@ -22,9 +22,10 @@ export type StandardFolder = (typeof STANDARD_FOLDERS)[number];
  * The user's private home, an administrator-configured location, a disk mounted from Settings
  * › Disks, or a read-only system path.
  */
-export type FileRootKind = "home" | "location" | "disk" | "system";
+export type FileRootKind = "home" | "location" | "disk" | "system" | "network";
 
 export interface FileRootView {
+  networkProtocol?: "nfs" | "smb" | "sftp";
   id: string;
   /** Location name; the username for a home; the absolute path for system roots. */
   name: string;

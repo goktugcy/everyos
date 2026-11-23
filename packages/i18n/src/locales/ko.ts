@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -7,6 +9,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** Korean. */
 export const ko: LocaleMessages = {
+  sharing: networkSharingMessages.ko,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1387,6 +1390,7 @@ export const ko: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.ko.title,
       remoteAccess: en.settings.sections.remoteAccess,
       agents: "AI 어시스턴트",
       appearance: "모양",
@@ -4203,6 +4207,7 @@ export const ko: LocaleMessages = {
     },
   },
   errors: {
+    ...sharingErrors.ko,
     FILES_ARCHIVE_INVALID: "ZIP 파일이 손상되었거나 안전하지 않은 파일 경로를 포함합니다.",
     FILES_ARCHIVE_LIMIT: "파일 수, 크기 또는 처리 시간 제한을 초과했습니다.",
     FILES_ARCHIVE_UNSUPPORTED:

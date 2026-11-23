@@ -47,6 +47,25 @@ export function toApiError(error: unknown): ApiError {
   if (!(error instanceof AgentClientError)) {
     return new ApiError(502, "AGENT_OPERATION_FAILED", "Agent operation failed");
   }
+  if (error.message === "SHARING_UNREACHABLE")
+    return new ApiError(503, "SHARING_UNREACHABLE", "Network server unavailable");
+  if (error.message === "SHARING_NETWORK_DENIED")
+    return new ApiError(403, "SHARING_NETWORK_DENIED", "Network destination denied");
+  if (error.message === "SHARING_DISABLED")
+    return new ApiError(409, "SHARING_DISABLED", "Connection disabled");
+  if (
+    [
+      "SHARING_CONFIG_UNSAFE",
+      "SHARING_CONFIG_CONFLICT",
+      "SHARING_EXTERNAL_MOUNT",
+      "SHARING_NAME_CONFLICT",
+    ].includes(error.message)
+  )
+    return new ApiError(
+      409,
+      "SHARING_CONFIG_CONFLICT",
+      "Existing host configuration conflicts with this change",
+    );
   const specific = AGENT_CODE_ERRORS[error.agentCode ?? ""];
   if (specific) return specific(error);
   switch (error.code) {

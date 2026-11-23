@@ -4,6 +4,12 @@ Everything that moves files for a while is listed with its progress, speed and t
 from the browser and copies that run on the server between [Google Drive](drive.md) and EveryOS
 locations.
 
+[Network Sharing](network-sharing.md) uses this same queue for NFS/SMB/SFTP cross-location copies
+and Quick Share downloads/uploads. Those entry points allow at most 16 queued/active jobs per
+person, with the existing two running at once. Cancelling retains completed destination files;
+partial-file upload/copy continuation is not offered. Quick Share supports quota-counted HTTP
+Range downloads. See its guide for one-time grants, revocation, expiry and restart behavior.
+
 ## Where it shows
 
 - **Pulse** ([pulse.md](pulse.md)): while files move, the bottom two rows of dots become a

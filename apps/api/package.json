@@ -31,6 +31,7 @@
     "nodemailer": "catalog:",
     "pg": "catalog:",
     "pg-cursor": "catalog:",
+    "ssh2": "1.17.0",
     "ws": "catalog:",
     "yaml": "catalog:",
     "zod": "catalog:"
@@ -39,6 +40,7 @@
     "@everyos/app-cli": "workspace:*",
     "@everyos/theme": "workspace:*",
     "@types/pg": "catalog:",
+    "@types/ssh2": "1.15.6",
     "@types/ws": "catalog:",
     "create-everyos-app": "workspace:*"
   }

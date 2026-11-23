@@ -83,6 +83,9 @@ allowBuilds:
   "@parcel/watcher": false
   workerd: false
   esbuild: true
+  # SFTP uses ssh2's Node crypto fallback; optional native accelerators are unnecessary.
+  cpu-features: false
+  ssh2: false
 patchedDependencies:
   "@excalidraw/excalidraw@0.18.1": patches/@excalidraw__excalidraw@0.18.1.patch
 

@@ -1,4 +1,5 @@
 import { AGENT_FILE_OPERATIONS } from "./file-operations.ts";
+import { NETWORK_SHARING_OPERATIONS } from "./sharing-operations.ts";
 import { LINUX_BACKUP_OPERATIONS } from "./linux-backup-operations.ts";
 import type { Permission } from "@everyos/shared";
 import {
@@ -163,6 +164,7 @@ function stream<P extends z.ZodType, E extends z.ZodType>(
 const NoParams = z.strictObject({});
 
 export const AGENT_OPERATIONS = {
+  ...NETWORK_SHARING_OPERATIONS,
   ...AGENT_FILE_OPERATIONS,
   ...LINUX_BACKUP_OPERATIONS,
   "ai.discover": unary({

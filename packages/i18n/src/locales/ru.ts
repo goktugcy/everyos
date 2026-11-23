@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -7,6 +9,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** Russian. */
 export const ru: LocaleMessages = {
+  sharing: networkSharingMessages.ru,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1418,6 +1421,7 @@ export const ru: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.ru.title,
       remoteAccess: en.settings.sections.remoteAccess,
       agents: "ИИ-ассистенты",
       appearance: "Оформление",
@@ -4294,6 +4298,7 @@ export const ru: LocaleMessages = {
     },
   },
   errors: {
+    ...sharingErrors.ru,
     FILES_ARCHIVE_INVALID: "ZIP-архив повреждён или содержит небезопасные пути.",
     FILES_ARCHIVE_LIMIT: "Превышен предел количества файлов, размера или времени обработки.",
     FILES_ARCHIVE_UNSUPPORTED:

@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessTr } from "../remote-access.ts";
 import { shortcutsTr } from "../shortcuts.ts";
 import { desktopAppNotificationsTr } from "../desktop-app-updates.ts";
@@ -33,6 +35,7 @@ import type {
  * locale must provide (enforced by the type checker).
  */
 export const tr = {
+  sharing: networkSharingMessages.tr,
   remoteAccess: remoteAccessTr,
   shortcuts: shortcutsTr,
   packageSafety: packageSafetyTr,
@@ -1374,6 +1377,7 @@ export const tr = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.tr.title,
       remoteAccess: "Uzaktan Erişim",
       agents: "AI Asistanları",
       appearance: "Görünüm",
@@ -4160,6 +4164,7 @@ export const tr = {
     },
   },
   errors: {
+    ...sharingErrors.tr,
     FILES_ARCHIVE_INVALID: "ZIP arşivi bozuk veya güvenli olmayan dosya yolları içeriyor.",
     FILES_ARCHIVE_LIMIT: "Arşiv dosya sayısı, boyut veya işlem süresi sınırını aşıyor.",
     FILES_ARCHIVE_UNSUPPORTED:

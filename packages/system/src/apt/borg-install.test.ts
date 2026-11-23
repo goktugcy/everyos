@@ -116,6 +116,34 @@ describe("fixed BorgBackup package installation", () => {
       createAptManager().installRemoteAccess!("netbird", new AbortController().signal),
     ).rejects.toThrow("PACKAGE_ENVIRONMENT_UNSAFE");
   });
+  it("installs only the fixed sharing dependencies including the bind helper and discovery daemon", async () => {
+    for (const [protocol, packages] of [
+      ["nfs", ["nfs-kernel-server", "python3"]],
+      ["smb", ["samba", "python3"]],
+      ["discovery", ["avahi-utils", "avahi-daemon"]],
+      ["sftp", ["openssh-server"]],
+      ["nfs-client", ["nfs-common"]],
+      ["smb-client", ["cifs-utils"]],
+    ] as const) {
+      vi.mocked(runCapture).mockClear();
+      expect(
+        await createAptManager().installSharing!(protocol, new AbortController().signal),
+      ).toMatchObject({ ok: true });
+      const calls = vi.mocked(runCapture).mock.calls.filter(([file]) => file.endsWith("apt-get"));
+      expect(calls).toHaveLength(packages.length);
+      packages.forEach((name, index) =>
+        expect(calls[index]![1]).toEqual(
+          expect.arrayContaining([
+            "--no-remove",
+            "--no-install-recommends",
+            name + "=" + state.candidate,
+            "everyos=" + state.current,
+            "Dpkg::Options::=--force-confold",
+          ]),
+        ),
+      );
+    }
+  });
   it("refuses unsupported or unavailable candidates before starting APT", async () => {
     for (const candidate of ["1.2.4-7", "2.0.0", "(none)"]) {
       state.candidate = candidate;

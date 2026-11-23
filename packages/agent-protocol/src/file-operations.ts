@@ -60,7 +60,7 @@ const roots = z.array(
   z.strictObject({
     id: FileRootIdSchema,
     name: z.string(),
-    kind: z.enum(["home", "location", "disk", "system"]),
+    kind: z.enum(["home", "location", "disk", "system", "network"]),
     readOnly: z.boolean(),
     available: z.boolean(),
   }),
@@ -106,7 +106,7 @@ export const AGENT_FILE_OPERATIONS = {
   "files.delete": file(DeleteRequestSchema, z.null(), true),
   "files.archive.discard": file(ArchiveStageLocationSchema, z.null(), true),
   "files.trash": file(
-    z.strictObject({}),
+    z.strictObject({ root: FileRootIdSchema.optional() }),
     z.strictObject({ entries: z.array(TrashEntrySchema), truncated: z.boolean() }),
   ),
   "files.trash.restore": file(TrashItemRequestSchema, z.null(), true),

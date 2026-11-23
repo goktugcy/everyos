@@ -67,6 +67,24 @@ function fixture() {
 }
 
 describe("Linux identity boundary", () => {
+  it("prepares native resource cleanup only after authentication and refuses identity changes when cleanup fails", async () => {
+    const f = fixture(),
+      actor = user(),
+      prepare = vi.fn(() => Promise.resolve());
+    await expect(f.identities.bind(actor.userId, account.name, "wrong", prepare)).rejects.toThrow(
+      "LINUX_AUTH_FAILED",
+    );
+    expect(prepare).not.toHaveBeenCalled();
+    await f.identities.bind(actor.userId, account.name, "linux-private-password", prepare);
+    expect(prepare).toHaveBeenCalledOnce();
+    await f.identities.unlock(actor, "linux-private-password");
+    const failed = () => Promise.reject(new Error("Busy managed mount"));
+    await expect(f.identities.unbind(actor.userId, failed)).rejects.toThrow("Busy managed mount");
+    expect(f.identities.resolve(actor)).toEqual(account);
+    expect(f.identities.status(actor).privileged).toBe(true);
+    await f.identities.unbind(actor.userId, prepare);
+    expect(f.identities.status(actor).account).toBeNull();
+  });
   it("requires OS authentication, persists only a UID-pinned association and rejects replaced accounts", async () => {
     const f = fixture();
     const actor = user();

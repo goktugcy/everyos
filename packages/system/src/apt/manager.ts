@@ -18,6 +18,11 @@ export type AptUpgradeEvent =
 
 /** Package management for the update manager; mutations only through apt-get. */
 export interface AptManager {
+  /** Fixed native file-sharing packages from the administrator's existing repositories. */
+  installSharing?(
+    protocol: "nfs" | "smb" | "sftp" | "discovery" | "nfs-client" | "smb-client",
+    signal: AbortSignal,
+  ): Promise<{ ok: boolean; busy: boolean }>;
   readonly source: "host" | "simulated";
   updates(): Promise<AptUpdates>;
   package(name: string): Promise<PackageInfo>;
@@ -88,7 +93,17 @@ export function createAptManager(): AptManager {
   };
   async function installDependency(
     manager: AptManager,
-    name: "borgbackup" | RemoteAccessProviderId,
+    name:
+      | "borgbackup"
+      | RemoteAccessProviderId
+      | "nfs-kernel-server"
+      | "samba"
+      | "openssh-server"
+      | "avahi-utils"
+      | "avahi-daemon"
+      | "python3"
+      | "nfs-common"
+      | "cifs-utils",
     signal: AbortSignal,
     borg: boolean,
   ): Promise<{ ok: boolean; busy: boolean }> {
@@ -192,6 +207,24 @@ export function createAptManager(): AptManager {
 
     async installBorg(signal) {
       return installDependency(this, "borgbackup", signal, true);
+    },
+    async installSharing(protocol, signal) {
+      const names = {
+        nfs: "nfs-kernel-server",
+        smb: "samba",
+        sftp: "openssh-server",
+        discovery: "avahi-utils",
+        "nfs-client": "nfs-common",
+        "smb-client": "cifs-utils",
+      } as const;
+      const name = names[protocol];
+      if (!name) throw new CommandError("failed", "SHARING_PROTOCOL_INVALID");
+      const result = await installDependency(this, name, signal, false);
+      if (!result.ok) return result;
+      if (protocol === "nfs" || protocol === "smb")
+        return installDependency(this, "python3", signal, false);
+      if (protocol === "discovery") return installDependency(this, "avahi-daemon", signal, false);
+      return result;
     },
     async installRemoteAccess(provider, signal) {
       if (provider !== "tailscale" && provider !== "netbird")

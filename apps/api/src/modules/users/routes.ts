@@ -83,6 +83,7 @@ export function userRoutes(services: Services): Hono<AppEnv> {
       target: user.username,
       details: { account: binding.account, uid: binding.uid },
     });
+    services.sharing.accountChanged(user.id);
     return c.json(binding);
   });
   app.delete("/:id/linux-account", async (c) => {
@@ -91,6 +92,7 @@ export function userRoutes(services: Services): Hono<AppEnv> {
     const body = await parseJsonBody(c, PasswordConfirmationSchema);
     await confirmPassword(services, c, auth, body.password, "users.linux.unbind");
     await callAgent(c, services, "identity.unbind", { userId: user.id });
+    services.sharing.accountChanged(user.id);
     audit.record({
       action: "users.linux.unbind",
       outcome: "success",
@@ -122,15 +124,20 @@ export function userRoutes(services: Services): Hono<AppEnv> {
         "The last active administrator cannot be demoted or disabled",
       );
     }
-    if (body.disabled === true && services.config.mode === "production")
+    if (body.disabled === true && services.config.mode === "production") {
       await callAgent(c, services, "identity.unbind", { userId: user.id });
+      services.sharing.accountChanged(user.id);
+    }
     services.db.transaction(() => {
       users.update(user.id, {
         ...(body.displayName !== undefined ? { displayName: body.displayName } : {}),
         ...(body.role !== undefined ? { role: body.role } : {}),
         ...(body.disabled !== undefined ? { disabled: body.disabled } : {}),
       });
-      if (body.disabled === true) sessions.revokeAllForUser(user.id);
+      if (body.disabled === true) {
+        sessions.revokeAllForUser(user.id);
+        services.sharing.closeOwner(user.id);
+      }
     });
     audit.record({
       action: "users.update",
@@ -194,6 +201,7 @@ export function userRoutes(services: Services): Hono<AppEnv> {
       throw new ApiError(409, "USER_LAST_ADMIN", "The last active administrator cannot be deleted");
     if (services.config.mode === "production")
       await callAgent(c, services, "identity.unbind", { userId: user.id });
+    services.sharing.closeOwner(user.id);
     users.delete(user.id);
     await services.wallpapers.deleteAllForUser(user.id);
     audit.record({

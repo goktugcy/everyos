@@ -134,6 +134,11 @@ pieces (agent operations, SSE stream, audit log) rather than new infrastructure:
 - **Notifications** (`modules/notifications`): `NotificationService` (conditions and events in
   SQLite), `HostMonitor` (background checks every two minutes), live delivery on the SSE stream.
 - **Files** (`modules/files`): `FileService` in the API's own identity over configured roots.
+- **Network Sharing** (`modules/sharing`): owner-scoped SQLite configuration, SecretBox credentials,
+  bounded SSH/SFTP adapters and capability-only Quick Share. Files wraps its existing UID account
+  view for native NFS/CIFS roots. The root agent owns only generated units/export fragments and
+  inspects sources through account workers; no fstab edits or additional EveryOS daemon. See
+  [Network Sharing](network-sharing.md) for contracts, limits and identity/restore reconciliation.
 - **Updates** (`modules/updates`): background apt jobs through the agent's `AptManager`, one at a
   time, with streamed output and history.
 - **Scheduler** (`modules/tasks`): a 30-second clock, cron parsing in `@everyos/shared`, and

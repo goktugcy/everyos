@@ -1,7 +1,7 @@
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
 import type { Logger } from "@everyos/logger";
-import { isShelfTemporary, type Locale } from "@everyos/shared";
+import { isShelfTemporary, isNetworkRoot, type Locale } from "@everyos/shared";
 import type { Services } from "../../services.ts";
 import { callAgentAs, type UserActor } from "../../http/agent.ts";
 import { ApiError } from "../../http/errors.ts";
@@ -27,23 +27,50 @@ export class AccountFileView {
     this.identity = identity;
   }
 
+  readonly #networkTransfers = new Set<string>();
   #params() {
     return { locale: this.identity.locale, systemRoots: this.identity.systemRoots };
   }
-  #call = <N extends Parameters<typeof callAgentAs>[2]>(
+  #call = async <N extends Parameters<typeof callAgentAs>[2]>(
     op: N,
     params: Parameters<typeof callAgentAs<N>>[3],
     cleanup = false,
-  ) =>
-    callAgentAs(this.services, this.identity.actor, op, params, {
-      signal: cleanup ? undefined : this.identity.signal,
-      logger: this.identity.logger,
-    }).catch((error: unknown) => {
-      // A full location is the person's to resolve, not an agent failure.
+    deadline?: AbortSignal,
+  ) => {
+    const p = params as { root?: string; destination?: { root: string }; transferId?: string };
+    const network =
+      (p.root !== undefined && isNetworkRoot(p.root)) ||
+      (p.destination !== undefined && isNetworkRoot(p.destination.root)) ||
+      (p.transferId && this.#networkTransfers.has(p.transferId)) ||
+      op === "files.trash";
+    const controller = new AbortController();
+    const timer = network ? setTimeout(() => controller.abort(), 12000) : undefined;
+    const signals = [
+      network ? controller.signal : undefined,
+      cleanup ? undefined : this.identity.signal,
+      deadline,
+    ].filter((value): value is AbortSignal => value !== undefined);
+    const signal = signals.length ? AbortSignal.any(signals) : undefined;
+    try {
+      const value = await callAgentAs(this.services, this.identity.actor, op, params, {
+        signal,
+        logger: this.identity.logger,
+      });
+      if (network && (op === "files.download.open" || op === "files.upload.open"))
+        this.#networkTransfers.add((value as { transferId: string }).transferId);
+      if (p.transferId && (op === "files.download.close" || op === "files.upload.close"))
+        this.#networkTransfers.delete(p.transferId);
+      return value;
+    } catch (error) {
+      if (controller.signal.aborted)
+        throw new ApiError(504, "SHARING_UNREACHABLE", "Network file operation timed out");
       if (error instanceof ApiError && error.message === "FILES_INSUFFICIENT_SPACE")
         throw new ApiError(507, "FILES_INSUFFICIENT_SPACE", "Not enough free space");
       throw error;
-    });
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
 
   /** Host locations need a linked Linux account; without one only the EveryOS home is there. */
   async hasLinuxAccount(): Promise<boolean> {
@@ -52,11 +79,23 @@ export class AccountFileView {
 
   async roots(canWrite: boolean) {
     const personal = (await this.personal.roots(canWrite)).filter((r) => r.id === "home");
-    const status = await this.#call("identity.status", {});
-    return status.account
-      ? personal.concat(await this.#call("files.roots", this.#params()))
-      : personal;
+    try {
+      const status = await this.#call("identity.status", {});
+      return status.account
+        ? personal.concat(await this.#call("files.roots", this.#params()))
+        : personal;
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        ["AGENT_UNAVAILABLE", "AGENT_TIMEOUT", "AGENT_OPERATION_FAILED", "RATE_LIMITED"].includes(
+          error.code,
+        )
+      )
+        return personal;
+      throw error;
+    }
   }
+
   list(root: string, path: string, hidden: boolean) {
     return root === "home"
       ? this.personal.list(root, path, hidden)
@@ -108,6 +147,9 @@ export class AccountFileView {
       : this.#call("files.archive.discard", { ...this.#params(), root, path }, true).then(
           () => undefined,
         );
+  }
+  networkTrash(root: string, signal?: AbortSignal) {
+    return this.#call("files.trash", { ...this.#params(), root }, false, signal);
   }
   async trash() {
     const personal = await this.personal.trash();

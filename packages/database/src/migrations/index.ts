@@ -1,4 +1,5 @@
 import type { Migration } from "../migrator.ts";
+import { migration0021 } from "./0021-network-sharing.ts";
 import { migration0001 } from "./0001-initial.ts";
 import { migration0002 } from "./0002-desktop.ts";
 import { migration0003 } from "./0003-docker.ts";
@@ -42,4 +43,5 @@ export const EVERYOS_MIGRATIONS: readonly Migration[] = [
   migration0018,
   migration0019,
   migration0020,
+  migration0021,
 ];

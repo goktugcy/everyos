@@ -79,6 +79,8 @@ export interface Limiters {
 }
 
 export interface Services {
+  sharing: NetworkSharingService;
+  quickShares: QuickShareService;
   config: ApiConfig;
   logger: Logger;
   db: Database;
@@ -132,6 +134,8 @@ export interface Services {
 }
 
 export interface ServiceDependencies {
+  /** Isolated protocol tests only; production always blocks loopback/metadata SFTP targets. */
+  sharingAllowLoopback?: boolean;
   config: ApiConfig;
   logger: Logger;
   db: Database;
@@ -360,6 +364,10 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
   });
   const services: Services = {
+    sharing: new NetworkSharingService(() => services, {
+      allowLoopback: deps.sharingAllowLoopback ?? false,
+    }),
+    quickShares: new QuickShareService(() => services),
     config: deps.config,
     logger: deps.logger,
     db: deps.db,
@@ -469,6 +477,7 @@ export function createServices(deps: ServiceDependencies): Services {
     now,
   };
   linuxBackups.attachTasks(services.tasks);
+  services.quickShares.initialize();
   return services;
 }
 
@@ -488,3 +497,5 @@ export function notifyAppJob(notifications: NotificationService, job: FinishedJo
     },
   });
 }
+import { NetworkSharingService } from "./modules/sharing/sharing-service.ts";
+import { QuickShareService } from "./modules/sharing/quick-share.ts";
