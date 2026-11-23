@@ -1,0 +1,94 @@
+{
+  "format": "everyos-community-lifecycle-evidence/1",
+  "live": true,
+  "status": "passed",
+  "origin": "https://registry.everyos.net",
+  "everyosVersion": "0.1.55",
+  "verifiedAt": "2026-11-23T08:46:12.495Z",
+  "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+  "appId": "dev.goktugceyhan.acceptancenotes",
+  "publisherId": "dev.goktugceyhan",
+  "environment": "owned disposable development instance; simulated host-data agent; real public registry, packages, browser, storage and signatures",
+  "publisherOrigin": "https://everyos.goktugceyhan.dev",
+  "enrollment": {
+    "passed": true,
+    "method": "Existing owner-verified publisher enrollment and authenticated live submissions"
+  },
+  "submissions": [
+    {
+      "version": "1.0.36",
+      "sha256": "9984a37f9bc850c072ea1b1856c7335092645bacb47eeb0d02951d6db5c20be0"
+    },
+    {
+      "version": "1.0.37",
+      "sha256": "60256a07326befb01c32084df72a7590ebca48e3c025373c34fdf13eec57a954"
+    }
+  ],
+  "humanReview": {
+    "passed": true,
+    "recordedAt": "2026-11-23T08:45:36.141Z",
+    "method": "Owner terminal review and approval of exact source and archive digests",
+    "reviewedExactPackages": true,
+    "versions": [
+      {
+        "version": "1.0.36",
+        "sha256": "9984a37f9bc850c072ea1b1856c7335092645bacb47eeb0d02951d6db5c20be0"
+      },
+      {
+        "version": "1.0.37",
+        "sha256": "60256a07326befb01c32084df72a7590ebca48e3c025373c34fdf13eec57a954"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "check": "installation",
+      "version": "1.0.36",
+      "sha256": "9984a37f9bc850c072ea1b1856c7335092645bacb47eeb0d02951d6db5c20be0",
+      "digest": "9984a37f9bc850c072ea1b1856c7335092645bacb47eeb0d02951d6db5c20be0",
+      "passed": true
+    },
+    {
+      "check": "update",
+      "version": "1.0.37",
+      "sha256": "60256a07326befb01c32084df72a7590ebca48e3c025373c34fdf13eec57a954",
+      "digest": "60256a07326befb01c32084df72a7590ebca48e3c025373c34fdf13eec57a954",
+      "savedNotePreserved": true,
+      "oldRuntimeDenied": true,
+      "passed": true
+    },
+    {
+      "check": "revocation",
+      "versions": ["1.0.36", "1.0.37"],
+      "signedSequence": 78,
+      "installationDisabled": true,
+      "instancesDenied": true,
+      "runtimeDenied": true,
+      "publicPackagesDenied": true,
+      "passed": true
+    }
+  ],
+  "deployment": {
+    "format": "everyos-community-deployment-verification/1",
+    "status": "passed",
+    "origin": "https://registry.everyos.net",
+    "registryFingerprint": "sha256:424cf75d70fcf7b9711cf5ed9ed1e436a8602e42c868379c17c66a0fd7847ddf",
+    "verifiedAt": "2026-11-23T08:46:11.649Z",
+    "checks": {
+      "productionHealth": "passed",
+      "registryIdentity": "passed",
+      "publicKey": "passed",
+      "signedCatalog": "passed"
+    },
+    "catalog": {
+      "sha256": "10f9bb781ddaafb96c82afc5061a85f1facad9d288a91ad47045fedc20ccd200",
+      "sequence": 78,
+      "publishedAt": 1795423569397,
+      "expiresAt": 1798015569397,
+      "publishers": 1,
+      "apps": 1,
+      "revocations": 38
+    },
+    "lifecycleAcceptance": "required"
+  }
+}
