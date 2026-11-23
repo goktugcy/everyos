@@ -248,7 +248,10 @@ export class NetworkExports {
     const folder =
       n.source === "simulated"
         ? { path: "/simulated/" + input.root + "/" + input.path, device: 1, inode: 1 }
-        : await n.options.inspect(input, context);
+        : await n.options.inspect(
+            { root: input.root, path: input.path, readOnly: input.readOnly },
+            context,
+          );
     const account = n.options.account(context.actor);
     const users = input.users.length ? input.users : [account.name];
     if (n.source !== "simulated" && input.protocol === "smb")

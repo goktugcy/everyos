@@ -465,8 +465,10 @@ reuse saved allocations. Keep explicit host-IP and protocol restrictions. An exp
 remains an explicit port, including normal failure when another host service owns it.
 
 Share measured icon-caption fitting across desktop, Files and the mobile launcher. Keep a readable
-9px floor; exceptionally long names expand on interaction rather than becoming unreadable. Text
-selection plates are removed while glyph highlighting and keyboard focus remain visible.
+9px floor; exceptionally long names expand on interaction in Files and the mobile launcher.
+Desktop captions stay fixed on hover, selection and focus, with their full name available in the
+native tooltip and accessible label. Text selection plates are removed while glyph highlighting
+and keyboard focus remain visible.
 
 ### D37 — EveryOS updates without redundant password confirmation
 

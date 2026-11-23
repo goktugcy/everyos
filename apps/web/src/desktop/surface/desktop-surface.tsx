@@ -286,7 +286,7 @@ function DesktopIcon(props: IconProps) {
           onBlur={(event) => props.onRename(id, event.currentTarget.value)}
         />
       ) : (
-        <IconLabel text={label} className="everyos-icon-label" />
+        <IconLabel text={label} className="everyos-icon-label" expand={false} />
       )}
     </button>
   );

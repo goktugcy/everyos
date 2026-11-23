@@ -16,9 +16,10 @@ Desktop shortcuts, files and installed applications highlight the whole item, in
 and name, with one selection background and outline. The Applications home entry uses the same
 whole-item focus feedback; file-list and Trash selections continue to highlight their rows.
 Names have no separate colored plate. Captions wrap unbroken names and shrink based on measured width
-and loaded fonts, down to 9px within three lines. Names exceeding that readable space expand in
-full when selected, hovered or keyboard-focused; the full title and accessible name remain intact.
-Mobile launcher names use the same fitting component. Icon layout and drag/selection hit areas
+and loaded fonts, down to 9px within three lines. Desktop captions keep the same position, width and
+font size on hover, selection and keyboard focus; excess text stays clipped, with the full name in
+the native tooltip and accessible label. Files and mobile launcher names use the same fitting
+component with expansion for overflowing names. Icon layout and drag/selection hit areas
 retain their existing geometry.
 
 File types share one local SVG icon family across the desktop, Files grid/list/search, app file

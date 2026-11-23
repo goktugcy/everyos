@@ -58,7 +58,9 @@ linked Linux UID/GID (`anonuid`/`anongid`). Clients cannot impersonate another s
 supplying its UID. This intentionally provides an authorized folder account, not transparent
 multi-user UID passthrough. The creating Linux account must be able to read/write the source.
 
-An existing UID account worker validates the source. A fixed root-owned systemd oneshot pins its
+An existing UID account worker validates the source. Inspection sends only `root`, `path` and
+`readOnly` through the strict `files.share.inspect` contract; export metadata belongs to the root
+agent's separate export operation. A fixed root-owned systemd oneshot pins its
 device/inode and bind-mounts it without following path symlinks. Its mount is `nosuid,nodev,noexec`
 and read-only when selected. Each export has its own filesystem ID and subtree checking to enforce
 the approved folder boundary (see [exports(5)](https://man7.org/linux/man-pages/man5/exports.5.html)).
@@ -211,7 +213,9 @@ sessions close on account disable/delete. Native configuration is not left activ
 
 Automated coverage includes actual temporary files and SSH/SFTP sessions/keys, Files cross-server
 tasks, owner/role boundaries, expiry/revocation/quotas, queue cancellation, live stream revocation,
-unsafe paths, managed-unit contracts and configuration preservation. Browser tests exercise QR
+unsafe paths, managed-unit contracts and configuration preservation. NFS and SMB regression tests
+also enforce the exact account-worker inspection contract before privileged changes; the native
+Linux fixture applies the same strict schema instead of accepting extra export fields. Browser tests exercise QR
 creation and account-free 375-pixel download/video-upload flows; native simulation stays labeled.
 
 `scripts/check-network-sharing-linux.ts` and the PR/manual Linux matrix run only in disposable
