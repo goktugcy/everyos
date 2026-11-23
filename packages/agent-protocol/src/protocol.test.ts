@@ -65,6 +65,18 @@ const notUsed = () => {
 
 function handlers(overrides: Partial<OperationHandlers> = {}): OperationHandlers {
   return {
+    "files.share.inspect": notUsed,
+    "sharing.status": notUsed,
+    "sharing.mount.apply": notUsed,
+    "sharing.mount.control": notUsed,
+    "sharing.mount.access": notUsed,
+    "sharing.mount.remove": notUsed,
+    "sharing.export.apply": notUsed,
+    "sharing.export.remove": notUsed,
+    "sharing.service": notUsed,
+    "sharing.install": notUsed,
+    "sharing.smb.account": notUsed,
+    "sharing.discover": notUsed,
     "remoteAccess.snapshot": notUsed,
     "remoteAccess.peers": notUsed,
     "remoteAccess.install": notUsed,

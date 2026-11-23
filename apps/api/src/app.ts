@@ -47,6 +47,8 @@ import { linuxBackupRoutes } from "./modules/backups/linux-backup-routes.ts";
 import { appSdkAppearanceRoutes } from "./modules/desktop-apps/sdk-appearance-routes.ts";
 import { wallpaperRoutes } from "./modules/wallpapers/routes.ts";
 import { remoteAccessRoutes } from "./modules/remote-access/routes.ts";
+import { sharingRoutes } from "./modules/sharing/routes.ts";
+import { publicQuickShareRoutes } from "./modules/sharing/public-routes.ts";
 import type { Services } from "./services.ts";
 
 const MAX_JSON_BODY_BYTES = 64 * 1024;
@@ -76,6 +78,7 @@ export function createApp(services: Services): Hono<AppEnv> {
       (c.req.path === "/api/wallpapers" ||
         c.req.path === "/api/folder-icons" ||
         c.req.path === "/api/files/upload" ||
+        /^\/api\/quick-share\/[a-f0-9-]{36}\/upload$/.test(c.req.path) ||
         c.req.path === "/api/drive/upload" ||
         c.req.path === "/api/backups/upload")
     )
@@ -93,6 +96,7 @@ export function createApp(services: Services): Hono<AppEnv> {
     return jsonBodyLimit(c, next);
   };
   app.use("/api/*", enforceBodyLimit);
+  app.route("/api/quick-share", publicQuickShareRoutes(services));
   app.use("/api/*", loadSession(services));
   app.use("/api/*", csrfProtection(services));
   app.use("/api/*", enforceUnlocked);
@@ -143,6 +147,7 @@ export function createApp(services: Services): Hono<AppEnv> {
   api.route("/events", eventRoutes(services));
   api.route("/preferences", preferenceRoutes(services));
   api.route("/remote-access", remoteAccessRoutes(services));
+  api.route("/sharing", sharingRoutes(services));
   api.route("/wallpapers", wallpaperRoutes(services));
   api.route("/folder-icons", wallpaperRoutes(services, "folder-icon"));
   api.all("*", () => {

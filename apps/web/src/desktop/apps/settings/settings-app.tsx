@@ -26,6 +26,10 @@ const SECTIONS: Record<SettingsSection, { icon: LucideIcon; component: ReturnTyp
     widgets: { icon: PanelsTopLeft, component: lazy(() => import("./widgets-section.tsx")) },
     notifications: { icon: Bell, component: lazy(() => import("./notifications-section.tsx")) },
     disks: { icon: HardDrive, component: lazy(() => import("./disks-section.tsx")) },
+    sharing: {
+      icon: Network,
+      component: lazy(() => import("../../../features/sharing/sharing-section.tsx")),
+    },
     connections: { icon: Cloud, component: lazy(() => import("./connections-section.tsx")) },
     remoteAccess: { icon: Network, component: lazy(() => import("./remote-access-section.tsx")) },
     account: { icon: UserRound, component: lazy(() => import("./account-section.tsx")) },

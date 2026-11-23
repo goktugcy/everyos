@@ -6,6 +6,7 @@ import type {
 } from "@everyos/shared";
 import { diskRootId, STANDARD_FOLDERS } from "@everyos/shared";
 import {
+  Network,
   Clapperboard,
   Cloud,
   Computer,
@@ -163,6 +164,8 @@ const rowAction =
  * the configured locations, and (for administrators) read-only system paths.
  */
 export function FilesSidebar({
+  networkOpen = false,
+  onNetwork,
   roots,
   system,
   location,
@@ -176,6 +179,8 @@ export function FilesSidebar({
   onDrive,
 }: {
   roots: FileRootView[];
+  networkOpen?: boolean;
+  onNetwork?: (() => void) | undefined;
   system: FileRootsResponse["system"] | null;
   location: FileLocation | null;
   onGo: (location: FileLocation) => void;
@@ -206,7 +211,11 @@ export function FilesSidebar({
   );
   const systemRoots = roots.filter((root) => root.kind === "system");
   const at = (root: string, path: string) =>
-    !applicationsOpen && !driveOpen && location?.root === root && location.path === path;
+    !networkOpen &&
+    !applicationsOpen &&
+    !driveOpen &&
+    location?.root === root &&
+    location.path === path;
 
   return (
     <nav
@@ -267,6 +276,42 @@ export function FilesSidebar({
         </Section>
       ) : null}
 
+      {onNetwork ? (
+        <Section title={t("sharing.title")}>
+          <li>
+            <button
+              type="button"
+              data-testid="files-network"
+              onClick={onNetwork}
+              aria-current={networkOpen ? "location" : undefined}
+              className={cn(
+                "flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                networkOpen ? "bg-hover/15 font-medium" : "hover:bg-hover/8",
+              )}
+            >
+              <Network className="size-4 shrink-0 text-accent" aria-hidden />
+              <span className="truncate">{t("sharing.manage")}</span>
+            </button>
+          </li>
+          {roots
+            .filter((r) => r.kind === "network")
+            .map((r) => (
+              <Item
+                key={r.id}
+                icon={Network}
+                label={r.name}
+                hint={r.networkProtocol?.toUpperCase() ?? r.name}
+                active={at(r.id, "")}
+                disabled={!r.available}
+                readOnly={r.readOnly}
+                target={"root:" + r.id}
+                into={{ root: r.id, path: "" }}
+                onGo={onGo}
+                drops={drops}
+              />
+            ))}
+        </Section>
+      ) : null}
       {locations.length > 0 ? (
         <Section title={t("files.locations")}>
           {locations.map((root) => (

@@ -34,6 +34,8 @@ import {
   Search,
   Trash2,
   Upload,
+  Share2,
+  Network,
   X,
 } from "lucide-react";
 import {
@@ -42,6 +44,8 @@ import {
   useMemo,
   useRef,
   useState,
+  lazy,
+  Suspense,
   type DragEvent,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
@@ -95,6 +99,16 @@ import { FolderIconDialog } from "../settings/folder-icon-picker.tsx";
 import { FileIconView } from "./icon-view.tsx";
 import { ApplicationsEntry } from "./applications-entry.tsx";
 import ApplicationsApp from "../store/applications-app.tsx";
+import type { QuickShareRequest } from "../../../features/sharing/quick-share-dialog.tsx";
+const SharingSection = lazy(() => import("../../../features/sharing/sharing-section.tsx"));
+const QuickShareDialog = lazy(() =>
+  import("../../../features/sharing/quick-share-dialog.tsx").then((m) => ({
+    default: m.QuickShareDialog,
+  })),
+);
+const FolderShareForm = lazy(() =>
+  import("../../../features/sharing/forms.tsx").then((m) => ({ default: m.FolderShareForm })),
+);
 
 type ViewMode = "icons" | "list";
 
@@ -136,6 +150,9 @@ export default function FilesApp() {
     ((host.appState as { driveFolder?: unknown } | undefined)?.driveFolder as string | undefined) ??
     "root";
   const [sendToDrive, setSendToDrive] = useState<string[] | null>(null);
+  const [quickShare, setQuickShare] = useState<QuickShareRequest | null>(null);
+  const [nativeShare, setNativeShare] = useState<FileLocation | null>(null);
+  const networkOpen = (host.appState as { place?: unknown } | undefined)?.place === "network";
   const [driveNotice, setDriveNotice] = useState<string | null>(null);
   useEffect(() => {
     if (!driveNotice) return;
@@ -208,7 +225,7 @@ export default function FilesApp() {
   );
   useEffect(() => {
     void loadRoots();
-  }, [loadRoots, mountedDisks]);
+  }, [loadRoots, mountedDisks, networkOpen]);
 
   // Finder's default is the icon view; each window remembers its own choice.
   const view: ViewMode =
@@ -239,7 +256,7 @@ export default function FilesApp() {
   };
 
   useEffect(() => {
-    if (!location) return;
+    if (!location || networkOpen) return;
     const controller = new AbortController();
     filesApi
       .list(location, hidden)
@@ -253,20 +270,22 @@ export default function FilesApp() {
       });
     return () => controller.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the location's fields identify it
-  }, [location?.root, location?.path, hidden, revision, changes]);
+  }, [location?.root, location?.path, hidden, revision, changes, networkOpen]);
 
   useEffect(() => {
     host.setTitle(
-      driveOpen
-        ? t("drive.title")
-        : applicationsOpen
-          ? t("apps.applications")
-          : location?.path
-            ? nameOf(location.path)
-            : (root?.name ?? ""),
+      networkOpen
+        ? t("sharing.title")
+        : driveOpen
+          ? t("drive.title")
+          : applicationsOpen
+            ? t("apps.applications")
+            : location?.path
+              ? nameOf(location.path)
+              : (root?.name ?? ""),
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps -- title follows the location
-  }, [location?.path, root?.name, applicationsOpen, driveOpen, t]);
+  }, [location?.path, root?.name, applicationsOpen, driveOpen, networkOpen, t]);
 
   const refresh = useCallback(() => setRevision((n) => n + 1), []);
 
@@ -391,9 +410,11 @@ export default function FilesApp() {
     const ok = await requestConfirm({
       title: t("files.deleteConfirm.title", { count: paths.length }),
       body:
-        paths.length === 1
-          ? t("files.deleteConfirm.one", { name: nameOf(paths[0]!) })
-          : t("files.deleteConfirm.many", { count: paths.length }),
+        roots?.find((r) => r.id === location.root)?.networkProtocol === "sftp"
+          ? t("sharing.permanentDelete")
+          : paths.length === 1
+            ? t("files.deleteConfirm.one", { name: nameOf(paths[0]!) })
+            : t("files.deleteConfirm.many", { count: paths.length }),
       confirmLabel: t("files.deleteConfirm.confirm"),
       danger: true,
     });
@@ -831,6 +852,36 @@ export default function FilesApp() {
     return [
       {
         kind: "item",
+        id: "quick-share",
+        label: t("sharing.quickShare"),
+        icon: <Share2 />,
+        permission: "files:write",
+        disabled:
+          folder ||
+          paths.some(
+            (p) =>
+              listing?.entries.find((e) => joinPath(location.path, e.name) === p)?.type !== "file",
+          ),
+        onSelect: () => setQuickShare({ direction: "send", location, paths }),
+      },
+      ...(folder &&
+      permissions.includes("system:manage") &&
+      !["home", "system", "network"].includes(
+        roots?.find((r) => r.id === location.root)?.kind ?? "system",
+      )
+        ? [
+            {
+              kind: "item" as const,
+              id: "share-folder",
+              label: t("sharing.addShare"),
+              icon: <Network />,
+              onSelect: () => setNativeShare({ root: location.root, path: paths[0]! }),
+              disabled: !single,
+            },
+          ]
+        : []),
+      {
+        kind: "item",
         id: "open",
         label: t("files.menu.open"),
         icon: <FolderOpen />,
@@ -986,6 +1037,17 @@ export default function FilesApp() {
   const backgroundMenu = (): MenuEntry[] => [
     {
       kind: "item",
+      id: "quick-receive",
+      label: t("sharing.receive"),
+      icon: <Share2 />,
+      disabled: !writable || !location,
+      permission: "files:write",
+      onSelect: () => {
+        if (location) setQuickShare({ direction: "receive", location, paths: [] });
+      },
+    },
+    {
+      kind: "item",
       id: "folder",
       label: t("files.menu.newFolder"),
       icon: <FolderPlus />,
@@ -1084,6 +1146,10 @@ export default function FilesApp() {
   return (
     <div className="flex h-full min-h-0" data-testid="files-app">
       <FilesSidebar
+        networkOpen={networkOpen}
+        onNetwork={() =>
+          host.setAppState({ ...(host.appState as object | undefined), place: "network" })
+        }
         roots={roots}
         system={system}
         location={location}
@@ -1098,7 +1164,21 @@ export default function FilesApp() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {driveOpen ? (
+        {networkOpen ? (
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <button
+              type="button"
+              className="mb-4 flex items-center gap-2 rounded px-2 py-1 text-sm text-fg-muted hover:bg-hover/8"
+              onClick={() => go(location ?? { root: roots[0]?.id ?? "home", path: "" })}
+            >
+              <ArrowLeft className="size-4" aria-hidden />
+              {t("common.back")}
+            </button>
+            <Suspense fallback={<p>{t("common.loading")}</p>}>
+              <SharingSection onBrowse={(value) => go(value)} />
+            </Suspense>
+          </div>
+        ) : driveOpen ? (
           <DriveBrowser
             key={driveFolder}
             folder={driveFolder}
@@ -1201,6 +1281,17 @@ export default function FilesApp() {
               >
                 {location?.path ? nameOf(location.path) : (root?.name ?? "")}
               </h2>
+              <button
+                type="button"
+                className={toolbarButton}
+                aria-label={t("sharing.title")}
+                title={t("sharing.title")}
+                onClick={() =>
+                  host.setAppState({ ...(host.appState as object | undefined), place: "network" })
+                }
+              >
+                <Network className="size-4" aria-hidden />
+              </button>
 
               <div
                 role="group"
@@ -1601,6 +1692,18 @@ export default function FilesApp() {
         />
       ) : null}
       <ArchiveDialog request={archive} onClose={() => setArchive(null)} />
+      <Suspense fallback={null}>
+        {quickShare ? (
+          <QuickShareDialog request={quickShare} onClose={() => setQuickShare(null)} />
+        ) : null}
+        {nativeShare ? (
+          <FolderShareForm
+            initialFolder={nativeShare}
+            onClose={() => setNativeShare(null)}
+            onSaved={filesChanged}
+          />
+        ) : null}
+      </Suspense>
       <PropertiesDialog location={properties} onClose={() => setProperties(null)} />
       <FolderIconDialog location={iconLocation} onClose={() => setIconLocation(null)} />
       <ImagePreview location={preview} onClose={() => setPreview(null)} />

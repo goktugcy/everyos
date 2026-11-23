@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -7,6 +9,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** Italian. */
 export const it: LocaleMessages = {
+  sharing: networkSharingMessages.it,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1427,6 +1430,7 @@ export const it: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.it.title,
       remoteAccess: en.settings.sections.remoteAccess,
       agents: "Assistenti IA",
       appearance: "Aspetto",
@@ -4308,6 +4312,7 @@ export const it: LocaleMessages = {
     },
   },
   errors: {
+    ...sharingErrors.it,
     FILES_ARCHIVE_INVALID: "L’archivio ZIP è danneggiato o contiene percorsi non sicuri.",
     FILES_ARCHIVE_LIMIT: "L’archivio supera il limite di file, dimensioni o tempo di elaborazione.",
     FILES_ARCHIVE_UNSUPPORTED:

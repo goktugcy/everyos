@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -7,6 +9,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** Japanese. */
 export const ja: LocaleMessages = {
+  sharing: networkSharingMessages.ja,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1411,6 +1414,7 @@ export const ja: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.ja.title,
       remoteAccess: en.settings.sections.remoteAccess,
       agents: "AIアシスタント",
       appearance: "外観",
@@ -4272,6 +4276,7 @@ export const ja: LocaleMessages = {
     },
   },
   errors: {
+    ...sharingErrors.ja,
     FILES_ARCHIVE_INVALID:
       "ZIP アーカイブが破損しているか、安全でないファイルパスが含まれています。",
     FILES_ARCHIVE_LIMIT: "ファイル数、サイズ、または処理時間の上限を超えています。",

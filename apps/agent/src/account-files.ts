@@ -16,6 +16,7 @@ import { ApiError } from "../../api/src/http/errors.ts";
 
 export function accountFiles(options: {
   roots: FileRootConfig[];
+  networkRoots?: () => readonly FileRootConfig[];
   /** Disks mounted from Settings › Disks appear as Files locations. */
   disksRoot: string;
   home: string;
@@ -49,6 +50,7 @@ export function accountFiles(options: {
   ) => {
     const roots = [
       ...options.roots,
+      ...(options.networkRoots?.() ?? []),
       {
         id: "linux-home",
         name: options.home,
@@ -100,6 +102,10 @@ export function accountFiles(options: {
     }
   };
   return {
+    "files.share.inspect": (p, { actor }) =>
+      safe(() =>
+        service({ locale: "en", systemRoots: false }, actor).sharePath(p.root, p.path, p.readOnly),
+      ),
     "files.roots": (p, { actor }) =>
       safe(() =>
         service(p, actor).roots(
@@ -143,7 +149,7 @@ export function accountFiles(options: {
         await service(p, actor).discardArchiveStage(p.root, p.path);
         return null;
       }),
-    "files.trash": (p, { actor }) => safe(() => service(p, actor).trash()),
+    "files.trash": (p, { actor }) => safe(() => service(p, actor).trash(p.root)),
     "files.trash.restore": (p, { actor }) =>
       safe(async () => {
         await service(p, actor).restoreTrash(p.root, p.ids);

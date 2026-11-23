@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -7,6 +9,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** German. */
 export const de: LocaleMessages = {
+  sharing: networkSharingMessages.de,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1426,6 +1429,7 @@ export const de: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.de.title,
       remoteAccess: en.settings.sections.remoteAccess,
       agents: "KI-Assistenten",
       appearance: "Darstellung",
@@ -4310,6 +4314,7 @@ export const de: LocaleMessages = {
     },
   },
   errors: {
+    ...sharingErrors.de,
     FILES_ARCHIVE_INVALID: "Das ZIP-Archiv ist beschädigt oder enthält unsichere Dateipfade.",
     FILES_ARCHIVE_LIMIT:
       "Das Archiv überschreitet die Grenze für Dateianzahl, Größe oder Verarbeitungszeit.",

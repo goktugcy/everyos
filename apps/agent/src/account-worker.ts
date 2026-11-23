@@ -9,7 +9,7 @@ import {
 } from "@everyos/agent-protocol";
 import { z } from "zod";
 import { LinuxAccountSchema } from "@everyos/shared/schemas";
-import { roleHasPermission } from "@everyos/shared";
+import { roleHasPermission, isNetworkRoot } from "@everyos/shared";
 import { createInternetProbe } from "@everyos/system";
 import { createHandlers } from "./handlers.ts";
 import { selectBackends } from "./backends.ts";
@@ -28,7 +28,13 @@ const BootstrapSchema = z.strictObject({
   internetCheckTargets: z.array(z.string()),
   disksRoot: z.string(),
   roots: z.array(
-    z.strictObject({ id: z.string(), name: z.string(), path: z.string(), readOnly: z.boolean() }),
+    z.strictObject({
+      id: z.string(),
+      name: z.string(),
+      path: z.string(),
+      readOnly: z.boolean(),
+      kind: z.enum(["home", "location", "disk", "system", "network"]).optional(),
+    }),
   ),
   maxUploadBytes: z.number(),
   minFreeBytes: z.number(),
@@ -36,6 +42,19 @@ const BootstrapSchema = z.strictObject({
 const lines = createInterface({ input: process.stdin, crlfDelay: Infinity });
 const iterator = lines[Symbol.asyncIterator]();
 const boot = BootstrapSchema.parse(JSON.parse((await iterator.next()).value ?? "null"));
+// Only the root parent can write this private pipe. File operations receive a fresh,
+// validated mount snapshot without replacing the worker or interrupting its other streams.
+const NetworkRootsSchema = z
+  .array(
+    BootstrapSchema.shape.roots.element.extend({
+      id: z.string().refine(isNetworkRoot),
+      kind: z.literal("network"),
+      name: z.string().max(80),
+      path: z.string().max(2048),
+    }),
+  )
+  .max(256);
+let networkRoots: z.infer<typeof NetworkRootsSchema> = [];
 if (process.getuid?.() !== boot.account.uid || process.getgid?.() !== boot.account.gid)
   process.exit(126);
 const logger = createLogger({
@@ -60,7 +79,7 @@ const handlers = {
     isProtectedContainer,
     internet: createInternetProbe(boot.internetCheckTargets),
   }),
-  ...accountFiles({ ...boot, home: boot.account.home, logger }),
+  ...accountFiles({ ...boot, home: boot.account.home, logger, networkRoots: () => networkRoots }),
   ...accountNativeAgents(boot.account.home),
 };
 const policy = createPolicy({
@@ -72,7 +91,13 @@ const policy = createPolicy({
 });
 const running = new Map<number, AbortController>();
 const send = (frame: unknown) => process.stdout.write(`${JSON.stringify(frame)}\n`);
-const invoke = async (frame: { id: number; op: string; params: unknown; actor: Actor }) => {
+const invoke = async (frame: {
+  id: number;
+  op: string;
+  params: unknown;
+  actor: Actor;
+  networkRoots?: unknown;
+}) => {
   const abort = new AbortController();
   running.set(frame.id, abort);
   try {
@@ -96,6 +121,8 @@ const invoke = async (frame: { id: number; op: string; params: unknown; actor: A
     const decision = policy(frame.op, frame.params, frame.actor);
     if (!decision.allowed) throw new OperationError("policy_denied", decision.reason);
     const params = contract.params.parse(frame.params);
+    if (frame.op.startsWith("files."))
+      networkRoots = NetworkRootsSchema.parse(frame.networkRoots ?? []);
     const handler = handlers[frame.op] as (p: unknown, context: OperationContext) => unknown;
     const result = handler(params, { actor: frame.actor, signal: abort.signal, logger });
     if (contract.kind === "unary")
@@ -129,6 +156,7 @@ while (true) {
     op: string;
     params: unknown;
     actor: Actor;
+    networkRoots?: unknown;
   };
   if (frame.cancel !== undefined) running.get(frame.cancel)?.abort();
   else if (running.size < 32) void invoke(frame);

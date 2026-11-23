@@ -193,6 +193,7 @@ async function main(): Promise<void> {
     services.disks.stop();
     services.desktopApps.stop();
     services.transfers.stop();
+    services.sharing.close();
     services.releaseMonitor.stop();
     services.terminals.stop();
     services.updates.stop();

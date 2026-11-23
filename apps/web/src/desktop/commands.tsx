@@ -32,6 +32,7 @@ export const SETTINGS_SECTIONS = [
   "widgets",
   "notifications",
   "disks",
+  "sharing",
   "connections",
   "remoteAccess",
   "account",

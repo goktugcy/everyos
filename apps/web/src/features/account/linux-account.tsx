@@ -84,6 +84,7 @@ export function LinuxBindingDialog({
     >
       <form className="flex flex-col gap-4" onSubmit={(event) => void submit(event)}>
         <p className="text-sm text-fg-muted">{t("linux.linkHelp")}</p>
+        <p className="text-xs text-fg-subtle">{t("sharing.identityCleanup")}</p>
         {data?.accounts.length === 0 ? <Alert tone="warning">{t("linux.noAccounts")}</Alert> : null}
         <Select
           label={t("linux.account")}

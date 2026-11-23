@@ -1,3 +1,5 @@
+import { networkSharingMessages } from "../network-sharing.ts";
+import { sharingErrors } from "../sharing-errors.ts";
 import { remoteAccessEn } from "../remote-access.ts";
 import { shortcutsEn } from "../shortcuts.ts";
 import { desktopAppNotificationsEn } from "../desktop-app-updates.ts";
@@ -7,6 +9,7 @@ import type { LocaleMessages } from "./tr.ts";
 
 /** Simplified Chinese. */
 export const zh: LocaleMessages = {
+  sharing: networkSharingMessages.zh,
   remoteAccess: remoteAccessEn,
   shortcuts: shortcutsEn,
   packageSafety: packageSafetyEn,
@@ -1341,6 +1344,7 @@ export const zh: LocaleMessages = {
   settings: {
     windowTitle: "{{app}} - {{section}}",
     sections: {
+      sharing: networkSharingMessages.zh.title,
       remoteAccess: en.settings.sections.remoteAccess,
       agents: "AI 助手",
       appearance: "外观",
@@ -4063,6 +4067,7 @@ export const zh: LocaleMessages = {
     },
   },
   errors: {
+    ...sharingErrors.zh,
     FILES_ARCHIVE_INVALID: "ZIP 压缩包已损坏或包含不安全的文件路径。",
     FILES_ARCHIVE_LIMIT: "压缩包超出了文件数量、大小或处理时间限制。",
     FILES_ARCHIVE_UNSUPPORTED: "不支持此 ZIP 加密或压缩方式、链接及特殊文件。",

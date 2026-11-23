@@ -1207,3 +1207,23 @@ the confirmation screen and preflight CLI compatibility before disconnecting onl
 Treat upstream ignored-settings/session-ownership warnings as failures even with exit code zero.
 Require conflict consent while another provider is connecting as well as connected. Public desired
 configuration follows refreshed server state unless the user has an unsaved local draft.
+
+## Built-in network storage and owner-mapped NFS (2026-11-22)
+
+Network Sharing extends Files, UID account workers, typed agent operations, existing APT and
+TransferService. NFS/CIFS use PID 1 mounts; SFTP is a bounded remote adapter and Quick Share a
+capability-only browser route. Only lazy automounts participate in boot. Keep NFS hard semantics
+for write integrity, bounding UI requests and outstanding worker work rather than force-unmounting.
+External mounts/exports, Samba/SSH configuration and the unprivileged API are preserved.
+
+AUTH_SYS permits client-supplied UIDs. EveryOS exports approved folders with
+`root_squash,all_squash,anonuid=<creator uid>,anongid=<creator gid>` and explicit client networks.
+This enforces the creator's Linux account boundary instead of allowing impersonation of another
+server user. It intentionally does not provide transparent multi-user UID passthrough. Sources
+are inspected as that UID and inode-pinned in a symlink-free bind helper outside the agent's
+read-only home namespace. Samba still checks authenticated users' Linux permissions.
+
+Quick Share grants no EveryOS session. Fragment tokens, hashed grants, private-network HTTPS,
+one-time claims, quotas and live revocation scope its streamed access. Host configurations are
+not silently recreated from restored API rows; owners explicitly reconcile them with valid local
+bindings and sudo. See [Network Sharing](network-sharing.md) for recovery and qualification.

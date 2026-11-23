@@ -1,0 +1,36 @@
+name: Native network sharing
+on:
+  pull_request:
+    paths:
+      - "apps/agent/src/network-sharing*.ts"
+      - "apps/api/src/modules/sharing/**"
+      - "packages/agent-protocol/src/sharing-operations.ts"
+      - "scripts/check-network-sharing-linux.ts"
+      - ".github/workflows/network-sharing.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install native dependencies in the disposable runner
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y nfs-kernel-server nfs-common samba cifs-utils openssh-server python3
+      - name: Exercise native units, NFS, SMB, Linux permissions and OpenSSH
+        env:
+          EVERYOS_DISPOSABLE_NETWORK_TEST: "1"
+        run: sudo --preserve-env=GITHUB_ACTIONS,RUNNER_ENVIRONMENT,EVERYOS_DISPOSABLE_NETWORK_TEST "$(command -v node)" scripts/check-network-sharing-linux.ts
