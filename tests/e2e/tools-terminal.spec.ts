@@ -15,9 +15,28 @@ async function openTerminal(page: Page) {
   return app;
 }
 async function sessions(page: Page): Promise<TerminalSessionView[]> {
-  const response = await page.request.get("/api/terminal/sessions");
-  expect(response.status()).toBe(200);
-  return ((await response.json()) as { sessions: TerminalSessionView[] }).sessions;
+  // Browser fetch honors the plain-HTTP fixture's DNS mapping; Node's request context does not.
+  const response = await page.evaluate(async () => {
+    const result = await fetch("/api/terminal/sessions");
+    return {
+      status: result.status,
+      body: (await result.json()) as { sessions: TerminalSessionView[] },
+    };
+  });
+  expect(response.status).toBe(200);
+  return response.body.sessions;
+}
+async function endSession(page: Page, id: string, csrfToken: string) {
+  return page.evaluate(
+    async ({ id, token, header }) =>
+      (
+        await fetch(`/api/terminal/sessions/${id}`, {
+          method: "DELETE",
+          headers: { [header]: token },
+        })
+      ).status,
+    { id, token: csrfToken, header: CSRF_HEADER },
+  );
 }
 
 async function signInTerminal(page: Page) {
@@ -26,30 +45,22 @@ async function signInTerminal(page: Page) {
   // from the previous test's layout. Remove that detached fixture before opening.
   for (const terminal of await sessions(page))
     if (terminal.userId === session.user.id)
-      expect(
-        (
-          await page.request.delete(`/api/terminal/sessions/${terminal.id}`, {
-            headers: { [CSRF_HEADER]: session.csrfToken },
-          })
-        ).status(),
-      ).toBe(204);
+      expect(await endSession(page, terminal.id, session.csrfToken)).toBe(204);
   return session;
 }
 
 // Failed assertions must not consume another test's real PTY quota.
 test.afterEach(async ({ page }) => {
-  const auth = await page.request.get("/api/auth/session");
-  if (auth.status() !== 200) return;
-  const session = (await auth.json()) as SessionInfo;
+  if (!page.url().startsWith("http")) return;
+  const auth = await page.evaluate(async () => {
+    const response = await fetch("/api/auth/session");
+    return { status: response.status, body: (await response.json()) as SessionInfo };
+  });
+  if (auth.status !== 200) return;
+  const session = auth.body;
   if (!session.permissions.includes("terminal:access")) return;
   for (const terminal of await sessions(page))
-    expect(
-      (
-        await page.request.delete(`/api/terminal/sessions/${terminal.id}`, {
-          headers: { [CSRF_HEADER]: session.csrfToken },
-        })
-      ).status(),
-    ).toBe(204);
+    expect(await endSession(page, terminal.id, session.csrfToken)).toBe(204);
 });
 
 test("terminal runs a real shell, reloads the same session and closes it with the window", async ({
@@ -320,4 +331,107 @@ test("closing a restored terminal before status loads still ends its shell", asy
   await app.getByRole("button", { name: "Kapat", exact: true }).click();
   await expect.poll(async () => (await sessions(page)).length).toBe(0);
   await page.unrouteAll({ behavior: "ignoreErrors" });
+});
+
+test.describe("touch terminal clipboard", () => {
+  test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+
+  async function openTouchTerminal(page: Page) {
+    await signInTerminal(page);
+    await page
+      .getByTestId("mobile-shell")
+      .getByRole("button", { name: "Terminal", exact: true })
+      .click();
+    const app = page.getByTestId("terminal-app");
+    await expect(app).toHaveAttribute("data-terminal-phase", "connected");
+    return app;
+  }
+  async function longPress(page: Page) {
+    const box = (await page.locator(".xterm-screen").boundingBox())!;
+    const input = await page.context().newCDPSession(page);
+    try {
+      await input.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x: box.x + 30, y: box.y + 25 }],
+      });
+      await expect(page.getByRole("menu")).toBeVisible();
+      await input.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    } finally {
+      await input.detach();
+    }
+    await expect(page.getByRole("menu")).toBeVisible();
+  }
+
+  test("long press opens real copy, paste and selection actions on a touch screen", async ({
+    page,
+    context,
+  }) => {
+    test.skip(
+      Boolean(process.env.EVERYOS_E2E_HTTP_HOST),
+      "Direct Clipboard API requires a secure browser context",
+    );
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    const app = await openTouchTerminal(page);
+    await page.evaluate(() => navigator.clipboard.writeText("printf 'touch-ğ\\n'"));
+    await longPress(page);
+    await page.screenshot({ path: test.info().outputPath("terminal-touch-menu.png") });
+    await page.getByRole("menuitem", { name: "Yapıştır", exact: true }).tap();
+    await expect(app.locator(".xterm-accessibility-tree")).toContainText("touch-ğ");
+    await page.keyboard.press("Enter");
+    await expect(
+      app.locator(".xterm-accessibility-tree > div").filter({ hasText: /^touch-ğ\s*$/ }),
+    ).toHaveCount(1);
+    await longPress(page);
+    await page.getByRole("menuitem", { name: "Tümünü seç", exact: true }).tap();
+    await longPress(page);
+    const copy = page.getByRole("menuitem", { name: "Kopyala", exact: true });
+    await expect(copy).not.toHaveAttribute("data-disabled");
+    await copy.tap();
+    await expect
+      .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+      .toContain("touch-ğ");
+  });
+
+  test("touch selection and manual paste work without the Clipboard API and keep native copy", async ({
+    page,
+  }) => {
+    const app = await openTouchTerminal(page);
+    await page.evaluate(() =>
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined }),
+    );
+    await longPress(page);
+    await page.getByRole("menuitem", { name: "Yapıştır", exact: true }).tap();
+    const paste = page.getByRole("dialog", { name: "Yapıştır", exact: true });
+    await paste.getByRole("textbox", { name: "Terminal girdisi" }).fill("printf 'manual-ç\\n'");
+    await paste.getByRole("button", { name: "Yapıştır", exact: true }).tap();
+    await expect(paste).toHaveCount(0);
+    await expect(app.getByRole("textbox", { name: "Terminal girdisi" })).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(
+      app.locator(".xterm-accessibility-tree > div").filter({ hasText: /^manual-ç\s*$/ }),
+    ).toHaveCount(1);
+    await longPress(page);
+    await page.getByRole("menuitem", { name: "Metni seç", exact: true }).tap();
+    const selection = page.getByRole("dialog", { name: "Metni seç", exact: true });
+    const text = selection.getByRole("textbox", { name: "Metni seç" });
+    await expect(text).toHaveValue(/manual-ç/);
+    await selection.getByRole("button", { name: "Tümünü seç", exact: true }).tap();
+    expect(
+      await text.evaluate((node: HTMLTextAreaElement) => node.selectionEnd - node.selectionStart),
+    ).toBeGreaterThan(0);
+    await selection.getByRole("button", { name: "Kopyala", exact: true }).tap();
+    await expect(selection.getByRole("alert")).toHaveCount(0);
+    await page.screenshot({ path: test.info().outputPath("terminal-touch-selection.png") });
+    await selection.getByRole("button", { name: "Kapat", exact: true }).tap();
+    await longPress(page);
+    await page.getByRole("menuitem", { name: "Yapıştır", exact: true }).tap();
+    const field = paste.getByRole("textbox", { name: "Terminal girdisi" });
+    await field.focus();
+    const modifier = await page.evaluate(() =>
+      navigator.platform.includes("Mac") ? "Meta" : "Control",
+    );
+    await page.keyboard.press(`${modifier}+v`);
+    await expect(field).toHaveValue(/manual-ç/);
+    await paste.getByRole("button", { name: "Kapat", exact: true }).tap();
+  });
 });

@@ -21,6 +21,7 @@ import { LoadingBlock, ResourceError } from "../system/parts.tsx";
 import { TerminalConnection, type ConnectionState } from "./connection.ts";
 import { debounceResize, readSession, saveSession, sessionKey, terminalSize } from "./helpers.ts";
 import { terminalOptions } from "./theme.ts";
+import { TerminalClipboard } from "./clipboard-menu.tsx";
 
 function Sessions({ onClose }: { onClose: () => void }) {
   const { t, i18n } = useTranslation();
@@ -257,11 +258,13 @@ function TerminalPane({ restart }: { restart: () => void }) {
           {t("terminal.sessions.title")}
         </Button>
       </div>
-      <div
-        ref={container}
-        data-terminal-input
-        className="min-h-0 flex-1 overflow-hidden p-2 font-mono text-sm"
-      />
+      <TerminalClipboard terminal={terminal} connected={state.phase === "connected"}>
+        <div
+          ref={container}
+          data-terminal-input
+          className="min-h-0 flex-1 overflow-hidden p-2 font-mono text-sm"
+        />
+      </TerminalClipboard>
       {state.phase === "ended" ? (
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-line px-3 py-2">
           <p className="min-w-0 text-sm text-fg-muted" role="status">

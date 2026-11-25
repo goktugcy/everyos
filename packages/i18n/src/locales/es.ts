@@ -988,6 +988,10 @@ export const es: LocaleMessages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "Seleccionar texto",
+    selectHint: "Mantén pulsado este campo para seleccionar y copiar texto.",
+    pasteHint:
+      "Mantén pulsado este campo para pegar y luego elige Pegar para enviar el texto al terminal.",
     input: "Entrada del terminal",
     outputLimit: "Hay demasiada salida. Desplázate para seguir leyendo.",
     account: "{{account}} · {{shell}}",

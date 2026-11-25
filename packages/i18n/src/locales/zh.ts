@@ -928,6 +928,9 @@ export const zh: LocaleMessages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "选择文本",
+    selectHint: "长按此文本框即可选择并复制文本。",
+    pasteHint: "长按此文本框粘贴，然后选择“粘贴”将文本发送到终端。",
     input: "终端输入",
     outputLimit: "输出过多。滚动以继续阅读。",
     account: "{{account}} · {{shell}}",

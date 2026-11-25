@@ -947,6 +947,10 @@ export const tr = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "Metni seç",
+    selectHint: "Metni seçmek ve kopyalamak için bu alana basılı tutabilirsin.",
+    pasteHint:
+      "Bu alana basılı tutup yapıştır, ardından terminale göndermek için Yapıştır’a dokun.",
     input: "Terminal girdisi",
     outputLimit: "Çok fazla çıktı var. Okumaya devam etmek için kaydırın.",
     account: "{{account}} · {{shell}}",

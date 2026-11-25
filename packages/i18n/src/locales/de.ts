@@ -985,6 +985,10 @@ export const de: LocaleMessages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "Text auswählen",
+    selectHint: "Dieses Feld gedrückt halten, um Text auszuwählen und zu kopieren.",
+    pasteHint:
+      "Dieses Feld gedrückt halten und einfügen. Danach Einfügen wählen, um den Text ans Terminal zu senden.",
     input: "Terminaleingabe",
     outputLimit: "Zu viel Ausgabe. Scrolle, um weiterzulesen.",
     account: "{{account}} · {{shell}}",

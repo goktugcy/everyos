@@ -7,6 +7,10 @@ EveryOS 0.1.56 fixes shared-folder setup and adds permanent Quick Share link del
   files. Revoking a link still keeps its record in the list.
 - Desktop file names keep their position and fitted font size on hover, selection and keyboard
   focus. Long names remain available in the tooltip and accessible label.
+- Files dragged into the Shelf's inner drop area are accepted by the browser and added as
+  references without moving their source files.
+- Touch and hold in Terminal opens copy, paste and text-selection actions. A normal text field
+  supports native selection and manual paste when browser clipboard access is unavailable.
 
 Quick Share API clients that need revocation without deleting the record should use
 POST /api/sharing/quick/:id/revoke. DELETE /api/sharing/quick/:id now removes the record.

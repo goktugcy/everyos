@@ -976,6 +976,9 @@ export const ja: LocaleMessages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "テキストを選択",
+    selectHint: "この欄を長押しすると、テキストを選択してコピーできます。",
+    pasteHint: "この欄を長押しして貼り付け、貼り付けボタンでテキストをターミナルに送信します。",
     input: "ターミナル入力",
     outputLimit: "出力が多すぎます。スクロールして続きを読んでください。",
     account: "{{account}} · {{shell}}",

@@ -962,6 +962,9 @@ export const ko: LocaleMessages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "텍스트 선택",
+    selectHint: "이 입력란을 길게 눌러 텍스트를 선택하고 복사하세요.",
+    pasteHint: "이 입력란을 길게 눌러 붙여넣은 다음 붙여넣기를 선택해 터미널로 보내세요.",
     input: "터미널 입력",
     outputLimit: "출력이 너무 많습니다. 계속 읽으려면 스크롤하세요.",
     account: "{{account}} · {{shell}}",
