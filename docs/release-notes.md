@@ -1,3 +1,21 @@
+EveryOS 0.1.56 fixes shared-folder setup and adds permanent Quick Share link deletion.
+
+- Creating an NFS or SMB shared folder now sends only the approved folder fields to the Linux
+  account worker. This fixes the generic system-operation error that prevented folder sharing.
+- Quick Share offers separate Revoke and Delete actions. Delete permanently removes the link,
+  sharing record and access grants, including inactive links, while keeping shared and received
+  files. Revoking a link still keeps its record in the list.
+- Desktop file names keep their position and fitted font size on hover, selection and keyboard
+  focus. Long names remain available in the tooltip and accessible label.
+- Files dragged into the Shelf's inner drop area are accepted by the browser and added as
+  references without moving their source files.
+- Touch and hold in Terminal opens copy, paste and text-selection actions. A normal text field
+  supports native selection and manual paste when browser clipboard access is unavailable.
+
+Quick Share API clients that need revocation without deleting the record should use
+POST /api/sharing/quick/:id/revoke. DELETE /api/sharing/quick/:id now removes the record.
+Both actions retain owner checks, file-write permission, CSRF protection and explicit confirmation.
+
 EveryOS 0.1.55 adds Network Sharing to Files and Settings.
 
 - Connect to NFS, SMB and SFTP folders from Files. Native Linux mounts use managed systemd

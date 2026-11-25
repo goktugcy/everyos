@@ -993,6 +993,10 @@ export const fr: LocaleMessages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "Sélectionner le texte",
+    selectHint: "Appuyez longuement sur ce champ pour sélectionner et copier du texte.",
+    pasteHint:
+      "Appuyez longuement sur ce champ pour coller, puis choisissez Coller pour envoyer le texte au terminal.",
     input: "Saisie du terminal",
     outputLimit: "Sortie trop volumineuse. Faites défiler pour continuer la lecture.",
     account: "{{account}} · {{shell}}",

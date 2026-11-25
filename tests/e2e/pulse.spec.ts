@@ -51,7 +51,11 @@ test("the pulse opens a dashboard and a shelf that takes files, and can be hidde
     return transfer;
   });
   const items = page.getByTestId("pulse-shelf-item");
-  await page.dispatchEvent('[data-testid="pulse-dropzone"]', "drop", { dataTransfer });
+  await page
+    .getByTestId("pulse-dropzone")
+    .locator("p")
+    .first()
+    .dispatchEvent("drop", { dataTransfer });
   await expect(items.filter({ hasText: "pulse-e2e.txt" })).toBeVisible();
   await page.dispatchEvent('[data-testid="pulse-dropzone"]', "drop", { dataTransfer });
   await expect(items.filter({ hasText: "pulse-e2e (2).txt" })).toBeVisible();
@@ -98,7 +102,27 @@ test("the pulse opens a dashboard and a shelf that takes files, and can be hidde
   const files = page.locator('[data-app-id="everyos.files"]');
   await files.getByTestId("files-sidebar").getByRole("button", { name: "İndirilenler" }).click();
   const row = files.getByTestId("file-row").filter({ hasText: "pulse-e2e.txt" });
-  await row.dragTo(page.getByTestId("pulse-trigger"));
+  // Use the browser's real drag operation: the inner drop area must accept Files' copyMove drag.
+  const start = (await row.boundingBox())!;
+  const trigger = (await page.getByTestId("pulse-trigger").boundingBox())!;
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(start.x + start.width / 2 + 12, start.y + start.height / 2, { steps: 3 });
+  await page.mouse.move(trigger.x + trigger.width / 2, trigger.y + trigger.height / 2, {
+    steps: 10,
+  });
+  await expect(page.getByTestId("pulse-dropzone")).toBeVisible();
+  const destination = (await page
+    .getByTestId("pulse-dropzone")
+    .locator("p")
+    .first()
+    .boundingBox())!;
+  await page.mouse.move(
+    destination.x + destination.width / 2,
+    destination.y + destination.height / 2,
+    { steps: 8 },
+  );
+  await page.mouse.up();
   await expect(pulse).toHaveAttribute("data-open", "true");
   const reference = items.filter({ hasText: "pulse-e2e.txt" });
   await expect(reference).toHaveAttribute("data-temporary", "false");
@@ -106,6 +130,14 @@ test("the pulse opens a dashboard and a shelf that takes files, and can be hidde
   await reference.getByRole("button", { name: "pulse-e2e.txt öğesini raftan kaldır" }).click();
   await expect(reference).toHaveCount(0);
   expect(await names("İndirilenler")).toEqual(["pulse-e2e.txt"]);
+
+  // The menu-bar trigger remains a drop target too.
+  await page.keyboard.press("Escape");
+  await row.dragTo(page.getByTestId("pulse-trigger"));
+  await expect(reference).toHaveAttribute("data-temporary", "false");
+  await reference.hover();
+  await reference.getByRole("button", { name: "pulse-e2e.txt öğesini raftan kaldır" }).click();
+  await expect(reference).toHaveCount(0);
 
   // Hidden from the panel, back from quick settings.
   await page.getByRole("button", { name: "Nabzı gizle" }).click();

@@ -922,6 +922,10 @@ export const en: Messages = {
     tailscale: "Tailscale",
   },
   terminal: {
+    selectText: "Select text",
+    selectHint: "Touch and hold this field to select and copy text.",
+    pasteHint:
+      "Touch and hold this field to paste, then choose Paste to send the text to the terminal.",
     input: "Terminal input",
     outputLimit: "Too much output. Scroll to continue reading.",
     account: "{{account}} · {{shell}}",

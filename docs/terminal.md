@@ -4,6 +4,20 @@ The lazy `everyos.terminal` desktop app connects to a real agent pseudo-terminal
 same-origin API WebSocket. Each window has its own shell. The browser cannot select an account,
 choose a shell, or run a command through an HTTP execution endpoint.
 
+## Copy, paste and touch selection
+
+Right-click or touch and hold inside the terminal to open Copy, Paste, Select all and Select text.
+Copy uses the actual xterm selection; Select all selects its scrollback. Existing keyboard copy,
+paste and shell interrupt shortcuts remain available. Clipboard reads occur only after choosing
+Paste, never when the terminal or menu opens.
+
+When the Clipboard API is unavailable (including ordinary HTTP) or access is denied, Paste opens
+a normal text field. Use the browser's native paste controls there and explicitly choose Paste to
+send that text to the existing PTY. Select text opens a read-only snapshot of the terminal buffer
+with native selection handles and copy controls. Both fields support touch callouts; their
+contents are cleared when closed and are not persisted or logged. Paste is disabled while the
+terminal is disconnected. These controls do not change terminal authorization or grant host access.
+
 ## Configuration and identity
 
 Production terminals use the EveryOS user's own association with an existing local Linux

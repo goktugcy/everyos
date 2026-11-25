@@ -189,7 +189,8 @@ export function PulseShelf() {
     const types = [...event.dataTransfer.types];
     if (!types.includes(FILES_DRAG_TYPE) && !types.includes("Files")) return false;
     event.preventDefault();
-    event.dataTransfer.dropEffect = types.includes("Files") ? "copy" : "link";
+    // Files sources advertise copyMove. A link effect makes the browser reject the drop.
+    event.dataTransfer.dropEffect = "copy";
     return true;
   };
 

@@ -12,6 +12,7 @@ export function Dialog({
   children,
   className,
   overlayClassName,
+  onCloseAutoFocus,
   footer,
 }: {
   open: boolean;
@@ -21,6 +22,7 @@ export function Dialog({
   children: ReactNode;
   className?: string;
   overlayClassName?: string;
+  onCloseAutoFocus?: (event: Event) => void;
   footer?: ReactNode;
 }) {
   const { t } = useTranslation();
@@ -31,6 +33,7 @@ export function Dialog({
           className={cn("fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]", overlayClassName)}
         />
         <DialogPrimitive.Content
+          {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
           className={cn(
             "glass-strong everyos-enter fixed left-1/2 top-1/2 z-50 flex max-h-[min(88dvh,760px)] w-[min(94vw,560px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-everyos-lg",
             className,

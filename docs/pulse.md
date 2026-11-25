@@ -69,6 +69,10 @@ shows the number of running transfers; the dots' context menu opens it.
 
 **Shelf**
 
+The inner drop area, its text and icons, and the surrounding open shelf panel all accept files.
+The shelf advertises a browser copy operation compatible with Files' `copyMove` drag source;
+adding an existing EveryOS file remains a reference and does not move or duplicate its contents.
+
 The shelf lists up to 48 items in the `pulse` preference, so it follows the user to other
 browsers. It holds two kinds of item:
 
